@@ -111,9 +111,59 @@ public class ServiceProxyClient {
 
 ## 四、MQ设计
 
+### ZBus MQ队列算法复杂度O(1)目标，队列算法提要
+* 1) 消息直接入队列
+* 2) 根据接收者获取消息
+
+![MQ设计](http://git.oschina.net/uploads/images/2014/0413/204808_3853071a_7458.png)
+
+* **消息入队列[mq_push_msg]**
+* mq_push_msg(mq_t* self, zmsg_t* zmsg)
+* 1.1 消息挂接到公共消息队列的尾部（公共消息队列以MQ标识索引）
+* 1.2 根据消息的接收者查找接收者私有消息队列，如果不存在创建空
+* 1.3 把消息同时挂接到接收者私有队列
+* 1.4 公共消息队列的消息增加指向私有消息队列的节点，私有消息队列增加指向公共消息队列的节点（如上图指示）
+* 【说明】1.1-1.4的所有操作复杂度均为O(1)
+
+> * **消息出队列[mq_fetch_msg]**
+* mq_fetch_msg(mq_t* self,  char* recver)
+* 1.1 如果消息队列模式为Roller负载均衡模式，从公共消息队列头部取出消息，同时删除接收者队列中对应的节点，否则进入下面的操作
+* 1.2 根据接收者查找对应私有消息队列，删除从消息队列头部取出消息，并将指向的公共消息队列节点清楚
+　　
+
+* **增加订阅者[mq_put_recver] [见代码，略]**
+* **删除订阅者[mq_rem_recver] [见代码，略]**
+
+
 
 ## 五、ZBus API（C/C++）
 
+* pub与sub可以分裂，由不同的socket，也可以由相同的socket完成
+
+* **创建客户端** 
+  zbus_connect()
+
+* **销毁客户端**
+　　zbus_destroy()
+
+* **创建队列**
+　　zbus_createmq
+　　在ZBus总线上创建队列
+
+* **发布消息**
+　　zbus_pub
+　　发布PUB消息指令，可选的ACK设置
+　　
+* **同步订阅消息**
+　　zbus_sub
+　　发送SUB消息队列指令，等到消息至超时
+　　
+* **同步请求服务**
+　　zbus_call(zmsg) 
+　　请求服务，等待返回
+　　
+* **注册提供服务**
+    zbus_serve(service_handler)
 
 ## 六、JAVA编写的服务于访问程序示例
 
