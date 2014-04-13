@@ -11,10 +11,10 @@
 ![队列模型](http://git.oschina.net/uploads/images/2014/0413/135225_e1c3253c_7458.png)
 
 > 消息队列支持消息发布者PUB发布消息，消息消费者SUB订阅消息。
-> 消息队列种类包括：
-* 1）Round-Robin Roller分发模式 
-* 2）Match准确匹配模式
-* 3）Filter主题消息过滤模式
+* 消息队列种类包括：
+1. Round-Robin Roller分发模式 
+2. Match准确匹配模式
+3. Filter主题消息过滤模式
 
 ![服务模型](http://git.oschina.net/uploads/images/2014/0413/135201_9609b24a_7458.png)
 
