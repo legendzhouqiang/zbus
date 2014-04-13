@@ -90,7 +90,7 @@ public class ServiceProxyClient {
 * 应答队列采用Match准确匹配模式（准确返回到服务请求者）
 ![服务模型](http://git.oschina.net/uploads/images/2014/0413/135201_9609b24a_7458.png)
 
-## 消息设计
+## 三、消息设计
 > 消息由 **消息业务** 与 **消息控制** 两大部分组成
 ![消息设计](http://git.oschina.net/uploads/images/2014/0413/135218_f7567ef9_7458.png)
 
@@ -108,13 +108,14 @@ public class ServiceProxyClient {
 * **访问控制码**，指定消息投递的目标队列需要的访问控制码，如果不匹配消息默认丢弃，ACK条件下返回403的状态码和原因给消息投递方
 * **发送者**，指定消息发送者标识，默认不指定由ZBus内部标识，指定的场景一般在异步配对场景
 * **接收者**，指定消息接收者标识，在消息队列为Roller负载均衡模式下一般不指定，Match确定匹配模式下需指定。
-## 一、ZBUS总线启动（Windows/Linux跨平台）
 
-* Windows默认双击可执行文件zbus.exe
-* Linux直接 ./zbus
-* 高级配置项通过 -help打印直接配置
+## 四、MQ设计
 
-## 二、JAVA编写的服务于访问程序示例
+
+## 五、ZBus API（C/C++）
+
+
+## 六、JAVA编写的服务于访问程序示例
 
 以ZBUS实现RPC为例，ZBUS内部都是Binary二进制格式处理数据，具体业务协议格式与ZBUS本身透明。ZBUS的Java API提供了一个默认的基于JSON协议的RPC实现
 
@@ -160,17 +161,18 @@ class MyService implements ServiceInterface {
 
 ```java
 public class RpcService {
-public static void main(String[] args) throws InterruptedException { 
-		WorkerPoolConfig cfg = new WorkerPoolConfig();
-		cfg.setService("MyRpc"); 
-		cfg.setBrokers(new String[] { "127.0.0.1:15555" });
-		int threadCount = 2;
-		WorkerPool wc = new WorkerPool(cfg);
-		System.out.format("Pooled RPC(%d) Run...\n", threadCount);
-
-		RpcServiceHandler handler = new RpcServiceHandler();  	
-		handler.addModule("ServiceInterface", new MyService());  
-		wc.run(threadCount, handler); 
+public static void main(String[] args) throws Exception { 
+		RpcServiceHandler handler = new RpcServiceHandler(); 
+		//简单添加模块
+		handler.addModule("ServiceInterface", new TestService()); 
+		
+		//注册服务名为MyRpc的服务到ZBus总线上
+		ZBusService service = new ZBusService("MyRpc", handler);
+		service.setHost("127.0.0.1");
+		service.setPort(15555);
+		service.setWorkerThreadCount(2); //以2个工作者线程运行
+		
+		service.run();
 	}
 }
 ```
@@ -193,12 +195,3 @@ public static void main(String[] args) throws Throwable {
 	}
 }
 ```
-
-##三、ZBUS内部文件组成说明
-
-* dist -- 已经发行的ZBUS总线可执行文件，Linux/Windows均支持，Mac需源码编译
-* msvc -- Visual Studio 2008项目编译文件，可编译zbus.exe可执行文件（x32/x64）
-* redhat -- Linux下make文件，可直接make执行编出目标可执行zbus文件
-* src/include, src/zmq -- zeromq 打包入的头和源文件
-* src/zbox -- 工具类C源码，包括跨平台宏/链表/Hash等工具类
-* src/zbus.cpp, src/zbus.h 真正意义上的zbus总线内部处理逻辑代码（2000行以内）
