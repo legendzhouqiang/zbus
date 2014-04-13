@@ -1,11 +1,79 @@
-#ZBus服务总线问题领域
-* 企业内部标准化服务提供接口（WebService重，限制多,需要集中接入点/服务点）
-* 跨平台/语言互访，代理模式解决遗留系统标准化
-* 提供透明的负载均衡机制，方便服务横向扩展
-* 提供相对透明的DMZ隔离，把服务提供者通过总线做安全隔离
-* 服务本身不侦听任何端口，仅仅创建连接到ZBUS总线，网络设备可做安全策略隔离，比如不允许APP网段直接连接数据库等
+## 一、ZBus服务总线问题领域
+> * **企业SOA服务治理**
+* **负载均衡横向扩展服务**
+* **跨平台多语言适配服务**
 
-## ZBus设计概览
+
+### **WebService标准**
+* HTTP+XML协议拖沓性能不高，无长链接机制
+* 缺乏便捷的服务横向扩容机制
+* 缺乏统一的服务视图，多点接入
+
+### 商业与开源ESB
+* 商业ESB繁重，做一堆不切合实际的工作，适配文件服务/DB等等，违背专业分工理念
+* 开源产品（MuleESB，OpenESB，JBossESB）仍然过重，跟商业产品存在类似的问题。
+
+### ZBus服务总线核心问题解决
+> 摈弃所谓的企业级，回归到服务总线，做两件简单的事情：
+
+* **1)只写业务逻辑代码，不写重复的服务接入处理程序**
+* Tomcat/Jetty等Web容器是HTTP请求应答模式的一种抽象（Servlet），目标也是尽量只写业务逻辑代码，但是侵入仍然有不少，Servlet框架，还有Struts/SpringMVC等一些列的框架均为简化而生
+* Apache/Nginx则更像是对HTTP服务之上的一种抽象，只管提供HTTP服务，不管接入优化与路由
+* **ZBus目标之一** 是免去写侦听端口，接收连接，编解码请求包，调用业务逻辑，反馈回客户端中除了业务逻辑代码之外的所有事情。
+* **2)透明的横向扩容机制**
+* Tomcat等Web容器的Servlet模型解决内部多线程扩容机制，Apahce/Nginx BackServer解决HTTP容器层面的扩容机制
+* **ZBus目标之二** 是提供简单的并发工作者模式运行业务逻辑代码，并且对业务逻辑代码透明（单机多线程，多机多线程均可）
+
+> **ZBus追求Z（Zero）的轻量级理念，尽量少的配置，尽量小的设计，跨平台几百K拷贝随时随地运行（Linux简单源码编译）**
+
+
+### **简单的一个例子**
+* 1) 启动zbus总线（本地启动，或者远程服务器上跑）， 200K左右无配置启动
+* 2) 编写业务逻辑代码，在main方法中启动注册，完成服务编写【Java平台示例】
+
+```java
+public class RpcService { 
+	
+	public static void main(String[] args) throws Exception {
+
+		RpcServiceHandler handler = new RpcServiceHandler(); 
+		//简单添加模块
+		handler.addModule("ServiceInterface", new TestService()); 
+		
+		//注册服务名为MyRpc的服务到ZBus总线上
+		ZBusService service = new ZBusService("MyRpc", handler);
+		service.setHost("127.0.0.1");
+		service.setPort(15555);
+		service.setWorkerThreadCount(2); //以2个工作者线程运行
+		
+		service.run();
+		
+	}
+}
+```
+其中TestService可以是任何JAVA代码逻辑
+
+* 3)客户端程序
+```java
+public class ServiceProxyClient {
+	public static void main(String[] args) throws Throwable { 
+		ServiceInterface rpc = RpcFactory.getService(
+				ServiceInterface.class, 
+				"zbus://localhost:15555/MyRpc"); 
+		
+		String pong = rpc.echo();
+		System.out.println(pong); 
+		
+		int c = rpc.plus(1, 2);
+		System.out.println(c);
+		
+		RpcFactory.destroy();
+	}
+}
+```
+
+
+## 二、ZBus设计概览
 ### ZBus消息最小组织单元不是Service服务槽，而是消息队列，一个请求应答Service由一个服务请求队列+一个服务应答队列组合完成。
 
 ***
@@ -134,4 +202,3 @@ public static void main(String[] args) throws Throwable {
 * src/include, src/zmq -- zeromq 打包入的头和源文件
 * src/zbox -- 工具类C源码，包括跨平台宏/链表/Hash等工具类
 * src/zbus.cpp, src/zbus.h 真正意义上的zbus总线内部处理逻辑代码（2000行以内）
-
