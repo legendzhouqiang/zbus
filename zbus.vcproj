@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="zbus-event"
+	Name="zbus"
 	ProjectGUID="{081D7FA8-578D-4005-B9FD-87B623D56291}"
 	RootNamespace="zbusevent"
 	Keyword="Win32Proj"
