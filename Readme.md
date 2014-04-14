@@ -18,7 +18,7 @@
 
 * **1)只写业务逻辑代码，不写重复的服务接入处理程序**
 * Tomcat/Jetty等Web容器是HTTP请求应答模式的一种抽象（Servlet），目标也是尽量只写业务逻辑代码，但是侵入仍然有不少，Servlet框架，还有Struts/SpringMVC等一些列的框架均为简化而生
-* Apache/Nginx则更像是对HTTP服务之上的一种抽象，只管提供HTTP服务，不管接入优化与路由
+* Apache/Nginx则更像是对HTTP服务之上的一种抽象，只管提供HTTP接入路由优化
 * **ZBus目标之一** 是免去写侦听端口，接收连接，编解码请求包，调用业务逻辑，反馈回客户端中除了业务逻辑代码之外的所有事情。
 * **2)透明的横向扩容机制**
 * Tomcat等Web容器的Servlet模型解决内部多线程扩容机制，Apahce/Nginx BackServer解决HTTP容器层面的扩容机制
@@ -71,6 +71,18 @@ public class ServiceProxyClient {
 	}
 }
 ```
+
+### ZBus的发展历程
+* **第一阶段** 基于ZeroMQ消息通讯框架基础之上，在国信与前海发展到了ZBus3.8，提供C/C++，JAVA，Python，.NET等众多对应的平台API
+　　存在的问题：ZeroMQ的封装，底层平台的发展在后期陆续受到制约，比如ZeroMQ中不使用多线程而是用ZeroMQ IPC/InProc在实际研发中并不能有效推进，ZeroMQ对网络事件的封闭封装也很难以基于事件的模式做业务封装。
+　　但这些并不能说明ZeroMQ不是个优秀网络通讯框架，ZeroMQ在无Broker的场景下做代码之间的通讯非常合适。
+* **第二阶段** 脱离ZeroMQ，部分使用Libevent做为通讯基础（想夸平台解决掉Linux epoll/Windows IOCP/BSD Kqueue等异构问题），当前的开发状态是，离开ZeroMQ除了部分需要做ZeroMQ诸如消息分帧的重复开发之外，获得了更多的自由，也归功与Memcached/Redis等优秀开源项目的源码借鉴
+　　整体上两个大版本目前都在支持，但是重点在发展新的去除ZeroMQ的版本，对应用层来说，尤其是JAVA 远程方法调用场景，这两个平台的切换几乎可以做到透明。
+
+
+### ZBus发展方向
+* 借鉴Memcached/Apache的Master-Worker模式，把zbus内核部分进一步多线程改造
+* 借鉴FastDFS，加入TrackServer与BusServer的理念，脱离LVS的模式做高可用。
 
 
 ## 二、ZBus设计概览
