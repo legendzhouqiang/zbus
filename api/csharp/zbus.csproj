@@ -45,14 +45,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="json\Formatter.cs" />
-    <Compile Include="json\Getters.cs" />
-    <Compile Include="json\JSON.cs" />
-    <Compile Include="json\JsonParser.cs" />
-    <Compile Include="json\JsonSerializer.cs" />
-    <Compile Include="json\SafeDictionary.cs" />
+    <Compile Include="JSON\Formatter.cs" />
+    <Compile Include="JSON\Getters.cs" />
+    <Compile Include="JSON\JSON.cs" />
+    <Compile Include="JSON\JsonParser.cs" />
+    <Compile Include="JSON\JsonSerializer.cs" />
+    <Compile Include="JSON\SafeDictionary.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\LoggerFactory.cs" />
+    <Compile Include="Remoting\Message.cs" />
+    <Compile Include="Remoting\Meta.cs" />
+    <Compile Include="Remoting\RemotingClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="zbus\Proto.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

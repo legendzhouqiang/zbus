@@ -8,18 +8,13 @@ client = RemotingClient(broker = '127.0.0.1:15555')
 
 consumer = Consumer(client=client, 
                     mq='MySub', 
-                    mode=MessageMode.PubSub) 
+                    mode=MessageMode.PubSub)#指定消息模式
+consumer.topic = 'qhee,xmee' #指定感兴趣的消息主题，用','分割不同主题
 
-consumer.topic = 'qhee,xmee'
-i = 0
 while True:
     msg = consumer.recv()
-    if msg is None:
-        continue
-    i += 1
-    if i%1 == 0:
-        print '================%s==================='%i
-        print msg
+    if msg is None: continue
+    print msg
      
     
 

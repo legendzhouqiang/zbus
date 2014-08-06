@@ -164,6 +164,102 @@
     	return 0;
     }
 
+
+###PubSub发布订阅###
+
+**Pub发布消息 Python示例**
+
+
+    from zbus import Message, RemotingClient, Producer, MessageMode
+    #整体与生产者几乎类似，除了指定消息模式为PubSub
+    client = RemotingClient(broker='127.0.0.1:15555')
+    p = Producer(client=client, 
+      				mq='MySub',
+      				mode=MessageMode.PubSub) #指定消息模式为发布订阅
+     
+    msg = Message()  
+    msg.set_topic('qhee')  #指定消息的主题
+    msg.set_body('hello world') 
+    print p.send(msg)
+    
+    client.close()
+
+
+**Sub订阅消息 Python示例**
+    
+    from zbus import RemotingClient, Consumer, MessageMode
+    
+    client = RemotingClient(broker = '127.0.0.1:15555')
+    
+    consumer = Consumer(client=client, 
+    						mq='MySub', 
+    						mode=MessageMode.PubSub)#指定消息模式
+    consumer.topic = 'qhee,xmee' #指定感兴趣的消息主题，用','分割不同主题
+    
+    while True:
+	    msg = consumer.recv()
+	    if msg is None: continue
+	    print msg
+     
+    
+**Pub发布消息 JAVA示例**
+
+    package org.zbus;
+    
+    import org.remoting.Message;
+    import org.remoting.RemotingClient;
+    import org.remoting.ticket.ResultCallback;
+    import org.zbus.client.Producer;
+    import org.zbus.common.MessageMode;
+    
+    
+    public class PubWithClient {
+    
+    	public static void main(String[] args) throws Exception {  
+    		final RemotingClient client = new RemotingClient("127.0.0.1", 15555); 
+    		//指定消息模式为发布订阅
+    		Producer producer = new Producer(client, "MySub", MessageMode.PubSub); 
+    		Message msg = new Message();  
+    		msg.setTopic("qhee"); //设定消息主题
+    		msg.setBody("hello world"); 
+    		producer.send(msg, new ResultCallback() { 
+    			@Override
+    			public void onCompleted(Message result) {  
+    				System.out.println(result); 
+    			}
+    		}); 
+    	}  
+    }
+    
+
+**Sub订阅消息 JAVA示例**
+
+
+    package org.zbus;
+    
+    import org.remoting.Message;
+    import org.remoting.RemotingClient;
+    import org.zbus.client.Consumer;
+    import org.zbus.common.MessageMode;
+    
+    public class SubWithClient {
+    
+    	public static void main(String[] args) throws Exception {  
+    		
+    		final RemotingClient client = new RemotingClient("127.0.0.1:15555");	
+    		final Consumer consumer = new Consumer(client, "MySub", MessageMode.PubSub);   
+    		consumer.setTopic("qhee,xmee");  
+    		while(true){
+    			Message msg = consumer.recv(10000); 
+    			if(msg == null) continue;
+    			System.out.println(msg);
+    		}
+    	}
+    
+    }
+    
+
+
 ###RPC远程调用###
 
 **RPC Python示例，服务实现**
