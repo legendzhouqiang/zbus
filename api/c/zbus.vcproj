@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="util;remoting;zbus;json"
+				AdditionalIncludeDirectories="src/util;src/remoting;src/zbus;src/json"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -95,7 +95,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="util;remoting;zbus;json"
+				AdditionalIncludeDirectories="src/util;src/remoting;src/zbus;src/json"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -136,10 +136,14 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -149,6 +153,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -164,42 +171,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<Filter
-				Name="util"
+				Name="json"
 				>
 				<File
-					RelativePath=".\util\hash.c"
+					RelativePath=".\src\json\json.c"
 					>
 				</File>
 				<File
-					RelativePath=".\util\hash.h"
-					>
-				</File>
-				<File
-					RelativePath=".\util\list.c"
-					>
-				</File>
-				<File
-					RelativePath=".\util\list.h"
-					>
-				</File>
-				<File
-					RelativePath=".\util\log.c"
-					>
-				</File>
-				<File
-					RelativePath=".\util\log.h"
-					>
-				</File>
-				<File
-					RelativePath=".\util\platform.h"
-					>
-				</File>
-				<File
-					RelativePath=".\util\thread.c"
-					>
-				</File>
-				<File
-					RelativePath=".\util\thread.h"
+					RelativePath=".\src\json\json.h"
 					>
 				</File>
 			</Filter>
@@ -207,27 +186,67 @@
 				Name="remoting"
 				>
 				<File
-					RelativePath=".\remoting\msg.c"
+					RelativePath=".\src\remoting\msg.c"
 					>
 				</File>
 				<File
-					RelativePath=".\remoting\msg.h"
+					RelativePath=".\src\remoting\msg.h"
 					>
 				</File>
 				<File
-					RelativePath=".\remoting\net.c"
+					RelativePath=".\src\remoting\net.c"
 					>
 				</File>
 				<File
-					RelativePath=".\remoting\net.h"
+					RelativePath=".\src\remoting\net.h"
 					>
 				</File>
 				<File
-					RelativePath=".\remoting\remoting.c"
+					RelativePath=".\src\remoting\remoting.c"
 					>
 				</File>
 				<File
-					RelativePath=".\remoting\remoting.h"
+					RelativePath=".\src\remoting\remoting.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="util"
+				>
+				<File
+					RelativePath=".\src\util\hash.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\hash.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\list.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\list.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\log.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\log.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\platform.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\thread.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\util\thread.h"
 					>
 				</File>
 			</Filter>
@@ -235,63 +254,51 @@
 				Name="zbus"
 				>
 				<File
-					RelativePath=".\zbus\zbus.c"
+					RelativePath=".\src\zbus\zbus.c"
 					>
 				</File>
 				<File
-					RelativePath=".\zbus\zbus.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="json"
-				>
-				<File
-					RelativePath=".\json\json.c"
-					>
-				</File>
-				<File
-					RelativePath=".\json\json.h"
+					RelativePath=".\src\zbus\zbus.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="examples"
+				Name="example"
 				>
 				<File
-					RelativePath=".\examples\consumer.c"
+					RelativePath=".\src\examples\consumer.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\jsonrpc.c"
+					RelativePath=".\src\examples\jsonrpc.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\jsonrpc_recv.c"
+					RelativePath=".\src\examples\jsonrpc_recv.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\jsonrpc_send.c"
+					RelativePath=".\src\examples\jsonrpc_send.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\producer.c"
+					RelativePath=".\src\examples\producer.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\pub.c"
+					RelativePath=".\src\examples\pub.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\rpc.c"
+					RelativePath=".\src\examples\rpc.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\rpc_service.c"
+					RelativePath=".\src\examples\rpc_service.c"
 					>
 				</File>
 				<File
-					RelativePath=".\examples\sub.c"
+					RelativePath=".\src\examples\sub.c"
 					>
 				</File>
 			</Filter>

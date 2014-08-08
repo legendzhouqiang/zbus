@@ -13,8 +13,8 @@ LIBRARIES :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-zbus \
-util \
-remoting \
-json \
+src/zbus \
+src/util \
+src/remoting \
+src/json \
 

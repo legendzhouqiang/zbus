@@ -8,10 +8,10 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include zbus/subdir.mk
--include util/subdir.mk
--include remoting/subdir.mk
--include json/subdir.mk
+-include src/zbus/subdir.mk
+-include src/util/subdir.mk
+-include src/remoting/subdir.mk
+-include src/json/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -32,7 +32,7 @@ all: zbus.so
 zbus.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	gcc -fPIC -shared -o "zbus.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "zbus.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
