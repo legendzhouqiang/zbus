@@ -7,16 +7,16 @@ extern "C" {
 #endif
  
 /////////////////////////////////////////
-//ÏÂÃæµÄ³£Á¿¶¨Òå¶¼²»ÊÇĞ­Òé±ØĞëÒªÇóµÄ£¬Ö»ÊÇ³£¹æÓ¦ÓÃ¶¨ÒåµÄ£¬ZBUSÖĞ´óÁ¿²ÉÓÃ·ÅÔÚÕâÀï
+//ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¶¼ï¿½ï¿½ï¿½ï¿½Ğ­ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ä£ï¿½Ö»ï¿½Ç³ï¿½ï¿½ï¿½Ó¦ï¿½Ã¶ï¿½ï¿½ï¿½Ä£ï¿½ZBUSï¿½Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-#define HEARTBEAT          "heartbeat" //ĞÄÌøÏûÏ¢
+#define HEARTBEAT          "heartbeat" //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
-//±ê×¼HTTPÍ·²¿ÄÚÈİ
+//ï¿½ï¿½×¼HTTPÍ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define HEADER_CLIENT      "remote-addr"
 #define HEADER_ENCODING    "content-encoding"
 
 #define HEADER_BROKER      "broker"
-#define HEADER_TOPIC       "topic"   //Ê¹ÓÃ,·Ö¸ô 
+#define HEADER_TOPIC       "topic"   //Ê¹ï¿½ï¿½,ï¿½Ö¸ï¿½ 
 #define HEADER_MQ_REPLY    "mq-reply"
 #define HEADER_MQ          "mq"
 #define HEADER_TOKEN       "token"
@@ -31,7 +31,7 @@ typedef struct msg msg_t;
 typedef struct iobuf iobuf_t; 
 
 
-//¼æÈİHTTPĞ­Òé£¬ÔªÊı¾İĞĞ£¨Í·²¿µÚÒ»ĞĞ£©+Í·²¿+ÏûÏ¢Ìå²Ù×÷
+//ï¿½ï¿½ï¿½ï¿½HTTPĞ­ï¿½é£¬Ôªï¿½ï¿½ï¿½ï¿½Ğ£ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ğ£ï¿½+Í·ï¿½ï¿½+ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½
 ZBOX_EXPORT msg_t*msg_new (void); 
 ZBOX_EXPORT void  msg_destroy (msg_t **self_p);
 ZBOX_EXPORT char* msg_get_head (msg_t *self, char* key);
@@ -49,7 +49,7 @@ ZBOX_EXPORT int   msg_is_status200(msg_t* self);
 ZBOX_EXPORT int   msg_is_status404(msg_t* self);
 ZBOX_EXPORT int   msg_is_status500(msg_t* self);
 
-//ZBUSÖĞ¿ÉÄÜÓÃµ½Ò»Ğ©Í·²¿À©Õ¹²Ù×÷£¬±ã½İÀ©Õ¹£¬¶¼ÊÇGET_HEADµÄ±ã½İ·½·¨·â×°
+//ZBUSï¿½Ğ¿ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ò»Ğ©Í·ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GET_HEADï¿½Ä±ï¿½İ·ï¿½ï¿½ï¿½ï¿½ï¿½×°
 ZBOX_EXPORT char* msg_get_sender(msg_t* self);
 ZBOX_EXPORT void  msg_set_sender(msg_t* self, char* value); 
 ZBOX_EXPORT char* msg_get_mq_reply(msg_t* self);
@@ -73,7 +73,7 @@ ZBOX_EXPORT void   msg_encode(msg_t* self, iobuf_t* buf);
 ZBOX_EXPORT msg_t* msg_decode(iobuf_t* buf);
 ZBOX_EXPORT void   msg_print(msg_t* self);
 ZBOX_EXPORT char*  msg_copy_body(msg_t* self);
-//META´¦Àí
+//METAï¿½ï¿½ï¿½ï¿½
 ZBOX_EXPORT meta_t* meta_new(char* meta);
 ZBOX_EXPORT void    meta_destroy(meta_t** self_p);
 ZBOX_EXPORT char*   meta_get_param(meta_t* self, char* key);
@@ -91,7 +91,7 @@ struct iobuf{
 	char* data; 
 };
 
-//IO»º´æ²Ù×÷
+//IOï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ZBOX_EXPORT iobuf_t* iobuf_new(int capacity);
 ZBOX_EXPORT iobuf_t* iobuf_dup(iobuf_t* buf);
 ZBOX_EXPORT iobuf_t* iobuf_wrap(char array[], int len); 
@@ -141,7 +141,7 @@ typedef struct json json_t;
 #define JSON_IsReference 256
 
 /* The cJSON structure: */
-typedef struct json {
+struct json {
 	struct json *next,*prev;	/* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
 	struct json *child;		/* An array or object item will have a child pointer pointing to a chain of the items in the array/object. */
 
@@ -152,7 +152,7 @@ typedef struct json {
 	double valuedouble;			/* The item's number, if type==cJSON_Number */
 
 	char *string;				/* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
-} json_t;
+};
 
 
 
@@ -238,11 +238,11 @@ The item->next and ->prev pointers are always zero on return from Duplicate. */
 
 /////////////////////////////////////////////////////////////////
 
-#define PRODUCE       "produce"     //Éú²úÏûÏ¢
-#define CONSUME       "consume"     //Ïû·ÑÏûÏ¢   
-#define REQUEST       "request"     //ÇëÇóµÈ´ıÓ¦´ğÏûÏ¢ 
-#define HEARTBEAT     "heartbeat"   //ĞÄÌøÏûÏ¢  
-#define ADMIN         "admin"       //¹ÜÀíÀàÏûÏ¢
+#define PRODUCE       "produce"     //ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+#define CONSUME       "consume"     //ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢   
+#define REQUEST       "request"     //ï¿½ï¿½ï¿½ï¿½È´ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ï¢ 
+#define HEARTBEAT     "heartbeat"   //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢  
+#define ADMIN         "admin"       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 #define CREATE_MQ     "create_mq"   
 #define TRACK_REPORT  "track_report" 
 #define TRACK_SUB     "track_sub" 

@@ -24,7 +24,7 @@ static int strempty(char* str){
 	return *str == 0;
 }
 
-static char* strndup(char* str, int n){
+static char* _strndup(char* str, int n){
 	char* res = malloc(n+1);
 	strncpy(res, str, n);
 	res[n] = '\0';
@@ -145,7 +145,7 @@ meta_t* meta_parse(char* meta){
 	
 	meta_tok = strdup(meta);
 	method = strtok_r(meta_tok, SPLIT_CHARS, &tok_reserved);
-	if(!is_http_method(method)){ //ÏìÓ¦Êý¾Ý°ü
+	if(!is_http_method(method)){ //ï¿½ï¿½Ó¦ï¿½ï¿½Ý°ï¿½
 		status = strtok_r(NULL,SPLIT_CHARS, &tok_reserved);
 		if(!status){
 			perror("invalid meta, missing status");
@@ -154,7 +154,7 @@ meta_t* meta_parse(char* meta){
 		}
 		goto DONE;
 	} 
-	//ÇëÇóÊý¾Ý°ü
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½
 	free(self->method);
 	self->method = strdup(method);
 	
@@ -175,14 +175,14 @@ meta_t* meta_parse(char* meta){
 	
 	params = p+1;
 	params_tok = strdup(params);
-	self->command = strndup(command,p-command);  
+	self->command = _strndup(command,p-command);  
 
 	p = strtok_r(params_tok, "&", &tok_reserved);
 	while(p){ 
 		char* key, * val;
 		val = strchr(p, '='); 
 		if(val){
-			key = strndup(p, val-p);
+			key = _strndup(p, val-p);
 			meta_set_param(self, key, val+1); 
 			free(key);
 		}
@@ -517,7 +517,7 @@ msg_t* msg_decode(iobuf_t* buf){
 	body_len = atoi(p);
 	if(iobuf_remaining(buf) < body_len){
 		msg_destroy(&msg);
-		iobuf_reset(buf); //²»ÍêÕû
+		iobuf_reset(buf); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return NULL;
 	} 
 	body = malloc(body_len);

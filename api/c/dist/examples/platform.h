@@ -347,9 +347,6 @@ typedef char  bool;
 #endif
 
 
-#if !defined(ssize_t)
-	typedef int ssize_t;
-#endif
 
 #if !defined(mode_t)
 	#define mode_t long

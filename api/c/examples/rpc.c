@@ -18,7 +18,7 @@ int main_rpc(int argc, char* argv[]){
 	}
 
 	getchar();
-	producer_destroy(&p);
+	rpc_destroy(&p);
 	rclient_destroy(&client);
 	return 0;
 }

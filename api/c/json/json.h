@@ -18,7 +18,7 @@ typedef struct json json_t;
 #define JSON_IsReference 256
 
 /* The cJSON structure: */
-typedef struct json {
+struct json {
 	struct json *next,*prev;	/* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
 	struct json *child;		/* An array or object item will have a child pointer pointing to a chain of the items in the array/object. */
 
@@ -29,8 +29,7 @@ typedef struct json {
 	double valuedouble;			/* The item's number, if type==cJSON_Number */
 
 	char *string;				/* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
-} json_t;
-
+};
 
 
 typedef struct json_hook {
