@@ -108,7 +108,7 @@ public class ZbusServer extends RemotingServer {
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					log.debug("%s", msg);
+					log.info("%s", msg);
 				}
 			}
 		}); 

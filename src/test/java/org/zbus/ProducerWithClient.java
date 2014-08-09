@@ -20,6 +20,6 @@ public class ProducerWithClient {
 				System.out.println(result); 
 			}
 		});  
-		client.close();
+		//client.close();
 	} 
 }
