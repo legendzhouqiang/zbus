@@ -1,17 +1,10 @@
+var util = require("util");
+var Buffer = require("buffer").Buffer;
+
 ////////////////////////////UTILS///////////////////////////////
-function formatString(format) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return format.replace(/{(\d+)}/g, function(match, number) { 
-      return typeof args[number] != 'undefined'
-        ? args[number] 
-        : match
-      ;
-    });
-}
 function stringEndsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
-
 function hashSize(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -19,7 +12,44 @@ function hashSize(obj) {
     }
     return size;
 };
-/////////////////////////////////////////////////////////////////// 
+//=================IoBuffer,类似Java NIO ByteBuffer===============
+function IoBuffer(capacity){
+	this.capacity = capacity;
+	this.data = new Buffer(capacity);
+	this.position = 0;
+	this.limit = capacity;
+	this.mark = -1;
+} 
+IoBuffer.prototype.mark = function(){
+	this.mark = this.position;
+}
+IoBuffer.prototype.reset = function(){
+	var m = this.mark;
+	if(m<0){
+		throw new Error("mark not set, should not reset");
+	}
+	this.position = m;
+}
+IoBuffer.prototype.remaining = function(){
+	return this.limit - this.position;
+}
+IoBuffer.prototype.flip = function(){
+	this.limit = this.position;
+	this.position = 0;
+	this.mark = -1;
+}
+
+IoBuffer.prototype.newLimit = function(newLimit){
+	if(newLimit>this.capacity || newLimit<0){
+		throw new Error("set new limit error");
+	}
+	this.limit = newLimit;
+	if(this.position > this.limit) this.position = this.limit;
+	if(this.mark > this.limit) this.mark = -1;
+}
+
+
+//===================HTTP头部第一行解释,Meta=======================
 function Meta(meta){
 	this.status = null;
 	
@@ -37,12 +67,11 @@ function Meta(meta){
 	}
 	this.decodeCommand(blocks[1]);
 }
-
 Meta.HttpMethod = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"];
 Meta.HttpStatus = {
-	"200": "OK",
-   	"201": "Created",
-	"202": "Accepted",
+    "200": "OK",
+    "201": "Created",
+    "202": "Accepted",
     "204": "No Content", 
     "206": "Partial Content", 
     "301": "Moved Permanently",
@@ -55,16 +84,15 @@ Meta.HttpStatus = {
     "416": "Requested Range Not Satisfiable",
     "500": "Internal Server Error" 
 }
-
 Meta.prototype.toString = function(){
     if(this.status){
     	var desc = Meta.HttpStatus[this.status];
     	if(!desc) desc = "Unknown Status";
-    	return formatString("HTTP/1.1 {0} {1}", this.status, desc); 
+    	return util.format("HTTP/1.1 %s %s", this.status, desc); 
     }
     if(this.command){
     	var cmdString = this.encodeCommand();
-    	return formatString("{0} /{1} HTTP/1.1", this.method, cmdString); 
+    	return util.format("%s /%s HTTP/1.1", this.method, cmdString); 
     }
     return "";
 }
@@ -85,8 +113,6 @@ Meta.prototype.setParam = function(key, val){
 	}
 	this.params[key] = val;
 }
-
-
 Meta.prototype.encodeCommand = function(){
 	var res = "";
 	if(this.command){
@@ -97,7 +123,7 @@ Meta.prototype.encodeCommand = function(){
 			res += "?";
 		}
 		for(var key in this.params){
-			res += formatString("{0}={1}&", key, this.params[key]);
+			res += util.format("%s=%s&", key, this.params[key]);
 		}
 		if(stringEndsWith(res, "&")){
 			res = res.substring(0, res.length-1);
@@ -124,8 +150,8 @@ Meta.prototype.decodeCommand = function(cmdStr){
 		var kv = kvs[i];
 		idx = kv.indexOf("=");
 		if(idx<0){
-			console.log("omit: "+kv);
-			return;
+			util.debug("omit: "+kv);
+			continue;
 		}
 		var key = kv.substring(0,  idx);
 		var val = kv.substring(idx+1);
@@ -133,11 +159,11 @@ Meta.prototype.decodeCommand = function(cmdStr){
 	} 
 }
 
-
+//===================HTTP消息格式,头部行集+消息体=======================
 function Message(){
 	this.meta = new Meta();
 	this.head = {};
-	this.body = new ArrayBuffer(0);
+	this.body = null; //Buffer类型(Node.JS)
 }
 
 Message.HEARTBEAT         = "heartbeat"; //心跳消息
@@ -233,8 +259,29 @@ Message.prototype.setStatus = function(val){
 	this.meta.command = null;
 	this.meta.status = val;
 }
+Message.prototype.setBody = function(val){
+	if(!Buffer.isBuffer(val)){
+		val = new Buffer(val);
+	}
+	this.body = val;
+	this.setHead('content-length', this.body.length);
+}
 
- 
-var msg = new Message(); 
-msg.setCommand("produce"); 
+Message.prototype.encode = function(){
+	var res = util.format("%s\r\n", this.meta.toString());
+	var bodyLen = 0;
+	if(this.body){
+		bodyLen = this.body.length;
+	} 
+}
+
+
+var msg = new Message();
+msg.setCommand("produce");
+msg.setStatus("200");
+msg.setBody("hong");
 console.log(msg);
+
+
+
+
