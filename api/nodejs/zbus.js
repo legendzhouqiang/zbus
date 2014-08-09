@@ -11,7 +11,7 @@ function hashSize(obj) {
         if (obj.hasOwnProperty(key)) size++;
     }
     return size;
-};
+}
 //=================IoBuffer,类似Java NIO ByteBuffer===============
 function IoBuffer(capacity){
 	if(capacity == undefined){
@@ -26,6 +26,7 @@ function IoBuffer(capacity){
 IoBuffer.prototype.mark = function(){
 	this.mark = this.position;
 }
+
 IoBuffer.prototype.reset = function(){
 	var m = this.mark;
 	if(m<0){
@@ -33,9 +34,11 @@ IoBuffer.prototype.reset = function(){
 	}
 	this.position = m;
 }
+
 IoBuffer.prototype.remaining = function(){
 	return this.limit - this.position;
 }
+
 IoBuffer.prototype.flip = function(){
 	this.limit = this.position;
 	this.position = 0;
@@ -57,8 +60,9 @@ IoBuffer.prototype.autoExpand = function(need){
 	while(newSize > newCap){
 		newCap *= 2;
 	}
+
 	if(newCap == this.capacity) return;
-	var newData = new Buffer(newCap);
+	var newData = new Buffer(newCap); 
 	this.data.copy(newData, 0, 0, this.position);
 	this.data = newData;
 	this.capacity = newCap;
@@ -307,10 +311,10 @@ Message.prototype.setBody = function(val){
 }
 
 Message.prototype.encode = function(){
-	var buf = new IoBuffer();
-	buf.put(util.format("%s\r\n", this.meta.toString()));
+	var iobuf = new IoBuffer();
+	iobuf.put(util.format("%s\r\n", this.meta.toString()));
 	for(var key in this.head){
-		buf.put(util.format("%s: %s\r\n", key, this.head[key]));
+		iobuf.put(util.format("%s: %s\r\n", key, this.head[key]));
 	} 
 	var bodyLen = 0;
 	if(this.body){
@@ -318,32 +322,81 @@ Message.prototype.encode = function(){
 	} 
 	var lenKey = "content-length"; 
 	if(!(lenKey in this.head)){
-		buf.put(util.format("%s: %d\r\n", lenKey, bodyLen));
+		iobuf.put(util.format("%s: %s\r\n", lenKey, bodyLen));
 	}
 	if(bodyLen > 0){
-		buf.put("\r\n");
-		buf.put(this.body);
+		iobuf.put("\r\n");
+		iobuf.put(this.body);
 	} 
-	buf.flip();
-	return buf;
+	iobuf.flip();
+	return iobuf;
+}
+Message.findHeaderEnd = function(iobuf){
+	var i = iobuf.position;
+	var data = iobuf.data;
+	var CR = 13, NL = 10;
+	while(i+3<iobuf.limit){
+		if(data[i]==CR && data[i+1]==NL && data[i+2]==CR && data[i+3]==NL){
+			return i+3;
+		}
+		i++;
+	}
+	return -1;
+}
+
+Message.decodeHeaders = function( headerStr ){
+	var blocks = headerStr.split("\r\n");
+	var lines = [];
+	for(var i in blocks){
+		var line = blocks[i];
+		if(line == '') continue;
+		lines.push(line);
+	}
+	
+	var msg = new Message();
+	msg.meta = new Meta(lines[0]);
+	for(var i=1;i<lines.length;i++){
+		var line = lines[i];
+		var p = line.indexOf(":");
+		if(p == -1) continue;
+		var key = line.substring(0, p).trim().toLowerCase();
+		var val = line.substring(p+1).trim();
+		msg.setHead(key, val);
+	}
+	return msg;
 }
 
 Message.decode = function(iobuf){
+	var headerIdx = Message.findHeaderEnd(iobuf); 
+	if(headerIdx == -1) return null;
+	var headLen = headerIdx+1 - iobuf.position;
 	
+	var headerStr = iobuf.data.slice(iobuf.position,  headerIdx+1).toString();
+	var msg = Message.decodeHeaders(headerStr); 
+	var lenKey = "content-length";
+	var bodyLen = msg.getHead(lenKey);
+    bodyLen = parseInt(bodyLen);
+	if(bodyLen == undefined){
+		iobuf.drain(headLen);
+		return msg;
+	}
+	if(iobuf.remaining() < (headLen+bodyLen)){
+		return null;
+	}
+	iobuf.drain(headLen);
+	msg.body = new Buffer(bodyLen);
+	msg.body = iobuf.data.slice(iobuf.position, iobuf.position+bodyLen);
+	iobuf.drain(bodyLen);
+	return msg;
 }
 
 
 var msg = new Message();
 msg.setCommand("produce");
-msg.setStatus("200");
 msg.setMq("MyMQ");
 msg.setTopic("qhee");
 msg.setBody("hello world");
 
-var buf = msg.encode();
-console.log(msg);
-console.log(buf); 
-console.log(buf.data.toString("utf8", 0, buf.limit));
-
-
+var iobuf = msg.encode();
+console.log(iobuf.data.toString("utf8", 0, iobuf.limit));
 
