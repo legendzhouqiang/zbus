@@ -25,7 +25,7 @@ function IoBuffer(capacity){
 } 
 IoBuffer.prototype.mark = function(){
 	this.mark = this.position;
-}
+};
 
 IoBuffer.prototype.reset = function(){
 	var m = this.mark;
@@ -33,17 +33,17 @@ IoBuffer.prototype.reset = function(){
 		throw new Error("mark not set, should not reset");
 	}
 	this.position = m;
-}
+};
 
 IoBuffer.prototype.remaining = function(){
 	return this.limit - this.position;
-}
+};
 
 IoBuffer.prototype.flip = function(){
 	this.limit = this.position;
 	this.position = 0;
 	this.mark = -1;
-}
+};
 
 IoBuffer.prototype.newLimit = function(newLimit){
 	if(newLimit>this.capacity || newLimit<0){
@@ -52,7 +52,7 @@ IoBuffer.prototype.newLimit = function(newLimit){
 	this.limit = newLimit;
 	if(this.position > this.limit) this.position = this.limit;
 	if(this.mark > this.limit) this.mark = -1;
-}
+};
 
 IoBuffer.prototype.autoExpand = function(need){
 	var newCap = this.capacity;
@@ -67,7 +67,7 @@ IoBuffer.prototype.autoExpand = function(need){
 	this.data = newData;
 	this.capacity = newCap;
 	this.limit = newCap;
-}
+};
 IoBuffer.prototype.drain = function(n){
 	if(n<=0) return;
 	var newPos = this.position + n;
@@ -75,7 +75,7 @@ IoBuffer.prototype.drain = function(n){
 		newPos = this.limit;
 	}
 	this.position = newPos;
-}
+};
 IoBuffer.prototype.put = function(val){
 	var len = val.length;
 	this.autoExpand(len);
@@ -85,10 +85,7 @@ IoBuffer.prototype.put = function(val){
 		this.data.write(val, this.position, len);
 	} 
 	this.position += len;
-}
-
-
-
+};
 
 
 
@@ -126,7 +123,7 @@ Meta.HttpStatus = {
     "405": "Method Not Allowed", 
     "416": "Requested Range Not Satisfiable",
     "500": "Internal Server Error" 
-}
+};
 Meta.prototype.toString = function(){
     if(this.status){
     	var desc = Meta.HttpStatus[this.status];
@@ -138,24 +135,19 @@ Meta.prototype.toString = function(){
     	return util.format("%s /%s HTTP/1.1", this.method, cmdString); 
     }
     return "";
-}
+};
 Meta.prototype.getParam = function(key){
-	return this.getParamWithDefault(key, null);
-}
-Meta.prototype.getParamWithDefault = function(key, defaultValue){ 
 	if(!this.params){
-		return defaultValue;
-	}
-	var val = this.params[key];
-	if(!val) val = defaultValue;
-	return val;
-}
+        return undefined;
+    }
+	return this.params[key];
+};
 Meta.prototype.setParam = function(key, val){
 	if(!this.params){
 		this.params = {};
 	}
 	this.params[key] = val;
-}
+};
 Meta.prototype.encodeCommand = function(){
 	var res = "";
 	if(this.command){
@@ -173,7 +165,7 @@ Meta.prototype.encodeCommand = function(){
 		}
 	}
 	return res;
-}
+};
 Meta.prototype.decodeCommand = function(cmdStr){
 	var idx = cmdStr.indexOf("?");
 	if(idx<0){
@@ -200,7 +192,7 @@ Meta.prototype.decodeCommand = function(cmdStr){
 		var val = kv.substring(idx+1);
 		this.params[key] = val;
 	} 
-}
+};
 
 //===================HTTP消息格式,头部行集+消息体=======================
 function Message(){
@@ -226,7 +218,7 @@ Message.HEADER_REPLY_CODE = "reply-code";
 	
 Message.prototype.getHead = function(key){
     return this.head[key];
-}
+};
 
 Message.prototype.getHeadOrParam = function(key){
     var val = this.head[key];
@@ -235,81 +227,89 @@ Message.prototype.getHeadOrParam = function(key){
 }
 Message.prototype.setHead = function(key, val){
     this.head[key] = val;
-}
+};
 
 Message.prototype.getMq = function(){
     return this.getHeadOrParam(Message.HEADER_MQ);
-} 
+};
 Message.prototype.setMq = function(val){
 	this.setHead(Message.HEADER_MQ, val);
-}
+};
 Message.prototype.getMqReply = function(){
     return this.getHeadOrParam(Message.HEADER_MQ_REPLY);
-} 
+};
 Message.prototype.setMqReply = function(val){
 	this.setHead(Message.HEADER_MQ_REPLY, val);
-}
+};
 Message.prototype.getMsgId = function(){
     return this.getHeadOrParam(Message.HEADER_MSGID);
-} 
+};
 Message.prototype.setMsgId = function(val){
 	this.setHead(Message.HEADER_MSGID, val);
-}
+};
 Message.prototype.getMsgIdRaw = function(){
     return this.getHeadOrParam(Message.HEADER_MSGID_RAW);
-} 
+};
 Message.prototype.setMsgIdRaw = function(val){
 	this.setHead(Message.HEADER_MSGID_RAW, val);
-}
+};
 Message.prototype.getToken = function(){
     return this.getHeadOrParam(Message.HEADER_TOKEN);
-} 
+};
 Message.prototype.setToken = function(val){
 	this.setHead(Message.HEADER_TOKEN, val);
-}
+};
 Message.prototype.getTopic = function(){
     return this.getHeadOrParam(Message.HEADER_TOPIC);
-} 
+};
 Message.prototype.setTopic = function(val){
 	this.setHead(Message.HEADER_TOPIC, val);
-}
+};
 Message.prototype.getEncoding = function(){
     return this.getHeadOrParam(Message.HEADER_ENCODING);
-} 
+};
 Message.prototype.setEncoding = function(val){
 	this.setHead(Message.HEADER_ENCODING, val);
-}
+};
 Message.prototype.isAck = function(){
     var ack = this.getHeadOrParam(Message.HEADER_ACK);
     if(!ack) return true;//default to true
     return ack == '1';
-} 
+};
 Message.prototype.setAck = function(val){
 	this.setHead(Message.HEADER_ACK, val);
-}
-
+};
 Message.prototype.getCommand = function(){
     return this.meta.command;
-} 
+};
 Message.prototype.setCommand = function(val){
 	this.meta.status = null;
 	this.meta.command = val;
-}
+};
 Message.prototype.getStatus = function(){
     return this.meta.status;
-} 
+};
 Message.prototype.setStatus = function(val){
 	this.meta.command = null;
 	this.meta.status = val;
-}
+};
 Message.prototype.setBody = function(val){
 	if(!Buffer.isBuffer(val)){
 		val = new Buffer(val);
 	}
 	this.body = val;
 	this.setHead('content-length', this.body.length);
-}
-
+};
+Message.prototype.setBodyFormat = function(format){
+    var args = Array.prototype.slice.call(arguments, 1);
+    var body = format.replace(/{(\d+)}/g, function(match, number) {
+        return typeof args[number] != 'undefined'
+            ? args[number]
+            : match
+            ;
+    });
+    this.setBody(body);
+};
 Message.prototype.encode = function(){
 	var iobuf = new IoBuffer();
 	iobuf.put(util.format("%s\r\n", this.meta.toString()));
@@ -330,7 +330,7 @@ Message.prototype.encode = function(){
 	} 
 	iobuf.flip();
 	return iobuf;
-}
+};
 Message.findHeaderEnd = function(iobuf){
 	var i = iobuf.position;
 	var data = iobuf.data;
@@ -364,7 +364,7 @@ Message.decodeHeaders = function( headerStr ){
 		msg.setHead(key, val);
 	}
 	return msg;
-}
+};
 
 Message.decode = function(iobuf){
 	var headerIdx = Message.findHeaderEnd(iobuf); 
@@ -388,15 +388,35 @@ Message.decode = function(iobuf){
 	msg.body = iobuf.data.slice(iobuf.position, iobuf.position+bodyLen);
 	iobuf.drain(bodyLen);
 	return msg;
+};
+
+
+function RemotingClient(address){
+    var p = address.indexOf(':');
+    if(p == -1){
+        this.serverHost = address.trim();
+        this.serverPort = 15555;
+    } else {
+        this.serverHost = address.substring(0, p).trim();
+        this.serverPort = parseInt(address.substring(p+1).trim());
+    }
+    this.readTimeout = 3000;
+    this.connectTimeout = 3000;
+
+    this.msgCallback = undefined;
+    this.connectCallback = undefined;
+    this.errorCallback = undefined;
+
 }
 
+RemotingClient.prototype.connect = function(){
 
+};
 var msg = new Message();
 msg.setCommand("produce");
 msg.setMq("MyMQ");
 msg.setTopic("qhee");
-msg.setBody("hello world");
+msg.setBodyFormat("hello world from node.js, {0}", new Date().getTime());
 
-var iobuf = msg.encode();
-console.log(iobuf.data.toString("utf8", 0, iobuf.limit));
-
+var client = new RemotingClient("127.0.0.1:15555");
+console.log(client);
