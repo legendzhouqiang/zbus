@@ -14,6 +14,9 @@ function hashSize(obj) {
 };
 //=================IoBuffer,类似Java NIO ByteBuffer===============
 function IoBuffer(capacity){
+	if(capacity == undefined){
+		capacity = 512;
+	}
 	this.capacity = capacity;
 	this.data = new Buffer(capacity);
 	this.position = 0;
@@ -47,6 +50,42 @@ IoBuffer.prototype.newLimit = function(newLimit){
 	if(this.position > this.limit) this.position = this.limit;
 	if(this.mark > this.limit) this.mark = -1;
 }
+
+IoBuffer.prototype.autoExpand = function(need){
+	var newCap = this.capacity;
+	var newSize = this.position + need;
+	while(newSize > newCap){
+		newCap *= 2;
+	}
+	if(newCap == this.capacity) return;
+	var newData = new Buffer(newCap);
+	this.data.copy(newData, 0, 0, this.position);
+	this.data = newData;
+	this.capacity = newCap;
+	this.limit = newCap;
+}
+IoBuffer.prototype.drain = function(n){
+	if(n<=0) return;
+	var newPos = this.position + n;
+	if(newPos > this.limit){
+		newPos = this.limit;
+	}
+	this.position = newPos;
+}
+IoBuffer.prototype.put = function(val){
+	var len = val.length;
+	this.autoExpand(len);
+	if(Buffer.isBuffer(val)){
+		val.copy(this.data, this.position, 0, len);
+	} else {
+		this.data.write(val, this.position, len);
+	} 
+	this.position += len;
+}
+
+
+
+
 
 
 //===================HTTP头部第一行解释,Meta=======================
@@ -268,20 +307,43 @@ Message.prototype.setBody = function(val){
 }
 
 Message.prototype.encode = function(){
-	var res = util.format("%s\r\n", this.meta.toString());
+	var buf = new IoBuffer();
+	buf.put(util.format("%s\r\n", this.meta.toString()));
+	for(var key in this.head){
+		buf.put(util.format("%s: %s\r\n", key, this.head[key]));
+	} 
 	var bodyLen = 0;
 	if(this.body){
 		bodyLen = this.body.length;
 	} 
+	var lenKey = "content-length"; 
+	if(!(lenKey in this.head)){
+		buf.put(util.format("%s: %d\r\n", lenKey, bodyLen));
+	}
+	if(bodyLen > 0){
+		buf.put("\r\n");
+		buf.put(this.body);
+	} 
+	buf.flip();
+	return buf;
+}
+
+Message.decode = function(iobuf){
+	
 }
 
 
 var msg = new Message();
 msg.setCommand("produce");
 msg.setStatus("200");
-msg.setBody("hong");
-console.log(msg);
+msg.setMq("MyMQ");
+msg.setTopic("qhee");
+msg.setBody("hello world");
 
+var buf = msg.encode();
+console.log(msg);
+console.log(buf); 
+console.log(buf.data.toString("utf8", 0, buf.limit));
 
 
 
