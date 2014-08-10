@@ -101,7 +101,7 @@ public class ZbusServer extends RemotingServer {
 			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				String mqReply = msg.getMqReply();
-				if(mqReply == null || mqReply.equals("")){
+				if(mqReply == null ||  mqReply.equals("")){
 					msg.setMqReply(sess.id()); //reply default to self
 				}   
 				msg.setHead(Message.HEADER_CLIENT, sess.getRemoteAddress());

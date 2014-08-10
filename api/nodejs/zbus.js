@@ -1,4 +1,5 @@
 var util = require("util");
+var Events = require('events');
 var Buffer = require("buffer").Buffer;
 var Socket = require("net");
 
@@ -359,6 +360,19 @@ Message.prototype.setBodyFormat = function(format){
     });
     this.setBody(body);
 };
+
+Message.prototype.isStatus200 = function(){
+    return "200" == this.getStatus();
+};
+Message.prototype.isStatus404 = function(){
+    return "404" == this.getStatus();
+};
+Message.prototype.isStatus500 = function(){
+    return "500" == this.getStatus();
+};
+
+
+
 Message.prototype.encode = function(){
 	var iobuf = new IoBuffer();
 	iobuf.put(util.format("%s\r\n", this.meta.toString()));
@@ -373,13 +387,19 @@ Message.prototype.encode = function(){
 	if(!(lenKey in this.head)){
 		iobuf.put(util.format("%s: %s\r\n", lenKey, bodyLen));
 	}
+    iobuf.put("\r\n");
 	if(bodyLen > 0){
-		iobuf.put("\r\n");
 		iobuf.put(this.body);
 	} 
 	iobuf.flip();
 	return iobuf;
 };
+Message.prototype.toString = function(){
+    var iobuf = this.encode();
+    var buf = iobuf.remainingBuf();
+    return buf.toString();
+};
+
 Message.findHeaderEnd = function(iobuf){
 	var i = iobuf.position;
 	var data = iobuf.data;
@@ -448,6 +468,7 @@ function Ticket(reqMsg, callback){
 }
 
 function RemotingClient(address){
+    Events.EventEmitter.call(this);
     var p = address.indexOf(':');
     if(p == -1){
         this.serverHost = address.trim();
@@ -459,10 +480,10 @@ function RemotingClient(address){
     this.autoReconnect = true;
     this.reconnectInterval = 3000;
     this.socket = null;
-    this.resultTable = {};
     this.ticketTable = {};
     this.readBuf = new IoBuffer();
 }
+util.inherits(RemotingClient, Events.EventEmitter);
 
 RemotingClient.prototype.connect = function(connectedCallback){
     console.log("Trying to connect: "+this.serverHost+":"+this.serverPort);
@@ -490,6 +511,11 @@ RemotingClient.prototype.connect = function(connectedCallback){
                 client.connect(connectedCallback);
             }, client.reconnectInterval);
         }
+        client.emit("error", error);
+    });
+
+    client.on("error", function(error){
+        //ignore
     });
 
     this.socket.on("data", function(data){
@@ -522,25 +548,34 @@ RemotingClient.prototype.invoke = function(msg, callback){
         this.ticketTable[ticket.id] = ticket;
     }
     var iobuf = msg.encode();
-    this.socket.write(iobuf.remainingBuf());
+    var buf = iobuf.remainingBuf();
+    this.socket.write(buf);
 };
 
 ///////////////////////////////ZBUS////////////////////////////////
 function Proto(){}
-//生产消费者模式
 Proto.Produce     = "produce";     //生产消息
 Proto.Consume     = "consume";     //消费消息
-//请求回复模式: 1个生产消费队列 + n个临时回复队列
 Proto.Request     = "request";     //请求等待应答消息
-//心跳
-Proto.Heartbeat   = "heartbeat"; //心跳消息
-//管理类
-Proto.Admin       = "admin";      //管理类消息
+Proto.Heartbeat   = "heartbeat";   //心跳消息
+Proto.Admin       = "admin";       //管理类消息
 Proto.CreateMQ    = "create_mq";
 //TrackServer通讯
 Proto.TrackReport = "track_report";
 Proto.TrackSub    = "track_sub";
 Proto.TrackPub    = "track_pub";
+
+Proto.buildAdminMessage = function(registerToken, cmd, params){
+    var msg = new Message();
+    msg.setCommand(Proto.Admin);
+    msg.setToken(registerToken);
+    msg.setHead("cmd", cmd);
+    for(var key in params){
+        msg.setHead(key, params[key]);
+    }
+    return msg;
+};
+
 
 function MessageMode(){}
 MessageMode.MQ     = 1<<0;
@@ -557,26 +592,75 @@ function Producer(client, mq){
         this.mode |= args[i];
     }
 }
+Producer.prototype.setToken = function(token){
+    this.token = token;
+};
 
 Producer.prototype.send = function(msg, callback){
-    msg.setCommand(Proto.Produce)
+    msg.setCommand(Proto.Produce);
     msg.setMq(this.mq);
     msg.setToken(this.token);
     this.client.invoke(msg, callback);
 };
 
 
+function Consumer(client, mq){
+    this.client = client;
+    this.mq = mq;
+    this.accessToken = "";
+    this.registerToken = "";
+    this.mode = 0;
+    this.autoRegister = true;
 
-var client = new RemotingClient("127.0.0.1:15555");
-
-client.connect(function(){
-    var producer = new Producer(client, "MyMQ");
+    var args = Array.prototype.slice.call(arguments, 2);
+    for(var i in args){
+        this.mode |= args[i];
+    }
+}
+Consumer.prototype.recv = function(callback){
     var msg = new Message();
-    msg.setBody("hello from node.js");
-    producer.send(msg, function(res){
-        console.log(res);
+    msg.setCommand(Proto.Consume);
+    msg.setMq(this.mq);
+    msg.setToken(this.accessToken);
+
+    var consumer = this;
+    this.client.invoke(msg, function(res){
+        if(res.isStatus404() && consumer.autoRegister){
+            consumer.register(function(registerRes){
+                console.log(registerRes.toString());
+                consumer.recv(callback);
+            });
+            return;
+        }
+
+        try{
+            callback(res);
+        } catch (error){
+            console.log(error);
+        }
+        return consumer.recv(callback);
     });
-});
+};
 
+Consumer.prototype.setAccessToken = function(token){
+    this.accessToken = token;
+};
+Consumer.prototype.setRegisterToken = function(token){
+    this.registerToken = token;
+};
 
+Consumer.prototype.register = function(callback){
+    var params = {};
+    params["mq_name"] = this.mq;
+    params["access_token"] = this.accessToken;
+    params["mq_mode"] = ""+this.mode;
 
+    var msg = Proto.buildAdminMessage(this.registerToken, Proto.CreateMQ, params);
+    this.client.invoke(msg, callback);
+};
+
+exports.Message = Message;
+exports.RemotingClient = RemotingClient;
+exports.MessageMode = MessageMode;
+exports.Producer = Producer;
+exports.Consumer = Consumer;

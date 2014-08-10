@@ -12,14 +12,16 @@ public class ProducerWithClient {
 		
 		//2) 包装为生产者，client生命周期不受Producer控制，因此Producer是个轻量级对象
 		Producer producer = new Producer(client, "MyMQ");  
-		Message msg = new Message();  
-		msg.setBody("hello world"); 
-		producer.send(msg, new ResultCallback() { 
-			@Override
-			public void onCompleted(Message result) {  
-				System.out.println(result); 
-			}
-		});  
+		for(int i=0;i<100;i++){
+			Message msg = new Message();  
+			msg.setBody("hello world"); 
+			producer.send(msg, new ResultCallback() { 
+				@Override
+				public void onCompleted(Message result) {  
+					System.out.println(result); 
+				}
+			});  
+		}
 		//client.close();
 	} 
 }
