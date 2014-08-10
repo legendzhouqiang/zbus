@@ -3,7 +3,7 @@ var Events = require('events');
 var Buffer = require("buffer").Buffer;
 var Socket = require("net");
 
-////////////////////////////UTILS///////////////////////////////
+//============================基本工具函数=============================
 function hashSize(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -642,6 +642,16 @@ Consumer.prototype.recv = function(callback){
     });
 };
 
+Consumer.prototype.reply = function(msg){
+    var status = msg.getStatus();
+    if(!status){
+        status = "200"; //assume to be "OK"
+    }
+    msg.setHead(Message.HEADER_REPLY_CODE, status);
+    msg.setCommand(Proto.Produce);
+    msg.setAck(false);
+    this.client.invoke(msg);
+};
 Consumer.prototype.setAccessToken = function(token){
     this.accessToken = token;
 };
@@ -659,8 +669,83 @@ Consumer.prototype.register = function(callback){
     this.client.invoke(msg, callback);
 };
 
+function Rpc(client, mq){
+    this.client = client;
+    this.mq = mq;
+    this.token = "";
+}
+Rpc.prototype.invoke = function(msg, callback){
+    msg.setCommand(Proto.Request);
+    msg.setMq(this.mq);
+    msg.setToken(this.token);
+    this.client.invoke(msg, callback);
+};
+Rpc.prototype.setToken = function(token){
+    this.token = token;
+};
+
+function JsonRpc(client, mq){
+    Rpc.call(this, client, mq);
+    this.module = "";
+    this.encoding = "utf-8";
+}
+util.inherits(JsonRpc, Rpc);
+JsonRpc.prototype.setModule = function(module){
+    this.module = module;
+};
+JsonRpc.prototype.setEncoding = function(encoding){
+    this.encoding = encoding;
+};
+
+JsonRpc.prototype.invoke = function(jsonReq, callback){
+    if(!jsonReq.module){
+        jsonReq.module = this.module;
+    }
+    var msg = new Message();
+    msg.setBody(JSON.stringify(jsonReq));
+    Rpc.prototype.invoke.call(this, msg, callback);
+};
+
+
+
+function RpcService(client, mq){
+    this.client = client;
+    this.mq = mq;
+    this.accessToken = "";
+    this.registerToken = "";
+}
+RpcService.prototype.setAccessToken = function(token){
+    this.accessToken = token;
+};
+RpcService.prototype.setRegisterToken = function(token){
+    this.registerToken = token;
+};
+
+RpcService.prototype.serve = function(handler){
+    var consumer = new Consumer(this.client, this.mq);
+    consumer.setAccessToken(this.accessToken);
+    consumer.setRegisterToken(this.registerToken);
+
+    consumer.recv(function(msg){
+        console.log(msg);
+        var mqReply = msg.getMqReply();
+        var msgId = msg.getMsgIdRaw();
+        var res = handler(msg);
+        if(res){
+            res.setMq(mqReply);
+            res.setMsgId(msgId);
+            consumer.reply(res);
+        }
+    });
+};
+
+
+
 exports.Message = Message;
 exports.RemotingClient = RemotingClient;
 exports.MessageMode = MessageMode;
 exports.Producer = Producer;
 exports.Consumer = Consumer;
+exports.Rpc = Rpc;
+exports.JsonRpc = JsonRpc;
+exports.RpcService = RpcService;
