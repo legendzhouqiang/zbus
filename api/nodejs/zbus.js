@@ -1,10 +1,8 @@
 var util = require("util");
 var Buffer = require("buffer").Buffer;
+var Socket = require("net");
 
 ////////////////////////////UTILS///////////////////////////////
-function stringEndsWith(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-}
 function hashSize(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -12,17 +10,44 @@ function hashSize(obj) {
     }
     return size;
 }
+function uuid(){
+    //http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+}
+
 //=================IoBuffer,类似Java NIO ByteBuffer===============
-function IoBuffer(capacity){
+function IoBuffer(capacity, buf){
 	if(capacity == undefined){
 		capacity = 512;
 	}
 	this.capacity = capacity;
-	this.data = new Buffer(capacity);
+    if(buf === undefined){
+        this.data = new Buffer(capacity);
+    } else {
+        if(!Buffer.isBuffer(buf)){
+            throw new TypeError("buf should be Node.JS Buffer type")
+        }
+        if(buf.length != this.capacity){
+            throw new RangeError("capacity should be same as buf")
+        }
+        this.data = buf;
+    }
+
 	this.position = 0;
 	this.limit = capacity;
 	this.mark = -1;
-} 
+}
+
+IoBuffer.prototype.duplicate = function(){
+    var dup = new IoBuffer(this.capacity, this.data);
+    dup.position = this.position;
+    dup.limit = this.limit;
+    dup.mark = this.mark;
+    return dup;
+};
 IoBuffer.prototype.mark = function(){
 	this.mark = this.position;
 };
@@ -86,6 +111,19 @@ IoBuffer.prototype.put = function(val){
 	} 
 	this.position += len;
 };
+
+IoBuffer.prototype.move = function(n){
+    if(n > this.position){
+        throw new RangeError("move back range exceed position");
+    }
+    this.data.copy(this.data, 0, n, this.position);
+    this.position -= n;
+};
+
+
+IoBuffer.prototype.remainingBuf = function(){
+    return this.data.slice(this.position, this.limit);
+}
 
 
 
@@ -160,8 +198,9 @@ Meta.prototype.encodeCommand = function(){
 		for(var key in this.params){
 			res += util.format("%s=%s&", key, this.params[key]);
 		}
-		if(stringEndsWith(res, "&")){
-			res = res.substring(0, res.length-1);
+
+        if(res.charAt(res.length - 1) == '&'){
+            res = res.substring(0, res.length-1);
 		}
 	}
 	return res;
@@ -169,7 +208,7 @@ Meta.prototype.encodeCommand = function(){
 Meta.prototype.decodeCommand = function(cmdStr){
 	var idx = cmdStr.indexOf("?");
 	if(idx<0){
-		this.commond = cmdStr;
+		this.command = cmdStr;
 	} else {
 		this.command = cmdStr.substring(0, idx);
 	}
@@ -293,6 +332,16 @@ Message.prototype.setStatus = function(val){
 	this.meta.command = null;
 	this.meta.status = val;
 };
+Message.prototype.getBodyString = function(){
+    if(!this.body) return null;
+    return this.body.toString();
+};
+
+Message.prototype.getBody = function(){
+    if(!this.body) return null;
+    return this.body;
+};
+
 Message.prototype.setBody = function(val){
 	if(!Buffer.isBuffer(val)){
 		val = new Buffer(val);
@@ -390,6 +439,13 @@ Message.decode = function(iobuf){
 	return msg;
 };
 
+function Ticket(reqMsg, callback){
+    this.id = uuid();
+    this.request = reqMsg;
+    this.response = null;
+    this.callback = callback;
+    reqMsg.setMsgId(this.id);
+}
 
 function RemotingClient(address){
     var p = address.indexOf(':');
@@ -400,23 +456,127 @@ function RemotingClient(address){
         this.serverHost = address.substring(0, p).trim();
         this.serverPort = parseInt(address.substring(p+1).trim());
     }
-    this.readTimeout = 3000;
-    this.connectTimeout = 3000;
-
-    this.msgCallback = undefined;
-    this.connectCallback = undefined;
-    this.errorCallback = undefined;
-
+    this.autoReconnect = true;
+    this.reconnectInterval = 3000;
+    this.socket = null;
+    this.resultTable = {};
+    this.ticketTable = {};
+    this.readBuf = new IoBuffer();
 }
 
-RemotingClient.prototype.connect = function(){
+RemotingClient.prototype.connect = function(connectedCallback){
+    console.log("Trying to connect: "+this.serverHost+":"+this.serverPort);
+    this.socket = Socket.connect({host: this.serverHost, port: this.serverPort});
+    var clientReadBuf = this.readBuf;
+    var clientTicketTable = this.ticketTable;
 
+    var client = this;
+    this.socket.on("connect", function(){
+        console.log("RemotingClient connected: "+client.serverHost+":"+client.serverPort);
+        connectedCallback();
+        client.heartbeatInterval = setInterval(function(){
+            var msg = new Message();
+            msg.setCommand(Message.HEARTBEAT);
+            client.invoke(msg);
+        },10*1000);
+    });
+
+    this.socket.on("error", function(error){
+        clearInterval(client.heartbeatInterval);
+        client.socket.destroy();
+        client.socket = null;
+        if(client.autoReconnect){
+            setTimeout(function(){
+                client.connect(connectedCallback);
+            }, client.reconnectInterval);
+        }
+    });
+
+    this.socket.on("data", function(data){
+        clientReadBuf.put(data);
+        var tempBuf = clientReadBuf.duplicate();
+        tempBuf.flip();
+
+        while(true){
+            var msg = Message.decode(tempBuf);
+            if(msg == null) break;
+            var msgid = msg.getMsgId();
+            var ticket = clientTicketTable[msgid];
+            if(ticket){
+                ticket.response = msg;
+                if(ticket.callback){
+                    ticket.callback(msg);
+                }
+                delete clientTicketTable[msgid];
+            }
+        }
+        if(tempBuf.position > 0){
+            clientReadBuf.move(tempBuf.position);
+        }
+    });
 };
-var msg = new Message();
-msg.setCommand("produce");
-msg.setMq("MyMQ");
-msg.setTopic("qhee");
-msg.setBodyFormat("hello world from node.js, {0}", new Date().getTime());
+
+RemotingClient.prototype.invoke = function(msg, callback){
+    if(callback){
+        var ticket = new Ticket(msg, callback);
+        this.ticketTable[ticket.id] = ticket;
+    }
+    var iobuf = msg.encode();
+    this.socket.write(iobuf.remainingBuf());
+};
+
+///////////////////////////////ZBUS////////////////////////////////
+function Proto(){}
+//生产消费者模式
+Proto.Produce     = "produce";     //生产消息
+Proto.Consume     = "consume";     //消费消息
+//请求回复模式: 1个生产消费队列 + n个临时回复队列
+Proto.Request     = "request";     //请求等待应答消息
+//心跳
+Proto.Heartbeat   = "heartbeat"; //心跳消息
+//管理类
+Proto.Admin       = "admin";      //管理类消息
+Proto.CreateMQ    = "create_mq";
+//TrackServer通讯
+Proto.TrackReport = "track_report";
+Proto.TrackSub    = "track_sub";
+Proto.TrackPub    = "track_pub";
+
+function MessageMode(){}
+MessageMode.MQ     = 1<<0;
+MessageMode.PubSub = 1<<1;
+MessageMode.Temp   = 1<<2;
+
+function Producer(client, mq){
+    this.client = client;
+    this.mq = mq;
+    this.token = "";
+    this.mode = 0;
+    var args = Array.prototype.slice.call(arguments, 2);
+    for(var i in args){
+        this.mode |= args[i];
+    }
+}
+
+Producer.prototype.send = function(msg, callback){
+    msg.setCommand(Proto.Produce)
+    msg.setMq(this.mq);
+    msg.setToken(this.token);
+    this.client.invoke(msg, callback);
+};
+
+
 
 var client = new RemotingClient("127.0.0.1:15555");
-console.log(client);
+
+client.connect(function(){
+    var producer = new Producer(client, "MyMQ");
+    var msg = new Message();
+    msg.setBody("hello from node.js");
+    producer.send(msg, function(res){
+        console.log(res);
+    });
+});
+
+
+
