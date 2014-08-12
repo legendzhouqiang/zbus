@@ -11,7 +11,8 @@ import org.logging.LoggerFactory;
  
 public class RemotingServer {  
 	private static final Logger log = LoggerFactory.getLogger(RemotingServer.class);
-	protected final ServerDispachterManager dispatcherManager;   
+	protected final ServerDispachterManager dispatcherManager;  
+	protected boolean ownDispachterManager = false;
 	private static volatile ServerDispachterManager defaultDispactherManager = null; 
 	
 	static ServerDispachterManager getDefaultDispatcherManager(){
@@ -47,7 +48,7 @@ public class RemotingServer {
 	}
 	
 	public RemotingServer(int serverPort){
-		this("0.0.0.0", serverPort, getDefaultDispatcherManager());
+		this("0.0.0.0", serverPort, getDefaultDispatcherManager()); 
 	}
 	
     public RemotingServer(String serverHost, int serverPort, ServerDispachterManager dispatcherManager) { 
@@ -86,6 +87,12 @@ public class RemotingServer {
     	channel.bind(new InetSocketAddress(this.serverHost, this.serverPort)); 
     	dispatcherManager.getDispatcher(0).registerChannel(channel, SelectionKey.OP_ACCEPT); 
     	log.info("%s serving@%s:%s", this.serverName, this.serverHost, this.serverPort);
+    }
+    
+    public void close(){
+    	if(this.ownDispachterManager){
+    		this.dispatcherManager.stop();
+    	}
     }
 
 	public String getServerName() {

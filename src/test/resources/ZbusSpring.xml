@@ -1,0 +1,17 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	
+	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+ 
+	<bean id="serviceInterface" class="org.zbus.spring.ServiceImpl"></bean>
+	<bean id="example" class="org.zbus.rpc.json.SpringIocObjectExample"></bean>
+	
+	<bean id="jsonrpcConfig" class="org.zbus.client.rpc.RpcServiceConfig">
+		<property name="broker" value="127.0.0.1:15555" />
+		<property name="serviceName" value="MyJsonRpc" />
+		<property name="threadCount" value="4" />
+	</bean>
+	
+</beans>

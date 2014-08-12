@@ -1,11 +1,24 @@
-package org.zbus.rpc.json;
+package org.zbus.spring;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.zbus.client.rpc.Remote;
+import org.zbus.rpc.json.SpringIocObjectExample;
 
 public class ServiceImpl implements ServiceInterface {
 	
+	
+	@Autowired
+	SpringIocObjectExample example;
+	
+	
+	
+	public void setExample(SpringIocObjectExample example) {
+		this.example = example;
+	}
+
 	@Remote
-	public String echo(String ping) {  
+	public String echo(String ping) { 
+		System.out.println(example);
 		return ping;
 	}
 	

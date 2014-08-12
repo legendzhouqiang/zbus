@@ -7,6 +7,7 @@ import org.zbus.client.rpc.json.JsonServiceHandler;
  
 public class JsonServiceWithClient {
 	public static void main(String[] args) throws Exception {
+		
 		//采用JSON格式处理
 		JsonServiceHandler handler = new JsonServiceHandler(); 
 		//增加模块，模块名在调用时需要指定

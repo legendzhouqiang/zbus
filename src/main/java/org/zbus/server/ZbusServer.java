@@ -62,6 +62,7 @@ public class ZbusServer extends RemotingServer {
 	
 	public ZbusServer(String serverHost, int serverPort) throws IOException {
 		super(serverHost, serverPort, new ZbusServerDispachterManager()); 
+		this.ownDispachterManager = true; 
 		
 		ZbusServerEventAdaptor eventHandler = (ZbusServerEventAdaptor) this.serverHandler;
 		eventHandler.setMqTable(mqTable);
@@ -334,6 +335,13 @@ public class ZbusServer extends RemotingServer {
 		this.trackInterval = trackInterval;
 	}
 
+	public void close(){
+		this.trackReportTimer.cancel();
+		for(RemotingClient client : this.trackClients){
+			client.close();
+		}  
+		super.close();
+	}
 	
 	
 	public static void main(String[] args) throws Exception{
@@ -346,7 +354,7 @@ public class ZbusServer extends RemotingServer {
 		ZbusServer zbus = new ZbusServer(serverPort); 
 		zbus.setAdminToken(adminToken);
 		zbus.setupTrackServer(trackServerAddr); 
-		zbus.start(); 
+		zbus.start();  
 	} 
 	 
 }
