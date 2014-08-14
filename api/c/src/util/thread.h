@@ -84,9 +84,7 @@ struct sigaction {
 	__p_sig_fn_t sa_sigaction;
 };
 
-int sigaction(int sig, struct sigaction *in, struct sigaction *out);
-
-
+ZBOX_EXPORT int sigaction(int sig, struct sigaction *in, struct sigaction *out);
 
 #define pthread_mutex_t CRITICAL_SECTION
 #define pthread_attr_t ssize_t
@@ -104,10 +102,10 @@ int sigaction(int sig, struct sigaction *in, struct sigaction *out);
 
 #define pthread_t u_int
 
-int pthread_create(pthread_t *thread, const void *unused,
+ZBOX_EXPORT int pthread_create(pthread_t *thread, const void *unused,
 				   void *(*start_routine)(void*), void *arg);
 
-pthread_t pthread_self(void);
+ZBOX_EXPORT pthread_t pthread_self(void);
 
 typedef struct {
 	CRITICAL_SECTION waiters_lock;
@@ -117,16 +115,16 @@ typedef struct {
 	HANDLE continue_broadcast;
 } pthread_cond_t;
 
-int pthread_cond_init(pthread_cond_t *cond, const void *unused);
-int pthread_cond_destroy(pthread_cond_t *cond);
-int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-int pthread_cond_signal(pthread_cond_t *cond); 
-int pthread_cond_broadcast(pthread_cond_t *cond);
+ZBOX_EXPORT int pthread_cond_init(pthread_cond_t *cond, const void *unused);
+ZBOX_EXPORT int pthread_cond_destroy(pthread_cond_t *cond);
+ZBOX_EXPORT int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
+ZBOX_EXPORT int pthread_cond_signal(pthread_cond_t *cond); 
+ZBOX_EXPORT int pthread_cond_broadcast(pthread_cond_t *cond);
 
-int pthread_detach (pthread_t thread);
-int pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
-void pthread_exit(void *value_ptr); 
-int  pthread_join(pthread_t* thread, void **retval);
+ZBOX_EXPORT int  pthread_detach (pthread_t thread);
+ZBOX_EXPORT int  pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
+ZBOX_EXPORT void pthread_exit(void *value_ptr); 
+ZBOX_EXPORT int  pthread_join(pthread_t* thread, void **retval);
 
 
 #ifndef siginfo_t

@@ -43,6 +43,7 @@ public abstract class AbstractMQ {
 	public abstract void consume(Message msg, Session sess) throws IOException;
 	
 	abstract void doDispatch() throws IOException;
+	public abstract void cleanSession();
 	void dispatch(){
 		executor.submit(new Runnable() {
 			@Override

@@ -31,6 +31,16 @@ public class MQ extends AbstractMQ {
 		this.dispatch();
 	} 
 	
+	public void cleanSession(){
+		Iterator<PullSession> iter = sessQ.iterator();
+		while(iter.hasNext()){
+			PullSession ps = iter.next();
+			if(!ps.session.isActive()){
+				iter.remove();
+			}
+		}
+	}
+	
 	@Override
 	void doDispatch() throws IOException{ 
 		while(msgQ.peek() != null && sessQ.peek() != null){

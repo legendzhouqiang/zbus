@@ -351,14 +351,13 @@ typedef char  bool;
 #if !defined(mode_t)
 	#define mode_t long
 #endif
-
-
-#if defined (__WINDOWS__) 
+ 
+#if defined (__WINDOWS__)    
 #   if defined(DLL_EXPORT)
 #       define ZBOX_EXPORT __declspec(dllexport)
 #   else
 #       define ZBOX_EXPORT __declspec(dllimport)
-#   endif
+#   endif  
 #else
 #   define ZBOX_EXPORT
 #endif

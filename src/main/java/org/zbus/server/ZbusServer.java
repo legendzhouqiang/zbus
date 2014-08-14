@@ -4,10 +4,12 @@ package org.zbus.server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -39,9 +41,12 @@ public class ZbusServer extends RemotingServer {
 	private String adminToken = ""; 
 	private long trackDelay = 1000;
 	private long trackInterval = 3000;
+	private long mqCleanDelay = 1000;
+	private long mqCleanInterval = 3000;
 	 
 	private AdminHandler adminHandler;
 	private final Timer trackReportTimer = new Timer("TrackReportTimer", true); 
+	private final Timer mqSessionCleanTimer = new Timer("MqSessionCleanTimer", true); 
 	private final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
 	
 	
@@ -70,6 +75,19 @@ public class ZbusServer extends RemotingServer {
 		this.serverName = "ZbusServer";
     	this.adminHandler = new AdminHandler();
     	this.adminHandler.setAdminToken(this.adminToken);
+    	
+    	this.mqSessionCleanTimer.scheduleAtFixedRate(new TimerTask() { 
+			@Override
+			public void run() {  
+				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
+		    	while(iter.hasNext()){
+		    		Entry<String, AbstractMQ> e = iter.next();
+		    		AbstractMQ mq = e.getValue(); 
+		    		mq.cleanSession();
+		    	}
+				
+			}
+		}, mqCleanDelay, mqCleanInterval);
 	}  
 	 
 	private AbstractMQ findMQ(Message msg, Session sess) throws IOException{
@@ -337,6 +355,7 @@ public class ZbusServer extends RemotingServer {
 
 	public void close(){
 		this.trackReportTimer.cancel();
+		this.mqSessionCleanTimer.cancel();
 		for(RemotingClient client : this.trackClients){
 			client.close();
 		}  

@@ -145,7 +145,7 @@ meta_t* meta_parse(char* meta){
 	
 	meta_tok = strdup(meta);
 	method = strtok_r(meta_tok, SPLIT_CHARS, &tok_reserved);
-	if(!is_http_method(method)){ //��Ӧ��ݰ�
+	if(!is_http_method(method)){ 
 		status = strtok_r(NULL,SPLIT_CHARS, &tok_reserved);
 		if(!status){
 			perror("invalid meta, missing status");
@@ -153,8 +153,8 @@ meta_t* meta_parse(char* meta){
 			self->status = strdup(status);
 		}
 		goto DONE;
-	} 
-	//������ݰ�
+	}  
+	
 	free(self->method);
 	self->method = strdup(method);
 	
@@ -324,6 +324,12 @@ char* msg_copy_body(msg_t* self){
 	memcpy(res, self->body, self->body_len);
 	res[self->body_len] = '\0';
 	return res;
+}
+void* msg_get_body(msg_t* self){
+	return self->body;
+}
+int msg_get_body_len(msg_t* self){
+	return self->body_len;
 }
 
 ///////////////////////////////////////////////////////////////////

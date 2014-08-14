@@ -40,6 +40,8 @@ ZBOX_EXPORT void  msg_set_body_nocopy(msg_t* self, void* body, int len);
 ZBOX_EXPORT void  msg_set_body_copy(msg_t* self, void* body, int len);
 ZBOX_EXPORT void  msg_set_bodyfmt(msg_t* self, const char* format, ...);
 ZBOX_EXPORT void  msg_set_body(msg_t* self, char* body);
+ZBOX_EXPORT void* msg_get_body(msg_t* self);
+ZBOX_EXPORT int   msg_get_body_len(msg_t* self);
 ZBOX_EXPORT char* msg_get_command(msg_t* self);
 ZBOX_EXPORT void  msg_set_command(msg_t* self, char* value);
 ZBOX_EXPORT char* msg_get_status(msg_t* self);

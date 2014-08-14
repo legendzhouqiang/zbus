@@ -37,6 +37,17 @@ public class PubSub extends AbstractMQ {
 	} 
 	
 	@Override
+	public void cleanSession() { 
+		Iterator<Entry<String, PullSession>> iter = sessMap.entrySet().iterator();
+		while(iter.hasNext()){
+			PullSession ps = iter.next().getValue();
+			if(!ps.session.isActive()){
+				iter.remove();
+			}
+		}
+	}
+	
+	@Override
 	void doDispatch() throws IOException{ 
 		Message msg = null;
 		while((msg = msgQ.poll()) != null){
