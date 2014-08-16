@@ -1,9 +1,9 @@
 package org.zbus.sendreply;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.Consumer;
 import org.zbus.client.rpc.json.JsonHelper;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 import com.alibaba.fastjson.JSONObject;
 

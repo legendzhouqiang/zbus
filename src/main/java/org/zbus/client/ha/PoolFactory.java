@@ -1,7 +1,7 @@
 package org.zbus.client.ha;
 
-import org.remoting.ClientDispachterManager;
 import org.zbus.client.ClientPool;
+import org.zbus.remoting.ClientDispachterManager;
 
 public class PoolFactory{
 	public static final boolean IS_COMMONS_POOL2_AVAILABLE;  

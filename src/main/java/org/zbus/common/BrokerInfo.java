@@ -3,8 +3,8 @@ package org.zbus.common;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONObject;
-import org.json.parser.JSONParser;
+import org.zbus.json.JSONObject;
+import org.zbus.json.parser.JSONParser;
 
 public class BrokerInfo{
 	long lastUpdatedTime = System.currentTimeMillis();

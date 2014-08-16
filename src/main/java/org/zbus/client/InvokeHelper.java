@@ -3,11 +3,11 @@ package org.zbus.client;
 import java.io.IOException;
 import java.util.List;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.Message;
-import org.remoting.RemotingClient;
-import org.remoting.ticket.ResultCallback;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class InvokeHelper { 
 	private static final Logger log = LoggerFactory.getLogger(InvokeHelper.class); 

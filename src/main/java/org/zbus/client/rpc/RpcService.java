@@ -2,12 +2,12 @@ package org.zbus.client.rpc;
 
 import java.io.IOException;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.ClientDispachterManager;
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.Consumer;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 class WorkerThread extends Thread{
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);

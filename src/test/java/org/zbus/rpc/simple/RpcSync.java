@@ -1,8 +1,8 @@
 package org.zbus.rpc.simple;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.rpc.Rpc;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 public class RpcSync {
 

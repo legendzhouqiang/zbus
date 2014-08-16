@@ -1,9 +1,9 @@
 package org.zbus;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
-import org.remoting.ticket.ResultCallback;
 import org.zbus.client.Producer; 
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class ProducerWithClient {
 	public static void main(String[] args) throws Exception {   

@@ -8,11 +8,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.remoting.Message;
 import org.zbus.common.ConsumerInfo;
-import org.znet.Session;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.znet.Session;
 
-public class MQ extends AbstractMQ {  
+public class MQ extends AbstractMQ {   
+	private static final long serialVersionUID = -1610052009303680593L;
+	
 	final BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
 	
 	public MQ(String name, ExecutorService executor, int mode){

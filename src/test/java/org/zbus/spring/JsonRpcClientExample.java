@@ -1,7 +1,7 @@
 package org.zbus.spring;
 
-import org.remoting.RemotingClient;
 import org.zbus.client.rpc.json.JsonRpcProxy;
+import org.zbus.remoting.RemotingClient;
 
 
 public class JsonRpcClientExample {

@@ -1,9 +1,9 @@
 package org.zbus;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.Consumer;
 import org.zbus.common.MessageMode;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 public class SubWithClient {
 

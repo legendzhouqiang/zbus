@@ -2,9 +2,9 @@ package org.zbus;
 
 import java.io.IOException;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.Consumer; 
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 public class ConsumerWithClient { 
 	public static void main(String[] args) throws IOException{  

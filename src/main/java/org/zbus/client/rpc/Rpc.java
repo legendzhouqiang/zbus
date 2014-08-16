@@ -25,12 +25,12 @@ package org.zbus.client.rpc;
 
 import java.io.IOException;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
-import org.remoting.ticket.ResultCallback;
 import org.zbus.client.ClientPool;
 import org.zbus.client.InvokeHelper;
 import org.zbus.common.Proto;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class Rpc {  
 	protected ClientPool pool; 

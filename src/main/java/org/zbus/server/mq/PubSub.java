@@ -9,13 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.Message;
 import org.zbus.common.ConsumerInfo;
-import org.znet.Session;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.znet.Session;
 
-public class PubSub extends AbstractMQ {   
+public class PubSub extends AbstractMQ {    
+	private static final long serialVersionUID = -2208189626959936406L;
+
 	private static final Logger log = LoggerFactory.getLogger(PubSub.class);	
 	
 	//保留所有的订阅Session

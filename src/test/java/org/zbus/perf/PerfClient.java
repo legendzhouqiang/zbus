@@ -3,11 +3,11 @@ package org.zbus.perf;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.remoting.ClientDispachterManager;
-import org.remoting.Helper;
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.rpc.Rpc;
+import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.Helper;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 class RequestThread extends Thread{
 	final int count;

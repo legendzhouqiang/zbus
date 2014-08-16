@@ -1,8 +1,8 @@
 package org.zbus.client.ha;
 
-import org.remoting.ClientDispachterManager;
-import org.remoting.RemotingClient;
 import org.zbus.client.ClientBuilder;
+import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.RemotingClient;
  
  
 public class SimpleClientBuilder implements ClientBuilder{  

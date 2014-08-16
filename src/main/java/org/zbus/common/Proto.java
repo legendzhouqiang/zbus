@@ -2,7 +2,7 @@ package org.zbus.common;
 
 import java.util.Map;
 
-import org.remoting.Message;
+import org.zbus.remoting.Message;
 
 public class Proto {
 	//生产消费者模式

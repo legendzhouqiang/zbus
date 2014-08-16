@@ -1,6 +1,6 @@
 package org.zbus.client;
 
-import org.remoting.RemotingClient;
+import org.zbus.remoting.RemotingClient;
 
 public interface ClientBuilder{
 	RemotingClient createClientForMQ(String mq);

@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.remoting.Message;
-import org.remoting.MessageHandler;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.znet.Session;
 import org.zbus.server.mq.ReplyHelper;
-import org.znet.Session;
 
 
 public class AdminHandler implements MessageHandler {  

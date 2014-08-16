@@ -25,13 +25,13 @@ package org.zbus.client.rpc.json;
 
 import java.io.IOException;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.Message;
-import org.remoting.RemotingClient;
 import org.zbus.client.ClientPool;
 import org.zbus.client.ZbusException;
 import org.zbus.client.rpc.Rpc;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
 
 public class JsonRpc extends Rpc{  
 	private static final Logger log = LoggerFactory.getLogger(JsonRpc.class);

@@ -5,12 +5,12 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
-import org.remoting.Message;
-import org.remoting.MessageHandler;
-import org.remoting.ServerEventAdaptor;
 import org.zbus.common.MessageMode; 
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.ServerEventAdaptor;
+import org.zbus.remoting.znet.Session;
 import org.zbus.server.mq.AbstractMQ;
-import org.znet.Session;
 
 public class ZbusServerEventAdaptor extends ServerEventAdaptor{ 
 	private ConcurrentMap<String, AbstractMQ> mqTable = null;

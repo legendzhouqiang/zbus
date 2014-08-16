@@ -1,9 +1,9 @@
 package org.zbus.agent;
 
-import org.remoting.Message;
 import org.zbus.client.Consumer;
 import org.zbus.client.ha.AgentConfig;
 import org.zbus.client.ha.ClientAgent;
+import org.zbus.remoting.Message;
 
 
 

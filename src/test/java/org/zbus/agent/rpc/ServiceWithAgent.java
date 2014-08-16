@@ -1,12 +1,12 @@
 package org.zbus.agent.rpc;
 
-import org.remoting.Helper;
-import org.remoting.Message;
 import org.zbus.client.ha.ClientAgent;
 import org.zbus.client.ha.AgentConfig;
 import org.zbus.client.rpc.RpcService;
 import org.zbus.client.rpc.RpcServiceConfig;
 import org.zbus.client.rpc.ServiceHandler;
+import org.zbus.remoting.Helper;
+import org.zbus.remoting.Message;
 
 public class ServiceWithAgent {
 	

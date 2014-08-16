@@ -1,11 +1,11 @@
 package org.zbus.sendreply;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
-import org.remoting.ticket.ResultCallback;
 import org.zbus.client.Producer;
 import org.zbus.client.rpc.json.JsonHelper;
 import org.zbus.client.rpc.json.JsonRequest;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class JsonRpcSender {
 

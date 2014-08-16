@@ -10,9 +10,9 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.remoting.ClientDispachterManager;
-import org.remoting.RemotingClient;
 import org.zbus.client.ClientPool;
+import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.RemotingClient;
 
 public class CommonsClientPool implements ClientPool{
 	private final ObjectPool<RemotingClient> pool;

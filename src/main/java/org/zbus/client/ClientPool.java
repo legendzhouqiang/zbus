@@ -2,7 +2,7 @@ package org.zbus.client;
 
 import java.util.List;
 
-import org.remoting.RemotingClient;
+import org.zbus.remoting.RemotingClient;
 
 public interface ClientPool{
 	RemotingClient borrowClient(String mq) throws Exception;

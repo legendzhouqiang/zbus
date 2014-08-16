@@ -1,19 +1,22 @@
 package org.zbus.server.mq;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.Message;
 import org.zbus.common.BrokerMqInfo;
 import org.zbus.common.ConsumerInfo;
-import org.znet.Session;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.znet.Session;
 
-public abstract class AbstractMQ {  
+public abstract class AbstractMQ implements Serializable{  
+	private static final long serialVersionUID = 3408125142128217794L;
+
 	private static final Logger log = LoggerFactory.getLogger(AbstractMQ.class);
 	
 	protected final String name; 

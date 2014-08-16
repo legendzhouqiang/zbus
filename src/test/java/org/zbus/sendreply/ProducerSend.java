@@ -2,10 +2,10 @@ package org.zbus.sendreply;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.remoting.Message;
-import org.remoting.RemotingClient;
-import org.remoting.ticket.ResultCallback;
 import org.zbus.client.Producer;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 
 public class ProducerSend {

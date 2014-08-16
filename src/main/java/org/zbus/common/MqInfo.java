@@ -1,6 +1,6 @@
 package org.zbus.common;
 
-import org.json.JSONObject;
+import org.zbus.json.JSONObject;
 
 
 public class MqInfo {

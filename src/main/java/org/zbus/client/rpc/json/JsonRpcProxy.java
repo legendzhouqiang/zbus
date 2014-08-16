@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.logging.Logger;
-import org.logging.LoggerFactory;
-import org.remoting.RemotingClient;
 import org.zbus.client.ClientPool;
+import org.zbus.logging.Logger;
+import org.zbus.logging.LoggerFactory;
+import org.zbus.remoting.RemotingClient;
  
 
 public class JsonRpcProxy { //轻量级代理
