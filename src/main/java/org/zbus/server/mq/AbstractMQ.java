@@ -25,7 +25,7 @@ public abstract class AbstractMQ implements Serializable{
 	protected String accessToken = "";
 	protected final long mode;
 	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
-	protected final ExecutorService executor;
+	protected transient ExecutorService executor;
 	
 	public AbstractMQ(String name, ExecutorService executor, int mode){
 		this.name = name; 
@@ -93,6 +93,16 @@ public abstract class AbstractMQ implements Serializable{
 	public long getMode() {
 		return mode;
 	}
+	
+	
+
+	public ExecutorService getExecutor() {
+		return executor;
+	}
+
+	public void setExecutor(ExecutorService executor) {
+		this.executor = executor;
+	}
 
 	public BrokerMqInfo getMqInfo(){
 		BrokerMqInfo info = new BrokerMqInfo();
@@ -106,6 +116,7 @@ public abstract class AbstractMQ implements Serializable{
 	}
 	
 	public abstract List<ConsumerInfo> getConsumerInfoList();
+	public abstract void restoreFromDump(ExecutorService executor);
 
 	@Override
 	public String toString() {

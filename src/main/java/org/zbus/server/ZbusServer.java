@@ -31,6 +31,7 @@ import org.zbus.remoting.RemotingServer;
 import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.znet.Session;
 import org.zbus.server.mq.AbstractMQ;
+import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubSub;
 import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.MQ;
@@ -43,10 +44,14 @@ public class ZbusServer extends RemotingServer {
 	private long trackInterval = 3000;
 	private long mqCleanDelay = 1000;
 	private long mqCleanInterval = 3000;
+	private long mqPersistDelay = 3000;
+	private long mqPersistInterval = 10000;
+	private boolean loadMqFromDump = true;
 	 
 	private AdminHandler adminHandler;
 	private final Timer trackReportTimer = new Timer("TrackReportTimer", true); 
 	private final Timer mqSessionCleanTimer = new Timer("MqSessionCleanTimer", true); 
+	private final Timer mqPersistTimer = new Timer("MqPersistTimer", true);
 	private final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
 	
 	
@@ -58,7 +63,7 @@ public class ZbusServer extends RemotingServer {
 	
 	private final ConcurrentMap<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();  
 	
-	
+	private final MqStore mqStore = new MqStore(this.mqTable);
 	
 	
 	public ZbusServer(int serverPort) throws IOException {
@@ -76,6 +81,10 @@ public class ZbusServer extends RemotingServer {
     	this.adminHandler = new AdminHandler();
     	this.adminHandler.setAdminToken(this.adminToken);
     	
+    	if(loadMqFromDump){
+    		this.loadMqTableFromDump();
+    	}
+    	
     	this.mqSessionCleanTimer.scheduleAtFixedRate(new TimerTask() { 
 			@Override
 			public void run() {  
@@ -88,8 +97,26 @@ public class ZbusServer extends RemotingServer {
 				
 			}
 		}, mqCleanDelay, mqCleanInterval);
+    	
+    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
+			@Override
+			public void run() {   
+				mqStore.dump();
+			}
+		}, mqPersistDelay, mqPersistInterval);
 	}  
 	 
+	private void loadMqTableFromDump(){
+		ConcurrentMap<String, AbstractMQ> load = MqStore.load();
+		if(load == null) return;
+		Iterator<Entry<String, AbstractMQ>> iter = load.entrySet().iterator();
+		while(iter.hasNext()){
+			Entry<String, AbstractMQ> e = iter.next();
+			AbstractMQ mq = e.getValue();
+			mq.restoreFromDump(mqExecutor); 
+			this.mqTable.put(e.getKey(), mq);
+		}
+	}
 	private AbstractMQ findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
 		AbstractMQ mq = mqTable.get(mqName);

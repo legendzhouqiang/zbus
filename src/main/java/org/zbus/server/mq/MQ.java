@@ -15,7 +15,7 @@ import org.zbus.remoting.znet.Session;
 public class MQ extends AbstractMQ {   
 	private static final long serialVersionUID = -1610052009303680593L;
 	
-	final BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
+	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
 	
 	public MQ(String name, ExecutorService executor, int mode){
 		super(name, executor, mode); 
@@ -74,6 +74,12 @@ public class MQ extends AbstractMQ {
 				msgQ.offer(msg); //TODO 消息顺序处理
 			} 
 		} 
+	}
+	
+	//used when load from dump
+	public void restoreFromDump(ExecutorService executor) {
+		this.executor = executor;
+		this.sessQ = new LinkedBlockingQueue<PullSession>();
 	}
 	
 	public List<ConsumerInfo> getConsumerInfoList() {

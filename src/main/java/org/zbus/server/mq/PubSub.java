@@ -21,10 +21,11 @@ public class PubSub extends AbstractMQ {
 	private static final Logger log = LoggerFactory.getLogger(PubSub.class);	
 	
 	//保留所有的订阅Session
-	final ConcurrentMap<String, PullSession> sessMap = new ConcurrentHashMap<String, PullSession>(); 
+	transient ConcurrentMap<String, PullSession> sessMap = new ConcurrentHashMap<String, PullSession>(); 
 	public PubSub(String name, ExecutorService executor, int mode){
 		super(name, executor, mode); 
 	}
+	
 	
 	@Override
 	public void consume(Message msg, Session sess) throws IOException{ 
@@ -95,6 +96,13 @@ public class PubSub extends AbstractMQ {
 			}
 		}  
 	}
+
+	//used when load from dump
+	public void restoreFromDump(ExecutorService executor) {
+		this.executor = executor;
+		this.sessMap = new ConcurrentHashMap<String, PullSession>();
+	}
+
 
 	public List<ConsumerInfo> getConsumerInfoList() {
 		List<ConsumerInfo> res = new ArrayList<ConsumerInfo>();
