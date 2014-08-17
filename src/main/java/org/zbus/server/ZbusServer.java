@@ -45,7 +45,7 @@ public class ZbusServer extends RemotingServer {
 	private long mqCleanDelay = 1000;
 	private long mqCleanInterval = 3000;
 	private long mqPersistDelay = 3000;
-	private long mqPersistInterval = 10000;
+	private long mqPersistInterval = 3000;
 	private boolean loadMqFromDump = true;
 	 
 	private AdminHandler adminHandler;
@@ -85,25 +85,7 @@ public class ZbusServer extends RemotingServer {
     		this.loadMqTableFromDump();
     	}
     	
-    	this.mqSessionCleanTimer.scheduleAtFixedRate(new TimerTask() { 
-			@Override
-			public void run() {  
-				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
-		    	while(iter.hasNext()){
-		    		Entry<String, AbstractMQ> e = iter.next();
-		    		AbstractMQ mq = e.getValue(); 
-		    		mq.cleanSession();
-		    	}
-				
-			}
-		}, mqCleanDelay, mqCleanInterval);
     	
-    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
-			@Override
-			public void run() {   
-				mqStore.dump();
-			}
-		}, mqPersistDelay, mqPersistInterval);
 	}  
 	 
 	private void loadMqTableFromDump(){
@@ -380,18 +362,48 @@ public class ZbusServer extends RemotingServer {
 		this.trackInterval = trackInterval;
 	}
 
+	@Override
+	public void start() throws Exception { 
+		super.start();
+		
+		this.mqSessionCleanTimer.scheduleAtFixedRate(new TimerTask() { 
+			@Override
+			public void run() {  
+				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
+		    	while(iter.hasNext()){
+		    		Entry<String, AbstractMQ> e = iter.next();
+		    		AbstractMQ mq = e.getValue(); 
+		    		mq.cleanSession();
+		    	}
+				
+			}
+		}, mqCleanDelay, mqCleanInterval);
+    	
+    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
+			@Override
+			public void run() {   
+				mqStore.dump();
+			}
+		}, mqPersistDelay, mqPersistInterval);
+	}
+	
 	public void close(){
 		this.trackReportTimer.cancel();
 		this.mqSessionCleanTimer.cancel();
+		this.mqPersistTimer.cancel();
 		for(RemotingClient client : this.trackClients){
 			client.close();
 		}  
 		super.close();
 	}
 	
-	
+	public void setMqPersistInterval(long mqPersistInterval) {
+		this.mqPersistInterval = mqPersistInterval;
+	}
+
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 15555);
+		int persistInterval = Helper.option(args, "-w", 3000);
 		String adminToken = Helper.option(args, "-adm", "");
 		String trackServerAddr = Helper.option(args, "-track", 
 				"127.0.0.1:16666;127.0.0.1:16667");
@@ -400,6 +412,8 @@ public class ZbusServer extends RemotingServer {
 		ZbusServer zbus = new ZbusServer(serverPort); 
 		zbus.setAdminToken(adminToken);
 		zbus.setupTrackServer(trackServerAddr); 
+		zbus.setMqPersistInterval(persistInterval);
+		
 		zbus.start();  
 	} 
 	 

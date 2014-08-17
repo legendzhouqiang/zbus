@@ -78,7 +78,7 @@ public class RemotingServer {
     }
     
     public void start() throws Exception{  
-    	init();
+    	init(); 
     	
     	dispatcherManager.start();
     	
