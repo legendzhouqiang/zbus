@@ -1,0 +1,6 @@
+微软的MSMQ坑比较多，Win7下可能出现下面的bug
+http://support.microsoft.com/kb/2554746
+
+netstat -ano | findstr 1801
+
+1801是MSMQ默认的侦听地址，如果没有侦听 0.0.0.0:1801 那么恭喜你中招了，先做上面的hotfix更新，不然会出现无法向本地私有Q发消息，Outgoing队列出现Wait to Connect
