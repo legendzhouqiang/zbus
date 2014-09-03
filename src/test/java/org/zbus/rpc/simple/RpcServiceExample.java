@@ -3,7 +3,7 @@ package org.zbus.rpc.simple;
 import org.zbus.client.rpc.RpcService;
 import org.zbus.client.rpc.RpcServiceConfig;
 import org.zbus.client.rpc.ServiceHandler;
-import org.zbus.remoting.Helper;
+import org.zbus.common.Helper;
 import org.zbus.remoting.Message;
 
 public class RpcServiceExample {

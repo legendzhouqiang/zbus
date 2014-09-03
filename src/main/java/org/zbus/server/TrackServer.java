@@ -10,8 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.common.BrokerInfo;
-import org.zbus.common.BrokerMqInfo;
+import org.zbus.common.Helper;
 import org.zbus.common.MqInfo;
 import org.zbus.common.Proto;
 import org.zbus.common.TrackTable;
@@ -20,12 +19,13 @@ import org.zbus.common.json.parser.JSONParser;
 import org.zbus.common.json.parser.ParseException;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingServer;
 import org.zbus.remoting.ServerDispatcherManager;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.info.BrokerInfo;
+import org.zbus.server.mq.info.BrokerMqInfo;
  
  
 public class TrackServer extends RemotingServer {  

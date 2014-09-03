@@ -8,9 +8,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.common.ConsumerInfo;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.info.ConsumerInfo;
 
 public class MQ extends AbstractMQ {   
 	private static final long serialVersionUID = -1610052009303680593L;

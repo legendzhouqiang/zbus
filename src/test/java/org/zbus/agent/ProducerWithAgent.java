@@ -1,8 +1,8 @@
 package org.zbus.agent;
 
 import org.zbus.client.Producer;
-import org.zbus.client.ha.AgentConfig;
-import org.zbus.client.ha.ClientAgent;
+import org.zbus.client.agent.AgentConfig;
+import org.zbus.client.agent.ClientAgent;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 

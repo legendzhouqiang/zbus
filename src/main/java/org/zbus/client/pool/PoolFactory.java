@@ -1,4 +1,4 @@
-package org.zbus.client.ha;
+package org.zbus.client.pool;
 
 import org.zbus.client.ClientPool;
 import org.zbus.remoting.ClientDispatcherManager;

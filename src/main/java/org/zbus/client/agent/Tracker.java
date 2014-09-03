@@ -1,4 +1,4 @@
-package org.zbus.client.ha;
+package org.zbus.client.agent;
 
 import java.io.IOException;
 import java.util.ArrayList;

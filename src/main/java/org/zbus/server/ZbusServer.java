@@ -17,13 +17,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.common.BrokerInfo;
-import org.zbus.common.BrokerMqInfo;
+import org.zbus.common.Helper;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingClient;
@@ -38,6 +36,8 @@ import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubSub;
 import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.MQ;
+import org.zbus.server.mq.info.BrokerInfo;
+import org.zbus.server.mq.info.BrokerMqInfo;
  
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
@@ -45,11 +45,14 @@ public class ZbusServer extends RemotingServer {
 	private String adminToken = ""; 
 	private long trackDelay = 1000;
 	private long trackInterval = 3000;
+	
+	
 	private long mqCleanDelay = 1000;
 	private long mqCleanInterval = 3000;
 	private long mqPersistDelay = 3000;
 	private long mqPersistInterval = 3000;
 	private boolean loadMqFromDump = true;
+	private boolean persistEnabled = false;
 	 
 	private AdminHandler adminHandler;
 	private final Timer trackReportTimer = new Timer("TrackReportTimer", true); 
@@ -138,7 +141,7 @@ public class ZbusServer extends RemotingServer {
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					//log.info("%s", msg);
+					log.debug("%s", msg);
 				}
 			}
 		}); 
@@ -380,13 +383,15 @@ public class ZbusServer extends RemotingServer {
 				
 			}
 		}, mqCleanDelay, mqCleanInterval);
-    	
-    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
-			@Override
-			public void run() {   
-				mqStore.dump();
-			}
-		}, mqPersistDelay, mqPersistInterval);
+		
+    	if(this.persistEnabled){
+	    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
+				@Override
+				public void run() {   
+					mqStore.dump();
+				}
+			}, mqPersistDelay, mqPersistInterval);
+    	}
 	}
 	
 	public void close(){
@@ -401,9 +406,15 @@ public class ZbusServer extends RemotingServer {
 	public void setMqPersistInterval(long mqPersistInterval) {
 		this.mqPersistInterval = mqPersistInterval;
 	}
+	
+
+	public void setPersistEnabled(boolean persistEnabled) {
+		this.persistEnabled = persistEnabled;
+	}
 
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 15555);
+		boolean persistEnabled = Helper.option(args, "-bw", false);
 		int persistInterval = Helper.option(args, "-w", 3000);
 		String adminToken = Helper.option(args, "-adm", "");
 		String trackServerAddr = Helper.option(args, "-track", 
@@ -411,6 +422,7 @@ public class ZbusServer extends RemotingServer {
 
 
 		ZbusServer zbus = new ZbusServer(serverPort); 
+		zbus.setPersistEnabled(persistEnabled);
 		zbus.setAdminToken(adminToken);
 		zbus.setupTrackServer(trackServerAddr); 
 		zbus.setMqPersistInterval(persistInterval);

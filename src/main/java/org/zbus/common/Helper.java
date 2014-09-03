@@ -1,4 +1,4 @@
-package org.zbus.remoting;
+package org.zbus.common;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -162,6 +162,12 @@ public class Helper {
 		String value = option(args, opt, null);
 		if(value == null) return defaultValue;
 		return Integer.valueOf(value);
+	}
+	
+	public static boolean option(String[] args, String opt, boolean defaultValue){
+		String value = option(args, opt, null);
+		if(value == null) return defaultValue;
+		return Boolean.valueOf(value);
 	}
 	
 	

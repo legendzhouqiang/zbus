@@ -1,4 +1,4 @@
-package org.zbus.client.ha;
+package org.zbus.client.agent;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.client.ClientBuilder;
 import org.zbus.client.ClientPool;
+import org.zbus.client.pool.PoolFactory;
 import org.zbus.common.MqInfo;
 import org.zbus.common.TrackTable;
 import org.zbus.common.logging.Logger;

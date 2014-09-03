@@ -1,4 +1,4 @@
-package org.zbus.common;
+package org.zbus.server.mq.info;
 
 import java.util.ArrayList;
 import java.util.Arrays;

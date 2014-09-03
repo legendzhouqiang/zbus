@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.client.rpc.Rpc;
+import org.zbus.common.Helper;
 import org.zbus.remoting.ClientDispatcherManager;
-import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 
@@ -55,7 +55,7 @@ class RequestThread extends Thread{
 public class PerfClient { 
 	public static void main(String[] args) throws Exception {
 		final int count = Helper.option(args, "-n", 100000);
-		final int threadCount = Helper.option(args, "-c", 16);
+		final int threadCount = Helper.option(args, "-c", 4);
 		final String zbusHost = Helper.option(args, "-h", "127.0.0.1");
 		final int zbusPort = Helper.option(args, "-p", 15555);
 		final String service = Helper.option(args, "-s", "MqService");

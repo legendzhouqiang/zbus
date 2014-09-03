@@ -9,11 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.info.ConsumerInfo;
 
 public class PubSub extends AbstractMQ {    
 	private static final long serialVersionUID = -2208189626959936406L;

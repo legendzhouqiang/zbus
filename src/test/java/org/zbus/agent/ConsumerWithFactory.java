@@ -2,7 +2,7 @@ package org.zbus.agent;
 
 import org.zbus.client.ClientBuilder;
 import org.zbus.client.Consumer;
-import org.zbus.client.ha.SimpleClientBuilder;
+import org.zbus.client.builder.SimpleClientBuilder;
 import org.zbus.remoting.Message;
 
 

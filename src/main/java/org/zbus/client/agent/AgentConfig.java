@@ -1,4 +1,6 @@
-package org.zbus.client.ha; 
+package org.zbus.client.agent; 
+
+import org.zbus.client.pool.PoolConfig;
 
 
  

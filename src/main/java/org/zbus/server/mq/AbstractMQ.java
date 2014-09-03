@@ -7,12 +7,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.common.BrokerMqInfo;
-import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.info.BrokerMqInfo;
+import org.zbus.server.mq.info.ConsumerInfo;
 
 public abstract class AbstractMQ implements Serializable{  
 	private static final long serialVersionUID = 3408125142128217794L;
