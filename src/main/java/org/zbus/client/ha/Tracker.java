@@ -11,15 +11,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.common.Proto;
 import org.zbus.common.TrackTable;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.callback.MessageCallback;
+import org.zbus.remoting.nio.Session;
 import org.zbus.remoting.ticket.ResultCallback;
-import org.zbus.remoting.znet.Session;
 
 import com.alibaba.fastjson.JSON;
 
@@ -32,7 +32,7 @@ class Tracker {
 	
 	String trackServerList="127.0.0.1:16666"; 
 	final List<RemotingClient> clients = new ArrayList<RemotingClient>();
-	ClientDispachterManager clientMgr;  
+	ClientDispatcherManager clientMgr;  
 	CountDownLatch tableReady = new CountDownLatch(1);
 	ExecutorService executor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	List<TrackListener> trackListeners = new ArrayList<TrackListener>();
@@ -42,7 +42,7 @@ class Tracker {
 		this(trackServerList, null);
 	} 
 	
-	public Tracker(String trackServerList, ClientDispachterManager clientMgr) throws IOException {  	
+	public Tracker(String trackServerList, ClientDispatcherManager clientMgr) throws IOException {  	
 		this.clientMgr = clientMgr;  
 		this.connectToTrackServers();
 		

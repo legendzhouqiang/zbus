@@ -10,10 +10,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 import org.zbus.common.ConsumerInfo;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.znet.Session;
+import org.zbus.remoting.nio.Session;
 
 public class PubSub extends AbstractMQ {    
 	private static final long serialVersionUID = -2208189626959936406L;

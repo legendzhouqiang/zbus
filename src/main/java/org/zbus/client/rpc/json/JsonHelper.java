@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.zbus.client.ZbusException;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 
 import com.alibaba.fastjson.JSON;

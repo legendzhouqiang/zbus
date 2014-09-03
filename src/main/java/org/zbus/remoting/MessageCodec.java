@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.zbus.remoting.znet.Codec;
-import org.zbus.remoting.znet.IoBuffer;
+import org.zbus.remoting.nio.Codec;
+import org.zbus.remoting.nio.IoBuffer;
 
 public class MessageCodec implements Codec{
 	@Override

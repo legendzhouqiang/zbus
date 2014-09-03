@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.client.rpc.Rpc;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 
 class RequestThread extends Thread{
 	final int count;
-	final ClientDispachterManager mgr;
+	final ClientDispatcherManager mgr;
 	String host;
 	int port;
 	String service;
@@ -19,7 +19,7 @@ class RequestThread extends Thread{
 	AtomicLong currentRequestCount;
 	long startTime;
 	
-	RequestThread(int count, ClientDispachterManager mgr){
+	RequestThread(int count, ClientDispatcherManager mgr){
 		this.count = count;
 		this.mgr = mgr; 
 	}
@@ -61,7 +61,7 @@ public class PerfClient {
 		final String service = Helper.option(args, "-s", "MqService");
 		final String body = Helper.option(args, "-b", "hello");
 		
-		final ClientDispachterManager mgr = new ClientDispachterManager(); 
+		final ClientDispatcherManager mgr = new ClientDispatcherManager(); 
 		mgr.start();
 		
 		

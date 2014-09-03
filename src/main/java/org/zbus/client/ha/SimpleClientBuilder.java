@@ -1,18 +1,18 @@
 package org.zbus.client.ha;
 
 import org.zbus.client.ClientBuilder;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.RemotingClient;
  
  
 public class SimpleClientBuilder implements ClientBuilder{  
-	private final ClientDispachterManager clientMgr;
+	private final ClientDispatcherManager clientMgr;
 	private final String defaultBroker;
 	public SimpleClientBuilder(String defaultBroker){ 
 		this(defaultBroker, null);
 	}
 	
-	public SimpleClientBuilder(String defaultBroker, ClientDispachterManager clientMgr){ 
+	public SimpleClientBuilder(String defaultBroker, ClientDispatcherManager clientMgr){ 
 		this.defaultBroker = defaultBroker;
 		this.clientMgr = clientMgr;
 	}

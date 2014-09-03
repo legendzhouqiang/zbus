@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.zbus.json.JSONArray;
-import org.zbus.json.JSONObject;
-import org.zbus.json.parser.JSONParser;
+import org.zbus.common.json.JSONArray;
+import org.zbus.common.json.JSONObject;
+import org.zbus.common.json.parser.JSONParser;
 
 public class ConsumerInfo {
 	private String remoteAddr;

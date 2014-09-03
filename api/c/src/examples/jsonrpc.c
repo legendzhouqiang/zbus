@@ -1,6 +1,6 @@
 #include "zbus.h"
 
-int main_jsonrpc(int argc, char* argv[]){
+int main(int argc, char* argv[]){
 	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
 	jsonrpc_t* p = jsonrpc_new(client, "MyJsonRpc");
 	json_t *res = NULL;

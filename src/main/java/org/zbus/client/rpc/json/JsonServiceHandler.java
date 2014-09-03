@@ -30,8 +30,8 @@ import java.util.Map;
 
 import org.zbus.client.rpc.Remote;
 import org.zbus.client.rpc.ServiceHandler;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 
 import com.alibaba.fastjson.JSON;

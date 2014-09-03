@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.common.ConsumerInfo;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.znet.Session;
+import org.zbus.remoting.nio.Session;
 
 public class MQ extends AbstractMQ {   
 	private static final long serialVersionUID = -1610052009303680593L;

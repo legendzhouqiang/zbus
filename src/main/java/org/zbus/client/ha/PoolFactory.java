@@ -1,7 +1,7 @@
 package org.zbus.client.ha;
 
 import org.zbus.client.ClientPool;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.ClientDispatcherManager;
 
 public class PoolFactory{
 	public static final boolean IS_COMMONS_POOL2_AVAILABLE;  
@@ -24,7 +24,7 @@ public class PoolFactory{
         }
     }  
     
-    public static ClientPool createPool(PoolConfig config, String broker, ClientDispachterManager manager){
+    public static ClientPool createPool(PoolConfig config, String broker, ClientDispatcherManager manager){
     	if(IS_COMMONS_POOL2_AVAILABLE){
     		return new CommonsClientPool(config, broker, manager); 
     	}

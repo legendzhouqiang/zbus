@@ -2,15 +2,15 @@ package org.zbus.remoting;
 
 import java.io.IOException;
 
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.callback.ConnectedCallback;
 import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.callback.MessageCallback;
+import org.zbus.remoting.nio.EventAdaptor;
+import org.zbus.remoting.nio.Session;
 import org.zbus.remoting.ticket.Ticket;
 import org.zbus.remoting.ticket.TicketManager;
-import org.zbus.remoting.znet.EventAdaptor;
-import org.zbus.remoting.znet.Session;
 
 public class ClientEventAdaptor extends EventAdaptor{  
 	private static final Logger log = LoggerFactory.getLogger(ClientEventAdaptor.class); 

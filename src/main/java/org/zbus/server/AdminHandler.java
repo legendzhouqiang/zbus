@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
-import org.zbus.remoting.znet.Session;
+import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.ReplyHelper;
 
 

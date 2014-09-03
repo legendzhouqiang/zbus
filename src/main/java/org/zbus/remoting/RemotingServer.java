@@ -1,38 +1,15 @@
 package org.zbus.remoting;
  
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
  
 public class RemotingServer {  
-	private static final Logger log = LoggerFactory.getLogger(RemotingServer.class);
-	protected final ServerDispachterManager dispatcherManager;  
-	protected boolean ownDispachterManager = false;
-	private static volatile ServerDispachterManager defaultDispactherManager = null; 
-	
-	static ServerDispachterManager getDefaultDispatcherManager(){
-		if(defaultDispactherManager == null){
-			synchronized (RemotingServer.class) {
-				if(defaultDispactherManager == null){
-					try {
-						defaultDispactherManager = new DefaultServerDispachterManager();
-						defaultDispactherManager.start();
-					} catch (IOException e) { 
-						//ignore
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		return defaultDispactherManager;
-	} 
-	
-	
+	private static final Logger log = LoggerFactory.getLogger(RemotingServer.class); 
 	protected String serverHost = "0.0.0.0";
 	protected int serverPort = 15555;   
 	
@@ -40,18 +17,18 @@ public class RemotingServer {
 	protected String serverName = "RemoteServer";
 	
 	protected ServerEventAdaptor serverHandler;
+	protected ServerDispatcherManager dispatcherManager; 
 	
- 
 	
-	public RemotingServer(String serverHost, int serverPort){
-		this(serverHost, serverPort, getDefaultDispatcherManager());
+	public RemotingServer(String serverHost, ServerDispatcherManager dispatcherManager){
+		this(serverHost, 15555, dispatcherManager);
 	}
 	
-	public RemotingServer(int serverPort){
-		this("0.0.0.0", serverPort, getDefaultDispatcherManager()); 
+	public RemotingServer(int serverPort,ServerDispatcherManager dispatcherManager){
+		this("0.0.0.0", serverPort,dispatcherManager); 
 	}
 	
-    public RemotingServer(String serverHost, int serverPort, ServerDispachterManager dispatcherManager) { 
+    public RemotingServer(String serverHost, int serverPort, ServerDispatcherManager dispatcherManager) { 
     	this.dispatcherManager = dispatcherManager;
     	this.serverHost = serverHost;
     	this.serverPort = serverPort; 
@@ -77,22 +54,17 @@ public class RemotingServer {
     	
     }
     
-    public void start() throws Exception{  
-    	init(); 
-    	
-    	dispatcherManager.start();
+    public void start() throws Exception{   
+    	this.init();
+    	if(!this.dispatcherManager.isStarted()){
+    		dispatcherManager.start();
+    	}
     	
     	ServerSocketChannel channel = ServerSocketChannel.open();
     	channel.configureBlocking(false);
     	channel.bind(new InetSocketAddress(this.serverHost, this.serverPort)); 
     	dispatcherManager.getDispatcher(0).registerChannel(channel, SelectionKey.OP_ACCEPT); 
     	log.info("%s serving@%s:%s", this.serverName, this.serverHost, this.serverPort);
-    }
-    
-    public void close(){
-    	if(this.ownDispachterManager){
-    		this.dispatcherManager.stop();
-    	}
     }
 
 	public String getServerName() {

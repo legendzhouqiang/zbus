@@ -21,15 +21,18 @@ import org.zbus.common.BrokerInfo;
 import org.zbus.common.BrokerMqInfo;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.RemotingServer;
+import org.zbus.remoting.ServerDispatcherManager;
+import org.zbus.remoting.ServerEventAdaptor;
 import org.zbus.remoting.callback.ErrorCallback;
-import org.zbus.remoting.znet.Session;
+import org.zbus.remoting.nio.DispatcherManager;
+import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.AbstractMQ;
 import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubSub;
@@ -71,8 +74,7 @@ public class ZbusServer extends RemotingServer {
 	}
 	
 	public ZbusServer(String serverHost, int serverPort) throws IOException {
-		super(serverHost, serverPort, new ZbusServerDispachterManager()); 
-		this.ownDispachterManager = true; 
+		super(serverHost, serverPort, new ZbusServerDispachterManager());  
 		
 		ZbusServerEventAdaptor eventHandler = (ZbusServerEventAdaptor) this.serverHandler;
 		eventHandler.setMqTable(mqTable);
@@ -136,7 +138,7 @@ public class ZbusServer extends RemotingServer {
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					log.info("%s", msg);
+					//log.info("%s", msg);
 				}
 			}
 		}); 
@@ -393,8 +395,7 @@ public class ZbusServer extends RemotingServer {
 		this.mqPersistTimer.cancel();
 		for(RemotingClient client : this.trackClients){
 			client.close();
-		}  
-		super.close();
+		}   
 	}
 	
 	public void setMqPersistInterval(long mqPersistInterval) {
@@ -415,6 +416,72 @@ public class ZbusServer extends RemotingServer {
 		zbus.setMqPersistInterval(persistInterval);
 		
 		zbus.start();  
-	} 
-	 
+	}  
 }
+ 
+
+class ZbusServerEventAdaptor extends ServerEventAdaptor{ 
+	private ConcurrentMap<String, AbstractMQ> mqTable = null;
+	 
+    @Override
+    public void onException(Throwable e, Session sess) throws IOException {
+    	if(! (e instanceof IOException) ){
+			super.onException(e, sess);
+		}
+    	this.cleanMQ(sess);
+    }
+    
+    @Override
+    public void onSessionDestroyed(Session sess) throws IOException {  
+    	this.cleanMQ(sess);
+    }
+    
+    
+    private void cleanMQ(Session sess){
+    	if(this.mqTable == null) return;
+    	String creator = sess.getRemoteAddress();
+    	Iterator<Entry<String, AbstractMQ>> iter = this.mqTable.entrySet().iterator();
+    	while(iter.hasNext()){
+    		Entry<String, AbstractMQ> e = iter.next();
+    		AbstractMQ mq = e.getValue();
+    		if(MessageMode.isEnabled(mq.getMode(), MessageMode.Temp)){
+    			if(mq.getCreator().equals(creator)){
+        			iter.remove();
+        		}
+    		} 
+    	}
+    } 
+    
+	public void setMqTable(ConcurrentMap<String, AbstractMQ> mqTable) {
+		this.mqTable = mqTable;
+	}  
+}
+
+
+class ZbusServerDispachterManager extends ServerDispatcherManager{ 
+	private ServerEventAdaptor serverEventAdaptor = new ZbusServerEventAdaptor();
+	
+	public ZbusServerDispachterManager(  
+			ExecutorService executor, 
+			int engineCount, 
+			String engineNamePrefix) throws IOException{
+		
+		super(executor,engineCount, ZbusServerDispachterManager.class.getSimpleName());
+	}
+	
+	public ZbusServerDispachterManager(int engineCount) throws IOException {
+		this(DispatcherManager.newDefaultExecutor(), 
+				engineCount, ZbusServerDispachterManager.class.getSimpleName());
+	}
+
+	public ZbusServerDispachterManager() throws IOException  { 
+		this(DispatcherManager.defaultDispatcherSize());
+	}  
+	
+	@Override
+	public ServerEventAdaptor buildEventAdaptor() {  
+		//服务器端，所有Session共享一个事件处理器
+		return this.serverEventAdaptor;
+	}
+}
+

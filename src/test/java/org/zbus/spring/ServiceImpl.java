@@ -2,7 +2,6 @@ package org.zbus.spring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zbus.client.rpc.Remote;
-import org.zbus.rpc.json.SpringIocObjectExample;
 
 public class ServiceImpl implements ServiceInterface {
 	

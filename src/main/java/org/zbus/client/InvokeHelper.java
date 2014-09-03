@@ -3,8 +3,8 @@ package org.zbus.client;
 import java.io.IOException;
 import java.util.List;
 
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.ticket.ResultCallback;

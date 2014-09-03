@@ -15,16 +15,17 @@ import org.zbus.common.BrokerMqInfo;
 import org.zbus.common.MqInfo;
 import org.zbus.common.Proto;
 import org.zbus.common.TrackTable;
-import org.zbus.json.JSONObject;
-import org.zbus.json.parser.JSONParser;
-import org.zbus.json.parser.ParseException;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.json.JSONObject;
+import org.zbus.common.json.parser.JSONParser;
+import org.zbus.common.json.parser.ParseException;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingServer;
-import org.zbus.remoting.znet.Session;
+import org.zbus.remoting.ServerDispatcherManager;
+import org.zbus.remoting.nio.Session;
  
  
 public class TrackServer extends RemotingServer {  
@@ -40,12 +41,12 @@ public class TrackServer extends RemotingServer {
 	
 	private Map<String, Session> subscribers = new ConcurrentHashMap<String, Session>();
 	
-	public TrackServer(int serverPort) {
-		super(serverPort);
-		this.serverName = "TrackServer";
+	public TrackServer(int serverPort, ServerDispatcherManager dispatcherManager) { 
+		this("0.0.0.0", serverPort, dispatcherManager);
 	}
-	public TrackServer(String serverHost, int serverPort) {
-		super(serverHost, serverPort);
+	
+	public TrackServer(String serverHost, int serverPort,ServerDispatcherManager dispatcherManager) {
+		super(serverHost, serverPort, dispatcherManager);
 		this.serverName = "TrackServer";
 	}
 	
@@ -167,7 +168,8 @@ public class TrackServer extends RemotingServer {
 	
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 16666);
-		TrackServer track = new TrackServer(serverPort); 
+		ServerDispatcherManager dispachterManager = new ServerDispatcherManager();
+		TrackServer track = new TrackServer(serverPort, dispachterManager); 
 		track.start(); 
 	} 
 	

@@ -11,28 +11,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.callback.ConnectedCallback;
 import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.callback.MessageCallback;
+import org.zbus.remoting.nio.Session;
 import org.zbus.remoting.ticket.ResultCallback;
 import org.zbus.remoting.ticket.Ticket;
 import org.zbus.remoting.ticket.TicketManager;
-import org.zbus.remoting.znet.Session;
  
 public class RemotingClient { 
 	private static final Logger log = LoggerFactory.getLogger(RemotingClient.class);     
 	
-	protected final ClientDispachterManager dispatcherManager;   
-	private static volatile ClientDispachterManager defaultDispactherManager = null; 
+	protected final ClientDispatcherManager dispatcherManager;   
+	private static volatile ClientDispatcherManager defaultDispactherManager = null; 
 	
-	static ClientDispachterManager getDefaultDispatcherManager(){
+	static ClientDispatcherManager getDefaultDispatcherManager(){
 		if(defaultDispactherManager == null){
 			synchronized (RemotingClient.class) {
 				if(defaultDispactherManager == null){
 					try {
-						defaultDispactherManager = new ClientDispachterManager();
+						defaultDispactherManager = new ClientDispatcherManager();
 						defaultDispactherManager.start();
 					} catch (IOException e) { 
 						//ignore
@@ -60,7 +60,7 @@ public class RemotingClient {
 	public RemotingClient(String serverHost, int serverPort){
 		this(serverHost, serverPort, getDefaultDispatcherManager());
 	}
-	public RemotingClient(String serverHost, int serverPort, ClientDispachterManager dispatcherManager) { 
+	public RemotingClient(String serverHost, int serverPort, ClientDispatcherManager dispatcherManager) { 
     	this(String.format("%s:%d", serverHost, serverPort), dispatcherManager);
     }  
 	
@@ -68,7 +68,7 @@ public class RemotingClient {
 		this(address, getDefaultDispatcherManager());
 	} 
 	
-	public RemotingClient(String address, ClientDispachterManager dispatcherManager){
+	public RemotingClient(String address, ClientDispatcherManager dispatcherManager){
 		if(dispatcherManager == null){
 			dispatcherManager = getDefaultDispatcherManager();
 		}

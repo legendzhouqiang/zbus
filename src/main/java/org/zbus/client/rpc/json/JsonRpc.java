@@ -28,8 +28,8 @@ import java.io.IOException;
 import org.zbus.client.ClientPool;
 import org.zbus.client.ZbusException;
 import org.zbus.client.rpc.Rpc;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 

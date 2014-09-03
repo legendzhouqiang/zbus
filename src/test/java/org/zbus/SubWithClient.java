@@ -12,10 +12,15 @@ public class SubWithClient {
 		final RemotingClient client = new RemotingClient("127.0.0.1:15555");	
 		final Consumer consumer = new Consumer(client, "MySub", MessageMode.PubSub);   
 		consumer.setTopic("qhee,xmee");  
+		int i = 0;
 		while(true){
 			Message msg = consumer.recv(10000); 
 			if(msg == null) continue;
-			System.out.println(msg);
+			i++;
+			if(i % 10000 == 0){
+				System.out.println(i);
+				System.out.println(msg);
+			}
 		}
 	}
 

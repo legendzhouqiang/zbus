@@ -12,9 +12,9 @@ import org.zbus.client.ClientBuilder;
 import org.zbus.client.ClientPool;
 import org.zbus.common.MqInfo;
 import org.zbus.common.TrackTable;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.RemotingClient;
  
  
@@ -29,7 +29,7 @@ public class ClientAgent implements ClientPool, ClientBuilder, TrackListener{
 
 	private Tracker tracker;
 	private AgentConfig config; 
-	private ClientDispachterManager clientMgr;   
+	private ClientDispatcherManager clientMgr;   
 		
 	public ClientAgent(AgentConfig config) throws IOException{
 		this(config, null);
@@ -39,11 +39,11 @@ public class ClientAgent implements ClientPool, ClientBuilder, TrackListener{
 		this(config, null, timeout);
 	} 
 	
-	public ClientAgent(AgentConfig config, ClientDispachterManager clientMgr) throws IOException{
+	public ClientAgent(AgentConfig config, ClientDispatcherManager clientMgr) throws IOException{
 		this(config, clientMgr, 3000);
 	}
 	
-	public ClientAgent(AgentConfig config, ClientDispachterManager clientMgr, int timeout) throws IOException {  
+	public ClientAgent(AgentConfig config, ClientDispatcherManager clientMgr, int timeout) throws IOException {  
 		this.config = config;
 		this.seedBroker = this.config.getSeedBroker();
 		this.clientMgr = clientMgr;  

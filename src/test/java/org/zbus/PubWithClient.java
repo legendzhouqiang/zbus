@@ -16,11 +16,19 @@ public class PubWithClient {
 		Message msg = new Message();  
 		msg.setTopic("qhee"); //设定消息主题
 		msg.setBody("hello world"); 
-		producer.send(msg, new ResultCallback() { 
-			@Override
-			public void onCompleted(Message result) {  
-				System.out.println(result); 
-			}
-		}); 
+		
+		long start = System.currentTimeMillis();
+		int count = 1000000;
+		for(int i=0;i<count;i++){
+			producer.send(msg, new ResultCallback() { 
+				@Override
+				public void onCompleted(Message result) {  
+					//System.out.println(result); 
+				}
+			}); 
+		}
+		long end = System.currentTimeMillis();
+		System.out.println(count*1000.0/(end-start));
+		System.out.println("done");
 	}  
 }

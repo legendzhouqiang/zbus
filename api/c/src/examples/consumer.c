@@ -1,7 +1,7 @@
 
 #include "zbus.h" 
 
-int main(int argc, char* argv[]){
+int main_consumer(int argc, char* argv[]){
 	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
 	consumer_t* consumer = consumer_new(client, "MyMQ2", MODE_MQ);
 	msg_t*res = NULL;

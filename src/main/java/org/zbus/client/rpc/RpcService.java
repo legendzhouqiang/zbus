@@ -3,18 +3,18 @@ package org.zbus.client.rpc;
 import java.io.IOException;
 
 import org.zbus.client.Consumer;
-import org.zbus.logging.Logger;
-import org.zbus.logging.LoggerFactory;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 
 class WorkerThread extends Thread{
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
 	private RpcServiceConfig config = null;
-	private final ClientDispachterManager manager;   
+	private final ClientDispatcherManager manager;   
 	
-	public WorkerThread(ClientDispachterManager manager, RpcServiceConfig config){
+	public WorkerThread(ClientDispatcherManager manager, RpcServiceConfig config){
 		this.manager = manager;
 		this.config  = config; 
 		
@@ -69,7 +69,7 @@ class WorkerThread extends Thread{
 public class RpcService extends Thread {   
 	private static final Logger log = LoggerFactory.getLogger(RpcService.class);
 	private final RpcServiceConfig config;
-	private ClientDispachterManager clientMgr;  
+	private ClientDispatcherManager clientMgr;  
 	private Thread[] workerThreads;
 	
 	public RpcService(RpcServiceConfig config) throws IOException{
@@ -80,7 +80,7 @@ public class RpcService extends Thread {
 		if(config.getServiceHandler() == null){
 			throw new IllegalArgumentException("serviceHandler required");
 		} 
-		clientMgr = new ClientDispachterManager();
+		clientMgr = new ClientDispatcherManager();
 	}
 	
 	public void run(){  

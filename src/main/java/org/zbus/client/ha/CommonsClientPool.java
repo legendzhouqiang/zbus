@@ -11,7 +11,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.zbus.client.ClientPool;
-import org.zbus.remoting.ClientDispachterManager;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.RemotingClient;
 
 public class CommonsClientPool implements ClientPool{
@@ -19,7 +19,7 @@ public class CommonsClientPool implements ClientPool{
 	private final GenericObjectPoolConfig config;
 	private final String broker;
 	
-	public CommonsClientPool(GenericObjectPoolConfig config, String broker, ClientDispachterManager clientMgr){
+	public CommonsClientPool(GenericObjectPoolConfig config, String broker, ClientDispatcherManager clientMgr){
 		this.config = config;
 		this.broker = broker;
 		RemotingClientFactory factory = new RemotingClientFactory(clientMgr, this.broker);	 
@@ -34,12 +34,12 @@ public class CommonsClientPool implements ClientPool{
 		this(config, broker, null);
 	}  
 	
-	public CommonsClientPool(PoolConfig config, String broker, ClientDispachterManager clientMgr){
+	public CommonsClientPool(PoolConfig config, String broker, ClientDispatcherManager clientMgr){
 		this(toObjectPoolConfig(config), broker, clientMgr);
 	}
 	
-	private static ClientDispachterManager defaultClientDispachterManager() throws IOException{
-		ClientDispachterManager clientMgr = new ClientDispachterManager();
+	private static ClientDispatcherManager defaultClientDispachterManager() throws IOException{
+		ClientDispatcherManager clientMgr = new ClientDispatcherManager();
 		clientMgr.start();
 		return clientMgr;
 	}
@@ -82,10 +82,10 @@ public class CommonsClientPool implements ClientPool{
 
 class RemotingClientFactory extends BasePooledObjectFactory<RemotingClient> {
 	
-	private final ClientDispachterManager cliengMgr;
+	private final ClientDispatcherManager cliengMgr;
 	private final String broker; 
 	
-	public RemotingClientFactory(final ClientDispachterManager clientMgr, final String broker){
+	public RemotingClientFactory(final ClientDispatcherManager clientMgr, final String broker){
 		this.cliengMgr = clientMgr;
 		this.broker = broker;
 	}

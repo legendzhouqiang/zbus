@@ -1,5 +1,8 @@
 #ifndef __JSON__H__
 #define __JSON__H__ 
+
+#include "platform.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -38,66 +41,66 @@ typedef struct json_hook {
 } json_hook_t;
 
 /* Supply malloc, realloc and free functions to cJSON */
-extern void json_init_hooks(json_hook_t* hooks);
+ZBOX_EXPORT void json_init_hooks(json_hook_t* hooks);
 
 
 /* Supply a block of JSON, and this returns a cJSON object you can interrogate. Call cJSON_Delete when finished. */
-extern json_t *json_parse(const char *value);
+ZBOX_EXPORT json_t *json_parse(const char *value);
 /* ParseWithOpts allows you to require (and check) that the JSON is null terminated, and to retrieve the pointer to the final byte parsed. */
-extern json_t *json_parse_ext(const char *value,const char **return_parse_end,int require_null_terminated);
+ZBOX_EXPORT json_t *json_parse_ext(const char *value,const char **return_parse_end,int require_null_terminated);
 
 /* Render a cJSON entity to text for transfer/storage. Free the char* when finished. */
-extern char  *json_dump(json_t *item);
+ZBOX_EXPORT char  *json_dump(json_t *item);
 /* Render a cJSON entity to text for transfer/storage without any formatting. Free the char* when finished. */
-extern char  *json_dump_raw(json_t *item);
+ZBOX_EXPORT char  *json_dump_raw(json_t *item);
 /* Delete a cJSON entity and all subentities. */
-extern void   json_destroy(json_t *c);
+ZBOX_EXPORT void   json_destroy(json_t *c);
 
 /* Returns the number of items in an array (or object). */
-extern int	  json_array_size(json_t *array);
+ZBOX_EXPORT int	  json_array_size(json_t *array);
 /* Retrieve item number "item" from array "array". Returns NULL if unsuccessful. */
-extern json_t *json_array_item(json_t *array,int item);
+ZBOX_EXPORT json_t *json_array_item(json_t *array,int item);
 /* Get item "string" from object. Case insensitive. */
-extern json_t *json_object_item(json_t *object,const char *string);
+ZBOX_EXPORT json_t *json_object_item(json_t *object,const char *string);
 
 /* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse() returns 0. 0 when cJSON_Parse() succeeds. */
-extern const char *json_error(void);
+ZBOX_EXPORT const char *json_error(void);
 
 /* These calls create a cJSON item of the appropriate type. */
-extern json_t *json_null(void);
-extern json_t *json_true(void);
-extern json_t *json_false(void);
-extern json_t *json_bool(int b);
-extern json_t *json_number(double num);
-extern json_t *json_string(const char *string);
-extern json_t *json_array(void);
-extern json_t *json_object(void);
+ZBOX_EXPORT json_t *json_null(void);
+ZBOX_EXPORT json_t *json_true(void);
+ZBOX_EXPORT json_t *json_false(void);
+ZBOX_EXPORT json_t *json_bool(int b);
+ZBOX_EXPORT json_t *json_number(double num);
+ZBOX_EXPORT json_t *json_string(const char *string);
+ZBOX_EXPORT json_t *json_array(void);
+ZBOX_EXPORT json_t *json_object(void);
 
 /* These utilities create an Array of count items. */
-extern json_t *json_array_int(int *numbers,int count);
-extern json_t *json_array_float(float *numbers,int count);
-extern json_t *json_array_double(double *numbers,int count);
-extern json_t *json_array_string(const char **strings,int count);
+ZBOX_EXPORT json_t *json_array_int(int *numbers,int count);
+ZBOX_EXPORT json_t *json_array_float(float *numbers,int count);
+ZBOX_EXPORT json_t *json_array_double(double *numbers,int count);
+ZBOX_EXPORT json_t *json_array_string(const char **strings,int count);
 
 /* Append item to the specified array/object. */
-extern void json_array_add(json_t *array, json_t *item);
-extern void	json_object_add(json_t *object,const char *string,json_t *item);
+ZBOX_EXPORT void json_array_add(json_t *array, json_t *item);
+ZBOX_EXPORT void	json_object_add(json_t *object,const char *string,json_t *item);
 /* Append reference to item to the specified array/object. Use this when you want to add an existing cJSON to a new cJSON, but don't want to corrupt your existing cJSON. */
-extern void json_array_addref(json_t *array, json_t *item);
-extern void	json_object_addref(json_t *object,const char *string,json_t *item);
+ZBOX_EXPORT void json_array_addref(json_t *array, json_t *item);
+ZBOX_EXPORT void	json_object_addref(json_t *object,const char *string,json_t *item);
 
 /* Remove/Detatch items from Arrays/Objects. */
-extern json_t* json_array_detach(json_t *array,int which);
-extern void    json_array_delete(json_t *array,int which);
-extern json_t* json_object_detach(json_t *object,const char *string);
-extern void    json_object_delete(json_t *object,const char *string);
+ZBOX_EXPORT json_t* json_array_detach(json_t *array,int which);
+ZBOX_EXPORT void    json_array_delete(json_t *array,int which);
+ZBOX_EXPORT json_t* json_object_detach(json_t *object,const char *string);
+ZBOX_EXPORT void    json_object_delete(json_t *object,const char *string);
 
 /* Update array items. */
-extern void json_array_replace(json_t *array,int which,json_t *newitem);
-extern void json_object_replace(json_t *object,const char *string,json_t *newitem);
+ZBOX_EXPORT void json_array_replace(json_t *array,int which,json_t *newitem);
+ZBOX_EXPORT void json_object_replace(json_t *object,const char *string,json_t *newitem);
 
 /* Duplicate a cJSON item */
-extern json_t *json_dup(json_t *item,int recurse);
+ZBOX_EXPORT json_t *json_dup(json_t *item,int recurse);
 /* Duplicate will create a new, identical cJSON item to the one you pass, in new memory that will
 need to be released. With recurse!=0, it will duplicate any children connected to the item.
 The item->next and ->prev pointers are always zero on return from Duplicate. */
@@ -111,6 +114,12 @@ The item->next and ->prev pointers are always zero on return from Duplicate. */
 /* When assigning an integer value, it needs to be propagated to valuedouble too. */
 #define json_object_setint(object,val)			((object)?(object)->valueint=(object)->valuedouble=(val):(val))
 
+
+#define BASE64_ERR_BUFFER_TOO_SMALL				-0x002A
+#define BASE64_ERR_INVALID_CHARACTER            -0x002C
+
+extern int base64_encode( unsigned char *dst, size_t *dlen,
+				  const unsigned char *src, size_t slen );
 
 
 #ifdef __cplusplus
