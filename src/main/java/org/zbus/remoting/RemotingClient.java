@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.common.logging.Logger;
@@ -55,7 +55,7 @@ public class RemotingClient {
 	protected ConnectedCallback connectedCallback;
 	protected ErrorCallback errorCallback; 
 
-	protected final Timer heartbeatTimer = new Timer("HeartbeatTimer", true); 
+	protected final ScheduledExecutorService heartbeator = Executors.newSingleThreadScheduledExecutor();
 	
 	public RemotingClient(String serverHost, int serverPort){
 		this(serverHost, serverPort, getDefaultDispatcherManager());
@@ -87,9 +87,9 @@ public class RemotingClient {
 		
 		this.dispatcherManager = dispatcherManager;
 		
-		this.heartbeatTimer.scheduleAtFixedRate(new TimerTask() { 
+		this.heartbeator.scheduleAtFixedRate(new Runnable() {
 			@Override
-			public void run() { 
+			public void run() {
 				if(RemotingClient.this.hasConnected()){
 					Message hbt = new Message();
 					hbt.setCommand(Message.HEARTBEAT);
@@ -100,7 +100,8 @@ public class RemotingClient {
 					}
 				}
 			}
-		}, 1000, 10000);
+		}, 1000, 10000, TimeUnit.MILLISECONDS);
+
 	}
 	
     
@@ -226,6 +227,7 @@ public class RemotingClient {
 				log.error(e.getMessage(), e);
 			}
     	}
+    	this.heartbeator.shutdown();
     }  
     
     

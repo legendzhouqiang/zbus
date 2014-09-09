@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -32,10 +32,10 @@ import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.nio.DispatcherManager;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.AbstractMQ;
+import org.zbus.server.mq.MQ;
 import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubSub;
 import org.zbus.server.mq.ReplyHelper;
-import org.zbus.server.mq.MQ;
 import org.zbus.server.mq.info.BrokerInfo;
 import org.zbus.server.mq.info.BrokerMqInfo;
  
@@ -55,9 +55,11 @@ public class ZbusServer extends RemotingServer {
 	private boolean persistEnabled = false;
 	 
 	private AdminHandler adminHandler;
-	private final Timer trackReportTimer = new Timer("TrackReportTimer", true); 
-	private final Timer mqSessionCleanTimer = new Timer("MqSessionCleanTimer", true); 
-	private final Timer mqPersistTimer = new Timer("MqPersistTimer", true);
+
+	protected final ScheduledExecutorService trackReportService = Executors.newSingleThreadScheduledExecutor();
+	protected final ScheduledExecutorService mqSessionCleanService = Executors.newSingleThreadScheduledExecutor();
+	protected final ScheduledExecutorService mqPersistService = Executors.newSingleThreadScheduledExecutor();
+	
 	private final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
 	
 	
@@ -332,12 +334,12 @@ public class ZbusServer extends RemotingServer {
 			trackClients.add(client);
 		} 
 		
-		this.trackReportTimer.scheduleAtFixedRate(new TimerTask() { 
+		this.trackReportService.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() { 
 				reportToTrackServer();
 			}
-		}, trackDelay, trackInterval);
+		}, trackDelay, trackInterval, TimeUnit.MILLISECONDS);
 	}
 	
 	private void reportToTrackServer(){
@@ -371,7 +373,7 @@ public class ZbusServer extends RemotingServer {
 	public void start() throws Exception { 
 		super.start();
 		
-		this.mqSessionCleanTimer.scheduleAtFixedRate(new TimerTask() { 
+		this.mqSessionCleanService.scheduleAtFixedRate(new Runnable() { 
 			@Override
 			public void run() {  
 				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
@@ -382,22 +384,22 @@ public class ZbusServer extends RemotingServer {
 		    	}
 				
 			}
-		}, mqCleanDelay, mqCleanInterval);
+		}, mqCleanDelay, mqCleanInterval, TimeUnit.MILLISECONDS);
 		
     	if(this.persistEnabled){
-	    	this.mqPersistTimer.scheduleAtFixedRate(new TimerTask() { 
+	    	this.mqPersistService.scheduleAtFixedRate(new Runnable() { 
 				@Override
 				public void run() {   
 					mqStore.dump();
 				}
-			}, mqPersistDelay, mqPersistInterval);
+			}, mqPersistDelay, mqPersistInterval, TimeUnit.MILLISECONDS);
     	}
 	}
 	
 	public void close(){
-		this.trackReportTimer.cancel();
-		this.mqSessionCleanTimer.cancel();
-		this.mqPersistTimer.cancel();
+		this.trackReportService.shutdown();
+		this.mqSessionCleanService.shutdown();
+		this.mqPersistService.shutdown();
 		for(RemotingClient client : this.trackClients){
 			client.close();
 		}   
