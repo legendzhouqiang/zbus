@@ -34,6 +34,7 @@ public class MyServer{
 		
 		RemotingServer server = new RemotingServer(80, dispatcherManager);
 		server.start();
+		
 	}
 
 }

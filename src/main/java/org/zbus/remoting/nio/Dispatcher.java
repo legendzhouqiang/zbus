@@ -34,7 +34,7 @@ public class Dispatcher extends Thread {
 	
 	
 	public void registerChannel(SelectableChannel channel, int ops) throws IOException{
-		registerChannel(channel, ops, null);
+		registerChannel(channel, ops, null); 
 	}
 	
 	public void registerSession(int ops, Session sess) throws IOException{
