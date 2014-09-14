@@ -55,7 +55,7 @@ class RequestThread extends Thread{
 public class PerfClient { 
 	public static void main(String[] args) throws Exception {
 		final int count = Helper.option(args, "-n", 100000);
-		final int threadCount = Helper.option(args, "-c", 4);
+		final int threadCount = Helper.option(args, "-c", 16);
 		final String zbusHost = Helper.option(args, "-h", "127.0.0.1");
 		final int zbusPort = Helper.option(args, "-p", 15555);
 		final String service = Helper.option(args, "-s", "MqService");

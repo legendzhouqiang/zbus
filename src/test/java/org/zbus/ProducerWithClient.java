@@ -17,7 +17,7 @@ public class ProducerWithClient {
 		Message msg = new Message();   
 		msg.setBody("hello world"); 
 		long start = System.currentTimeMillis();
-		int count = 1000000;
+		int count = 10;
 		final AtomicInteger counter = new AtomicInteger();
 		for(int i=0;i<count;i++){
 			producer.send(msg, new ResultCallback() { 

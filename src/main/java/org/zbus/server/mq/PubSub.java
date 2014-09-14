@@ -86,7 +86,7 @@ public class PubSub extends AbstractMQ {
 				if(msg == null) continue; //消息未到达
 				
 				sess.setPullMsg(null);
-				msg.setMsgIdRaw(pullMsg.getMsgId()); //保留原始消息ID
+				msg.setMsgIdSrc(pullMsg.getMsgId()); //保留原始消息ID
 				msg.setMsgId(pullMsg.getMsgId());    //配对订阅消息！
 				sess.getSession().write(msg);
 			} catch(IOException ex){

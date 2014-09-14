@@ -8,11 +8,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.info.ConsumerInfo;
 
 public class MQ extends AbstractMQ {   
+	private static final Logger log = LoggerFactory.getLogger(MQ.class);
 	private static final long serialVersionUID = -1610052009303680593L;
 	
 	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
@@ -44,7 +47,48 @@ public class MQ extends AbstractMQ {
 	}
 	
 	@Override
-	void doDispatch() throws IOException{ 
+	void doDispatch() throws IOException{  
+		while(msgQ.peek() != null && sessQ.peek() != null){
+			PullSession pull = sessQ.poll(); 
+			if(pull == null || pull.window.get() == 0){
+				continue;
+			}
+			if( !pull.getSession().isActive() ){ 
+				continue;
+			} 
+			
+			Message msg = msgQ.poll();
+			if(msg == null){
+				continue;
+			} 
+			try { 
+				String status = msg.removeHead(Message.HEADER_REPLY_CODE);
+				if(status == null){
+					status = "200";
+				} 
+				
+				Message pullMsg = pull.getPullMsg();
+				msg.setStatus(status);
+				msg.setMsgIdSrc(msg.getMsgId());  //保留原始消息ID
+				msg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
+				pull.getSession().write(msg); 
+				
+				if(pull.window.get()>0){
+					pull.window.decrementAndGet();
+				}
+				
+			} catch (IOException ex) {   
+				log.error(ex.getMessage(), ex); 
+				msgQ.offer(msg);
+			} 
+
+			if(pull.window.get() == -1 || pull.window.get() > 0){
+				sessQ.offer(pull);
+			}
+		} 
+	}
+	
+	void doDispatch2() throws IOException{  
 		while(msgQ.peek() != null && sessQ.peek() != null){
 			PullSession pull = sessQ.poll(); 
 			if(pull == null){
@@ -67,7 +111,7 @@ public class MQ extends AbstractMQ {
 				
 				Message pullMsg = pull.getPullMsg();
 				msg.setStatus(status);
-				msg.setMsgIdRaw(msg.getMsgId());  //保留原始消息ID
+				msg.setMsgIdSrc(msg.getMsgId());  //保留原始消息ID
 				msg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
 				pull.getSession().write(msg);
 			} catch (IOException ex) {  
@@ -75,7 +119,6 @@ public class MQ extends AbstractMQ {
 			} 
 		} 
 	}
-	
 	//used when load from dump
 	public void restoreFromDump(ExecutorService executor) {
 		this.executor = executor;

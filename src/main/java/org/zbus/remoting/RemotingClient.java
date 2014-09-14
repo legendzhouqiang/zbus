@@ -170,6 +170,10 @@ public class RemotingClient {
     	} 
     }
     
+    public void invokeAsync(Message req) throws IOException{
+    	this.invokeAsync(req, null);
+    }
+    
     public void invokeAsync(Message req, ResultCallback callback) throws IOException { 
     	connectIfNeed();
     	

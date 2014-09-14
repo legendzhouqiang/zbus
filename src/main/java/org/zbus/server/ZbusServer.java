@@ -141,6 +141,7 @@ public class ZbusServer extends RemotingServer {
 				}   
 				msg.setHead(Message.HEADER_CLIENT, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
+				msg.setHead(Message.HEADER_SOCKID_SRC, sess.id());
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
 					log.debug("%s", msg);

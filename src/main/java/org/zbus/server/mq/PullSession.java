@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.zbus.remoting.Message;
@@ -13,6 +14,7 @@ public class PullSession {
 	public static final int HIGHT_WATER_MARK = 100;
 	Session session;
     Message pullMsg;
+    AtomicInteger window = new AtomicInteger(1);
     
     final ReentrantLock pullMsgLock = new ReentrantLock();
 	final Set<String> topicSet = new HashSet<String>(); 
@@ -52,6 +54,17 @@ public class PullSession {
 	public void setPullMsg(Message msg) { 
 		this.pullMsg = msg;
 		if(msg == null) return;
+		
+		String window = this.pullMsg.getWindow();
+		if(window != null){
+			try{
+				this.window.set(Integer.valueOf(window));
+			} catch(Exception e){
+				e.printStackTrace();//
+			}
+		} else {
+			this.window.set(1);; //default to 1
+		}
 		
 		String topic = this.pullMsg.getTopic();
 		if(topic != null){

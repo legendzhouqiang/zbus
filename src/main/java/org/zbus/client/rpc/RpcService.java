@@ -45,7 +45,7 @@ class WorkerThread extends Thread{
 				log.debug("Request: %s", msg);
 				
 				final String mqReply = msg.getMqReply();
-				final String msgId  = msg.getMsgIdRaw(); //必须使用原始的msgId
+				final String msgId  = msg.getMsgIdSrc(); //必须使用原始的msgId
 				
 				Message res = config.getServiceHandler().handleRequest(msg);
 				

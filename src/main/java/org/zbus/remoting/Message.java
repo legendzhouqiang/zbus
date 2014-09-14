@@ -29,14 +29,17 @@ public class Message implements Serializable {
 	
 	//常见扩展HTTP协议头部
 	public static final String HEADER_BROKER     = "broker";
+	public static final String HEADER_SOCKID_SRC = "sockid-src"; 
 	public static final String HEADER_TOPIC      = "topic"; //使用,分隔 
 	public static final String HEADER_MQ_REPLY   = "mq-reply";
 	public static final String HEADER_MQ         = "mq";
 	public static final String HEADER_TOKEN      = "token";
-	public static final String HEADER_MSGID      = "msgid";	
-	public static final String HEADER_MSGID_RAW  = "msgid-raw";
+	public static final String HEADER_MSGID      = "msgid";	 //消息ID
+	public static final String HEADER_MSGID_SRC  = "msgid-raw"; //原始消息ID
 	public static final String HEADER_ACK        = "ack";	
-	public static final String HEADER_REPLY_CODE = "reply-code";	
+	public static final String HEADER_REPLY_CODE = "reply-code";	 
+	public static final String HEADER_WINDOW     = "window";	
+	
 	
 	 
 	protected Meta meta = new Meta();
@@ -226,12 +229,12 @@ public class Message implements Serializable {
 	}
 	
 	
-	public String getMsgIdRaw() {
-		return this.getHeadOrParam(HEADER_MSGID_RAW);
+	public String getMsgIdSrc() {
+		return this.getHeadOrParam(HEADER_MSGID_SRC);
 	}
-	public Message setMsgIdRaw(String value) {
+	public Message setMsgIdSrc(String value) {
 		if(value == null) return this;
-		this.setHead(HEADER_MSGID_RAW, value);
+		this.setHead(HEADER_MSGID_SRC, value);
 		return this;
 	}
 	
@@ -271,7 +274,27 @@ public class Message implements Serializable {
 	public Message setTopic(String topic) {
 		this.setHead(HEADER_TOPIC, topic);
 		return this;
-	}  
+	} 
+	
+	public String getWindow() {
+		return getHeadOrParam(HEADER_WINDOW);
+	}
+
+	public Message setWindow(int window) {
+		this.setHead(HEADER_WINDOW, ""+window);
+		return this;
+	} 
+	
+
+	public String getSockIdSrc() {
+		return getHeadOrParam(HEADER_SOCKID_SRC);
+	}
+
+	public Message setSockIdSrc(String value) {
+		this.setHead(HEADER_SOCKID_SRC, value);
+		return this;
+	}   
+
 
 	//////////特殊处理：Command 与 Status 兼容HTTP////////////// 
 	public String getCommand() { //特殊处理 
