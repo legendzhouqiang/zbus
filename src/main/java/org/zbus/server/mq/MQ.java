@@ -87,38 +87,7 @@ public class MQ extends AbstractMQ {
 			}
 		} 
 	}
-	
-	void doDispatch2() throws IOException{  
-		while(msgQ.peek() != null && sessQ.peek() != null){
-			PullSession pull = sessQ.poll(); 
-			if(pull == null){
-				continue;
-			}
-			if( !pull.getSession().isActive() ){ 
-				continue;
-			} 
-			
-			Message msg = msgQ.poll();
-			if(msg == null){
-				continue;
-			}
-			
-			try { 
-				String status = msg.removeHead(Message.HEADER_REPLY_CODE);
-				if(status == null){
-					status = "200";
-				} 
-				
-				Message pullMsg = pull.getPullMsg();
-				msg.setStatus(status);
-				msg.setMsgIdSrc(msg.getMsgId());  //保留原始消息ID
-				msg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
-				pull.getSession().write(msg);
-			} catch (IOException ex) {  
-				msgQ.offer(msg); //TODO 消息顺序处理
-			} 
-		} 
-	}
+	 
 	//used when load from dump
 	public void restoreFromDump(ExecutorService executor) {
 		this.executor = executor;
