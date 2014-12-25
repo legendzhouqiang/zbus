@@ -51,7 +51,7 @@ public class ZbusServer extends RemotingServer {
 	private long mqCleanInterval = 3000;
 	private long mqPersistDelay = 3000;
 	private long mqPersistInterval = 3000;
-	private boolean loadMqFromDump = true;
+	private boolean loadMqFromDump = false;
 	private boolean persistEnabled = false;
 	 
 	private AdminHandler adminHandler;
@@ -139,9 +139,9 @@ public class ZbusServer extends RemotingServer {
 				if(mqReply == null ||  mqReply.equals("")){
 					msg.setMqReply(sess.id()); //reply default to self
 				}   
-				msg.setHead(Message.HEADER_CLIENT, sess.getRemoteAddress());
+				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
-				msg.setHead(Message.HEADER_SOCKID_SRC, sess.id());
+				msg.setHead(Message.HEADER_REMOTE_ID, sess.id());
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
 					log.debug("%s", msg);

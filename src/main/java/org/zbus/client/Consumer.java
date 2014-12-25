@@ -50,7 +50,6 @@ public class Consumer{
 		}
 	}  
 
-   
     public Message recv(int timeout) throws IOException{
     	
     	Message req = new Message();

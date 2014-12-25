@@ -2,7 +2,6 @@ package org.zbus.remoting.nio;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -14,6 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.zbus.common.Helper;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 
@@ -245,14 +245,7 @@ public class Session {
 	
 	public String getLocalAddress() {
 		if (this.status != SessionStatus.CLOSED) { 
-			SocketAddress addr;
-			try {
-				addr = this.channel.getLocalAddress();
-			} catch (IOException e) { 
-				return null;
-			}
-			String res = String.format("%s", addr);
-			return res.substring(1);
+			return Helper.localAddress(this.channel);
 		} 
 		return null;
 	}

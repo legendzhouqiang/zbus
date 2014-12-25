@@ -7,9 +7,12 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -24,12 +27,12 @@ public class Message implements Serializable {
 	public static final String HEARTBEAT         = "heartbeat"; //心跳消息
 	
 	//标准HTTP头部内容
-	public static final String HEADER_CLIENT     = "remote-addr";
+	public static final String HEADER_REMOTE_ADDR= "remote-addr";
 	public static final String HEADER_ENCODING   = "content-encoding";
 	
 	//常见扩展HTTP协议头部
 	public static final String HEADER_BROKER     = "broker";
-	public static final String HEADER_SOCKID_SRC = "sockid-src"; 
+	public static final String HEADER_REMOTE_ID  = "remote-id"; 
 	public static final String HEADER_TOPIC      = "topic"; //使用,分隔 
 	public static final String HEADER_MQ_REPLY   = "mq-reply";
 	public static final String HEADER_MQ         = "mq";
@@ -286,12 +289,12 @@ public class Message implements Serializable {
 	} 
 	
 
-	public String getSockIdSrc() {
-		return getHeadOrParam(HEADER_SOCKID_SRC);
+	public String getRemoteId() {
+		return getHeadOrParam(HEADER_REMOTE_ID);
 	}
 
-	public Message setSockIdSrc(String value) {
-		this.setHead(HEADER_SOCKID_SRC, value);
+	public Message setRemoteId(String value) {
+		this.setHead(HEADER_REMOTE_ID, value);
 		return this;
 	}   
 
@@ -340,20 +343,13 @@ public class Message implements Serializable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(meta+"\r\n");
-		//优先Print msgId与MQ
-		String msgid = head.get(HEADER_MSGID);
-		String mq = head.get(HEADER_MQ);
-		if(msgid != null){
-			sb.append(HEADER_MSGID+": "+msgid+"\r\n");
-		}
-		if(mq != null){
-			sb.append(HEADER_MQ+": "+mq+"\r\n");
-		}
 		
-		for(Map.Entry<String, String> e : head.entrySet()){
-			if(e.getKey().equals(HEADER_MSGID)) continue;
-			if(e.getKey().equals(HEADER_MQ)) continue;
-			sb.append(e.getKey()+": "+e.getValue()+"\r\n");
+		List<String> keys = new ArrayList<String>(head.keySet());
+		Collections.sort(keys);
+		
+		for(String key : keys){ 
+			String val = head.get(key);
+			sb.append(key+": "+val+"\r\n");
 		}
 		sb.append("\r\n");
 		sb.append(getBodyPrintString());

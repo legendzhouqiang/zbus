@@ -7,10 +7,11 @@ import org.zbus.client.rpc.json.JsonRpc;
 import org.zbus.remoting.RemotingClient;
 
 
-public class KcxpJsonRpc {
+public class JsonRpcClientRaw {
 	
 	public static void main(String[] args) throws Throwable { 
 		RemotingClient client = new RemotingClient("127.0.0.1:15555");
+		
 		
 		JsonRpc rpc = new JsonRpc(client, "KCXP");
 		String funcId = "testFunc2413336";

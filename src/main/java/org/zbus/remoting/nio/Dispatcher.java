@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.zbus.common.Helper;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.nio.Session.SessionStatus;
@@ -169,8 +170,8 @@ public class Dispatcher extends Thread {
 	protected void handleAcceptEvent(SelectionKey key) throws IOException{ 
 		ServerSocketChannel server = (ServerSocketChannel) key.channel();
 		SocketChannel channel = server.accept();
-		channel.configureBlocking(false);
-		log.debug("ACCEPT: %s=>%s", channel.getRemoteAddress(), channel.getLocalAddress());
+		channel.configureBlocking(false); 
+		log.debug("ACCEPT: %s=>%s", Helper.remoteAddress(channel), Helper.localAddress(channel));
 		
 		Session sess = new Session(dispatcherManager, channel, dispatcherManager.buildEventAdaptor()); 
 		sess.setStatus(SessionStatus.CONNECTED); //set connected 
@@ -181,7 +182,7 @@ public class Dispatcher extends Thread {
 	
 	protected void handleConnectEvent(SelectionKey key) throws IOException{
 		final SocketChannel channel = (SocketChannel) key.channel();
-		log.debug("CONNECT: %s=>%s", channel.getLocalAddress(), channel.getRemoteAddress());
+		log.debug("CONNECT: %s=>%s", Helper.localAddress(channel), Helper.remoteAddress(channel));
 		
 		Session sess = (Session) key.attachment();
 		if(sess == null){
@@ -203,7 +204,7 @@ public class Dispatcher extends Thread {
 			throw new IOException("Session not attached yet to SelectionKey");
 		}
 		final SocketChannel channel = sess.getChannel();
-		log.debug("READ: %s=>%s", channel.getRemoteAddress(), channel.getLocalAddress());
+		log.debug("READ: %s=>%s", Helper.remoteAddress(channel), Helper.localAddress(channel));
 		
 		sess.doRead();
 	}
@@ -215,7 +216,7 @@ public class Dispatcher extends Thread {
 		}
 		
 		final SocketChannel channel = sess.getChannel();
-		log.debug("WRITE: %s=>%s", channel.getRemoteAddress(), channel.getLocalAddress());
+		log.debug("WRITE: %s=>%s", Helper.remoteAddress(channel), Helper.localAddress(channel));
 		
 		sess.doWrite();
 	}

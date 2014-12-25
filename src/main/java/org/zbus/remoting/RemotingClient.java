@@ -94,7 +94,7 @@ public class RemotingClient {
 					Message hbt = new Message();
 					hbt.setCommand(Message.HEARTBEAT);
 					try {
-						RemotingClient.this.invokeAsync(hbt, null);
+						RemotingClient.this.send(hbt);
 					} catch (IOException e) {  
 						//ignore
 					}
@@ -169,11 +169,8 @@ public class RemotingClient {
     		throw new IOException("Connection failed");
     	} 
     }
-    
-    public void invokeAsync(Message req) throws IOException{
-    	this.invokeAsync(req, null);
-    }
-    
+        
+   
     public void invokeAsync(Message req, ResultCallback callback) throws IOException { 
     	connectIfNeed();
     	
@@ -292,6 +289,22 @@ public class RemotingClient {
 	}
 
 	
+	 /**
+     * asynchronous send message, return message fall into client's callback 
+     * 异步发送消息，消息没有Ticket匹配，由Client的消息回调处理
+     * @param msg
+     * @throws IOException
+     */
+    public void send(Message msg) throws IOException{
+    	connectIfNeed();
+    	//没有设置消息ID则自动生成
+    	if("".equals(msg.getMsgId()) || msg.getMsgId() == null){
+			msg.setMsgId(Ticket.uuidTicket());
+		}
+    	
+    	this.session.write(msg);
+    } 
+    
 	public void onMessage(MessageCallback messageCallback){
     	this.messageCallback = messageCallback;
     	if(this.session != null && this.messageCallback != null){

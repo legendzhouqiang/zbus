@@ -12,7 +12,9 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.URL;
+import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -170,6 +172,18 @@ public class Helper {
 		return Boolean.valueOf(value);
 	}
 	
+	
+	public static String remoteAddress(SocketChannel channel){
+		SocketAddress addr = channel.socket().getRemoteSocketAddress();
+		String res = String.format("%s", addr);
+		return addr==null? res: res.substring(1);
+	}
+	
+	public static String localAddress(SocketChannel channel){
+		SocketAddress addr = channel.socket().getLocalSocketAddress();
+		String res = String.format("%s", addr);
+		return addr==null? res: res.substring(1);
+	}
 	
 	public static void main(String[] args){ 
 		String ip = getLocalIp();

@@ -63,7 +63,7 @@ public class RemotingServer {
     	
     	ServerSocketChannel channel = ServerSocketChannel.open();
     	channel.configureBlocking(false);
-    	channel.bind(new InetSocketAddress(this.serverHost, this.serverPort)); 
+    	channel.socket().bind(new InetSocketAddress(this.serverHost, this.serverPort)); 
     	dispatcherManager.getDispatcher(0).registerChannel(channel, SelectionKey.OP_ACCEPT); 
     	log.info("%s serving@%s:%s", this.serverName, this.serverHost, this.serverPort);
     }
