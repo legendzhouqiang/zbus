@@ -3,9 +3,7 @@ package org.zbus.server.mq;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
@@ -14,35 +12,26 @@ import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.info.BrokerMqInfo;
 import org.zbus.server.mq.info.ConsumerInfo;
 
-public abstract class AbstractMQ implements Serializable{  
+public abstract class MessageQueue implements Serializable{  
 	private static final long serialVersionUID = 3408125142128217794L;
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractMQ.class);
+	private static final Logger log = LoggerFactory.getLogger(MessageQueue.class);
 	
 	protected final String name; 
 	protected String creator;
 	protected long createdTime = System.currentTimeMillis();
 	protected String accessToken = "";
 	protected final long mode;
-	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
+	
 	protected transient ExecutorService executor;
 	
-	public AbstractMQ(String name, ExecutorService executor, int mode){
+	public MessageQueue(String name, ExecutorService executor, int mode){
 		this.name = name; 
 		this.executor = executor; 
 		this.mode = mode;
 	}  
 	 
-	public void produce(Message msg, Session sess) throws IOException{
-		String msgId = msg.getMsgId(); 
-		if(msg.isAck()){
-			ReplyHelper.reply200(msgId, sess);
-		} 
-		
-    	msgQ.offer(msg);  
-    	this.dispatch();
-	}
- 
+	public abstract void produce(Message msg, Session sess) throws IOException;
 	public abstract void consume(Message msg, Session sess) throws IOException;
 	
 	abstract void doDispatch() throws IOException;
@@ -52,7 +41,7 @@ public abstract class AbstractMQ implements Serializable{
 			@Override
 			public void run() { 
 				try {
-					AbstractMQ.this.doDispatch();
+					MessageQueue.this.doDispatch();
 				} catch (IOException e) { 
 					log.error(e.getMessage(), e);
 				}
@@ -92,9 +81,7 @@ public abstract class AbstractMQ implements Serializable{
 
 	public long getMode() {
 		return mode;
-	}
-	
-	
+	} 
 
 	public ExecutorService getExecutor() {
 		return executor;
@@ -109,12 +96,13 @@ public abstract class AbstractMQ implements Serializable{
 		info.setName(name);
 		info.setCreator(creator);
 		info.setCreatedTime(createdTime);
-		info.setUnconsumedMsgCount(msgQ.size()); 
+		info.setUnconsumedMsgCount(this.getMessageQueueSize()); 
 		info.setConsumerInfoList(getConsumerInfoList());
 		info.setMode(this.mode);
 		return info;
 	}
 	
+	public abstract int getMessageQueueSize();
 	public abstract List<ConsumerInfo> getConsumerInfoList();
 	public abstract void restoreFromDump(ExecutorService executor);
 

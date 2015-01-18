@@ -15,8 +15,8 @@ import org.zbus.remoting.Message;
 public class MqStore {
 	private static final Logger log = LoggerFactory.getLogger(MqStore.class);
 	private static final String DUMP_FILE = "zbus.dump";
-	private ConcurrentMap<String, AbstractMQ> mqTable; 
-	public MqStore(ConcurrentMap<String, AbstractMQ> mqTable){
+	private ConcurrentMap<String, MessageQueue> mqTable; 
+	public MqStore(ConcurrentMap<String, MessageQueue> mqTable){
 		this.mqTable = mqTable; 
 	} 
 	
@@ -36,12 +36,12 @@ public class MqStore {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static ConcurrentMap<String, AbstractMQ> load(){
-		ConcurrentMap<String, AbstractMQ> loaded = null;
+	public static ConcurrentMap<String, MessageQueue> load(){
+		ConcurrentMap<String, MessageQueue> loaded = null;
 		try {  
 			FileInputStream in = new FileInputStream(DUMP_FILE);
 			ObjectInputStream mqInputStream = new ObjectInputStream(in);
-			loaded = (ConcurrentMap<String, AbstractMQ>) mqInputStream.readObject();
+			loaded = (ConcurrentMap<String, MessageQueue>) mqInputStream.readObject();
 			mqInputStream.close();
 		} catch (FileNotFoundException e) { 
 			log.debug(e.getMessage(), e);

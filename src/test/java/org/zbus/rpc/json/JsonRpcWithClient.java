@@ -11,10 +11,17 @@ public class JsonRpcWithClient {
 		
 		//2)通过JsonRpcProxy动态创建实现类
 		ServiceInterface rpc = new JsonRpcProxy(client).getService(
-				ServiceInterface.class, "mq=MyJsonRpc"); 
-		for(int i=0;i<1;i++){
+				ServiceInterface.class, "mq=MyJsonRpc&&timeout=1000"); 
+		try {
 			int c = rpc.plus(1, 2); 
 			System.out.println(c);   
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		for(int i=0;i<100;i++){
+		String echo = rpc.echo("hong");
+		System.out.println(echo);
+		
 		}
 	}
 }

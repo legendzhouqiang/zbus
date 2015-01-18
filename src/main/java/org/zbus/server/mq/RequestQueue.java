@@ -14,20 +14,32 @@ import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.info.ConsumerInfo;
 
-public class MQ extends AbstractMQ {   
-	private static final Logger log = LoggerFactory.getLogger(MQ.class);
+public class RequestQueue extends MessageQueue {   
+	private static final Logger log = LoggerFactory.getLogger(RequestQueue.class);
 	private static final long serialVersionUID = -1610052009303680593L;
 	
+	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
 	
-	public MQ(String name, ExecutorService executor, int mode){
+	public RequestQueue(String name, ExecutorService executor, int mode){
 		super(name, executor, mode); 
 	}  
+	
+	public void produce(Message msg, Session sess) throws IOException{
+		String msgId = msg.getMsgId(); 
+		if(msg.isAck()){
+			ReplyHelper.reply200(msgId, sess);
+		} 
+		
+    	msgQ.offer(msg);  
+    	this.dispatch();
+	}
 	
 	public void consume(Message msg, Session sess) throws IOException{ 
 		for(PullSession pull : sessQ){
 			if(pull.getSession() == sess){
 				pull.setPullMsg(msg);
+				this.dispatch();
 				return; 
 			}
 		} 
@@ -107,6 +119,10 @@ public class MQ extends AbstractMQ {
 			res.add(info);
 		}
 		return res;
+	}
+	@Override
+	public int getMessageQueueSize() {
+		return this.msgQ.size();
 	}
 	 
 }

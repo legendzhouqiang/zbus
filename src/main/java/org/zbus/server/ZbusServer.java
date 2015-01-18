@@ -31,10 +31,11 @@ import org.zbus.remoting.ServerEventAdaptor;
 import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.nio.DispatcherManager;
 import org.zbus.remoting.nio.Session;
-import org.zbus.server.mq.AbstractMQ;
-import org.zbus.server.mq.MQ;
+import org.zbus.server.mq.MessageQueue;
+import org.zbus.server.mq.ReplyQueue;
+import org.zbus.server.mq.RequestQueue;
 import org.zbus.server.mq.MqStore;
-import org.zbus.server.mq.PubSub;
+import org.zbus.server.mq.PubsubQueue;
 import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.info.BrokerInfo;
 import org.zbus.server.mq.info.BrokerMqInfo;
@@ -69,7 +70,7 @@ public class ZbusServer extends RemotingServer {
 	private ExecutorService mqExecutor = new ThreadPoolExecutor(4, 
 			16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
-	private final ConcurrentMap<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();  
+	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
 	
 	private final MqStore mqStore = new MqStore(this.mqTable);
 	
@@ -96,19 +97,19 @@ public class ZbusServer extends RemotingServer {
 	}  
 	 
 	private void loadMqTableFromDump(){
-		ConcurrentMap<String, AbstractMQ> load = MqStore.load();
+		ConcurrentMap<String, MessageQueue> load = MqStore.load();
 		if(load == null) return;
-		Iterator<Entry<String, AbstractMQ>> iter = load.entrySet().iterator();
+		Iterator<Entry<String, MessageQueue>> iter = load.entrySet().iterator();
 		while(iter.hasNext()){
-			Entry<String, AbstractMQ> e = iter.next();
-			AbstractMQ mq = e.getValue();
+			Entry<String, MessageQueue> e = iter.next();
+			MessageQueue mq = e.getValue();
 			mq.restoreFromDump(mqExecutor); 
 			this.mqTable.put(e.getKey(), mq);
 		}
 	}
-	private AbstractMQ findMQ(Message msg, Session sess) throws IOException{
+	private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
-		AbstractMQ mq = mqTable.get(mqName);
+		MessageQueue mq = mqTable.get(mqName);
     	boolean ack = msg.isAck();
     	if(mq == null){
     		if(ack){
@@ -161,7 +162,7 @@ public class ZbusServer extends RemotingServer {
 		this.registerHandler(Proto.Produce, new MessageHandler() { 
 			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException { 
-				AbstractMQ mq = findMQ(msg, sess);
+				MessageQueue mq = findMQ(msg, sess);
 				if(mq == null) return;
 				mq.produce(msg, sess); 
 			}
@@ -170,7 +171,7 @@ public class ZbusServer extends RemotingServer {
 		this.registerHandler(Proto.Consume, new MessageHandler() { 
 			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException { 
-				AbstractMQ mq = findMQ(msg, sess);
+				MessageQueue mq = findMQ(msg, sess);
 				if(mq == null) return;
 				mq.consume(msg, sess); 
 			}
@@ -179,23 +180,23 @@ public class ZbusServer extends RemotingServer {
 		
 		this.registerHandler(Proto.Request, new MessageHandler() { 
 			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException { 
-				AbstractMQ reqMq = findMQ(msg, sess);
-				if(reqMq == null) return;
+			public void handleMessage(Message requestMsg, Session sess) throws IOException { 
+				MessageQueue requestMq = findMQ(requestMsg, sess);
+				if(requestMq == null) return;
 				
 				
-				String replyMqName = msg.getMqReply();  
-				AbstractMQ replyMq = mqTable.get(replyMqName);
+				String replyMqName = requestMsg.getMqReply();  
+				MessageQueue replyMq = mqTable.get(replyMqName);
 				if(replyMq == null){
 					int mode = MessageMode.intValue(MessageMode.MQ, MessageMode.Temp);
-					replyMq = new MQ(replyMqName, mqExecutor, mode); 
+					replyMq = new ReplyQueue(replyMqName, mqExecutor, mode); 
 					replyMq.setCreator(sess.getRemoteAddress());
 					mqTable.putIfAbsent(replyMqName, replyMq);
 				} 
-				msg.setAck(false);
+				requestMsg.setAck(false);
 				
-				Message msgConsume = Message.copyWithoutBody(msg);
-				reqMq.produce(msg, sess); 
+				Message msgConsume = Message.copyWithoutBody(requestMsg);
+				requestMq.produce(requestMsg, sess); 
 				replyMq.consume(msgConsume, sess);
 			}
 		});
@@ -227,12 +228,12 @@ public class ZbusServer extends RemotingServer {
 	        		return;  
 	    		} 
 	    		
-	    		AbstractMQ mq = mqTable.get(mqName);
+	    		MessageQueue mq = mqTable.get(mqName);
 	    		if(mq == null){
 	    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
-	    				mq = new PubSub(mqName, mqExecutor, mode);
+	    				mq = new PubsubQueue(mqName, mqExecutor, mode);
 	    			} else {//默认到消息队列
-	    				mq = new MQ(mqName, mqExecutor, mode);
+	    				mq = new RequestQueue(mqName, mqExecutor, mode);
 	    			} 
 	    			mq.setAccessToken(accessToken);
 		    		mq.setCreator(sess.getRemoteAddress());
@@ -244,12 +245,12 @@ public class ZbusServer extends RemotingServer {
 		    		return;
 	    		}
 	    		
-	    		if(MessageMode.isEnabled(mode, MessageMode.MQ) && !(mq instanceof MQ)){
+	    		if(MessageMode.isEnabled(mode, MessageMode.MQ) && !(mq instanceof RequestQueue)){
     				msg.setBody("MsgQueue, type not matched");
 	    			ReplyHelper.reply400(msg, sess);
 	        		return;  
     			}
-	    		if(MessageMode.isEnabled(mode, MessageMode.PubSub) && !(mq instanceof PubSub)){
+	    		if(MessageMode.isEnabled(mode, MessageMode.PubSub) && !(mq instanceof PubsubQueue)){
     				msg.setBody("Pubsub, type not matched");
 	    			ReplyHelper.reply400(msg, sess);
 	        		return;  
@@ -301,7 +302,7 @@ public class ZbusServer extends RemotingServer {
 	
 	public Map<String, BrokerMqInfo> getMqInfoTable(){
    		Map<String, BrokerMqInfo> table = new HashMap<String, BrokerMqInfo>();
-   		for(Map.Entry<String, AbstractMQ> e : this.mqTable.entrySet()){
+   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
    			table.put(e.getKey(), e.getValue().getMqInfo());
    		}
    		return table;
@@ -377,10 +378,10 @@ public class ZbusServer extends RemotingServer {
 		this.mqSessionCleanService.scheduleAtFixedRate(new Runnable() { 
 			@Override
 			public void run() {  
-				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
+				Iterator<Entry<String, MessageQueue>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){
-		    		Entry<String, AbstractMQ> e = iter.next();
-		    		AbstractMQ mq = e.getValue(); 
+		    		Entry<String, MessageQueue> e = iter.next();
+		    		MessageQueue mq = e.getValue(); 
 		    		mq.cleanSession();
 		    	}
 				
@@ -436,7 +437,7 @@ public class ZbusServer extends RemotingServer {
  
 
 class ZbusServerEventAdaptor extends ServerEventAdaptor{ 
-	private ConcurrentMap<String, AbstractMQ> mqTable = null;
+	private ConcurrentMap<String, MessageQueue> mqTable = null;
 	 
     @Override
     public void onException(Throwable e, Session sess) throws IOException {
@@ -455,10 +456,10 @@ class ZbusServerEventAdaptor extends ServerEventAdaptor{
     private void cleanMQ(Session sess){
     	if(this.mqTable == null) return;
     	String creator = sess.getRemoteAddress();
-    	Iterator<Entry<String, AbstractMQ>> iter = this.mqTable.entrySet().iterator();
+    	Iterator<Entry<String, MessageQueue>> iter = this.mqTable.entrySet().iterator();
     	while(iter.hasNext()){
-    		Entry<String, AbstractMQ> e = iter.next();
-    		AbstractMQ mq = e.getValue();
+    		Entry<String, MessageQueue> e = iter.next();
+    		MessageQueue mq = e.getValue();
     		if(MessageMode.isEnabled(mq.getMode(), MessageMode.Temp)){
     			if(mq.getCreator().equals(creator)){
         			iter.remove();
@@ -467,7 +468,7 @@ class ZbusServerEventAdaptor extends ServerEventAdaptor{
     	}
     } 
     
-	public void setMqTable(ConcurrentMap<String, AbstractMQ> mqTable) {
+	public void setMqTable(ConcurrentMap<String, MessageQueue> mqTable) {
 		this.mqTable = mqTable;
 	}  
 }

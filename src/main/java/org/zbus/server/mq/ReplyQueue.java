@@ -1,0 +1,108 @@
+package org.zbus.server.mq;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.info.ConsumerInfo;
+
+public class ReplyQueue extends MessageQueue {   
+	private static final Logger log = LoggerFactory.getLogger(ReplyQueue.class);
+	private static final long serialVersionUID = -1610052009303680593L;
+	
+	protected final ConcurrentMap<String, Message> msgQ = new ConcurrentHashMap<String, Message>();
+	transient PullSession pullSession = null;
+	
+	public ReplyQueue(String name, ExecutorService executor, int mode){
+		super(name, executor, mode); 
+	}  
+	
+	public void produce(Message msg, Session sess) throws IOException{
+		String msgId = msg.getMsgId(); 
+		if(msg.isAck()){
+			ReplyHelper.reply200(msgId, sess);
+		} 
+		
+    	msgQ.put(msgId, msg);
+    	this.dispatch();
+	}
+	
+	public void consume(Message msg, Session sess) throws IOException{ 
+		if( this.pullSession == null){
+			this.pullSession = new PullSession(sess, msg);
+		}
+		this.pullSession.setSession(sess);
+		this.pullSession.setPullMsg(msg);
+		this.dispatch();
+	} 
+	
+	public void cleanSession(){
+	}
+	
+	@Override
+	void doDispatch() throws IOException{  
+		if(this.pullSession == null) return;
+		if(this.pullSession.getSession() == null) return;
+		if(this.pullSession.getPullMsg() == null) return;
+		
+		String msgId = this.pullSession.getPullMsg().getMsgId();
+		
+		if(this.msgQ.containsKey(msgId)){
+			Message msg = this.msgQ.get(msgId);  
+			if(!msgId.equals(msg.getMsgId())){
+				return;
+			} 
+			this.msgQ.remove(msgId);
+			try { 
+				String status = msg.removeHead(Message.HEADER_REPLY_CODE);
+				if(status == null){
+					status = "200";
+				} 
+				msg.setStatus(status);
+				this.pullSession.getSession().write(msg); 
+				
+				if(this.pullSession.window.get()>0){
+					this.pullSession.window.decrementAndGet();
+				}
+				
+			} catch (IOException ex) {   
+				log.error(ex.getMessage(), ex);  
+			} 
+
+			if(this.pullSession.window.get() != -1 && this.pullSession.window.get() <= 0){
+				this.pullSession.setSession(null);
+			}
+
+		} 
+	}
+	 
+	//used when load from dump
+	public void restoreFromDump(ExecutorService executor) {
+		this.executor = executor; 
+	}
+	
+	public List<ConsumerInfo> getConsumerInfoList() {
+		List<ConsumerInfo> res = new ArrayList<ConsumerInfo>();
+		if(this.pullSession != null && this.pullSession.getSession() != null){
+			PullSession value = this.pullSession;
+			Session sess = value.getSession(); 
+			ConsumerInfo info = new ConsumerInfo();
+			info.setStatus(sess.getStatus().toString());
+			info.setRemoteAddr(sess.getRemoteAddress());
+			res.add(info);
+		}
+		return res;
+	}
+	@Override
+	public int getMessageQueueSize() {
+		return this.msgQ.size();
+	}
+	 
+}

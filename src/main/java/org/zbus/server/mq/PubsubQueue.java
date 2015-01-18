@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
@@ -15,17 +17,27 @@ import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.info.ConsumerInfo;
 
-public class PubSub extends AbstractMQ {    
+public class PubsubQueue extends MessageQueue {    
 	private static final long serialVersionUID = -2208189626959936406L;
 
-	private static final Logger log = LoggerFactory.getLogger(PubSub.class);	
+	private static final Logger log = LoggerFactory.getLogger(PubsubQueue.class);	
 	
+	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	//保留所有的订阅Session
 	transient ConcurrentMap<String, PullSession> sessMap = new ConcurrentHashMap<String, PullSession>(); 
-	public PubSub(String name, ExecutorService executor, int mode){
+	public PubsubQueue(String name, ExecutorService executor, int mode){
 		super(name, executor, mode); 
 	}
 	
+	public void produce(Message msg, Session sess) throws IOException{
+		String msgId = msg.getMsgId(); 
+		if(msg.isAck()){
+			ReplyHelper.reply200(msgId, sess);
+		} 
+		
+    	msgQ.offer(msg);  
+    	this.dispatch();
+	}
 	
 	@Override
 	public void consume(Message msg, Session sess) throws IOException{ 
@@ -119,5 +131,10 @@ public class PubSub extends AbstractMQ {
 			res.add(info);
 		}
 		return res;
+	}
+	
+	@Override
+	public int getMessageQueueSize() {
+		return this.msgQ.size();
 	}
 }
