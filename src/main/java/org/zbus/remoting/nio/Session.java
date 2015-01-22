@@ -152,14 +152,13 @@ public class Session {
 						//log.error(e.getMessage(), e);
 						try {
 							eventAdaptor.onException(e, Session.this);
-						} catch (Throwable e1) { 
-						} finally{
+						} catch (IOException e1) { 
 							try {
 								close();
 							} catch (Throwable e2) {
 								log.error(e2.getMessage(), e2);
-							} 
-						}
+							}
+						}  
 					}
 				}
 			});  

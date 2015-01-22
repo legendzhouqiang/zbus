@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.common.Helper;
 import org.zbus.common.MqInfo;
@@ -21,6 +27,7 @@ import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.RemotingServer;
 import org.zbus.remoting.ServerDispatcherManager;
 import org.zbus.remoting.nio.Session;
@@ -32,6 +39,7 @@ public class TrackServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(TrackServer.class);
 	private long brokerObsoleteTime = 10000; 
 	private long publishInterval = 10000;
+	private long probeInterval = 3000;
 	private long lastPublishTime = 0;
 	
 	
@@ -40,6 +48,11 @@ public class TrackServer extends RemotingServer {
 	private String fullTrackMapBuffer = null;
 	
 	private Map<String, Session> subscribers = new ConcurrentHashMap<String, Session>();
+	private Map<String, RemotingClient> brokerProbes = new ConcurrentHashMap<String, RemotingClient>();
+	
+	protected final ScheduledExecutorService trackPubService = Executors.newSingleThreadScheduledExecutor();
+	private ExecutorService trackExecutor = new ThreadPoolExecutor(4, 
+			16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
 	public TrackServer(int serverPort, ServerDispatcherManager dispatcherManager) { 
 		this("0.0.0.0", serverPort, dispatcherManager);
@@ -48,6 +61,38 @@ public class TrackServer extends RemotingServer {
 	public TrackServer(String serverHost, int serverPort,ServerDispatcherManager dispatcherManager) {
 		super(serverHost, serverPort, dispatcherManager);
 		this.serverName = "TrackServer";
+		
+		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
+			@Override
+			public void run() {
+				publishTrackTable();
+			}
+		}, 0, publishInterval, TimeUnit.MILLISECONDS);
+		
+		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
+			@Override
+			public void run() {
+				probeBrokers();
+			}
+		}, 0, probeInterval, TimeUnit.MILLISECONDS);
+	}
+	
+	
+	private void probeBrokers(){
+		
+		Iterator<Entry<String, RemotingClient>> iter = brokerProbes.entrySet().iterator();
+		while(iter.hasNext()){
+			Entry<String, RemotingClient> entry = iter.next();
+			String brokerAddress = entry.getKey();
+			RemotingClient client = entry.getValue();
+			if(!client.hasConnected()){
+				rawTrackMap.remove(brokerAddress);
+				rebuildTrackTable(); 
+				iter.remove();
+			}
+		}
+		log.info("Track: "+ trackTable);
+		
 	}
 	
 	private void rebuildTrackTable(){
@@ -83,9 +128,10 @@ public class TrackServer extends RemotingServer {
 	}
 	 
 	private void publishTrackTable(){
-		if(subscribers.size()<1) return; 
-		//String curFullTrackMapBuffer = JSON.toJSONString(trackTable, true);
 		String curFullTrackMapBuffer = trackTable.toString();
+		//log.info("Track: " + curFullTrackMapBuffer);
+		if(subscribers.size()<1) return;  
+		
 		if(curFullTrackMapBuffer.equals(fullTrackMapBuffer)){
 			if(System.currentTimeMillis()-lastPublishTime<publishInterval){
 				return;
@@ -137,14 +183,27 @@ public class TrackServer extends RemotingServer {
 					log.error(e.getMessage(), e);
 					return;
 				}
-				BrokerInfo map = BrokerInfo.fromJson(json);
-				log.info("Broker Report:\n%s", map);
+				final BrokerInfo map = BrokerInfo.fromJson(json);
+				final String brokerAddress = map.getBroker();
+				//log.info("Broker Report:\n%s", map); 
+				if(!brokerProbes.containsKey(brokerAddress)){
+					final RemotingClient client = new RemotingClient(brokerAddress);
+					trackExecutor.submit(new Runnable() {
+						@Override
+						public void run() { 
+							try {
+								client.connectIfNeed();
+								brokerProbes.put(brokerAddress, client);
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					});
+				}
 				
-				rawTrackMap.put(map.getBroker(), map);
+				rawTrackMap.put(brokerAddress, map);
 				
-				rebuildTrackTable(); 
-				
-				
+				rebuildTrackTable();  
 				publishTrackTable(); 
 			}
 		});

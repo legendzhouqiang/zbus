@@ -25,56 +25,81 @@ package org.zbus.client.rpc;
 
 import java.io.IOException;
 
-import org.zbus.client.ClientPool;
-import org.zbus.client.InvokeHelper;
-import org.zbus.common.Proto;
+import org.zbus.client.Broker;
+import org.zbus.client.Caller;
+import org.zbus.client.ZbusException;
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
-import org.zbus.remoting.ticket.ResultCallback;
 
-public class Rpc {  
-	protected ClientPool pool; 
-	protected RemotingClient client = null;
-	protected String mq;
-	protected String token = "";  
- 
-	public Rpc(ClientPool pool, String mq) {
-		this.pool = pool;
-		this.mq = mq;
-	}
-	 
-	public Rpc(RemotingClient client, String mq) {
-		this.client = client;
-		this.mq = mq;
+public class Rpc extends Caller{  
+	private static final Logger log = LoggerFactory.getLogger(Rpc.class);
+	private static final Codec codec = new JsonCodec();
+	public static final String DEFAULT_ENCODING = "UTF-8";  
+	
+	private String module = ""; 
+	private String encoding = DEFAULT_ENCODING;
+	private int timeout = 10000;  
+
+	public Rpc(Broker broker, String mq) {
+		super(broker, mq); 
 	}
 	
 	
-	public Message invokeSync(Message req, int timeout) throws IOException{ 
-		req.setCommand(Proto.Request); 
-		req.setMq(this.mq);
-		req.setToken(this.token);  
-    	 
-		return InvokeHelper.invokeSync(pool, client, req, timeout);
-	}
-	
-	public void invokeAsync(Message req, ResultCallback callback) throws IOException{
-		req.setCommand(Proto.Request); 
-		req.setMq(this.mq);
-		req.setToken(this.token);  
-    	InvokeHelper.invokeAsync(pool, client, req, callback);
-	}
-	
-	
-	public String getMq() {
-		return mq;
+	public <T> T invokeSync(String method, Object... args) {
+		return invokeSyncWithType(method, null, args);
 	} 
-	public void setMq(String mq) {
-		this.mq = mq;
-	} 
-	public String getToken() {
-		return token;
-	} 
-	public void setToken(String token) {
-		this.token = token;
+	
+	public <T> T invokeSyncWithType(String method, Class<?>[] types, Object... args) {	
+		Request req = new Request();
+		req.setModule(this.module);
+		req.setMethod(method); 
+		req.setParams(args); 
+		req.setParamTypes(types); 
+		 
+		Message msg = null;
+		try {
+			msg = codec.encode(req);
+			log.debug("Request: %s", msg);
+			msg = this.invokeSync(msg, this.timeout); 
+			log.debug("Reply: %s", msg);
+		} catch (IOException e) {
+			throw new ZbusException(e.getMessage(), e);
+		}
+		
+		if (msg == null) { 
+			throw new ZbusException("rpc request timeout");
+		}
+		
+		return codec.decode(msg, this.encoding);
 	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+
+	public String getModule() {
+		return module;
+	}
+
+	public void setModule(String module) {
+		this.module = module;
+	}
+	
+	public Rpc module(String module) {
+		this.module = module;
+		return this;
+	}
+
+	public int getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	} 
 }
