@@ -1,7 +1,5 @@
 package org.zbus.ha;
 
-import java.io.IOException;
-
 import org.zbus.client.Broker;
 import org.zbus.client.Producer;
 import org.zbus.client.broker.HaBroker;
@@ -10,12 +8,12 @@ import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 
 public class ProducerExample {
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		// 1）创建Broker代表
 		HaBrokerConfig config = new HaBrokerConfig();
 		config.setTrackAddrList("127.0.0.1:16666:127.0.0.1:16667");
-		Broker broker = new HaBroker(config);
-
+		Broker broker = new HaBroker(config); 
+		
 		// 2) 创建生产者
 		Producer producer = new Producer(broker, "MyMQ");
 		while(true){
@@ -28,9 +26,16 @@ public class ProducerExample {
 						System.out.println(result);
 					}
 				});
-				Thread.sleep(1000);
+				
 			}catch(Exception ex){
 				ex.printStackTrace();
+			} finally{
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}

@@ -7,11 +7,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
+import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
-import org.zbus.server.mq.info.ConsumerInfo;
 
 public class ReplyQueue extends MessageQueue {   
 	private static final Logger log = LoggerFactory.getLogger(ReplyQueue.class);
@@ -20,8 +20,8 @@ public class ReplyQueue extends MessageQueue {
 	protected final ConcurrentMap<String, Message> msgQ = new ConcurrentHashMap<String, Message>();
 	transient PullSession pullSession = null;
 	
-	public ReplyQueue(String name, ExecutorService executor, int mode){
-		super(name, executor, mode); 
+	public ReplyQueue(String broker, String name, ExecutorService executor, int mode){
+		super(broker, name, executor, mode); 
 	}  
 	
 	public void produce(Message msg, Session sess) throws IOException{

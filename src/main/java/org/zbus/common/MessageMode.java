@@ -7,16 +7,20 @@ public enum MessageMode {
 	Temp;   //是否临时
 	
 	private MessageMode(){
-        mask = (1L << ordinal());
+        mask = (1 << ordinal());
     }
 	
-    private final long mask;
+    private final int mask;
 
-    public final long getMask() {
+    public final int getMask() {
         return mask;
     }
     
-    public static boolean isEnabled(long features, MessageMode feature) {
+    public int intValue(){
+    	return this.mask;
+    }
+    
+    public static boolean isEnabled(int features, MessageMode feature) {
         return (features & feature.getMask()) != 0;
     }
     

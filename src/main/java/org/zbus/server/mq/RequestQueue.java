@@ -8,11 +8,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
-import org.zbus.server.mq.info.ConsumerInfo;
 
 public class RequestQueue extends MessageQueue {   
 	private static final Logger log = LoggerFactory.getLogger(RequestQueue.class);
@@ -21,8 +21,8 @@ public class RequestQueue extends MessageQueue {
 	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
 	
-	public RequestQueue(String name, ExecutorService executor, int mode){
-		super(name, executor, mode); 
+	public RequestQueue(String broker, String name, ExecutorService executor, int mode){
+		super(broker, name, executor, mode); 
 	}  
 	
 	public void produce(Message msg, Session sess) throws IOException{

@@ -5,27 +5,29 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import org.zbus.common.MqInfo;
+import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
-import org.zbus.server.mq.info.BrokerMqInfo;
-import org.zbus.server.mq.info.ConsumerInfo;
 
 public abstract class MessageQueue implements Serializable{  
 	private static final long serialVersionUID = 3408125142128217794L;
 
 	private static final Logger log = LoggerFactory.getLogger(MessageQueue.class);
 	
+	protected final String broker; 
 	protected final String name; 
 	protected String creator;
 	protected long createdTime = System.currentTimeMillis();
 	protected String accessToken = "";
-	protected final long mode;
+	protected final int mode;
 	
 	protected transient ExecutorService executor;
 	
-	public MessageQueue(String name, ExecutorService executor, int mode){
+	public MessageQueue(String broker, String name, ExecutorService executor, int mode){
+		this.broker = broker;
 		this.name = name; 
 		this.executor = executor; 
 		this.mode = mode;
@@ -79,7 +81,7 @@ public abstract class MessageQueue implements Serializable{
 	}
 	
 
-	public long getMode() {
+	public int getMode() {
 		return mode;
 	} 
 
@@ -91,15 +93,16 @@ public abstract class MessageQueue implements Serializable{
 		this.executor = executor;
 	}
 
-	public BrokerMqInfo getMqInfo(){
-		BrokerMqInfo info = new BrokerMqInfo();
+	public MqInfo getMqInfo(){
+		MqInfo info = new MqInfo(); 
+		info.setBroker(broker);
 		info.setName(name);
 		info.setCreator(creator);
 		info.setCreatedTime(createdTime);
 		info.setUnconsumedMsgCount(this.getMessageQueueSize()); 
 		info.setConsumerInfoList(getConsumerInfoList());
 		info.setMode(this.mode);
-		return info;
+		return info; 
 	}
 	
 	public abstract int getMessageQueueSize();

@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.zbus.common.Proto;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.ticket.ResultCallback;
 
 
@@ -24,41 +23,16 @@ public class Caller{
 		req.setToken(this.accessToken); 
 	}
 	
-	private ClientHint myClientHint(){
-		ClientHint hint = new ClientHint();
-		hint.setMq(mq);
-		return hint;
-	}
-	
 	public Message invokeSync(Message req, int timeout) throws IOException{ 
 		this.fillCallMessage(req); 
-		
-		RemotingClient client = null;
-		try { 
-			client = broker.getClient(myClientHint());
-			return client.invokeSync(req, timeout);
-		} finally {
-			if(client != null){
-				broker.closeClient(client);
-			}
-		}
+		return broker.produceMessage(req, timeout);
 	}
 	
 	public void invokeAsync(Message req, ResultCallback callback) throws IOException{
 		this.fillCallMessage(req);   
-		
-		RemotingClient client = null;
-		try {
-			client = broker.getClient(myClientHint());
-			client.invokeAsync(req, callback);
-		} finally {
-			if(client != null){
-				broker.closeClient(client);
-			}
-		}
+		broker.produceMessage(req, callback);
 	}
 
-	
 	
 	
 	public String getMq() {

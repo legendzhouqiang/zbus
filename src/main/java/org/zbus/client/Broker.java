@@ -1,24 +1,26 @@
 package org.zbus.client;
 
+import java.io.IOException;
+
+import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.ticket.ResultCallback;
 
 
 
 public interface Broker {
 	/**
-	 * 从broker获取一个链接，可以是新创建的，也可以是连接池中借用的
+	 * 创建一个消费者连接
 	 * @param hint
 	 * @return
 	 */
-	RemotingClient getClient(ClientHint hint);
-	
+	RemotingClient getConsumerClient(ClientHint hint) throws IOException;
 	/**
-	 * 关闭链接，底层可以实现为关闭物理连接，也可以是返回连接池
+	 * 关闭一个消费者连接
+	 * @param client
 	 */
-	void closeClient(RemotingClient client);
-	
-	/**
-	 * 销毁Broker
-	 */
+	void closeConsumerClient(RemotingClient client) throws IOException;
+	void produceMessage(Message msg, final ResultCallback callback) throws IOException;
+	Message produceMessage(Message req, int timeout) throws IOException;  
 	void destroy();
 }

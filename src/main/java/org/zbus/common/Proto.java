@@ -18,6 +18,7 @@ public class Proto {
 	
 	//管理类
 	public static final String Admin = "admin";      //管理类消息
+	public static final String AdminCommand = "cmd";
 	public static final String CreateMQ = "create_mq";      
 	
 	//TrackServer通讯
@@ -25,12 +26,14 @@ public class Proto {
 	public static final String TrackSub    = "track_sub";  
 	public static final String TrackPub    = "track_pub"; 
 	
+	
+	
 	public static Message buildAdminMessage(String registerToken, String cmd, Map<String, String> params){
     	Message msg = new Message();
     	msg.setCommand(Admin); 
     	msg.setToken(registerToken);
     	
-    	msg.setHead("cmd", cmd); 
+    	msg.setHead(AdminCommand, cmd); 
     	for(Map.Entry<String, String> e : params.entrySet()){
     		msg.setHead(e.getKey(), e.getValue());
     	}

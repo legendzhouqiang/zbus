@@ -205,6 +205,14 @@ public class Message implements Serializable {
 		return size;
 	} 
 	
+	public String getBroker(){
+		return this.getHeadOrParam(HEADER_BROKER);
+	}
+	
+	public void setBroker(String value){
+		this.setHead(HEADER_BROKER, value);
+	}
+	
 	public String getMqReply() {
 		return this.getHeadOrParam(HEADER_MQ_REPLY);
 	}

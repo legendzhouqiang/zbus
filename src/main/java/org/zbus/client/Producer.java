@@ -7,7 +7,6 @@ import java.util.Map;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.ticket.ResultCallback;
 
 public class Producer {     
@@ -38,24 +37,11 @@ public class Producer {
 		params.put("mq_mode", "" + modeValue);
 		Message req = Proto.buildAdminMessage(registerToken, Proto.CreateMQ,
 				params);
+		 
+		Message res = broker.produceMessage(req, 3000);
+		if (res == null) return false;
+		return res.isStatus200();
 		
-		RemotingClient client = null;
-		try {
-			client = broker.getClient(myClientHint());
-			Message res = client.invokeSync(req);
-			if (res == null) return false;
-			return res.isStatus200();
-		} finally {
-			if(client != null){
-				this.broker.closeClient(client);
-			}
-		} 
-	}
-
-	private ClientHint myClientHint(){
-		ClientHint hint = new ClientHint();
-		hint.setMq(mq);
-		return hint;
 	}
 	
 	public void send(Message msg, final ResultCallback callback)
@@ -64,16 +50,9 @@ public class Producer {
 		msg.setMq(this.mq);
 		msg.setToken(this.accessToken);
 		
-		RemotingClient client = null;
-		try {
-			client = broker.getClient(myClientHint());
-			client.invokeAsync(msg, callback);
-		} finally {
-			if(client != null){
-				broker.closeClient(client);
-			}
-		}
+		broker.produceMessage(msg, callback);
 	}
+	
 
 	public String getAccessToken() {
 		return accessToken;

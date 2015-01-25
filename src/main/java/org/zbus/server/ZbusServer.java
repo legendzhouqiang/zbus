@@ -17,6 +17,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.zbus.common.BrokerInfo;
+import org.zbus.common.MqInfo;
 import org.zbus.common.Helper;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
@@ -37,8 +39,8 @@ import org.zbus.server.mq.RequestQueue;
 import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubsubQueue;
 import org.zbus.server.mq.ReplyHelper;
-import org.zbus.server.mq.info.BrokerInfo;
-import org.zbus.server.mq.info.BrokerMqInfo;
+
+import com.alibaba.fastjson.JSON;
  
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
@@ -46,7 +48,6 @@ public class ZbusServer extends RemotingServer {
 	private String adminToken = ""; 
 	private long trackDelay = 1000;
 	private long trackInterval = 3000;
-	
 	
 	private long mqCleanDelay = 1000;
 	private long mqCleanInterval = 3000;
@@ -64,14 +65,10 @@ public class ZbusServer extends RemotingServer {
 	private final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
 	
 	
-	private ExecutorService reportExecutor = new ThreadPoolExecutor(4, 
-			16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-	
-	private ExecutorService mqExecutor = new ThreadPoolExecutor(4, 
-			16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+	private ExecutorService reportExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+	private ExecutorService mqExecutor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
 	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
-	
 	private final MqStore mqStore = new MqStore(this.mqTable);
 	
 	
@@ -83,17 +80,14 @@ public class ZbusServer extends RemotingServer {
 		super(serverHost, serverPort, new ZbusServerDispachterManager());  
 		
 		ZbusServerEventAdaptor eventHandler = (ZbusServerEventAdaptor) this.serverHandler;
-		eventHandler.setMqTable(mqTable);
-		
+		eventHandler.setMqTable(mqTable); 
 		this.serverName = "ZbusServer";
     	this.adminHandler = new AdminHandler();
     	this.adminHandler.setAdminToken(this.adminToken);
     	
     	if(loadMqFromDump){
     		this.loadMqTableFromDump();
-    	}
-    	
-    	
+    	} 
 	}  
 	 
 	private void loadMqTableFromDump(){
@@ -107,6 +101,8 @@ public class ZbusServer extends RemotingServer {
 			this.mqTable.put(e.getKey(), mq);
 		}
 	}
+	
+	
 	private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
 		MessageQueue mq = mqTable.get(mqName);
@@ -189,7 +185,7 @@ public class ZbusServer extends RemotingServer {
 				MessageQueue replyMq = mqTable.get(replyMqName);
 				if(replyMq == null){
 					int mode = MessageMode.intValue(MessageMode.MQ, MessageMode.Temp);
-					replyMq = new ReplyQueue(replyMqName, mqExecutor, mode); 
+					replyMq = new ReplyQueue(serverAddr, replyMqName, mqExecutor, mode); 
 					replyMq.setCreator(sess.getRemoteAddress());
 					mqTable.putIfAbsent(replyMqName, replyMq);
 				} 
@@ -231,9 +227,9 @@ public class ZbusServer extends RemotingServer {
 	    		MessageQueue mq = mqTable.get(mqName);
 	    		if(mq == null){
 	    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
-	    				mq = new PubsubQueue(mqName, mqExecutor, mode);
+	    				mq = new PubsubQueue(serverAddr, mqName, mqExecutor, mode);
 	    			} else {//默认到消息队列
-	    				mq = new RequestQueue(mqName, mqExecutor, mode);
+	    				mq = new RequestQueue(serverAddr, mqName, mqExecutor, mode);
 	    			} 
 	    			mq.setAccessToken(accessToken);
 		    		mq.setCreator(sess.getRemoteAddress());
@@ -300,20 +296,17 @@ public class ZbusServer extends RemotingServer {
 	
 	}
 	
-	public Map<String, BrokerMqInfo> getMqInfoTable(){
-   		Map<String, BrokerMqInfo> table = new HashMap<String, BrokerMqInfo>();
-   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			table.put(e.getKey(), e.getValue().getMqInfo());
-   		}
-   		return table;
-   	}
 	
 	private Message packServerInfo(){
+		Map<String, MqInfo> table = new HashMap<String, MqInfo>();
+   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
+   			table.put(e.getKey(), e.getValue().getMqInfo());
+   		} 
 		Message msg = new Message(); 
 		BrokerInfo info = new BrokerInfo();
 		info.setBroker(serverAddr);
-		info.setMqTable(getMqInfoTable());   
-		msg.setBody(info.toString());
+		info.setMqTable(table);  
+		msg.setBody(JSON.toJSONString(info));
 		return msg;
 	}
 	
@@ -417,7 +410,7 @@ public class ZbusServer extends RemotingServer {
 	}
 
 	public static void main(String[] args) throws Exception{
-		int serverPort = Helper.option(args, "-p", 15555);
+		int serverPort = Helper.option(args, "-p", 15556);
 		boolean persistEnabled = Helper.option(args, "-bw", false);
 		int persistInterval = Helper.option(args, "-w", 3000);
 		String adminToken = Helper.option(args, "-adm", "");

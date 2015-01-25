@@ -1,20 +1,39 @@
 package org.zbus.common;
 
-import org.zbus.common.json.JSONObject;
-
+import java.util.List;
 
 public class MqInfo {
 	private String broker;
 	private String name;
+	private int mode;
+	private String creator;
+	private long createdTime;
 	private long unconsumedMsgCount;
-	private long consumerCount;
+	private List<ConsumerInfo> consumerInfoList;
 	
-	
+	public String getBroker() {
+		return broker;
+	}
+	public void setBroker(String broker) {
+		this.broker = broker;
+	}
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	public String getCreator() {
+		return creator;
+	}
+	public void setCreator(String creator) {
+		this.creator = creator;
+	}
+	public long getCreatedTime() {
+		return createdTime;
+	}
+	public void setCreatedTime(long createdTime) {
+		this.createdTime = createdTime;
 	}
 	public long getUnconsumedMsgCount() {
 		return unconsumedMsgCount;
@@ -22,37 +41,37 @@ public class MqInfo {
 	public void setUnconsumedMsgCount(long unconsumedMsgCount) {
 		this.unconsumedMsgCount = unconsumedMsgCount;
 	}
+	public int getConsumerCount(){
+		if(this.consumerInfoList == null) return 0;
+		return this.consumerInfoList.size();
+	}
+	public List<ConsumerInfo> getConsumerInfoList() {
+		return consumerInfoList;
+	}
+	public void setConsumerInfoList(List<ConsumerInfo> consumerInfoList) {
+		this.consumerInfoList = consumerInfoList;
+	}
 	
-	public long getConsumerCount() {
-		return consumerCount;
+	public int getMode() {
+		return mode;
 	}
-	public void setConsumerCount(long consumerCount) {
-		this.consumerCount = consumerCount;
+	public void setMode(int mode) {
+		this.mode = mode;
 	}
-	public String getBroker() {
-		return broker;
-	}
-	public void setBroker(String broker) {
-		this.broker = broker;
+	
+	public double getLoadFactor(){
+		if(this.consumerInfoList == null ||
+				this.consumerInfoList.size() == 0) return Double.MAX_VALUE;
+		return 1.0*(unconsumedMsgCount+0.000001)/this.consumerInfoList.size();
 	}
 	
 	@Override
 	public String toString() {
-		JSONObject json = new JSONObject();
-		json.put("broker", this.broker);
-		json.put("name", this.name);
-		json.put("unconsumedMsgCount", this.unconsumedMsgCount);
-		json.put("consumerCount", this.consumerCount); 
-		return json.toJSONString();
+		return "MqInfo [broker=" + broker + ", name=" + name + ", mode=" + mode
+				+ ", creator=" + creator + ", createdTime=" + createdTime
+				+ ", unconsumedMsgCount=" + unconsumedMsgCount
+				+ ", consumerInfoList=" + consumerInfoList + "]";
 	} 
 	
-	public static MqInfo fromJson(JSONObject json){ 
-		MqInfo info = new MqInfo();
-		info.broker = (String)json.get("broker");
-		info.name = (String)json.get("name");
-		info.unconsumedMsgCount = (Long)json.get("unconsumedMsgCount");
-		info.consumerCount = (Long)json.get("consumerCount"); 
-		
-		return info;
-	}
+	
 }
