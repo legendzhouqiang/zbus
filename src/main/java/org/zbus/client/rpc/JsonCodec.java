@@ -5,17 +5,16 @@ import java.util.Collection;
 import java.util.List;
 
 import org.zbus.client.ZbusException;
+import org.zbus.common.json.JSON;
+import org.zbus.common.json.JSONArray;
+import org.zbus.common.json.JSONException;
+import org.zbus.common.json.JSONObject;
+import org.zbus.common.json.serializer.JSONSerializer;
+import org.zbus.common.json.serializer.SerializeWriter;
+import org.zbus.common.json.serializer.SerializerFeature;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.JSONSerializer;
-import com.alibaba.fastjson.serializer.SerializeWriter;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 public class JsonCodec implements Codec {
 	private static final Logger log = LoggerFactory.getLogger(JsonCodec.class);

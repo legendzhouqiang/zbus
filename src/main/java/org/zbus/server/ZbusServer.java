@@ -22,6 +22,7 @@ import org.zbus.common.MqInfo;
 import org.zbus.common.Helper;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
+import org.zbus.common.json.JSON;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
@@ -39,8 +40,6 @@ import org.zbus.server.mq.RequestQueue;
 import org.zbus.server.mq.MqStore;
 import org.zbus.server.mq.PubsubQueue;
 import org.zbus.server.mq.ReplyHelper;
-
-import com.alibaba.fastjson.JSON;
  
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
@@ -410,7 +409,7 @@ public class ZbusServer extends RemotingServer {
 	}
 
 	public static void main(String[] args) throws Exception{
-		int serverPort = Helper.option(args, "-p", 15556);
+		int serverPort = Helper.option(args, "-p", 15555);
 		boolean persistEnabled = Helper.option(args, "-bw", false);
 		int persistInterval = Helper.option(args, "-w", 3000);
 		String adminToken = Helper.option(args, "-adm", "");

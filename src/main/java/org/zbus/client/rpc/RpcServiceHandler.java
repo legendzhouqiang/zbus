@@ -29,14 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.zbus.client.ServiceHandler;
+import org.zbus.common.json.JSON;
+import org.zbus.common.json.JSONArray;
+import org.zbus.common.json.JSONObject;
+import org.zbus.common.json.serializer.SerializerFeature;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 class MethodInstance{
 	public Method method;

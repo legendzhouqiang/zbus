@@ -2,11 +2,11 @@ package org.zbus.client.broker;
 
 import java.io.IOException;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.zbus.common.pool.BasePooledObjectFactory;
+import org.zbus.common.pool.PooledObject;
+import org.zbus.common.pool.impl.DefaultPooledObject;
+import org.zbus.common.pool.impl.GenericObjectPool;
+import org.zbus.common.pool.impl.GenericObjectPoolConfig;
 import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.RemotingClient;
 

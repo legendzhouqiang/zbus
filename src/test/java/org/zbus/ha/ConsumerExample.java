@@ -1,7 +1,5 @@
 package org.zbus.ha;
 
-import java.io.IOException;
-
 import org.zbus.client.Broker;
 import org.zbus.client.Consumer;
 import org.zbus.client.broker.HaBroker;
@@ -9,7 +7,7 @@ import org.zbus.client.broker.HaBrokerConfig;
 import org.zbus.remoting.Message;
 
 public class ConsumerExample {
-	public static void main(String[] args) throws IOException{  
+	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代表
 		HaBrokerConfig config = new HaBrokerConfig();
 		config.setTrackAddrList("127.0.0.1:16666:127.0.0.1:16667");
@@ -23,6 +21,7 @@ public class ConsumerExample {
 				if(msg == null) continue;
 				System.out.println(msg);
 			} catch(Exception e){
+				Thread.sleep(1000);
 				e.printStackTrace();
 			}
 		}

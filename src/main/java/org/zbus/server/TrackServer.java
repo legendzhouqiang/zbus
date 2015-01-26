@@ -17,6 +17,7 @@ import org.zbus.common.BrokerInfo;
 import org.zbus.common.Helper;
 import org.zbus.common.Proto;
 import org.zbus.common.TrackTable;
+import org.zbus.common.json.JSON;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
@@ -25,8 +26,6 @@ import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.RemotingServer;
 import org.zbus.remoting.ServerDispatcherManager;
 import org.zbus.remoting.nio.Session;
-
-import com.alibaba.fastjson.JSON;
  
  
 public class TrackServer extends RemotingServer {  
