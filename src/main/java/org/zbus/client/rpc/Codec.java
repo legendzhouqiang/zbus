@@ -3,7 +3,10 @@ package org.zbus.client.rpc;
 import org.zbus.remoting.Message;
 
 public interface Codec {
-	Message encode(Request request);
-	Message encode(Response response);
-	<T> T decode(Message msg, String encoding);
+	Message  encodeRequest(Request request);
+	Message  encodeResponse(Response response);
+	Request  decodeRequest(Message msg);
+	Response decodeResponse(Message msg);
+	
+	Object normalize(Object param, Class<?> targetType) throws ClassNotFoundException;
 }

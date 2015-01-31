@@ -5,12 +5,12 @@ import java.io.IOException;
 import org.zbus.client.Broker;
 import org.zbus.client.Service;
 import org.zbus.client.ServiceConfig;
-import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.rpc.RpcServiceHandler;
 import org.zbus.common.Helper;
-import org.zbus.rpc.biz.ServiceImpl;
-import org.zbus.rpc.biz.ServiceInterface;
+import org.zbus.rpc.biz.Interface;
+import org.zbus.rpc.biz.InterfaceImpl;
 
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
@@ -30,7 +30,7 @@ public class RpcServiceExample {
 		
 		RpcServiceHandler handler = new RpcServiceHandler(); 
 		//增加模块，模块名在调用时需要指定
-		handler.addModule(ServiceInterface.class, new ServiceImpl());  
+		handler.addModule(Interface.class, new InterfaceImpl());  
 	    //handler.addModule("ServiceInterface", new ServiceImpl()); //可以指定模块名
 				
 		//处理逻辑

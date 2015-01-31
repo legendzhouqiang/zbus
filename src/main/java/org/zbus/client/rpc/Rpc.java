@@ -45,33 +45,68 @@ public class Rpc extends Caller{
 		super(broker, mq); 
 	}
 	
+	@SuppressWarnings("unchecked")
+	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
+		Object netObj = invokeSync(method, args);
+		try {
+			return (T) codec.normalize(netObj, clazz);
+		} catch (ClassNotFoundException e) { 
+			throw new ZbusException(e.getMessage(), e.getCause());
+		}
+	}
 	
-	public <T> T invokeSync(String method, Object... args) {
+	@SuppressWarnings("unchecked")
+	public <T> T invokeSyncWithType(Class<T> clazz, String method, Class<?>[] types, Object... args){
+		Object netObj = invokeSyncWithType(method, types, args);
+		try {
+			return (T) codec.normalize(netObj, clazz);
+		} catch (ClassNotFoundException e) { 
+			throw new ZbusException(e.getMessage(), e.getCause());
+		}
+	}
+	
+	public Object invokeSync(String method, Object... args) {
 		return invokeSyncWithType(method, null, args);
 	} 
 	
-	public <T> T invokeSyncWithType(String method, Class<?>[] types, Object... args) {	
+	public Object invokeSyncWithType(String method, Class<?>[] types, Object... args) {	
 		Request req = new Request();
 		req.setModule(this.module);
 		req.setMethod(method); 
 		req.setParams(args); 
-		req.setParamTypes(types); 
+		req.assignParamTypes(types); 
+		req.setEncoding(this.encoding);
 		 
 		Message msg = null;
 		try {
-			msg = codec.encode(req);
+			msg = codec.encodeRequest(req);
 			log.debug("Request: %s", msg);
 			msg = this.invokeSync(msg, this.timeout); 
-			log.debug("Reply: %s", msg);
+			log.debug("Response: %s", msg);
 		} catch (IOException e) {
 			throw new ZbusException(e.getMessage(), e);
 		}
 		
 		if (msg == null) { 
-			throw new ZbusException("rpc request timeout");
+			String errorMsg = String.format("method(%s) request timeout", method);
+			throw new ZbusException(errorMsg);
 		}
 		
-		return codec.decode(msg, this.encoding);
+		Response resp = codec.decodeResponse(msg);
+		
+		
+		if(resp.getStackTrace() != null){
+			Throwable error = resp.getError();
+			if(error != null){
+				if(error instanceof RuntimeException){
+					throw (RuntimeException)error;
+				}
+				throw new ZbusException(error.getMessage(), error.getCause()); 
+			} else {
+				throw new ZbusException(resp.getStackTrace());
+			}
+		} 
+		return resp.getResult();
 	}
 
 	public String getEncoding() {

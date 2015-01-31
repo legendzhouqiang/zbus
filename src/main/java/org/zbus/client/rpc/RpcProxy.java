@@ -12,8 +12,13 @@ import org.zbus.client.Broker;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
  
-
-public class RpcProxy { //轻量级代理
+/**
+ * 
+ * 
+ * @author 洪磊明(rushmore)
+ *
+ */
+public class RpcProxy {
 	private static final Logger log = LoggerFactory.getLogger(RpcProxy.class);
 	private static Constructor<RpcInvoker> rpcInvokerCtor;
 	private static Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
@@ -87,28 +92,26 @@ public class RpcProxy { //轻量级代理
 		
 		RpcInvoker rpcInvoker = rpcInvokerCache.get(cacheKey);
 		Class<T>[] interfaces = new Class[] { api };
-		if(rpcInvoker != null){
-			return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, rpcInvoker);
+		if(rpcInvoker == null){
+			Rpc rpc = new Rpc(broker, mq);
+			if(module != null){
+				rpc.setModule(module);
+			} 
+			if(encoding != null) {
+				rpc.setEncoding(params.get("encoding"));
+			}
+			if(timeout != null) { 
+				rpc.setTimeout(Integer.valueOf(params.get("timeout")));
+			}
+			if (accessToken != null) { 
+				rpc.setAccessToken(accessToken);
+			} 
+			
+			rpcInvoker = rpcInvokerCtor.newInstance(rpc); 
+			rpcInvokerCache.put(cacheKey, rpcInvoker); 
 		}
-		Rpc rpc = new Rpc(broker, mq);
-	
-		if(module != null){
-			rpc.setModule(module);
-		} 
-		if(encoding != null) {
-			rpc.setEncoding(params.get("encoding"));
-		}
-		if(timeout != null) { 
-			rpc.setTimeout(Integer.valueOf(params.get("timeout")));
-		}
-		if (accessToken != null) { 
-			rpc.setAccessToken(accessToken);
-		} 
-		
-		rpcInvoker = rpcInvokerCtor.newInstance(rpc); 
-		rpcInvokerCache.put(cacheKey, rpcInvoker);
-		
-		return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, rpcInvoker);
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		return (T) Proxy.newProxyInstance(classLoader, interfaces, rpcInvoker);
 	} 
 }
 
@@ -125,9 +128,9 @@ class RpcInvoker implements InvocationHandler {
 			args = new Object[0];
 		}
 		Object value = handleLocalMethod(proxy, method, args);
-		if (value != REMOTE_METHOD_CALL) return value;
-	
-		return rpc.invokeSyncWithType(method.getName(),method.getParameterTypes(), args);
+		if (value != REMOTE_METHOD_CALL) return value; 
+		Class<?> returnType = method.getReturnType(); 
+		return rpc.invokeSyncWithType(returnType, method.getName(),method.getParameterTypes(), args);
 	}
 
 	protected Object handleLocalMethod(Object proxy, Method method,

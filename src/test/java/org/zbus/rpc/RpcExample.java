@@ -1,12 +1,25 @@
 package org.zbus.rpc;
 
+import java.util.Arrays;
+import java.util.Random;
+
 import org.zbus.client.Broker;
-import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.rpc.RpcProxy;
-import org.zbus.rpc.biz.ServiceInterface;
+import org.zbus.rpc.biz.Interface;
+import org.zbus.rpc.biz.User;
 
 public class RpcExample {
+	public static User getUser(String name) {
+		User user = new User();
+		user.setName(name);
+		user.setPassword("password"+System.currentTimeMillis());
+		user.setAge(new Random().nextInt(100));
+		user.setItem("item_1");
+		user.setRoles(Arrays.asList("admin", "common"));		
+		return user;
+	}
 	public static void main(String[] args) throws Exception {
 		// 1）创建Broker代表 
 		SingleBrokerConfig config = new SingleBrokerConfig();
@@ -15,20 +28,20 @@ public class RpcExample {
 
 		RpcProxy proxy = new RpcProxy(broker);
 		
-		ServiceInterface rpc = proxy.getService(
-				ServiceInterface.class,
+		Interface hello = proxy.getService(
+				Interface.class,
 				"mq=MyRpc&&timeout=1000");
 
-		try {
-			int c = rpc.plus(1, 2);
-			System.out.println(c);
-		} catch (Exception e) {
-			e.printStackTrace();
+	/*    Object[] res = hello.objectArray();
+		for(Object obj : res){
+			System.out.println(obj);
 		}
-		for (int i = 0; i < 100; i++) {
-			String echo = rpc.echo("hong"+i);
-			System.out.println(echo);
-
-		}
+		
+		Object[] array = new Object[]{getUser("rushmore"), "hong", true, 1, String.class};
+		int saved = hello.saveObjectArray(array);
+		System.out.println(saved);
+		*/
+		hello.noReturn();
+		hello.throwException();
 	}
 }

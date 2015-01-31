@@ -22,13 +22,15 @@
  ***************************************************************************/
 package org.zbus.client.rpc;
 
+import java.util.Arrays;
+
 
 
 public class Request{ 
 	private String module = "";
 	private String method;
 	private Object[] params;
-	private Class<?>[] paramTypes;
+	private String[] paramTypes;
 	private String encoding = "UTF-8";
 	
 	public String getModule() {
@@ -49,10 +51,10 @@ public class Request{
 	public void setParams(Object[] params) {
 		this.params = params;
 	}
-	public Class<?>[] getParamTypes() {
+	public String[] getParamTypes() {
 		return paramTypes;
 	}
-	public void setParamTypes(Class<?>[] paramTypes) {
+	public void setParamTypes(String[] paramTypes) {
 		this.paramTypes = paramTypes;
 	}
 	public String getEncoding() {
@@ -60,6 +62,29 @@ public class Request{
 	}
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
+	}
+	
+	public void assignParamTypes(Class<?>... types){
+		this.paramTypes = new String[types.length];
+		for(int i=0; i<types.length; i++){
+			this.paramTypes[i]= types[i].getCanonicalName(); 
+		}
+	}
+	
+	public static void normalize(Request req){
+		if(req.module == null){
+			req.module = "";
+		}
+		if(req.params == null){
+			req.params = new Object[0];
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return "Request [module=" + module + ", method=" + method + ", params="
+				+ Arrays.toString(params) + ", paramTypes="
+				+ Arrays.toString(paramTypes) + ", encoding=" + encoding + "]";
 	}
 	
 }

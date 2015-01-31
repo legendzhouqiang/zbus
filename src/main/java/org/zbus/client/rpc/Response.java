@@ -1,8 +1,13 @@
 package org.zbus.client.rpc;
 
-public class Response {
-	private Object result;
-	private Class<?> returnType;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+public class Response { 
+	public static final String KEY_RESULT = "result";
+	public static final String KEY_STACK_TRACE = "stackTrace"; 
+	
+	private Object result;  
 	private Throwable error;
 	private String stackTrace;
 	private String encoding = "UTF-8";
@@ -13,17 +18,21 @@ public class Response {
 	public void setResult(Object result) {
 		this.result = result;
 	}
-	public Class<?> getReturnType() {
-		return returnType;
-	}
-	public void setReturnType(Class<?> returnType) {
-		this.returnType = returnType;
-	}
+	
 	public Throwable getError() {
 		return error;
 	}
+	
 	public void setError(Throwable error) {
 		this.error = error;
+		if(error == null) return;
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		if(error.getCause() != null){
+			error = error.getCause();
+		}
+		error.printStackTrace(pw);  
+		this.stackTrace = sw.toString();
 	}
 	public String getStackTrace() {
 		return stackTrace;
@@ -37,4 +46,5 @@ public class Response {
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
+	
 }

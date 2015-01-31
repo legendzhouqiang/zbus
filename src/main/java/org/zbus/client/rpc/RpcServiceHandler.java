@@ -22,17 +22,12 @@
  ***************************************************************************/
 package org.zbus.client.rpc;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.zbus.client.ServiceHandler;
-import org.zbus.common.json.JSON;
-import org.zbus.common.json.JSONArray;
-import org.zbus.common.json.JSONObject;
-import org.zbus.common.json.serializer.SerializerFeature;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
@@ -53,11 +48,10 @@ class MethodInstance{
 }
 
 public class RpcServiceHandler implements ServiceHandler {
-	private static final Logger log = LoggerFactory.getLogger(RpcServiceHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(RpcServiceHandler.class); 
+	private static final Codec codec = new JsonCodec();//TODO configurable
 	
-	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	private Map<String,MethodInstance> methods = new HashMap<String, MethodInstance>();
-	
 	
 	public void addModule(Class<?> clazz, Object... services){
 		addModule(clazz.getSimpleName(), services);
@@ -70,216 +64,133 @@ public class RpcServiceHandler implements ServiceHandler {
 	}
 	
 	private void initCommandTable(String module, Object service){
-		Class<?>[] classes = new Class<?>[service.getClass().getInterfaces().length+1];
-		classes[0] = service.getClass(); 
-		for(int i=1; i<classes.length; i++){
-			classes[i] = service.getClass().getInterfaces()[i-1];
-		}
-		try { 
-			for(Class<?> clazz : classes){
-				Method [] methods = clazz.getMethods(); 
-				for (Method m : methods) { 
-					Remote cmd = m.getAnnotation(Remote.class);
-					if(cmd != null){
-						String paramMD5 = ""; 
-						Class<?>[] paramTypes = m.getParameterTypes();
-						StringBuilder sb = new StringBuilder();
-						for(int i=0;i<paramTypes.length;i++){ 
-							sb.append(paramTypes[i].getCanonicalName());
-						}
-						paramMD5 = sb.toString();
-						
-						String method = cmd.id();
-						if("".equals(method)){
-							method = m.getName();
-						}  
-						String key = module + ":" + method+":"+paramMD5; 
-						String key2 = module + ":" + method;
-						if(this.methods.containsKey(key)){
-							log.error(key + " duplicated"); 
-						} else {
-							log.debug("register "+service.getClass().getSimpleName()+"\t" + key);
-							log.debug("register "+service.getClass().getSimpleName()+"\t"  + key2);
-						}
-						m.setAccessible(true);
-						MethodInstance mi = new MethodInstance(m, service);
-						this.methods.put(key, mi);  
-						this.methods.put(key2, mi);  
-					}
-				} 
-			}
+		try {  
+			Method [] methods = service.getClass().getMethods(); 
+			for (Method m : methods) { 
+				String method = m.getName();
+				Remote cmd = m.getAnnotation(Remote.class);
+				if(cmd != null){ 
+					method = cmd.id();
+					if(cmd.exclude()) continue;
+					if("".equals(method)){
+						method = m.getName();
+					}  
+				}
+				
+				String paramMD5 = ""; 
+				Class<?>[] paramTypes = m.getParameterTypes();
+				StringBuilder sb = new StringBuilder();
+				for(int i=0;i<paramTypes.length;i++){ 
+					sb.append(paramTypes[i].getCanonicalName());
+				}
+				paramMD5 = sb.toString();
+				String key = module + ":" + method+":"+paramMD5; 
+				String key2 = module + ":" + method;
+				if(this.methods.containsKey(key)){
+					log.error(key + " duplicated"); 
+				} else {
+					log.debug("register "+service.getClass().getSimpleName()+"\t" + key);
+					log.debug("register "+service.getClass().getSimpleName()+"\t"  + key2);
+				}
+				m.setAccessible(true);
+				MethodInstance mi = new MethodInstance(m, service);
+				this.methods.put(key, mi);  
+				this.methods.put(key2, mi);  
+			}  
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 		}   
 	}
 	
-	
-	public Message handleJsonRequest(byte[] jsonData, String charsetName){  
-		Throwable error = null;
-		Object result = null; 
-		JSONObject req = null;
-		String module = "";
-		String method = null; 
-		JSONArray args = null;
-		MethodInstance target = null; 
-		JSONArray paramTypes = null;
-		String paramMD5 = "";
-		 
-		try{  
-			String jsonStr = new String(jsonData, charsetName);
-			req = (JSONObject) JSON.parse(jsonStr);
-		} catch (Exception e) {
-			e.printStackTrace();
-			error = e;
-		}
-		 
-		if(error == null){
-			try{ 
-				module = req.getString("module");
-				method = req.getString("method");
-				args = req.getJSONArray("params");
-				paramTypes = req.getJSONArray("paramTypes");
-                if(paramTypes != null){
-                	StringBuilder sb = new StringBuilder();
-                	for(int i=0; i<paramTypes.size(); i++){
-                		if (paramTypes.get(i) == null) continue;
-                		sb.append(paramTypes.get(i).toString());
-                	}
-                	paramMD5 = sb.toString();
-                }
-			} catch (Exception e) {
-				error = e;
-			}
-			if(module == null){
-				module = "";
-			}
-			if(method == null){
-				error = new IllegalArgumentException("missing method name");
-			}
-		}
-		
-		String key = module+":"+method+":"+paramMD5;
-		if(error == null){
-			if(this.methods.containsKey(key)){
-				target = this.methods.get(key); 
-			}else{ 
-				String keyWithoutParams = module+":"+method;
-				if(this.methods.containsKey(keyWithoutParams)){
-					target = this.methods.get(keyWithoutParams); 
-				} else {
-					String msg = String.format("%s:%s not found, module may not set, or wrong", module, method);
-					error = new IllegalArgumentException(msg);
-				}
-			}
-		}
-		Class<?> returnType=null;
-		if(error == null){
-			try { 
-				Class<?>[] paramTypeList = target.method.getParameterTypes();
-				returnType = target.method.getReturnType();
-				
-				//添加返回值类型，判断是否为数组
-				if(returnType != null && returnType.isArray()){
-					returnType = returnType.getComponentType(); 
-				}
-				
-				if(args == null){ //FIX of none parameters
-					args = new JSONArray();
-				}
-				
-				if(paramTypeList.length == args.size()){
-					Object[] params = new Object[paramTypeList.length]; 
-					for(int i=0; i<paramTypeList.length; i++){
-						if (paramTypeList[i].getName().equals("java.lang.Class"))
-							params[i] = Thread.currentThread().getContextClassLoader().loadClass(args.get(i).toString());
-						else 
-							params[i] = args.getObject(i, paramTypeList[i]);
-					}
-					result = target.method.invoke(target.instance, params); 
-				} else {
-					String requiredParamTypeString = "";
-					for(int i=0;i<paramTypeList.length;i++){
-						Class<?> paramType = paramTypeList[i]; 
-						requiredParamTypeString += paramType.getName();
-						if(i<paramTypeList.length-1){
-							requiredParamTypeString += ", ";
-						}
-					}
-					String gotParamsString = "";
-					for(int i=0;i<args.size();i++){ 
-						gotParamsString += args.getString(i);
-						if(i<args.size()-1){
-							gotParamsString += ", ";
-						}
-					}
-					String msg = String.format("Method:%s(%s), called with %s(%s)", 
-							target.method.getName(), requiredParamTypeString, target.method.getName(),gotParamsString);
-					error = new IllegalArgumentException(msg);
-				} 
-			} catch (Throwable e) {
-			    log.error(e.getMessage(), e);
-				error = e;
-			}
-		} 
-		 
-		if(error == null){    
-			return okMessage(result, returnType, charsetName);
-		} else { 
-			String status = "500";
-			if(error instanceof IllegalArgumentException){
-				status = "400";
-			}
-			return errorMessage(error, charsetName, status);
-		} 
-	}
-
-	private Message okMessage(Object result, Class<?> returnType, String encoding){
-		Message res = new Message();
-		JSONObject data = new JSONObject();
-		res.setStatus("200");
-		data.put("result", result); 
-		if(returnType != null){
-			data.put("returnType", returnType); 
-		}
-		
-		byte[] resBytes = null;  
-		resBytes = JsonCodec.toJSONBytes(data, encoding, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteClassName);
-		res.setJsonBody(resBytes);
-		return res;
+	private static boolean isBlank(String value){
+		return (value == null || "".equals(value.trim()));
 	}
 	
-	private Message errorMessage(Throwable error, String encoding, String status){
-		Message res = new Message();
-		res.setStatus(status);
-		
-		JSONObject data = new JSONObject(); 
-		
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		if(error.getCause() != null){
-			error = error.getCause();
+	private Request decodeRequest(Message msg){
+		Request req = codec.decodeRequest(msg);
+		Request.normalize(req); //json未设置好的module或者params标准化
+		if(isBlank(req.getMethod())){
+			throw new IllegalArgumentException("missing method name");
 		}
-		error.printStackTrace(pw); 
-		data.put("error", error); 
-		data.put("stack_trace", sw.toString()); 
+		return req;
+	}
+	
+	private MethodInstance findMethod(Request req){ 
+		String paramTypesMD5 = "";
+		if(req.getParamTypes() != null){
+			for(String type : req.getParamTypes()){
+				paramTypesMD5 += type;
+			}
+		}
+		String module = req.getModule(); 
+		String method = req.getMethod();
+		String key = module+":"+method+":"+paramTypesMD5;//支持语言多态
+		String key2 = module+":"+method;
+		if(this.methods.containsKey(key)){
+			return this.methods.get(key); 
+		} else {  
+			if(this.methods.containsKey(key2)){
+				return this.methods.get(key2); 
+			} else {
+				String errorMsg = String.format("%s:%s not found, module may not set, or wrong", module, method);
+				throw new IllegalArgumentException(errorMsg);
+			}
+		}
+	}
+	
+	private void checkParamTypes(MethodInstance target, Request req){
+		Class<?>[] targetParamTypes = target.method.getParameterTypes();
 		
-		byte[] resBytes = null;  
-		resBytes = JsonCodec.toJSONBytes(data, encoding, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteClassName);
-		res.setJsonBody(resBytes);
-		return res;
+		if(targetParamTypes.length !=  req.getParams().length){
+			String requiredParamTypeString = "";
+			for(int i=0;i<targetParamTypes.length;i++){
+				Class<?> paramType = targetParamTypes[i]; 
+				requiredParamTypeString += paramType.getName();
+				if(i<targetParamTypes.length-1){
+					requiredParamTypeString += ", ";
+				}
+			}
+			Object[] params = req.getParams();
+			String gotParamsString = "";
+			for(int i=0;i<params.length;i++){ 
+				gotParamsString += params[i];
+				if(i<params.length-1){
+					gotParamsString += ", ";
+				}
+			}
+			String errorMsg = String.format("Method:%s(%s), called with %s(%s)", 
+					target.method.getName(), requiredParamTypeString, target.method.getName(), gotParamsString);
+			throw new IllegalArgumentException(errorMsg);
+		}
 	}
 	
 	@Override
-	public Message handleRequest(Message request) {  
-		String encoding = request.getEncoding();
-		if(encoding == null){
-			encoding = DEFAULT_ENCODING;
+	public Message handleRequest(Message msg){  
+		Response resp = new Response();
+		try {
+			Request req = decodeRequest(msg);
+			MethodInstance target = findMethod(req);
+			checkParamTypes(target, req);
+			
+			Class<?>[] targetParamTypes = target.method.getParameterTypes();
+			Object[] invokeParams = new Object[targetParamTypes.length];  
+			Object[] reqParams = req.getParams();
+			for(int i=0; i<targetParamTypes.length; i++){ 
+				invokeParams[i] = codec.normalize(reqParams[i], targetParamTypes[i]);
+			} 
+			Object result = target.method.invoke(target.instance, invokeParams);
+			resp.setResult(result); 
+			resp.setEncoding(msg.getEncoding());
+		} catch (InvocationTargetException e) { 
+			resp.setError(e.getTargetException());
+		} catch (Throwable e) { 
+			resp.setError(e);
 		} 
-		try { 
-			byte[] jsonBytes = request.getBody();  
-			return this.handleJsonRequest(jsonBytes, encoding);
-		} catch (Throwable error) {
-			return errorMessage(error, encoding, "500");
+		try{
+			return codec.encodeResponse(resp);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e.getCause());
 		} 
-	} 
+		return null; //should not here
+	}
 }
