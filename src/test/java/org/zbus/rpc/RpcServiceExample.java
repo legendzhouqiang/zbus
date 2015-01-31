@@ -9,7 +9,6 @@ import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.rpc.RpcServiceHandler;
 import org.zbus.common.Helper;
-import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.InterfaceImpl;
 
 public class RpcServiceExample {
@@ -20,7 +19,7 @@ public class RpcServiceExample {
 		
 		ServiceConfig config = new ServiceConfig();
 		config.setThreadCount(threadCount); 
-		config.setServiceName(service);
+		config.setMq(service);
 		//配置Broker
 		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
 		brokerCfg.setBrokerAddress(address);
@@ -30,8 +29,7 @@ public class RpcServiceExample {
 		
 		RpcServiceHandler handler = new RpcServiceHandler(); 
 		//增加模块，模块名在调用时需要指定
-		handler.addModule(Interface.class, new InterfaceImpl());  
-	    //handler.addModule("ServiceInterface", new ServiceImpl()); //可以指定模块名
+		handler.addModule(new InterfaceImpl());   
 				
 		//处理逻辑
 		config.setServiceHandler(handler);

@@ -53,8 +53,18 @@ public class RpcServiceHandler implements ServiceHandler {
 	
 	private Map<String,MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
-	public void addModule(Class<?> clazz, Object... services){
-		addModule(clazz.getSimpleName(), services);
+	public RpcServiceHandler(Object... services){
+		addModule(services);
+	}
+	public void addModule(Object... services){
+		for(Object obj : services){
+			for(Class<?> intf : obj.getClass().getInterfaces()){
+				addModule(intf.getSimpleName(), obj);
+				addModule(intf.getCanonicalName(), obj);
+			}
+			addModule(obj.getClass().getSimpleName(), obj);
+			addModule(obj.getClass().getCanonicalName(), obj);
+		}
 	}
 	
 	public void addModule(String module, Object... services){

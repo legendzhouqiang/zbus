@@ -4,11 +4,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.client.Broker;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
  
@@ -23,90 +21,39 @@ public class RpcProxy {
 	private static Constructor<RpcInvoker> rpcInvokerCtor;
 	private static Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
 	
-	private final Broker broker;
-	
 	static {
 		try {
 			rpcInvokerCtor = RpcInvoker.class.getConstructor(new Class[] {Rpc.class });
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-	} 
-	
-	public RpcProxy(Broker broker){
-		this.broker = broker;
-	}
-	
-	private static Map<String, String> parseKeyValues(String kvstring) {
-		Map<String, String> res = new HashMap<String, String>();
-		String[] parts = kvstring.split("\\&\\&");
-		for(String kv : parts){
-			String[] kvp = kv.split("=");
-			String key = kvp[0].trim();
-			String val = "";
-			if(kvp.length>1){
-				val = kvp[1].trim();
-			} 
-			res.put(key, val);
-		}
-		return res;
-	} 
-	
-	/**
-	 * mq=TRADE&&encoding=utf8
-	 * 
-	 * encoding=UTF8
-	 * module=
-	 * timeout=10000
-	 * token= 
-	 * 
-	 * @param api 
-	 */
-	public <T> T getService(Class<T> api, String params) throws Exception { 
-		Map<String, String> kvs = parseKeyValues(params);
-		return getService(api, kvs);
-	} 
-	
-	public <T> T getService(Class<T> api, String mq, Map<String, String> params) throws Exception { 
-		params.put("mq", mq);
-		return getService(api, params);
-	}
+	}  
 	
 	@SuppressWarnings("unchecked")
-	public <T> T getService(Class<T> api, Map<String, String> params) throws Exception {  
-		String mq = params.get("mq"); 
+	public static <T> T getService(Class<T> api, RpcConfig config) throws Exception {   
+		String mq = config.getMq(); 
 		if(mq == null){
 			throw new IllegalArgumentException("Missing argument mq");
 		}
-		String module = params.get("module");
-		if(module == null){
+		String module = config.getModule();
+		if(module == null ||module.trim().length()==0){
 			module = api.getSimpleName();
+			config.setModule(module);
 		}
 			
-		String encoding = params.get("encoding");
-		String timeout = params.get("timeout");
-		String accessToken = params.get("accessToken");
+		String encoding = config.getEncoding();
+		int timeout = config.getTimeout();
+		String accessToken = config.getAccessToken();
+		String registerToken = config.getRegisterToken();
 		
-		String cacheKey = String.format("mq=%s&&module=%s&&encoding=%s&&timeout=%s&&accessToken=%s",
-				mq, module, encoding, timeout, accessToken);
+		String cacheKey = String.format(
+				"mq=%s&&module=%s&&encoding=%s&&timeout=%d&&accessToken=%s&&registerToken=%s",
+				mq, module, encoding, timeout, accessToken,registerToken);
 		
 		RpcInvoker rpcInvoker = rpcInvokerCache.get(cacheKey);
 		Class<T>[] interfaces = new Class[] { api };
 		if(rpcInvoker == null){
-			Rpc rpc = new Rpc(broker, mq);
-			if(module != null){
-				rpc.setModule(module);
-			} 
-			if(encoding != null) {
-				rpc.setEncoding(params.get("encoding"));
-			}
-			if(timeout != null) { 
-				rpc.setTimeout(Integer.valueOf(params.get("timeout")));
-			}
-			if (accessToken != null) { 
-				rpc.setAccessToken(accessToken);
-			} 
-			
+			Rpc rpc = new Rpc(config);
 			rpcInvoker = rpcInvokerCtor.newInstance(rpc); 
 			rpcInvokerCache.put(cacheKey, rpcInvoker); 
 		}
@@ -148,7 +95,7 @@ class RpcInvoker implements InvocationHandler {
 		} else if (methodName.equals("hashCode") && params.length == 0) {
 			return new Integer(this.rpc.hashCode());
 		} else if (methodName.equals("toString") && params.length == 0) {
-			return "RpcProxy[" + this.rpc + "]";
+			return "RpcInvoker[" + this.rpc + "]";
 		}
 		return REMOTE_METHOD_CALL;
 	} 

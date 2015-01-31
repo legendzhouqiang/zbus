@@ -45,6 +45,13 @@ public class Rpc extends Caller{
 		super(broker, mq); 
 	}
 	
+	public Rpc(RpcConfig config){
+		super(config);
+		this.module = config.getModule();
+		this.timeout = config.getTimeout(); 
+		this.encoding = config.getEncoding();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
 		Object netObj = invokeSync(method, args);

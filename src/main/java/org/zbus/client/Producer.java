@@ -9,21 +9,30 @@ import org.zbus.common.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 
+/**
+ * 生产者,
+ * @author 洪磊明(rushmore)
+ *
+ */
 public class Producer {     
 	private final Broker broker; 
 	private final String mq;
 	private String accessToken = "";
+	private String registerToken = "";
 
 	public Producer(Broker broker, String mq) {
 		this.broker = broker;
 		this.mq = mq; 
 	} 
+	
+	public Producer(MqConfig config){
+		this.broker = config.getBroker();
+		this.mq = config.getMq();
+		this.accessToken = config.getAccessToken();
+		this.registerToken = config.getRegisterToken();
+	}
 
-	public boolean createMQ(String mq, String registerToken,
-			MessageMode... mode) throws IOException {
-		if (registerToken == null) {
-			registerToken = "";
-		}
+	public boolean createMQ(MessageMode... mode) throws IOException {
 		int modeValue = 0;
 		if (mode.length == 0) {
 			modeValue = MessageMode.intValue(MessageMode.MQ);

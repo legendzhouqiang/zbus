@@ -17,8 +17,7 @@ public class SubExample {
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建消费者
-		Consumer c = new Consumer(broker, "MyPubSub", MessageMode.PubSub);
-		c.setFixedBrokerAddress("192.168.1.106:15556");
+		Consumer c = new Consumer(broker, "MyPubSub", MessageMode.PubSub); 
 		c.setTopic("hong");
 		while(true){
 			Message msg = c.recv(10000);

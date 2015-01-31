@@ -14,13 +14,12 @@ import org.zbus.remoting.RemotingClient;
 
 public class Consumer{    
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class);  
-	private final Broker broker;   
-	private String fixedBrokerAddress = null; //是否指定Broker,在高可用模式下的选项
-	private RemotingClient client;
+	private final Broker broker;    
+	private RemotingClient client;      //消费者拥有一个物理链接
+	
 	private final String mq;            //队列唯一性标识
 	private String accessToken = "";    //访问控制码
-	private String registerToken = "";  //注册认证码
-	private boolean autoRegister = true;  //自动注册
+	private String registerToken = "";  //注册认证码 
 	private final int mode; 
 	//为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
 	private String topic = null;
@@ -35,10 +34,18 @@ public class Consumer{
 		} 
 	} 
 	
+	public Consumer(MqConfig config){
+		this.broker = config.getBroker();
+		this.mq = config.getMq();
+		this.accessToken = config.getAccessToken();
+		this.registerToken = config.getRegisterToken(); 
+		this.mode = config.getMode();
+		this.topic = config.getTopic();
+	}
+	
 	private ClientHint myClientHint(){
 		ClientHint hint = new ClientHint();
-		hint.setMq(this.mq); 
-		hint.setBroker(this.fixedBrokerAddress);
+		hint.setMq(this.mq);  
 		return hint;
 	}
 	
@@ -60,7 +67,7 @@ public class Consumer{
     	Message res = null;
     	try{
 	    	res = client.invokeSync(req, timeout);
-			if(res != null && res.isStatus404() && this.autoRegister){
+			if(res != null && res.isStatus404()){
 				if(!this.register()){
 					throw new IllegalStateException("register error");
 				}
@@ -113,13 +120,7 @@ public class Consumer{
 	public void setRegisterToken(String registerToken) {
 		this.registerToken = registerToken;
 	} 	   
-	public boolean isAutoRegister() {
-		return autoRegister;
-	}
 
-	public void setAutoRegister(boolean autoRegister) {
-		this.autoRegister = autoRegister;
-	} 
 	public String getTopic() {
 		return topic;
 	}
@@ -130,13 +131,4 @@ public class Consumer{
 		}
 		this.topic = topic;
 	}
-
-	public String getFixedBrokerAddress() {
-		return fixedBrokerAddress;
-	}
-
-	public void setFixedBrokerAddress(String fixedBrokerAddress) {
-		this.fixedBrokerAddress = fixedBrokerAddress;
-	}
-	
 }

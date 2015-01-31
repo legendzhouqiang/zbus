@@ -33,6 +33,8 @@ public interface Interface{
 	
 	List<Map<String, Object>> listMap();
 	
+	Class<?> classTest(Class<?> inClass);
+	
 	void noReturn();
 	
 	void throwException();

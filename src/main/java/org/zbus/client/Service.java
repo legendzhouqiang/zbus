@@ -13,8 +13,8 @@ public class Service extends Thread {
 	
 	public Service(ServiceConfig config) throws IOException{
 		this.config = config;
-		if(config.getServiceName() == null || "".equals(config.getServiceName())){
-			throw new IllegalArgumentException("servieName required");
+		if(config.getMq() == null || "".equals(config.getMq())){
+			throw new IllegalArgumentException("MQ required");
 		}
 		if(config.getServiceHandler() == null){
 			throw new IllegalArgumentException("serviceHandler required");
@@ -52,8 +52,8 @@ class WorkerThread extends Thread{
 	
 	@Override
 	public void run() {
-		Consumer consumer =new Consumer(config.getBroker(), config.getServiceName());
-		final int timeout = config.getConsumeTimeout(); //ms 
+		Consumer consumer =new Consumer(config.getBroker(), config.getMq());
+		final int timeout = config.getReadTimeout(); //ms 
 		consumer.setAccessToken(config.getAccessToken());
 		consumer.setRegisterToken(config.getRegisterToken());
 		

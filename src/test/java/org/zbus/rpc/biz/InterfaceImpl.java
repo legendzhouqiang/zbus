@@ -120,4 +120,10 @@ public class InterfaceImpl implements Interface{
 	public void noReturn() {
 		System.out.println("called noReturn");
 	}
+	
+	@Override
+	public Class<?> classTest(Class<?> inClass) {
+		System.out.println(inClass);
+		return Double.class;
+	}
 }

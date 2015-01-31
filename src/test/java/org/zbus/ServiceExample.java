@@ -20,7 +20,7 @@ public class ServiceExample {
 		
 		ServiceConfig config = new ServiceConfig();
 		config.setThreadCount(threadCount); 
-		config.setServiceName(service);
+		config.setMq(service);
 		//配置Broker
 		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
 		brokerCfg.setBrokerAddress(address);

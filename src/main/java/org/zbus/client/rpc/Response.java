@@ -3,13 +3,18 @@ package org.zbus.client.rpc;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+/**
+ * RPC响应，结果或者异常信息（堆栈）
+ * @author 洪磊明(rushmore)
+ *
+ */
 public class Response { 
 	public static final String KEY_RESULT = "result";
 	public static final String KEY_STACK_TRACE = "stackTrace"; 
 	
 	private Object result;  
 	private Throwable error;
-	private String stackTrace;
+	private String stackTrace; //异常时候一定保证stackTrace设定，判断的逻辑以此为依据
 	private String encoding = "UTF-8";
 	
 	public Object getResult() {
@@ -34,6 +39,7 @@ public class Response {
 		error.printStackTrace(pw);  
 		this.stackTrace = sw.toString();
 	}
+	
 	public String getStackTrace() {
 		return stackTrace;
 	}

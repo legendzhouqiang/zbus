@@ -25,11 +25,16 @@ package org.zbus.client.rpc;
 import java.util.Arrays;
 
 
-
+/**
+ * RPC请求格式，模块+方法+参数列表，附加请求二进制的编码格式
+ * 
+ * @author 洪磊明(rushmore)
+ *
+ */
 public class Request{ 
-	private String module = "";
-	private String method;
-	private Object[] params;
+	private String module = ""; //模块标识
+	private String method;      //远程方法
+	private Object[] params;    //参数列表
 	private String[] paramTypes;
 	private String encoding = "UTF-8";
 	
