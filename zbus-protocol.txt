@@ -1,6 +1,6 @@
 # ZBUS消息协议 #
 ======================================================================
-ZBUS协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体，
+ZBUS协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体组成，
 ZBUS协议在HTTP头部KV值做了扩展，支持浏览器方式直接访问，但是ZBUS链接机制采用保持长连接方式。
 
 原则上： 编写客户端SDK只需要遵循下面ZBUS协议扩展即可。
@@ -123,6 +123,3 @@ URI = /MyMQ
 /MyMQ?cmd=consume&&msgid=aed14-2343-1dea0-32
 /MyMQ?cmd=request&&msgid=aed14-2343-1dea0-32
 第一个?之后理解为Key-Value, URI的KV优先级低于头部扩展
-
-
-
