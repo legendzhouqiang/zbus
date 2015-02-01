@@ -17,7 +17,7 @@ handler = MyServiceHandler()
  
 config = RpcServiceConfig()
 config.broker = '127.0.0.1'
-config.service_name = 'MyRpc'
+config.service_name = 'MyService'
 config.thread_count = 1
 config.service_andler = handler
 

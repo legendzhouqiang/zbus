@@ -11,7 +11,7 @@ public class ZbusSpringClient {
 		
 		Interface intf = (Interface) context.getBean("interface");
 		
-		System.out.println(intf.getString("hong"));
+		System.out.println(intf.listMap());
 	}
 
 }
