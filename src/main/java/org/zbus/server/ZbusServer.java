@@ -231,7 +231,7 @@ public class ZbusServer extends RemotingServer {
     	if(cmd == null){ 
     		cmd = msg.getPath(); 
     	}
-    	if(cmd == null){  
+    	if(cmd == null || "".equals(cmd.trim())){  
     		cmd = Proto.Admin; 
     	}
     	return cmd;
