@@ -1,6 +1,7 @@
 package org.zbus.remoting;
  
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
@@ -9,7 +10,7 @@ import org.zbus.common.Helper;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
  
-public class RemotingServer {  
+public class RemotingServer extends ServerEventAdaptor {  
 	private static final Logger log = LoggerFactory.getLogger(RemotingServer.class); 
 	protected String serverHost = "0.0.0.0";
 	protected int serverPort = 15555;   
@@ -17,20 +18,24 @@ public class RemotingServer {
 	protected String serverAddr = String.format("%s:%d",  this.serverHost, this.serverPort);
 	protected String serverName = "RemoteServer";
 	
-	protected ServerEventAdaptor serverHandler;
 	protected ServerDispatcherManager dispatcherManager; 
 	
-	
-	public RemotingServer(String serverHost, ServerDispatcherManager dispatcherManager){
-		this(serverHost, 15555, dispatcherManager);
+	public RemotingServer(String serverHost){
+		this(serverHost, 15555);
 	}
 	
-	public RemotingServer(int serverPort,ServerDispatcherManager dispatcherManager){
-		this("0.0.0.0", serverPort,dispatcherManager); 
+	public RemotingServer(int serverPort){
+		this("0.0.0.0", serverPort); 
 	}
-	
-    public RemotingServer(String serverHost, int serverPort, ServerDispatcherManager dispatcherManager) { 
-    	this.dispatcherManager = dispatcherManager;
+
+    public RemotingServer(String serverHost, int serverPort) { 
+    	super();
+    	
+		try {
+			this.dispatcherManager = new ServerDispatcherManager(this);
+		} catch (IOException e) { 
+			log.error(e.getMessage(), e);
+		}
     	this.serverHost = serverHost;
     	this.serverPort = serverPort; 
     	
@@ -39,17 +44,7 @@ public class RemotingServer {
     	} else {
     		this.serverAddr = String.format("%s:%d", this.serverHost, this.serverPort);
     	}
-    	
-    	this.serverHandler = this.dispatcherManager.buildEventAdaptor();
     }   
-    
-    public void registerGlobalHandler(MessageHandler handler){
-    	this.serverHandler.registerGlobalHandler(handler);
-    } 
-    
-    public void registerHandler(String command, MessageHandler handler){
-    	this.serverHandler.registerHandler(command, handler);
-    }
     
     public void init(){
     	

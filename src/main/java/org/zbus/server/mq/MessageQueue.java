@@ -5,15 +5,16 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.zbus.common.MqInfo;
 import org.zbus.common.ConsumerInfo;
+import org.zbus.common.MqInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.mq.store.MessageStore;
 
-public abstract class MessageQueue implements Serializable{  
-	private static final long serialVersionUID = 3408125142128217794L;
+public abstract class MessageQueue implements Serializable{   
+	private static final long serialVersionUID = 5719362844495027862L;
 
 	private static final Logger log = LoggerFactory.getLogger(MessageQueue.class);
 	
@@ -25,6 +26,7 @@ public abstract class MessageQueue implements Serializable{
 	protected final int mode;
 	
 	protected transient ExecutorService executor;
+	protected transient MessageStore messageStore = null;
 	
 	public MessageQueue(String broker, String name, ExecutorService executor, int mode){
 		this.broker = broker;
@@ -32,7 +34,7 @@ public abstract class MessageQueue implements Serializable{
 		this.executor = executor; 
 		this.mode = mode;
 	}  
-	 
+	
 	public abstract void produce(Message msg, Session sess) throws IOException;
 	public abstract void consume(Message msg, Session sess) throws IOException;
 	
@@ -106,14 +108,19 @@ public abstract class MessageQueue implements Serializable{
 	}
 	
 	public abstract int getMessageQueueSize();
-	public abstract List<ConsumerInfo> getConsumerInfoList();
-	public abstract void restoreFromDump(ExecutorService executor);
+	public abstract List<ConsumerInfo> getConsumerInfoList(); 
 
 	@Override
 	public String toString() {
 		return "MQ [name=" + name + ", creator=" + creator + ", createdTime="
 				+ createdTime + "]";
 	}
-	
-	
+
+	public MessageStore getMessageStore() {
+		return messageStore;
+	}
+
+	public void setMessageStore(MessageStore messageStore) {
+		this.messageStore = messageStore;
+	}
 }

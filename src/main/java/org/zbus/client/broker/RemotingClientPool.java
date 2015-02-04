@@ -11,16 +11,9 @@ import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.RemotingClient;
 
 public class RemotingClientPool extends GenericObjectPool<RemotingClient>{
-	public RemotingClientPool(String broker, GenericObjectPoolConfig config) throws IOException{
-		super(new RemotingClientFactory(defaultClientDispachterManager(), 
-				broker), config);
-		
-	}
-	private static ClientDispatcherManager defaultClientDispachterManager() throws IOException{
-		ClientDispatcherManager clientMgr = new ClientDispatcherManager();
-		clientMgr.start();
-		return clientMgr;
-	}
+	public RemotingClientPool(ClientDispatcherManager clientMgr, String broker, GenericObjectPoolConfig config) throws IOException{
+		super(new RemotingClientFactory(clientMgr, broker), config);
+	}  
 }
 
 class RemotingClientFactory extends BasePooledObjectFactory<RemotingClient> {

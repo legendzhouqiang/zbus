@@ -17,8 +17,8 @@ import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 
-public class PubsubQueue extends MessageQueue {    
-	private static final long serialVersionUID = -2208189626959936406L;
+public class PubsubQueue extends MessageQueue {   
+	private static final long serialVersionUID = -593851217778104787L;
 
 	private static final Logger log = LoggerFactory.getLogger(PubsubQueue.class);	
 	
@@ -28,14 +28,13 @@ public class PubsubQueue extends MessageQueue {
 	public PubsubQueue(String broker, String name, ExecutorService executor, int mode){
 		super(broker, name, executor, mode); 
 	}
-	
+  
 	public void produce(Message msg, Session sess) throws IOException{
 		String msgId = msg.getMsgId(); 
 		if(msg.isAck()){
 			ReplyHelper.reply200(msgId, sess);
 		} 
-		
-    	msgQ.offer(msg);  
+		msgQ.offer(msg); 
     	this.dispatch();
 	}
 	
@@ -98,7 +97,8 @@ public class PubsubQueue extends MessageQueue {
 				if(msg == null) continue; //消息未到达
 				
 				sess.setPullMsg(null);
-				msg.setMsgIdSrc(pullMsg.getMsgId()); //保留原始消息ID
+				msg.setStatus("200"); //支持浏览器
+				msg.setMsgIdRaw(pullMsg.getMsgId()); //保留原始消息ID
 				msg.setMsgId(pullMsg.getMsgId());    //配对订阅消息！
 				sess.getSession().write(msg);
 			} catch(IOException ex){
@@ -108,13 +108,6 @@ public class PubsubQueue extends MessageQueue {
 			}
 		}  
 	}
-
-	//used when load from dump
-	public void restoreFromDump(ExecutorService executor) {
-		this.executor = executor;
-		this.sessMap = new ConcurrentHashMap<String, PullSession>();
-	}
-
 
 	public List<ConsumerInfo> getConsumerInfoList() {
 		List<ConsumerInfo> res = new ArrayList<ConsumerInfo>();

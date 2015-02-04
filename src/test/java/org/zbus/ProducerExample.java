@@ -1,6 +1,7 @@
 package org.zbus;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zbus.client.Broker;
 import org.zbus.client.Producer;
@@ -18,15 +19,17 @@ public class ProducerExample {
 		
 		//2) 创建生产者
 		Producer producer = new Producer(broker, "MyMQ");
-		
-		Message msg = new Message();
-		msg.setBody("hello world");
-		
-		producer.send(msg, new ResultCallback() {
-			@Override
-			public void onCompleted(Message result) {
-				System.out.println(result);
-			}
-		});
+		final AtomicInteger counter = new AtomicInteger();
+		for(int i=0;i<1000;i++){
+			Message msg = new Message();
+			msg.setBody("hello world %6d",i);
+			
+			producer.send(msg, new ResultCallback() {
+				@Override
+				public void onCompleted(Message result) { 
+					System.out.println(counter.incrementAndGet());
+				}
+			});
+		}
 	} 
 }

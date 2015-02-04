@@ -23,29 +23,31 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Message implements Serializable { 
 	private static final long serialVersionUID = 4379223525215626137L;
-
 	public static final String HEARTBEAT         = "heartbeat"; //心跳消息
 	
-	//标准HTTP头部内容
-	public static final String HEADER_REMOTE_ADDR= "remote-addr";
-	public static final String HEADER_ENCODING   = "content-encoding";
+	//使用到的标准HTTP头部
+	public static final String HEADER_REMOTE_ADDR      = "remote-addr";
+	public static final String HEADER_CONTENT_ENCODING = "content-encoding";
+	public static final String HEADER_CONTENT_LENGTH   = "content-length";
+	public static final String HEADER_CONTENT_TYPE     = "content-type";
 	
-	//常见扩展HTTP协议头部
-	public static final String HEADER_BROKER     = "broker";
-	public static final String HEADER_REMOTE_ID  = "remote-id"; 
-	public static final String HEADER_TOPIC      = "topic"; //使用,分隔 
-	public static final String HEADER_MQ_REPLY   = "mq-reply";
+	//扩展HTTP协议头部
+	public static final String HEADER_CMD    	 = "cmd"; 
+	public static final String HEADER_SUBCMD     = "sub_cmd";    
 	public static final String HEADER_MQ         = "mq";
+	public static final String HEADER_MQ_REPLY   = "mq_reply";
+	public static final String HEADER_MSGID      = "msgid";	    //消息ID
+	public static final String HEADER_MSGID_RAW  = "msgid_raw"; //原始消息ID
+	
 	public static final String HEADER_TOKEN      = "token";
-	public static final String HEADER_MSGID      = "msgid";	 //消息ID
-	public static final String HEADER_MSGID_SRC  = "msgid-raw"; //原始消息ID
-	public static final String HEADER_ACK        = "ack";	
-	public static final String HEADER_REPLY_CODE = "reply-code";	 
+	public static final String HEADER_BROKER     = "broker"; 
+	public static final String HEADER_TOPIC      = "topic"; //使用,分隔 
+	public static final String HEADER_ACK        = "ack";	 	 
 	public static final String HEADER_WINDOW     = "window";	
 	
 	
 	 
-	protected Meta meta = new Meta();
+	protected Meta meta = new Meta(); 
 	protected Map<String, String> head = new ConcurrentHashMap<String, String>();
 	protected byte[] body; 
 	
@@ -121,7 +123,12 @@ public class Message implements Serializable {
 	}   
 	
 	public byte[] getBody() {
-		return body;
+		byte[] b = body;
+		String bodyOfHead = getHead("body");
+		if(b == null && bodyOfHead != null){
+			b = bodyOfHead.getBytes();
+		}
+		return b;
 	}
 	
 	public void setBody(byte[] body) {
@@ -129,7 +136,7 @@ public class Message implements Serializable {
 		if( body != null){
 			len = body.length;
 		}
-		this.setHead("content-length", ""+len);
+		this.setHead(HEADER_CONTENT_LENGTH, ""+len);
 		this.body = body;
 	}
 	
@@ -147,21 +154,21 @@ public class Message implements Serializable {
 	}
 	
 	public void setJsonBody(byte[] body){
-		this.setHead("content-type", "application/json");
+		this.setHead(HEADER_CONTENT_TYPE, "application/json");
 		this.setBody(body);
 	}
 	
 	public String getBodyString() {
-		if (this.body == null) return null;
-		return new String(this.body);
+		if (this.getBody() == null) return null;
+		return new String(this.getBody());
 	}
 
 	public String getBodyString(String encoding) {
-		if (this.body == null) return null;
+		if (this.getBody() == null) return null;
 		try {
-			return new String(this.body, encoding);
+			return new String(this.getBody(), encoding);
 		} catch (UnsupportedEncodingException e) {
-			return new String(this.body);
+			return new String(this.getBody());
 		}
 	}
 	
@@ -205,6 +212,22 @@ public class Message implements Serializable {
 		return size;
 	} 
 	
+	public String getCommand() { 
+		return this.getHeadOrParam(HEADER_CMD);
+	} 
+	public Message setCommand(String value) {
+		this.setHead(HEADER_CMD, value); 
+		return this;
+	}  
+	
+	public String getSubCommand() { 
+		return this.getHeadOrParam(HEADER_SUBCMD);
+	} 
+	public Message setSubCommand(String value) {
+		this.setHead(HEADER_SUBCMD, value); 
+		return this;
+	}   
+	
 	public String getBroker(){
 		return this.getHeadOrParam(HEADER_BROKER);
 	}
@@ -222,13 +245,12 @@ public class Message implements Serializable {
 	}
 	
 	public String getEncoding() {
-		return this.getHeadOrParam(HEADER_ENCODING);
+		return this.getHeadOrParam(HEADER_CONTENT_ENCODING);
 	}
 	public Message setEncoding(String encoding) {
-		this.setHead(HEADER_ENCODING, encoding);
+		this.setHead(HEADER_CONTENT_ENCODING, encoding);
 		return this;
 	}
-	
 	
 	public String getMsgId() {
 		return this.getHeadOrParam(HEADER_MSGID);
@@ -240,12 +262,12 @@ public class Message implements Serializable {
 	}
 	
 	
-	public String getMsgIdSrc() {
-		return this.getHeadOrParam(HEADER_MSGID_SRC);
+	public String getMsgIdRaw() {
+		return this.getHeadOrParam(HEADER_MSGID_RAW);
 	}
-	public Message setMsgIdSrc(String value) {
+	public Message setMsgIdRaw(String value) {
 		if(value == null) return this;
-		this.setHead(HEADER_MSGID_SRC, value);
+		this.setHead(HEADER_MSGID_RAW, value);
 		return this;
 	}
 	
@@ -253,7 +275,7 @@ public class Message implements Serializable {
 		String ack = this.getHeadOrParam(HEADER_ACK);
 		if(ack == null) return true; //默认ack为true
 		ack = ack.trim().toLowerCase();
-		return ack.equals("1");
+		return ack.equals("1") || ack.equals("true");
 	}
 	
 	public void setAck(boolean ack){
@@ -264,6 +286,15 @@ public class Message implements Serializable {
 	public String getMq(){
 		return this.getHeadOrParam(HEADER_MQ);
 	}
+	
+	public String getUri(){
+		return this.meta.uri;
+	}
+	
+	public String getPath(){
+		return this.meta.path;
+	}
+	 
 	 
 	public Message setMq(String mq) {
 		this.setHead(HEADER_MQ, mq);
@@ -295,33 +326,14 @@ public class Message implements Serializable {
 		this.setHead(HEADER_WINDOW, ""+window);
 		return this;
 	} 
-	
+	 
 
-	public String getRemoteId() {
-		return getHeadOrParam(HEADER_REMOTE_ID);
-	}
-
-	public Message setRemoteId(String value) {
-		this.setHead(HEADER_REMOTE_ID, value);
-		return this;
-	}   
-
-
-	//////////特殊处理：Command 与 Status 兼容HTTP////////////// 
-	public String getCommand() { //特殊处理 
-		return meta.command; 
-	} 
-	public Message setCommand(String command) {
-		meta.command = command;
-		meta.status = null; //互斥
-		return this;
-	}   
+	//////////特殊处理：Status 兼容HTTP////////////// 
 	public String getStatus() {  
 		return meta.status;
 	}
 	public Message setStatus(String status) { 
 		meta.status = status;
-		meta.command = null; //互斥
 		return this; 
 	}
 	
@@ -360,9 +372,18 @@ public class Message implements Serializable {
 			sb.append(key+": "+val+"\r\n");
 		}
 		sb.append("\r\n");
-		sb.append(getBodyPrintString());
+		String bodyString = getBodyPrintString();
+		if(bodyString != null){
+			sb.append(bodyString);
+		}
 		return sb.toString();
 	} 
+	public static void main(String[] args){
+		Message msg = new Message(); 
+		msg.setStatus("200"); 
+		msg.setStatus(null);
+		System.out.println(msg);
+	}
 	 
 }
 
@@ -370,13 +391,17 @@ public class Message implements Serializable {
 
 class Meta implements Serializable{ 
 	private static final long serialVersionUID = -8557063231118504061L;
-	//HTTP请求头部: 方法(GET/POST)-命令-参数
+	//HTTP响应头部: 状态(200)
+	String status; //根据status是否设置来决定Meta是请求还是应答	
+	//HTTP请求头部: 方法(GET/POST)-RequestString-KV参数
 	String method = "GET"; 
-	String command; 
+	String uri = "/";
+	
+	//请求分析出来的两个部分：path + kv组
+	String path; 
 	Map<String,String> params;
 	
-	//HTTP响应头部: 状态(200)
-	String status;
+	
 	
 	static Set<String> httpMethod = new HashSet<String>();
 	static Map<String,String> httpStatus = new HashMap<String, String>();
@@ -406,28 +431,30 @@ class Meta implements Serializable{
 		httpStatus.put("500", "Internal Server Error");
 	}
 	
+
+	
 	@Override
 	public String toString() { 
-		if(this.status != null){ //status存在，则认为是响应元数据
+		//如果status存在，理解为响应包，否则默认就是请求包
+		if(this.status != null){
 			String desc = httpStatus.get(this.status);
 			if(desc == null){
 				desc = "Unknown Status";
 			}
 			return String.format("HTTP/1.1 %s %s", status, desc); 
 		}
-		
-		if(this.command != null){//command存在，则认为是请求元数据
-			String cmdStr = encodeCommand();
-			return String.format("%s /%s HTTP/1.1", method, cmdStr);
-		}
-		
-		return "";
+		String method = this.method;
+		String uri = this.uri;
+		if(this.method == null) method = "";
+		if(this.uri == null) uri = "";
+		return String.format("%s %s HTTP/1.1", method, uri);
 	}
 	
 	public Meta(){}
 	
 	public Meta(Meta m){
-		this.command = m.command;
+		this.uri = m.uri;
+		this.path = m.path;
 		this.method = m.method;
 		this.status = m.status;
 		if(m.params != null){
@@ -440,52 +467,26 @@ class Meta implements Serializable{
 			return;
 		}
 		StringTokenizer st = new StringTokenizer(meta);
-		String method = st.nextToken();
-		
-		if(!httpMethod.contains(method)){ //不是method字段，理解为Response
-			String status = st.nextToken();
-			this.status = status;
+		String firstWord = st.nextToken();
+		if(firstWord.toUpperCase().startsWith("HTTP")){ //理解为响应
+			this.status = st.nextToken();
 			return;
 		}
-		
-		this.method = method;  
-		String commandString = st.nextToken();
-		decodeCommand(commandString);
+		//理解为请求
+		this.method = firstWord;  
+		this.uri = st.nextToken();
+		decodeURI(this.uri);
 	} 
 	
-
-	private String encodeCommand(){
-		StringBuilder sb = new StringBuilder();
-		if(this.command != null){
-			sb.append(this.command);
-		}
-		if(this.params == null) return sb.toString();
-		
-		Iterator<Entry<String, String>> iter = this.params.entrySet().iterator();
-		if(iter.hasNext()){
-			sb.append("?");
-		}
-		
-		while(iter.hasNext()){
-			Entry<String, String> e = iter.next();
-			sb.append(e.getKey()+"="+e.getValue());
-			if(iter.hasNext()){
-				sb.append("&");
-			}
-		}
-		return sb.toString();
-	} 
-	
-	
-	private void decodeCommand(String commandString){
+	private void decodeURI(String commandString){
 		int idx = commandString.indexOf('?');
 		if(idx < 0){
-			this.command = decodeUrl(commandString);
+			this.path = decodeUrl(commandString);
 		} else {
-			this.command = commandString.substring(0, idx);
+			this.path = commandString.substring(0, idx);
 		}
-		if(this.command.startsWith("/")){
-			this.command = this.command.substring(1);
+		if(this.path.startsWith("/")){
+			this.path = this.path.substring(1);
 		}
 		if(idx < 0) return;
 		
@@ -524,13 +525,5 @@ class Meta implements Serializable{
 			value = defaultValue;
 		}
 		return value;
-	}
-	
-	public void setParam(String key, String value){
-		if(value == null) return;
-		if(params == null){
-			params = new HashMap<String, String>();
-		}
-		params.put(key, value);
 	}
 }

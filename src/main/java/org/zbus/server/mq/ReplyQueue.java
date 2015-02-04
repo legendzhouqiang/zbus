@@ -13,9 +13,10 @@ import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 
-public class ReplyQueue extends MessageQueue {   
-	private static final Logger log = LoggerFactory.getLogger(ReplyQueue.class);
-	private static final long serialVersionUID = -1610052009303680593L;
+public class ReplyQueue extends MessageQueue {    
+	private static final long serialVersionUID = -2343230968503191635L;
+
+	private static final Logger log = LoggerFactory.getLogger(ReplyQueue.class); 
 	
 	protected final ConcurrentMap<String, Message> msgQ = new ConcurrentHashMap<String, Message>();
 	transient PullSession pullSession = null;
@@ -29,8 +30,7 @@ public class ReplyQueue extends MessageQueue {
 		if(msg.isAck()){
 			ReplyHelper.reply200(msgId, sess);
 		} 
-		
-    	msgQ.put(msgId, msg);
+		msgQ.put(msgId, msg);
     	this.dispatch();
 	}
 	
@@ -61,11 +61,6 @@ public class ReplyQueue extends MessageQueue {
 			} 
 			this.msgQ.remove(msgId);
 			try { 
-				String status = msg.removeHead(Message.HEADER_REPLY_CODE);
-				if(status == null){
-					status = "200";
-				} 
-				msg.setStatus(status);
 				this.pullSession.getSession().write(msg); 
 				
 				if(this.pullSession.window.get()>0){
@@ -81,11 +76,6 @@ public class ReplyQueue extends MessageQueue {
 			}
 
 		} 
-	}
-	 
-	//used when load from dump
-	public void restoreFromDump(ExecutorService executor) {
-		this.executor = executor; 
 	}
 	
 	public List<ConsumerInfo> getConsumerInfoList() {

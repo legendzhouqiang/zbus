@@ -1,10 +1,7 @@
 package org.zbus.client;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
@@ -32,26 +29,6 @@ public class Producer {
 		this.registerToken = config.getRegisterToken();
 	}
 
-	public boolean createMQ(MessageMode... mode) throws IOException {
-		int modeValue = 0;
-		if (mode.length == 0) {
-			modeValue = MessageMode.intValue(MessageMode.MQ);
-		} else {
-			modeValue = MessageMode.intValue(mode);
-		}
-
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("mq_name", mq);
-		params.put("access_token", accessToken);
-		params.put("mq_mode", "" + modeValue);
-		Message req = Proto.buildAdminMessage(registerToken, Proto.CreateMQ,
-				params);
-		 
-		Message res = broker.produceMessage(req, 3000);
-		if (res == null) return false;
-		return res.isStatus200();
-		
-	}
 	
 	public void send(Message msg, final ResultCallback callback)
 			throws IOException {
@@ -69,5 +46,13 @@ public class Producer {
 
 	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
+	}
+
+	public String getRegisterToken() {
+		return registerToken;
+	}
+
+	public void setRegisterToken(String registerToken) {
+		this.registerToken = registerToken;
 	}
 }

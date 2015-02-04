@@ -24,7 +24,6 @@ import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.RemotingServer;
-import org.zbus.remoting.ServerDispatcherManager;
 import org.zbus.remoting.nio.Session;
  
  
@@ -41,15 +40,14 @@ public class TrackServer extends RemotingServer {
 	private final ScheduledExecutorService trackPubService = Executors.newSingleThreadScheduledExecutor();
 	private ExecutorService trackExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
-	
-	public TrackServer(int serverPort, ServerDispatcherManager dispatcherManager) { 
-		this("0.0.0.0", serverPort, dispatcherManager);
+	public TrackServer(int serverPort){
+		this("0.0.0.0", serverPort);
 	}
 	
-	public TrackServer(String serverHost, int serverPort,ServerDispatcherManager dispatcherManager) {
-		super(serverHost, serverPort, dispatcherManager);
-		this.serverName = "TrackServer";
+	public TrackServer(String serverHost, int serverPort) {
+		super(serverHost, serverPort);
 		
+		this.serverName = "TrackServer";
 		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
 			@Override
 			public void run() {
@@ -162,8 +160,7 @@ public class TrackServer extends RemotingServer {
 	
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 16666);
-		ServerDispatcherManager dispachterManager = new ServerDispatcherManager();
-		TrackServer track = new TrackServer(serverPort, dispachterManager); 
+		TrackServer track = new TrackServer(serverPort); 
 		track.start(); 
 	} 
 	

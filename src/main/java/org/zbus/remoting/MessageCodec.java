@@ -23,7 +23,7 @@ public class MessageCodec implements Codec{
 		if(msg.getBody() != null){
 			contentLength = msg.getBody().length;
 		}
-		String lenKey = "content-length"; 
+		String lenKey = Message.HEADER_CONTENT_LENGTH; 
 		
 		Iterator<Entry<String, String>> iter = headers.entrySet().iterator();
 		while(iter.hasNext()){
@@ -54,7 +54,7 @@ public class MessageCodec implements Codec{
 		msg.decodeHeaders(buf.array(), buf.position(), headerLen);
 		buf.position(buf.position()+headerLen);
 		
-		String contentLength = msg.getHeadOrParam("content-length");
+		String contentLength = msg.getHeadOrParam(Message.HEADER_CONTENT_LENGTH);
 		if(contentLength == null){ //just head 
 			return msg;
 		}

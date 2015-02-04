@@ -14,6 +14,7 @@ public class SubExample {
 		//1）创建Broker代表
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
+		
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建消费者

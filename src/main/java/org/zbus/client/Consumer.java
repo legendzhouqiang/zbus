@@ -68,7 +68,7 @@ public class Consumer{
     	try{
 	    	res = client.invokeSync(req, timeout);
 			if(res != null && res.isStatus404()){
-				if(!this.register()){
+				if(!this.createMQ()){
 					throw new IllegalStateException("register error");
 				}
 				return recv(timeout);
@@ -86,19 +86,20 @@ public class Consumer{
     }
     
     
-    public void reply(Message msg) throws IOException{
-    	msg.setHead(Message.HEADER_REPLY_CODE, msg.getStatus());
+    public void reply(Message msg) throws IOException{ 
     	msg.setCommand(Proto.Produce);  //!!would clear msg's status, do it after getStatus
     	msg.setAck(false);
     	client.getSession().write(msg); 
     }
     
-    public boolean register() throws IOException{
+    public boolean createMQ() throws IOException{
     	Map<String, String> params = new HashMap<String, String>();
-    	params.put("mq_name", mq);
-    	params.put("access_token", accessToken);
-    	params.put("mq_mode", "" + this.mode);
-    	Message req = Proto.buildAdminMessage(registerToken, Proto.CreateMQ, params);
+    	params.put("mqName", mq);
+    	params.put("accessToken", accessToken);
+    	params.put("mqMode", "" + this.mode);
+    	
+    	Message req = Proto.buildSubCommandMessage(Proto.Admin, Proto.AdminCreateMQ, params);
+    	req.setToken(this.registerToken);
     	
     	Message res = client.invokeSync(req);
     	if(res == null) return false;

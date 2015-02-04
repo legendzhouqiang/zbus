@@ -60,8 +60,12 @@ public class HaBroker implements Broker, TrackListener {
 					this.config.getPoolConfig());
 			singleConfig.setBrokerAddress(brokerAddress);
 			
-			broker = new SingleBroker(singleConfig);
-			this.brokers.put(brokerAddress, broker);
+			try {
+				broker = new SingleBroker(singleConfig);
+				this.brokers.put(brokerAddress, broker);
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			} 
 		}
 		
 		Iterator<Entry<String, SingleBroker>> iter = this.brokers.entrySet().iterator();

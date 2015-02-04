@@ -2,11 +2,7 @@ package org.zbus.server;
  
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -17,58 +13,38 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.common.BrokerInfo;
-import org.zbus.common.MqInfo;
 import org.zbus.common.Helper;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
-import org.zbus.common.json.JSON;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
-import org.zbus.remoting.RemotingClient;
 import org.zbus.remoting.RemotingServer;
-import org.zbus.remoting.ServerDispatcherManager;
-import org.zbus.remoting.ServerEventAdaptor;
-import org.zbus.remoting.callback.ErrorCallback;
-import org.zbus.remoting.nio.DispatcherManager;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.MessageQueue;
-import org.zbus.server.mq.ReplyQueue;
-import org.zbus.server.mq.RequestQueue;
-import org.zbus.server.mq.MqStore;
-import org.zbus.server.mq.PubsubQueue;
 import org.zbus.server.mq.ReplyHelper;
- 
+import org.zbus.server.mq.ReplyQueue;
+import org.zbus.server.mq.store.MessageStore;
+import org.zbus.server.mq.store.MessageStoreFactory;
+
+
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
 	
-	private String adminToken = ""; 
-	private long trackDelay = 1000;
-	private long trackInterval = 3000;
-	
-	private long mqCleanDelay = 1000;
-	private long mqCleanInterval = 3000;
-	private long mqPersistDelay = 3000;
-	private long mqPersistInterval = 3000;
-	private boolean loadMqFromDump = false;
-	private boolean persistEnabled = false;
-	 
-	private AdminHandler adminHandler;
-
-	protected final ScheduledExecutorService trackReportService = Executors.newSingleThreadScheduledExecutor();
-	protected final ScheduledExecutorService mqSessionCleanService = Executors.newSingleThreadScheduledExecutor();
-	protected final ScheduledExecutorService mqPersistService = Executors.newSingleThreadScheduledExecutor();
-	
-	private final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
-	
-	
-	private ExecutorService reportExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	private ExecutorService mqExecutor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-	
 	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
-	private final MqStore mqStore = new MqStore(this.mqTable);
+
+	private long mqCleanDelay = 1000;
+	private long mqCleanInterval = 3000;   
+	protected final ScheduledExecutorService mqSessionCleanService = Executors.newSingleThreadScheduledExecutor();
+
+	private MessageStore messageStore;
+	private String messageStoreType = "dummy"; 
+	
+	private String adminToken = "";  
+	
+	private AdminHandler adminHandler;
 	
 	
 	public ZbusServer(int serverPort) throws IOException {
@@ -76,31 +52,13 @@ public class ZbusServer extends RemotingServer {
 	}
 	
 	public ZbusServer(String serverHost, int serverPort) throws IOException {
-		super(serverHost, serverPort, new ZbusServerDispachterManager());  
+		super(serverHost, serverPort);
 		
-		ZbusServerEventAdaptor eventHandler = (ZbusServerEventAdaptor) this.serverHandler;
-		eventHandler.setMqTable(mqTable); 
 		this.serverName = "ZbusServer";
-    	this.adminHandler = new AdminHandler();
-    	this.adminHandler.setAdminToken(this.adminToken);
-    	
-    	if(loadMqFromDump){
-    		this.loadMqTableFromDump();
-    	} 
+    	this.adminHandler = new AdminHandler(mqTable, mqExecutor, serverAddr);
+    	this.adminHandler.setAccessToken(this.adminToken); 
 	}  
 	 
-	private void loadMqTableFromDump(){
-		ConcurrentMap<String, MessageQueue> load = MqStore.load();
-		if(load == null) return;
-		Iterator<Entry<String, MessageQueue>> iter = load.entrySet().iterator();
-		while(iter.hasNext()){
-			Entry<String, MessageQueue> e = iter.next();
-			MessageQueue mq = e.getValue();
-			mq.restoreFromDump(mqExecutor); 
-			this.mqTable.put(e.getKey(), mq);
-		}
-	}
-	
 	
 	private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
@@ -136,8 +94,7 @@ public class ZbusServer extends RemotingServer {
 					msg.setMqReply(sess.id()); //reply default to self
 				}   
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
-				msg.setHead(Message.HEADER_BROKER, serverAddr); 
-				msg.setHead(Message.HEADER_REMOTE_ID, sess.id());
+				msg.setHead(Message.HEADER_BROKER, serverAddr);  
 				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
 					log.debug("%s", msg);
@@ -196,176 +153,36 @@ public class ZbusServer extends RemotingServer {
 			}
 		});
 		
-		
-		//初始化管理处理回调
-		this.registerHandler(Proto.Admin, adminHandler);
-		
-		adminHandler.registerHandler(Proto.CreateMQ, new MessageHandler() { 
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				String msgId= msg.getMsgId();
-				String mqName = msg.getHeadOrParam("mq_name");
-	    		String accessToken = msg.getHeadOrParam("access_token", "");
-	    		String type = msg.getHeadOrParam("mq_mode", "");
-	    		int mode = 0;
-	    		try{
-	    			mode = Integer.valueOf(type);
-	    		} catch (Exception e){
-	    			msg.setBody("mq_mode invalid");
-	    			ReplyHelper.reply400(msg, sess);
-	        		return;  
-	    		}
-	    		
-	    		
-	    		if(mqName == null){
-	    			msg.setBody("Missing mq_name filed");
-	    			ReplyHelper.reply400(msg, sess);
-	        		return;  
-	    		} 
-	    		
-	    		MessageQueue mq = mqTable.get(mqName);
-	    		if(mq == null){
-	    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
-	    				mq = new PubsubQueue(serverAddr, mqName, mqExecutor, mode);
-	    			} else {//默认到消息队列
-	    				mq = new RequestQueue(serverAddr, mqName, mqExecutor, mode);
-	    			} 
-	    			mq.setAccessToken(accessToken);
-		    		mq.setCreator(sess.getRemoteAddress());
-		    		mqTable.putIfAbsent(mqName, mq);
-					log.info("MQ Created: %s", mq);
-					ReplyHelper.reply200(msgId, sess); 
-					
-		    		reportToTrackServer();
-		    		return;
-	    		}
-	    		
-	    		if(MessageMode.isEnabled(mode, MessageMode.MQ) && !(mq instanceof RequestQueue)){
-    				msg.setBody("MsgQueue, type not matched");
-	    			ReplyHelper.reply400(msg, sess);
-	        		return;  
-    			}
-	    		if(MessageMode.isEnabled(mode, MessageMode.PubSub) && !(mq instanceof PubsubQueue)){
-    				msg.setBody("Pubsub, type not matched");
-	    			ReplyHelper.reply400(msg, sess);
-	        		return;  
-    			}
-    			ReplyHelper.reply200(msgId, sess);  
-			}
-		}); 
-		//WEB监控
-		intiMonitor(); 
+		this.registerHandler(Proto.Admin, adminHandler); 
 	} 
 	 
-	
-	private void intiMonitor() { 
-		this.registerHandler("", new MessageHandler() { 
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				msg = new Message();
-				msg.setStatus("200");
-				msg.setHead("content-type","text/html");
-				String body = Helper.loadFileContent("zbus.htm"); 
-				msg.setBody(body); 
-				sess.write(msg);  
-			}
-		});
-		
-		this.registerHandler("jquery", new MessageHandler() { 
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				msg = new Message();
-				msg.setStatus("200");
-				msg.setHead("content-type","application/javascript");
-				String body = Helper.loadFileContent("jquery.js"); 
-				msg.setBody(body); 
-				sess.write(msg);  
-			}
-		});
-		
-		this.registerHandler("data", new MessageHandler() { 
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				msg = packServerInfo();
-				msg.setStatus("200"); 
-				msg.setHead("content-type", "application/json");
-				sess.write(msg);  
-			}
-		});
-	
-	}
-	
-	
-	private Message packServerInfo(){
-		Map<String, MqInfo> table = new HashMap<String, MqInfo>();
-   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			table.put(e.getKey(), e.getValue().getMqInfo());
-   		} 
-		Message msg = new Message(); 
-		BrokerInfo info = new BrokerInfo();
-		info.setBroker(serverAddr);
-		info.setMqTable(table);  
-		msg.setBody(JSON.toJSONString(info));
-		return msg;
-	}
-	
-	
-	
-	public void setupTrackServer(String trackServerAddr){ 
-		if(trackServerAddr == null) return;
-		trackClients.clear();
-		String[] serverAddrs = trackServerAddr.split("[;]");
-		for(String addr : serverAddrs){
-			addr = addr.trim();
-			if( addr.isEmpty() ) continue;
-			RemotingClient client = new RemotingClient(addr);
-			client.onError(new ErrorCallback() { 
-				@Override
-				public void onError(IOException e, Session sess) throws IOException {
-					//ignore
-				}
-			});
-			trackClients.add(client);
-		} 
-		
-		this.trackReportService.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() { 
-				reportToTrackServer();
-			}
-		}, trackDelay, trackInterval, TimeUnit.MILLISECONDS);
-	}
-	
-	private void reportToTrackServer(){
-		reportExecutor.submit(new Runnable() { 
-			@Override
-			public void run() {
-				Message msg = packServerInfo();
-				msg.setCommand(Proto.TrackReport);
-				for(RemotingClient client : trackClients){
-					try {
-						client.invokeAsync(msg, null);
-					} catch (IOException e) {  
-						//ignore
-					}
-				} 
-			}
-		}); 
-	}
-
 	public void setAdminToken(String adminToken) {
 		this.adminToken = adminToken;
-	}
-	public void setTrackDelay(long trackDelay) {
-		this.trackDelay = trackDelay;
-	}
-	public void setTrackInterval(long trackInterval) {
-		this.trackInterval = trackInterval;
-	}
-
+	} 
+	
 	@Override
 	public void start() throws Exception { 
 		super.start();
+		//build message store
+		this.messageStore = MessageStoreFactory.getMessageStore(this.messageStoreType);
+		this.adminHandler.setMessageStore(this.messageStore);
+		this.messageStore.start();
+		{
+			log.info("message store loading ....");
+			this.mqTable.clear();
+			
+			ConcurrentMap<String, MessageQueue> mqs = this.messageStore.loadMqTable();
+			Iterator<Entry<String, MessageQueue>> iter = mqs.entrySet().iterator();
+			while(iter.hasNext()){
+				MessageQueue mq = iter.next().getValue();
+				mq.setExecutor(this.mqExecutor);
+			}
+			
+			this.mqTable.putAll(mqs);
+			log.info("message store loaded");
+		}
+		
+		
 		
 		this.mqSessionCleanService.scheduleAtFixedRate(new Runnable() { 
 			@Override
@@ -379,57 +196,20 @@ public class ZbusServer extends RemotingServer {
 				
 			}
 		}, mqCleanDelay, mqCleanInterval, TimeUnit.MILLISECONDS);
-		
-    	if(this.persistEnabled){
-	    	this.mqPersistService.scheduleAtFixedRate(new Runnable() { 
-				@Override
-				public void run() {   
-					mqStore.dump();
-				}
-			}, mqPersistDelay, mqPersistInterval, TimeUnit.MILLISECONDS);
-    	}
 	}
 	
-	public void close(){
-		this.trackReportService.shutdown();
-		this.mqSessionCleanService.shutdown();
-		this.mqPersistService.shutdown();
-		for(RemotingClient client : this.trackClients){
-			client.close();
-		}   
+	public void close(){ 
+		this.mqSessionCleanService.shutdown(); 
 	}
 	
-	public void setMqPersistInterval(long mqPersistInterval) {
-		this.mqPersistInterval = mqPersistInterval;
+	public void setupTrackServer(String trackServerAddr){
+		this.adminHandler.setupTrackServer(trackServerAddr);
+	}
+
+	public void setMessageStoreType(String messageStoreType) {
+		this.messageStoreType = messageStoreType;
 	}
 	
-
-	public void setPersistEnabled(boolean persistEnabled) {
-		this.persistEnabled = persistEnabled;
-	}
-
-	public static void main(String[] args) throws Exception{
-		int serverPort = Helper.option(args, "-p", 15555);
-		boolean persistEnabled = Helper.option(args, "-bw", false);
-		int persistInterval = Helper.option(args, "-w", 3000);
-		String adminToken = Helper.option(args, "-adm", "");
-		String trackServerAddr = Helper.option(args, "-track", 
-				"127.0.0.1:16666;127.0.0.1:16667");
-
-
-		ZbusServer zbus = new ZbusServer(serverPort); 
-		zbus.setPersistEnabled(persistEnabled);
-		zbus.setAdminToken(adminToken);
-		zbus.setupTrackServer(trackServerAddr); 
-		zbus.setMqPersistInterval(persistInterval);
-		
-		zbus.start();  
-	}  
-}
- 
-
-class ZbusServerEventAdaptor extends ServerEventAdaptor{ 
-	private ConcurrentMap<String, MessageQueue> mqTable = null;
 	 
     @Override
     public void onException(Throwable e, Session sess) throws IOException {
@@ -444,6 +224,18 @@ class ZbusServerEventAdaptor extends ServerEventAdaptor{
     	this.cleanMQ(sess);
     }
     
+    
+    @Override
+    public String findHandlerKey(Message msg) {
+    	String cmd = msg.getCommand();
+    	if(cmd == null){ 
+    		cmd = msg.getPath(); 
+    	}
+    	if(cmd == null){  
+    		cmd = Proto.Admin; 
+    	}
+    	return cmd;
+    }
     
     private void cleanMQ(Session sess){
     	if(this.mqTable == null) return;
@@ -460,36 +252,17 @@ class ZbusServerEventAdaptor extends ServerEventAdaptor{
     	}
     } 
     
-	public void setMqTable(ConcurrentMap<String, MessageQueue> mqTable) {
-		this.mqTable = mqTable;
-	}  
-}
-
-
-class ZbusServerDispachterManager extends ServerDispatcherManager{ 
-	private ServerEventAdaptor serverEventAdaptor = new ZbusServerEventAdaptor();
-	
-	public ZbusServerDispachterManager(  
-			ExecutorService executor, 
-			int engineCount, 
-			String engineNamePrefix) throws IOException{
+    public static void main(String[] args) throws Exception{
+		int serverPort = Helper.option(args, "-p", 15555); 
+		String adminToken = Helper.option(args, "-admin", "");
+		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
+		String storeType = Helper.option(args, "-store", "dummy"); 
+		ZbusServer zbus = new ZbusServer(serverPort);  
+		zbus.setAdminToken(adminToken);
+		zbus.setMessageStoreType(storeType);
+		zbus.setupTrackServer(trackServerAddr); 
 		
-		super(executor,engineCount, ZbusServerDispachterManager.class.getSimpleName());
-	}
-	
-	public ZbusServerDispachterManager(int engineCount) throws IOException {
-		this(DispatcherManager.newDefaultExecutor(), 
-				engineCount, ZbusServerDispachterManager.class.getSimpleName());
-	}
-
-	public ZbusServerDispachterManager() throws IOException  { 
-		this(DispatcherManager.defaultDispatcherSize());
+		zbus.start();  
 	}  
-	
-	@Override
-	public ServerEventAdaptor buildEventAdaptor() {  
-		//服务器端，所有Session共享一个事件处理器
-		return this.serverEventAdaptor;
-	}
 }
 

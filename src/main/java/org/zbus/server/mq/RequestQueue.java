@@ -14,9 +14,10 @@ import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 
-public class RequestQueue extends MessageQueue {   
-	private static final Logger log = LoggerFactory.getLogger(RequestQueue.class);
-	private static final long serialVersionUID = -1610052009303680593L;
+public class RequestQueue extends MessageQueue {     
+	private static final long serialVersionUID = -7640938066598234399L;
+
+	private static final Logger log = LoggerFactory.getLogger(RequestQueue.class); 
 	
 	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();
@@ -24,14 +25,53 @@ public class RequestQueue extends MessageQueue {
 	public RequestQueue(String broker, String name, ExecutorService executor, int mode){
 		super(broker, name, executor, mode); 
 	}  
+	 
+	void enqueue(final Message msg) { 
+		msgQ.offer(msg);  
+		
+		executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					if(messageStore != null){
+						messageStore.saveMessage(msg);
+					}
+				} catch (Exception e){
+					log.error(e.getMessage(), e);
+				}
+			}
+		});
+		
+	}
+	 
+	Message dequeue() { 
+		final Message msg = msgQ.poll();
+		
+		if(msg != null){
+			executor.submit(new Runnable() {
+				@Override
+				public void run() {
+					try{
+						if(messageStore != null){
+							messageStore.removeMessage(msg);
+						}
+					} catch (Exception e){
+						log.error(e.getMessage(), e);
+					}
+				}
+			});
+		}
+		
+		return msg;
+	}
+	
 	
 	public void produce(Message msg, Session sess) throws IOException{
 		String msgId = msg.getMsgId(); 
 		if(msg.isAck()){
 			ReplyHelper.reply200(msgId, sess);
-		} 
-		
-    	msgQ.offer(msg);  
+		}  
+    	enqueue(msg); 
     	this.dispatch();
 	}
 	
@@ -69,21 +109,18 @@ public class RequestQueue extends MessageQueue {
 				continue;
 			} 
 			
-			Message msg = msgQ.poll();
+			Message msg = dequeue();
 			if(msg == null){
 				continue;
 			} 
 			try { 
-				String status = msg.removeHead(Message.HEADER_REPLY_CODE);
-				if(status == null){
-					status = "200";
-				} 
 				
-				Message pullMsg = pull.getPullMsg();
-				msg.setStatus(status);
-				msg.setMsgIdSrc(msg.getMsgId());  //保留原始消息ID
-				msg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
-				pull.getSession().write(msg); 
+				Message pullMsg = pull.getPullMsg(); 
+				Message writeMsg = Message.copyWithoutBody(msg);
+				writeMsg.setStatus("200"); //支持浏览器显示 
+				writeMsg.setMsgIdRaw(msg.getMsgId());  //保留原始消息ID
+				writeMsg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
+				pull.getSession().write(writeMsg); 
 				
 				if(pull.window.get()>0){
 					pull.window.decrementAndGet();
@@ -91,7 +128,7 @@ public class RequestQueue extends MessageQueue {
 				
 			} catch (IOException ex) {   
 				log.error(ex.getMessage(), ex); 
-				msgQ.offer(msg);
+				enqueue(msg); 
 			} 
 
 			if(pull.window.get() == -1 || pull.window.get() > 0){
@@ -99,11 +136,10 @@ public class RequestQueue extends MessageQueue {
 			}
 		} 
 	}
-	 
-	//used when load from dump
-	public void restoreFromDump(ExecutorService executor) {
-		this.executor = executor;
-		this.sessQ = new LinkedBlockingQueue<PullSession>();
+	
+	public void loadMessageList(List<Message> msgs){
+		this.msgQ.clear();
+		this.msgQ.addAll(msgs);
 	}
 	
 	public List<ConsumerInfo> getConsumerInfoList() {
@@ -124,5 +160,5 @@ public class RequestQueue extends MessageQueue {
 	public int getMessageQueueSize() {
 		return this.msgQ.size();
 	}
-	 
+	
 }
