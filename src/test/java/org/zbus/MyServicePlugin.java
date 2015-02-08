@@ -2,7 +2,7 @@ package org.zbus;
 
 import org.zbus.client.ServiceConfig;
 import org.zbus.client.ServiceHandler;
-import org.zbus.client.container.ServiceProvider;
+import org.zbus.common.container.ServiceProvider;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;

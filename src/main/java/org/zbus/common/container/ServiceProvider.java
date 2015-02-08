@@ -1,4 +1,4 @@
-package org.zbus.client.container;
+package org.zbus.common.container;
 
 import org.zbus.client.ServiceConfig;
 

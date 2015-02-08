@@ -1,8 +1,8 @@
 package org.zbus.server;
  
 
+import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,9 +14,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.zbus.client.Broker;
+import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.common.Helper;
 import org.zbus.common.MessageMode;
 import org.zbus.common.Proto;
+import org.zbus.common.container.ServiceLoader;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
@@ -259,7 +263,7 @@ public class ZbusServer extends RemotingServer {
 		String adminToken = Helper.option(args, "-admin", "");
 		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
 		String storeType = Helper.option(args, "-store", "dummy"); 
-		String plugins = Helper.option(args, "-plugins", "plugins.xml"); 
+		String serviceBase = Helper.option(args, "-serviceBase", "G:/zbus-osc/zbus-dist/services"); 
 		
 		ZbusServer zbus = new ZbusServer(serverPort);  
 		zbus.setAdminToken(adminToken);
@@ -267,18 +271,22 @@ public class ZbusServer extends RemotingServer {
 		zbus.setupTrackServer(trackServerAddr); 
 		zbus.start();
 		
-		final String spring = "org.springframework.context.support.ClassPathXmlApplicationContext";	
-		Class<?> clazz = null;
-		try{ clazz = Class.forName(spring); } catch(Exception e) {}
-		if(clazz != null){
-			try {
-			Constructor<?> ctor = clazz.getConstructor(new Class[]{String.class});
-			if(ctor != null){
-				ctor.newInstance(plugins);
+		if(serviceBase != null){
+			
+			File file = new File(serviceBase);
+			if(file.exists()){ 
+				if(file.isDirectory()){ 
+					log.info(">>>ServiceBase: " + file.getAbsolutePath());
+					SingleBrokerConfig config = new SingleBrokerConfig();
+					config.setBrokerAddress(String.format("127.0.0.1:%d", serverPort));
+					Broker broker = new SingleBroker(config);
+					
+					ServiceLoader serviceLoader = new ServiceLoader(broker);
+					serviceLoader.loadServicesFromBasePath(serviceBase);
+				} 
+			} else {
+				log.warn("!!!ServiceBase not exist: " + file.getAbsolutePath());
 			}
-			} catch(Exception e) {
-	        	log.error(e.getMessage(), e);
-	        }
 		}
 	}  
 }
