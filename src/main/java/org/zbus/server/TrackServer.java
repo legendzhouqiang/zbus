@@ -107,15 +107,7 @@ public class TrackServer extends RemotingServer {
 	
 	
 	@Override
-	public void init() { 
-		this.registerHandler(Proto.Heartbeat, new MessageHandler() {
-			
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				//ignore;
-			}
-		});
-		
+	public void init() { 	
 		this.registerHandler(Proto.TrackReport, new MessageHandler() {  
 			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {  

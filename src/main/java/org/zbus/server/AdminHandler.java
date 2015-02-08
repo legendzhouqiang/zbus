@@ -91,25 +91,28 @@ public class AdminHandler extends SubCommandHandler {
 	        		return;  
 	    		} 
 	    		
-	    		MessageQueue mq = mqTable.get(mqName);
-	    		if(mq == null){
-	    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
-	    				mq = new PubsubQueue(serverAddr, mqName, mqExecutor, mode);
-	    			} else {//默认到消息队列
-	    				mq = new RequestQueue(serverAddr, mqName, mqExecutor, mode);
-	    				if(messageStore != null){
-	    					messageStore.onMessageQueueCreated(mq);
-	    				}
-	    			} 
-	    			mq.setMessageStore(messageStore);
-	    			mq.setAccessToken(accessToken);
-		    		mq.setCreator(sess.getRemoteAddress());
-		    		mqTable.putIfAbsent(mqName, mq);
-					log.info("MQ Created: %s", mq);
-					ReplyHelper.reply200(msgId, sess); 
-					
-		    		reportToTrackServer();
-		    		return;
+	    		MessageQueue mq = null;	
+	    		synchronized (mqTable) {
+	    			mq = mqTable.get(mqName);
+	    			if(mq == null){ 
+		    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
+		    				mq = new PubsubQueue(serverAddr, mqName, mqExecutor, mode);
+		    			} else {//默认到消息队列
+		    				mq = new RequestQueue(serverAddr, mqName, mqExecutor, mode);
+		    				if(messageStore != null){
+		    					messageStore.onMessageQueueCreated(mq);
+		    				}
+		    			} 
+		    			mq.setMessageStore(messageStore);
+		    			mq.setAccessToken(accessToken);
+			    		mq.setCreator(sess.getRemoteAddress());
+			    		mqTable.putIfAbsent(mqName, mq);
+						log.info("MQ Created: %s", mq);
+						ReplyHelper.reply200(msgId, sess); 
+						
+			    		reportToTrackServer();
+			    		return;
+		    		}
 	    		}
 	    		
 	    		if(MessageMode.isEnabled(mode, MessageMode.MQ) && !(mq instanceof RequestQueue)){

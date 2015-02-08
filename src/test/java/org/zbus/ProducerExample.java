@@ -18,9 +18,9 @@ public class ProducerExample {
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者
-		Producer producer = new Producer(broker, "MyMQ");
+		Producer producer = new Producer(broker, "Plugin");
 		final AtomicInteger counter = new AtomicInteger();
-		for(int i=0;i<1000;i++){
+		for(int i=0;i<100000;i++){
 			Message msg = new Message();
 			msg.setBody("hello world %6d",i);
 			

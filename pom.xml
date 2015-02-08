@@ -56,7 +56,7 @@
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.14</version>
+			<version>1.2.17</version>
 			<optional>true</optional>
 			<scope>compile</scope>
 		</dependency>
@@ -84,6 +84,15 @@
 			<optional>true</optional>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-all-server</artifactId>
+			<version>8.1.16.v20140903</version>
+			<optional>true</optional>
+			<scope>compile</scope>
+		</dependency>
+
 
 
 	</dependencies>

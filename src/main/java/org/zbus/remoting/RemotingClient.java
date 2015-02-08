@@ -36,7 +36,7 @@ public class RemotingClient {
 						defaultDispactherManager.start();
 					} catch (IOException e) { 
 						//ignore
-						e.printStackTrace();
+						log.error(e.getMessage(), e);
 					}
 				}
 			}

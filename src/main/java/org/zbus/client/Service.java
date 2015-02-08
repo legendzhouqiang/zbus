@@ -11,7 +11,7 @@ public class Service extends Thread {
 	private final ServiceConfig config; 
 	private Thread[] workerThreads;
 	
-	public Service(ServiceConfig config) throws IOException{
+	public Service(ServiceConfig config){
 		this.config = config;
 		if(config.getMq() == null || "".equals(config.getMq())){
 			throw new IllegalArgumentException("MQ required");

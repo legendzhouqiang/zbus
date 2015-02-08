@@ -70,6 +70,7 @@ public class RemotingServer extends ServerEventAdaptor {
 	public void setServerName(String serverName) {
 		this.serverName = serverName;
 	}
-    
-    
 }
+
+
+

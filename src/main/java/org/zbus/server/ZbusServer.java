@@ -2,6 +2,7 @@ package org.zbus.server;
  
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +63,9 @@ public class ZbusServer extends RemotingServer {
 	
 	private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
+		if(mqName == null){
+			mqName = msg.getPath(); //support browser
+		}
 		MessageQueue mq = mqTable.get(mqName);
     	boolean ack = msg.isAck();
     	if(mq == null){
@@ -95,21 +99,11 @@ public class ZbusServer extends RemotingServer {
 				}   
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr);  
-				
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
 					log.debug("%s", msg);
 				}
 			}
 		}); 
-
-
-		this.registerHandler(Proto.Heartbeat, new MessageHandler() {
-			
-			@Override
-			public void handleMessage(Message msg, Session sess) throws IOException {
-				//ignore;
-			}
-		});
 
 		this.registerHandler(Proto.Produce, new MessageHandler() { 
 			@Override
@@ -251,18 +245,41 @@ public class ZbusServer extends RemotingServer {
     		} 
     	}
     } 
-    
+    static boolean isAvailable(String classname) {
+        try {
+            return Class.forName(classname) != null;
+        }
+        catch(ClassNotFoundException cnfe) {
+            return false;
+        }
+    }
+
     public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 15555); 
 		String adminToken = Helper.option(args, "-admin", "");
 		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
 		String storeType = Helper.option(args, "-store", "dummy"); 
+		String plugins = Helper.option(args, "-plugins", "plugins.xml"); 
+		
 		ZbusServer zbus = new ZbusServer(serverPort);  
 		zbus.setAdminToken(adminToken);
 		zbus.setMessageStoreType(storeType);
 		zbus.setupTrackServer(trackServerAddr); 
+		zbus.start();
 		
-		zbus.start();  
+		final String spring = "org.springframework.context.support.ClassPathXmlApplicationContext";	
+		Class<?> clazz = null;
+		try{ clazz = Class.forName(spring); } catch(Exception e) {}
+		if(clazz != null){
+			try {
+			Constructor<?> ctor = clazz.getConstructor(new Class[]{String.class});
+			if(ctor != null){
+				ctor.newInstance(plugins);
+			}
+			} catch(Exception e) {
+	        	log.error(e.getMessage(), e);
+	        }
+		}
 	}  
 }
 

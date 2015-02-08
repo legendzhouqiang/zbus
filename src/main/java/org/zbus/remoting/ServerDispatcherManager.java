@@ -38,4 +38,3 @@ public class ServerDispatcherManager extends DispatcherManager{
 		return this.serverEventAdaptor;
 	}
 }
-
