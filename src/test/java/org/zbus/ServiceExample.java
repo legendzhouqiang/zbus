@@ -3,11 +3,11 @@ package org.zbus;
 import java.io.IOException;
 
 import org.zbus.client.Broker;
-import org.zbus.client.Service;
-import org.zbus.client.ServiceConfig;
-import org.zbus.client.ServiceHandler;
-import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.broker.SingleBrokerConfig;
+import org.zbus.client.service.Service;
+import org.zbus.client.service.ServiceConfig;
+import org.zbus.client.service.ServiceHandler;
 import org.zbus.common.Helper;
 import org.zbus.remoting.Message;
 

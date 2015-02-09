@@ -1,4 +1,4 @@
-package org.zbus.common.container;
+package org.zbus.client.service;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -11,13 +11,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.client.Broker;
-import org.zbus.client.Service;
-import org.zbus.client.ServiceConfig;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
+import org.zbus.client.service.Scanner.Listener;
+import org.zbus.client.service.Scanner.ScanInfo;
 import org.zbus.common.Helper;
-import org.zbus.common.container.Scanner.Listener;
-import org.zbus.common.container.Scanner.ScanInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 
@@ -36,6 +34,20 @@ public class ServiceLoader {
 		for(File f : dirs){
 			this.loadService(f.getAbsolutePath());
 		}
+	}
+	
+	public void loadService(final ServiceProvider sp){
+		executor.execute(new Runnable() {
+			@Override
+			public void run() { 
+				ServiceConfig config = sp.getConfig();
+				if(config.getBroker() == null){
+					config.setBroker(broker);
+				}
+				Service service = new Service(config);
+				service.start();
+			}
+		}); 
 	}
 	
 	public void loadService(String servicePath){
@@ -71,18 +83,7 @@ public class ServiceLoader {
 					if(!isServiceProvider) return;
 					
 					final ServiceProvider sp = (ServiceProvider) clazz.newInstance();
-					
-					executor.execute(new Runnable() {
-						@Override
-						public void run() { 
-							ServiceConfig config = sp.getConfig();
-							if(config.getBroker() == null){
-								config.setBroker(broker);
-							}
-							Service service = new Service(config);
-							service.start();
-						}
-					}); 
+					loadService(sp);
 				} catch (Exception e) { 
 					log.error(e.getMessage(), e);
 				} 

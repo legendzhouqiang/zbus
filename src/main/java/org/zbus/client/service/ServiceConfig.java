@@ -1,5 +1,6 @@
-package org.zbus.client;
+package org.zbus.client.service;
 
+import org.zbus.client.MqConfig;
 
 
 

@@ -5,9 +5,9 @@ import org.zbus.client.MqConfig;
 public class RpcConfig extends MqConfig {
 	public static final String DEFAULT_ENCODING = "UTF-8";  
 	
-	private String module = ""; 
-	private int timeout = 10000;
-	private String encoding = DEFAULT_ENCODING;
+	protected String module = ""; 
+	protected int timeout = 10000;
+	protected String encoding = DEFAULT_ENCODING;
 	
 	public String getModule() {
 		return module;

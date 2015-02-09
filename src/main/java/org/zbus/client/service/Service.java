@@ -1,7 +1,8 @@
-package org.zbus.client;
+package org.zbus.client.service;
 
 import java.io.IOException;
 
+import org.zbus.client.Consumer;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;

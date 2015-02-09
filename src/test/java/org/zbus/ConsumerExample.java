@@ -16,7 +16,7 @@ public class ConsumerExample {
 		brokerConfig.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);
 		
-		MqConfig config = new MqConfig();
+		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
 		config.setMq("MyMQ");
 		

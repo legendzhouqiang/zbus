@@ -3,9 +3,9 @@ package org.zbus;
 import java.io.IOException;
 
 import org.zbus.client.Broker;
-import org.zbus.client.Caller;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.service.Caller;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 

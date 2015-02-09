@@ -1,4 +1,4 @@
-package org.zbus.common.container;
+package org.zbus.client.service;
 
 
 public interface Scanner{

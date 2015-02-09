@@ -1,4 +1,4 @@
-package org.zbus.common.container;
+package org.zbus.client.service;
 
 import java.net.URL;
 import java.net.URLClassLoader;

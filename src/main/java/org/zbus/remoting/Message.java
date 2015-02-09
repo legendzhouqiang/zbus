@@ -191,6 +191,16 @@ public class Message implements Serializable {
 	            } 
 	            line = in.readLine();
 	        }
+	        
+	        if(this.meta.params != null){
+	        	 for(Map.Entry<String, String> kv : this.meta.params.entrySet()){
+	        		 String key = kv.getKey().toLowerCase();
+	        		 if(!head.containsKey(key)){
+	        			 head.put(key, kv.getValue());
+	        		 }
+	        	 }
+	        }
+	       
 		} catch(IOException e){
 			e.printStackTrace();
 		}

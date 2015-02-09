@@ -26,8 +26,8 @@ package org.zbus.client.rpc;
 import java.io.IOException;
 
 import org.zbus.client.Broker;
-import org.zbus.client.Caller;
 import org.zbus.client.ZbusException;
+import org.zbus.client.service.Caller;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.remoting.Message;
