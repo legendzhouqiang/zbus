@@ -51,8 +51,57 @@
 		}); 
 
 
+### 消费者
 
+		//1）创建Broker代表
+		SingleBrokerConfig brokerConfig = new SingleBrokerConfig();
+		brokerConfig.setBrokerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(brokerConfig);
+		
+		MqConfig config = new MqConfig(); 
+		config.setBroker(broker);
+		config.setMq("MyMQ");
+		
+		//2) 创建消费者
+		Consumer c = new Consumer(config);
+		while(true){
+			Message msg = c.recv(10000);
+			if(msg == null) continue;
+			
+			System.out.println(msg);
+		}
  
+### RPC动态代理【各类复杂类型】
+
+参考源码test目下的rpc部分
+
+		SingleBrokerConfig config = new SingleBrokerConfig();
+		config.setBrokerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(config);
+
+		RpcConfig rpcConfig = new RpcConfig();
+		rpcConfig.setBroker(broker);
+		rpcConfig.setMq("MyRpc"); 
+		
+		//动态代理处Interface通过zbus调用的动态实现类
+		Interface hello = RpcProxy.getService (Interface.class, rpcConfig);
+
+		Object[] res = hello.objectArray();
+		for (Object obj : res) {
+			System.out.println(obj);
+		}
+
+		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
+				String.class };
+		
+		
+		int saved = hello.saveObjectArray(array);
+		System.out.println(saved);
+		 
+		Class<?> ret = hello.classTest(String.class);
+		System.out.println(ret);
+
+
 # ZBUS消息协议 
 
 ## 协议概览 
