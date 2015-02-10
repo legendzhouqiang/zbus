@@ -1,5 +1,0 @@
-<dependency>
-    <groupId>org.zbus</groupId>
-        <artifactId>zbus-client</artifactId>
-    <version>5.0.0</version>
-</dependency>

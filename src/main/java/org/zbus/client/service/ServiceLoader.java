@@ -53,12 +53,18 @@ public class ServiceLoader {
 	public void loadService(String servicePath){
 		Scanner scanner = new ClassScanner();
 		scanner.addJarpath(servicePath); 
-		
+		log.info("load service from: "+servicePath);
 		final List<URL> urls = new ArrayList<URL>();
+		try {
+			urls.add(new URL("file:" + servicePath));
+		} catch (MalformedURLException e) { 
+			log.error(e.getMessage(), e);
+		}
 		scanner.scanJar(new Listener() { 
 			@Override
 			public void onScanned(ScanInfo info) { 
 				try {
+					log.info(info.toString());
 					URL url = new URL("file:" + info.jarpath);
 					urls.add(url);
 				} catch (MalformedURLException e) {
@@ -66,6 +72,7 @@ public class ServiceLoader {
 				} 
 			}
 		});
+		
 		 
 		final ContainerClassLoader classLoader = new ContainerClassLoader(urls.toArray(new URL[0]));
 		scanner.scanClass(new Listener() {
@@ -81,7 +88,7 @@ public class ServiceLoader {
 						}
 					}
 					if(!isServiceProvider) return;
-					
+					log.info("service class found: "+clazz);
 					final ServiceProvider sp = (ServiceProvider) clazz.newInstance();
 					loadService(sp);
 				} catch (Exception e) { 
@@ -109,11 +116,13 @@ public class ServiceLoader {
 		return dirs;
 	}
 	
+	
 	public static void main(String[] args) throws Exception {
 		String serviceBase = Helper.option(args, "-serviceBase", "G:/zbus-osc/services"); 
+		String brokerAddress = Helper.option(args, "-broker", "127.0.0.1:15555"); 
 		
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress(brokerAddress);
 		Broker broker = new SingleBroker(config);
 		
 		final ServiceLoader serviceLoader = new ServiceLoader(broker);
