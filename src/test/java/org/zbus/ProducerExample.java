@@ -1,12 +1,11 @@
 package org.zbus;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zbus.client.Broker;
 import org.zbus.client.Producer;
-import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
+import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 
@@ -19,17 +18,14 @@ public class ProducerExample {
 		
 		//2) 创建生产者
 		Producer producer = new Producer(broker, "Plugin");
-		final AtomicInteger counter = new AtomicInteger();
-		for(int i=0;i<100000;i++){
-			Message msg = new Message();
-			msg.setBody("hello world %6d",i);
-			
-			producer.send(msg, new ResultCallback() {
-				@Override
-				public void onCompleted(Message result) { 
-					System.out.println(counter.incrementAndGet());
-				}
-			});
-		}
+		Message msg = new Message();
+		msg.setBody("hello world");
+		
+		producer.send(msg, new ResultCallback() {
+			@Override
+			public void onCompleted(Message result) { 
+				System.out.println(result);
+			}
+		}); 
 	} 
 }

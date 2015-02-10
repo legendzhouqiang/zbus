@@ -18,7 +18,7 @@
 * [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
 
 
-## ZBUS总线启动与监控 
+## ZBUS 启动与监控 
 
 1. zbus-dist选择zbus.sh或者zbus.bat直接执行
 2. 通过源码ZbusServer.java个性化控制启动
@@ -27,6 +27,29 @@
 
 **高可用模式启动总线**
 分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。
+
+
+## ZBUS 示例
+### 生产者
+
+
+		//1）创建Broker代表
+		SingleBrokerConfig config = new SingleBrokerConfig();
+		config.setBrokerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(config);
+		
+		//2) 创建生产者
+		Producer producer = new Producer(broker, "MyMQ");
+		Message msg = new Message();
+		msg.setBody("hello world");
+		
+		producer.send(msg, new ResultCallback() {
+			@Override
+			public void onCompleted(Message result) { 
+				System.out.println(result);
+			}
+		}); 
+
 
 
  
