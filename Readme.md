@@ -1,16 +1,16 @@
-# ZBUS--轻量级消息队列、服务总线 #
+# ZBUS--轻量级消息队列、服务总线
 
-##**ZBUS** 特性###
+##**ZBUS** 特性
 
-* **消息队列 -- 生产者消费者模式、发布订阅 **
-* **服务总线 -- 适配改造已有业务系统，使之具备跨平台与语言, RPC **
-* **RPC -- 分布式远程方法调用，Java方法透明代理 **
 
+* **消息队列 -- 生产者消费者模式、发布订阅**
+* **服务总线 -- 适配改造已有业务系统，使之具备跨平台与语言, RPC**
+* **RPC -- 分布式远程方法调用，Java方法透明代理**
 * **跨平台、多语言**
 * **轻量级, 无依赖单个jar包**
 * **高可用、高并发**
 
-##**ZBUS** SDK ###
+##**ZBUS** SDK 
 * [Java SDK](http://git.oschina.net/rushmore/zbus "zbus-java") 
 * [C/C++ SDK](http://git.oschina.net/rushmore/zbus-c "zbus-c") 
 * [Python SDK](http://git.oschina.net/rushmore/zbus-python "zbus-python") 
@@ -18,7 +18,7 @@
 * [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
 
 
-## ZBUS总线启动与监控 ##
+## ZBUS总线启动与监控 
 
 1. zbus-dist选择zbus.sh或者zbus.bat直接执行
 2. 通过源码ZbusServer.java个性化控制启动
@@ -28,8 +28,9 @@
 **高可用模式启动总线**
 分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。
 
+
  
-## ZBUS消息协议 ## 
+## ZBUS消息协议 
 ZBUS协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体组成，
 ZBUS协议在HTTP头部KV值做了扩展，支持浏览器方式直接访问，但是ZBUS链接机制采用保持长连接方式。
 原则上, 编写客户端SDK只需要遵循下面ZBUS协议扩展即可。
@@ -43,25 +44,26 @@ ZBUS扩展头部主要是完成
 
 扩展头部Key-Value解释
 
-###1. 消息命令 ###
+###1. 消息命令
 命令标识，决定Broker（ZbusServer|TrackServer)的处理 
 
 cmd: produce | consume | request | heartbeat | admin(默认值)
 
-###2. 消息队列寻址###
+###2. 消息队列寻址
+
 mq: 消息目标队列
 
 mq-reply: 消息回复队列
 
-###3. 异步消息匹配###
+###3. 异步消息匹配
 msgid: 消息唯一UUID
 
 msgid-raw: 原始消息唯一UUID, 消息消费路由后ID发生变化，该字段保留最原始的消息ID
 
-###4. 安全控制###
+###4. 安全控制
 token: 访问控制码，不填默认空
 
-###5. 其他可扩展###
+###5. 其他可扩展
 broker: 消息经过Broker的地址
 
 topic: 消息主题，发布订阅时使用
@@ -73,7 +75,7 @@ encoding: 消息体的编码格式
 method: 管理命令的二级命令
 
 
-### HTTP头部第一行，ZBUS协议保持一致理解 ###
+### HTTP头部第一行，ZBUS协议保持一致理解
 
 请求：GET|POST URI
 
@@ -82,7 +84,7 @@ method: 管理命令的二级命令
 URI做扩展Key-Value的字符串理解
 
  
-### 具体消息扩展 ###
+### 具体消息扩展
 ======================================================================
 
 生产者Produce
