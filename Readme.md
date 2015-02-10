@@ -1,363 +1,190 @@
-# ZBUS--服务总线/消息队列【轻量级】 #
+# ZBUS--轻量级消息队列、服务总线 #
 
-> ###**ZBUS**解决问题领域###
+##**ZBUS** 特性###
 
-* **消息队列 -- 生产者消费者模式、发布订阅、远程方法调用RPC**
+* **消息队列 -- 生产者消费者模式、发布订阅 **
+* **服务总线 -- 适配改造已有业务系统，使之具备跨平台与语言, RPC **
+* **RPC -- 分布式远程方法调用，Java方法透明代理 **
+
 * **跨平台、多语言**
-* **极度轻量级**
-* **追求服务高可用、高并发**
-* **企业SOA服务实施轻量级核心组件**
+* **轻量级, 无依赖单个jar包**
+* **高可用、高并发**
 
-> ###**ZBUS**设计实现理念###
+##**ZBUS** SDK ###
+* [Java SDK](http://git.oschina.net/rushmore/zbus "zbus-java") 
+* [C/C++ SDK](http://git.oschina.net/rushmore/zbus-c "zbus-c") 
+* [Python SDK](http://git.oschina.net/rushmore/zbus-python "zbus-python") 
+* [CSharp SDK](http://git.oschina.net/rushmore/zbus-csharp "zbus-csharp") 
+* [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
 
-* ZBUS追求极度轻量级，<200K 发行jar包（从早期的基于ZeroMQ C实现演化为JAVA NIO实现），不依赖任何其他包，
-* 高度可扩展（异步通讯NIO，Remoting，日志、JSON协议格式等等都可以动态更换扩展）
-* 兼容HTTP协议标准（协议本身**兼容**，原生支持不是适配，浏览器HTTP可以直接与zbus互动）
-* 丰富API轻量级接入： C/C++,C#, JAVA, Python，Node.JS等主流平台不断丰富
 
+## ZBUS总线启动与监控 ##
 
-## ZBUS总线启动 ##
-
-1. 通过发行jar包启动，进入bin目录下选择zbus.sh或者zbus.bat直接执行
-2. 通过源码ZbusServer.java启动
+1. zbus-dist选择zbus.sh或者zbus.bat直接执行
+2. 通过源码ZbusServer.java个性化控制启动
 
 总线默认占用**15555**端口， [http://localhost:15555](http://localhost:15555 "默认监控地址") 可以直接进入监控，注意zbus因为原生兼容HTTP协议所以监控与消息队列使用同一个端口
 
 **高可用模式启动总线**
-分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。高可用部分后续专门介绍。
+分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。
 
-## ZBUS API通用模式 ##
+ 
+## ZBUS消息协议 ## 
+ZBUS协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体组成，
+ZBUS协议在HTTP头部KV值做了扩展，支持浏览器方式直接访问，但是ZBUS链接机制采用保持长连接方式。
+原则上, 编写客户端SDK只需要遵循下面ZBUS协议扩展即可。
 
->ZBUS把物理连接与消息模式分离，上层消息模式共享底层物理连接，所以一般分两部分完成消息模式客户端的创建
+ZBUS扩展头部主要是完成
 
-1. 创建到zbus通讯链接--**RemotingClient**
-2. 通过RemotingClient创建**Producer**、**Consumer**、**Rpc**等消息模式对象
+*   消息命令
+*   ZBUS消息队列寻址
+*	异步消息匹配
+*	安全控制
 
+扩展头部Key-Value解释
 
-## ZBUS 示例 ##
+###1. 消息命令 ###
+命令标识，决定Broker（ZbusServer|TrackServer)的处理 
 
-### *1* 生产者Producer###
-**生产者Python示例**
-    
-    from zbus import Message, RemotingClient, Producer
-    #1）创建通讯链接
-    client = RemotingClient(broker='127.0.0.1:15555') 
-    #2）创建生产对象，指定队列
-    p = Producer(client=client, mq='MyMQ')           
-    msg = Message()
-    msg.set_body('hello world') 
-    #3）生产消息
-    p.send(msg) 
-    
-    client.close() 
-    
-**生产者Java示例**
-    
-    package org.zbus;
-    
-    import org.remoting.Message;
-    import org.remoting.RemotingClient;
-    import org.remoting.ticket.ResultCallback;
-    import org.zbus.client.Producer; 
-    
-    public class ProducerWithClient {
-    	public static void main(String[] args) throws Exception {   
-    		//1) 创建到ZbusServer的链接
-    		final RemotingClient client = new RemotingClient("127.0.0.1:15555"); 
-    		
-    		//2) 包装为生产者，client生命周期不受Producer控制，因此Producer是个轻量级对象
-    		Producer producer = new Producer(client, "MyMQ");  
-    		Message msg = new Message();  
-    		msg.setBody("hello world"); 
-    		producer.send(msg, new ResultCallback() { 
-    			@Override
-    			public void onCompleted(Message result) {  
-    				System.out.println(result); 
-    			}
-    		});  
-            client.close();
-    	} 
-    }
-**生产者C/C++示例**
-    
-	#include "zbus.h"
-    int main_producer(int argc, char* argv[]){
-    	//1)创建通讯链接
-    	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
-    	//2)创建生产对象，指定队列
-    	producer_t* p = producer_new(client, "MyMQ", MODE_MQ);
-    	
-    	msg_t* msg, *res = NULL;
-    	int rc;
-    	
-    	msg = msg_new();
-    	msg_set_body(msg, "hello world");
-    	//3)生产消息	
-    	rc = producer_send(p, msg, &res, 10000);
-    	if(rc>=0 && res){
-    		msg_print(res);
-    		msg_destroy(&res);
-    	} 
-    	
-    	getchar();
-    	producer_destroy(&p);
-    	rclient_destroy(&client);
-    	return 0;
-    }
+cmd: produce | consume | request | heartbeat | admin(默认值)
+
+###2. 消息队列寻址###
+mq: 消息目标队列
+
+mq-reply: 消息回复队列
+
+###3. 异步消息匹配###
+msgid: 消息唯一UUID
+
+msgid-raw: 原始消息唯一UUID, 消息消费路由后ID发生变化，该字段保留最原始的消息ID
+
+###4. 安全控制###
+token: 访问控制码，不填默认空
+
+###5. 其他可扩展###
+broker: 消息经过Broker的地址
+
+topic: 消息主题，发布订阅时使用
+
+ack: 是否需要对当前消息ACK，不填默认true
+
+encoding: 消息体的编码格式
+
+method: 管理命令的二级命令
 
 
-### *2* 消费者Consumer###
+### HTTP头部第一行，ZBUS协议保持一致理解 ###
 
-**消费者Python示例**
+请求：GET|POST URI
 
-    from zbus import RemotingClient, Consumer
-    client = RemotingClient(broker = '127.0.0.1:15555')
-    consumer = Consumer(client=client,mq='MyMQ')  
-    while True:
-    	msg = consumer.recv()
-    	if msg is None: continue
-    	print msg
+应答：200 OK 
 
-**消费者Java示例**
+URI做扩展Key-Value的字符串理解
 
-    package org.zbus;
-    
-    import java.io.IOException;
-    
-    import org.remoting.Message;
-    import org.remoting.RemotingClient;
-    import org.zbus.client.Consumer; 
-    
-    public class ConsumerWithClient { 
-    	public static void main(String[] args) throws IOException{  
-    		//1) 创建到ZbusServer的链接
-    		final RemotingClient client = new RemotingClient("127.0.0.1", 15555);
-    		//2) 包装为消费者，client生命周期不受Consumer控制，因此Consumer是个轻量级对象
-    		Consumer consumer = new Consumer(client, "MyMQ");
-    		while(true){
-    			Message msg = consumer.recv(10000);
-    			if(msg == null) continue; 
-    			System.out.println(msg); 
-    		} 
-    	} 
-    }
-    
-**消费者C/C++示例**
-    
-    #include "zbus.h" 
-    int main(int argc, char* argv[]){
-    	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
-    	consumer_t* consumer = consumer_new(client, "MyMQ", MODE_MQ);
-    	msg_t*res = NULL;
-    	int rc;
-    	while(1){
-    		rc = consumer_recv(consumer, &res, 10000);
-    		if(rc<0) continue; 
-    		if(rc>=0 && res){
-    			msg_print(res); 
-    			msg_destroy(&res);
-    		}
-    	}
-    	getchar();
-    	consumer_destroy(&consumer);
-    	rclient_destroy(&client);
-    	return 0;
-    }
+ 
+### 具体消息扩展 ###
+======================================================================
+
+生产者Produce
+
+======================================================================
+
+请求格式
+
+*	[必填]cmd: produce 
+*	[必填]mq: 目标队列 
+*	[可选*]msgid: 消息UUID， 需要ACK时[必填]
+*	[可选]mq-reply: 回复队列，默认为请求UUID。 需要应答的时候由mq_reply + msgid路由返回
+*	[可选]topic: 发布订阅时发布消息的主题
+*	[可选]token: 访问控制码
+*	[可选]HTTP消息体 承载业务数据
+
+应答格式（在启用ack的时候才有应答）
+
+*	[可选]msgid: 消息UUID=请求消息UUID，客户端匹配使用
+
+======================================================================
+
+消费者Consume
+
+======================================================================
 
 
-###PubSub发布订阅###
+请求格式
 
-**Pub发布消息 Python示例**
+*	[必填]cmd: consume 
+*	[必填]mq: 目标队列 
+*	[必填]msgid: 消息UUID 
+*	[可选]topic: 发布订阅时订阅感兴趣消息的主题
+*	[可选]token: 访问控制码 
 
+应答格式
 
-    from zbus import Message, RemotingClient, Producer, MessageMode
-    #整体与生产者几乎类似，除了指定消息模式为PubSub
-    client = RemotingClient(broker='127.0.0.1:15555')
-    p = Producer(client=client, 
-      				mq='MySub',
-      				mode=MessageMode.PubSub) #指定消息模式为发布订阅
-     
-    msg = Message()  
-    msg.set_topic('qhee')  #指定消息的主题
-    msg.set_body('hello world') 
-    print p.send(msg)
-    
-    client.close()
+*	[必填]msgid: 消息UUID，为了匹配消费请求
+*	[必填]broker: 消息路由经历的Broker地址
+*	[可选]mq-reply: 回复队列, 需要反馈结果的Consumer利用mq-reply指定目标消息队列
+*	[可选]msgid-raw: 原始消息UUID，需要反馈结果的Consumer利用msgid-raw指定回复消息ID
+*	[可选]HTTP消息体 承载业务数据
 
 
-**Sub订阅消息 Python示例**
-    
-    from zbus import RemotingClient, Consumer, MessageMode
-    
-    client = RemotingClient(broker = '127.0.0.1:15555')
-    
-    consumer = Consumer(client=client, 
-    						mq='MySub', 
-    						mode=MessageMode.PubSub)#指定消息模式
-    consumer.topic = 'qhee,xmee' #指定感兴趣的消息主题，用','分割不同主题
-    
-    while True:
-	    msg = consumer.recv()
-	    if msg is None: continue
-	    print msg
-     
-    
-**Pub发布消息 JAVA示例**
+======================================================================
 
-    package org.zbus;
-    
-    import org.remoting.Message;
-    import org.remoting.RemotingClient;
-    import org.remoting.ticket.ResultCallback;
-    import org.zbus.client.Producer;
-    import org.zbus.common.MessageMode;
-    
-    
-    public class PubWithClient {
-    
-    	public static void main(String[] args) throws Exception {  
-    		final RemotingClient client = new RemotingClient("127.0.0.1", 15555); 
-    		//指定消息模式为发布订阅
-    		Producer producer = new Producer(client, "MySub", MessageMode.PubSub); 
-    		Message msg = new Message();  
-    		msg.setTopic("qhee"); //设定消息主题
-    		msg.setBody("hello world"); 
-    		producer.send(msg, new ResultCallback() { 
-    			@Override
-    			public void onCompleted(Message result) {  
-    				System.out.println(result); 
-    			}
-    		}); 
-    	}  
-    }
-    
+服务请求Request
 
-**Sub订阅消息 JAVA示例**
+======================================================================
 
+请求格式
 
-    package org.zbus;
-    
-    import org.remoting.Message;
-    import org.remoting.RemotingClient;
-    import org.zbus.client.Consumer;
-    import org.zbus.common.MessageMode;
-    
-    public class SubWithClient {
-    
-    	public static void main(String[] args) throws Exception {  
-    		
-    		final RemotingClient client = new RemotingClient("127.0.0.1:15555");	
-    		final Consumer consumer = new Consumer(client, "MySub", MessageMode.PubSub);   
-    		consumer.setTopic("qhee,xmee");  
-    		while(true){
-    			Message msg = consumer.recv(10000); 
-    			if(msg == null) continue;
-    			System.out.println(msg);
-    		}
-    	}
-    
-    }
-    
+*	[必填]cmd: request 
+*	[必填]mq: 目标队列 
+*	[必填]msgid: 消息UUID
+*	[必填]mq-reply: 回复队列，不制定的情况下默认为当前发送者的UUID 
+*	[可选]token: 访问控制码
+*	[可选]HTTP消息体 承载业务数据
+
+应答格式（在启用ack的时候才有应答）
+
+*	[必填]msgid: 消息UUID=请求消息UUID，客户端匹配使用
+*	[可选]HTTP消息体 承载业务数据
+
+======================================================================
+
+监控管理
+
+======================================================================
+
+请求格式
+
+*	[可选]cmd: admin，不填写默认为admin 
+*	[可选]method: index(默认) | track_report | track_sub | create_mq
+*	[可选*]msgid: 消息UUID, 客户端需要消息匹配时需指定
+*	[可选]token: 访问控制码
+*	[可选]HTTP消息体 承载业务数据
+
+应答格式
+
+*	[可选*]msgid: 消息UUID=请求消息UUID，客户端匹配使用
+*	[可选]HTTP消息体 承载业务数据
+
+======================================================================
+
+URI格式
+
+======================================================================
+
+URI = /   
+ 
+监控首页 = /?cmd=admin&&method=index
 
 
-###RPC远程调用###
+URI = /MyMQ 
 
-**RPC Python示例，服务实现**
-    
-    from zbus import RpcService, RpcServiceConfig, ServiceHandler, Message
-    import time
-    #服务示例，直接返回200 OK，服务时间
-    class MyServiceHandler(ServiceHandler):
-	    def handle_request(self, msg): 
-		    print msg
-		    res = Message()
-		    res.set_status('200')
-		    res.set_body('hello server@%s'%time.time())
-		    return res
-    
-    handler = MyServiceHandler() 
-    
-    #配置信
-    config = RpcServiceConfig()
-    config.broker = '127.0.0.1:15555' #总线地址
-    config.service_name = 'MyRpc' #服务队列名称
-    config.thread_count = 1 #线程数配置
-    config.service_andler = handler
-    
-    svc = RpcService(config)
-    svc.start()
-    svc.join()
-    
-**RPC Python示例，服务调用** 
-    
-    from zbus import RemotingClient, Rpc, Message
-    client = RemotingClient(broker='127.0.0.1:15555')
-    rpc = Rpc(client=client, mq='MyRpc') 
-    
-    msg = Message()
-    msg.set_body('hello?') #构造消息
-    print rpc.invoke(msg)  #直接调用请求
-    
-    client.close()
-    
-    
-###JsonRpc远程调用###
-
-**JsonRpc Python示例，服务实现**
-    
-    
-    from zbus import RpcService, RpcServiceConfig, JsonServiceHandler, Remote
-    
-    class MyService(object): 
-    
-	    @Remote()
-	    def echo(self, ping):
-	    	return ping
-	    
-	    @Remote()
-	    def save(self, user):
-	    	print user
-	    	return 'OK'
-	    
-	    @Remote('user')
-	    	def user(self, username):
-	   		return {'Name': username, 'Addr': u'中文'}
-	    
-	    @Remote()
-	    def plus(self, a, b):
-	    	print 'plus(%s,%s)'%(a, b)
-	    	return a + b 
-     
-    handler = JsonServiceHandler()
-    handler.add_module('ServiceInterface', MyService())
-    
-    config = RpcServiceConfig()
-    config.broker = '127.0.0.1:15555'
-    config.service_name = 'MyJsonRpc'
-    config.service_andler = handler
-    config.thread_count = 1
-    
-    svc = RpcService(config)
-    svc.start()
-    svc.join()
+第一个?之前理解为消息队列 mq=MyMQ
 
 
-**JsonRpc Python示例，服务调用**
-    
-    from zbus import RemotingClient,JsonRpc 
-    
-    client = RemotingClient(broker='127.0.0.1:15555')
-    
-    rpc = JsonRpc(client=client, 
-      				mq='MyJsonRpc', 
-      				module='ServiceInterface')
-    
-    print rpc.plus(1,2)
+*	/MyMQ?cmd=produce&&msgid=aed14-2343-1dea0-32&&body=xxxyyyzzz
+*	/MyMQ?cmd=consume&&msgid=aed14-2343-1dea0-32
+*	/MyMQ?cmd=request&&msgid=aed14-2343-1dea0-32
 
-     
-
-### **TODO**
-* 1) 增加C、Python平台异步操作API
-* 2) 增加Node.JS平台接入
-
+第一个?之后理解为Key-Value, URI的KV优先级低于头部扩展
 
