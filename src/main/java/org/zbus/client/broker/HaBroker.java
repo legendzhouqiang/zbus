@@ -99,7 +99,7 @@ public class HaBroker implements Broker, TrackListener {
 			log.error(errorMsg);
 			throw new ZbusException(errorMsg);
 		}
-		broker.produceMessage(msg, callback);
+		broker.invokeAsync(msg, callback);
 	}
 	
 	private Message invokeSyncByBroker(String brokerAddress, Message msg, int timeout) throws IOException{
@@ -109,11 +109,11 @@ public class HaBroker implements Broker, TrackListener {
 			log.error(errorMsg);
 			throw new ZbusException(errorMsg);
 		}
-		return broker.produceMessage(msg, timeout);
+		return broker.invokeSync(msg, timeout);
 	}
 	
 	@Override
-	public void produceMessage(Message msg, ResultCallback callback)
+	public void invokeAsync(Message msg, ResultCallback callback)
 			throws IOException { 
 		if(!isProducer(msg)){//
 			log.warn("produce message required");
@@ -145,7 +145,7 @@ public class HaBroker implements Broker, TrackListener {
 	}
 
 	@Override
-	public Message produceMessage(Message msg, int timeout) throws IOException { 
+	public Message invokeSync(Message msg, int timeout) throws IOException { 
 		if(!isProducer(msg)){//
 			log.warn("produce message required");
 			throw new ZbusException("produce message required");
@@ -177,7 +177,7 @@ public class HaBroker implements Broker, TrackListener {
 		return invokeSyncByBroker(brokerAddress, msg, timeout);
 	}
 
-	private RemotingClient getConsumerClientByBroker(String brokerAddress) throws IOException{
+	private RemotingClient getClientByBroker(String brokerAddress) throws IOException{
 		SingleBroker broker = getBrokerByAddress(brokerAddress);
 		if(broker == null){
 			String errorMsg = brokerAddress+" zbus broker missing";
@@ -186,14 +186,14 @@ public class HaBroker implements Broker, TrackListener {
 		}
 		ClientHint hint = new ClientHint();
 		hint.setBroker(brokerAddress);
-		return broker.getConsumerClient(hint);
+		return broker.getClient(hint);
 	}
 	@Override
-	public RemotingClient getConsumerClient(ClientHint hint) throws IOException {
+	public RemotingClient getClient(ClientHint hint) throws IOException {
 		String brokerAddress = hint.getBroker();
 		//1)指定Broker优先
 		if(brokerAddress != null){
-			return getConsumerClientByBroker(brokerAddress);
+			return getClientByBroker(brokerAddress);
 		}
 		//2)根据MQ来找有滞留消息的队列
 		String mq = hint.getMq();
@@ -203,7 +203,7 @@ public class HaBroker implements Broker, TrackListener {
 			if(mqInfos != null && mqInfos.size() > 0){ 
 				MqInfo info = mqInfos.get(mqInfos.size()-1);
 				if(info.getUnconsumedMsgCount()>0){ //有没有消费掉消息优先补上
-					return getConsumerClientByBroker(info.getBroker());
+					return getClientByBroker(info.getBroker());
 				}
 			}
 		}
@@ -218,11 +218,11 @@ public class HaBroker implements Broker, TrackListener {
 			requestIp = this.requestIp;
 		}
 		brokerAddress = list.get(Math.abs(requestIp.hashCode())%list.size());
-		return getConsumerClientByBroker(brokerAddress);
+		return getClientByBroker(brokerAddress);
 	}
 
 	@Override
-	public void closeConsumerClient(RemotingClient client) throws IOException {
+	public void closeClient(RemotingClient client) throws IOException {
 		String brokerAddress = client.attr("broker");
 		if(brokerAddress == null){
 			log.warn("unable to find client's broker, missing attribute");
@@ -230,7 +230,7 @@ public class HaBroker implements Broker, TrackListener {
 		} else {
 			Broker broker = getBrokerByAddress(brokerAddress);
 			if(broker != null){
-				broker.closeConsumerClient(client);
+				broker.closeClient(client);
 			} else {
 				log.warn("unable to find client's broker");
 				client.close();

@@ -52,7 +52,7 @@ public class Consumer{
 	
     public Message recv(int timeout) throws IOException{ 
     	if(this.client == null){
-	    	this.client = broker.getConsumerClient(myClientHint());
+	    	this.client = broker.getClient(myClientHint());
     	}
     	Message req = new Message();
     	req.setCommand(Proto.Consume);
@@ -76,8 +76,8 @@ public class Consumer{
     	} catch(IOException e){
     		log.error(e.getMessage(), e);
     		try{
-    			broker.closeConsumerClient(client);
-    			client = broker.getConsumerClient(myClientHint());
+    			broker.closeClient(client);
+    			client = broker.getClient(myClientHint());
     		} catch(IOException ex){
     			log.error(e.getMessage(), e);
     		}
@@ -87,7 +87,10 @@ public class Consumer{
     
     
     public void reply(Message msg) throws IOException{ 
-    	msg.setCommand(Proto.Produce);  //!!would clear msg's status, do it after getStatus
+    	if(msg.getStatus() != null){
+    		msg.setReplyCode(msg.getStatus());
+    	}
+    	msg.setCommand(Proto.Produce); 
     	msg.setAck(false);
     	client.getSession().write(msg); 
     }

@@ -61,6 +61,7 @@ public class ReplyQueue extends MessageQueue {
 			} 
 			this.msgQ.remove(msgId);
 			try { 
+				prepareMessageStatus(msg);
 				this.pullSession.getSession().write(msg); 
 				
 				if(this.pullSession.window.get()>0){

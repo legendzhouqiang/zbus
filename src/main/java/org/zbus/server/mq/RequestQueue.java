@@ -117,7 +117,8 @@ public class RequestQueue extends MessageQueue {
 				
 				Message pullMsg = pull.getPullMsg(); 
 				Message writeMsg = Message.copyWithoutBody(msg);
-				writeMsg.setStatus("200"); //支持浏览器显示 
+				
+				prepareMessageStatus(writeMsg);
 				writeMsg.setMsgIdRaw(msg.getMsgId());  //保留原始消息ID
 				writeMsg.setMsgId(pullMsg.getMsgId()); //配对订阅消息！
 				pull.getSession().write(writeMsg); 

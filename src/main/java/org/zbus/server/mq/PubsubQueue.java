@@ -75,7 +75,7 @@ public class PubsubQueue extends MessageQueue {
 				} 
 				if(sess.isTopicMatched(topic)){ 
 					Message copy = Message.copyWithoutBody(msg);
-					copy.setStatus("200"); 
+					prepareMessageStatus(copy);
 					sess.getMsgQ().offer(copy);
 				}
 			}

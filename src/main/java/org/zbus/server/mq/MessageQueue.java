@@ -110,6 +110,21 @@ public abstract class MessageQueue implements Serializable{
 	public abstract int getMessageQueueSize();
 	public abstract List<ConsumerInfo> getConsumerInfoList(); 
 
+	/**
+	 * 为支持浏览器，特定处理消息状态 
+	 * @param msg
+	 */
+	public void prepareMessageStatus(Message msg){
+		String status = msg.getStatus();
+		if(status == null){
+			status = msg.getReplyCode(); 
+			if(status == null){
+				status = "200"; //default to OK
+			}
+			msg.setStatus(status);
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return "MQ [name=" + name + ", creator=" + creator + ", createdTime="

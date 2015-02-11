@@ -18,11 +18,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.zbus.common.logging.Logger;
+import org.zbus.common.logging.LoggerFactory;
  
 
 
 public class Message implements Serializable { 
 	private static final long serialVersionUID = 4379223525215626137L;
+	private static final Logger log = LoggerFactory.getLogger(Message.class);
+	
 	public static final String HEARTBEAT         = "heartbeat"; //心跳消息
 	
 	//使用到的标准HTTP头部
@@ -43,7 +48,8 @@ public class Message implements Serializable {
 	public static final String HEADER_BROKER     = "broker"; 
 	public static final String HEADER_TOPIC      = "topic"; //使用,分隔 
 	public static final String HEADER_ACK        = "ack";	 	 
-	public static final String HEADER_WINDOW     = "window";	
+	public static final String HEADER_WINDOW     = "window";
+	public static final String HEADER_REPLY_CODE = "reply_code";
 	
 	
 	 
@@ -191,7 +197,7 @@ public class Message implements Serializable {
 	            } 
 	            line = in.readLine();
 	        }
-	        
+	        //合并: header优先，url参数次之
 	        if(this.meta.params != null){
 	        	 for(Map.Entry<String, String> kv : this.meta.params.entrySet()){
 	        		 String key = kv.getKey().toLowerCase();
@@ -201,8 +207,8 @@ public class Message implements Serializable {
 	        	 }
 	        }
 	       
-		} catch(IOException e){
-			e.printStackTrace();
+		} catch(IOException e){ 
+			log.error(e.getMessage(), e);
 		}
 	}
 	
@@ -336,9 +342,16 @@ public class Message implements Serializable {
 		this.setHead(HEADER_WINDOW, ""+window);
 		return this;
 	} 
-	 
-
-	//////////特殊处理：Status 兼容HTTP////////////// 
+	
+	public String getReplyCode() {
+		return getHeadOrParam(HEADER_REPLY_CODE);
+	}
+	public Message setReplyCode(String value) {
+		this.setHead(HEADER_REPLY_CODE, value);
+		return this;
+	} 
+	
+	
 	public String getStatus() {  
 		return meta.status;
 	}

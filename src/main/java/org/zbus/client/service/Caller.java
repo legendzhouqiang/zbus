@@ -35,12 +35,12 @@ public class Caller{
 	
 	public Message invokeSync(Message req, int timeout) throws IOException{ 
 		this.fillCallMessage(req); 
-		return broker.produceMessage(req, timeout);
+		return broker.invokeSync(req, timeout);
 	}
 	
 	public void invokeAsync(Message req, ResultCallback callback) throws IOException{
 		this.fillCallMessage(req);   
-		broker.produceMessage(req, callback);
+		broker.invokeAsync(req, callback);
 	}
 
 	

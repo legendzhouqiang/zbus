@@ -42,7 +42,7 @@ public class SingleBroker implements Broker {
 		return brokerAddress;
 	}
  
-	public void produceMessage(Message msg, ResultCallback callback)
+	public void invokeAsync(Message msg, ResultCallback callback)
 			throws IOException {  
 		RemotingClient client = null;
 		try {
@@ -62,7 +62,7 @@ public class SingleBroker implements Broker {
 	} 
 
 	@Override
-	public Message produceMessage(Message req, int timeout) throws IOException {
+	public Message invokeSync(Message req, int timeout) throws IOException {
 		RemotingClient client = null;
 		try {
 			client = this.pool.borrowObject();
@@ -82,13 +82,13 @@ public class SingleBroker implements Broker {
 		}
 	}
 	@Override
-	public RemotingClient getConsumerClient(ClientHint hint) throws IOException{ 
+	public RemotingClient getClient(ClientHint hint) throws IOException{ 
 		return new RemotingClient(this.brokerAddress, this.clientMgr);
 	}
 
 
 	@Override
-	public void closeConsumerClient(RemotingClient client) throws IOException {
+	public void closeClient(RemotingClient client) throws IOException {
 		client.close();
 	}
 

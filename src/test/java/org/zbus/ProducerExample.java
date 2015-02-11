@@ -17,10 +17,10 @@ public class ProducerExample {
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者
-		Producer producer = new Producer(broker, "Plugin");
+		Producer producer = new Producer(broker, "MyMQ");
 		Message msg = new Message();
 		msg.setBody("hello world");
-		
+		for(int i=0;i<100;i++)
 		producer.send(msg, new ResultCallback() {
 			@Override
 			public void onCompleted(Message result) { 

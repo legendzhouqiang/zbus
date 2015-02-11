@@ -14,7 +14,7 @@
 * [Java SDK](http://git.oschina.net/rushmore/zbus "zbus-java") 
 * [C/C++ SDK](http://git.oschina.net/rushmore/zbus-c "zbus-c") 
 * [Python SDK](http://git.oschina.net/rushmore/zbus-python "zbus-python") 
-* [CSharp SDK](http://git.oschina.net/rushmore/zbus-csharp "zbus-csharp") 
+* [C# SDK](http://git.oschina.net/rushmore/zbus-csharp "zbus-csharp") 
 * [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
 
 

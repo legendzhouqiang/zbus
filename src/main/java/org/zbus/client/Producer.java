@@ -36,7 +36,7 @@ public class Producer {
 		msg.setMq(this.mq);
 		msg.setToken(this.accessToken);
 		
-		broker.produceMessage(msg, callback);
+		broker.invokeAsync(msg, callback);
 	}
 	
 
