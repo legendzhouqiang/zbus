@@ -27,6 +27,8 @@
 1. zbus-dist选择zbus.sh或者zbus.bat直接执行
 2. 通过源码ZbusServer.java个性化控制启动
 
+![简单监控](http://git.oschina.net/uploads/images/2015/0212/103207_b5d2e1d3_7458.png)
+
 总线默认占用**15555**端口， [http://localhost:15555](http://localhost:15555 "默认监控地址") 可以直接进入监控，注意zbus因为原生兼容HTTP协议所以监控与消息队列使用同一个端口
 
 **高可用模式启动总线**
