@@ -88,6 +88,41 @@
 			
 			System.out.println(msg);
 		}
+
+ 
+### RPC动态代理【各类复杂类型】
+
+参考源码test目下的rpc部分
+
+		SingleBrokerConfig config = new SingleBrokerConfig();
+		config.setBrokerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(config);
+
+		RpcConfig rpcConfig = new RpcConfig();
+		rpcConfig.setBroker(broker);
+		rpcConfig.setMq("MyRpc"); 
+		
+		//动态代理处Interface通过zbus调用的动态实现类
+		Interface hello = RpcProxy.getService (Interface.class, rpcConfig);
+
+		Object[] res = hello.objectArray();
+		for (Object obj : res) {
+			System.out.println(obj);
+		}
+
+		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
+				String.class };
+		
+		
+		int saved = hello.saveObjectArray(array);
+		System.out.println(saved);
+		 
+		Class<?> ret = hello.classTest(String.class);
+		System.out.println(ret);
+
+
+
+
  
  
 ### Spring集成--服务端
@@ -151,36 +186,10 @@
 	</bean>
  
  
- 
-### RPC动态代理【各类复杂类型】
 
-参考源码test目下的rpc部分
 
-		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
-		Broker broker = new SingleBroker(config);
 
-		RpcConfig rpcConfig = new RpcConfig();
-		rpcConfig.setBroker(broker);
-		rpcConfig.setMq("MyRpc"); 
-		
-		//动态代理处Interface通过zbus调用的动态实现类
-		Interface hello = RpcProxy.getService (Interface.class, rpcConfig);
 
-		Object[] res = hello.objectArray();
-		for (Object obj : res) {
-			System.out.println(obj);
-		}
-
-		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
-				String.class };
-		
-		
-		int saved = hello.saveObjectArray(array);
-		System.out.println(saved);
-		 
-		Class<?> ret = hello.classTest(String.class);
-		System.out.println(ret);
 
 
 # ZBUS消息协议 
