@@ -135,7 +135,7 @@
 	<bean id="serviceHandler" class="org.zbus.client.rpc.RpcServiceHandler">
 		<constructor-arg>
 			<list>
-				<!-- 放入你需要的暴露的的接口 -->
+				<!-- 放入你需要暴露的接口 ,其他配置基本不变-->
 				<ref bean="interface"/>
 			</list>
 		</constructor-arg>
