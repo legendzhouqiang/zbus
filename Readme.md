@@ -17,6 +17,10 @@
 * [C# SDK](http://git.oschina.net/rushmore/zbus-csharp "zbus-csharp") 
 * [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
 
+##**ZBUS** 桥接
+
+* [微软MSMQ](http://git.oschina.net/rushmore/zbus-msmq "zbus-msmq") 
+* [金证KCXP](http://git.oschina.net/rushmore/zbus-kcxp "zbus-kcxp") 
 
 ## ZBUS 启动与监控 
 
