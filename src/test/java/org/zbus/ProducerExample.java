@@ -17,9 +17,8 @@ public class ProducerExample {
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者
-		Producer producer = new Producer(broker, "MSMQ");
-		Message msg = new Message();
-		msg.setMqReply("MSMQ_REPLY");
+		Producer producer = new Producer(broker, "MyMQ");
+		Message msg = new Message(); 
 		msg.setBody("hello world");
 		for(int i=0;i<1;i++)
 		producer.send(msg, new ResultCallback() {

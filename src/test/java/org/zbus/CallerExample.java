@@ -17,7 +17,7 @@ public class CallerExample {
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者
-		Caller caller = new Caller(broker, "MSMQ");
+		Caller caller = new Caller(broker, "MyMQ");
 		
 		Message msg = new Message();
 		msg.setBody("hello world");
