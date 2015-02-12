@@ -125,7 +125,9 @@
 
  
  
-### Spring集成--服务端
+### Spring集成--服务端(RPC示例)
+
+**无任何代码侵入使得你已有的业务接口接入到zbus，获得跨平台和多语言支持**
 
 	<!-- 暴露的的接口实现示例 -->
 	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
