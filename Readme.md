@@ -34,6 +34,15 @@
 
 
 ## ZBUS 示例
+
+### Java Maven 依赖（单个jar包）
+
+	<dependency>
+		<groupId>org.zbus</groupId>
+		<artifactId>zbus</artifactId>
+		<version>5.1.0-SNAPSHOT</version>
+	</dependency>
+
 ### 生产者
 
 
