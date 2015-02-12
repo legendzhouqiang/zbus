@@ -187,8 +187,17 @@
 		</constructor-arg>
 	</bean>
  
- 
 
+**Spring完成zbus代理透明化，zbus设施从你的应用逻辑中彻底消失**
+
+	public static void main(String[] args) { 
+		ApplicationContext context = new ClassPathXmlApplicationContext("ZbusSpringClient.xml");
+		
+		Interface intf = (Interface) context.getBean("interface");
+		
+		System.out.println(intf.listMap());
+	}
+	
 
 
 
