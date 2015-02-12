@@ -6,11 +6,13 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
 
 	
+	<!-- 暴露的的接口实现示例 -->
 	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
 	
 	<bean id="serviceHandler" class="org.zbus.client.rpc.RpcServiceHandler">
 		<constructor-arg>
 			<list>
+				<!-- 放入你需要的暴露的的接口 -->
 				<ref bean="interface"/>
 			</list>
 		</constructor-arg>

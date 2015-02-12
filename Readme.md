@@ -89,6 +89,69 @@
 			System.out.println(msg);
 		}
  
+ 
+### Spring集成--服务端
+
+	<!-- 暴露的的接口实现示例 -->
+	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
+	
+	<bean id="serviceHandler" class="org.zbus.client.rpc.RpcServiceHandler">
+		<constructor-arg>
+			<list>
+				<!-- 放入你需要的暴露的的接口 -->
+				<ref bean="interface"/>
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
+	<bean id="broker" class="org.zbus.client.broker.SingleBroker">
+		<constructor-arg>
+			<bean class="org.zbus.client.broker.SingleBrokerConfig">
+				<property name="brokerAddress" value="127.0.0.1:15555" />
+			</bean>
+		</constructor-arg>
+	</bean>
+	
+	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
+	<bean id="zbusService" class="org.zbus.client.Service" init-method="start">
+		<constructor-arg>  
+			<bean class="org.zbus.client.ServiceConfig">
+				<property name="broker" ref="broker"/>
+				<property name="mq" value="MyRpc"/>
+				<property name="threadCount" value="2"/>
+				<property name="serviceHandler" ref="serviceHandler"/>
+			</bean>
+		</constructor-arg>
+	</bean>
+	
+
+
+### Spring集成--客户端
+
+	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
+	<bean id="broker" class="org.zbus.client.broker.SingleBroker">
+		<constructor-arg>
+			<bean class="org.zbus.client.broker.SingleBrokerConfig">
+				<property name="brokerAddress" value="127.0.0.1:15555" />
+			</bean>
+		</constructor-arg>
+	</bean>
+	
+
+	<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
+	<bean id="interface" class="org.zbus.client.rpc.RpcProxy" factory-method="getService">
+		<constructor-arg type="java.lang.Class" value="org.zbus.rpc.biz.Interface"/> 
+		<constructor-arg>
+			<bean class="org.zbus.client.rpc.RpcConfig">
+				<property name="broker" ref="broker"/> 
+				<property name="mq" value="MyRpc"/>
+			</bean>
+		</constructor-arg>
+	</bean>
+ 
+ 
+ 
 ### RPC动态代理【各类复杂类型】
 
 参考源码test目下的rpc部分
