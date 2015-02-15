@@ -300,7 +300,11 @@ public class Message implements Serializable {
 	}
 	
 	public String getMq(){
-		return this.getHeadOrParam(HEADER_MQ);
+		String value = this.getHeadOrParam(HEADER_MQ);
+		if(value == null){
+			value = getPath();
+		}
+		return value;
 	}
 	
 	public String getUri(){

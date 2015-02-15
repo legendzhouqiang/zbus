@@ -39,6 +39,14 @@ public class Producer {
 		broker.invokeAsync(msg, callback);
 	}
 	
+	public Message sendSync(Message msg, int timeout) throws IOException{
+		msg.setCommand(Proto.Produce);
+		msg.setMq(this.mq);
+		msg.setToken(this.accessToken);
+		
+		return broker.invokeSync(msg, timeout);
+	}
+	
 
 	public String getAccessToken() {
 		return accessToken;

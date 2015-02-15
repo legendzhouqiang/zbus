@@ -3,6 +3,8 @@ package org.zbus.client;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
@@ -10,6 +12,7 @@ import org.zbus.common.protocol.MessageMode;
 import org.zbus.common.protocol.Proto;
 import org.zbus.common.remoting.Message;
 import org.zbus.common.remoting.RemotingClient;
+import org.zbus.common.remoting.callback.MessageCallback;
 
 
 public class Consumer{    
@@ -83,6 +86,34 @@ public class Consumer{
     		}
     	}
     	return res;
+    }
+    
+    protected ScheduledExecutorService executorService = null;
+    private MessageCallback callback;
+    public void onMessage(MessageCallback cb) throws IOException{
+    	this.callback = cb;
+    	if(executorService == null){
+    		executorService = Executors.newSingleThreadScheduledExecutor(); 
+    	} else {  
+    		return;
+    	}
+  
+    	executorService.submit(new Runnable() {
+			@Override
+			public void run() { 
+				for(;;){
+					try {
+						Message msg = recv(10000);
+						if(msg == null){
+							continue;
+						}
+						callback.onMessage(msg, client.getSession());
+					} catch (IOException e) { 
+						//
+					}
+				}
+			}
+		});
     }
     
     

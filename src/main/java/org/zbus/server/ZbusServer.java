@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -101,6 +102,9 @@ public class ZbusServer extends RemotingServer {
 				if(mqReply == null ||  mqReply.equals("")){
 					msg.setMqReply(sess.id()); //reply default to self
 				}   
+				if(msg.getMsgId() == null){ //msgid should be set
+					msg.setMsgId(UUID.randomUUID().toString());
+				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr);  
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
@@ -162,9 +166,8 @@ public class ZbusServer extends RemotingServer {
 	public void start() throws Exception { 
 		super.start();
 		//build message store
-		this.messageStore = MessageStoreFactory.getMessageStore(this.messageStoreType);
-		this.adminHandler.setMessageStore(this.messageStore);
-		this.messageStore.start();
+		this.messageStore = MessageStoreFactory.getMessageStore(this.serverAddr, this.messageStoreType);
+		this.adminHandler.setMessageStore(this.messageStore); 
 		{
 			log.info("message store loading ....");
 			this.mqTable.clear();
@@ -262,8 +265,8 @@ public class ZbusServer extends RemotingServer {
 		int serverPort = Helper.option(args, "-p", 15555); 
 		String adminToken = Helper.option(args, "-admin", "");
 		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
-		String storeType = Helper.option(args, "-store", "dummy"); 
-		String serviceBase = Helper.option(args, "-serviceBase", "G:/zbus-osc/zbus-dist/services"); 
+		String storeType = Helper.option(args, "-store", "redis"); 
+		String serviceBase = Helper.option(args, "-serviceBase", null); 
 		
 		ZbusServer zbus = new ZbusServer(serverPort);  
 		zbus.setAdminToken(adminToken);

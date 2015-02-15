@@ -13,6 +13,6 @@ public interface MessageStore {
 	
 	ConcurrentMap<String, MessageQueue> loadMqTable() throws Exception;
 	
-	void start();
-	void shutdown();
+	void start() throws Exception;
+	void shutdown() throws Exception;
 }

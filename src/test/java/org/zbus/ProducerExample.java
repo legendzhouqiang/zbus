@@ -19,9 +19,8 @@ public class ProducerExample {
 		//2) 创建生产者
 		Producer producer = new Producer(broker, "MyMQ");
 		Message msg = new Message(); 
-		msg.setBody("hello world");
-		msg.setMqReply("MyMQ_REPLY");
-		for(int i=0;i<1;i++)
+		msg.setBody("hello world"); 
+		for(int i=0;i<100;i++)
 		producer.send(msg, new ResultCallback() {
 			@Override
 			public void onCompleted(Message result) { 

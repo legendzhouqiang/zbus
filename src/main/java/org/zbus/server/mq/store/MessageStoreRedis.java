@@ -1,9 +1,12 @@
 package org.zbus.server.mq.store;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,26 +23,60 @@ import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.RequestQueue;
 
 import redis.clients.jedis.Jedis;
- 
+
+/**
+ * NOT yet fully tested
+ * @author 洪磊明(rushmore)
+ *
+ */
 public class MessageStoreRedis implements MessageStore {
 	private static final Logger log = LoggerFactory.getLogger(MessageStoreRedis.class);private Jedis jedis;
 
-	private static final MessageCodec codec = new MessageCodec();
-	private static final String ZBUS_PREFIX = "zbus-";
+	private static final MessageCodec codec = new MessageCodec(); 
+	
+	private final Properties props = new Properties();
+	private final static String CONFIG_FILE = "redis.properties";
+	
 	private final String brokerKey;
 	
-	public MessageStoreRedis(Jedis jedis, String broker){
-		this.jedis = jedis;
-		this.brokerKey = ZBUS_PREFIX + broker;
+	public MessageStoreRedis(String broker){ 
+		this.brokerKey = broker;
+		//从配置文件中读取配置信息
+		InputStream stream = getClass().getClassLoader().getResourceAsStream(CONFIG_FILE);
+		try {
+			if(stream != null){
+				props.load(stream);
+			} else {
+				log.warn("missing properties: "+ CONFIG_FILE);
+			}
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
+		String host = props.getProperty("host", "localhost").trim();
+		String portString = props.getProperty("port", "6379").trim();
+		String password = props.getProperty("password", "").trim();
+		int port = 6379;
+		try{
+			port = Integer.valueOf(portString);
+		} catch (Exception e){
+		}
+		this.jedis = new Jedis(host, port); 
+		if(!"".equals(password)){
+			jedis.auth(password);
+		}
+	}
+	
+	private String msgKey(Message msg){
+		return msg.getMsgId();
 	}
 	
 	private String mqKey(String mq){
-		return String.format("%s-%s", brokerKey, mq);
+		return String.format("%s%s", brokerKey, mq);
 	}
 	
 	@Override
 	public void saveMessage(Message msg) {  
-		String msgKey = msg.getMsgId();
+		String msgKey = msgKey(msg);
 		String mqKey = mqKey(msg.getMq());  
 		jedis.set(msgKey, msg.toString());  
 		jedis.rpush(mqKey, msgKey);
@@ -47,7 +84,7 @@ public class MessageStoreRedis implements MessageStore {
 
 	@Override
 	public void removeMessage(Message msg) {
-		String msgKey = msg.getMsgId();
+		String msgKey = msgKey(msg);
 		String mqKey = mqKey(msg.getMq());  
 		
 		jedis.del(msgKey);  
@@ -84,6 +121,7 @@ public class MessageStoreRedis implements MessageStore {
 			RequestQueue mq = new RequestQueue(info.getBroker(),
 					mqName, null, mode);
 			mq.setCreator(info.getCreator());
+			mq.setMessageStore(this);
 			
 			String mqKey = mqKey(mqName);
 			
@@ -94,6 +132,11 @@ public class MessageStoreRedis implements MessageStore {
 			List<String> msgStrings = jedis.mget(msgIds.toArray(new String[0]));
 			List<Message> msgs = new ArrayList<Message>();
 			for(String msgString : msgStrings){
+				if(msgString == null){
+					log.warn("message missing");
+					continue;
+				}
+				
 				IoBuffer buf = IoBuffer.wrap(msgString);
 				Message msg = (Message) codec.decode(buf);
 				if(msg != null){
@@ -116,25 +159,5 @@ public class MessageStoreRedis implements MessageStore {
 	@Override
 	public void shutdown() { 
 		
-	}
-	
-	public static void main(String[] args){
-		Jedis jedis = new Jedis("localhost");
-		jedis.del("list1");
-		Message msg = new Message();
-		msg.setStatus("200");
-		jedis.rpush("list1", "hong", "lei", "ming");
-		List<String> res = jedis.lrange("list1", 0, 10);
-		for(String x : res){
-			System.out.println(x);
-		}
-		jedis.lrem("list1", 1, "lei");
-		
-		res = jedis.lrange("list1", 0, 10);
-		for(String x : res){
-			System.out.println(x);
-		}
-		
-		jedis.close();
 	}
 }

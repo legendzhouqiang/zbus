@@ -8,6 +8,8 @@ import org.zbus.client.MqConfig;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.callback.MessageCallback;
+import org.zbus.common.remoting.nio.Session;
 
 public class ConsumerExample {
 	public static void main(String[] args) throws IOException{  
@@ -18,15 +20,18 @@ public class ConsumerExample {
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq("MyMQ_REPLY");
+		config.setMq("MyMQ");
 		
 		//2) 创建消费者
 		Consumer c = new Consumer(config);
-		while(true){
-			Message msg = c.recv(10000);
-			if(msg == null) continue;
-			
-			System.out.println(msg);
-		}
+		
+		c.onMessage(new MessageCallback() {
+			@Override
+			public void onMessage(Message msg, Session sess) throws IOException {
+				System.out.println(msg);
+			}
+		});
+		
+		System.out.println("Consumer is consuming");
 	} 
 }
