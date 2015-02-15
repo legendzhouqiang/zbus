@@ -13,12 +13,16 @@ public class MessageStoreDummy implements MessageStore {
 	
 	@Override
 	public void saveMessage(Message message) { 
-		log.debug("Dummy save: "+ message);
+		if(log.isDebugEnabled()){
+			log.debug("Dummy save: "+ message);
+		}
 	}
 
 	@Override
 	public void removeMessage(Message message) {  
-		log.debug("Dummy remove: "+ message);
+		if(log.isDebugEnabled()){
+			log.debug("Dummy remove: "+ message);
+		}
 	}
 	
 	@Override

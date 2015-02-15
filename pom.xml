@@ -84,17 +84,7 @@
 			<optional>true</optional>
 			<scope>compile</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-all-server</artifactId>
-			<version>8.1.16.v20140903</version>
-			<optional>true</optional>
-			<scope>compile</scope>
-		</dependency>
-
-
-
+		
 	</dependencies>
 
 
