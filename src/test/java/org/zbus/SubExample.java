@@ -7,7 +7,7 @@ import org.zbus.client.Consumer;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.common.protocol.MessageMode;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class SubExample {
 	public static void main(String[] args) throws IOException{  

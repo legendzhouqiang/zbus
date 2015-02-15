@@ -3,7 +3,7 @@ package org.zbus.common.protocol;
 import java.util.Map;
 
 import org.zbus.common.json.JSON;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class Proto {
 	public static final String Heartbeat = Message.HEARTBEAT; //心跳消息 

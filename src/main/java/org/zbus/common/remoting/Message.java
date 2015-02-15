@@ -1,4 +1,4 @@
-package org.zbus.remoting;
+package org.zbus.common.remoting;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

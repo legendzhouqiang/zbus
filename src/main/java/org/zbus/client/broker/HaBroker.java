@@ -18,9 +18,9 @@ import org.zbus.common.protocol.MessageMode;
 import org.zbus.common.protocol.MqInfo;
 import org.zbus.common.protocol.Proto;
 import org.zbus.common.protocol.TrackTable;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
-import org.zbus.remoting.ticket.ResultCallback;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.RemotingClient;
+import org.zbus.common.remoting.ticket.ResultCallback;
  
 
 public class HaBroker implements Broker, TrackListener {

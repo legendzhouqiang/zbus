@@ -16,9 +16,9 @@ import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.common.protocol.MessageMode;
 import org.zbus.common.protocol.MqInfo;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.MessageCodec;
-import org.zbus.remoting.nio.IoBuffer;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.MessageCodec;
+import org.zbus.common.remoting.nio.IoBuffer;
 import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.RequestQueue;
 

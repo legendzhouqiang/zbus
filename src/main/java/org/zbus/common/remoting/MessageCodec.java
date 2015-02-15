@@ -1,11 +1,11 @@
-package org.zbus.remoting;
+package org.zbus.common.remoting;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.zbus.remoting.nio.Codec;
-import org.zbus.remoting.nio.IoBuffer;
+import org.zbus.common.remoting.nio.Codec;
+import org.zbus.common.remoting.nio.IoBuffer;
 
 public class MessageCodec implements Codec{
 	@Override

@@ -9,7 +9,7 @@ import org.zbus.client.service.Service;
 import org.zbus.client.service.ServiceConfig;
 import org.zbus.client.service.ServiceHandler;
 import org.zbus.common.Helper;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class ServiceExample {
 	

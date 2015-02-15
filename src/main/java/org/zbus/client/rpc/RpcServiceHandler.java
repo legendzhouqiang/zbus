@@ -30,7 +30,7 @@ import java.util.Map;
 import org.zbus.client.service.ServiceHandler;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 class MethodInstance{
 	public Method method;

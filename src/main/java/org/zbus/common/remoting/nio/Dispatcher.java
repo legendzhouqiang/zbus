@@ -1,4 +1,4 @@
-package org.zbus.remoting.nio;
+package org.zbus.common.remoting.nio;
 
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
@@ -13,7 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.zbus.common.Helper;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.nio.Session.SessionStatus;
+import org.zbus.common.remoting.nio.Session.SessionStatus;
 
 public class Dispatcher extends Thread {
 	private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);

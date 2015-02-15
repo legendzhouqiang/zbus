@@ -1,6 +1,6 @@
-package org.zbus.remoting.ticket;
+package org.zbus.common.remoting.ticket;
 
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
  
 public interface ResultCallback { 

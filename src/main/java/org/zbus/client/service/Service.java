@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.zbus.client.Consumer;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class Service extends Thread {   
 	private static final Logger log = LoggerFactory.getLogger(Service.class);

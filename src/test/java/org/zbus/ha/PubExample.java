@@ -6,8 +6,8 @@ import org.zbus.client.Broker;
 import org.zbus.client.Producer;
 import org.zbus.client.broker.HaBroker;
 import org.zbus.client.broker.HaBrokerConfig;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.ticket.ResultCallback;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.ticket.ResultCallback;
 
 public class PubExample {
 	public static void main(String[] args) throws IOException{  

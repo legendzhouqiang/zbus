@@ -1,4 +1,4 @@
-package org.zbus.remoting;
+package org.zbus.common.remoting;
  
 
 import java.io.IOException;
@@ -13,13 +13,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.callback.ConnectedCallback;
-import org.zbus.remoting.callback.ErrorCallback;
-import org.zbus.remoting.callback.MessageCallback;
-import org.zbus.remoting.nio.Session;
-import org.zbus.remoting.ticket.ResultCallback;
-import org.zbus.remoting.ticket.Ticket;
-import org.zbus.remoting.ticket.TicketManager;
+import org.zbus.common.remoting.callback.ConnectedCallback;
+import org.zbus.common.remoting.callback.ErrorCallback;
+import org.zbus.common.remoting.callback.MessageCallback;
+import org.zbus.common.remoting.nio.Session;
+import org.zbus.common.remoting.ticket.ResultCallback;
+import org.zbus.common.remoting.ticket.Ticket;
+import org.zbus.common.remoting.ticket.TicketManager;
  
 public class RemotingClient { 
 	private static final Logger log = LoggerFactory.getLogger(RemotingClient.class);     

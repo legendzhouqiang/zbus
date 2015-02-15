@@ -1,4 +1,4 @@
-package org.zbus.remoting.nio; 
+package org.zbus.common.remoting.nio; 
 
 public interface Codec{
 	public IoBuffer encode(Object msg);

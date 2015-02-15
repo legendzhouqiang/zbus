@@ -1,10 +1,10 @@
-package org.zbus.remoting.ticket;
+package org.zbus.common.remoting.ticket;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
   
  
 public class Ticket {   

@@ -14,7 +14,7 @@ import org.zbus.client.service.ServiceLoader;
 import org.zbus.client.service.ServiceProvider;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 	private static final Logger log = LoggerFactory.getLogger(ServiceProviderExample.class);

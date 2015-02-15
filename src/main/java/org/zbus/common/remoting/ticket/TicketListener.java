@@ -1,4 +1,4 @@
-package org.zbus.remoting.ticket;
+package org.zbus.common.remoting.ticket;
  
 public interface TicketListener { 
 	public void onResponseExpired(Ticket ticket); 

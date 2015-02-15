@@ -1,4 +1,4 @@
-package org.zbus.remoting.nio;
+package org.zbus.common.remoting.nio;
 
 import java.nio.ByteBuffer;
 

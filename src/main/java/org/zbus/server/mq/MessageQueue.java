@@ -9,8 +9,8 @@ import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.common.protocol.ConsumerInfo;
 import org.zbus.common.protocol.MqInfo;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.nio.Session;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.nio.Session;
 import org.zbus.server.mq.store.MessageStore;
 
 public abstract class MessageQueue implements Serializable{   

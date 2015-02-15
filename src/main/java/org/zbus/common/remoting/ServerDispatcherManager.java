@@ -1,9 +1,9 @@
-package org.zbus.remoting;
+package org.zbus.common.remoting;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-import org.zbus.remoting.nio.DispatcherManager;
+import org.zbus.common.remoting.nio.DispatcherManager;
 
 public class ServerDispatcherManager extends DispatcherManager{ 
 	protected ServerEventAdaptor serverEventAdaptor;

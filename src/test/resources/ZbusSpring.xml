@@ -28,9 +28,9 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	</bean>
 	
 	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
-	<bean id="zbusService" class="org.zbus.client.Service" init-method="start">
+	<bean id="zbusService" class="org.zbus.client.service.Service" init-method="start">
 		<constructor-arg>  
-			<bean class="org.zbus.client.ServiceConfig">
+			<bean class="org.zbus.client.service.ServiceConfig">
 				<property name="broker" ref="broker"/>
 				<property name="mq" value="MyRpc"/>
 				<property name="threadCount" value="2"/>

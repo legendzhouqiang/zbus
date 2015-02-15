@@ -7,10 +7,10 @@ import org.zbus.client.ClientHint;
 import org.zbus.client.ZbusException;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.ClientDispatcherManager;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
-import org.zbus.remoting.ticket.ResultCallback;
+import org.zbus.common.remoting.ClientDispatcherManager;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.RemotingClient;
+import org.zbus.common.remoting.ticket.ResultCallback;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     

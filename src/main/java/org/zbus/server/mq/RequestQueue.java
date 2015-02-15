@@ -11,8 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.common.protocol.ConsumerInfo;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.nio.Session;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.nio.Session;
 
 public class RequestQueue extends MessageQueue {     
 	private static final long serialVersionUID = -7640938066598234399L;

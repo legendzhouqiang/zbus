@@ -6,7 +6,7 @@ import org.zbus.common.json.JSONObject;
 import org.zbus.common.json.serializer.JSONSerializer;
 import org.zbus.common.json.serializer.SerializeWriter;
 import org.zbus.common.json.serializer.SerializerFeature;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
  
 
 public class JsonCodec implements Codec {  

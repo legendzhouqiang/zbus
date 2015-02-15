@@ -2,8 +2,8 @@ package org.zbus.server.mq;
 
 import java.io.IOException;
 
-import org.zbus.remoting.Message;
-import org.zbus.remoting.nio.Session;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.nio.Session;
 
 public class ReplyHelper { 
 	

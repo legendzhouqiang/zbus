@@ -7,8 +7,8 @@ import org.zbus.common.pool.PooledObject;
 import org.zbus.common.pool.impl.DefaultPooledObject;
 import org.zbus.common.pool.impl.GenericObjectPool;
 import org.zbus.common.pool.impl.GenericObjectPoolConfig;
-import org.zbus.remoting.ClientDispatcherManager;
-import org.zbus.remoting.RemotingClient;
+import org.zbus.common.remoting.ClientDispatcherManager;
+import org.zbus.common.remoting.RemotingClient;
 
 public class RemotingClientPool extends GenericObjectPool<RemotingClient>{
 	public RemotingClientPool(ClientDispatcherManager clientMgr, String broker, GenericObjectPoolConfig config) throws IOException{

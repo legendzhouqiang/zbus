@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 import org.zbus.server.mq.MessageQueue;
  
 public class MessageStoreDummy implements MessageStore {

@@ -30,7 +30,7 @@ import org.zbus.client.ZbusException;
 import org.zbus.client.service.Caller;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
-import org.zbus.remoting.Message;
+import org.zbus.common.remoting.Message;
 
 public class Rpc extends Caller{  
 	private static final Logger log = LoggerFactory.getLogger(Rpc.class);

@@ -1,4 +1,4 @@
-package org.zbus.remoting.ticket;
+package org.zbus.common.remoting.ticket;
 
 public class TicketExpiredException extends RuntimeException {  
 	private static final long serialVersionUID = 6006204188240205218L;

@@ -1,11 +1,11 @@
-package org.zbus.remoting;
+package org.zbus.common.remoting;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.remoting.nio.EventAdaptor;
-import org.zbus.remoting.nio.Session;
+import org.zbus.common.remoting.nio.EventAdaptor;
+import org.zbus.common.remoting.nio.Session;
 
 public class ServerEventAdaptor extends EventAdaptor{  
 	

@@ -8,8 +8,8 @@ import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
 import org.zbus.common.protocol.MessageMode;
 import org.zbus.common.protocol.Proto;
-import org.zbus.remoting.Message;
-import org.zbus.remoting.RemotingClient;
+import org.zbus.common.remoting.Message;
+import org.zbus.common.remoting.RemotingClient;
 
 
 public class Consumer{    
