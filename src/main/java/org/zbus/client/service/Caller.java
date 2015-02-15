@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.zbus.client.Broker;
 import org.zbus.client.MqConfig;
-import org.zbus.common.Proto;
+import org.zbus.common.protocol.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 

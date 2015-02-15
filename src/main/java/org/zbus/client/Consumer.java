@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.zbus.common.MessageMode;
-import org.zbus.common.Proto;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
+import org.zbus.common.protocol.MessageMode;
+import org.zbus.common.protocol.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
 

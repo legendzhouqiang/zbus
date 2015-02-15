@@ -5,10 +5,10 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.zbus.common.ConsumerInfo;
-import org.zbus.common.MqInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
+import org.zbus.common.protocol.ConsumerInfo;
+import org.zbus.common.protocol.MqInfo;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.store.MessageStore;

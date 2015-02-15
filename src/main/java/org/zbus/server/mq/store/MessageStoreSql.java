@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.zbus.common.MessageMode;
-import org.zbus.common.MqInfo;
 import org.zbus.common.json.JSON;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
+import org.zbus.common.protocol.MessageMode;
+import org.zbus.common.protocol.MqInfo;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageCodec;
 import org.zbus.remoting.nio.IoBuffer;

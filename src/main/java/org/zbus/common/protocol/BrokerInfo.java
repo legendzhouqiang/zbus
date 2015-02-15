@@ -1,4 +1,4 @@
-package org.zbus.common;
+package org.zbus.common.protocol;
 
 import java.util.HashMap;
 import java.util.Map;

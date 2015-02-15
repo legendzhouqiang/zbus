@@ -20,6 +20,7 @@ public class ProducerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		Message msg = new Message(); 
 		msg.setBody("hello world");
+		msg.setMqReply("MyMQ_REPLY");
 		for(int i=0;i<1;i++)
 		producer.send(msg, new ResultCallback() {
 			@Override

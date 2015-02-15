@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import org.zbus.common.ConsumerInfo;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
+import org.zbus.common.protocol.ConsumerInfo;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
 

@@ -13,13 +13,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.common.BrokerInfo;
 import org.zbus.common.Helper;
-import org.zbus.common.Proto;
-import org.zbus.common.TrackTable;
 import org.zbus.common.json.JSON;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
+import org.zbus.common.protocol.BrokerInfo;
+import org.zbus.common.protocol.Proto;
+import org.zbus.common.protocol.TrackTable;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingClient;

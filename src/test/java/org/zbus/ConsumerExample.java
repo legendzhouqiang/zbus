@@ -18,7 +18,7 @@ public class ConsumerExample {
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq("MyMQ");
+		config.setMq("MyMQ_REPLY");
 		
 		//2) 创建消费者
 		Consumer c = new Consumer(config);
