@@ -97,7 +97,7 @@
 	</dependencies>
 
 
-	<!-- mvn clean deploy -P release -Dgpg.passphrase=MY_FULL_PINYIN -->
+	<!-- mvn clean deploy -P release -Dgpg.passphrase= -->
 	<profiles>
 		<profile>
 			<id>release</id>

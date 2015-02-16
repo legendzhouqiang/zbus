@@ -1,8 +1,8 @@
 package org.zbus.server;
  
 
-import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -15,10 +15,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.client.Broker;
-import org.zbus.client.broker.SingleBroker;
-import org.zbus.client.broker.SingleBrokerConfig;
-import org.zbus.client.service.ServiceLoader;
 import org.zbus.common.Helper;
 import org.zbus.common.logging.Logger;
 import org.zbus.common.logging.LoggerFactory;
@@ -265,7 +261,7 @@ public class ZbusServer extends RemotingServer {
 		int serverPort = Helper.option(args, "-p", 15555); 
 		String adminToken = Helper.option(args, "-admin", "");
 		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
-		String storeType = Helper.option(args, "-store", "redis"); 
+		String storeType = Helper.option(args, "-store", "sql"); 
 		String serviceBase = Helper.option(args, "-serviceBase", null); 
 		
 		ZbusServer zbus = new ZbusServer(serverPort);  
@@ -275,20 +271,14 @@ public class ZbusServer extends RemotingServer {
 		zbus.start();
 		
 		if(serviceBase != null){
-			
-			File file = new File(serviceBase);
-			if(file.exists()){ 
-				if(file.isDirectory()){ 
-					log.info(">>>ServiceBase: " + file.getAbsolutePath());
-					SingleBrokerConfig config = new SingleBrokerConfig();
-					config.setBrokerAddress(String.format("127.0.0.1:%d", serverPort));
-					Broker broker = new SingleBroker(config);
-					
-					ServiceLoader serviceLoader = new ServiceLoader(broker);
-					serviceLoader.loadServicesFromBasePath(serviceBase);
-				} 
-			} else {
-				log.warn("!!!ServiceBase not exist: " + file.getAbsolutePath());
+			try{
+				Class<?> loaderClass = Class.forName("org.zbus.client.service.ServiceLoader");
+				Method m = loaderClass.getMethod("load", String.class, String.class);
+				String brokerAddress = String.format("127.0.0.1:%d", serverPort);
+				m.invoke(null, serviceBase, brokerAddress); 
+			} catch(Exception e){
+				//ignore
+				log.warn("loading service error, ignore");
 			}
 		}
 	}  

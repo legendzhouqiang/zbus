@@ -37,9 +37,9 @@ public class MessageStoreSql implements MessageStore {
 	private String url = "jdbc:hsqldb:db/zbus";
 	private String user = "sa";
 	private String password = "";
-	private String sqlMsgs = "CREATE TABLE IF NOT EXISTS msgs(id VARCHAR(128), msg_str VARCHAR(1024000), PRIMARY KEY(id) )";
+	private String sqlMsgs = "CREATE TABLE IF NOT EXISTS msgs(id VARCHAR(128), msg_str VARCHAR(10240000), PRIMARY KEY(id) )";
 	private String sqlMqMsgs = "CREATE TABLE IF NOT EXISTS mq_msgs(mq_id VARCHAR(128), msg_id VARCHAR(128) )";
-	private String sqlMqs = "CREATE TABLE IF NOT EXISTS mqs(id VARCHAR(512), mq_info VARCHAR(1024000), PRIMARY KEY(id) )";
+	private String sqlMqs = "CREATE TABLE IF NOT EXISTS mqs(id VARCHAR(512), mq_info VARCHAR(10240000), PRIMARY KEY(id) )";
 	
 	
 	private final String brokerKey;

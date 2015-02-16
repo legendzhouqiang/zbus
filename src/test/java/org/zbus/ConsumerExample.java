@@ -31,7 +31,5 @@ public class ConsumerExample {
 				System.out.println(msg);
 			}
 		});
-		
-		System.out.println("Consumer is consuming");
 	} 
 }
