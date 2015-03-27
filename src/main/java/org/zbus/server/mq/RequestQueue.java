@@ -8,11 +8,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.ConsumerInfo;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.nio.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.ConsumerInfo;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.nio.Session;
 
 public class RequestQueue extends MessageQueue {     
 	private static final long serialVersionUID = -7640938066598234399L;

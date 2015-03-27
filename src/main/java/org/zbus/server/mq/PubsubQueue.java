@@ -11,11 +11,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.ConsumerInfo;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.nio.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.ConsumerInfo;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.nio.Session;
 
 public class PubsubQueue extends MessageQueue {   
 	private static final long serialVersionUID = -593851217778104787L;

@@ -2,9 +2,9 @@ package org.zbus.client;
 
 import java.io.IOException;
 
-import org.zbus.common.protocol.Proto;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.ticket.ResultCallback;
+import org.zbus.protocol.Proto;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.ticket.ResultCallback;
 
 /**
  * 生产者,

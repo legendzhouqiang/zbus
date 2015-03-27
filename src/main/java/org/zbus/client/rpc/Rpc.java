@@ -25,12 +25,12 @@ package org.zbus.client.rpc;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zbus.client.Broker;
 import org.zbus.client.ZbusException;
 import org.zbus.client.service.Caller;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.remoting.Message;
+import org.zbus.remoting.Message;
 
 public class Rpc extends Caller{  
 	private static final Logger log = LoggerFactory.getLogger(Rpc.class);
@@ -87,9 +87,9 @@ public class Rpc extends Caller{
 		Message msg = null;
 		try {
 			msg = codec.encodeRequest(req);
-			log.debug("Request: %s", msg);
+			log.debug("Request: {}", msg);
 			msg = this.invokeSync(msg, this.timeout); 
-			log.debug("Response: %s", msg);
+			log.debug("Response: {}", msg);
 		} catch (IOException e) {
 			throw new ZbusException(e.getMessage(), e);
 		}

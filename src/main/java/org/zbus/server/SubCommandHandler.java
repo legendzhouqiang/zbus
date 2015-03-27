@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.MessageHandler;
-import org.zbus.common.remoting.nio.Session;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.ReplyHelper;
 
 

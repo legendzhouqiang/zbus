@@ -6,23 +6,24 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.zbus.common.json.JSON;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.MessageMode;
-import org.zbus.common.protocol.MqInfo;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.MessageCodec;
-import org.zbus.common.remoting.nio.IoBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.MessageMode;
+import org.zbus.protocol.MqInfo;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageCodec;
+import org.zbus.remoting.nio.IoBuffer;
 import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.RequestQueue;
 
 import redis.clients.jedis.Jedis;
+
+import com.alibaba.fastjson.JSON;
 
 /**
  * NOT yet fully tested

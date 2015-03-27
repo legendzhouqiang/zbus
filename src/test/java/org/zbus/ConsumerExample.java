@@ -7,9 +7,9 @@ import org.zbus.client.Consumer;
 import org.zbus.client.MqConfig;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.callback.MessageCallback;
-import org.zbus.common.remoting.nio.Session;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.callback.MessageCallback;
+import org.zbus.remoting.nio.Session;
 
 public class ConsumerExample {
 	public static void main(String[] args) throws IOException{  

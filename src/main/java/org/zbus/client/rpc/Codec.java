@@ -1,6 +1,6 @@
 package org.zbus.client.rpc;
 
-import org.zbus.common.remoting.Message;
+import org.zbus.remoting.Message;
 
 /**
  * RPC请求应答编解码

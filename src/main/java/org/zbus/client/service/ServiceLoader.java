@@ -10,18 +10,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zbus.client.Broker;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.service.Scanner.Listener;
 import org.zbus.client.service.Scanner.ScanInfo;
-import org.zbus.common.Helper;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
+import org.zbus.remoting.Helper;
 
 public class ServiceLoader {
-	private static final Logger log = LoggerFactory
-			.getLogger(ServiceLoader.class);
+	private static final Logger log = LoggerFactory.getLogger(ServiceLoader.class);
 	private Broker broker;
 	private ExecutorService executor = new ThreadPoolExecutor(4, 16, 120,
 			TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());

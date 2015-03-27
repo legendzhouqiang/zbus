@@ -13,25 +13,26 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.common.Helper;
-import org.zbus.common.json.JSON;
-import org.zbus.common.json.JSONObject;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.BrokerInfo;
-import org.zbus.common.protocol.MessageMode;
-import org.zbus.common.protocol.MqInfo;
-import org.zbus.common.protocol.Proto;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.MessageHandler;
-import org.zbus.common.remoting.RemotingClient;
-import org.zbus.common.remoting.callback.ErrorCallback;
-import org.zbus.common.remoting.nio.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.BrokerInfo;
+import org.zbus.protocol.MessageMode;
+import org.zbus.protocol.MqInfo;
+import org.zbus.protocol.Proto;
+import org.zbus.remoting.Helper;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.callback.ErrorCallback;
+import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.PubsubQueue;
 import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.RequestQueue;
 import org.zbus.server.mq.store.MessageStore;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 public class AdminHandler extends SubCommandHandler {
 	private static final Logger log = LoggerFactory.getLogger(AdminHandler.class);
@@ -109,7 +110,7 @@ public class AdminHandler extends SubCommandHandler {
 		    				}
 		    			}  
 			    		mqTable.putIfAbsent(mqName, mq);
-						log.info("MQ Created: %s", mq);
+						log.info("MQ Created: {}", mq);
 						ReplyHelper.reply200(msgId, sess); 
 						
 			    		reportToTrackServer();

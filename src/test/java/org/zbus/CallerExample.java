@@ -6,14 +6,14 @@ import org.zbus.client.Broker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.service.Caller;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.ticket.ResultCallback;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class CallerExample {
 	public static void main(String[] args) throws IOException{  
 		//1）创建Broker代表
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("112.74.124.210:15555");
 		Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者

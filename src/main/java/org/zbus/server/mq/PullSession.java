@@ -7,8 +7,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.nio.Session;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.nio.Session;
 
 public class PullSession {
 	public static final int HIGHT_WATER_MARK = 100;

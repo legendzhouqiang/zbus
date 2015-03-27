@@ -15,15 +15,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.common.Helper;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.MessageMode;
-import org.zbus.common.protocol.Proto;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.MessageHandler;
-import org.zbus.common.remoting.RemotingServer;
-import org.zbus.common.remoting.nio.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.MessageMode;
+import org.zbus.protocol.Proto;
+import org.zbus.remoting.Helper;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.MessageHandler;
+import org.zbus.remoting.RemotingServer;
+import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.ReplyQueue;
@@ -104,7 +104,7 @@ public class ZbusServer extends RemotingServer {
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr);  
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					log.debug("%s", msg);
+					log.debug("{}", msg);
 				}
 			}
 		}); 

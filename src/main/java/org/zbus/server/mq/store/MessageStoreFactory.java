@@ -1,7 +1,7 @@
 package org.zbus.server.mq.store;
 
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
  
 

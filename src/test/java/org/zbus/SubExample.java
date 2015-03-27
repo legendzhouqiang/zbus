@@ -6,8 +6,8 @@ import org.zbus.client.Broker;
 import org.zbus.client.Consumer;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
-import org.zbus.common.protocol.MessageMode;
-import org.zbus.common.remoting.Message;
+import org.zbus.protocol.MessageMode;
+import org.zbus.remoting.Message;
 
 public class SubExample {
 	public static void main(String[] args) throws IOException{  

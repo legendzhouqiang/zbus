@@ -2,10 +2,10 @@ package org.zbus.client.service;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zbus.client.Consumer;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.remoting.Message;
+import org.zbus.remoting.Message;
 
 public class Service extends Thread {   
 	private static final Logger log = LoggerFactory.getLogger(Service.class);
@@ -62,7 +62,7 @@ class WorkerThread extends Thread{
 			try {  
 				Message msg = consumer.recv(timeout); 
 				if(msg == null) continue;  
-				log.debug("Request: %s", msg);
+				log.debug("Request: {}", msg);
 				
 				final String mqReply = msg.getMqReply();
 				final String msgId  = msg.getMsgIdRaw(); //必须使用原始的msgId

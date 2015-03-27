@@ -3,9 +3,9 @@ package org.zbus.server.mq.store;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.remoting.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.remoting.Message;
 import org.zbus.server.mq.MessageQueue;
  
 public class MessageStoreDummy implements MessageStore {

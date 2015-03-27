@@ -5,6 +5,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zbus.client.Broker;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
@@ -12,9 +14,7 @@ import org.zbus.client.service.ServiceConfig;
 import org.zbus.client.service.ServiceHandler;
 import org.zbus.client.service.ServiceLoader;
 import org.zbus.client.service.ServiceProvider;
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.remoting.Message;
+import org.zbus.remoting.Message;
 
 public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 	private static final Logger log = LoggerFactory.getLogger(ServiceProviderExample.class);

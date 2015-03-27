@@ -1,6 +1,6 @@
 package org.zbus.client;
 
-import org.zbus.common.protocol.MessageMode;
+import org.zbus.protocol.MessageMode;
 
 public class MqConfig { 
 	protected Broker broker; //Broker，必须设置

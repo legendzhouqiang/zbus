@@ -1,12 +1,13 @@
 package org.zbus.client.rpc;
 
 import org.zbus.client.ZbusException;
-import org.zbus.common.json.JSON;
-import org.zbus.common.json.JSONObject;
-import org.zbus.common.json.serializer.JSONSerializer;
-import org.zbus.common.json.serializer.SerializeWriter;
-import org.zbus.common.json.serializer.SerializerFeature;
-import org.zbus.common.remoting.Message;
+import org.zbus.remoting.Message;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.JSONSerializer;
+import com.alibaba.fastjson.serializer.SerializeWriter;
+import com.alibaba.fastjson.serializer.SerializerFeature;
  
 
 public class JsonCodec implements Codec {  

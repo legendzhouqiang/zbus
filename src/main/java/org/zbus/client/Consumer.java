@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.zbus.common.logging.Logger;
-import org.zbus.common.logging.LoggerFactory;
-import org.zbus.common.protocol.MessageMode;
-import org.zbus.common.protocol.Proto;
-import org.zbus.common.remoting.Message;
-import org.zbus.common.remoting.RemotingClient;
-import org.zbus.common.remoting.callback.MessageCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zbus.protocol.MessageMode;
+import org.zbus.protocol.Proto;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.callback.MessageCallback;
 
 
 public class Consumer{    

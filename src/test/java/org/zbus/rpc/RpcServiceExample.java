@@ -8,7 +8,7 @@ import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.client.rpc.RpcServiceHandler;
 import org.zbus.client.service.Service;
 import org.zbus.client.service.ServiceConfig;
-import org.zbus.common.Helper;
+import org.zbus.remoting.Helper;
 import org.zbus.rpc.biz.InterfaceImpl;
 
 public class RpcServiceExample {

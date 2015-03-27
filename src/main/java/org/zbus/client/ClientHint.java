@@ -1,6 +1,6 @@
 package org.zbus.client;
 
-import org.zbus.common.Helper;
+import org.zbus.remoting.Helper;
 
 public class ClientHint {
 	private final static String StartupIpAddress = Helper.getLocalIp();

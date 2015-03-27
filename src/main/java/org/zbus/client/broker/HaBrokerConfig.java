@@ -1,6 +1,6 @@
 package org.zbus.client.broker;
 
-import org.zbus.common.pool.impl.GenericObjectPoolConfig;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 public class HaBrokerConfig {
 	private GenericObjectPoolConfig poolConfig;
