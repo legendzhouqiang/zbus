@@ -1,0 +1,2 @@
+version 5.2.0-SNAPSHOT
+1. fixed MessageStore bug: change zbus port cause MQ name error

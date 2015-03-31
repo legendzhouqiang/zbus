@@ -94,7 +94,7 @@ public class MessageStoreSql implements MessageStore {
 		return msg.getMsgId();
 	}
 	private String mqKey(String mq){
-		return String.format("%s%s", brokerKey, mq);
+		return String.format("%s-%s", brokerKey, mq);
 	}
 	@Override
 	public void saveMessage(Message msg) {
@@ -153,7 +153,7 @@ public class MessageStoreSql implements MessageStore {
 		ResultSet mqRs = this.query("SELECT * FROM mqs");
 		while(mqRs.next()) {
 			String mqId = mqRs.getString("id");
-			String mqName = mqId.substring(brokerKey.length());
+			String mqName = mqId.substring(mqId.indexOf('-')+1);
 			String mqInfoString = mqRs.getString("mq_info");  
 			MqInfo info = JSON.parseObject(mqInfoString, MqInfo.class);
 			int mode = info.getMode();
