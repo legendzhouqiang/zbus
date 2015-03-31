@@ -46,7 +46,7 @@
 	<dependency>
 		<groupId>org.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>5.1.0-SNAPSHOT</version>
+		<version>5.1.0</version>
 	</dependency>
 
 ### 生产者
