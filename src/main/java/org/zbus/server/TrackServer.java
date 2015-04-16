@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.zbus.protocol.BrokerInfo;
 import org.zbus.protocol.Proto;
 import org.zbus.protocol.TrackTable;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
@@ -41,11 +42,13 @@ public class TrackServer extends RemotingServer {
 	private final ScheduledExecutorService trackPubService = Executors.newSingleThreadScheduledExecutor();
 	private ExecutorService trackExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
-	public TrackServer(int serverPort){
+	private ClientDispatcherManager trackerClientDispatcherManager = new ClientDispatcherManager();
+	
+	public TrackServer(int serverPort)  throws IOException{
 		this("0.0.0.0", serverPort);
 	}
 	
-	public TrackServer(String serverHost, int serverPort) {
+	public TrackServer(String serverHost, int serverPort) throws IOException {
 		super(serverHost, serverPort);
 		
 		this.serverName = "TrackServer";
@@ -117,7 +120,7 @@ public class TrackServer extends RemotingServer {
 				
 				final String brokerAddress = brokerInfo.getBroker(); 
 				if(!brokerProbes.containsKey(brokerAddress)){
-					final RemotingClient client = new RemotingClient(brokerAddress);
+					final RemotingClient client = new RemotingClient(brokerAddress, trackerClientDispatcherManager);
 					trackExecutor.submit(new Runnable() {
 						@Override
 						public void run() { 

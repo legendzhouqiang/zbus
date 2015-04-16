@@ -11,12 +11,12 @@ import org.zbus.remoting.ticket.ResultCallback;
 
 public class CallerExample {
 	public static void main(String[] args) throws IOException{  
-		//1）创建Broker代表
+		//1）创建Broker代理【重量级对象，需要释放】
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("112.74.124.210:15555");
-		Broker broker = new SingleBroker(config);
+		config.setBrokerAddress("127.0.0.1:15555");
+		final Broker broker = new SingleBroker(config);
 		
-		//2) 创建生产者
+		//2) 【轻量级对象，不需要释放，随便使用】
 		Caller caller = new Caller(broker, "MyService");
 		
 		Message msg = new Message();
@@ -26,6 +26,9 @@ public class CallerExample {
 			@Override
 			public void onCompleted(Message result) {
 				System.out.println(result);
+				
+				//销毁Broker，注意，这里仅仅是为了方便应用退出
+				broker.destroy();
 			}
 		});
 		

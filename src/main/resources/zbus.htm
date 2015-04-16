@@ -139,6 +139,7 @@ $.getJSON('/?cmd=admin&&sub_cmd=data',function(data){
     }); 
     
     $.each(data.mqTable, function(key, mq){  
+    	return;//TODO
     	if(key=='@type') return;
     	if((mq.mode & MODE_PUBSUB) == 0) return;
     	if((mq.mode & MODE_TEMP) == 0) return;
@@ -154,7 +155,7 @@ $.getJSON('/?cmd=admin&&sub_cmd=data',function(data){
 			</tr>"
 		);
     }); 
-    
+   
     
 }); 
 

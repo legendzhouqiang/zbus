@@ -8,6 +8,8 @@ import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.protocol.MessageMode;
 import org.zbus.remoting.Message;
+import org.zbus.remoting.callback.MessageCallback;
+import org.zbus.remoting.nio.Session;
 
 public class SubExample {
 	public static void main(String[] args) throws IOException{  
@@ -15,16 +17,18 @@ public class SubExample {
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		
-		Broker broker = new SingleBroker(config);
+		final Broker broker = new SingleBroker(config);
 		
 		//2) 创建消费者
 		Consumer c = new Consumer(broker, "MyPubSub", MessageMode.PubSub); 
 		c.setTopic("hong");
-		while(true){
-			Message msg = c.recv(10000);
-			if(msg == null) continue;
-			
-			System.out.println(msg);
-		}
+		
+		c.onMessage(new MessageCallback() { 
+			@Override
+			public void onMessage(Message msg, Session sess) throws IOException {
+				System.out.println(msg); 
+				
+			}
+		}); 
 	} 
 }

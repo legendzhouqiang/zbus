@@ -84,7 +84,11 @@ public class JsonCodec implements Codec {
 				jsonString = jsonString.replace("@type", "unknown-class"); //禁止掉实例化
 				json = JSON.parseObject(jsonString); 
 			} catch(Exception ex){
-				throw new ZbusException("JSON format invalid: "+ jsonString);
+				String prefix = "";
+				if(msg.isStatus200()){
+					prefix = "JSON format invalid: ";
+				}
+				throw new ZbusException(prefix + jsonString);
 			} 
 			if(json != null){
 				final String stackTrace = Response.KEY_STACK_TRACE;

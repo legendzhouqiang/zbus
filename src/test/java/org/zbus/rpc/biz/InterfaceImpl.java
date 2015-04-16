@@ -19,11 +19,6 @@ class PrivateRuntimeException extends RuntimeException{
 		super(); 
 	}
 
-	public PrivateRuntimeException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace); 
-	}
-
 	public PrivateRuntimeException(String message, Throwable cause) {
 		super(message, cause); 
 	}

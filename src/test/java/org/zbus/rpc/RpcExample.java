@@ -48,5 +48,8 @@ public class RpcExample {
 		 
 		Class<?> ret = hello.classTest(String.class);
 		System.out.println(ret);
+		
+		
+		//broker.destroy();
 	}
 }

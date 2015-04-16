@@ -56,8 +56,7 @@ public class HaBroker implements Broker, TrackListener {
 			SingleBroker broker = this.brokers.get(brokerAddress);
 			if (broker != null) continue;
 			
-			SingleBrokerConfig singleConfig = new SingleBrokerConfig(
-					this.config.getPoolConfig());
+			SingleBrokerConfig singleConfig = config.clone();
 			singleConfig.setBrokerAddress(brokerAddress);
 			
 			try {

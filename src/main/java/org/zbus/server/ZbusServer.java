@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.Proto;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
@@ -48,6 +49,8 @@ public class ZbusServer extends RemotingServer {
 	
 	private AdminHandler adminHandler;
 	
+	private ClientDispatcherManager trackerClientDispatcherManager = new ClientDispatcherManager();
+	
 	
 	public ZbusServer(int serverPort) throws IOException {
 		this("0.0.0.0", serverPort);
@@ -57,7 +60,8 @@ public class ZbusServer extends RemotingServer {
 		super(serverHost, serverPort);
 		
 		this.serverName = "ZbusServer";
-    	this.adminHandler = new AdminHandler(mqTable, mqExecutor, serverAddr);
+    	this.adminHandler = new AdminHandler(mqTable, mqExecutor, 
+    			serverAddr, this.trackerClientDispatcherManager);
     	this.adminHandler.setAccessToken(this.adminToken); 
 	}  
 	 
@@ -196,7 +200,13 @@ public class ZbusServer extends RemotingServer {
 	}
 	
 	public void close(){ 
+		this.mqExecutor.shutdown();
 		this.mqSessionCleanService.shutdown(); 
+		try {
+			this.trackerClientDispatcherManager.close();
+		} catch (IOException e) { 
+			log.error(e.getMessage(), e);
+		}
 	}
 	
 	public void setupTrackServer(String trackServerAddr){
@@ -256,12 +266,16 @@ public class ZbusServer extends RemotingServer {
             return false;
         }
     }
-
-    public static void main(String[] args) throws Exception{
+    
+    public String getServerAddress(){
+    	return this.serverAddr;
+    }
+    
+    public static ZbusServer startServer(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 15555); 
 		String adminToken = Helper.option(args, "-admin", "");
 		String trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
-		String storeType = Helper.option(args, "-store", "sql"); 
+		String storeType = Helper.option(args, "-store", "dummy"); 
 		String serviceBase = Helper.option(args, "-serviceBase", null); 
 		
 		ZbusServer zbus = new ZbusServer(serverPort);  
@@ -281,6 +295,12 @@ public class ZbusServer extends RemotingServer {
 				log.warn("loading service error, ignore");
 			}
 		}
+		
+		return zbus;
+	}  
+
+    public static void main(String[] args) throws Exception{
+		startServer(args);
 	}  
 }
 

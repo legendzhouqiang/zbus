@@ -19,6 +19,7 @@ import org.zbus.protocol.BrokerInfo;
 import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.MqInfo;
 import org.zbus.protocol.Proto;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
@@ -48,11 +49,15 @@ public class AdminHandler extends SubCommandHandler {
 	protected final String serverAddr;
 	
 	protected MessageStore messageStore = null;
+	protected ClientDispatcherManager clientDispatcherManager;
 	
-	public AdminHandler(ConcurrentMap<String, MessageQueue> mqTable, ExecutorService mqExecutor, String serverAddr){
+	public AdminHandler(ConcurrentMap<String, MessageQueue> mqTable, 
+			ExecutorService mqExecutor, String serverAddr,
+			ClientDispatcherManager clientDispatcherManager){
 		this.mqTable = mqTable;
 		this.mqExecutor = mqExecutor;
 		this.serverAddr = serverAddr;
+		this.clientDispatcherManager = clientDispatcherManager;
 		this.initCommands();
 	}
 	
@@ -187,7 +192,7 @@ public class AdminHandler extends SubCommandHandler {
 		for(String addr : serverAddrs){
 			addr = addr.trim();
 			if( addr.isEmpty() ) continue;
-			RemotingClient client = new RemotingClient(addr);
+			RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager);
 			client.onError(new ErrorCallback() { 
 				@Override
 				public void onError(IOException e, Session sess) throws IOException {

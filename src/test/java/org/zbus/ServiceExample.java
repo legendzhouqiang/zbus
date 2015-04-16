@@ -14,7 +14,7 @@ import org.zbus.remoting.Message;
 public class ServiceExample {
 	
 	public static void main(String[] args) throws IOException{  
-		String address = Helper.option(args, "-b", "112.74.124.210:15555"); 
+		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
 		int threadCount = Helper.option(args, "-c", 1);
 		String service = Helper.option(args, "-s", "MyService");
 		

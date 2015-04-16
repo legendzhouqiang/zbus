@@ -1,29 +1,20 @@
 package org.zbus.client.broker;
 
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-public class HaBrokerConfig {
-	private GenericObjectPoolConfig poolConfig;
+public class HaBrokerConfig extends SingleBrokerConfig { 
 	private String trackAddrList = "127.0.0.1:16666;127.0.0.1:16667";
-	
-	public HaBrokerConfig(){
-		this.poolConfig = new GenericObjectPoolConfig();//default
-	}
-	public HaBrokerConfig(GenericObjectPoolConfig poolConfig){
-		this.poolConfig = poolConfig;
-	}
-	
+
 	public String getTrackAddrList() {
 		return trackAddrList;
 	}
 	public void setTrackAddrList(String trackAddrList) {
 		this.trackAddrList = trackAddrList;
-	}
-	public GenericObjectPoolConfig getPoolConfig() {
-		return poolConfig;
-	}
-	public void setPoolConfig(GenericObjectPoolConfig poolConfig) {
-		this.poolConfig = poolConfig;
-	} 
+	}	
 	
+	@Override
+	public HaBrokerConfig clone() {
+		HaBrokerConfig res = (HaBrokerConfig)super.clone();
+		res.trackAddrList = trackAddrList;
+		return res;
+	}
 }

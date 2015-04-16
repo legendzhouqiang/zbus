@@ -10,32 +10,27 @@ import org.zbus.client.ZbusException;
 import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
+import org.zbus.remoting.pool.RemotingClientPool;
 import org.zbus.remoting.ticket.ResultCallback;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
 	private RemotingClientPool pool; 
-	private String brokerAddress;
-	private ClientDispatcherManager clientMgr;
-	
-	private static ClientDispatcherManager defaultClientDispachterManager() throws IOException{
-		ClientDispatcherManager clientMgr = new ClientDispatcherManager();
-		clientMgr.start();
-		return clientMgr;
-	}
-	
+	private String brokerAddress; 
+	private ClientDispatcherManager clientDispatcherManager;
+	 
 	public SingleBroker(SingleBrokerConfig config) throws IOException{ 
-		this.brokerAddress = config.getBrokerAddress();
-		this.clientMgr = defaultClientDispachterManager();
+		this.brokerAddress = config.getBrokerAddress(); 
 		try {
-			this.pool = new RemotingClientPool(this.clientMgr, this.brokerAddress, config.getPoolConfig());
+			this.pool = new RemotingClientPool(config);
+			this.clientDispatcherManager = this.pool.getClientDispatcherManager();
 		} catch (IOException e) { 
 			log.error(e.getMessage(),e);
 		}
 	} 
 	  
-	public void destroy() {  
-		this.pool.close();
+	public void destroy() { 
+		this.pool.close(); 
 	}
 
 	public String getBrokerAddress() {
@@ -83,7 +78,7 @@ public class SingleBroker implements Broker {
 	}
 	@Override
 	public RemotingClient getClient(ClientHint hint) throws IOException{ 
-		return new RemotingClient(this.brokerAddress, this.clientMgr);
+		return new RemotingClient(this.brokerAddress, this.clientDispatcherManager);
 	}
 
 
