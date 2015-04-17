@@ -56,7 +56,6 @@ public class SingleBroker implements Broker {
 		}
 	} 
 
-	@Override
 	public Message invokeSync(Message req, int timeout) throws IOException {
 		RemotingClient client = null;
 		try {
@@ -76,13 +75,11 @@ public class SingleBroker implements Broker {
 			}
 		}
 	}
-	@Override
 	public RemotingClient getClient(ClientHint hint) throws IOException{ 
 		return new RemotingClient(this.brokerAddress, this.clientDispatcherManager);
 	}
 
 
-	@Override
 	public void closeClient(RemotingClient client) throws IOException {
 		client.close();
 	}

@@ -53,14 +53,12 @@ public class TrackServer extends RemotingServer {
 		
 		this.serverName = "TrackServer";
 		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
-			@Override
 			public void run() {
 				publishTrackTable();
 			}
 		}, 0, publishInterval, TimeUnit.MILLISECONDS);
 		
 		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
-			@Override
 			public void run() {
 				probeBrokers();
 			}
@@ -113,7 +111,6 @@ public class TrackServer extends RemotingServer {
 	@Override
 	public void init() { 	
 		this.registerHandler(Proto.TrackReport, new MessageHandler() {  
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {  
 				
 				final BrokerInfo brokerInfo = JSON.parseObject(msg.getBodyString(), BrokerInfo.class);
@@ -122,7 +119,6 @@ public class TrackServer extends RemotingServer {
 				if(!brokerProbes.containsKey(brokerAddress)){
 					final RemotingClient client = new RemotingClient(brokerAddress, trackerClientDispatcherManager);
 					trackExecutor.submit(new Runnable() {
-						@Override
 						public void run() { 
 							try {
 								client.connectIfNeed();
@@ -141,7 +137,6 @@ public class TrackServer extends RemotingServer {
 		});
 		
 		this.registerHandler(Proto.TrackSub, new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				subscribers.put(sess.id(), sess);
 				String json = JSON.toJSONString(trackTable);

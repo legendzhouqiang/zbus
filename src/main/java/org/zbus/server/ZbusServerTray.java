@@ -40,71 +40,58 @@ public class ZbusServerTray implements ActionListener, MouseListener, WindowList
     public ZbusServerTray() {
     	isWindows = Helper.getProperty("os.name", "").startsWith("Windows");
 	}
-    
-	@Override
+     
 	public void windowActivated(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void windowClosed(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void windowClosing(WindowEvent e) { 
 		shutdown();
 	}
 
-	@Override
 	public void windowDeactivated(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void windowDeiconified(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void windowIconified(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void windowOpened(WindowEvent e) { 
 		
 	}
 
-	@Override
 	public void mouseClicked(MouseEvent e) { 
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			startBrowser(); 
         }
 	}
 
-	@Override
 	public void mouseEntered(MouseEvent e) { 
 		
 	}
 
-	@Override
 	public void mouseExited(MouseEvent e) { 
 		
 	}
 
-	@Override
 	public void mousePressed(MouseEvent e) { 
 		
 	}
 
-	@Override
 	public void mouseReleased(MouseEvent e) { 
 		
 	}
 
 	
-	@Override
 	public void actionPerformed(ActionEvent e) { 
 		String command = e.getActionCommand();
         if ("exit".equals(command)) {
@@ -484,7 +471,7 @@ class Helper {
 			}
 			return copied;
 		} catch (Exception e) {
-			throw new IOException(e.getMessage(), e);
+			throw new IOException(e.getMessage());
 		}
 	}
 

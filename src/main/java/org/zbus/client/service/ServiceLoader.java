@@ -38,8 +38,7 @@ public class ServiceLoader {
 	}
 
 	public void loadService(final ServiceProvider sp) {
-		executor.execute(new Runnable() {
-			@Override
+		executor.execute(new Runnable() { 
 			public void run() {
 				ServiceConfig config = sp.getConfig();
 				if (config.getBroker() == null) {
@@ -62,7 +61,6 @@ public class ServiceLoader {
 			log.error(e.getMessage(), e);
 		}
 		scanner.scanJar(new Listener() {
-			@Override
 			public void onScanned(ScanInfo info) {
 				try {
 					log.info(info.toString());
@@ -77,7 +75,6 @@ public class ServiceLoader {
 		final ContainerClassLoader classLoader = new ContainerClassLoader(
 				urls.toArray(new URL[0]));
 		scanner.scanClass(new Listener() {
-			@Override
 			public void onScanned(ScanInfo info) {
 				try {
 					Class<?> clazz = classLoader.loadClass(info.className);

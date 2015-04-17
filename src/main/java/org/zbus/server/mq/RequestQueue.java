@@ -30,7 +30,6 @@ public class RequestQueue extends MessageQueue {
 		msgQ.offer(msg);  
 		
 		executor.submit(new Runnable() {
-			@Override
 			public void run() {
 				try{
 					if(messageStore != null){
@@ -49,7 +48,6 @@ public class RequestQueue extends MessageQueue {
 		
 		if(msg != null){
 			executor.submit(new Runnable() {
-				@Override
 				public void run() {
 					try{
 						if(messageStore != null){

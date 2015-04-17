@@ -43,7 +43,6 @@ public class AdminHandler extends SubCommandHandler {
 	private void initCommands(){
 
 		this.registerHandler(Proto.AdminCreateMQ, new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException { 
 				JSONObject params = null;
 				try{
@@ -117,7 +116,6 @@ public class AdminHandler extends SubCommandHandler {
 		}); 
 		
 		this.registerHandler("", new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				msg = new Message();
 				msg.setStatus("200");
@@ -129,7 +127,6 @@ public class AdminHandler extends SubCommandHandler {
 		});
 		
 		this.registerHandler("jquery", new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				msg = new Message();
 				msg.setStatus("200");
@@ -141,7 +138,6 @@ public class AdminHandler extends SubCommandHandler {
 		});
 		
 		this.registerHandler("data", new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				msg = trackReport.packServerInfo();
 				msg.setStatus("200"); 

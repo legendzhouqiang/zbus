@@ -42,7 +42,6 @@ public abstract class MessageQueue implements Serializable{
 	public abstract void cleanSession();
 	void dispatch(){
 		executor.submit(new Runnable() {
-			@Override
 			public void run() { 
 				try {
 					MessageQueue.this.doDispatch();

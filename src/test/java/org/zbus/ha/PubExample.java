@@ -24,7 +24,6 @@ public class PubExample {
 		msg.setBody("hello world");
 		
 		producer.send(msg, new ResultCallback() {
-			@Override
 			public void onCompleted(Message result) {
 				System.out.println(result);
 			}

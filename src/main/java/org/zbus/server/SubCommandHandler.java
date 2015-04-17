@@ -19,7 +19,6 @@ public class SubCommandHandler implements MessageHandler {
     	this.handlerMap.put(command, handler);
     }
 	
-	@Override
 	public void handleMessage(Message msg, Session sess) throws IOException {
 		if(!accessToken.equals("") && !accessToken.equals(msg.getToken())){
     		ReplyHelper.reply403(msg, sess);

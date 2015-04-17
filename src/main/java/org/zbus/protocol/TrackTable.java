@@ -46,7 +46,6 @@ public class TrackTable {
 		}
 		for(List<MqInfo> mqInfos : mqTable.values()){
 			Collections.sort(mqInfos, new Comparator<MqInfo>() {
-				@Override
 				public int compare(MqInfo m1, MqInfo m2) {
 					double f1 = m1.getLoadFactor();
 					double f2 = m2.getLoadFactor();

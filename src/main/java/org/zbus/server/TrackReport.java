@@ -66,7 +66,6 @@ public class TrackReport implements Closeable {
 		
 		
 		this.scheduledService.scheduleAtFixedRate(new Runnable() {
-			@Override
 			public void run() { 
 				reportToTrackServer();
 			}
@@ -88,7 +87,6 @@ public class TrackReport implements Closeable {
 	
 	public void reportToTrackServer(){
 		reportService.submit(new Runnable() { 
-			@Override
 			public void run() {
 				Message msg = packServerInfo();
 				msg.setCommand(Proto.TrackReport);

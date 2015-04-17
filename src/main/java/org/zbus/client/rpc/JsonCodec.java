@@ -13,7 +13,6 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 public class JsonCodec implements Codec {  
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
-	@Override
 	public Message encodeRequest(Request request) {
 		Message msg = new Message(); 
 		String encoding = request.getEncoding();
@@ -24,7 +23,6 @@ public class JsonCodec implements Codec {
 		return msg;
 	}
 	
-	@Override
 	public Request decodeRequest(Message msg) {
 		String encoding = msg.getEncoding();
 		if(encoding == null){
@@ -35,7 +33,6 @@ public class JsonCodec implements Codec {
 		return req;
 	}
 	
-	@Override
 	public Object normalize(Object param, Class<?> targetType) throws ClassNotFoundException {
 		if(param instanceof JSON){ //转换为目标类型
 			return JSON.toJavaObject((JSON)param, targetType);
@@ -47,7 +44,6 @@ public class JsonCodec implements Codec {
 		return param;
 	}
 	
-	@Override
 	public Message encodeResponse(Response response) {
 		Message msg = new Message(); 
 		msg.setStatus("200"); 

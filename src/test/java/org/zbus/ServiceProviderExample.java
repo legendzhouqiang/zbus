@@ -24,7 +24,6 @@ public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 		
 	}
 	
-	@Override
 	public ServiceConfig getConfig() { 
 		ServiceConfig config = new ServiceConfig();
 		config.setMq("HttpCallback"); 
@@ -39,12 +38,10 @@ public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 	}
 	
 	
-	@Override
 	public Message handleRequest(final Message msg) { 
 		try{
 			log.info(msg.toString());
 			executor.submit(new Runnable() {
-				@Override
 				public void run() { 
 					handleMessage(msg);
 				}

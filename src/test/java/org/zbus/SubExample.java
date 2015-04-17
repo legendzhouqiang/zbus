@@ -25,7 +25,6 @@ public class SubExample {
 		c.setTopic("hong");
 		
 		c.onMessage(new MessageCallback() { 
-			@Override
 			public void onMessage(Message msg, Session sess) throws IOException {
 				System.out.println(msg); 
 				

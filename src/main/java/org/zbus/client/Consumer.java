@@ -64,8 +64,7 @@ public class Consumer extends MqAdmin implements Closeable{
     	}
     	return res;
     }  
-    
-    @Override
+     
 	public void close() throws IOException { 
 		if(this.client != null){
 			this.broker.closeClient(this.client);
@@ -102,8 +101,7 @@ public class Consumer extends MqAdmin implements Closeable{
     		return;
     	}
   
-    	executorService.submit(new Runnable() {
-			@Override
+    	executorService.submit(new Runnable() { 
 			public void run() { 
 				for(;;){
 					try {

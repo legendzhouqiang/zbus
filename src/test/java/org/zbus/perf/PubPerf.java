@@ -27,7 +27,6 @@ public class PubPerf {
 			Message msg = new Message();
 			msg.setBody("hello");
 			p.send(msg, new ResultCallback() { 
-				@Override
 				public void onCompleted(Message result) { 
 					//System.out.println(result);
 					counter.incrementAndGet();

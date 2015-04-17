@@ -47,12 +47,12 @@ public class InterfaceImpl implements Interface{
 		return new Object[]{getUser("rushmore"), "hong", true, 1, String.class};
 	}
 	
-	@Override
+	
 	public int plus(int a, int b) { 
 		return a+b;
 	}
 	
-	@Override
+	
 	public User getUser(String name) {
 		User user = new User();
 		user.setName(name);
@@ -63,19 +63,19 @@ public class InterfaceImpl implements Interface{
 		return user;
 	}
 	
-	@Override
+	
 	public Order getOrder() {
 		Order order = new Order();
 		order.setItem(Arrays.asList("item1","item2","item3"));
 		return order;
 	}
 	
-	@Override
+	
 	public User[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
 	
-	@Override
+	
 	public Map<String, Object> map(int value1) {
 		HashMap<String, Object> res = new HashMap<String, Object>();
 		res.put("key1", value1);
@@ -84,7 +84,7 @@ public class InterfaceImpl implements Interface{
 		return res;
 	}
 	
-	@Override
+	
 	public List<Map<String, Object>> listMap() {
 		List<Map<String, Object>> res = new ArrayList<Map<String,Object>>();
 		res.add(map(1));
@@ -93,7 +93,7 @@ public class InterfaceImpl implements Interface{
 		return res;
 	}
 	
-	@Override
+	
 	public int saveObjectArray(Object[] array) {
 		for(Object obj : array){
 			System.out.println(obj);
@@ -101,22 +101,22 @@ public class InterfaceImpl implements Interface{
 		return 0;
 	}
 	
-	@Override
+	
 	public void throwException() {
 		throw new RuntimeException("runtime exception from server");
 	}
 	
-	@Override
+	
 	public void throwUnkownException() {  
 		throw new PrivateRuntimeException("private runtime exeption");
 	}
 	
-	@Override
+	
 	public void noReturn() {
 		System.out.println("called noReturn");
 	}
 	
-	@Override
+	
 	public Class<?> classTest(Class<?> inClass) {
 		System.out.println(inClass);
 		return Double.class;

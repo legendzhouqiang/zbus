@@ -77,7 +77,6 @@ public class TrackAgent {
 			clients.add(client);
 			
 			executor.submit(new Runnable() { 
-				@Override
 				public void run() { 
 					try {
 						initTrackClient(client);
@@ -93,7 +92,6 @@ public class TrackAgent {
 	
 	private void initTrackClient(final RemotingClient client) throws IOException{  
 		client.onMessage(new MessageCallback() { 
-			@Override
 			public void onMessage(Message msg, Session sess) throws IOException { 
 				final TrackTable trackTable = JSON.parseObject(msg.getBody(), TrackTable.class);
 				for(TrackListener listener : trackListeners){
@@ -104,10 +102,8 @@ public class TrackAgent {
 		});
 		
 		client.onError(new ErrorCallback() { 
-			@Override
 			public void onError(IOException e, Session sess) throws IOException {
 				executor.submit(new Runnable() { 
-					@Override
 					public void run() { 
 						doTrackSub(client);
 					}
@@ -124,7 +120,6 @@ public class TrackAgent {
 			Message msg = new Message();
 			msg.setCommand(Proto.TrackSub); 
 			client.invokeAsync(msg, new ResultCallback() { 
-				@Override
 				public void onCompleted(Message result) {
 					final TrackTable trackTable = JSON.parseObject(result.getBody(), TrackTable.class);
 					for(TrackListener listener : trackListeners){

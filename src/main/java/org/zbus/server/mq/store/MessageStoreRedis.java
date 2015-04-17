@@ -75,7 +75,6 @@ public class MessageStoreRedis implements MessageStore {
 		return String.format("%s%s", brokerKey, mq);
 	}
 	
-	@Override
 	public void saveMessage(Message msg) {  
 		String msgKey = msgKey(msg);
 		String mqKey = mqKey(msg.getMq());  
@@ -83,7 +82,6 @@ public class MessageStoreRedis implements MessageStore {
 		jedis.rpush(mqKey, msgKey);
 	}
 
-	@Override
 	public void removeMessage(Message msg) {
 		String msgKey = msgKey(msg);
 		String mqKey = mqKey(msg.getMq());  
@@ -92,18 +90,15 @@ public class MessageStoreRedis implements MessageStore {
 		jedis.lrem(mqKey, 1, msgKey); 
 	}
 	
-	@Override
 	public void onMessageQueueCreated(MessageQueue mq) { 
 		String json = JSON.toJSONString(mq.getMqInfo());
 		jedis.hset(this.brokerKey, mq.getName(), json);
 	}
 	
-	@Override
 	public void onMessageQueueRemoved(MessageQueue mq) { 
 		jedis.hdel(this.brokerKey, mq.getName());
 	}
 	
-	@Override
 	public ConcurrentMap<String, MessageQueue> loadMqTable() { 
 		Map<String, String> mqs = jedis.hgetAll(this.brokerKey);
 		ConcurrentHashMap<String, MessageQueue> res = new ConcurrentHashMap<String, MessageQueue>();
@@ -152,12 +147,10 @@ public class MessageStoreRedis implements MessageStore {
 		return res;
 	}
 	
-	@Override
 	public void start() { 
 		
 	}
 	
-	@Override
 	public void shutdown() { 
 		
 	}

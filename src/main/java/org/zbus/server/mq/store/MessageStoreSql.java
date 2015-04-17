@@ -96,7 +96,6 @@ public class MessageStoreSql implements MessageStore {
 	private String mqKey(String mq){
 		return String.format("%s-%s", brokerKey, mq);
 	}
-	@Override
 	public void saveMessage(Message msg) {
 		try{
 			String msgId = msgKey(msg);
@@ -111,7 +110,6 @@ public class MessageStoreSql implements MessageStore {
 		}
 	}
 
-	@Override
 	public void removeMessage(Message msg) { 
 		try{
 			String msgId = msgKey(msg);
@@ -125,7 +123,6 @@ public class MessageStoreSql implements MessageStore {
 		}
 	}
 
-	@Override
 	public void onMessageQueueCreated(MessageQueue mq) {
 		try{
 			String mqId = mqKey(mq.getName());
@@ -136,7 +133,6 @@ public class MessageStoreSql implements MessageStore {
 		}
 	}
 
-	@Override
 	public void onMessageQueueRemoved(MessageQueue mq) {
 		try{
 			String mqId = mqKey(mq.getName());
@@ -147,7 +143,6 @@ public class MessageStoreSql implements MessageStore {
 	}
 
 	
-	@Override
 	public ConcurrentMap<String, MessageQueue> loadMqTable() throws SQLException {
 		ConcurrentHashMap<String, MessageQueue> res = new ConcurrentHashMap<String, MessageQueue>();
 		ResultSet mqRs = this.query("SELECT * FROM mqs");

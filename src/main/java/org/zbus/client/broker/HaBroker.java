@@ -49,7 +49,6 @@ public class HaBroker implements Broker, TrackListener {
 		return this.brokers.get(address);
 	} 
 	
-	@Override
 	public void onTrackTableUpdated(TrackTable trackTable) {
 		this.trackTable = trackTable; 
 		for (String brokerAddress : trackTable.brokerAddresses()) {
@@ -79,7 +78,6 @@ public class HaBroker implements Broker, TrackListener {
 		} 
 	}
 	
-	@Override
 	public void destroy() { 
 		for (SingleBroker broker : this.brokers.values()) {
 			broker.destroy();
@@ -111,7 +109,6 @@ public class HaBroker implements Broker, TrackListener {
 		return broker.invokeSync(msg, timeout);
 	}
 	
-	@Override
 	public void invokeAsync(Message msg, ResultCallback callback)
 			throws IOException { 
 		if(!isProducer(msg)){//
@@ -143,7 +140,6 @@ public class HaBroker implements Broker, TrackListener {
 		invokeAsyncByBroker(brokerAddress, msg, callback);
 	}
 
-	@Override
 	public Message invokeSync(Message msg, int timeout) throws IOException { 
 		if(!isProducer(msg)){//
 			log.warn("produce message required");
@@ -187,7 +183,7 @@ public class HaBroker implements Broker, TrackListener {
 		hint.setBroker(brokerAddress);
 		return broker.getClient(hint);
 	}
-	@Override
+
 	public RemotingClient getClient(ClientHint hint) throws IOException {
 		String brokerAddress = hint.getBroker();
 		//1)指定Broker优先
@@ -220,7 +216,6 @@ public class HaBroker implements Broker, TrackListener {
 		return getClientByBroker(brokerAddress);
 	}
 
-	@Override
 	public void closeClient(RemotingClient client) throws IOException {
 		String brokerAddress = client.attr("broker");
 		if(brokerAddress == null){

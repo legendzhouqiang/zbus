@@ -27,7 +27,6 @@ public class ConsumerExample {
 		Consumer c = new Consumer(config);
 		
 		c.onMessage(new MessageCallback() {
-			@Override
 			public void onMessage(Message msg, Session sess) throws IOException {
 				System.out.println(msg);
 			}

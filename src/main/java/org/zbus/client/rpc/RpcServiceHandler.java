@@ -174,7 +174,6 @@ public class RpcServiceHandler implements ServiceHandler {
 		}
 	}
 	
-	@Override
 	public Message handleRequest(Message msg){  
 		Response resp = new Response();
 		try {

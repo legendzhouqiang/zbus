@@ -96,7 +96,6 @@ public class ZbusServer extends RemotingServer {
 	public void init(){  
 		
 		this.registerGlobalHandler(new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				String mqReply = msg.getMqReply();
 				if(mqReply == null ||  mqReply.equals("")){
@@ -114,7 +113,6 @@ public class ZbusServer extends RemotingServer {
 		}); 
 
 		this.registerHandler(Proto.Produce, new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException { 
 				MessageQueue mq = findMQ(msg, sess);
 				if(mq == null) return;
@@ -123,7 +121,6 @@ public class ZbusServer extends RemotingServer {
 		});
 		
 		this.registerHandler(Proto.Consume, new MessageHandler() { 
-			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException { 
 				MessageQueue mq = findMQ(msg, sess);
 				if(mq == null) return;
@@ -133,7 +130,6 @@ public class ZbusServer extends RemotingServer {
 		
 		
 		this.registerHandler(Proto.Request, new MessageHandler() { 
-			@Override
 			public void handleMessage(Message requestMsg, Session sess) throws IOException { 
 				MessageQueue requestMq = findMQ(requestMsg, sess);
 				if(requestMq == null) return;
@@ -188,7 +184,6 @@ public class ZbusServer extends RemotingServer {
 		
 		
 		this.mqSessionCleanService.scheduleAtFixedRate(new Runnable() { 
-			@Override
 			public void run() {  
 				Iterator<Entry<String, MessageQueue>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){

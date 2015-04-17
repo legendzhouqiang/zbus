@@ -49,8 +49,7 @@ public class ClassScanner implements Scanner {
 			} 
 		} 
 	}
-	
-	@Override
+	 
 	public void scanJar(Listener listener) { 
 		for (String jp : jarpath) {
 			List<File> jars = getJars(jp);

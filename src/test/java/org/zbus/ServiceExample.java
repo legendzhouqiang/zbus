@@ -29,7 +29,6 @@ public class ServiceExample {
 		
 		//处理逻辑
 		config.setServiceHandler(new ServiceHandler() { 
-			@Override
 			public Message handleRequest(Message request) { 
 				System.out.println(request);
 				Message result = new Message();

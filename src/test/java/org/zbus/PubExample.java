@@ -8,7 +8,6 @@ import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.protocol.MessageMode;
 import org.zbus.remoting.Message;
-import org.zbus.remoting.ticket.ResultCallback;
 
 public class PubExample {
 	public static void main(String[] args) throws IOException{  
@@ -25,14 +24,9 @@ public class PubExample {
 		msg.setTopic("hong");
 		msg.setBody("hello world");
 		
-		producer.send(msg, new ResultCallback() {
-			@Override
-			public void onCompleted(Message result) {
-				System.out.println(result);
-				
-				//收到消息退出应用，清理broker
-				broker.destroy();
-			}
-		});
+		Message res = producer.sendSync(msg, 2500);
+		System.out.println(res);
+		
+		broker.destroy();
 	} 
 }

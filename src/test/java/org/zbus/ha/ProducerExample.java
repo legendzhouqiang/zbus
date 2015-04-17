@@ -21,7 +21,6 @@ public class ProducerExample {
 			msg.setBody("hello world");
 			try{
 				producer.send(msg, new ResultCallback() {
-					@Override
 					public void onCompleted(Message result) {
 						System.out.println(result);
 					}
