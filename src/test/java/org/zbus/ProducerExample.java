@@ -16,7 +16,9 @@ public class ProducerExample {
 		final Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者 【轻量级对象，不需要释放，随便使用】
-		Producer producer = new Producer(broker, "MyMQ");
+		Producer producer = new Producer(broker, "MyMQ2");
+		producer.createMQ();
+		
 		Message msg = new Message(); 
 		msg.setBody("hello world");  
 		Message res = producer.sendSync(msg, 1000);

@@ -23,6 +23,7 @@ public class ConsumerExample {
 		config.setMq("MyMQ");
 		
 		//2) 创建消费者
+		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);
 		
 		c.onMessage(new MessageCallback() {

@@ -208,7 +208,11 @@ public class ZbusServerTray implements ActionListener, MouseListener, WindowList
 	
 	public void shutdown() {  
 		if(zbus != null){
-			zbus.close();
+			try {
+				zbus.close();
+			} catch (IOException e) { 
+				e.printStackTrace();
+			}
 		}
         if (trayIconUsed) {
             try { 

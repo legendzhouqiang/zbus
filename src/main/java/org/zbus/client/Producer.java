@@ -2,6 +2,7 @@ package org.zbus.client;
 
 import java.io.IOException;
 
+import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
@@ -11,22 +12,13 @@ import org.zbus.remoting.ticket.ResultCallback;
  * @author 洪磊明(rushmore)
  *
  */
-public class Producer {     
-	private final Broker broker; 
-	private final String mq;
-	private String accessToken = "";
-	private String registerToken = "";
-
-	public Producer(Broker broker, String mq) {
-		this.broker = broker;
-		this.mq = mq; 
+public class Producer extends MqAdmin{    
+	public Producer(Broker broker, String mq, MessageMode... mode) {
+		super(broker, mq, mode);
 	} 
 	
 	public Producer(MqConfig config){
-		this.broker = config.getBroker();
-		this.mq = config.getMq();
-		this.accessToken = config.getAccessToken();
-		this.registerToken = config.getRegisterToken();
+		super(config);
 	}
 
 	
@@ -45,22 +37,5 @@ public class Producer {
 		msg.setToken(this.accessToken);
 		
 		return broker.invokeSync(msg, timeout);
-	}
-	
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-
-	public String getRegisterToken() {
-		return registerToken;
-	}
-
-	public void setRegisterToken(String registerToken) {
-		this.registerToken = registerToken;
 	}
 }

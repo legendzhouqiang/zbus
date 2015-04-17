@@ -1,30 +1,16 @@
 package org.zbus.server;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zbus.protocol.BrokerInfo;
 import org.zbus.protocol.MessageMode;
-import org.zbus.protocol.MqInfo;
 import org.zbus.protocol.Proto;
-import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.MessageHandler;
-import org.zbus.remoting.RemotingClient;
-import org.zbus.remoting.callback.ErrorCallback;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.MessageQueue;
 import org.zbus.server.mq.PubsubQueue;
@@ -36,32 +22,25 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 public class AdminHandler extends SubCommandHandler {
-	private static final Logger log = LoggerFactory.getLogger(AdminHandler.class);
-	protected long trackDelay = 1000;
-	protected long trackInterval = 3000;
+	private static final Logger log = LoggerFactory.getLogger(AdminHandler.class); 
+	private final ConcurrentMap<String, MessageQueue> mqTable;
+	private final ExecutorService mqExecutor;
+	private final String serverAddr;
+	private final TrackReport trackReport;
 	
-	protected final ScheduledExecutorService trackReportService = Executors.newSingleThreadScheduledExecutor();
-	protected final List<RemotingClient> trackClients = new ArrayList<RemotingClient>();
-	protected ExecutorService reportExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-	
-	protected final ConcurrentMap<String, MessageQueue> mqTable;
-	protected final ExecutorService mqExecutor;
-	protected final String serverAddr;
-	
-	protected MessageStore messageStore = null;
-	protected ClientDispatcherManager clientDispatcherManager;
+	private MessageStore messageStore = null; 
 	
 	public AdminHandler(ConcurrentMap<String, MessageQueue> mqTable, 
 			ExecutorService mqExecutor, String serverAddr,
-			ClientDispatcherManager clientDispatcherManager){
+			TrackReport trackReport){
 		this.mqTable = mqTable;
 		this.mqExecutor = mqExecutor;
 		this.serverAddr = serverAddr;
-		this.clientDispatcherManager = clientDispatcherManager;
+		this.trackReport = trackReport;
 		this.initCommands();
 	}
 	
-	public void initCommands(){
+	private void initCommands(){
 
 		this.registerHandler(Proto.AdminCreateMQ, new MessageHandler() { 
 			@Override
@@ -118,7 +97,7 @@ public class AdminHandler extends SubCommandHandler {
 						log.info("MQ Created: {}", mq);
 						ReplyHelper.reply200(msgId, sess); 
 						
-			    		reportToTrackServer();
+			    		trackReport.reportToTrackServer();
 			    		return;
 		    		}
 	    		}
@@ -164,93 +143,14 @@ public class AdminHandler extends SubCommandHandler {
 		this.registerHandler("data", new MessageHandler() { 
 			@Override
 			public void handleMessage(Message msg, Session sess) throws IOException {
-				msg = packServerInfo();
+				msg = trackReport.packServerInfo();
 				msg.setStatus("200"); 
 				msg.setHead("content-type", "application/json");
 				sess.write(msg);  
 			}
 		});
 	}
-	
-	private Message packServerInfo(){
-		Map<String, MqInfo> table = new HashMap<String, MqInfo>();
-   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			table.put(e.getKey(), e.getValue().getMqInfo());
-   		} 
-		Message msg = new Message(); 
-		BrokerInfo info = new BrokerInfo();
-		info.setBroker(serverAddr);
-		info.setMqTable(table);  
-		msg.setBody(JSON.toJSONString(info));
-		return msg;
-	}
-	
-	public void setupTrackServer(String trackServerAddr){ 
-		if(trackServerAddr == null) return;
-		trackClients.clear();
-		String[] serverAddrs = trackServerAddr.split("[;]");
-		for(String addr : serverAddrs){
-			addr = addr.trim();
-			if( addr.isEmpty() ) continue;
-			RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager);
-			client.onError(new ErrorCallback() { 
-				@Override
-				public void onError(IOException e, Session sess) throws IOException {
-					//ignore
-				}
-			});
-			trackClients.add(client);
-		} 
-		
-		this.trackReportService.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() { 
-				reportToTrackServer();
-			}
-		}, trackDelay, trackInterval, TimeUnit.MILLISECONDS);
-	}
-	
-	private void reportToTrackServer(){
-		reportExecutor.submit(new Runnable() { 
-			@Override
-			public void run() {
-				Message msg = packServerInfo();
-				msg.setCommand(Proto.TrackReport);
-				for(RemotingClient client : trackClients){
-					try {
-						client.invokeAsync(msg, null);
-					} catch (IOException e) {  
-						//ignore
-					}
-				} 
-			}
-		}); 
-	}
-	
-	
-	public void close(){
-		this.trackReportService.shutdown();
-		for(RemotingClient client : this.trackClients){
-			client.close();
-		}   
-	}
-
-	public long getTrackDelay() {
-		return trackDelay;
-	}
-
-	public void setTrackDelay(long trackDelay) {
-		this.trackDelay = trackDelay;
-	}
-
-	public long getTrackInterval() {
-		return trackInterval;
-	}
-
-	public void setTrackInterval(long trackInterval) {
-		this.trackInterval = trackInterval;
-	}
-
+	 
 	public MessageStore getMessageStore() {
 		return messageStore;
 	}

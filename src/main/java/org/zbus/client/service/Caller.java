@@ -3,28 +3,21 @@ package org.zbus.client.service;
 import java.io.IOException;
 
 import org.zbus.client.Broker;
+import org.zbus.client.MqAdmin;
 import org.zbus.client.MqConfig;
+import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.Proto;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 
 
-public class Caller{    
-	private final Broker broker; 
-	private String mq;
-	private String accessToken = "";
-	private String registerToken = "";
- 
-	public Caller(Broker broker, String mq) {
-		this.broker = broker;
-		this.mq = mq;
+public class Caller extends MqAdmin{    
+	public Caller(Broker broker, String mq, MessageMode... mode) {
+		super(broker, mq, mode);
 	}
 	
 	public Caller(MqConfig config){
-		this.broker = config.getBroker();
-		this.mq = config.getMq(); 
-		this.accessToken = config.getAccessToken();
-		this.registerToken = config.getRegisterToken();
+		super(config);
 	}
 	
 	private void fillCallMessage(Message req){
@@ -42,35 +35,4 @@ public class Caller{
 		this.fillCallMessage(req);   
 		broker.invokeAsync(req, callback);
 	}
-
-	
-	
-	public String getMq() {
-		return mq;
-	}
-
-
-	public void setMq(String mq) {
-		this.mq = mq;
-	}
-
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-
-	public String getRegisterToken() {
-		return registerToken;
-	}
-
-	public void setRegisterToken(String registerToken) {
-		this.registerToken = registerToken;
-	}
-	
-	
 }

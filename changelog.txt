@@ -1,2 +1,4 @@
 version 5.2.0-SNAPSHOT
 1. fixed MessageStore bug: change zbus port cause MQ name error
+2. RemotingClient\ZbusServer\Broker 支持close退出后台线程，类似netty之shutdownGracefully
+3. 增加Producer\Caller\Rpc支持主动创建队列, 5.1.0仅Consumer\Service支持创建队列

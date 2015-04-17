@@ -6,6 +6,7 @@ import org.zbus.client.Broker;
 import org.zbus.client.Producer;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
+import org.zbus.protocol.MessageMode;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.ticket.ResultCallback;
 
@@ -17,7 +18,8 @@ public class PubExample {
 		final Broker broker = new SingleBroker(config);
 		
 		//2) 创建生产者 【轻量级对象，不需要释放，随便使用】
-		Producer producer = new Producer(broker, "MyPubSub");
+		Producer producer = new Producer(broker, "MyPubSub", MessageMode.PubSub);
+		producer.createMQ(); //创建MQ，如果确定存在的MQ可以不创建
 		
 		Message msg = new Message();
 		msg.setTopic("hong");

@@ -53,6 +53,7 @@ class WorkerThread extends Thread{
 	
 	@Override
 	public void run() {
+		@SuppressWarnings("resource")
 		Consumer consumer =new Consumer(config.getBroker(), config.getMq());
 		final int timeout = config.getReadTimeout(); //ms 
 		consumer.setAccessToken(config.getAccessToken());
@@ -82,7 +83,7 @@ class WorkerThread extends Thread{
 					//ignore
 				}
 			}
-		}
+		} 
 	}
 }
 

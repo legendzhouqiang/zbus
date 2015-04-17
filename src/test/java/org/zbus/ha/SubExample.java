@@ -10,6 +10,7 @@ import org.zbus.protocol.MessageMode;
 import org.zbus.remoting.Message;
 
 public class SubExample {
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException{  
 		//1）创建Broker代表
 		HaBrokerConfig config = new HaBrokerConfig();

@@ -7,6 +7,7 @@ import org.zbus.client.broker.HaBrokerConfig;
 import org.zbus.remoting.Message;
 
 public class ConsumerExample {
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代表
 		HaBrokerConfig config = new HaBrokerConfig();

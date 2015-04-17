@@ -156,6 +156,7 @@ public class TrackServer extends RemotingServer {
 	
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 16666);
+		@SuppressWarnings("resource")
 		TrackServer track = new TrackServer(serverPort); 
 		track.start(); 
 	} 
