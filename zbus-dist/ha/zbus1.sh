@@ -1,6 +1,6 @@
 #/usr/bin
 JAVA_HOME=/apps/jdk7
-ZBUS_HOME=.
+ZBUS_HOME=..
 JAVA_OPTS="-Dfile.encoding=UTF-8 -server -Xms64m -Xmx4096m -XX:+UseParallelGC"
 MAIN_CLASS=org.zbus.server.ZbusServer
 MAIN_OPTS="-p 15555 -store dummy  -openBrowser false -track 127.0.0.1:16666;127.0.0.1:16667"
