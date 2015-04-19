@@ -1,6 +1,6 @@
-SET JAVA_HOME=D:\SDK\jdk6_x64
+REM SET JAVA_HOME=D:\SDK\jdk6_x64
 SET ZBUS_HOME=..
-SET JAVA_OPTS=-Dfile.encoding=UTF-8 -server -Xms1024m -Xmx4096m -XX:+UseParallelGC
+SET JAVA_OPTS=-Dfile.encoding=UTF-8 -server -Xms64m -Xmx512m -XX:+UseParallelGC
 SET MAIN_CLASS=org.zbus.server.TrackServer 
 SET MAIN_OPTS=-p 16667
 SET LIB_OPTS=%ZBUS_HOME%/lib;%ZBUS_HOME%/lib/*;%ZBUS_HOME%/conf;

@@ -59,6 +59,7 @@ public class MqAdmin{
     	
     	Message req = Proto.buildSubCommandMessage(Proto.Admin, Proto.AdminCreateMQ, params);
     	req.setToken(this.registerToken);
+    	req.setMq(mq); //支持HA模式下选择Broker算法优化
     	
     	Message res = invokeCreateMQ(req);
     	if(res == null) return false;

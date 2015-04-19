@@ -61,10 +61,7 @@ public class SingleBroker implements Broker {
 			throws IOException {  
 		RemotingClient client = null;
 		try {
-			client = this.pool.borrowObject();
-			if(client.attr("broker") == null){
-				client.attr("broker", brokerAddress);
-			}
+			client = this.pool.borrowObject(); 
 			client.invokeAsync(msg, callback);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -79,10 +76,7 @@ public class SingleBroker implements Broker {
 	public Message invokeSync(Message req, int timeout) throws IOException {
 		RemotingClient client = null;
 		try {
-			client = this.pool.borrowObject();
-			if(client.attr("broker") == null){
-				client.attr("broker", brokerAddress);
-			}
+			client = this.pool.borrowObject(); 
 			return client.invokeSync(req, timeout);
 		} catch (IOException e) {
 			throw e;
@@ -98,7 +92,6 @@ public class SingleBroker implements Broker {
 	public RemotingClient getClient(ClientHint hint) throws IOException{ 
 		return new RemotingClient(this.brokerAddress, this.clientDispatcherManager);
 	}
-
 
 	public void closeClient(RemotingClient client) throws IOException {
 		client.close();

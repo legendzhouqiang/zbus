@@ -114,9 +114,8 @@ public class HaBroker implements Broker, TrackListener {
 		}
 	}
 
-	private boolean isProducer(Message msg){
-		return Proto.Produce.equals(msg.getCommand())||
-				Proto.Request.equals(msg.getCommand());
+	private boolean isAdmin(Message msg){
+		return Proto.Admin.equals(msg.getCommand());
 	}
 	
 	private void invokeAsyncByBroker(String brokerAddress, Message msg, ResultCallback callback) throws IOException{
@@ -139,11 +138,31 @@ public class HaBroker implements Broker, TrackListener {
 		return broker.invokeSync(msg, timeout);
 	}
 	
+	
+	private String getBrokerAddressForAdmin(String mq){
+		List<MqInfo> mqInfos = null;
+		if(mq != null) {
+			mqInfos = trackTable.getMqInfo(mq);
+		}
+		String brokerAddress = null;
+		if(mqInfos == null || mqInfos.size() == 0){ 
+			if(trackTable.brokerAddresses().size() == 0){
+				throw new ZbusException("ZbusServer not exists");
+			}
+			brokerAddress = trackTable.brokerAddresses().iterator().next();
+		} else {
+			brokerAddress = mqInfos.get(0).getBroker();
+		}
+		return brokerAddress;
+	}
+	
+	
 	public void invokeAsync(Message msg, ResultCallback callback)
 			throws IOException { 
-		if(!isProducer(msg)){//
-			log.warn("produce message required");
-			throw new ZbusException("produce message required");
+		if(isAdmin(msg)){
+			String brokerAddress = getBrokerAddressForAdmin(msg.getMq());
+			invokeAsyncByBroker(brokerAddress, msg, callback);
+			return;
 		}
 		String brokerAddress = msg.getBroker();
 		//1)指定Broker优先
@@ -171,10 +190,11 @@ public class HaBroker implements Broker, TrackListener {
 	}
 
 	public Message invokeSync(Message msg, int timeout) throws IOException { 
-		if(!isProducer(msg)){//
-			log.warn("produce message required");
-			throw new ZbusException("produce message required");
+		if(isAdmin(msg)){
+			String brokerAddress = getBrokerAddressForAdmin(msg.getMq());
+			return invokeSyncByBroker(brokerAddress, msg, timeout); 
 		}
+		
 		String brokerAddress = msg.getBroker();
 		//1)指定Broker优先
 		if(brokerAddress != null){
@@ -247,18 +267,13 @@ public class HaBroker implements Broker, TrackListener {
 	}
 
 	public void closeClient(RemotingClient client) throws IOException {
-		String brokerAddress = client.attr("broker");
-		if(brokerAddress == null){
-			log.warn("unable to find client's broker, missing attribute");
-			client.close();
+		String brokerAddress = client.getBrokerAddress();
+		Broker broker = getBrokerByAddress(brokerAddress);
+		if(broker != null){
+			broker.closeClient(client);
 		} else {
-			Broker broker = getBrokerByAddress(brokerAddress);
-			if(broker != null){
-				broker.closeClient(client);
-			} else {
-				log.warn("unable to find client's broker");
-				client.close();
-			}
-		}
+			log.warn("unable to find client's broker");
+			client.close();
+		} 
 	}
 }
