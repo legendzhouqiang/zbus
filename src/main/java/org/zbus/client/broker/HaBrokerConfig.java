@@ -11,6 +11,16 @@ public class HaBrokerConfig extends SingleBrokerConfig {
 		this.trackAddrList = trackAddrList;
 	}	
 	
+	
+	/**
+	 * 对HA模式，brokerAddress不起作用, 使用trackAddrList
+	 */
+	@Override
+	@Deprecated
+	public void setBrokerAddress(String brokerAddress) { 
+		super.setBrokerAddress(brokerAddress);
+	}
+	
 	@Override
 	public HaBrokerConfig clone() {
 		HaBrokerConfig res = (HaBrokerConfig)super.clone();

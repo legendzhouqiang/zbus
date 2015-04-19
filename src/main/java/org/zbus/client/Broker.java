@@ -1,5 +1,6 @@
 package org.zbus.client;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.remoting.Message;
@@ -17,7 +18,7 @@ import org.zbus.remoting.ticket.ResultCallback;
  * @author 洪磊明(rushmore)
  *
  */
-public interface Broker {
+public interface Broker extends Closeable{
 	/**
 	 * 向Broker索取一个链接对象
 	 * @param hint
@@ -53,8 +54,4 @@ public interface Broker {
 	 */
 	Message invokeSync(Message req, int timeout) throws IOException;  
 	
-	/**
-	 * 销毁当前Broker对象，销毁后的Broker不可重用
-	 */
-	void destroy();
 }

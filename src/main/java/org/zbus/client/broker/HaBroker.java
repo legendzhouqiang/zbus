@@ -17,6 +17,7 @@ import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.MqInfo;
 import org.zbus.protocol.Proto;
 import org.zbus.protocol.TrackTable;
+import org.zbus.remoting.ClientDispatcherManager;
 import org.zbus.remoting.Helper;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.RemotingClient;
@@ -25,24 +26,36 @@ import org.zbus.remoting.ticket.ResultCallback;
 
 public class HaBroker implements Broker, TrackListener {
 	private static final Logger log = LoggerFactory.getLogger(HaBroker.class);
+	private final String requestIp = Helper.getLocalIp();
 	private volatile TrackTable trackTable = new TrackTable();
 	private String trackAddressList;
 	private HaBrokerConfig config;
-	public TrackAgent trackAgent;
-	private final String requestIp = Helper.getLocalIp();
+	public  TrackAgent trackAgent;
+	
+	private ClientDispatcherManager clientDispatcherManager = null;
+	private boolean ownClientDispatcherManager = false;
+	
  
 	private Map<String, SingleBroker> brokers = new ConcurrentHashMap<String, SingleBroker>();
 
-	public HaBroker(HaBrokerConfig config) {
+	public HaBroker(HaBrokerConfig config) throws IOException {
 		this.config = config;
 		this.trackAddressList = config.getTrackAddrList(); 
-		try {
-			this.trackAgent = new TrackAgent(this.trackAddressList);
-			this.trackAgent.addTrackListener(this);
-			this.trackAgent.waitForReady(3000);
-		} catch (IOException e) { 
-			log.error(e.getMessage(), e);
+		if(config.getClientDispatcherManager() == null){
+			this.ownClientDispatcherManager = true;
+			this.clientDispatcherManager = new ClientDispatcherManager();
+			this.config.setClientDispatcherManager(clientDispatcherManager);
+		} else {
+			this.clientDispatcherManager = config.getClientDispatcherManager();
+			this.ownClientDispatcherManager = false;
 		}
+		this.clientDispatcherManager.start();
+		
+		
+		this.trackAgent = new TrackAgent(this.trackAddressList, this.clientDispatcherManager);
+		this.trackAgent.addTrackListener(this);
+		this.trackAgent.waitForReady(3000);
+		
 	} 
 	
 	private SingleBroker getBrokerByAddress(String address){
@@ -72,15 +85,32 @@ public class HaBroker implements Broker, TrackListener {
 			String brokerAddress = entry.getKey();
 			SingleBroker broker = entry.getValue();
 			if(!this.trackTable.brokerAddresses().contains(brokerAddress)){
-				broker.destroy();
+				try {
+					broker.close();
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
 				iter.remove();
 			}
 		} 
-	}
+	} 
 	
-	public void destroy() { 
+	@Override
+	public void close() throws IOException { 
 		for (SingleBroker broker : this.brokers.values()) {
-			broker.destroy();
+			broker.close();
+		}
+		if(ownClientDispatcherManager && this.clientDispatcherManager != null){
+			try {
+				this.clientDispatcherManager.close();
+			} catch (IOException e) { 
+				log.error(e.getMessage(), e);
+			}
+		}
+		try {
+			trackAgent.close();
+		} catch (IOException e) { 
+			log.error(e.getMessage(), e);
 		}
 	}
 

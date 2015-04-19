@@ -1,5 +1,6 @@
 package org.zbus.client.broker;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,21 +28,18 @@ interface TrackListener{
 	void onTrackTableUpdated(TrackTable trackTable);
 }
 
-public class TrackAgent {
+public class TrackAgent implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(TrackAgent.class);
 	private String trackServerList="127.0.0.1:16666"; 
 	private final List<RemotingClient> clients = new ArrayList<RemotingClient>();
-	private ClientDispatcherManager clientMgr;  
+	private ClientDispatcherManager clientDispatcherManager;  
 	private CountDownLatch tableReady = new CountDownLatch(1);
 	private ExecutorService executor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	private List<TrackListener> trackListeners = new ArrayList<TrackListener>();
 	
-	public TrackAgent(String trackServerList) throws IOException{
-		this(trackServerList, null);
-	} 
-	
+
 	public TrackAgent(String trackServerList, ClientDispatcherManager clientMgr) throws IOException {  	
-		this.clientMgr = clientMgr;  
+		this.clientDispatcherManager = clientMgr;  
 		this.connectToTrackServers();
 		
 	} 
@@ -61,11 +59,6 @@ public class TrackAgent {
 		this.trackListeners.remove(listener);
 	}
 	
-	public void printSessions(){
-		for(RemotingClient client : this.clients){
-			log.info("client session: "+client.getSession());
-		}
-	}
 	
 	private void connectToTrackServers(){
 		String[] serverAddrs = this.trackServerList.split("[;]");
@@ -73,7 +66,7 @@ public class TrackAgent {
 			addr = addr.trim();
 			if( addr.length() == 0 ) continue;
 			
-			final RemotingClient client = new RemotingClient(addr, this.clientMgr); 
+			final RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager); 
 			clients.add(client);
 			
 			executor.submit(new Runnable() { 
@@ -131,6 +124,14 @@ public class TrackAgent {
 		} catch (IOException e) { 
 			log.debug(e.getMessage(), e);;
 		}
+	}
+
+	@Override
+	public void close() throws IOException { 
+		for(RemotingClient client : this.clients){
+			client.close();
+		}
+		executor.shutdown();
 	}
 	
 }

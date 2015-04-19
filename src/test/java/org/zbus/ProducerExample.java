@@ -25,6 +25,6 @@ public class ProducerExample {
 		System.out.println(res);
 		
 		//3）销毁Broker
-		broker.destroy(); 
+		broker.close();
 	} 
 }

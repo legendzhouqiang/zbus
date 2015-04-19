@@ -17,22 +17,42 @@ public class SingleBroker implements Broker {
 	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
 	private RemotingClientPool pool; 
 	private String brokerAddress; 
-	private ClientDispatcherManager clientDispatcherManager;
+	
+	private SingleBrokerConfig config;
+	private ClientDispatcherManager clientDispatcherManager = null;
+	private boolean ownClientDispatcherManager = false;
 	 
 	public SingleBroker(SingleBrokerConfig config) throws IOException{ 
+		this.config = config;
 		this.brokerAddress = config.getBrokerAddress(); 
-		try {
-			this.pool = new RemotingClientPool(config);
-			this.clientDispatcherManager = this.pool.getClientDispatcherManager();
-		} catch (IOException e) { 
-			log.error(e.getMessage(),e);
+		
+		if(config.getClientDispatcherManager() == null){
+			this.ownClientDispatcherManager = true;
+			this.clientDispatcherManager = new ClientDispatcherManager();
+			this.config.setClientDispatcherManager(clientDispatcherManager);
+		} else {
+			this.clientDispatcherManager = config.getClientDispatcherManager();
+			this.ownClientDispatcherManager = false;
 		}
+		this.clientDispatcherManager.start();
+		
+		this.pool = new RemotingClientPool(this.config); 
 	} 
-	  
-	public void destroy() { 
+	 
+
+	@Override
+	public void close() throws IOException { 
 		this.pool.close(); 
+		if(ownClientDispatcherManager && this.clientDispatcherManager != null){
+			try {
+				this.clientDispatcherManager.close();
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			}
+		}
 	}
 
+	
 	public String getBrokerAddress() {
 		return brokerAddress;
 	}

@@ -279,7 +279,7 @@ public class ZbusServer extends RemotingServer {
 		zbus.setMessageStoreType(config.storeType);
 		
 		//HA高可用模式下，启动链接TrackServer，上报当前节点拓扑信息
-		if(config.trackServerAddr != null){
+		if(config.trackServerAddr != null && !config.trackServerAddr.equals("")){
 			zbus.startTrackReport(config.trackServerAddr); 
 		}
 		
@@ -302,7 +302,7 @@ public class ZbusServer extends RemotingServer {
     	ZbusServerConfig config = new ZbusServerConfig();
     	config.serverPort = Helper.option(args, "-p", 15555); 
     	config.adminToken = Helper.option(args, "-admin", "");
-    	config.trackServerAddr = Helper.option(args, "-track", null);
+    	config.trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
     	config.storeType = Helper.option(args, "-store", "dummy"); 
     	config.serviceBase = Helper.option(args, "-serviceBase", null); 
     	config.openBrowser = Helper.option(args, "-openBrowser", true); 

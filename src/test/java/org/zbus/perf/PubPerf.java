@@ -1,5 +1,6 @@
 package org.zbus.perf;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.client.Broker;
@@ -35,7 +36,11 @@ public class PubPerf {
 						System.out.println(counter.get()*1000.0/(end-start));
 					} 
 					if(counter.get() == total){
-						broker.destroy();
+						try {
+							broker.close();
+						} catch (IOException e) { 
+							e.printStackTrace();
+						}
 					}
 				}
 			});

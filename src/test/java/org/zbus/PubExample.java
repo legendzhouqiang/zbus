@@ -27,6 +27,6 @@ public class PubExample {
 		Message res = producer.sendSync(msg, 2500);
 		System.out.println(res);
 		
-		broker.destroy();
+		broker.close();
 	} 
 }

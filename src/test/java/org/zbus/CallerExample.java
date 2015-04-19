@@ -24,6 +24,6 @@ public class CallerExample {
 		Message res = caller.invokeSync(msg, 2500);
 		System.out.println(res);
 		
-		broker.destroy();
+		broker.close();
 	} 
 }
