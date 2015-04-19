@@ -24,7 +24,6 @@ import org.zbus.remoting.MessageHandler;
 import org.zbus.remoting.RemotingServer;
 import org.zbus.remoting.nio.Session;
 import org.zbus.server.mq.MessageQueue;
-import org.zbus.server.mq.ReplyHelper;
 import org.zbus.server.mq.ReplyQueue;
 import org.zbus.server.mq.store.MessageStore;
 import org.zbus.server.mq.store.MessageStoreFactory;
@@ -74,7 +73,7 @@ public class ZbusServer extends RemotingServer {
     	boolean ack = msg.isAck();
     	if(mq == null){
     		if(ack){
-    			ReplyHelper.reply404(msg, sess);
+    			ServerHelper.reply404(msg, sess);
     		}
     		return null;
     	} 
@@ -82,7 +81,7 @@ public class ZbusServer extends RemotingServer {
     	if(!"".equals(mq.getAccessToken())){ 
     		if(!mq.getAccessToken().equals(msg.getToken())){ 
     			if(ack){
-    				ReplyHelper.reply403(msg, sess);
+    				ServerHelper.reply403(msg, sess);
     			}
     			return null;
     		}

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.zbus.protocol.ConsumerInfo;
 import org.zbus.remoting.Message;
 import org.zbus.remoting.nio.Session;
+import org.zbus.server.ServerHelper;
 
 public class RequestQueue extends MessageQueue {     
 	private static final long serialVersionUID = -7640938066598234399L;
@@ -67,7 +68,7 @@ public class RequestQueue extends MessageQueue {
 	public void produce(Message msg, Session sess) throws IOException{
 		String msgId = msg.getMsgId(); 
 		if(msg.isAck()){
-			ReplyHelper.reply200(msgId, sess);
+			ServerHelper.reply200(msgId, sess);
 		}  
     	enqueue(msg); 
     	this.dispatch();

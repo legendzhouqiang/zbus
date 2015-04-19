@@ -1,25 +1,19 @@
 package org.zbus.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zbus.remoting.Message;
+import org.zbus.remoting.nio.Session;
 
-public class ServerHelper {
-	private static final Logger log = LoggerFactory.getLogger(ServerHelper.class);
-	public static final int IO_BUFFER_SIZE = 4 * 1024;
-	private static final HashMap<String, byte[]> RESOURCES = new HashMap<String, byte[]>();
+public class ServerHelper { 
+	private static final Logger log = LoggerFactory.getLogger(ServerHelper.class); 
 
 	public static Object callMethod(Object instance, String methodName,
 			Object... params) throws Exception {
@@ -118,97 +112,7 @@ public class ServerHelper {
 		return best.newInstance(params);
 	}
 
-	public static byte[] getResource(String name) throws IOException {
-		byte[] data = RESOURCES.get(name);
-		if (data == null) {
-			data = loadResource(name);
-			RESOURCES.put(name, data);
-		}
-		return data == null ? new byte[0] : data;
-	}
-
-	private static byte[] loadResource(String name) throws IOException {
-		InputStream in = ServerHelper.class.getResourceAsStream("data.zip");
-		if (in == null) {
-			in = ServerHelper.class.getResourceAsStream(name);
-			if (in == null) {
-				return null;
-			}
-			return ServerHelper.readBytesAndClose(in, 0);
-		}
-		ZipInputStream zipIn = new ZipInputStream(in);
-		try {
-			while (true) {
-				ZipEntry entry = zipIn.getNextEntry();
-				if (entry == null) {
-					break;
-				}
-				String entryName = entry.getName();
-				if (!entryName.startsWith("/")) {
-					entryName = "/" + entryName;
-				}
-				if (entryName.equals(name)) {
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					copy(zipIn, out);
-					zipIn.closeEntry();
-					return out.toByteArray();
-				}
-				zipIn.closeEntry();
-			}
-		} catch (IOException e) {
-			// if this happens we have a real problem
-			e.printStackTrace();
-		} finally {
-			zipIn.close();
-		}
-		return null;
-	}
-
-	public static long copy(InputStream in, OutputStream out)
-			throws IOException {
-		return copy(in, out, Long.MAX_VALUE);
-	}
-
-	public static long copy(InputStream in, OutputStream out, long length)
-			throws IOException {
-		try {
-			long copied = 0;
-			int len = (int) Math.min(length, IO_BUFFER_SIZE);
-			byte[] buffer = new byte[len];
-			while (length > 0) {
-				len = in.read(buffer, 0, len);
-				if (len < 0) {
-					break;
-				}
-				if (out != null) {
-					out.write(buffer, 0, len);
-				}
-				copied += len;
-				length -= len;
-				len = (int) Math.min(length, IO_BUFFER_SIZE);
-			}
-			return copied;
-		} catch (Exception e) {
-			throw new IOException(e.getMessage());
-		}
-	}
-
-	public static byte[] readBytesAndClose(InputStream in, int length)
-			throws IOException {
-		try {
-			if (length <= 0) {
-				length = Integer.MAX_VALUE;
-			}
-			int block = Math.min(IO_BUFFER_SIZE, length);
-			ByteArrayOutputStream out = new ByteArrayOutputStream(block);
-			copy(in, out, length);
-			return out.toByteArray();
-		} catch (Exception e) {
-			throw new IOException(e.getMessage());
-		} finally {
-			in.close();
-		}
-	}
+	 
 	
 	public static String getProperty(String key, String defaultValue) {
         try {
@@ -355,5 +259,50 @@ public class ServerHelper {
 			log.debug("loading service error, ignore");
 		}
 	}
-
+	
+	
+	
+	public static void reply404(Message msg, Session sess) throws IOException{
+    	Message res = new Message();
+    	String mqName = msg.getMq();
+		res.setMsgId(msg.getMsgId());  
+		res.setStatus("404");
+		res.setMqReply(sess.id()); //mark
+		res.setBody(String.format("MQ(%s) Not Found", mqName));
+		
+		sess.write(res);
+    }
+   
+    public static void reply403(Message msg, Session sess) throws IOException{
+    	Message res = new Message();
+    	String mqName = msg.getMq();
+    	
+    	res.setMsgId(msg.getMsgId()); 
+    	res.setStatus("403");
+    	res.setMqReply(sess.id()); //mark
+    	res.setBody(String.format("MQ(%s) forbbiden, token(%s) mismatched", mqName, msg.getToken()));
+    	
+    	sess.write(res);
+    }
+    
+    public static void reply200(String msgId, Session sess) throws IOException{
+    	Message res = new Message();
+    	res.setMsgId(msgId); 
+    	res.setStatus("200");
+    	res.setMqReply(sess.id()); //mark
+    	res.setBody(""+System.currentTimeMillis()); 
+    	 
+    	sess.write(res);
+    }
+    
+    
+    public static void reply400(Message msg, Session sess) throws IOException{
+    	Message res = new Message();
+    	res.setMsgId(msg.getMsgId()); 
+    	res.setStatus("400");
+    	res.setMqReply(sess.id()); //mark
+    	res.setBody(String.format("Bad format: %s", msg.getBodyString())); 
+    	sess.write(res);
+    }
+    
 }
