@@ -19,6 +19,8 @@ public class Proto {
 	public static final String TrackReport      = "track_report"; 
 	public static final String TrackSub         = "track_sub";  
 	public static final String TrackPub         = "track_pub"; 
+	//5.2.0 added
+	public static final String TrackQuery       = "track_query"; 
 	
 	
 	public static Message buildSubCommandMessage(String cmd, String subCmd, Map<String, String> params){

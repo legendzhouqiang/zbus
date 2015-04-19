@@ -34,9 +34,9 @@
 分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。
 
 
-## ZBUS 设计概要图（挫了点待完善）
+## ZBUS 设计概要图
 
-![设计概要图](http://git.oschina.net/uploads/images/2015/0212/094231_fa14e07f_7458.png)
+![zbus-arch](http://git.oschina.net/uploads/images/2015/0419/134134_62a4e21c_7458.png)
 
 
 ## ZBUS 示例

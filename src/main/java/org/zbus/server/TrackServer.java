@@ -31,6 +31,7 @@ import com.alibaba.fastjson.JSON;
  
 public class TrackServer extends RemotingServer {  
 	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
+
 	private long publishInterval = 10000;
 	private long probeInterval = 3000; 
 	
@@ -39,7 +40,7 @@ public class TrackServer extends RemotingServer {
 	private Map<String, Session> subscribers = new ConcurrentHashMap<String, Session>();
 	private Map<String, RemotingClient> brokerProbes = new ConcurrentHashMap<String, RemotingClient>();
 	
-	private final ScheduledExecutorService trackPubService = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
 	private ExecutorService trackExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
 	private ClientDispatcherManager trackerClientDispatcherManager = new ClientDispatcherManager();
@@ -52,13 +53,13 @@ public class TrackServer extends RemotingServer {
 		super(serverHost, serverPort);
 		
 		this.serverName = "TrackServer";
-		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
+		this.scheduledService.scheduleAtFixedRate(new Runnable() {	
 			public void run() {
 				publishTrackTable();
 			}
 		}, 0, publishInterval, TimeUnit.MILLISECONDS);
 		
-		this.trackPubService.scheduleAtFixedRate(new Runnable() {	
+		this.scheduledService.scheduleAtFixedRate(new Runnable() {	
 			public void run() {
 				probeBrokers();
 			}
@@ -100,8 +101,7 @@ public class TrackServer extends RemotingServer {
 			try {
 				sess.write(msg);
 			} catch (IOException e) {  
-				iter.remove();
-				//ignore
+				iter.remove(); 
 			}
 		}
 		
