@@ -41,33 +41,33 @@
 
 ## ZBUS 示例
 
-### Java Maven 依赖（单个jar包）
+### Java Maven 依赖
 
 	<dependency>
 		<groupId>org.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>5.1.0</version>
+		<version>5.2.0</version>
 	</dependency>
 
 ### 生产者
 
 
-		//1）创建Broker代表
+		//1）创建Broker代理【重量级对象，需要释放】
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
-		Broker broker = new SingleBroker(config);
+		final Broker broker = new SingleBroker(config);
 		
-		//2) 创建生产者
+		//2) 创建生产者 【轻量级对象，不需要释放，随便使用】
 		Producer producer = new Producer(broker, "MyMQ");
-		Message msg = new Message();
-		msg.setBody("hello world");
+		producer.createMQ(); //如果已经确定存在，不需要创建
 		
-		producer.send(msg, new ResultCallback() {
-			@Override
-			public void onCompleted(Message result) { 
-				System.out.println(result);
-			}
-		}); 
+		Message msg = new Message(); 
+		msg.setBody("hello world");  
+		Message res = producer.sendSync(msg, 1000);
+		System.out.println(res);
+		
+		//3）销毁Broker
+		broker.close();
 
 
 ### 消费者
@@ -82,13 +82,14 @@
 		config.setMq("MyMQ");
 		
 		//2) 创建消费者
+		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);
-		while(true){
-			Message msg = c.recv(10000);
-			if(msg == null) continue;
-			
-			System.out.println(msg);
-		}
+		
+		c.onMessage(new MessageCallback() {
+			public void onMessage(Message msg, Session sess) throws IOException {
+				System.out.println(msg);
+			}
+		});
 
  
 ### RPC动态代理【各类复杂类型】
