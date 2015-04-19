@@ -71,7 +71,7 @@ public class TrackAgent {
 		String[] serverAddrs = this.trackServerList.split("[;]");
 		for(String addr : serverAddrs){
 			addr = addr.trim();
-			if( addr.isEmpty() ) continue;
+			if( addr.length() == 0 ) continue;
 			
 			final RemotingClient client = new RemotingClient(addr, this.clientMgr); 
 			clients.add(client);

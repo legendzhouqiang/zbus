@@ -55,7 +55,7 @@ public class TrackReport implements Closeable {
 		
 		for(String addr : serverAddrs){
 			addr = addr.trim();
-			if( addr.isEmpty() ) continue;
+			if( addr.length() == 0 ) continue;
 			
 			RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager);
 			client.onError(new ErrorCallback() {  

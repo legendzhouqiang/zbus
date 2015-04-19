@@ -2,7 +2,6 @@ package org.zbus.server;
  
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -265,34 +264,50 @@ public class ZbusServer extends RemotingServer {
     	return this.serverAddr;
     }
     
-    public static ZbusServer startServer(String[] args) throws Exception{
-		int serverPort = Helper.option(args, "-p", 15555); 
-		String adminToken = Helper.option(args, "-admin", "");
-		String trackServerAddr = Helper.option(args, "-track", null);
-		String storeType = Helper.option(args, "-store", "dummy"); 
-		String serviceBase = Helper.option(args, "-serviceBase", null); 
+    
+    public static class ZbusServerConfig{
+    	public int serverPort = 15555;
+    	public String adminToken = "";
+    	public String trackServerAddr; //用分号分割, 127.0.0.1:16666;127.0.0.1:16667
+    	public String storeType = "dummy";
+    	public String serviceBase = null;
+    	public boolean openBrowser = true;
+    }
+    
+    public static ZbusServer startServer(ZbusServerConfig config) throws Exception{
+    	ZbusServer zbus = new ZbusServer(config.serverPort);  
+		zbus.setAdminToken(config.adminToken);
+		zbus.setMessageStoreType(config.storeType);
 		
-		ZbusServer zbus = new ZbusServer(serverPort);  
-		zbus.setAdminToken(adminToken);
-		zbus.setMessageStoreType(storeType);
-		if(trackServerAddr != null){
-			zbus.startTrackReport(trackServerAddr); 
+		//HA高可用模式下，启动链接TrackServer，上报当前节点拓扑信息
+		if(config.trackServerAddr != null){
+			zbus.startTrackReport(config.trackServerAddr); 
 		}
+		
 		zbus.start();
 		
-		if(serviceBase != null){
-			try{
-				Class<?> loaderClass = Class.forName("org.zbus.client.service.ServiceLoader");
-				Method m = loaderClass.getMethod("load", String.class, String.class);
-				String brokerAddress = String.format("127.0.0.1:%d", serverPort);
-				m.invoke(null, serviceBase, brokerAddress); 
-			} catch(Exception e){
-				//ignore
-				log.warn("loading service error, ignore");
-			}
+		//启动浏览器查看监控页面
+		if(config.openBrowser){
+			ServerHelper.openBrowser(String.format("http://localhost:%d", config.serverPort));
+		}
+		
+		//启动与zbus同时启动的本地JAVA服务，类似tomcat带起来work目录
+		if(config.serviceBase != null){
+			ServerHelper.loadStartupService(config.serviceBase, config.serverPort);
 		}
 		
 		return zbus;
+    }
+    
+    public static ZbusServer startServer(String[] args) throws Exception{
+    	ZbusServerConfig config = new ZbusServerConfig();
+    	config.serverPort = Helper.option(args, "-p", 15555); 
+    	config.adminToken = Helper.option(args, "-admin", "");
+    	config.trackServerAddr = Helper.option(args, "-track", null);
+    	config.storeType = Helper.option(args, "-store", "dummy"); 
+    	config.serviceBase = Helper.option(args, "-serviceBase", null); 
+    	config.openBrowser = Helper.option(args, "-openBrowser", true); 
+		return startServer(config);
 	}  
 
     public static void main(String[] args) throws Exception{

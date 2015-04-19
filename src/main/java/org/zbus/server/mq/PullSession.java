@@ -29,7 +29,7 @@ public class PullSession {
 		if(topicString == null) return;  
 		String[] ts = topicString.split("[,]");
 		for(String t : ts){
-			if(t.trim().isEmpty()) continue;
+			if(t.trim().length() == 0) continue;
 			topicSet.add(t.trim());
 		}
 	}
