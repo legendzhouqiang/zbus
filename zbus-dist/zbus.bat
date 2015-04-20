@@ -1,4 +1,4 @@
-REM SET JAVA_HOME=D:\SDK\jdk6_x64
+SET JAVA_HOME=D:\SDK\jdk6_x64
 SET ZBUS_HOME=.
 SET JAVA_OPTS=-Dfile.encoding=UTF-8 -server -Xms1024m -Xmx4096m -XX:+UseParallelGC
 SET MAIN_CLASS=org.zbus.server.ZbusServer
