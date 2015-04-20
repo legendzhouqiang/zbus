@@ -230,12 +230,12 @@ cmd: produce | consume | request | heartbeat | admin(默认值)
 
 mq: 消息目标队列
 
-mq-reply: 消息回复队列
+mq_reply: 消息回复队列
 
 ###3. 异步消息匹配
 msgid: 消息唯一UUID
 
-msgid-raw: 原始消息唯一UUID, 消息消费路由后ID发生变化，该字段保留最原始的消息ID
+msgid_raw: 原始消息唯一UUID, 消息消费路由后ID发生变化，该字段保留最原始的消息ID
 
 ###4. 安全控制
 token: 访问控制码，不填默认空
@@ -270,7 +270,7 @@ URI做扩展Key-Value的字符串理解
 *	[必填]cmd: produce 
 *	[必填]mq: 目标队列 
 *	[可选*]msgid: 消息UUID， 需要ACK时[必填]
-*	[可选]mq-reply: 回复队列，默认为请求UUID。 需要应答的时候由mq_reply + msgid路由返回
+*	[可选]mq_reply: 回复队列，默认为请求UUID。 需要应答的时候由mq_reply + msgid路由返回
 *	[可选]topic: 发布订阅时发布消息的主题
 *	[可选]token: 访问控制码
 *	[可选]HTTP消息体 承载业务数据
@@ -296,8 +296,8 @@ URI做扩展Key-Value的字符串理解
 
 *	[必填]msgid: 消息UUID，为了匹配消费请求
 *	[必填]broker: 消息路由经历的Broker地址
-*	[可选]mq-reply: 回复队列, 需要反馈结果的Consumer利用mq-reply指定目标消息队列
-*	[可选]msgid-raw: 原始消息UUID，需要反馈结果的Consumer利用msgid-raw指定回复消息ID
+*	[可选]mq_reply: 回复队列, 需要反馈结果的Consumer利用mq_reply指定目标消息队列
+*	[可选]msgid_raw: 原始消息UUID，需要反馈结果的Consumer利用msgid_raw指定回复消息ID
 *	[可选]HTTP消息体 承载业务数据
 
 
@@ -310,7 +310,7 @@ URI做扩展Key-Value的字符串理解
 *	[必填]cmd: request 
 *	[必填]mq: 目标队列 
 *	[必填]msgid: 消息UUID
-*	[必填]mq-reply: 回复队列，不制定的情况下默认为当前发送者的UUID 
+*	[必填]mq_reply: 回复队列，不制定的情况下默认为当前发送者的UUID 
 *	[可选]token: 访问控制码
 *	[可选]HTTP消息体 承载业务数据
 

@@ -6,3 +6,8 @@ zbus-5.2.0发布更新说明
 4. Broker接口继承于java.io.Closeable, IDE提示资源释放
 5. zbus启动自动打开监控页面（默认打开，可选择）
 
+[TODO]
+zbus-5.2.1-SNAPSHOT  
+
+
+

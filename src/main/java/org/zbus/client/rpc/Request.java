@@ -70,6 +70,7 @@ public class Request{
 	}
 	
 	public void assignParamTypes(Class<?>... types){
+		if(types == null) return;
 		this.paramTypes = new String[types.length];
 		for(int i=0; i<types.length; i++){
 			this.paramTypes[i]= types[i].getCanonicalName(); 
