@@ -32,5 +32,7 @@ public class RpcRawExample {
 		String res = (String)rpc.invokeSync("getString", "hong");
 		
 		System.out.println(res);
+		
+		broker.close();
 	}
 }

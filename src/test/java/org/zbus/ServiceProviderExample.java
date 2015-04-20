@@ -26,7 +26,7 @@ public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 	
 	public ServiceConfig getConfig() { 
 		ServiceConfig config = new ServiceConfig();
-		config.setMq("HttpCallback"); 
+		config.setMq("MyService"); 
 		config.setServiceHandler(this);
 		return config;
 	}
@@ -50,7 +50,10 @@ public class ServiceProviderExample implements ServiceProvider, ServiceHandler {
 		} catch (Throwable e){
 			log.error(e.getMessage(), e);
 		}
-		return null;
+		Message res = new Message();
+		res.setStatus("200");
+		res.setBody("example");
+		return res;
 	}
 	
 	

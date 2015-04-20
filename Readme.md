@@ -9,6 +9,13 @@
 * **跨平台、多语言**
 * **高可用、高并发**
 
+
+##**ZBUS** 通讯基础之zbus-remoting
+
+[轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/zbus-remoting, "zbus-remoting") 
+
+ 
+
 ##**ZBUS** SDK 
 * [Java SDK](http://git.oschina.net/rushmore/zbus "zbus-java") 
 * [C/C++ SDK](http://git.oschina.net/rushmore/zbus-c "zbus-c") 

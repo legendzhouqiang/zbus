@@ -10,6 +10,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		<constructor-arg>
 			<bean class="org.zbus.client.broker.SingleBrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
+				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
 			</bean>
 		</constructor-arg>
 	</bean>
