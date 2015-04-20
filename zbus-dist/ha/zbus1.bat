@@ -5,4 +5,4 @@ SET MAIN_CLASS=org.zbus.server.ZbusServer
 REM -p 15555 -store dummy|sql
 SET MAIN_OPTS=-p 15555 -store dummy -openBrowser true -track 127.0.0.1:16666;127.0.0.1:16667
 SET LIB_OPTS=%ZBUS_HOME%/lib;%ZBUS_HOME%/lib/*;%ZBUS_HOME%/conf;
-START /B %JAVA_HOME%\bin\java %JAVA_OPTS% -cp %LIB_OPTS% %MAIN_CLASS% %MAIN_OPTS% 
+"%JAVA_HOME%\bin\java" %JAVA_OPTS% -cp %LIB_OPTS% %MAIN_CLASS% %MAIN_OPTS% 
