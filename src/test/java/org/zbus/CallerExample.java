@@ -18,11 +18,12 @@ public class CallerExample {
 		//2) 【轻量级对象，不需要释放，随便使用】
 		Caller caller = new Caller(broker, "MyService");
 		
+		
 		Message msg = new Message();
 		msg.setBody("hello world");
-		
+		for(int i=0;i<1;i++){
 		Message res = caller.invokeSync(msg, 2500);
-		System.out.println(res);
+		System.out.println(res);}
 		
 		broker.close();
 	} 

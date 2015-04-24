@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zbus.client.service.ServiceLoader;
 import org.zbus.protocol.MessageMode;
 import org.zbus.protocol.Proto;
 import org.zbus.remoting.Helper;
@@ -47,6 +48,8 @@ public class ZbusServer extends RemotingServer {
 	private final AdminHandler adminHandler;
 	
 	private final TrackReport trackReport;
+	
+	private ServiceLoader serviceLoader = null;
 	
 	
 	public ZbusServer(int serverPort) throws IOException {
@@ -198,6 +201,9 @@ public class ZbusServer extends RemotingServer {
 		this.mqExecutor.shutdown();
 		this.mqSessionCleanService.shutdown(); 
 		this.trackReport.close();
+		if(this.serviceLoader != null){
+			serviceLoader.close();
+		}
 		
 		super.close();
 	}
@@ -285,14 +291,16 @@ public class ZbusServer extends RemotingServer {
 		
 		zbus.start();
 		
+		String thisBrokerAddress = String.format("http://localhost:%d", config.serverPort);
 		//启动浏览器查看监控页面
 		if(config.openBrowser){
-			ServerHelper.openBrowser(String.format("http://localhost:%d", config.serverPort));
+			ServerHelper.openBrowser(thisBrokerAddress);
 		}
 		
 		//启动与zbus同时启动的本地JAVA服务，类似tomcat带起来work目录
-		if(config.serviceBase != null){
-			ServerHelper.loadStartupService(config.serviceBase, config.serverPort);
+		if(config.serviceBase != null){ 
+			zbus.serviceLoader = new ServiceLoader(thisBrokerAddress);
+			zbus.serviceLoader.loadFromServiceBase(config.serviceBase); 
 		}
 		
 		return zbus;

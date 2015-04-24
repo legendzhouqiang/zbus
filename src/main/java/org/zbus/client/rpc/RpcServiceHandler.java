@@ -62,6 +62,7 @@ public class RpcServiceHandler implements ServiceHandler {
 				addModule(intf.getSimpleName(), obj);
 				addModule(intf.getCanonicalName(), obj);
 			}
+			addModule("", obj);
 			addModule(obj.getClass().getSimpleName(), obj);
 			addModule(obj.getClass().getCanonicalName(), obj);
 		}

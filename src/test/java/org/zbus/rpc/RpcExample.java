@@ -30,7 +30,7 @@ public class RpcExample {
 
 		RpcConfig rpcConfig = new RpcConfig();
 		rpcConfig.setBroker(broker);
-		rpcConfig.setMq("MyRpc"); 
+		rpcConfig.setMq("MySpringRpc"); 
 		
 		Interface hello = RpcProxy.getService(Interface.class, rpcConfig);
 
@@ -50,6 +50,6 @@ public class RpcExample {
 		System.out.println(ret);
 		
 		
-		//broker.destroy();
+		broker.close();
 	}
 }

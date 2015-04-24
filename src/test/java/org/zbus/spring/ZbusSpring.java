@@ -13,7 +13,7 @@ public class ZbusSpring {
 		return defaultValue;
 	}
 	public static void main(String[] args) { 
-		String config = option(args, "-conf", "ZbusSpring.xml");
+		String config = option(args, "-conf", "ZbusSpring.xml"); 
 		new ClassPathXmlApplicationContext(config); 
 	}
 }

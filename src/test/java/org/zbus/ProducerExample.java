@@ -7,6 +7,7 @@ import org.zbus.client.Producer;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
 import org.zbus.remoting.Message;
+import org.zbus.remoting.ticket.ResultCallback;
 
 public class ProducerExample {
 	public static void main(String[] args) throws IOException{  
@@ -21,10 +22,18 @@ public class ProducerExample {
 		
 		Message msg = new Message(); 
 		msg.setBody("hello world");  
-		Message res = producer.sendSync(msg, 1000);
-		System.out.println(res);
+		//Message res = producer.sendSync(msg, 1000);
+		//System.out.println(res);
+		
+		producer.send(msg, new ResultCallback() {
+			@Override
+			public void onCompleted(Message msg) { 
+				System.out.println(msg);
+			}
+		});
+		
 		
 		//3）销毁Broker
-		broker.close();
+		//broker.close();
 	} 
 }

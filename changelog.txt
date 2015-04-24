@@ -8,6 +8,7 @@ zbus-5.2.0发布更新说明
 
 [TODO]
 zbus-5.2.1-SNAPSHOT  
-
+1. Rpc增加默认module为空的场景下访问不冲突的远程方法
+2. ServiceClassLoader 隔离嵌入式服务运行环境
 
 

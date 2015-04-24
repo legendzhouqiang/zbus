@@ -247,20 +247,7 @@ public class ServerHelper {
         	log.debug(e.getMessage(), e);
         }
     }
-	
-	public static void loadStartupService(String serviceBase, int serverPort){
-		try{
-			Class<?> loaderClass = Class.forName("org.zbus.client.service.ServiceLoader");
-			Method m = loaderClass.getMethod("load", String.class, String.class);
-			String brokerAddress = String.format("127.0.0.1:%d", serverPort);
-			m.invoke(null, serviceBase, brokerAddress); 
-		} catch(Exception e){
-			//ignore
-			log.debug("loading service error, ignore");
-		}
-	}
-	
-	
+
 	
 	public static void reply404(Message msg, Session sess) throws IOException{
     	Message res = new Message();

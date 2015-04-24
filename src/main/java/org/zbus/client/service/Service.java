@@ -1,7 +1,5 @@
 package org.zbus.client.service;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zbus.client.Consumer;
@@ -52,9 +50,15 @@ class WorkerThread extends Thread{
 	} 
 	
 	@Override
+	public void interrupt() { 
+		super.interrupt();
+		
+	}
+	
+	@Override
 	public void run() {
 		@SuppressWarnings("resource")
-		Consumer consumer =new Consumer(config.getBroker(), config.getMq());
+		Consumer consumer = new Consumer(config.getBroker(), config.getMq());
 		final int timeout = config.getReadTimeout(); //ms 
 		consumer.setAccessToken(config.getAccessToken());
 		consumer.setRegisterToken(config.getRegisterToken());
@@ -62,8 +66,11 @@ class WorkerThread extends Thread{
 		while(true){
 			try {  
 				Message msg = consumer.recv(timeout); 
-				if(msg == null) continue;  
-				log.debug("Request: {}", msg);
+				if(msg == null) continue;
+				
+				if(log.isDebugEnabled()){
+					log.debug("Request: {}", msg);
+				}
 				
 				final String mqReply = msg.getMqReply();
 				final String msgId  = msg.getMsgIdRaw(); //必须使用原始的msgId
@@ -76,7 +83,7 @@ class WorkerThread extends Thread{
 					consumer.reply(res);
 				} 
 				
-			} catch (IOException e) { 
+			} catch (Exception e) { 
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException ex) { 

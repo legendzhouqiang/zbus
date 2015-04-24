@@ -1,105 +1,106 @@
 package org.zbus.client.service;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zbus.client.Broker;
 import org.zbus.client.broker.SingleBroker;
 import org.zbus.client.broker.SingleBrokerConfig;
-import org.zbus.client.service.Scanner.Listener;
-import org.zbus.client.service.Scanner.ScanInfo;
-import org.zbus.remoting.Helper;
 
-public class ServiceLoader {
+public class ServiceLoader implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ServiceLoader.class);
 	private Broker broker;
-	private ExecutorService executor = new ThreadPoolExecutor(4, 16, 120,
-			TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+	private boolean ownBroker = false; 
 
 	public ServiceLoader(Broker broker) {
 		this.broker = broker;
 	}
-
-	public void loadServicesFromBasePath(String basePath) {
-		this.loadService(basePath);
-		List<File> dirs = getDirs(basePath);
-		for (File f : dirs) {
-			this.loadService(f.getAbsolutePath());
-		}
-	}
-
-	public void loadService(final ServiceProvider sp) {
-		executor.execute(new Runnable() { 
-			public void run() {
-				ServiceConfig config = sp.getConfig();
-				if (config.getBroker() == null) {
-					config.setBroker(broker);
-				}
-				Service service = new Service(config);
-				service.start();
-			}
-		});
-	}
-
-	public void loadService(String servicePath) {
-		Scanner scanner = new ClassScanner();
-		scanner.addJarpath(servicePath);
-		log.info("load service from: " + servicePath);
-		final List<URL> urls = new ArrayList<URL>();
+	
+	public ServiceLoader(String brokerAddress){
+		SingleBrokerConfig config = new SingleBrokerConfig();
 		try {
-			urls.add(new URL("file:" + servicePath));
-		} catch (MalformedURLException e) {
+			this.broker = new SingleBroker(config);
+			this.ownBroker = true;
+		} catch (IOException e) { 
 			log.error(e.getMessage(), e);
 		}
-		scanner.scanJar(new Listener() {
-			public void onScanned(ScanInfo info) {
-				try {
-					log.info(info.toString());
-					URL url = new URL("file:" + info.jarpath);
-					urls.add(url);
-				} catch (MalformedURLException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		});
-
-		final ContainerClassLoader classLoader = new ContainerClassLoader(
-				urls.toArray(new URL[0]));
-		scanner.scanClass(new Listener() {
-			public void onScanned(ScanInfo info) {
-				try {
-					Class<?> clazz = classLoader.loadClass(info.className);
-					boolean isServiceProvider = false;
-					for (Class<?> inf : clazz.getInterfaces()) {
-						if (inf == ServiceProvider.class) {
-							isServiceProvider = true;
-							break;
-						}
-					}
-					if (!isServiceProvider)
-						return;
-					log.info("service class found: " + clazz);
-					final ServiceProvider sp = (ServiceProvider) clazz
-							.newInstance();
-					loadService(sp);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		});
-
 	}
-
-	public static List<File> getDirs(String basePath) {
+	
+	public void startService(final ServiceConfig config){
+		if (config.getBroker() == null) {
+			config.setBroker(broker);
+		}
+		Service service = new Service(config);
+		service.start();
+	}
+	
+	public void loadFromServiceBase(String serviceBase){
+		List<File> dirs = getDirs(serviceBase);
+		for(File dir : dirs){
+			loadFromServiceProject(dir.getAbsolutePath());
+		}
+	}
+	
+	public void loadFromServiceProject(final String projectPath){
+		//Thread.currentThread().setContextClassLoader 改变
+		new Thread(new Runnable() {
+			public void run() {
+				loadFromServiceProject0(projectPath);
+			}
+		}).start();
+	}
+	
+	private void loadFromServiceProject0(String projectPath){
+		String configFilePath = projectPath + File.separator + "zbus.properties";
+		FileInputStream fileInputStream = null;
+		Properties props = new Properties();
+		try {
+			fileInputStream = new FileInputStream(configFilePath);
+			props.load(fileInputStream);
+			fileInputStream.close();
+			
+			URL[] urls = getClassLoaderUrls(projectPath);
+			ClassLoader classLoader = new ServiceClassLoader(urls); 
+			
+			List<ServiceConfig> configs = loadServiceConfigs(classLoader, props);
+			
+			for(final ServiceConfig config : configs){
+				startService(config);
+			}
+			
+		} catch (Exception e) { 
+			log.error(e.getMessage(), e);
+			return;
+		}
+		
+	}
+	
+	
+	
+	private URL[] getClassLoaderUrls(String servicePath){
+		List<URL> urls = new ArrayList<URL>();
+		try { 
+			urls.add(new URL("file:" + servicePath + File.separator + "classes" + File.separator));
+			List<File> jars = getJars(servicePath + File.separator + "lib") ;
+			for(File jar : jars){
+				urls.add(new URL("file:" + jar.getAbsolutePath()));
+			}
+		} catch (MalformedURLException e) { 
+			//ignore
+		}
+		return urls.toArray(new URL[0]);
+	}
+ 
+	private static List<File> getDirs(String basePath) {
 		List<File> dirs = new ArrayList<File>();
 		try {
 			File base = new File(basePath);
@@ -115,34 +116,95 @@ public class ServiceLoader {
 		}
 		return dirs;
 	}
-
-	public static void load(String serviceBase, String brokerAddress)
-			throws Exception {
-		
-		if (serviceBase == null) {
-			log.warn("mssing serviceBase directory");
-			return;
-		}
-		File file = new File(serviceBase);
-		if (file.exists()) {
-			if (file.isDirectory()) {
-				log.info(">>>ServiceBase: " + file.getAbsolutePath());
-				SingleBrokerConfig config = new SingleBrokerConfig();
-				config.setBrokerAddress(brokerAddress);
-				Broker broker = new SingleBroker(config);
-
-				ServiceLoader serviceLoader = new ServiceLoader(broker);
-				serviceLoader.loadServicesFromBasePath(serviceBase);
+	
+	private static List<File> getJars(String basePath) {
+		List<File> jars = new ArrayList<File>();
+		try {
+			File base = new File(basePath);
+			if (base.isDirectory() && base.exists()) {
+				for (File file : base.listFiles()) {
+					if (file.isFile() && file.exists()) { 
+						jars.add(file);
+					} 
+					if (file.isDirectory() && file.exists()) { 
+						jars.addAll(getDirs(file.getAbsolutePath()));
+					} 
+				}
 			}
-		} else {
-			log.warn("!!!ServiceBase not exist: " + file.getAbsolutePath());
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
 		}
+		return jars;
 	}
 
-	public static void main(String[] args) throws Exception {
-		String serviceBase = Helper.option(args, "-serviceBase", null);
-		String brokerAddress = Helper
-				.option(args, "-broker", "127.0.0.1:15555"); 
-		load(serviceBase, brokerAddress);
+
+	private static List<ServiceConfig> loadServiceConfigs(final ClassLoader classLoader, Properties props){
+		List<ServiceConfig> configs = new ArrayList<ServiceConfig>();
+		final String namespace = "zbus.mq";
+		final String prefix = namespace+".";
+		String mqNameString = props.getProperty(namespace);
+		if(mqNameString == null) return configs;
+		String[] mqs = mqNameString.split(",");
+		for(String mq : mqs){
+			mq = mq.trim();
+			if(mq.equals("")) continue; 
+			
+			String provider = props.getProperty(prefix + mq + ".provider", "").trim();
+			if("".equals(provider)){
+				log.warn("missing provider for MQ="+mq);
+				continue;
+			}
+			String consumerCount = props.getProperty(prefix + mq + ".consumerCount", "1").trim();
+			String accessToken = props.getProperty(prefix + mq + ".accessToken", "").trim();
+			String registerToken = props.getProperty(prefix + mq + ".registerToken", "").trim();
+			
+			
+			int threadCount = 1;
+			try{
+				threadCount = Integer.valueOf(consumerCount);
+			} catch (Exception e){
+				log.warn(e.getMessage(), e);
+				//ignore
+			}
+			ServiceConfig config = new ServiceConfig();
+			config.setMq(mq);
+			config.setAccessToken(accessToken.trim());
+			config.setRegisterToken(registerToken.trim());
+			config.setThreadCount(threadCount);
+			 
+			Class<?> providerClass = null;
+			try { 
+				providerClass = classLoader.loadClass(provider);
+			} catch (ClassNotFoundException e) { 
+				log.warn(e.getMessage(), e);
+				continue;
+			}
+			//
+			if(!ServiceProvider.class.isAssignableFrom(providerClass)){
+				log.warn(provider+" is not a type of "+ServiceProvider.class);
+				continue;
+			}
+			try {
+				final ServiceProvider sp = (ServiceProvider)providerClass.newInstance();
+				config.setServiceHandler(sp.buildHandler());
+				configs.add(config);
+			} catch (Exception e) {
+				log.warn(e.getMessage(), e);
+			} 
+		}
+		
+		return configs;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if(this.ownBroker && this.broker != null){
+			this.broker.close();
+		}
+	}
+	
+	public static void main(String[] args) throws Exception{
+		ServiceLoader loader = new ServiceLoader("127.0.0.1:15555");
+		loader.close();
 	}
 }
