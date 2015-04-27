@@ -10,7 +10,7 @@
 * **高可用、高并发**
 
 
-##**ZBUS** 通讯基础之zbus-remoting
+##**ZBUS** 通讯基础之znet
 
 [轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
 
