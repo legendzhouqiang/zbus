@@ -1,5 +1,6 @@
 # zbus--轻量级消息队列、服务总线
 
+
 ##**zbus** 特性
 
 
@@ -7,23 +8,30 @@
 * **服务总线 -- 适配改造已有业务系统，使之具备跨平台与语言, RPC**
 * **RPC -- 分布式远程方法调用，Java方法透明代理**
 * **跨平台、多语言**
-* **高可用、高并发**
+* **轻量级、高可用**
 
 
-##**zbus** 通讯基础之znet
+##**zbus** 项目结构
+
+
+###**zbus** 服务器
+
+只用JAVA可以只关注这部分
+[zbus服务器](http://git.oschina.net/rushmore/zbus/tree/master/zbus "zbus") 
+
+###**zbus**通讯基础之znet
 
 [轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
 
- 
 
-##**zbus** SDK 
-* [Java SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus "zbus") 
-* [C/C++ SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-c "zbus-api-c") 
-* [Python SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-python "zbus-api-python") 
-* [C# SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-csharp "zbus-api-csharp") 
-* [Node.JS SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-nodejs "zbus-api-nodejs") 
+### **zbus** API
+* [Java API](http://git.oschina.net/rushmore/zbus/tree/master/zbus "zbus") 
+* [C/C++ API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-c "zbus-api-c") 
+* [Python API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-python "zbus-api-python") 
+* [C# API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-csharp "zbus-api-csharp") 
+* [Node.JS API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-nodejs "zbus-api-nodejs") 
 
-##**zbus** 桥接
+###**zbus** 桥接
 
 * [微软MSMQ](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-msmq "zbus-proxy-msmq") 
 * [金证KCXP](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-kcxp "zbus-proxy-kcxp") 
@@ -54,9 +62,9 @@
 ### Java Maven 依赖
 
 	<dependency>
-		<groupId>org.zstacks.zbus</groupId>
+		<groupId>org.zstacks</groupId>
 		<artifactId>zbus</artifactId>
-		<version>5.2.0</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</dependency>
 
 ### 生产者
