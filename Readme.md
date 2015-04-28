@@ -1,6 +1,6 @@
-# ZBUS--轻量级消息队列、服务总线
+# zbus--轻量级消息队列、服务总线
 
-##**ZBUS** 特性
+##**zbus** 特性
 
 
 * **消息队列 -- 生产者消费者模式、发布订阅**
@@ -10,48 +10,51 @@
 * **高可用、高并发**
 
 
-##**ZBUS** 通讯基础之zbus-remoting
+##**zbus** 通讯基础之znet
 
-[轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/zbus-remoting "zbus-remoting") 
+[轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
 
  
 
-##**ZBUS** SDK 
-* [Java SDK](http://git.oschina.net/rushmore/zbus "zbus-java") 
-* [C/C++ SDK](http://git.oschina.net/rushmore/zbus-c "zbus-c") 
-* [Python SDK](http://git.oschina.net/rushmore/zbus-python "zbus-python") 
-* [C# SDK](http://git.oschina.net/rushmore/zbus-csharp "zbus-csharp") 
-* [Node.JS SDK](http://git.oschina.net/rushmore/zbus-nodejs "zbus-nodejs") 
+##**zbus** SDK 
+* [Java SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus "zbus") 
+* [C/C++ SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-c "zbus-api-c") 
+* [Python SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-python "zbus-api-python") 
+* [C# SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-csharp "zbus-api-csharp") 
+* [Node.JS SDK](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-nodejs "zbus-api-nodejs") 
 
-##**ZBUS** 桥接
+##**zbus** 桥接
 
-* [微软MSMQ](http://git.oschina.net/rushmore/zbus-msmq "zbus-msmq") 
-* [金证KCXP](http://git.oschina.net/rushmore/zbus-kcxp "zbus-kcxp") 
+* [微软MSMQ](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-msmq "zbus-proxy-msmq") 
+* [金证KCXP](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-kcxp "zbus-proxy-kcxp") 
+* [国信TC](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-tc "zbus-proxy-tc") 
+* [桥接JAVA客户端](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-java "zbus-proxy-java") 
 
-## ZBUS 启动与监控 
+
+## zbus 启动与监控 
 
 1. zbus-dist选择zbus.sh或者zbus.bat直接执行
-2. 通过源码ZbusServer.java个性化控制启动
+2. 通过源码zbusServer.java个性化控制启动
 
 ![简单监控](http://git.oschina.net/uploads/images/2015/0212/103207_b5d2e1d3_7458.png)
 
 总线默认占用**15555**端口， [http://localhost:15555](http://localhost:15555 "默认监控地址") 可以直接进入监控，注意zbus因为原生兼容HTTP协议所以监控与消息队列使用同一个端口
 
 **高可用模式启动总线**
-分别启动ZbusServer与TrackServer，无顺序之分，默认ZbusServer占用15555端口，TrackServer占用16666端口。
+分别启动zbusServer与TrackServer，无顺序之分，默认zbusServer占用15555端口，TrackServer占用16666端口。
 
 
-## ZBUS 设计概要图
+## zbus 设计概要图
 
 ![zbus-arch](http://git.oschina.net/uploads/images/2015/0419/134134_62a4e21c_7458.png)
 
 
-## ZBUS 示例
+## zbus 示例
 
 ### Java Maven 依赖
 
 	<dependency>
-		<groupId>org.zbus</groupId>
+		<groupId>org.zstacks.zbus</groupId>
 		<artifactId>zbus</artifactId>
 		<version>5.2.0</version>
 	</dependency>
@@ -139,9 +142,9 @@
 **无任何代码侵入使得你已有的业务接口接入到zbus，获得跨平台和多语言支持**
 
 	<!-- 暴露的的接口实现示例 -->
-	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
+	<bean id="interface" class="org.zstacks.zbus.rpc.biz.InterfaceImpl"></bean>
 	
-	<bean id="serviceHandler" class="org.zbus.client.rpc.RpcServiceHandler">
+	<bean id="serviceHandler" class="org.zstacks.zbus.client.rpc.RpcServiceHandler">
 		<constructor-arg>
 			<list>
 				<!-- 放入你需要暴露的接口 ,其他配置基本不变-->
@@ -151,18 +154,18 @@
 	</bean>
 	
 	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
-	<bean id="broker" class="org.zbus.client.broker.SingleBroker">
+	<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
 		<constructor-arg>
-			<bean class="org.zbus.client.broker.SingleBrokerConfig">
+			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
 			</bean>
 		</constructor-arg>
 	</bean>
 	
 	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
-	<bean id="zbusService" class="org.zbus.client.service.Service" init-method="start">
+	<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
 		<constructor-arg>  
-			<bean class="org.zbus.client.service.ServiceConfig">
+			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
 				<property name="broker" ref="broker"/>
 				<property name="mq" value="MyRpc"/>
 				<property name="threadCount" value="2"/>
@@ -176,9 +179,9 @@
 ### Spring集成--客户端
 
 	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
-	<bean id="broker" class="org.zbus.client.broker.SingleBroker">
+	<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
 		<constructor-arg>
-			<bean class="org.zbus.client.broker.SingleBrokerConfig">
+			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
 			</bean>
 		</constructor-arg>
@@ -186,10 +189,10 @@
 	
 
 	<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
-	<bean id="interface" class="org.zbus.client.rpc.RpcProxy" factory-method="getService">
-		<constructor-arg type="java.lang.Class" value="org.zbus.rpc.biz.Interface"/> 
+	<bean id="interface" class="org.zstacks.zbus.client.rpc.RpcProxy" factory-method="getService">
+		<constructor-arg type="java.lang.Class" value="org.zstacks.zbus.rpc.biz.Interface"/> 
 		<constructor-arg>
-			<bean class="org.zbus.client.rpc.RpcConfig">
+			<bean class="org.zstacks.zbus.client.rpc.RpcConfig">
 				<property name="broker" ref="broker"/> 
 				<property name="mq" value="MyRpc"/>
 			</bean>
@@ -200,7 +203,7 @@
 **Spring完成zbus代理透明化，zbus设施从你的应用逻辑中彻底消失**
 
 	public static void main(String[] args) { 
-		ApplicationContext context = new ClassPathXmlApplicationContext("ZbusSpringClient.xml");
+		ApplicationContext context = new ClassPathXmlApplicationContext("zbusSpringClient.xml");
 		
 		Interface intf = (Interface) context.getBean("interface");
 		
@@ -212,24 +215,24 @@
 
 
 
-# ZBUS消息协议 
+# zbus消息协议 
 
 ## 协议概览 
-ZBUS协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体组成，
-ZBUS协议在HTTP头部KV值做了扩展，支持浏览器方式直接访问，但是ZBUS链接机制采用保持长连接方式。
-原则上, 编写客户端SDK只需要遵循下面ZBUS协议扩展即可。
+zbus协议继承于HTTP协议格式，主体采用HTTP头部协议扩展完成,HTTP协议由HTTP头部和HTTP包体组成，
+zbus协议在HTTP头部KV值做了扩展，支持浏览器方式直接访问，但是zbus链接机制采用保持长连接方式。
+原则上, 编写客户端SDK只需要遵循下面zbus协议扩展即可。
 
-ZBUS扩展头部主要是完成
+zbus扩展头部主要是完成
 
 *   消息命令
-*   ZBUS消息队列寻址
+*   zbus消息队列寻址
 *	异步消息匹配
 *	安全控制
 
 扩展头部Key-Value解释
 
 ###1. 消息命令
-命令标识，决定Broker（ZbusServer|TrackServer)的处理 
+命令标识，决定Broker（zbusServer|TrackServer)的处理 
 
 cmd: produce | consume | request | heartbeat | admin(默认值)
 
@@ -259,7 +262,7 @@ encoding: 消息体的编码格式
 sub_cmd: 管理命令的二级命令
 
 
-###6 HTTP头部第一行，ZBUS协议保持一致理解
+###6 HTTP头部第一行，zbus协议保持一致理解
 
 请求：GET|POST URI
 
