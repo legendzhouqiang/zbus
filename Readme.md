@@ -64,7 +64,7 @@
 	<dependency>
 		<groupId>org.zstacks</groupId>
 		<artifactId>zbus</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>6.0.0-SNAPSHOT</version>
 	</dependency>
 
 ### 生产者
