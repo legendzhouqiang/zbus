@@ -26,17 +26,17 @@
 
 ### **zbus** API
 * [Java API](http://git.oschina.net/rushmore/zbus/tree/master/zbus "zbus") 
-* [C/C++ API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-c "zbus-api-c") 
-* [Python API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-python "zbus-api-python") 
-* [C# API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-csharp "zbus-api-csharp") 
-* [Node.JS API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api-nodejs "zbus-api-nodejs") 
+* [C/C++ API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api/zbus-api-c "zbus-api-c") 
+* [Python API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api/zbus-api-python "zbus-api-python") 
+* [C# API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api/zbus-api-csharp "zbus-api-csharp") 
+* [Node.JS API](http://git.oschina.net/rushmore/zbus/tree/master/zbus-api/zbus-api-nodejs "zbus-api-nodejs") 
 
 ###**zbus** 桥接
 
-* [微软MSMQ](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-msmq "zbus-proxy-msmq") 
-* [金证KCXP](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-kcxp "zbus-proxy-kcxp") 
-* [国信TC](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-tc "zbus-proxy-tc") 
-* [桥接JAVA客户端](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy-java "zbus-proxy-java") 
+* [微软MSMQ](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy/zbus-proxy-msmq "zbus-proxy-msmq") 
+* [金证KCXP](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy/zbus-proxy-kcxp "zbus-proxy-kcxp") 
+* [国信TC](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy/zbus-proxy-tc "zbus-proxy-tc") 
+* [桥接JAVA客户端](http://git.oschina.net/rushmore/zbus/tree/master/zbus-proxy/zbus-proxy-java "zbus-proxy-java") 
 
 
 ## zbus 启动与监控 
