@@ -7,7 +7,7 @@ zbus-5.2.0发布更新说明
 5. zbus启动自动打开监控页面（默认打开，可选择）
 
 zbus-6.0.0-SNAPSHOT
-1. zbus纳入zstacks组织管理，报名前缀由 org.zbus 改为 org.zstacks.zbus
+1. zbus纳入zstacks组织管理，package前缀由 org.zbus 改为 org.zstacks.zbus
 1. Rpc增加默认module为空的场景下访问不冲突的远程方法
 2. ServiceClassLoader 隔离嵌入式服务运行环境
 
