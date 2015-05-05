@@ -2,8 +2,10 @@ package org.zstacks.zbus.client;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ public class Consumer extends MqAdmin implements Closeable{
 	private RemotingClient client;  //消费者拥有一个物理链接
 	//为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
 	private String topic = null;
+	private int messageCallbackThreadCount = 4;
 	
 	public Consumer(Broker broker, String mq, MessageMode... mode){  
 		super(broker, mq, mode);
@@ -69,6 +72,9 @@ public class Consumer extends MqAdmin implements Closeable{
 		if(this.client != null){
 			this.broker.closeClient(this.client);
 		}
+		if(this.executorService != null){
+			this.executorService.shutdown();
+		}
 	}
 	
 	@Override
@@ -91,12 +97,13 @@ public class Consumer extends MqAdmin implements Closeable{
     
     
     
-    protected ScheduledExecutorService executorService = null;
+    protected ExecutorService executorService = null;
     private MessageCallback callback;
     public void onMessage(MessageCallback cb) throws IOException{
     	this.callback = cb;
     	if(executorService == null){
-    		executorService = Executors.newSingleThreadScheduledExecutor(); 
+    		executorService = new ThreadPoolExecutor(messageCallbackThreadCount, 
+    				256, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
     	} else {  
     		return;
     	}
@@ -129,4 +136,14 @@ public class Consumer extends MqAdmin implements Closeable{
 		}
 		this.topic = topic;
 	}
+
+	public int getMessageCallbackThreadCount() {
+		return messageCallbackThreadCount;
+	}
+
+	public void setMessageCallbackThreadCount(int messageCallbackThreadCount) {
+		this.messageCallbackThreadCount = messageCallbackThreadCount;
+	}
+	
+	
 }

@@ -30,7 +30,7 @@ public class RpcExample {
 
 		RpcConfig rpcConfig = new RpcConfig();
 		rpcConfig.setBroker(broker);
-		rpcConfig.setMq("MySpringRpc"); 
+		rpcConfig.setMq("MyRpc"); 
 		
 		Interface hello = RpcProxy.getService(Interface.class, rpcConfig);
 

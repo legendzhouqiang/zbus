@@ -27,8 +27,8 @@ public class RpcRawExample {
 		Broker broker = new SingleBroker(config);
 		
 		Rpc rpc = new Rpc(broker, "MyRpc"); 
-		
-		String res = (String)rpc.invokeSync("getName");
+		//rpc.setModule("User");
+		String res = (String)rpc.invokeSync("getString", "hong");
 		
 		System.out.println(res);
 		
