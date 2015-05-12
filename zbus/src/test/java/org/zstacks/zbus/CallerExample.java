@@ -23,7 +23,7 @@ public class CallerExample {
 		msg.setBody("hello world");
 		for(int i=0;i<1;i++){
 		Message res = caller.invokeSync(msg, 2500);
-		System.out.println(res);}
+		System.out.println(res);} 
 		
 		broker.close();
 	} 

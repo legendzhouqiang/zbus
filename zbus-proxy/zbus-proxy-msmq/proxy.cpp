@@ -351,6 +351,21 @@ int main(int argc, char* argv[]){
 
 	g_proxy_cfg = proxy_cfg_new(argc, argv); 
 
+	char instance_id[512];
+	sprintf(instance_id,"MSMQ_%s_%s", g_proxy_cfg->msmq_server, g_proxy_cfg->msmq_client);
+	
+	//printf("InstanceId=%s\n", instance_id);
+	HANDLE mutex = CreateMutex(NULL, FALSE, (LPCTSTR)"zbus-msmq"); 
+	if(GetLastError()==ERROR_ALREADY_EXISTS){
+		printf("链接同一个MSMQ私有队列不能多实例运行,请关闭之前的实例\n");
+		getchar();
+		CloseHandle(mutex);
+		mutex = NULL;
+		::CoUninitialize();
+		return -1;
+	}
+	
+
 	if(g_proxy_cfg->log_path){
 		zlog_set_file(g_proxy_cfg->log_path); 
 	} else {

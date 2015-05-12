@@ -18,10 +18,10 @@ import org.zstacks.zbus.protocol.BrokerInfo;
 import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.server.mq.MessageQueue;
-import org.zstacks.znet.ClientDispatcherManager;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.callback.ErrorCallback;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 
 import com.alibaba.fastjson.JSON;
@@ -36,7 +36,6 @@ public class TrackReport implements Closeable {
 	private final ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
 	private ExecutorService reportService = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
-	private ClientDispatcherManager clientDispatcherManager = null;
 	
 	public TrackReport(ConcurrentMap<String, MessageQueue> mqTable, String zbusServerAddr){
 		this.mqTable = mqTable; 
@@ -44,21 +43,17 @@ public class TrackReport implements Closeable {
 	}
 	 
 	
-	public void startTrackReport(String trackServerAddr) throws IOException{ 
+	public void startTrackReport(String trackServerAddr, Dispatcher dispatcher) throws IOException{ 
 		if(trackServerAddr == null) return;
-		if(clientDispatcherManager != null){
-			return;
-		}
-		this.clientDispatcherManager = new ClientDispatcherManager();
-		
+		 
 		String[] serverAddrs = trackServerAddr.split("[;]");
 		
 		for(String addr : serverAddrs){
 			addr = addr.trim();
 			if( addr.length() == 0 ) continue;
 			
-			RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager);
-			client.onError(new ErrorCallback() {  
+			RemotingClient client = new RemotingClient(addr, dispatcher);
+			client.setErrorCallback(new ErrorCallback() {  
 				public void onError(IOException e, Session sess) throws IOException { }
 			});
 			clients.add(client);
@@ -103,10 +98,7 @@ public class TrackReport implements Closeable {
 			client.close();
 		}   
 		this.scheduledService.shutdown();
-		this.reportService.shutdown();
-		if(this.clientDispatcherManager != null){
-			this.clientDispatcherManager.close();
-		}
+		this.reportService.shutdown(); 
 	}
 
 	public long getTrackDelay() {

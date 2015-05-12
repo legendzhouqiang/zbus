@@ -122,6 +122,7 @@ $.getJSON('/?cmd=admin&&sub_cmd=data',function(data){
     }); 
     
     $.each(data.mqTable, function(key, mq){  
+    	return;
     	if(key=='@type') return;
     	if((mq.mode & MODE_PUBSUB) != 0) return; //pubsub
     	if((mq.mode & MODE_TEMP) == 0) return;

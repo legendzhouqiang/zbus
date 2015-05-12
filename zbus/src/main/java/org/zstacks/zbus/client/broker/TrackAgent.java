@@ -14,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.protocol.TrackTable;
-import org.zstacks.znet.ClientDispatcherManager;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.callback.ErrorCallback;
 import org.zstacks.znet.callback.MessageCallback;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 import org.zstacks.znet.ticket.ResultCallback;
 
@@ -32,14 +32,14 @@ public class TrackAgent implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(TrackAgent.class);
 	private String trackServerList="127.0.0.1:16666"; 
 	private final List<RemotingClient> clients = new ArrayList<RemotingClient>();
-	private ClientDispatcherManager clientDispatcherManager;  
+	private Dispatcher dispatcher;  
 	private CountDownLatch tableReady = new CountDownLatch(1);
 	private ExecutorService executor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	private List<TrackListener> trackListeners = new ArrayList<TrackListener>();
 	
 
-	public TrackAgent(String trackServerList, ClientDispatcherManager clientMgr) throws IOException {  	
-		this.clientDispatcherManager = clientMgr;  
+	public TrackAgent(String trackServerList, Dispatcher dispatcher) throws IOException {  	
+		this.dispatcher = dispatcher;  
 		this.connectToTrackServers();
 		
 	} 
@@ -66,7 +66,7 @@ public class TrackAgent implements Closeable {
 			addr = addr.trim();
 			if( addr.length() == 0 ) continue;
 			
-			final RemotingClient client = new RemotingClient(addr, this.clientDispatcherManager); 
+			final RemotingClient client = new RemotingClient(addr, this.dispatcher); 
 			clients.add(client);
 			
 			executor.submit(new Runnable() { 
@@ -84,7 +84,7 @@ public class TrackAgent implements Closeable {
 	
 	
 	private void initTrackClient(final RemotingClient client) throws IOException{  
-		client.onMessage(new MessageCallback() { 
+		client.setMessageCallback(new MessageCallback() { 
 			public void onMessage(Message msg, Session sess) throws IOException { 
 				final TrackTable trackTable = JSON.parseObject(msg.getBody(), TrackTable.class);
 				for(TrackListener listener : trackListeners){
@@ -94,7 +94,7 @@ public class TrackAgent implements Closeable {
 			}
 		});
 		
-		client.onError(new ErrorCallback() { 
+		client.setErrorCallback(new ErrorCallback() { 
 			public void onError(IOException e, Session sess) throws IOException {
 				executor.submit(new Runnable() { 
 					public void run() { 

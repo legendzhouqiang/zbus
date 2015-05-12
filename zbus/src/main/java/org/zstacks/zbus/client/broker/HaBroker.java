@@ -17,10 +17,10 @@ import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.protocol.TrackTable;
-import org.zstacks.znet.ClientDispatcherManager;
 import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.ticket.ResultCallback;
  
 
@@ -32,8 +32,8 @@ public class HaBroker implements Broker, TrackListener {
 	private HaBrokerConfig config;
 	public  TrackAgent trackAgent;
 	
-	private ClientDispatcherManager clientDispatcherManager = null;
-	private boolean ownClientDispatcherManager = false;
+	private Dispatcher dispatcher = null;
+	private boolean ownDispatcher = false;
 	
  
 	private Map<String, SingleBroker> brokers = new ConcurrentHashMap<String, SingleBroker>();
@@ -41,18 +41,18 @@ public class HaBroker implements Broker, TrackListener {
 	public HaBroker(HaBrokerConfig config) throws IOException {
 		this.config = config;
 		this.trackAddressList = config.getTrackAddrList(); 
-		if(config.getClientDispatcherManager() == null){
-			this.ownClientDispatcherManager = true;
-			this.clientDispatcherManager = new ClientDispatcherManager();
-			this.config.setClientDispatcherManager(clientDispatcherManager);
+		if(config.getDispatcher() == null){
+			this.ownDispatcher = true;
+			this.dispatcher = new Dispatcher();
+			this.config.setDispatcher(dispatcher);
 		} else {
-			this.clientDispatcherManager = config.getClientDispatcherManager();
-			this.ownClientDispatcherManager = false;
+			this.dispatcher = config.getDispatcher();
+			this.ownDispatcher = false;
 		}
-		this.clientDispatcherManager.start();
+		this.dispatcher.start();
 		
 		
-		this.trackAgent = new TrackAgent(this.trackAddressList, this.clientDispatcherManager);
+		this.trackAgent = new TrackAgent(this.trackAddressList, this.dispatcher);
 		this.trackAgent.addTrackListener(this);
 		this.trackAgent.waitForReady(3000);
 		
@@ -100,9 +100,9 @@ public class HaBroker implements Broker, TrackListener {
 		for (SingleBroker broker : this.brokers.values()) {
 			broker.close();
 		}
-		if(ownClientDispatcherManager && this.clientDispatcherManager != null){
+		if(ownDispatcher && this.dispatcher != null){
 			try {
-				this.clientDispatcherManager.close();
+				this.dispatcher.close();
 			} catch (IOException e) { 
 				log.error(e.getMessage(), e);
 			}

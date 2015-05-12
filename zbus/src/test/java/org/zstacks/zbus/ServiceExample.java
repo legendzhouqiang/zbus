@@ -15,7 +15,7 @@ public class ServiceExample {
 	
 	public static void main(String[] args) throws IOException{  
 		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
-		int threadCount = Helper.option(args, "-c", 1);
+		int threadCount = Helper.option(args, "-c", 4);
 		String service = Helper.option(args, "-s", "MyService");
 		
 		ServiceConfig config = new ServiceConfig();
@@ -30,7 +30,7 @@ public class ServiceExample {
 		//处理逻辑
 		config.setServiceHandler(new ServiceHandler() { 
 			public Message handleRequest(Message request) { 
-				System.out.println(request);
+				//System.out.println(request);
 				Message result = new Message();
 				result.setStatus("200");
 				result.setBody("Server time: "+System.currentTimeMillis());	

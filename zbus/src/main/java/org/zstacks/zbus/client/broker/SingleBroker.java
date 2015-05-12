@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.ClientHint;
 import org.zstacks.zbus.client.ZbusException;
-import org.zstacks.znet.ClientDispatcherManager;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.pool.RemotingClientPool;
 import org.zstacks.znet.ticket.ResultCallback;
 
@@ -19,22 +19,22 @@ public class SingleBroker implements Broker {
 	private String brokerAddress; 
 	
 	private SingleBrokerConfig config;
-	private ClientDispatcherManager clientDispatcherManager = null;
-	private boolean ownClientDispatcherManager = false;
+	private Dispatcher dispatcher = null;
+	private boolean ownDispatcher = false;
 	 
 	public SingleBroker(SingleBrokerConfig config) throws IOException{ 
 		this.config = config;
 		this.brokerAddress = config.getBrokerAddress(); 
 		
-		if(config.getClientDispatcherManager() == null){
-			this.ownClientDispatcherManager = true;
-			this.clientDispatcherManager = new ClientDispatcherManager();
-			this.config.setClientDispatcherManager(clientDispatcherManager);
+		if(config.getDispatcher() == null){
+			this.ownDispatcher = true;
+			this.dispatcher = new Dispatcher();
+			this.config.setDispatcher(dispatcher);
 		} else {
-			this.clientDispatcherManager = config.getClientDispatcherManager();
-			this.ownClientDispatcherManager = false;
+			this.dispatcher = config.getDispatcher();
+			this.ownDispatcher = false;
 		}
-		this.clientDispatcherManager.start();
+		this.dispatcher.start();
 		
 		this.pool = new RemotingClientPool(this.config); 
 	} 
@@ -43,9 +43,9 @@ public class SingleBroker implements Broker {
 	@Override
 	public void close() throws IOException { 
 		this.pool.close(); 
-		if(ownClientDispatcherManager && this.clientDispatcherManager != null){
+		if(ownDispatcher && this.dispatcher != null){
 			try {
-				this.clientDispatcherManager.close();
+				this.dispatcher.close();
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			}
@@ -90,7 +90,7 @@ public class SingleBroker implements Broker {
 		}
 	}
 	public RemotingClient getClient(ClientHint hint) throws IOException{ 
-		return new RemotingClient(this.brokerAddress, this.clientDispatcherManager);
+		return new RemotingClient(this.brokerAddress, this.dispatcher);
 	}
 
 	public void closeClient(RemotingClient client) throws IOException {

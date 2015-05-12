@@ -30,6 +30,7 @@ public class RpcServiceProvider implements ServiceProvider {
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
 		
+		@SuppressWarnings("resource")
 		ServiceLoader serviceLoader = new ServiceLoader(broker);
 		serviceLoader.loadFromServiceBase("D:\\zbus-project\\zbus\\zbus-dist\\work"); 
 	}

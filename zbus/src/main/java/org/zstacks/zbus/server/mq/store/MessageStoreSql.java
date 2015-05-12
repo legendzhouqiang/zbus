@@ -21,14 +21,14 @@ import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.server.mq.MessageQueue;
 import org.zstacks.zbus.server.mq.RequestQueue;
 import org.zstacks.znet.Message;
-import org.zstacks.znet.MessageCodec;
+import org.zstacks.znet.MessageAdaptor;
 import org.zstacks.znet.nio.IoBuffer;
 
 import com.alibaba.fastjson.JSON;
 
 public class MessageStoreSql implements MessageStore {
 	private static final Logger log = LoggerFactory.getLogger(MessageStoreSql.class);
-	private static final MessageCodec codec = new MessageCodec();
+	private static final MessageAdaptor codec = new MessageAdaptor();
 	
 	private final static String CONFIG_FILE = "sql.properties";
 	private final Properties props = new Properties();

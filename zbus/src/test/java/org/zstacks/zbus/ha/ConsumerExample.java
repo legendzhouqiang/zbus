@@ -14,6 +14,7 @@ public class ConsumerExample {
 		Broker broker = new HaBroker(config);
 		
 		//2) 创建消费者
+		@SuppressWarnings("resource")
 		Consumer c = new Consumer(broker, "MyMQ2");
 		while(true){
 			try{

@@ -22,9 +22,7 @@ static int check_and_mk_log_dir(const char *base_path)
 	{
 		if (mkdir(base_path, 0755) != 0)
 		{
-			fprintf(stderr, "mkdir \"%s\" fail, " \
-				"errno: %d, error info: %s", \
-				base_path, errno, strerror(errno));
+			//fprintf(stderr, "mkdir \"%s\" fail, " "errno: %d, error info: %s", base_path, errno, strerror(errno));
 			return errno != 0 ? errno : EPERM;
 		}
 	}

@@ -27,6 +27,7 @@ import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageHandler;
 import org.zstacks.znet.RemotingServer;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 
 
@@ -49,21 +50,21 @@ public class ZbusServer extends RemotingServer {
 	
 	private final TrackReport trackReport;
 	
-	private ServiceLoader serviceLoader = null;
+	private ServiceLoader serviceLoader = null; 
 	
 	
-	public ZbusServer(int serverPort) throws IOException {
-		this("0.0.0.0", serverPort);
+	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
+		this("0.0.0.0", serverPort, dispatcher);
 	}
 	
-	public ZbusServer(String serverHost, int serverPort) throws IOException {
-		super(serverHost, serverPort);
-		
-		this.serverName = "ZbusServer";
+	public ZbusServer(String serverHost, int serverPort, Dispatcher dispatcher) throws IOException {
+		super(serverHost, serverPort, dispatcher); 
 		this.trackReport = new TrackReport(mqTable, serverAddr);//TrackReport尚未启动自动上报
 		
     	this.adminHandler = new AdminHandler(mqTable, mqExecutor, serverAddr, trackReport);
     	this.adminHandler.setAccessToken(this.adminToken); 
+    	
+    	this.init();
 	}  
 	 
 	
@@ -94,7 +95,7 @@ public class ZbusServer extends RemotingServer {
     	
 	}
 	
-	public void init(){  
+	private void init(){  
 		
 		this.registerGlobalHandler(new MessageHandler() { 
 			public void handleMessage(Message msg, Session sess) throws IOException {
@@ -210,7 +211,7 @@ public class ZbusServer extends RemotingServer {
 	
 	public void startTrackReport(String trackServerAddr){
 		try {
-			this.trackReport.startTrackReport(trackServerAddr);
+			this.trackReport.startTrackReport(trackServerAddr, dispatcher);
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
@@ -280,7 +281,8 @@ public class ZbusServer extends RemotingServer {
     }
     
     public static ZbusServer startServer(ZbusServerConfig config) throws Exception{
-    	ZbusServer zbus = new ZbusServer(config.serverPort);  
+    	Dispatcher dispatcher = new Dispatcher();
+    	ZbusServer zbus = new ZbusServer(config.serverPort, dispatcher);  
 		zbus.setAdminToken(config.adminToken);
 		zbus.setMessageStoreType(config.storeType);
 		
@@ -310,7 +312,7 @@ public class ZbusServer extends RemotingServer {
     	ZbusServerConfig config = new ZbusServerConfig();
     	config.serverPort = Helper.option(args, "-p", 15555); 
     	config.adminToken = Helper.option(args, "-admin", "");
-    	config.trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
+    	config.trackServerAddr = Helper.option(args, "-track", null);
     	config.storeType = Helper.option(args, "-store", "dummy"); 
     	config.serviceBase = Helper.option(args, "-serviceBase", null); 
     	config.openBrowser = Helper.option(args, "-openBrowser", true); 

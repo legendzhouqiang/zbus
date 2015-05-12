@@ -116,8 +116,8 @@ proxy_cfg_new(int argc, char* argv[]){
 	self->target_port = atoi(option(argc,argv,"-p","21000"));
 	self->target_reconnect_timeout = atoi(option(argc,argv,"-r","1000"));
 	self->target_timeout = atoi(option(argc,argv,"-kcxp_t","10000"));
-	self->sendq_name = strdup(option(argc,argv, "-qs", "reqacct_bus"));
-	self->recvq_name = strdup(option(argc,argv, "-qr", "ansacct_bus"));
+	self->sendq_name = strdup(option(argc,argv, "-qs", "reqacct_bus2"));
+	self->recvq_name = strdup(option(argc,argv, "-qr", "ansacct_bus2"));
 	self->auth_user = strdup(option(argc,argv, "-u", "KCXP00"));
 	self->auth_pwd = strdup(option(argc,argv, "-P", "888888"));
 	
@@ -494,7 +494,20 @@ void* target2zbus(void* args){
 }
 
 int main(int argc, char *argv[]){
+
 	g_proxy_cfg = proxy_cfg_new(argc, argv); 
+	char instance_id[512];
+	sprintf(instance_id,"KCXP_%s_%d_%s", g_proxy_cfg->target_host,
+		g_proxy_cfg->target_port, g_proxy_cfg->recvq_name);
+	HANDLE mutex = CreateMutex(NULL, FALSE, (LPCTSTR)"zbus-kcxp");
+	
+	if(GetLastError()==ERROR_ALREADY_EXISTS){
+		printf("链接同一个KCXP私有队列不能多实例运行,请关闭之前的实例\n");
+		getchar();
+		CloseHandle(mutex);
+		mutex = NULL;
+		return -1;
+	}
 
 	if(g_proxy_cfg->log_path){
 		zlog_set_file(g_proxy_cfg->log_path); 

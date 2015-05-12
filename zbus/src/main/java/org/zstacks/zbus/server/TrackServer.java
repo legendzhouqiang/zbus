@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.BrokerInfo;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.protocol.TrackTable;
-import org.zstacks.znet.ClientDispatcherManager;
 import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageHandler;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.RemotingServer;
+import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 
 import com.alibaba.fastjson.JSON;
@@ -43,14 +43,12 @@ public class TrackServer extends RemotingServer {
 	private final ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
 	private ExecutorService trackExecutor = new ThreadPoolExecutor(4,16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	
-	private ClientDispatcherManager trackerClientDispatcherManager = new ClientDispatcherManager();
-	
-	public TrackServer(int serverPort)  throws IOException{
-		this("0.0.0.0", serverPort);
+	public TrackServer(int serverPort, Dispatcher dispatcher)  throws IOException{
+		this("0.0.0.0", serverPort, dispatcher);
 	}
 	
-	public TrackServer(String serverHost, int serverPort) throws IOException {
-		super(serverHost, serverPort);
+	public TrackServer(String serverHost, int serverPort, Dispatcher dispatcher) throws IOException {
+		super(serverHost, serverPort, dispatcher);
 		
 		this.serverName = "TrackServer";
 		this.scheduledService.scheduleAtFixedRate(new Runnable() {	
@@ -108,7 +106,6 @@ public class TrackServer extends RemotingServer {
 	}
 	
 	
-	@Override
 	public void init() { 	
 		this.registerHandler(Proto.TrackReport, new MessageHandler() {  
 			public void handleMessage(Message msg, Session sess) throws IOException {  
@@ -117,7 +114,7 @@ public class TrackServer extends RemotingServer {
 				
 				final String brokerAddress = brokerInfo.getBroker(); 
 				if(!brokerProbes.containsKey(brokerAddress)){
-					final RemotingClient client = new RemotingClient(brokerAddress, trackerClientDispatcherManager);
+					final RemotingClient client = new RemotingClient(brokerAddress, dispatcher);
 					trackExecutor.submit(new Runnable() {
 						public void run() { 
 							try {
@@ -151,7 +148,10 @@ public class TrackServer extends RemotingServer {
 	
 	public static void main(String[] args) throws Exception{
 		int serverPort = Helper.option(args, "-p", 16666);
-		TrackServer track = new TrackServer(serverPort); 
+		
+		Dispatcher dispatcher = new Dispatcher();
+		@SuppressWarnings("resource")
+		TrackServer track = new TrackServer(serverPort, dispatcher); 
 		track.start(); 
 	} 
 	

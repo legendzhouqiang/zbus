@@ -20,6 +20,7 @@ public class SubExample {
 		final Broker broker = new SingleBroker(config);
 		
 		//2) 创建消费者
+		@SuppressWarnings("resource")
 		Consumer c = new Consumer(broker, "MyPubSub", MessageMode.PubSub); 
 		c.setTopic("hong");
 		
