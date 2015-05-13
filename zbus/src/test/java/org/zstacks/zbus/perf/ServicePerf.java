@@ -14,12 +14,12 @@ class Task extends Thread{
 	String service = "MyService";
 	
 	@Override
-	public void run() {
+	public void run() { 
 		Caller p = new Caller(broker, service);
 		for(int i=0;i<count;i++){ 
-			Message msg = new Message();
-			msg.setBody("hello");
 			try {
+				Message msg = new Message();
+				msg.setBody("hello");
 				p.invokeSync(msg, 2500); 
 			} catch (IOException e) { 
 				e.printStackTrace();
@@ -30,14 +30,15 @@ class Task extends Thread{
 
 public class ServicePerf {
 	public static void main(String[] args) throws Exception { 
-		SingleBrokerConfig config = new SingleBrokerConfig();
-		//config.setBrokerAddress("10.8.60.250:15555");
-		config.setMaxTotal(1000);
-		config.setMinIdle(128);
+		SingleBrokerConfig config = new SingleBrokerConfig(); 
+		config.setMaxTotal(100);
+		config.setMaxIdle(100);  
+		
 		final Broker broker = new SingleBroker(config);
 		
 		final int count = 1000; 
 		final int threadCount = 64;
+		
 		final long start = System.currentTimeMillis();
 		Task[] tasks = new Task[threadCount];
 		for(int i=0;i<tasks.length;i++){
@@ -57,6 +58,6 @@ public class ServicePerf {
 		long end = System.currentTimeMillis();
 		System.out.println(count*threadCount*1000.0/(end-start));
 		//broker.close();
-		
+		System.in.read();
 	}
 }

@@ -15,7 +15,7 @@ public class ServiceExample {
 	
 	public static void main(String[] args) throws IOException{  
 		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
-		int threadCount = Helper.option(args, "-c", 4);
+		int threadCount = Helper.option(args, "-c", 32);
 		String service = Helper.option(args, "-s", "MyService");
 		
 		ServiceConfig config = new ServiceConfig();
@@ -24,6 +24,7 @@ public class ServiceExample {
 		//配置Broker
 		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
 		brokerCfg.setBrokerAddress(address);
+		brokerCfg.setMaxTotal(threadCount);
 		Broker broker = new SingleBroker(brokerCfg);
 		config.setBroker(broker);
 		

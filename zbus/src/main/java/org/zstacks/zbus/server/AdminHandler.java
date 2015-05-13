@@ -25,17 +25,17 @@ import com.alibaba.fastjson.JSONObject;
 public class AdminHandler extends SubCommandHandler {
 	private static final Logger log = LoggerFactory.getLogger(AdminHandler.class); 
 	private final ConcurrentMap<String, MessageQueue> mqTable;
-	private final ExecutorService mqExecutor;
+	private final ExecutorService executorService;
 	private final String serverAddr;
 	private final TrackReport trackReport;
 	
 	private MessageStore messageStore = null; 
 	
 	public AdminHandler(ConcurrentMap<String, MessageQueue> mqTable, 
-			ExecutorService mqExecutor, String serverAddr,
+			ExecutorService executorService, String serverAddr,
 			TrackReport trackReport){
 		this.mqTable = mqTable;
-		this.mqExecutor = mqExecutor;
+		this.executorService = executorService;
 		this.serverAddr = serverAddr;
 		this.trackReport = trackReport;
 		this.initCommands();
@@ -81,11 +81,11 @@ public class AdminHandler extends SubCommandHandler {
 	    			mq = mqTable.get(mqName);
 	    			if(mq == null){ 
 		    			if(MessageMode.isEnabled(mode, MessageMode.PubSub)){
-		    				mq = new PubsubQueue(serverAddr, mqName, mqExecutor, mode);
+		    				mq = new PubsubQueue(serverAddr, mqName, executorService, mode);
 		    				mq.setAccessToken(accessToken);
 		    				mq.setCreator(sess.getRemoteAddress());
 		    			} else {//默认到消息队列
-		    				mq = new RequestQueue(serverAddr, mqName, mqExecutor, mode);
+		    				mq = new RequestQueue(serverAddr, mqName, executorService, mode);
 		    				mq.setMessageStore(messageStore);
 		    				mq.setAccessToken(accessToken);
 		    				mq.setCreator(sess.getRemoteAddress());

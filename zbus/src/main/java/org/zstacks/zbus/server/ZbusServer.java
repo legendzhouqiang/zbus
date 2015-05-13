@@ -9,14 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zstacks.zbus.client.service.ServiceLoader;
 import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.server.mq.MessageQueue;
@@ -34,13 +31,12 @@ import org.zstacks.znet.nio.Session;
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
 	
-	private ExecutorService mqExecutor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
-
-	private long mqCleanDelay = 1000;
+	private final ExecutorService executorService;
+	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long mqCleanInterval = 3000;   
-	protected final ScheduledExecutorService mqSessionCleanService = Executors.newSingleThreadScheduledExecutor();
-
+	
+	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
+ 
 	private MessageStore messageStore;
 	private String messageStoreType = "dummy"; 
 	
@@ -48,9 +44,7 @@ public class ZbusServer extends RemotingServer {
 	
 	private final AdminHandler adminHandler;
 	
-	private final TrackReport trackReport;
-	
-	private ServiceLoader serviceLoader = null; 
+	private final TrackReport trackReport; 
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -59,12 +53,18 @@ public class ZbusServer extends RemotingServer {
 	
 	public ZbusServer(String serverHost, int serverPort, Dispatcher dispatcher) throws IOException {
 		super(serverHost, serverPort, dispatcher); 
+		if(!dispatcher.isStarted()){
+			dispatcher.start();
+		}
+		
+		this.executorService = dispatcher.executorService();
+		this.serverName = "ZbusServer";
 		this.trackReport = new TrackReport(mqTable, serverAddr);//TrackReport尚未启动自动上报
 		
-    	this.adminHandler = new AdminHandler(mqTable, mqExecutor, serverAddr, trackReport);
+    	this.adminHandler = new AdminHandler(mqTable, executorService, serverAddr, trackReport);
     	this.adminHandler.setAccessToken(this.adminToken); 
     	
-    	this.init();
+    	this.initHandlers();
 	}  
 	 
 	
@@ -95,15 +95,15 @@ public class ZbusServer extends RemotingServer {
     	
 	}
 	
-	private void init(){  
+	private void initHandlers(){  
 		
 		this.registerGlobalHandler(new MessageHandler() { 
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				String mqReply = msg.getMqReply();
 				if(mqReply == null ||  mqReply.equals("")){
-					msg.setMqReply(sess.id()); //reply default to self
+					msg.setMqReply(sess.id()); 
 				}   
-				if(msg.getMsgId() == null){ //msgid should be set
+				if(msg.getMsgId() == null){
 					msg.setMsgId(UUID.randomUUID().toString());
 				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
@@ -141,7 +141,7 @@ public class ZbusServer extends RemotingServer {
 				MessageQueue replyMq = mqTable.get(replyMqName);
 				if(replyMq == null){
 					int mode = MessageMode.intValue(MessageMode.MQ, MessageMode.Temp);
-					replyMq = new ReplyQueue(serverAddr, replyMqName, mqExecutor, mode); 
+					replyMq = new ReplyQueue(serverAddr, replyMqName, executorService, mode); 
 					replyMq.setCreator(sess.getRemoteAddress());
 					mqTable.putIfAbsent(replyMqName, replyMq);
 				} 
@@ -174,18 +174,16 @@ public class ZbusServer extends RemotingServer {
 				Iterator<Entry<String, MessageQueue>> iter = mqs.entrySet().iterator();
 				while(iter.hasNext()){
 					MessageQueue mq = iter.next().getValue();
-					mq.setExecutor(this.mqExecutor);
+					mq.setExecutor(this.executorService);
 				} 
 				this.mqTable.putAll(mqs);
 				log.info("message store loaded");
 			} catch(Exception e){
 				log.info("message store loading error: {}", e.getMessage(), e);
 			} 
-		}
-		
-		
-		
-		this.mqSessionCleanService.scheduleAtFixedRate(new Runnable() { 
+		} 
+	
+		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
 				Iterator<Entry<String, MessageQueue>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){
@@ -193,18 +191,13 @@ public class ZbusServer extends RemotingServer {
 		    		MessageQueue mq = e.getValue(); 
 		    		mq.cleanSession();
 		    	}
-				
 			}
-		}, mqCleanDelay, mqCleanInterval, TimeUnit.MILLISECONDS);
+		}, 1000, mqCleanInterval, TimeUnit.MILLISECONDS);
 	}
 	
-	public void close() throws IOException{ 
-		this.mqExecutor.shutdown();
-		this.mqSessionCleanService.shutdown(); 
-		this.trackReport.close();
-		if(this.serviceLoader != null){
-			serviceLoader.close();
-		}
+	public void close() throws IOException{  
+		this.scheduledExecutor.shutdown(); 
+		this.trackReport.close(); 
 		
 		super.close();
 	}
@@ -275,14 +268,26 @@ public class ZbusServer extends RemotingServer {
     	public int serverPort = 15555;
     	public String adminToken = "";
     	public String trackServerAddr; //用分号分割, 127.0.0.1:16666;127.0.0.1:16667
-    	public String storeType = "dummy";
-    	public String serviceBase = null;
-    	public boolean openBrowser = true;
-    }
-    
-    public static ZbusServer startServer(ZbusServerConfig config) throws Exception{
-    	Dispatcher dispatcher = new Dispatcher();
-    	ZbusServer zbus = new ZbusServer(config.serverPort, dispatcher);  
+    	public String storeType = "dummy";  
+    	public int selectorCount = 1;
+    	public int executorCount = 4;
+    } 
+
+    @SuppressWarnings("resource")
+    public static void main(String[] args) throws Exception{
+    	ZbusServerConfig config = new ZbusServerConfig();
+    	config.serverPort = Helper.option(args, "-p", 15555); 
+    	config.adminToken = Helper.option(args, "-admin", "");
+    	config.trackServerAddr = Helper.option(args, "-track", null);
+    	config.storeType = Helper.option(args, "-store", "dummy");   
+    	config.selectorCount = Helper.option(args, "-selector", 1);   
+    	config.executorCount = Helper.option(args, "-executor", 16); 
+    	 
+		Dispatcher dispatcher = new Dispatcher() 
+    		.selectorCount(config.selectorCount)
+    		.executorCount(config.executorCount); 
+    	
+		ZbusServer zbus = new ZbusServer(config.serverPort, dispatcher);  
 		zbus.setAdminToken(config.adminToken);
 		zbus.setMessageStoreType(config.storeType);
 		
@@ -292,35 +297,6 @@ public class ZbusServer extends RemotingServer {
 		}
 		
 		zbus.start();
-		
-		String thisBrokerAddress = String.format("http://localhost:%d", config.serverPort);
-		//启动浏览器查看监控页面
-		if(config.openBrowser){
-			ServerHelper.openBrowser(thisBrokerAddress);
-		}
-		
-		//启动与zbus同时启动的本地JAVA服务，类似tomcat带起来work目录
-		if(config.serviceBase != null){ 
-			zbus.serviceLoader = new ServiceLoader(thisBrokerAddress);
-			zbus.serviceLoader.loadFromServiceBase(config.serviceBase); 
-		}
-		
-		return zbus;
-    }
-    
-    public static ZbusServer startServer(String[] args) throws Exception{
-    	ZbusServerConfig config = new ZbusServerConfig();
-    	config.serverPort = Helper.option(args, "-p", 15555); 
-    	config.adminToken = Helper.option(args, "-admin", "");
-    	config.trackServerAddr = Helper.option(args, "-track", null);
-    	config.storeType = Helper.option(args, "-store", "dummy"); 
-    	config.serviceBase = Helper.option(args, "-serviceBase", null); 
-    	config.openBrowser = Helper.option(args, "-openBrowser", true); 
-		return startServer(config);
-	}  
-
-    public static void main(String[] args) throws Exception{
-    	startServer(args); 
 	}  
 }
 
