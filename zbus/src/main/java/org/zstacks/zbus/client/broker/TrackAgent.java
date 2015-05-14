@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -34,7 +31,6 @@ public class TrackAgent implements Closeable {
 	private final List<RemotingClient> clients = new ArrayList<RemotingClient>();
 	private Dispatcher dispatcher;  
 	private CountDownLatch tableReady = new CountDownLatch(1);
-	private ExecutorService executor = new ThreadPoolExecutor(4, 16, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	private List<TrackListener> trackListeners = new ArrayList<TrackListener>();
 	
 
@@ -69,7 +65,7 @@ public class TrackAgent implements Closeable {
 			final RemotingClient client = new RemotingClient(addr, this.dispatcher); 
 			clients.add(client);
 			
-			executor.submit(new Runnable() { 
+			dispatcher.asyncRun(new Runnable() { 
 				public void run() { 
 					try {
 						initTrackClient(client);
@@ -96,7 +92,7 @@ public class TrackAgent implements Closeable {
 		
 		client.setErrorCallback(new ErrorCallback() { 
 			public void onError(IOException e, Session sess) throws IOException {
-				executor.submit(new Runnable() { 
+				dispatcher.asyncRun(new Runnable() { 
 					public void run() { 
 						doTrackSub(client);
 					}
@@ -131,7 +127,5 @@ public class TrackAgent implements Closeable {
 		for(RemotingClient client : this.clients){
 			client.close();
 		}
-		executor.shutdown();
 	}
-	
 }

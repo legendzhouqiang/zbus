@@ -17,13 +17,14 @@ public class RpcServiceExample {
 		int threadCount = Helper.option(args, "-c", 1);
 		String service = Helper.option(args, "-s", "MyRpc");
 		
-		ServiceConfig config = new ServiceConfig();
-		config.setThreadCount(threadCount); 
-		config.setMq(service);
 		//配置Broker
 		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
 		brokerCfg.setBrokerAddress(address);
 		Broker broker = new SingleBroker(brokerCfg);
+		
+		ServiceConfig config = new ServiceConfig();
+		config.setThreadCount(threadCount); 
+		config.setMq(service); 
 		config.setBroker(broker);
 		
 		

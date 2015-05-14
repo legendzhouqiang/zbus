@@ -278,7 +278,7 @@ public class ZbusServer extends RemotingServer {
     	ZbusServerConfig config = new ZbusServerConfig();
     	config.serverPort = Helper.option(args, "-p", 15555); 
     	config.adminToken = Helper.option(args, "-admin", "");
-    	config.trackServerAddr = Helper.option(args, "-track", null);
+    	config.trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
     	config.storeType = Helper.option(args, "-store", "dummy");   
     	config.selectorCount = Helper.option(args, "-selector", 1);   
     	config.executorCount = Helper.option(args, "-executor", 16); 
