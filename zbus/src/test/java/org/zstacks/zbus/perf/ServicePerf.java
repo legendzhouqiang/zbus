@@ -40,14 +40,14 @@ class Task extends Thread{
 public class ServicePerf {
 	public static void main(String[] args) throws Exception { 
 		SingleBrokerConfig config = new SingleBrokerConfig(); 
-		config.setBrokerAddress("10.8.60.250:15555");
+		config.setBrokerAddress("10.19.1.32:15555");
 		config.setMaxTotal(200);
 		config.setMaxIdle(200);  
 		
 		final Broker broker = new SingleBroker(config);
 		
 		final int loopCount = 10000; 
-		final int threadCount = 32;
+		final int threadCount = 100;
 		
 		AtomicLong counter = new AtomicLong(0);
 		final long start = System.currentTimeMillis();

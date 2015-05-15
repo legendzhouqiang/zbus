@@ -31,20 +31,19 @@ import org.zstacks.znet.nio.Session;
 public class ZbusServer extends RemotingServer {
 	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
 	
-	private final ExecutorService executorService;
-	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-	private long mqCleanInterval = 3000;   
-	
 	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
  
+	private boolean verbose = true;
 	private MessageStore messageStore;
 	private String messageStoreType = "dummy"; 
-	
 	private String adminToken = "";  
-	
 	private final AdminHandler adminHandler;
-	
 	private final TrackReport trackReport; 
+	
+	private final ExecutorService executorService;
+	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+	private long mqCleanInterval = 3000;  
+	
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -109,7 +108,11 @@ public class ZbusServer extends RemotingServer {
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr);  
 				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					log.debug("{}", msg);
+					if(verbose){
+						log.info("{}", msg);
+					} else {
+						log.debug("{}", msg);
+					}
 				}
 			}
 		}); 
@@ -263,6 +266,10 @@ public class ZbusServer extends RemotingServer {
     	return this.serverAddr;
     }
     
+    public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+    
     
     public static class ZbusServerConfig{
     	public int serverPort = 15555;
@@ -271,6 +278,7 @@ public class ZbusServer extends RemotingServer {
     	public String storeType = "dummy";  
     	public int selectorCount = 1;
     	public int executorCount = 4;
+    	public boolean verbose = true;
     } 
 
     @SuppressWarnings("resource")
@@ -282,6 +290,7 @@ public class ZbusServer extends RemotingServer {
     	config.storeType = Helper.option(args, "-store", "dummy");   
     	config.selectorCount = Helper.option(args, "-selector", 1);   
     	config.executorCount = Helper.option(args, "-executor", 16); 
+    	config.verbose = Helper.option(args, "-verbose", true); 
     	 
 		Dispatcher dispatcher = new Dispatcher() 
     		.selectorCount(config.selectorCount)
@@ -290,6 +299,7 @@ public class ZbusServer extends RemotingServer {
 		ZbusServer zbus = new ZbusServer(config.serverPort, dispatcher);  
 		zbus.setAdminToken(config.adminToken);
 		zbus.setMessageStoreType(config.storeType);
+		zbus.setVerbose(config.verbose);
 		
 		//HA高可用模式下，启动链接TrackServer，上报当前节点拓扑信息
 		if(config.trackServerAddr != null && !config.trackServerAddr.equals("")){

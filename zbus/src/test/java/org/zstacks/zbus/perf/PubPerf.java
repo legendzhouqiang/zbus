@@ -14,7 +14,7 @@ import org.zstacks.znet.ticket.ResultCallback;
 public class PubPerf {
 	public static void main(String[] args) throws Exception { 
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("10.19.1.32:15555");
 		final Broker broker = new SingleBroker(config);
 		
 		final long total = 100000;

@@ -2,6 +2,9 @@
 #include "log.h"
 #include "thread.h"
 #include "zbus.h"
+#include "blockq.h"
+#include "hash.h"
+#include "list.h"
 
 
 #include "crypt.h"
@@ -94,11 +97,23 @@ typedef struct _proxy_cfg_t{
 	char* service_name; 
 	char* service_regtoken;
 	char* service_acctoken;
-	char* broker;
+	char* brokers;
 
 	char* log_path;
 } proxy_cfg_t;
   
+
+
+hash_ctrl_t hash_ctrl_str_blockq = {
+	hash_func_string,			/* hash function */
+	hash_dup_string,			/* key dup */
+	NULL,				        /* val dup */
+	hash_cmp_string,			/* key compare */
+	hash_destroy_string,		/* key destructor */
+	NULL,			            /* val destructor */
+};
+
+hash_t* g_blockq_map;
 
 proxy_cfg_t*		g_proxy_cfg;
 
@@ -119,7 +134,7 @@ proxy_cfg_new(int argc, char* argv[]){
 	self->service_name = strdup(option(argc, argv, "-s", "Trade"));
 	self->service_regtoken = strdup(option(argc,argv, "-kreg", ""));
 	self->service_acctoken = strdup(option(argc,argv, "-kacc", ""));
-	self->broker = strdup(option(argc,argv, "-b", "localhost:15555"));
+	self->brokers = strdup(option(argc,argv, "-b", "10.8.30.4:15555;10.8.30.4:15556"));
 	self->log_path = strdup(option(argc,argv, "-log", NULL));
 
 	return self;
@@ -136,8 +151,8 @@ proxy_cfg_destroy(proxy_cfg_t** self_p){
 			free(self->msmq_server);
 		if(self->service_name)
 			free(self->service_name);
-		if(self->broker)
-			free(self->broker);
+		if(self->brokers)
+			free(self->brokers);
 		if(self->service_regtoken)
 			free(self->service_regtoken);
 		if(self->service_acctoken)
@@ -152,10 +167,12 @@ proxy_cfg_destroy(proxy_cfg_t** self_p){
 
 
 void* zbus2target(void* args){
+	char* broker = (char*)args;
+
 	rclient_t* client;
 	consumer_t* zbus_consumer; 
 
-	client = rclient_connect(g_proxy_cfg->broker, g_proxy_cfg->zbus_reconnect_timeout);
+	client = rclient_connect(broker, g_proxy_cfg->zbus_reconnect_timeout);
 	zbus_consumer = consumer_new(client, g_proxy_cfg->service_name, MODE_MQ);
 	consumer_set_acc_token(zbus_consumer, g_proxy_cfg->service_acctoken);
 	consumer_set_reg_token(zbus_consumer, g_proxy_cfg->service_regtoken);
@@ -250,9 +267,7 @@ static int s_parse_head(char* head, char* broker, char* mq_reply, char* msgid, c
 }
 
 
-void* target2zbus(void* args){ 
-	rclient_t* client = rclient_connect(g_proxy_cfg->broker, 3000);
-	
+void* target2blockq(void* args){  
 	char* client_ip = g_proxy_cfg->msmq_client;
 	char client_ip_[100];
 	sprintf(client_ip_, "%s", client_ip); 
@@ -260,7 +275,7 @@ void* target2zbus(void* args){
 
 	char msmq_name[256];
 	sprintf(msmq_name, ".\\PRIVATE$\\%s_send", client_ip_);
-	zlog("msmq2zbus: %s", msmq_name);   
+	zlog("msmq2blockq: %s", msmq_name);   
 	IMSMQQueuePtr msmq_consumer = NULL;
 	while(1){
 		try{   
@@ -277,12 +292,6 @@ void* target2zbus(void* args){
 			while(1){   
 				pmsg = msmq_consumer->Receive(&vtMissing, &vtMissing, &want_body, &timeout);
 				if(pmsg == NULL){ 
-					msg_t* zbusmsg = msg_new();
-					msg_set_command(zbusmsg, HEARTBEAT);
-					rc = rclient_send(client, zbusmsg);		
-					if(rc < 0){ //missing message
-						rclient_reconnect(client, g_proxy_cfg->zbus_reconnect_timeout);
-					} 
 					continue;   
 				} 
 				_bstr_t body = pmsg->Body;  
@@ -307,6 +316,11 @@ void* target2zbus(void* args){
 					zlog(errormsg);
 					continue;
 				}
+				blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, to_broker);
+				if(q_send == NULL){ 
+					zlog("missing target zbus(%s)", to_broker);
+					continue;
+				}
 				
 				msg_t* zbusmsg = msg_new();
 				msg_set_command(zbusmsg, PRODUCE);
@@ -315,10 +329,7 @@ void* target2zbus(void* args){
 				msg_set_ack(zbusmsg, false);
 				msg_set_body(zbusmsg, msg_body);
 
-				rc = rclient_send(client, zbusmsg);		
-				if(rc < 0){ //missing message
-					rclient_reconnect(client, g_proxy_cfg->zbus_reconnect_timeout);
-				}
+				blockq_push(q_send, zbusmsg);
 			}
 		} catch(_com_error& e){ 
 			wprintf(L"Error Code = 0x%X\nError Description = %s\n", e.Error(), (wchar_t *)e.Description());
@@ -330,6 +341,31 @@ void* target2zbus(void* args){
 
 	return NULL;
 }
+
+
+ 
+void* blockq2zbus(void* args){
+	char* broker = (char*)args;
+	blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, broker);
+	if(q_send == NULL){
+		zlog("blockq for zbus(%s) not found", broker);
+		return NULL;
+	}
+
+	rclient_t* client = rclient_connect(broker, g_proxy_cfg->zbus_reconnect_timeout);
+	int rc;
+	msg_t* msg;
+	while(1){
+		msg = (msg_t*)blockq_pop(q_send);
+		rc = rclient_send(client, msg);		
+		if(rc < 0){ //missing message
+			rclient_reconnect(client, g_proxy_cfg->zbus_reconnect_timeout);
+		}
+	}
+	return NULL;
+}
+
+
 
 int main(int argc, char* argv[]){   
 	if(argc>1 && ( strcmp(argv[1],"help")==0 
@@ -371,24 +407,47 @@ int main(int argc, char* argv[]){
 	} else {
 		zlog_set_stdout();
 	}
+	g_blockq_map = hash_new(&hash_ctrl_str_blockq, NULL);
 
-	char* broker = strdup(g_proxy_cfg->broker);
+	char* brokers = strdup(g_proxy_cfg->brokers); 
+	list_t* broker_list = list_new();
+	char* broker = strtok(brokers,";");
+	while (broker){  
+		blockq_t* q = blockq_new();
+		hash_put(g_blockq_map, broker, q);
+
+		list_push_back(broker_list, strdup(broker));
+		broker = strtok(NULL, ";");
+	} 
+	free(brokers); 
 
 	int thread_count = g_proxy_cfg->worker_threads;
-	pthread_t* zbus2msmq_threads = (pthread_t*)malloc(thread_count*sizeof(pthread_t));
-	pthread_t* msmq2zbus_threads = (pthread_t*)malloc(thread_count*sizeof(pthread_t));
-
-	for(int i=0; i<thread_count; i++){
-		pthread_create(&zbus2msmq_threads[i], NULL, zbus2target, NULL); 
-		pthread_create(&msmq2zbus_threads[i], NULL, target2zbus, NULL); 
-	} 
-
-	free(broker);
-
-	for(int i=0; i<thread_count; i++){
-		pthread_join(&zbus2msmq_threads[i], NULL);
-		pthread_join(&msmq2zbus_threads[i], NULL);
+	int broker_count = list_size(broker_list);
+	pthread_t* zbus2msmq_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
+	pthread_t* msmq2blockq_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
+	pthread_t* blockq2zbus_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
+	
+	list_node_t* node = list_head(broker_list);
+	int broker_idx = 0;
+	while(node){
+		char* broker = (char*)list_value(node); 
+		int d = broker_idx*thread_count;
+		for(int i=0; i<thread_count; i++){
+			pthread_create(&zbus2msmq_threads[d+i],   NULL, zbus2target, broker); 
+			pthread_create(&msmq2blockq_threads[d+i], NULL, target2blockq, NULL); 
+			pthread_create(&blockq2zbus_threads[d+i], NULL, blockq2zbus, broker); 
+		} 
+		broker_idx++;
+		node = list_next(node);
 	}  
+
+	for(int i=0; i<thread_count*broker_count; i++){
+		pthread_join(&zbus2msmq_threads[i], NULL);
+		pthread_join(&msmq2blockq_threads[i], NULL);
+		pthread_join(&blockq2zbus_threads[i], NULL);
+	}
+
+	hash_destroy(&g_blockq_map);
 
 	proxy_cfg_destroy(&g_proxy_cfg);
  
