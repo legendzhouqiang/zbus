@@ -9,7 +9,7 @@ extern "C" {
 
 ZBOX_EXPORT int64_t current_millis(void);
 
-void replace_sleep(int64_t msecs);
+ZBOX_EXPORT void replace_sleep(int64_t msecs);
 #define sleep replace_sleep
 
 #if defined (__WINDOWS__)

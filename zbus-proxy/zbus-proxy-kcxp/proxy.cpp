@@ -1,11 +1,44 @@
+#include "KCBPCli.h"
+
 #include "platform.h"
 #include "log.h"
 #include "json.h"
 #include "zbus.h"  
 #include "hash.h"
 #include "thread.h"
-#include "KCBPCli.h"
+#include "blockq.h"
+#include "list.h"
 
+
+
+hash_ctrl_t hash_ctrl_str_blockq = {
+	hash_func_string,			/* hash function */
+	hash_dup_string,			/* key dup */
+	NULL,				        /* val dup */
+	hash_cmp_string,			/* key compare */
+	hash_destroy_string,		/* key destructor */
+	NULL,			            /* val destructor */
+};
+
+hash_t* g_blockq_map;
+zlog_t* g_log;
+int g_log_level = LOG_INFO;
+
+void ZLOG(const char *format, ...){ 
+	int priority = g_log_level;
+	if(zlog_priority(g_log) >= priority){
+		zlog_lock(g_log);
+		zlog_head(g_log, (priority));
+		FILE* file = zlog_get_file(g_log);
+		va_list argptr;
+		va_start (argptr, format);
+		vfprintf ((file), format, argptr);
+		va_end (argptr);
+		fprintf (file, "\n");
+		fflush (file);
+		zlog_unlock(g_log);
+	}
+}
 
 typedef struct _proxy_cfg_t{ 
 	char*	target_name;
@@ -21,7 +54,7 @@ typedef struct _proxy_cfg_t{
 	char*	auth_pwd;
 
 	
-	char*	zbus_broker; 
+	char*	brokers; 
 	int     zbus_timeout;
 	int     zbus_reconnect_timeout;
 
@@ -53,40 +86,51 @@ hash_ctrl_t		g_hctrl_msgid_target2zbus = {
 pthread_mutex_t*	g_mutex_target2zbus;
 
 
-//KCBP消息ID（动态产生） ==> zbus路由（mq_reply|msg_id）
+//KCBP消息ID（动态产生） ==> zbus路由（broker|mq_reply|msg_id）
 static void 
-zbus_route_record(char* mq_reply, char* msgid, char* kcxpMsgId){
+zbus_route_record(char* broker, char* mq_reply, char* msgid, char* kcxpMsgId){
 	char zbus_route_info[256];
-	sprintf(zbus_route_info, "%s|%s", mq_reply, msgid); 
+	sprintf(zbus_route_info, "%s|%s|%s", broker, mq_reply, msgid); 
 	pthread_mutex_lock(g_mutex_target2zbus);
 	hash_put(g_msgid_target2zbus, kcxpMsgId, zbus_route_info);
 	pthread_mutex_unlock(g_mutex_target2zbus); 
 }
 
 static int
-zbus_route_parse(char* kcxpMsgId, char* mq_reply, char* msgid){
+zbus_route_parse(char* kcxpMsgId, char* broker, char* mq_reply, char* msgid){
 	char* zbus_route_info = NULL;
+	char* p = NULL;
 	pthread_mutex_lock(g_mutex_target2zbus);
 	zbus_route_info = (char*)hash_get(g_msgid_target2zbus, kcxpMsgId);
 	if(zbus_route_info){
-		zbus_route_info = strdup(zbus_route_info);
+		p = strdup(zbus_route_info);
 		hash_rem(g_msgid_target2zbus, kcxpMsgId);
 	}
 	pthread_mutex_unlock(g_mutex_target2zbus); 
 
-	if(!zbus_route_info) return -1;
-	
+	if(!p) return -1;
 	int res = 0;
-	char* part2 = strchr(zbus_route_info, '|');
-	if(part2){
-		strncpy(mq_reply, zbus_route_info, part2-zbus_route_info); 
-		strcpy(msgid, part2+1);
+	char* p1 = strtok(p, "|");
+	if(p1){
+		strcpy(broker, p1);
 	} else {
 		res = -1;
 	}
-	free(zbus_route_info);
+	p1 = strtok(NULL, "|");
+	if(p1){
+		strcpy(mq_reply, p1);
+	} else {
+		res = -1;
+	}
+	p1 = strtok(NULL, "|");
+	if(p1){
+		strcpy(msgid, p1);
+	} else {
+		res = -1;
+	}
+	free(p);
 
-	return res;
+	return 0;
 }
 
 
@@ -121,13 +165,13 @@ proxy_cfg_new(int argc, char* argv[]){
 	self->auth_user = strdup(option(argc,argv, "-u", "KCXP00"));
 	self->auth_pwd = strdup(option(argc,argv, "-P", "888888"));
 	
-	self->zbus_broker = strdup(option(argc,argv, "-b", "localhost:15555"));
+	self->brokers = strdup(option(argc,argv, "-b", "172.24.178.175:15555;172.24.180.45:15555"));
 	self->service_name = strdup(option(argc,argv, "-s", "KCXP"));
 	self->service_regtoken = strdup(option(argc,argv, "-kreg", ""));
 	self->service_acctoken = strdup(option(argc,argv, "-kacc", ""));
 	self->zbus_timeout = atoi(option(argc,argv,"-zbus_t","10000"));
 	self->zbus_reconnect_timeout = atoi(option(argc,argv,"-zbus_r","10000"));
-	self->worker_threads = atoi(option(argc,argv, "-c", "2"));
+	self->worker_threads = atoi(option(argc,argv, "-c", "1"));
 	self->probe_interval = atoi(option(argc,argv, "-t", "6000")); 
 
 	
@@ -156,8 +200,8 @@ proxy_cfg_destroy(proxy_cfg_t** self_p){
 			free(self->auth_pwd);
 		if(self->service_name)
 			free(self->service_name);
-		if(self->zbus_broker)
-			free(self->zbus_broker);
+		if(self->brokers)
+			free(self->brokers);
 		if(self->log_path)
 			free(self->log_path);
 		free(self);
@@ -198,14 +242,14 @@ kcxpcli_new(proxy_cfg_t* cfg){
 	int auth = 0; //for asynchronise mode
 	KCBPCLI_SetOptions(self, KCBP_OPTION_AUTHENTICATION, &auth, sizeof(auth));
 
-	zlog("KCXP Connecting ...");
+	ZLOG("KCXP Connecting ...");
 	rc = KCBPCLI_ConnectServer(self, cfg->target_name, cfg->auth_user, cfg->auth_pwd); 
 
 	if(rc != 0){
-		zlog("KCXP Connect failed: %d", rc);
+		ZLOG("KCXP Connect failed: %d", rc);
 		kcxpcli_destroy(&self);
 	} else {
-		zlog("KCXP Connected", rc);
+		ZLOG("KCXP Connected", rc);
 	}
 	return self;
 }
@@ -223,10 +267,11 @@ kcxpcli_clear_data(void* kcbp){
 
 
 void* zbus2target(void* args){
+	char* broker = (char*)args;
 	rclient_t* client;
 	consumer_t* zbus_consumer; 
 
-	client = rclient_connect(g_proxy_cfg->zbus_broker, g_proxy_cfg->zbus_reconnect_timeout);
+	client = rclient_connect(broker, g_proxy_cfg->zbus_reconnect_timeout);
 	zbus_consumer = consumer_new(client, g_proxy_cfg->service_name, MODE_MQ);
 	consumer_set_acc_token(zbus_consumer, g_proxy_cfg->service_acctoken);
 	consumer_set_reg_token(zbus_consumer, g_proxy_cfg->service_regtoken);
@@ -239,7 +284,7 @@ void* zbus2target(void* args){
 
 	while(1){  
 		while(!kcbp){ //assume target ok, if not reconnect
-			zlog("KCXP(%s:%d) down, reconnecting...", g_proxy_cfg->target_host,g_proxy_cfg->target_port);
+			ZLOG("KCXP(%s:%d) down, reconnecting...", g_proxy_cfg->target_host,g_proxy_cfg->target_port);
 			Sleep(g_proxy_cfg->target_reconnect_timeout);
 			kcbp = kcxpcli_new(g_proxy_cfg);
 		}
@@ -263,9 +308,9 @@ void* zbus2target(void* args){
 			if(strlen(bodystr)>max_len){
 				char temp[max_len+1] = {0};
 				strncpy(temp, bodystr, max_len);
-				zlog("ZBUS(MsgID=%s)=>KCXP 请求:\n%s", msgid, temp);
+				ZLOG("ZBUS(Broker=%s,MsgID=%s)=>KCXP 请求:\n%s", broker, msgid, temp);
 			}
-			zlog("ZBUS(MsgID=%s)=>KCXP 请求:\n%s", msgid, bodystr);
+			ZLOG("ZBUS(Broker=%s,MsgID=%s)=>KCXP 请求:\n%s", broker, msgid, bodystr);
 		}
 
 		json_t* json = json_parse(bodystr); 
@@ -328,18 +373,18 @@ void* zbus2target(void* args){
 		
 
 		if(g_proxy_cfg->debug)
-			zlog("KCXP AsynCall BEGIN....");
+			ZLOG("KCXP AsynCall BEGIN....");
 
 		rc = KCBPCLI_ACallProgramAndCommit(kcbp, funcid, &bpctrl);  
 		if(rc == 0){ 
-			zbus_route_record(mq_reply, msgid, bpctrl.szMsgId);
+			zbus_route_record(broker, mq_reply, msgid, bpctrl.szMsgId);
 		}
 		if(g_proxy_cfg->debug)
-			zlog("KCXP AsynCall END (%d)", rc);
+			ZLOG("KCXP AsynCall END (%d)", rc);
 		
 		if(rc != 0){ 
 			KCBPCLI_GetErrorMsg(kcbp, error_msg);
-			zlog("WARN: KCXP failed(code=%d,msg=%s)", rc, error_msg);
+			ZLOG("WARN: KCXP failed(code=%d,msg=%s)", rc, error_msg);
 			if(rc == 2003 || rc == 2004 || rc == 2054 || rc == 2055){ 
 				//require reconnect
 				kcxpcli_destroy(&kcbp); 
@@ -356,9 +401,7 @@ destroy:
 
 
 
-void* target2zbus(void* args){
-	rclient_t* client; 
-	client = rclient_connect(g_proxy_cfg->zbus_broker, g_proxy_cfg->zbus_reconnect_timeout); 
+void* target2blockq(void* args){
 
 	char error_code[1024] = {0};
 	char field_value[1024] = {0};
@@ -369,13 +412,14 @@ void* target2zbus(void* args){
 	tagCallCtrl bpctrl;
 	int rc;
 
+	char broker[1024];
 	char mq_reply[1024] = {0};
 	char msgid[1024] = {0};
 
 	void* kcbp = kcxpcli_new(g_proxy_cfg); 
 	while(1){
 		while(!kcbp){ //assume target ok, if not reconnect
-			zlog("KCXP(%s:%d) down, reconnecting...", g_proxy_cfg->target_host,g_proxy_cfg->target_port);
+			ZLOG("KCXP(%s:%d) down, reconnecting...", g_proxy_cfg->target_host,g_proxy_cfg->target_port);
 			Sleep(g_proxy_cfg->target_reconnect_timeout);
 			kcbp = kcxpcli_new(g_proxy_cfg);
 		}
@@ -393,20 +437,25 @@ void* target2zbus(void* args){
 		if( rc != 0){
 			if(rc == 2003 || rc == 2004 || rc == 2054 || rc == 2055){ 
 				KCBPCLI_GetErrorMsg(kcbp, error_msg);
-				zlog("WARN: KCXP failed(code=%d,msg=%s)", rc, error_msg);
+				ZLOG("WARN: KCXP failed(code=%d,msg=%s)", rc, error_msg);
 				//require reconnect
 				kcxpcli_destroy(&kcbp); 
 			} 
-			rclient_probe(client);
 			continue;
 		} 
 		
 		
-		int parse_res = zbus_route_parse(bpctrl.szMsgId, mq_reply, msgid);
+		int parse_res = zbus_route_parse(bpctrl.szMsgId, broker, mq_reply, msgid);
 		
 		if(parse_res == -1){ 
 			continue;
 		}
+		blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, broker);
+		if(q_send == NULL){ 
+			ZLOG("missing target zbus(%s)", broker);
+			continue;
+		}
+
 
 		json_t* reply = json_object(); 
 		int cols = 0;
@@ -428,13 +477,13 @@ void* target2zbus(void* args){
 				json_object_addstr(reply, "error_code", error_code);
 				json_object_addstr(reply, "error_msg", field_value);
 				if(g_proxy_cfg->verbose){
-					zlog("KCXP=>ZBUS(MsgID=%s) 应答: 错误码=%s,错误消息=%s", msgid, error_code, field_value);
+					ZLOG("KCXP=>ZBUS(MsgID=%s) 应答: 错误码=%s,错误消息=%s", msgid, error_code, field_value);
 				}
 			} else { 
 				json_t* rs_array = json_array();
 				int rs_count = 0;
 				if(g_proxy_cfg->verbose){
-					zlog("KCXP=>ZBUS(MsgID=%s) 应答:", msgid);
+					ZLOG("KCXP=>ZBUS(MsgID=%s) 应答:", msgid);
 				}
 				while(KCBPCLI_SQLMoreResults(kcbp) == 0){
 					rs_count++; 
@@ -443,12 +492,12 @@ void* target2zbus(void* args){
 					if(rc != 0) continue; 
 
 					int rows = 0;
-					if(g_proxy_cfg->verbose){ zlog_raw("结果集[%d]\n", rs_count);}
+					if(g_proxy_cfg->verbose){ zlog_raw(g_log, "结果集[%d]\n", rs_count);}
 					json_t* json_rs = json_array();
 					while(KCBPCLI_SQLFetch(kcbp) == 0){
 						json_t* json_row = json_object();
 						rows++;
-						if(g_proxy_cfg->verbose){ zlog_raw("结果集[%d][行%d]: ", rs_count, rows); }
+						if(g_proxy_cfg->verbose){ zlog_raw(g_log, "结果集[%d][行%d]: ", rs_count, rows); }
 						for( int i=1; i<=cols; i++){ //假设column不重名
 							unsigned char* col_val;
 							long  col_len;
@@ -466,11 +515,11 @@ void* target2zbus(void* args){
 									strncpy(val, (char*)col_val, col_len);
 									val[col_len] = '\0';
 								}
-								zlog_raw("[%s=%s] ", column_name, val);
+								zlog_raw(g_log, "[%s=%s] ", column_name, val);
 							}
 						} 
 						json_array_add(json_rs, json_row); //行结束
-						if(g_proxy_cfg->verbose){  zlog_raw("\n"); }
+						if(g_proxy_cfg->verbose){  zlog_raw(g_log, "\n"); }
 					}
 					json_array_add(rs_array, json_rs);//结果集结束
 				} 
@@ -487,11 +536,33 @@ void* target2zbus(void* args){
 		msg_set_msgid(msg, msgid);
 		msg_set_body_nocopy(msg, res_body_str, strlen(res_body_str));
 
-		rclient_send(client, msg); 
+		blockq_push(q_send, msg);
 	}
 
 	return NULL;
 }
+
+void* blockq2zbus(void* args){
+	char* broker = (char*)args;
+	blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, broker);
+	if(q_send == NULL){
+		zlog(g_log, "blockq for zbus(%s) not found", broker);
+		return NULL;
+	}
+
+	rclient_t* client = rclient_connect(broker, g_proxy_cfg->zbus_reconnect_timeout);
+	int rc;
+	msg_t* msg;
+	while(1){
+		msg = (msg_t*)blockq_pop(q_send);
+		rc = rclient_send(client, msg);		
+		if(rc < 0){ //missing message
+			rclient_reconnect(client, g_proxy_cfg->zbus_reconnect_timeout);
+		}
+	}
+	return NULL;
+}
+
 
 int main(int argc, char *argv[]){
 
@@ -509,41 +580,61 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	if(g_proxy_cfg->log_path){
-		zlog_set_file(g_proxy_cfg->log_path); 
-	} else {
-		zlog_set_stdout();
-	}
+	g_log = zlog_new(g_proxy_cfg->log_path);
+	g_blockq_map = hash_new(&hash_ctrl_str_blockq, NULL);
 
 	g_mutex_target2zbus = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
 	pthread_mutex_init(g_mutex_target2zbus);
 	g_msgid_target2zbus = hash_new(&g_hctrl_msgid_target2zbus, NULL);
-	
 
 
-	char* broker = strdup(g_proxy_cfg->zbus_broker);
+	char* brokers = strdup(g_proxy_cfg->brokers); 
+	list_t* broker_list = list_new();
+	char* broker = strtok(brokers,";");
+	while (broker){  
+		blockq_t* q = blockq_new();
+		hash_put(g_blockq_map, broker, q);
+
+		list_push_back(broker_list, strdup(broker));
+		broker = strtok(NULL, ";");
+	} 
+	free(brokers); 
+
 
 	int thread_count = g_proxy_cfg->worker_threads;
-	pthread_t* zbus2target_threads = (pthread_t*)malloc(thread_count*sizeof(pthread_t));
-	pthread_t* target2zbus_threads = (pthread_t*)malloc(thread_count*sizeof(pthread_t));
+	int broker_count = list_size(broker_list);
+	pthread_t* zbus2target_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
+	pthread_t* target2blockq_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
+	pthread_t* blockq2zbus_threads = (pthread_t*)malloc(broker_count*thread_count*sizeof(pthread_t));
 
-	for(int i=0; i<thread_count; i++){
-		pthread_create(&zbus2target_threads[i], NULL, zbus2target, NULL); 
-		pthread_create(&target2zbus_threads[i], NULL, target2zbus, NULL); 
-	} 
-
-	free(broker);
-
-	for(int i=0; i<thread_count; i++){
-		pthread_join(&zbus2target_threads[i], NULL);
-		pthread_join(&target2zbus_threads[i], NULL);
+	list_node_t* node = list_head(broker_list);
+	int broker_idx = 0;
+	while(node){
+		char* broker = (char*)list_value(node); 
+		int d = broker_idx*thread_count;
+		for(int i=0; i<thread_count; i++){
+			pthread_create(&zbus2target_threads[d+i],   NULL, zbus2target, broker); 
+			pthread_create(&target2blockq_threads[d+i], NULL, target2blockq, NULL); 
+			pthread_create(&blockq2zbus_threads[d+i], NULL, blockq2zbus, broker); 
+		} 
+		broker_idx++;
+		node = list_next(node);
 	}  
+
+	for(int i=0; i<thread_count*broker_count; i++){
+		pthread_join(&zbus2target_threads[i], NULL);
+		pthread_join(&target2blockq_threads[i], NULL);
+		pthread_join(&blockq2zbus_threads[i], NULL);
+	}
+
+	hash_destroy(&g_blockq_map); 
 
 	proxy_cfg_destroy(&g_proxy_cfg);
 
 	pthread_mutex_destroy(g_mutex_target2zbus);
 	free(g_mutex_target2zbus);
 	hash_destroy(&g_msgid_target2zbus);
+	zlog_destroy(&g_log);
 
 	getchar();
 	return 0;

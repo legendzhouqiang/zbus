@@ -12,7 +12,7 @@ public class TradeExample {
 	public static void main(String[] args) throws IOException{  
 		//1）创建Broker代表
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("127.0.0.1:15556");
 		Broker broker = new SingleBroker(config);
 		
 		Caller c = new Caller(broker, "Trade");

@@ -163,8 +163,8 @@ ZBOX_EXPORT int
 ZBOX_EXPORT void
 	hash_destroy_string(void *privdata, void *key); 
 
-extern hash_ctrl_t hash_ctrl_copy_key_string;
-extern hash_ctrl_t hash_ctrl_copy_key_val_string;
+extern ZBOX_EXPORT hash_ctrl_t hash_ctrl_copy_key_string;
+extern ZBOX_EXPORT hash_ctrl_t hash_ctrl_copy_key_val_string;
 
 #ifdef __cplusplus
 }

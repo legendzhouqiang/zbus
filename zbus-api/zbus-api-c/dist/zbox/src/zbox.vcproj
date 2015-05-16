@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="zbus-kcxp"
-	ProjectGUID="{0B750C74-A073-4A6F-9739-25FF708DB6CB}"
-	RootNamespace="zbuskcxp"
+	Name="zbox"
+	ProjectGUID="{0B62F1CE-C02B-461D-9B54-D30AC87C9E19}"
+	RootNamespace="zbus"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -18,9 +18,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="..\"
+			IntermediateDirectory="..\..\bin\zbox\$(ConfigurationName)"
+			ConfigurationType="4"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,11 +41,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="zbus\include;kcxp\include;zbox\include"
+				AdditionalIncludeDirectories="..\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -61,19 +61,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="zbox.lib zbus.lib KCBPCli.lib Ws2_32.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="zbox;zbus;kcxp"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -85,17 +76,14 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="..\"
+			IntermediateDirectory="..\..\bin\zbox\$(ConfigurationName)"
+			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -118,13 +106,14 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="zbus\include;kcxp\include;zbox\include"
+				AdditionalIncludeDirectories="..\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				CompileAs="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -136,21 +125,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="zbox.lib zbus.lib KCBPCli.lib Ws2_32.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="zbox;zbus;kcxp"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -160,9 +138,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -178,7 +153,31 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\proxy.cpp"
+				RelativePath=".\blockq.c"
+				>
+			</File>
+			<File
+				RelativePath=".\hash.c"
+				>
+			</File>
+			<File
+				RelativePath=".\json.c"
+				>
+			</File>
+			<File
+				RelativePath=".\list.c"
+				>
+			</File>
+			<File
+				RelativePath=".\log.c"
+				>
+			</File>
+			<File
+				RelativePath=".\net.c"
+				>
+			</File>
+			<File
+				RelativePath=".\thread.c"
 				>
 			</File>
 		</Filter>
@@ -188,35 +187,35 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\zbox\include\blockq.h"
+				RelativePath="..\include\blockq.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\hash.h"
+				RelativePath="..\include\hash.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\json.h"
+				RelativePath="..\include\json.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\list.h"
+				RelativePath="..\include\list.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\log.h"
+				RelativePath="..\include\log.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\net.h"
+				RelativePath="..\include\net.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\platform.h"
+				RelativePath="..\include\platform.h"
 				>
 			</File>
 			<File
-				RelativePath=".\zbox\include\thread.h"
+				RelativePath="..\include\thread.h"
 				>
 			</File>
 		</Filter>

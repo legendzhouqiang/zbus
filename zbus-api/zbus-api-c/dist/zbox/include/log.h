@@ -35,8 +35,27 @@ ZBOX_EXPORT void
 ZBOX_EXPORT void
 	zlog_ex(zlog_t* zlog, const int priority, const char *format, ...);
 
-ZBOX_EXPORT void zlog_raw(zlog_t* zlog, const char *format, ...);
+ZBOX_EXPORT int  zlog_priority(zlog_t* zlog);
+ZBOX_EXPORT void zlog_lock(zlog_t* zlog);
+ZBOX_EXPORT void zlog_unlock(zlog_t* zlog);
 
+#define _DO_LOG(zlog, priority) do{\
+	if(zlog_priority(zlog) >= (priority)){\
+		zlog_lock(zlog);\
+		zlog_head(zlog, (priority));\
+		FILE* file = zlog_get_file(zlog);\
+		va_list argptr;\
+		va_start (argptr, format);\
+		vfprintf ((file), format, argptr);\
+		va_end (argptr);\
+		fprintf (file, "\n");\
+		fflush (file);\
+		zlog_unlock(zlog);\
+	}\
+}while(0)
+
+
+ZBOX_EXPORT void zlog_raw(zlog_t* zlog, const char *format, ...);
 ZBOX_EXPORT void zlog_head(zlog_t* zlog, const int priority);
 ZBOX_EXPORT void zlog_emerg(zlog_t* zlog, const char *format, ...);
 ZBOX_EXPORT void zlog_crit(zlog_t* zlog, const char *format, ...);

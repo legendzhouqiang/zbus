@@ -1,7 +1,7 @@
 #ifndef _ZBOX_MQ_H_
 #define _ZBOX_MQ_H_
 
-#include "thread.h"
+#include "platform.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,16 +10,18 @@ extern "C" {
 
 typedef struct blockq blockq_t;
 
-blockq_t*
+ZBOX_EXPORT blockq_t*
 	blockq_new();
-void 
+ZBOX_EXPORT void 
+	blockq_destroy(blockq_t **self_p);
+
+ZBOX_EXPORT void 
 	blockq_push(blockq_t *self, void *msg);
-
-void* 
+ZBOX_EXPORT void* 
 	blockq_pop(blockq_t *self);
+ZBOX_EXPORT int 
+	blockq_length(blockq_t *self);
 
-int blockq_length(blockq_t *self);
-void blockq_destroy(blockq_t **self_p);
 
 
 #ifdef __cplusplus

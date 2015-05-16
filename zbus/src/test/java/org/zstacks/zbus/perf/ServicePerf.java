@@ -40,7 +40,7 @@ class Task extends Thread{
 public class ServicePerf {
 	public static void main(String[] args) throws Exception { 
 		SingleBrokerConfig config = new SingleBrokerConfig(); 
-		config.setBrokerAddress("10.19.1.32:15555");
+		//config.setBrokerAddress("10.19.1.32:15555");
 		config.setMaxTotal(200);
 		config.setMaxIdle(200);  
 		
