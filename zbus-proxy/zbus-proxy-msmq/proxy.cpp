@@ -114,8 +114,8 @@ hash_ctrl_t hash_ctrl_str_blockq = {
 };
 
 hash_t* g_blockq_map;
-
 proxy_cfg_t*		g_proxy_cfg;
+zlog_t* g_log;
 
 proxy_cfg_t*
 proxy_cfg_new(int argc, char* argv[]){
@@ -135,7 +135,7 @@ proxy_cfg_new(int argc, char* argv[]){
 	self->service_regtoken = strdup(option(argc,argv, "-kreg", ""));
 	self->service_acctoken = strdup(option(argc,argv, "-kacc", ""));
 	self->brokers = strdup(option(argc,argv, "-b", "10.8.30.4:15555;10.8.30.4:15556"));
-	self->log_path = strdup(option(argc,argv, "-log", NULL));
+	self->log_path = strdup(option(argc,argv, "-log", "logs"));
 
 	return self;
 }
@@ -187,7 +187,7 @@ void* zbus2target(void* args){
 
 	char msmq_name[256];
 	sprintf(msmq_name, "DIRECT=TCP:%s\\PRIVATE$\\%s_recv", server_ip, client_ip_);
-	zlog("zbus2msmq: %s", msmq_name);  
+	zlog(g_log, "zbus2msmq: %s", msmq_name);  
 	
 	while(1){ 
 
@@ -229,7 +229,7 @@ void* zbus2target(void* args){
 			msg_destroy(&req); //destroy msg
 
 			if(g_proxy_cfg->verbose){
-				zlog("[MSMQ] REQ: %s\n", msmq_req);
+				zlog(g_log, "[MSMQ] REQ: %s\n", msmq_req);
 			} 
 
 			rc = msmq_send(msmq_producer, msmq_req, g_proxy_cfg->msmq_timeout);
@@ -275,7 +275,7 @@ void* target2blockq(void* args){
 
 	char msmq_name[256];
 	sprintf(msmq_name, ".\\PRIVATE$\\%s_send", client_ip_);
-	zlog("msmq2blockq: %s", msmq_name);   
+	zlog(g_log, "msmq2blockq: %s", msmq_name);   
 	IMSMQQueuePtr msmq_consumer = NULL;
 	while(1){
 		try{   
@@ -298,11 +298,11 @@ void* target2blockq(void* args){
 
 				char* msmq_msg = (char*)body;  
 				if(g_proxy_cfg->verbose){
-					zlog("[MSMQ] REP: %s\n", msmq_msg);
+					zlog(g_log, "[MSMQ] REP: %s\n", msmq_msg);
 				}
 				char* split = strstr(msmq_msg, g_sn_delimit);
 				if(split == NULL){
-					zlog("[ERROR]: MSMQ invalid message, missing header\n");
+					zlog(g_log, "[ERROR]: MSMQ invalid message, missing header\n");
 					continue;
 				}
  
@@ -313,12 +313,12 @@ void* target2blockq(void* args){
 
 				rc = s_parse_head(msg_head_str, to_broker, mq_reply, msgid, errormsg);
 				if(rc != 0){
-					zlog(errormsg);
+					zlog(g_log, errormsg);
 					continue;
 				}
 				blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, to_broker);
 				if(q_send == NULL){ 
-					zlog("missing target zbus(%s)", to_broker);
+					zlog(g_log, "missing target zbus(%s)", to_broker);
 					continue;
 				}
 				
@@ -335,7 +335,7 @@ void* target2blockq(void* args){
 			wprintf(L"Error Code = 0x%X\nError Description = %s\n", e.Error(), (wchar_t *)e.Description());
 			Sleep(100); //
 			msmq_close(msmq_consumer);
-			zlog("Going to retry recv from MSMQ...\n");
+			zlog(g_log, "Going to retry recv from MSMQ...\n");
 		} 
 	}
 
@@ -348,7 +348,7 @@ void* blockq2zbus(void* args){
 	char* broker = (char*)args;
 	blockq_t* q_send = (blockq_t*)hash_get(g_blockq_map, broker);
 	if(q_send == NULL){
-		zlog("blockq for zbus(%s) not found", broker);
+		zlog(g_log, "blockq for zbus(%s) not found", broker);
 		return NULL;
 	}
 
@@ -364,8 +364,6 @@ void* blockq2zbus(void* args){
 	}
 	return NULL;
 }
-
-
 
 int main(int argc, char* argv[]){   
 	if(argc>1 && ( strcmp(argv[1],"help")==0 
@@ -401,12 +399,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 	
-
-	if(g_proxy_cfg->log_path){
-		zlog_set_file(g_proxy_cfg->log_path); 
-	} else {
-		zlog_set_stdout();
-	}
+	g_log = zlog_new(g_proxy_cfg->log_path);
 	g_blockq_map = hash_new(&hash_ctrl_str_blockq, NULL);
 
 	char* brokers = strdup(g_proxy_cfg->brokers); 
@@ -448,6 +441,7 @@ int main(int argc, char* argv[]){
 	}
 
 	hash_destroy(&g_blockq_map);
+	zlog_destroy(&g_log);
 
 	proxy_cfg_destroy(&g_proxy_cfg);
  

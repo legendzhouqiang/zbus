@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="zbus/include; crypt"
+				AdditionalIncludeDirectories="zbus/include;crypt;zbox/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -65,8 +65,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zbus\zbus.lib crypt\KDEncodeCli.lib crypt\encrypt.lib crypt\CryptDLL2.lib"
+				AdditionalDependencies="Ws2_32.lib zbox.lib zbus.lib KDEncodeCli.lib encrypt.lib CryptDLL2.lib"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="zbus;crypt;zbox"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -193,7 +194,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="zbus/include; crypt"
+				AdditionalIncludeDirectories="zbus/include;crypt;zbox/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -213,8 +214,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zbus\zbus.lib crypt\KDEncodeCli.lib crypt\encrypt.lib crypt\CryptDLL2.lib"
+				AdditionalDependencies="Ws2_32.lib zbox.lib zbus.lib KDEncodeCli.lib encrypt.lib CryptDLL2.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="zbus;crypt;zbox"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -329,14 +331,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\blockq.c"
-				>
-			</File>
-			<File
-				RelativePath=".\blockq.h"
-				>
-			</File>
 			<File
 				RelativePath=".\crypt.cpp"
 				>

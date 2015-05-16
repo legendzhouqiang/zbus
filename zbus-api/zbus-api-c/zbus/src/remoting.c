@@ -64,15 +64,6 @@ struct rclient{ //remoting client
 }; 
 
 
-#define ZLOG(priority, ...) do{\
-	if(priority <= zlog_get_level()){\
-		FILE* file = zlog_get_file();\
-		zlog_head(priority);\
-		fprintf(file, "%s:%d: %s(): ", __FILE__, __LINE__, __FUNCTION__);\
-		fprintf(file, __VA_ARGS__);\
-		fprintf(file, "\n");\
-	}\
-}while(0)
 
 rclient_t* rclient_new(char* broker){
 	rclient_t* self = malloc(sizeof(*self));
@@ -126,7 +117,7 @@ bool rclient_reconnect(rclient_t* self, int reconnect_msecs){
 	while(rc = net_connect(&self->fd, self->host, self->port)){
 		if(reconnect_msecs<=0) break; //no reconnect
 		net_close(self->fd);
-		ZLOG(LOG_INFO, "Try to reconnect(%s:%d) in %d ms...", self->host, self->port, reconnect_msecs);
+		printf("Try to reconnect(%s:%d) in %d ms...", self->host, self->port, reconnect_msecs);
 		sleep(reconnect_msecs);
 	}
 	return rc == 0;

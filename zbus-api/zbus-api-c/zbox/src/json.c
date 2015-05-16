@@ -669,7 +669,7 @@ json_t *json_base64str(byte *bin, size_t len){
 	json_t* json;
 	size_t dlen = len*8/6 + 10;
 	char * dst = (char *)malloc(dlen);
-	int rc = base64_encode(dst, &dlen, bin, len);
+	int rc = base64_encode((unsigned char*)dst, &dlen, bin, len);
 	assert(rc == 0); 
 	json = json_string(dst);
 	free(dst);
@@ -683,7 +683,7 @@ byte* json_base64bin(json_t* json, size_t *len){
 	size_t slen = strlen(str);
 	size_t dlen2 = (slen*6+10)/8;
 	byte* bin = (byte*)malloc(dlen2);
-	int rc = base64_decode(bin, len, str, slen);
+	int rc = base64_decode(bin, len, (const unsigned char *)str, slen);
 	if( rc != 0){
 		free(bin);
 		*len = 0;

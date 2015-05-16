@@ -21,16 +21,16 @@
 extern "C" {
 #endif
 
-int  net_connect( int *fd, const char *host, int port );
-int  net_bind( int *fd, const char *bind_ip, int port );
-int  net_accept( int bind_fd, int *client_fd, void *client_ip );
-int  net_set_block( int fd );
-int  net_set_nonblock( int fd );
-int  net_recv( int fd, unsigned char *buf, size_t len );
-int  net_send( int fd, const unsigned char *buf, size_t len );
-void net_close( int fd );
-int  net_peer_info(int fd, char *ip, int *port);
-int  net_set_timeout(int fd, int64_t timeout);
+ZBOX_EXPORT int  net_connect( int *fd, const char *host, int port );
+ZBOX_EXPORT int  net_bind( int *fd, const char *bind_ip, int port );
+ZBOX_EXPORT int  net_accept( int bind_fd, int *client_fd, void *client_ip );
+ZBOX_EXPORT int  net_set_block( int fd );
+ZBOX_EXPORT int  net_set_nonblock( int fd );
+ZBOX_EXPORT int  net_recv( int fd, unsigned char *buf, size_t len );
+ZBOX_EXPORT int  net_send( int fd, const unsigned char *buf, size_t len );
+ZBOX_EXPORT void net_close( int fd );
+ZBOX_EXPORT int  net_peer_info(int fd, char *ip, int *port);
+ZBOX_EXPORT int  net_set_timeout(int fd, int64_t timeout);
 
 
 #ifdef __cplusplus
