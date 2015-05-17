@@ -1,7 +1,7 @@
-# zbus--轻量级消息队列、服务总线
+# ZBUS--轻量级消息队列、服务总线
 
 
-##**zbus** 特性
+##**ZBUS** 特性
 
 
 * **消息队列 -- 生产者消费者模式、发布订阅**
@@ -11,7 +11,7 @@
 * **轻量级、高可用**
 
 
-##**zbus** 项目结构
+##**ZBUS** 项目结构
 
 
 ### [ZNET--超轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
@@ -32,7 +32,7 @@
 * [桥接JAVA客户端](http://git.oschina.net/rushmore/zbus-proxy/tree/master/zbus-proxy-java "zbus-proxy-java") 
 
 
-## zbus 启动与监控 
+## ZBUS 启动与监控 
 
 1. zbus-dist选择zbus.sh或者zbus.bat直接执行
 2. 通过源码zbusServer.java个性化控制启动
@@ -45,12 +45,12 @@
 分别启动zbusServer与TrackServer，无顺序之分，默认zbusServer占用15555端口，TrackServer占用16666端口。
 
 
-## zbus 设计概要图
+## ZBUS 设计概要图
 
 ![zbus-arch](http://git.oschina.net/uploads/images/2015/0419/134134_62a4e21c_7458.png)
 
 
-## zbus 示例
+## ZBUS 示例
 
 ### Java Maven 依赖
 
@@ -212,7 +212,7 @@
 	}
 	
 
-## zbus消息协议
+## ZBUS消息协议
 
 * [zbus消息协议](http://git.oschina.net/rushmore/zbus/wikis/zbus%E6%B6%88%E6%81%AF%E5%8D%8F%E8%AE%AE- "zbus-protocol") 
 
