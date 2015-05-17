@@ -14,9 +14,7 @@
 ##**zbus** 项目结构
 
 
-###**zbus**通讯基础之znet
-
-[轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
+### [ZNET--超轻量级、高性能NIO网络通讯框架](http://git.oschina.net/rushmore/znet "znet") 
 
 
 ###  [ZBUS API](http://git.oschina.net/rushmore/zbus-api "zbus-api")
@@ -26,7 +24,7 @@
 * [C# API](http://git.oschina.net/rushmore/zbus-api/tree/master/zbus-api-csharp "zbus-api-csharp") 
 * [Node.JS API](http://git.oschina.net/rushmore/zbus-api/tree/master/zbus-api-nodejs "zbus-api-nodejs") 
 
-###**ZBUS** 桥接
+### [ZBUS 桥接](http://git.oschina.net/rushmore/zbus-proxy "zbus-proxy") 
 
 * [微软MSMQ|国信交易调度](http://git.oschina.net/rushmore/zbus-proxy/tree/master/zbus-proxy-msmq "zbus-proxy-msmq") 
 * [金证KCXP](http://git.oschina.net/rushmore/zbus-proxy/tree/master/zbus-proxy-kcxp "zbus-proxy-kcxp") 
