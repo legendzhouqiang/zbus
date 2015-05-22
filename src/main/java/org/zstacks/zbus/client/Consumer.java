@@ -33,7 +33,7 @@ public class Consumer extends MqAdmin implements Closeable{
 	} 
 	
 	
-    public Message recv(int timeout) throws IOException{ 
+    public Message recv(int timeout) throws IOException, InterruptedException{ 
     	if(this.client == null){
 	    	this.client = broker.getClient(myClientHint());
     	}
@@ -78,11 +78,11 @@ public class Consumer extends MqAdmin implements Closeable{
 	}
 	
 	@Override
-	protected Message invokeCreateMQ(Message req) throws IOException {
+	protected Message invokeCreateMQ(Message req) throws IOException, InterruptedException {
 		if(this.client == null){
 	    	this.client = broker.getClient(myClientHint());
     	}
-		return client.invokeSync(req, invokeTimeout);
+		return client.invokeSync(req, invokeTimeout); 
 	}
 	
     
@@ -112,7 +112,12 @@ public class Consumer extends MqAdmin implements Closeable{
 			public void run() { 
 				for(;;){
 					try {
-						Message msg = recv(10000);
+						Message msg;
+						try {
+							msg = recv(10000);
+						} catch (InterruptedException e) {
+							break;
+						}
 						if(msg == null){
 							continue;
 						}

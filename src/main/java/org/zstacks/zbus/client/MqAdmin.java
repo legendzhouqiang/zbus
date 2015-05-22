@@ -47,11 +47,11 @@ public class MqAdmin{
 	 * @return
 	 * @throws IOException
 	 */
-	protected Message invokeCreateMQ(Message req) throws IOException{
+	protected Message invokeCreateMQ(Message req) throws IOException, InterruptedException{
 		return broker.invokeSync(req, invokeTimeout);
 	}
    
-    public boolean createMQ() throws IOException{
+    public boolean createMQ() throws IOException, InterruptedException{
     	Map<String, String> params = new HashMap<String, String>();
     	params.put("mqName", mq);
     	params.put("accessToken", accessToken);

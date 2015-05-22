@@ -13,19 +13,19 @@ import org.zstacks.znet.Message;
 
 public class ServiceExample {
 	
-	public static void main(String[] args) throws IOException{  
+	public static void main(String[] args) throws IOException, Exception{  
 		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
-		int threadCount = Helper.option(args, "-c", 32);
+		int threadCount = Helper.option(args, "-c", 2);
 		String service = Helper.option(args, "-s", "MyService");
 		
 		ServiceConfig config = new ServiceConfig();
 		config.setThreadCount(threadCount); 
 		config.setMq(service);
 		//配置Broker
-		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
-		brokerCfg.setBrokerAddress(address);
-		brokerCfg.setMaxTotal(threadCount);
-		Broker broker = new SingleBroker(brokerCfg);
+		SingleBrokerConfig brokerConfig = new SingleBrokerConfig();
+		brokerConfig.setBrokerAddress(address);
+		brokerConfig.setMaxTotal(threadCount);
+		Broker broker = new SingleBroker(brokerConfig);
 		config.setBroker(broker);
 		
 		//处理逻辑
@@ -39,8 +39,9 @@ public class ServiceExample {
 			}
 		});
 		
+		@SuppressWarnings("resource")
 		Service svc = new Service(config);
-		svc.start();  
+		svc.start();   
 	} 
 	
 }

@@ -35,6 +35,7 @@ public class RpcServiceExample {
 		//处理逻辑
 		config.setServiceHandler(handler);
 		
+		@SuppressWarnings("resource")
 		Service svc = new Service(config);
 		svc.start();  
 	} 

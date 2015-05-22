@@ -10,6 +10,11 @@ import org.zstacks.znet.Message;
 
 public class CallerExample {
 	public static void main(String[] args) throws IOException{  
+		for(int i=0;i<1000;i++){
+			test();
+		}
+	}
+	public static void test() throws IOException{  
 		//1）创建Broker代理【重量级对象，需要释放】
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");

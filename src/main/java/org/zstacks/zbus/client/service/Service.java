@@ -1,14 +1,17 @@
 package org.zstacks.zbus.client.service;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Consumer;
 import org.zstacks.znet.Message;
 
-public class Service extends Thread {   
+public class Service implements Closeable {   
 	private static final Logger log = LoggerFactory.getLogger(Service.class);
 	private final ServiceConfig config; 
-	private Thread[] workerThreads;
+	private WorkerThread[] workerThreads;
 	
 	public Service(ServiceConfig config){
 		this.config = config;
@@ -19,49 +22,47 @@ public class Service extends Thread {
 			throw new IllegalArgumentException("serviceHandler required");
 		}  
 	}
+	 
+	@Override
+	public void close() throws IOException {
+		if(this.workerThreads != null){
+			for(WorkerThread thread : this.workerThreads){
+				try {
+					thread.close();
+				} catch (IOException e) {
+					log.debug(e.getMessage(), e);
+				}
+			}
+		} 
+	}
 	
-	public void run(){   
-		
-		this.workerThreads = new Thread[config.getThreadCount()];
+	public void start(){    
+		this.workerThreads = new WorkerThread[config.getThreadCount()];
 		for(int i=0;i<workerThreads.length;i++){
+			@SuppressWarnings("resource")
 			WorkerThread thread = new WorkerThread(config); 
 			this.workerThreads[i] = thread; 
 			this.workerThreads[i].start();
-		}
-		
-		for(Thread thread : this.workerThreads){
-			try {
-				thread.join();
-			} catch (InterruptedException e) { 
-				log.error(e.getMessage(), e);
-			}
 		}
 	} 
 }
 
 
 
-class WorkerThread extends Thread{
+class WorkerThread extends Thread implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
-	private ServiceConfig config = null; 
-	
+	private ServiceConfig config = null;  
+	private Consumer consumer;
 	public WorkerThread(ServiceConfig config){ 
 		this.config  = config;  
-	} 
+	}  
 	
 	@Override
-	public void interrupt() { 
-		super.interrupt();
-		
-	}
-	
-	@Override
-	public void run() {
-		@SuppressWarnings("resource")
-		Consumer consumer = new Consumer(config);
+	public void run() { 
+		this.consumer = new Consumer(config);
 		final int timeout = config.getReadTimeout(); //ms  
 		
-		while(true){
+		while(!isInterrupted()){
 			try {  
 				Message msg = consumer.recv(timeout); 
 				if(msg == null) continue;
@@ -79,16 +80,27 @@ class WorkerThread extends Thread{
 					res.setMsgId(msgId); 
 					res.setMq(mqReply);		
 					consumer.reply(res);
-				} 
-				
+				}  	
+			} catch (InterruptedException e) { 
+				break;
 			} catch (Exception e) { 
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException ex) { 
-					//ignore
-				}
+				log.error(e.getMessage(), e);
 			}
 		} 
+		log.info("Service thread({}) closed", this.getId());
+		if(this.consumer != null){
+			try {
+				consumer.close();
+				this.consumer = null;
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			}
+		} 
+	}
+	
+	@Override
+	public void close() throws IOException {
+		this.interrupt();
 	}
 }
 

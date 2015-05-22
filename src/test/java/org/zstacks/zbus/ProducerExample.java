@@ -1,7 +1,5 @@
 package org.zstacks.zbus;
 
-import java.io.IOException;
-
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.Producer;
 import org.zstacks.zbus.client.broker.SingleBroker;
@@ -10,7 +8,7 @@ import org.zstacks.znet.Message;
 import org.zstacks.znet.ticket.ResultCallback;
 
 public class ProducerExample {
-	public static void main(String[] args) throws IOException{  
+	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代理【重量级对象，需要释放】
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
