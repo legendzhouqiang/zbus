@@ -41,7 +41,7 @@ public class ServiceExample {
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);
-		svc.start();   
+		svc.start();
 	} 
 	
 }
