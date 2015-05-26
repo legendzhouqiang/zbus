@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zstacks.zbus.client.Broker;
  
 /**
  * 
@@ -19,8 +20,8 @@ import org.slf4j.LoggerFactory;
 public class RpcProxy {
 	private static final Logger log = LoggerFactory.getLogger(RpcProxy.class);
 	private static Constructor<RpcInvoker> rpcInvokerCtor;
-	private static Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
-	
+	private Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
+	private final Broker broker;
 	static {
 		try {
 			rpcInvokerCtor = RpcInvoker.class.getConstructor(new Class[] {Rpc.class });
@@ -29,8 +30,31 @@ public class RpcProxy {
 		}
 	}  
 	
+	public RpcProxy(Broker broker) {
+		this.broker = broker;
+	}
+	
+	/**
+	 * mq=TRADE&&encoding=utf8
+	 *
+	 * parameters after ? got default values
+	 * 
+	 * encoding=UTF8
+	 * module=
+	 * timeout=10000
+	 * token= 
+	 * 
+	 * @param api
+	 * @param serviceURL
+	 */
+	public <T> T getService(Class<T> api, String serviceUrl) throws Exception {   
+		RpcConfig config = parseRpcConfig(serviceUrl);
+		return getService(api, config);
+	} 
+	
 	@SuppressWarnings("unchecked")
-	public static <T> T getService(Class<T> api, RpcConfig config) throws Exception {   
+	public <T> T getService(Class<T> api, RpcConfig config) throws Exception {   
+		config.setBroker(this.broker);
 		String mq = config.getMq(); 
 		if(mq == null){
 			throw new IllegalArgumentException("Missing argument mq");
@@ -59,6 +83,39 @@ public class RpcProxy {
 		}
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		return (T) Proxy.newProxyInstance(classLoader, interfaces, rpcInvoker);
+	} 
+	 
+	private static RpcConfig parseRpcConfig(String kvstring) {
+		RpcConfig config = new RpcConfig(); 
+		String[] parts = kvstring.split("\\&");
+		for(String kv : parts){
+			String[] kvp = kv.split("=");
+			String key = kvp[0].trim();
+			String val = "";
+			if(kvp.length>1){
+				val = kvp[1].trim();
+			} 
+			if("mq".equals(key)){
+				config.setMq(val);
+			} else if("encoding".equals(key)){
+				config.setEncoding(val);
+			} else if("mode".equals(key)){
+				int timeout = 2500;//default
+				try{ timeout = Integer.valueOf(val); }catch(Exception e){}
+				config.setTimeout(timeout);
+			} else if("accessToken".equals(key)){
+				config.setAccessToken(val);
+			} else if("registerToken".equals(key)){
+				config.setRegisterToken(val);
+			} else if("topic".equals(key)){
+				config.setTopic(val);
+			} else if("mode".equals(key)){
+				int mode = 0;
+				try{ mode = Integer.valueOf(val); }catch(Exception e){}
+				config.setMode(mode);
+			} 
+		}
+		return config;
 	} 
 }
 

@@ -20,7 +20,7 @@ public class PubExample {
 		
 		Message msg = new Message();
 		msg.setTopic("hong");
-		msg.setBody("hello world");
+		msg.setBody("hello world2");
 		
 		Message res = producer.sendSync(msg, 2500);
 		System.out.println(res);

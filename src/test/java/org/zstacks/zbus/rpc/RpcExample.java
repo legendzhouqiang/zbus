@@ -6,7 +6,6 @@ import java.util.Random;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.broker.SingleBroker;
 import org.zstacks.zbus.client.broker.SingleBrokerConfig;
-import org.zstacks.zbus.client.rpc.RpcConfig;
 import org.zstacks.zbus.client.rpc.RpcProxy;
 import org.zstacks.zbus.rpc.biz.Interface;
 import org.zstacks.zbus.rpc.biz.User;
@@ -27,12 +26,9 @@ public class RpcExample {
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
-
-		RpcConfig rpcConfig = new RpcConfig();
-		rpcConfig.setBroker(broker);
-		rpcConfig.setMq("MyRpc"); 
+		RpcProxy proxy = new RpcProxy(broker); 
 		
-		Interface hello = RpcProxy.getService(Interface.class, rpcConfig);
+		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
 
 		Object[] res = hello.objectArray();
 		for (Object obj : res) {
