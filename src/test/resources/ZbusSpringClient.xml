@@ -15,13 +15,15 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		</constructor-arg>
 	</bean>
 	
+	<bean id="rpcProxy" class="org.zstacks.zbus.client.rpc.RpcProxy">
+		<constructor-arg> <ref bean="broker"/> </constructor-arg>
+	</bean>
 
 	<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
-	<bean id="interface" class="org.zstacks.zbus.client.rpc.RpcProxy" factory-method="getService">
+	<bean id="interface" factory-bean="rpcProxy" factory-method="getService">
 		<constructor-arg type="java.lang.Class" value="org.zstacks.zbus.rpc.biz.Interface"/> 
 		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.rpc.RpcConfig">
-				<property name="broker" ref="broker"/> 
+			<bean class="org.zstacks.zbus.client.rpc.RpcConfig"> 
 				<property name="mq" value="MyRpc"/>
 			</bean>
 		</constructor-arg>

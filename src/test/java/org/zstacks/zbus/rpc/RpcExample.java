@@ -21,13 +21,12 @@ public class RpcExample {
 		return user;
 	}
 
-	public static void main(String[] args) throws Exception {
-		// 1）创建Broker代表
+	public static void main(String[] args) throws Exception { 
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
-		RpcProxy proxy = new RpcProxy(broker); 
 		
+		RpcProxy proxy = new RpcProxy(broker); 
 		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
 
 		Object[] res = hello.objectArray();

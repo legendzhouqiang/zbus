@@ -110,13 +110,9 @@
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
-
-		RpcConfig rpcConfig = new RpcConfig();
-		rpcConfig.setBroker(broker);
-		rpcConfig.setMq("MyRpc"); 
 		
-		//动态代理处Interface通过zbus调用的动态实现类
-		Interface hello = RpcProxy.getService (Interface.class, rpcConfig);
+		RpcProxy proxy = new RpcProxy(broker); 
+		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
 
 		Object[] res = hello.objectArray();
 		for (Object obj : res) {
@@ -132,6 +128,9 @@
 		 
 		Class<?> ret = hello.classTest(String.class);
 		System.out.println(ret);
+		
+		
+		broker.close();
 
 
 
@@ -142,64 +141,67 @@
 
 **无任何代码侵入使得你已有的业务接口接入到zbus，获得跨平台和多语言支持**
 
-	<!-- 暴露的的接口实现示例 -->
-	<bean id="interface" class="org.zstacks.zbus.rpc.biz.InterfaceImpl"></bean>
-	
-	<bean id="serviceHandler" class="org.zstacks.zbus.client.rpc.RpcServiceHandler">
-		<constructor-arg>
-			<list>
-				<!-- 放入你需要暴露的接口 ,其他配置基本不变-->
-				<ref bean="interface"/>
-			</list>
-		</constructor-arg>
-	</bean>
-	
-	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
-	<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
-		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
-				<property name="brokerAddress" value="127.0.0.1:15555" />
-			</bean>
-		</constructor-arg>
-	</bean>
-	
-	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
-	<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
-		<constructor-arg>  
-			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
-				<property name="broker" ref="broker"/>
-				<property name="mq" value="MyRpc"/>
-				<property name="threadCount" value="2"/>
-				<property name="serviceHandler" ref="serviceHandler"/>
-			</bean>
-		</constructor-arg>
-	</bean>
+		<!-- 暴露的的接口实现示例 -->
+		<bean id="interface" class="org.zstacks.zbus.rpc.biz.InterfaceImpl"></bean>
+		
+		<bean id="serviceHandler" class="org.zstacks.zbus.client.rpc.RpcServiceHandler">
+			<constructor-arg>
+				<list>
+					<!-- 放入你需要暴露的接口 ,其他配置基本不变-->
+					<ref bean="interface"/>
+				</list>
+			</constructor-arg>
+		</bean>
+		
+		<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
+		<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
+			<constructor-arg>
+				<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
+					<property name="brokerAddress" value="127.0.0.1:15555" />
+				</bean>
+			</constructor-arg>
+		</bean>
+		
+		<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
+		<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
+			<constructor-arg>  
+				<bean class="org.zstacks.zbus.client.service.ServiceConfig">
+					<property name="broker" ref="broker"/>
+					<property name="mq" value="MyRpc"/>
+					<property name="threadCount" value="2"/>
+					<property name="serviceHandler" ref="serviceHandler"/>
+				</bean>
+			</constructor-arg>
+		</bean>
 	
 
 
 ### Spring集成--客户端
 
-	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
-	<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
-		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
-				<property name="brokerAddress" value="127.0.0.1:15555" />
-			</bean>
-		</constructor-arg>
-	</bean>
+		<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
+		<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
+			<constructor-arg>
+				<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
+					<property name="brokerAddress" value="127.0.0.1:15555" />
+					<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
+				</bean>
+			</constructor-arg>
+		</bean>
+		
+		<bean id="rpcProxy" class="org.zstacks.zbus.client.rpc.RpcProxy">
+			<constructor-arg> <ref bean="broker"/> </constructor-arg>
+		</bean>
 	
-
-	<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
-	<bean id="interface" class="org.zstacks.zbus.client.rpc.RpcProxy" factory-method="getService">
-		<constructor-arg type="java.lang.Class" value="org.zstacks.zbus.rpc.biz.Interface"/> 
-		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.rpc.RpcConfig">
-				<property name="broker" ref="broker"/> 
-				<property name="mq" value="MyRpc"/>
-			</bean>
-		</constructor-arg>
-	</bean>
- 
+		<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
+		<bean id="interface" factory-bean="rpcProxy" factory-method="getService">
+			<constructor-arg type="java.lang.Class" value="org.zstacks.zbus.rpc.biz.Interface"/> 
+			<constructor-arg>
+				<bean class="org.zstacks.zbus.client.rpc.RpcConfig"> 
+					<property name="mq" value="MyRpc"/>
+				</bean>
+			</constructor-arg>
+		</bean>
+	 
 
 **Spring完成zbus代理透明化，zbus设施从你的应用逻辑中彻底消失**
 
