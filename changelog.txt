@@ -6,8 +6,10 @@ zbus-5.2.0发布更新说明
 4. Broker接口继承于java.io.Closeable, IDE提示资源释放
 5. zbus启动自动打开监控页面（默认打开，可选择）
 
-zbus-6.0.0-SNAPSHOT
+zbus-6.0.0
 1. zbus纳入zstacks组织管理，package前缀由 org.zbus 改为 org.zstacks.zbus
 2. Rpc增加默认module为空的场景下访问不冲突的远程方法 
 3. Service增加停止服务方法暴露
+4. 底层通讯支持znet升级到6.0.0，Dispatcher与SelectorThread模型更新，更简单使用
+5. Broker、RemotingClient退出时偶尔出现的read InterruptException。
 

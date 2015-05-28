@@ -5,7 +5,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.zstacks.zbus.rpc.biz.Interface;
 
 public class ZbusSpringClient {
-
+	Interface interface1;
+	
 	public static void main(String[] args) { 
 		ApplicationContext context = new ClassPathXmlApplicationContext("ZbusSpringClient.xml");
 		

@@ -27,7 +27,6 @@ public class RpcServiceExample {
 		config.setMq(service); 
 		config.setBroker(broker);
 		
-		
 		RpcServiceHandler handler = new RpcServiceHandler(); 
 		//增加模块，模块名在调用时需要指定
 		handler.addModule(new InterfaceImpl());   

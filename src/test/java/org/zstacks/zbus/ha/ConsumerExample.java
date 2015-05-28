@@ -15,7 +15,7 @@ public class ConsumerExample {
 		
 		//2) 创建消费者
 		@SuppressWarnings("resource")
-		Consumer c = new Consumer(broker, "MyMQ2");
+		Consumer c = new Consumer(broker, "MyMQ");
 		while(true){
 			try{
 				Message msg = c.recv(10000);

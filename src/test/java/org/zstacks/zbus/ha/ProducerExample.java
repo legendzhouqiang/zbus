@@ -15,7 +15,7 @@ public class ProducerExample {
 		Broker broker = new HaBroker(config); 
 		
 		// 2) 创建生产者
-		Producer producer = new Producer(broker, "MyMQ2");
+		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();
 		while(true){
 			Message msg = new Message();
