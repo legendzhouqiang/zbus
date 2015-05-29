@@ -28,5 +28,8 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 			</bean>
 		</constructor-arg>
 	</bean>
+	<bean id="client" class="org.zstacks.zbus.spring.ZbusSpringClient"> 
+	</bean>
+	
 	
 </beans>

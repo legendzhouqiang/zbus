@@ -62,7 +62,7 @@ public class MessageStoreSql implements MessageStore {
 	private Connection getConnection(){
 		try { 
 			url = props.getProperty("url", url).trim();
-			user = props.getProperty("sa", user).trim();
+			user = props.getProperty("user", user).trim();
 			password = props.getProperty("password", password).trim();
 			return DriverManager.getConnection(this.url, this.user, this.password);
 		} catch (Exception e) {
