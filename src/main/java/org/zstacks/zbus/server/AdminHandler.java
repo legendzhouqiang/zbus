@@ -116,6 +116,24 @@ public class AdminHandler extends SubCommandHandler {
 			}
 		}); 
 		
+		this.registerHandler(Proto.AdminQueryMQ, new MessageHandler() { 
+			@Override
+			public void handleMessage(Message msg, Session sess) throws IOException { 
+				String mqName = msg.getMq();
+				MessageQueue mq = mqTable.get(mqName);
+				if(mq == null){
+					ServerHelper.reply404(msg, sess);
+					return;
+				}
+				Message res = new Message();
+				res.setStatus("200"); 
+				res.setMsgId(msg.getMsgId());
+				
+				res.setJsonBody(JSON.toJSONBytes(mq.getMqInfo()));
+				sess.write(res);  
+			}
+		});
+		
 		this.registerHandler("", new MessageHandler() { 
 			public void handleMessage(Message msg, Session sess) throws IOException {
 				msg = new Message();

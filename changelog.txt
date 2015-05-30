@@ -15,3 +15,4 @@ zbus-6.0.0
 
 zbus-6.1.0-SNAPSHOT
 1. MessageStoreSql 获取SQL用户名bug @玛雅牛
+2. 增加protocol 支持查询MQ状态, 可以查询出当前使用队列的诸如消息数目等具体信息 @刘浪 

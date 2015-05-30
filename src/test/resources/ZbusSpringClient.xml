@@ -24,7 +24,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		<constructor-arg type="java.lang.Class" value="org.zstacks.zbus.rpc.biz.Interface"/> 
 		<constructor-arg>
 			<bean class="org.zstacks.zbus.client.rpc.RpcConfig"> 
-				<property name="mq" value="MyRpc"/>
+				<property name="mq" value="MyRpc"/> 
 			</bean>
 		</constructor-arg>
 	</bean>

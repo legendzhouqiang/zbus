@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.zstacks.zbus.protocol.MessageMode;
+import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.znet.Message;
+
+import com.alibaba.fastjson.JSON;
 
 
 public class MqAdmin{     
@@ -49,6 +52,29 @@ public class MqAdmin{
 	 */
 	protected Message invokeCreateMQ(Message req) throws IOException, InterruptedException{
 		return broker.invokeSync(req, invokeTimeout);
+	}
+	
+	/**
+	 * 查询消息队列状态
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public MqInfo queryMQ() throws IOException, InterruptedException{
+	   	Message req = new Message();
+	   	req.setMq(mq);
+    	req.setToken(this.registerToken); 
+    	req.setCommand(Proto.Admin);
+    	req.setSubCommand(Proto.AdminQueryMQ);
+    	
+    	Message res = broker.invokeSync(req, invokeTimeout);
+    	if(res == null){
+    		throw new ZbusException(mq+ " timeout");
+    	}
+    	if(!res.isStatus200()){
+    		throw new ZbusException(res.getBodyString());
+    	}
+    	return JSON.parseObject(res.getBodyString(), MqInfo.class);
 	}
    
     public boolean createMQ() throws IOException, InterruptedException{

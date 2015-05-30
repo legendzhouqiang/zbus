@@ -14,6 +14,7 @@ public class Proto {
 	public static final String Admin     = "admin";           //管理类消息  
 	//管理类命令二级子命令 
 	public static final String AdminCreateMQ    = "create_mq";  
+	public static final String AdminQueryMQ     = "query_mq";  
 	
 	//TrackServer命令
 	public static final String TrackReport      = "track_report"; 
