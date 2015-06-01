@@ -99,7 +99,7 @@ public class RpcProxy {
 				config.setMq(val);
 			} else if("encoding".equals(key)){
 				config.setEncoding(val);
-			} else if("mode".equals(key)){
+			} else if("timeout".equals(key)){
 				int timeout = 2500;//default
 				try{ timeout = Integer.valueOf(val); }catch(Exception e){}
 				config.setTimeout(timeout);
