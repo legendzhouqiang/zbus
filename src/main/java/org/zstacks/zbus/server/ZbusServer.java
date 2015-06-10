@@ -107,13 +107,16 @@ public class ZbusServer extends RemotingServer {
 				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
 				msg.setHead(Message.HEADER_BROKER, serverAddr);  
-				if(!Message.HEARTBEAT.equals(msg.getCommand())){
-					if(verbose){
-						log.info("{}", msg);
-					} else {
-						log.debug("{}", msg);
-					}
+				String cmd = msg.getCommand();
+				
+				if(Proto.Heartbeat.equals(cmd) || Proto.Consume.equals(cmd) ||
+					cmd == null || "".equals(cmd)){
+					return;
 				}
+				
+				if(verbose){
+					log.info("{}", msg);
+				} 
 			}
 		}); 
 

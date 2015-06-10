@@ -23,11 +23,16 @@ public interface Interface{
 	
 	Order getOrder();
 	
-	User[] getUsers();
+	Object[] getUsers();
 	
-	Object[] objectArray();
+	Object[] objectArray(String id);
 
 	int saveObjectArray(Object[] array);
+	
+	int saveUserArray(User[] array);
+	
+	int saveUserList(List<User> array);
+	
 
 	Map<String, Object> map(int value1);
 	
@@ -36,6 +41,8 @@ public interface Interface{
 	Class<?> classTest(Class<?> inClass);
 	
 	void noReturn();
+	
+	void throwNullPointerException();
 	
 	void throwException();
 	

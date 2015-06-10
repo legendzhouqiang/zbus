@@ -43,8 +43,8 @@ public class InterfaceImpl implements Interface{
 		return new String[]{"hong", "leiming"};
 	}
 	
-	public Object[] objectArray(){  
-		return new Object[]{getUser("rushmore"), "hong", true, 1, String.class};
+	public Object[] objectArray(String id){  
+		return new Object[]{id, getUser("rushmore"), "hong", true, 1, String.class};
 	}
 	
 	
@@ -71,7 +71,7 @@ public class InterfaceImpl implements Interface{
 	}
 	
 	
-	public User[] getUsers() {
+	public Object[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
 	
@@ -101,11 +101,28 @@ public class InterfaceImpl implements Interface{
 		return 0;
 	}
 	
+	@Override
+	public int saveUserArray(User[] array) {
+		for(User user : array){
+			System.out.println(user);
+		}
+		return 0;
+	}
+	
+	@Override
+	public int saveUserList(List<User> array) {
+		for(User user : array){
+			System.out.println(user);
+		}
+		return 0;
+	}
 	
 	public void throwException() {
 		throw new RuntimeException("runtime exception from server");
 	}
-	
+	public void throwNullPointerException(){
+		throw new NullPointerException("null pointer");
+	}
 	
 	public void throwUnkownException() {  
 		throw new PrivateRuntimeException("private runtime exeption");
