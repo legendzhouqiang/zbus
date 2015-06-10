@@ -1,5 +1,8 @@
 package org.zstacks.zbus.client.rpc;
 
+import java.util.List;
+import java.util.Map;
+
 import org.zstacks.zbus.client.ZbusException;
 import org.zstacks.znet.Message;
 
@@ -9,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.util.TypeUtils;
  
 
 public class JsonCodec implements Codec {  
@@ -34,17 +38,48 @@ public class JsonCodec implements Codec {
 		return req;
 	}
 	
-	public Object normalize(Object param, Class<?> targetType) throws ClassNotFoundException {
-		if(param instanceof JSON){ //转换为目标类型 
-			try{
-				return JSON.toJavaObject((JSON)param, targetType);
-			}catch(JSONException jsonException){
-				return param;
+	@SuppressWarnings("unchecked")
+	private static void removeTypeInfo(Object param){
+		if(param instanceof List){
+			List<Object> list  = (List<Object>)param;
+			for(Object obj : list){
+				removeTypeInfo(obj);
 			}
 		}
+		if(param instanceof Map){ 
+			Object typeKey = JSON.DEFAULT_TYPE_KEY; 
+			Map<Object, Object> map = (Map<Object, Object>)param;
+			if(map.containsKey(typeKey)){
+				map.remove(typeKey);
+			}
+			for(Object value : map.values()){
+				removeTypeInfo(value);
+			}
+		}
+	}
+	
+	public Object normalize(Object param, Class<?> targetType) throws ClassNotFoundException {
+		
+		if(targetType.isEnum()){ 
+			return TypeUtils.castToJavaBean(param, targetType);
+		}
+		
 		if(targetType.getName().equals("java.lang.Class")){
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			return classLoader.loadClass(param.toString());
+		}
+		
+		if(param instanceof JSON){
+			try{
+				return JSON.toJavaObject((JSON)param, targetType);
+			} catch(JSONException ex1){
+				removeTypeInfo(param); //没法准确转换的，剔除类型信息再次尝试
+				try{
+					return JSON.toJavaObject((JSON)param, targetType);
+				} catch(JSONException ex2){
+					return param;
+				} 
+			} 
 		}
 		return param;
 	}

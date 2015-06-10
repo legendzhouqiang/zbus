@@ -52,6 +52,12 @@ public class InterfaceImpl implements Interface{
 		return a+b;
 	}
 	
+	@Override
+	public MyEnum myEnum(MyEnum e) { 
+		System.out.println(e);
+		return MyEnum.Sunday;
+	}
+	
 	
 	public User getUser(String name) {
 		User user = new User();
@@ -71,7 +77,7 @@ public class InterfaceImpl implements Interface{
 	}
 	
 	
-	public Object[] getUsers() {
+	public User[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
 	

@@ -8,6 +8,7 @@ import org.zstacks.zbus.client.broker.SingleBroker;
 import org.zstacks.zbus.client.broker.SingleBrokerConfig;
 import org.zstacks.zbus.client.rpc.RpcProxy;
 import org.zstacks.zbus.rpc.biz.Interface;
+import org.zstacks.zbus.rpc.biz.MyEnum;
 import org.zstacks.zbus.rpc.biz.User;
 
 public class RpcExample {
@@ -25,7 +26,7 @@ public class RpcExample {
 		
 		
 		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
-
+/*
 		Object[] res = hello.objectArray("xzx");
 		for (Object obj : res) {
 			System.out.println(obj);
@@ -50,6 +51,9 @@ public class RpcExample {
 		for(Object obj : objects){
 			System.out.println(obj);
 		}
+		*/
+		MyEnum e = hello.myEnum(MyEnum.Monday);
+		System.out.println(e);
 	}
 	
 

@@ -19,11 +19,13 @@ public interface Interface{
 	
 	int plus(int a, int b);
 	
+	MyEnum myEnum(MyEnum e);
+	
 	User getUser(String name);
 	
 	Order getOrder();
 	
-	Object[] getUsers();
+	User[] getUsers();
 	
 	Object[] objectArray(String id);
 
