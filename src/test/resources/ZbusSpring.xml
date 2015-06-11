@@ -35,7 +35,8 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
 				<property name="broker" ref="broker"/>
 				<property name="mq" value="MyRpc"/>
-				<property name="threadCount" value="2"/>
+				<property name="consumerCount" value="2"/>
+				<property name="threadCount" value="20"/>
 				<property name="serviceHandler" ref="serviceHandler"/>
 			</bean>
 		</constructor-arg>

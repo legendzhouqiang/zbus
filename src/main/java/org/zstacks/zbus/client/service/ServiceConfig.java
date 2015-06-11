@@ -7,7 +7,8 @@ import org.zstacks.zbus.client.MqConfig;
 
 public class ServiceConfig extends MqConfig {
 	private ServiceHandler serviceHandler;  
-	private int threadCount = 1; 
+	private int threadCount = 20; 
+	private int consumerCount = 1;
 	private int readTimeout = 10000;
 	
 	public int getThreadCount() {
@@ -15,8 +16,14 @@ public class ServiceConfig extends MqConfig {
 	}
 	public void setThreadCount(int threadCount) {
 		this.threadCount = threadCount;
-	}
+	} 
 	
+	public int getConsumerCount() {
+		return consumerCount;
+	}
+	public void setConsumerCount(int consumerCount) {
+		this.consumerCount = consumerCount;
+	}
 	public ServiceHandler getServiceHandler() {
 		return serviceHandler;
 	}

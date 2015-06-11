@@ -26,7 +26,7 @@ public class RpcExample {
 		
 		
 		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
-/*
+
 		Object[] res = hello.objectArray("xzx");
 		for (Object obj : res) {
 			System.out.println(obj);
@@ -50,8 +50,8 @@ public class RpcExample {
 		Object[] objects = hello.getUsers();
 		for(Object obj : objects){
 			System.out.println(obj);
-		}
-		*/
+		} 
+		
 		MyEnum e = hello.myEnum(MyEnum.Monday);
 		System.out.println(e);
 	}

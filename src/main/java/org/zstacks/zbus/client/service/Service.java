@@ -2,6 +2,9 @@ package org.zstacks.zbus.client.service;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +14,8 @@ import org.zstacks.znet.Message;
 public class Service implements Closeable {   
 	private static final Logger log = LoggerFactory.getLogger(Service.class);
 	private final ServiceConfig config; 
-	private WorkerThread[] workerThreads;
+	private ConsumerThread[] consumerThreads;
+	private final ThreadPoolExecutor threadPoolExecutor;
 	
 	public Service(ServiceConfig config){
 		this.config = config;
@@ -21,12 +25,14 @@ public class Service implements Closeable {
 		if(config.getServiceHandler() == null){
 			throw new IllegalArgumentException("serviceHandler required");
 		}  
+		threadPoolExecutor = new ThreadPoolExecutor(config.getConsumerCount(),
+				4*config.getConsumerCount(), 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	}
 	 
 	@Override
 	public void close() throws IOException {
-		if(this.workerThreads != null){
-			for(WorkerThread thread : this.workerThreads){
+		if(this.consumerThreads != null){
+			for(ConsumerThread thread : this.consumerThreads){
 				try {
 					thread.close();
 				} catch (IOException e) {
@@ -37,24 +43,26 @@ public class Service implements Closeable {
 	}
 	
 	public void start(){    
-		this.workerThreads = new WorkerThread[config.getThreadCount()];
-		for(int i=0;i<workerThreads.length;i++){
+		this.consumerThreads = new ConsumerThread[config.getConsumerCount()];
+		for(int i=0;i<consumerThreads.length;i++){
 			@SuppressWarnings("resource")
-			WorkerThread thread = new WorkerThread(config); 
-			this.workerThreads[i] = thread; 
-			this.workerThreads[i].start();
+			ConsumerThread thread = new ConsumerThread(config, threadPoolExecutor); 
+			this.consumerThreads[i] = thread; 
+			this.consumerThreads[i].start();
 		}
 	} 
 }
 
 
 
-class WorkerThread extends Thread implements Closeable{
-	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
+class ConsumerThread extends Thread implements Closeable{
+	private static final Logger log = LoggerFactory.getLogger(ConsumerThread.class);
 	private ServiceConfig config = null;  
 	private Consumer consumer;
-	public WorkerThread(ServiceConfig config){ 
+	private ThreadPoolExecutor threadPoolExecutor;
+	public ConsumerThread(ServiceConfig config, final ThreadPoolExecutor threadPoolExecutor){ 
 		this.config  = config;  
+		this.threadPoolExecutor = threadPoolExecutor;
 	}  
 	
 	@Override
@@ -64,7 +72,7 @@ class WorkerThread extends Thread implements Closeable{
 		
 		while(!isInterrupted()){
 			try {  
-				Message msg = consumer.recv(timeout); 
+				final Message msg = consumer.recv(timeout); 
 				if(msg == null) continue;
 				
 				if(log.isDebugEnabled()){
@@ -73,14 +81,26 @@ class WorkerThread extends Thread implements Closeable{
 				
 				final String mqReply = msg.getMqReply();
 				final String msgId  = msg.getMsgIdRaw(); //必须使用原始的msgId
+				if(threadPoolExecutor == null){
+					break;
+				}
 				
-				Message res = config.getServiceHandler().handleRequest(msg);
+				threadPoolExecutor.submit(new Runnable() { 
+					@Override
+					public void run() {
+						Message res = config.getServiceHandler().handleRequest(msg); 
+						if(res != null){ 
+							res.setMsgId(msgId); 
+							res.setMq(mqReply);		
+							try {
+								consumer.reply(res);
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}
+						}  	
+					}
+				});
 				
-				if(res != null){ 
-					res.setMsgId(msgId); 
-					res.setMq(mqReply);		
-					consumer.reply(res);
-				}  	
 			} catch (InterruptedException e) { 
 				break;
 			} catch (Exception e) { 
@@ -100,7 +120,9 @@ class WorkerThread extends Thread implements Closeable{
 	
 	@Override
 	public void close() throws IOException {
-		this.interrupt();
+		this.threadPoolExecutor.shutdown();
+		this.threadPoolExecutor = null;
+		this.interrupt(); 
 	}
 }
 

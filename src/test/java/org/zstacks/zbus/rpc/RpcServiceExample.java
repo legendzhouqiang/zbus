@@ -14,7 +14,8 @@ import org.zstacks.znet.Helper;
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
 		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
-		int threadCount = Helper.option(args, "-c", 1);
+		int conusmerCount = Helper.option(args, "-c", 1); //消费者数目
+		int threadCount = Helper.option(args, "-t", 20);  //业务执行线程数目
 		String service = Helper.option(args, "-s", "MyRpc");
 		
 		//配置Broker
@@ -23,6 +24,7 @@ public class RpcServiceExample {
 		Broker broker = new SingleBroker(brokerCfg);
 		
 		ServiceConfig config = new ServiceConfig();
+		config.setConsumerCount(conusmerCount);
 		config.setThreadCount(threadCount); 
 		config.setMq(service); 
 		config.setBroker(broker);
