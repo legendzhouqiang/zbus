@@ -95,7 +95,7 @@ public class Rpc extends Caller{
 		}
 		
 		if (msg == null) { 
-			String errorMsg = String.format("MQ(%s)-method(%s) request timeout",  mq, method);
+			String errorMsg = String.format("MQ(%s)-module(%s)-method(%s) request timeout",  mq,  module, method);
 			throw new ZbusException(errorMsg);
 		}
 		
