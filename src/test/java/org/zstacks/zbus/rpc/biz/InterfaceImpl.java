@@ -53,8 +53,7 @@ public class InterfaceImpl implements Interface{
 	}
 	
 	@Override
-	public MyEnum myEnum(MyEnum e) { 
-		System.out.println(e);
+	public MyEnum myEnum(MyEnum e) {  
 		return MyEnum.Sunday;
 	}
 	
@@ -101,25 +100,16 @@ public class InterfaceImpl implements Interface{
 	
 	
 	public int saveObjectArray(Object[] array) {
-		for(Object obj : array){
-			System.out.println(obj);
-		}
 		return 0;
 	}
 	
 	@Override
-	public int saveUserArray(User[] array) {
-		for(User user : array){
-			System.out.println(user);
-		}
+	public int saveUserArray(User[] array) { 
 		return 0;
 	}
 	
 	@Override
-	public int saveUserList(List<User> array) {
-		for(User user : array){
-			System.out.println(user);
-		}
+	public int saveUserList(List<User> array) { 
 		return 0;
 	}
 	
@@ -140,8 +130,7 @@ public class InterfaceImpl implements Interface{
 	}
 	
 	
-	public Class<?> classTest(Class<?> inClass) {
-		System.out.println(inClass);
+	public Class<?> classTest(Class<?> inClass) { 
 		return Double.class;
 	}
 }

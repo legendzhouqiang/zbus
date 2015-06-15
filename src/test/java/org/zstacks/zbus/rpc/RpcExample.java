@@ -22,10 +22,15 @@ public class RpcExample {
 		return user;
 	}
 	
-	public static void test(RpcProxy proxy) throws Exception{
+	public static void test2(Interface hello) throws Exception{ 
+		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
+				String.class };
 		
-		
-		Interface hello = proxy.getService(Interface.class, "mq=MyRpc");
+		int saved = hello.saveObjectArray(array);
+		System.out.println(saved);
+	}
+	
+	public static void test(Interface hello) throws Exception{ 
 
 		Object[] res = hello.objectArray("xzx");
 		for (Object obj : res) {
@@ -36,16 +41,16 @@ public class RpcExample {
 				String.class };
 		
 		
-		int saved = hello.saveObjectArray(array);
-		System.out.println(saved);
+		//int saved = hello.saveObjectArray(array);
+		//System.out.println(saved);
 		 
 		Class<?> ret = hello.classTest(String.class);
 		System.out.println(ret);
 		
 		User[] users = new User[]{ getUser("rushmore"),  getUser("rushmore2")};
-		hello.saveUserArray(users);
+		//hello.saveUserArray(users);
 		
-		hello.saveUserList(Arrays.asList(users));
+		//hello.saveUserList(Arrays.asList(users));
 		
 		Object[] objects = hello.getUsers();
 		for(Object obj : objects){
@@ -59,11 +64,15 @@ public class RpcExample {
 
 	public static void main(String[] args) throws Exception { 
 		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("10.19.1.32:15555");
 		Broker broker = new SingleBroker(config);
 
 		RpcProxy proxy = new RpcProxy(broker); 
-		test(proxy);
+		Interface hello = proxy.getService(Interface.class, "mq=MyRpc&&timeout=10000");
+		for(int i=0;i<1000000;i++){
+			System.out.println(">>>>>>"+i);
+			test2(hello); 
+		}
 		
 		broker.close();
 	}

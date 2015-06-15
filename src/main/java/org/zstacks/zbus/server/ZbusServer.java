@@ -115,7 +115,7 @@ public class ZbusServer extends RemotingServer {
 				}
 				
 				if(verbose){
-					log.info("{}", msg);
+					log.info("\n{}", msg);
 				} 
 			}
 		}); 

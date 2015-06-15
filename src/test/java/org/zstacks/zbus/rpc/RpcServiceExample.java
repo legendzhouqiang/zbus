@@ -13,8 +13,8 @@ import org.zstacks.znet.Helper;
 
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
-		String address = Helper.option(args, "-b", "127.0.0.1:15555"); 
-		int conusmerCount = Helper.option(args, "-c", 1); //消费者数目
+		String address = Helper.option(args, "-b", "10.19.1.32:15555"); 
+		int conusmerCount = Helper.option(args, "-c", 2); //消费者数目
 		int threadCount = Helper.option(args, "-t", 20);  //业务执行线程数目
 		String service = Helper.option(args, "-s", "MyRpc");
 		
