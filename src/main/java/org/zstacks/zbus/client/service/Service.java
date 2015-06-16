@@ -26,8 +26,8 @@ public class Service implements Closeable {
 		if(config.getServiceHandler() == null){
 			throw new IllegalArgumentException("serviceHandler required");
 		}  
-		threadPoolExecutor = new ThreadPoolExecutor(config.getConsumerCount(),
-				4*config.getConsumerCount(), 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		threadPoolExecutor = new ThreadPoolExecutor(config.getThreadCount(),
+				4*config.getThreadCount(), 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	}
 	 
 	@Override
