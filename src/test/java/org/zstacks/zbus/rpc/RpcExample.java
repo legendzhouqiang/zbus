@@ -41,16 +41,16 @@ public class RpcExample {
 				String.class };
 		
 		
-		//int saved = hello.saveObjectArray(array);
-		//System.out.println(saved);
+		int saved = hello.saveObjectArray(array);
+		System.out.println(saved);
 		 
 		Class<?> ret = hello.classTest(String.class);
 		System.out.println(ret);
 		
 		User[] users = new User[]{ getUser("rushmore"),  getUser("rushmore2")};
-		//hello.saveUserArray(users);
+		hello.saveUserArray(users);
 		
-		//hello.saveUserList(Arrays.asList(users));
+		hello.saveUserList(Arrays.asList(users));
 		
 		Object[] objects = hello.getUsers();
 		for(Object obj : objects){
