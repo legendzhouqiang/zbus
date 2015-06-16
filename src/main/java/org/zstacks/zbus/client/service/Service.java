@@ -8,13 +8,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.Consumer;
 import org.zstacks.znet.Message;
 
 public class Service implements Closeable {   
 	private static final Logger log = LoggerFactory.getLogger(Service.class);
 	private final ServiceConfig config; 
-	private ConsumerThread[] consumerThreads;
+	private ConsumerThread[][] brokerConsumerThreads;
 	private final ThreadPoolExecutor threadPoolExecutor;
 	
 	public Service(ServiceConfig config){
@@ -31,28 +32,39 @@ public class Service implements Closeable {
 	 
 	@Override
 	public void close() throws IOException {
-		if(this.consumerThreads != null){
-			for(ConsumerThread thread : this.consumerThreads){
-				try {
-					thread.close();
-				} catch (IOException e) {
-					log.debug(e.getMessage(), e);
+		if(this.brokerConsumerThreads != null){
+			for(ConsumerThread[] threads : this.brokerConsumerThreads){
+				for(ConsumerThread thread : threads){
+					try {
+						thread.close();
+					} catch (IOException e) {
+						log.debug(e.getMessage(), e);
+					}
 				}
 			}
 		} 
 	}
 	
 	public void start(){    
-		this.consumerThreads = new ConsumerThread[config.getConsumerCount()];
-		for(int i=0;i<consumerThreads.length;i++){
-			@SuppressWarnings("resource")
-			ConsumerThread thread = new ConsumerThread(config, threadPoolExecutor); 
-			this.consumerThreads[i] = thread; 
-			this.consumerThreads[i].start();
+		Broker[] brokers = config.getBrokers();
+		int consumerCount = config.getConsumerCount();
+		if(brokers.length < 1 || consumerCount < 1) return;
+		
+		this.brokerConsumerThreads = new ConsumerThread[brokers.length][];
+		for(int i=0; i<brokerConsumerThreads.length; i++){
+			ConsumerThread[] threads = new ConsumerThread[consumerCount];
+			brokerConsumerThreads[i] = threads;
+			for(int j=0; j<consumerCount; j++){ 
+				ServiceConfig cfg = config.clone();
+				cfg.setBroker(brokers[i]);
+				@SuppressWarnings("resource")
+				ConsumerThread thread = new ConsumerThread(cfg, threadPoolExecutor); 
+				threads[j] = thread; 
+				threads[j].start();
+			}
 		}
 	} 
 }
-
 
 
 class ConsumerThread extends Thread implements Closeable{

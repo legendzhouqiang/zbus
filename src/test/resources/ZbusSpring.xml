@@ -29,11 +29,26 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		</constructor-arg>
 	</bean>
 	
+	<bean id="broker2" class="org.zstacks.zbus.client.broker.SingleBroker">
+		<constructor-arg>
+			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
+				<property name="brokerAddress" value="127.0.0.1:15556" />
+				<property name="maxTotal" value="20"/>
+				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
+			</bean>
+		</constructor-arg>
+	</bean>
+	
 	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
 	<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
 		<constructor-arg>  
 			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
-				<property name="broker" ref="broker"/>
+				<constructor-arg> <!-- 支持多总线注册 -->
+					<list>
+						<ref bean="broker"/>
+						<ref bean="broker2"/>
+					</list>
+				</constructor-arg> 
 				<property name="mq" value="MyRpc"/>
 				<property name="consumerCount" value="2"/>
 				<property name="threadCount" value="20"/>

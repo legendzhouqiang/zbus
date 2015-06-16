@@ -2,7 +2,7 @@ package org.zstacks.zbus.client;
 
 import org.zstacks.zbus.protocol.MessageMode;
 
-public class MqConfig { 
+public class MqConfig implements Cloneable { 
 	protected Broker broker; //Broker，必须设置
 	protected String mq;     //MQ标识，必须设置
 	protected String accessToken = "";   //访问控制码
@@ -58,5 +58,23 @@ public class MqConfig {
 	public void setTopic(String topic) {
 		this.topic = topic;
 	}
+	
+	@Override
+	public MqConfig clone() { 
+		try {
+			return (MqConfig)super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "MqConfig [broker=" + broker + ", mq=" + mq + ", accessToken="
+				+ accessToken + ", registerToken=" + registerToken + ", mode="
+				+ mode + ", topic=" + topic + "]";
+	}
+	
+	
 	
 }
