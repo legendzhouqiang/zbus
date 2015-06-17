@@ -10,6 +10,7 @@
 * **跨平台、多语言**
 * **轻量级、高可用**
 
+## QQ群: 467741880
 
 ##**ZBUS** 项目结构
 
@@ -217,4 +218,3 @@
 ## ZBUS消息协议
 
 * [zbus消息协议](http://git.oschina.net/rushmore/zbus/wikis/zbus%E6%B6%88%E6%81%AF%E5%8D%8F%E8%AE%AE- "zbus-protocol") 
-
