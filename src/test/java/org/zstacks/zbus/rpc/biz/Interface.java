@@ -13,6 +13,8 @@ import java.util.Map;
  */
 public interface Interface{
   
+	int getUserScore();
+	
 	String getString(String name);
 	
 	String[] stringArray();
@@ -41,6 +43,8 @@ public interface Interface{
 	List<Map<String, Object>> listMap();
 	
 	Class<?> classTest(Class<?> inClass);
+	
+	void testTimeout();
 	
 	void noReturn();
 	

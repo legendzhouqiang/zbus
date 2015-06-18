@@ -18,6 +18,7 @@ public class ProducerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ(); //如果已经确定存在，不需要创建
 		
+		for(int i=0;i<2;i++){
 		Message msg = new Message(); 
 		msg.setBody("hello world");  
 		//Message res = producer.sendSync(msg, 1000);
@@ -29,7 +30,7 @@ public class ProducerExample {
 				System.out.println(msg);
 			}
 		});
-		
+		}
 		
 		//3）销毁Broker
 		//broker.close();
