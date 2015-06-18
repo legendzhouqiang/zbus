@@ -84,22 +84,23 @@ public class Rpc extends Caller{
 		req.assignParamTypes(types); 
 		req.setEncoding(this.encoding);
 		 
-		Message msg = null;
+		Message msgReq= null, msgRes = null;
 		try {
-			msg = codec.encodeRequest(req);
-			log.debug("Request: {}", msg);
-			msg = this.invokeSync(msg, this.timeout); 
-			log.debug("Response: {}", msg);
+			msgReq = codec.encodeRequest(req);
+			log.debug("Request: {}", msgReq);
+			msgRes = this.invokeSync(msgReq, this.timeout); 
+			log.debug("Response: {}", msgRes);
 		} catch (IOException e) {
 			throw new ZbusException(e.getMessage(), e);
 		}
 		
-		if (msg == null) { 
-			String errorMsg = String.format("MQ(%s)-module(%s)-method(%s) request timeout",  mq,  module, method);
+		if (msgRes == null) { 
+			String errorMsg = String.format("MQ(%s)-module(%s)-method(%s) request timeout\n%s", 
+					mq,  module, method, msgReq.toString());
 			throw new ZbusException(errorMsg);
 		}
 		
-		Response resp = codec.decodeResponse(msg);
+		Response resp = codec.decodeResponse(msgRes);
 		
 		
 		if(resp.getStackTrace() != null){
