@@ -10,6 +10,7 @@ public class MqConfig implements Cloneable {
 	
 	protected int mode = MessageMode.MQ.intValue(); //创建消息队列时采用到
 	protected String topic = null; //发布订阅模式下使用
+	private boolean verbose = false;
 	
 	public Broker getBroker() {
 		return broker;
@@ -57,6 +58,14 @@ public class MqConfig implements Cloneable {
 
 	public void setTopic(String topic) {
 		this.topic = topic;
+	}
+	
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 	
 	@Override

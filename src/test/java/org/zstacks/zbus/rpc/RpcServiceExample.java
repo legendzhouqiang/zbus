@@ -17,6 +17,7 @@ public class RpcServiceExample {
 		int conusmerCount = Helper.option(args, "-consumer", 2); //消费者数目
 		int threadCount = Helper.option(args, "-thread", 20);  //业务执行线程数目
 		String service = Helper.option(args, "-service", "MyRpc");
+		boolean verbose = Helper.option(args, "-verbose", true);
 		
 		//配置Broker
 		SingleBrokerConfig brokerCfg = new SingleBrokerConfig();
@@ -28,6 +29,7 @@ public class RpcServiceExample {
 		config.setThreadCount(threadCount); 
 		config.setMq(service); 
 		config.setBroker(broker);
+		config.setVerbose(verbose);
 		
 		RpcServiceHandler handler = new RpcServiceHandler(); 
 		//增加模块，模块名在调用时需要指定

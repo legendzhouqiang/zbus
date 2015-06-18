@@ -40,6 +40,7 @@ public class Rpc extends Caller{
 	private String module = ""; 
 	private String encoding = DEFAULT_ENCODING;
 	private int timeout = 10000;  
+	private boolean verbose = false;
 
 	public Rpc(Broker broker, String mq) {
 		super(broker, mq); 
@@ -50,6 +51,7 @@ public class Rpc extends Caller{
 		this.module = config.getModule();
 		this.timeout = config.getTimeout(); 
 		this.encoding = config.getEncoding();
+		this.verbose = config.isVerbose();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -86,10 +88,19 @@ public class Rpc extends Caller{
 		 
 		Message msgReq= null, msgRes = null;
 		try {
-			msgReq = codec.encodeRequest(req);
-			log.debug("Request: {}", msgReq);
+			long start = System.currentTimeMillis();
+			msgReq = codec.encodeRequest(req); 
+			if(isVerbose()){
+				log.info("[REQ]: {}", msgReq);
+			} 
+			
 			msgRes = this.invokeSync(msgReq, this.timeout); 
-			log.debug("Response: {}", msgRes);
+			
+			if(isVerbose()){
+				long end = System.currentTimeMillis();
+				log.info("[REP]: Time cost={}ms\n{}",(end-start), msgRes);
+			} 
+			
 		} catch (IOException e) {
 			throw new ZbusException(e.getMessage(), e);
 		}
@@ -144,5 +155,14 @@ public class Rpc extends Caller{
 
 	public void setTimeout(int timeout) {
 		this.timeout = timeout;
+	}
+
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	} 
+	
 }

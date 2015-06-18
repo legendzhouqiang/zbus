@@ -109,6 +109,10 @@ public class RpcProxy {
 				config.setRegisterToken(val);
 			} else if("topic".equals(key)){
 				config.setTopic(val);
+			} else if("verbose".equals(key)){
+				boolean verbose = false;
+				try{ verbose = Boolean.valueOf(val); }catch(Exception e){}
+				config.setVerbose(verbose);
 			} else if("mode".equals(key)){
 				int mode = 0;
 				try{ mode = Integer.valueOf(val); }catch(Exception e){}

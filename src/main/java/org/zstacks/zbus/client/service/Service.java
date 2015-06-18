@@ -81,14 +81,15 @@ class ConsumerThread extends Thread implements Closeable{
 	public void run() { 
 		this.consumer = new Consumer(config);
 		final int timeout = config.getReadTimeout(); //ms  
-		
+		final boolean verbose = config.isVerbose();
 		while(!isInterrupted()){
 			try {  
 				final Message msg = consumer.recv(timeout); 
 				if(msg == null) continue;
 				
-				if(log.isDebugEnabled()){
-					log.debug("Request: {}", msg);
+				final long start = System.currentTimeMillis();
+				if(verbose){
+					log.info("[REQ-Consume]:\n{}", msg);
 				}
 				
 				final String mqReply = msg.getMqReply();
@@ -106,6 +107,10 @@ class ConsumerThread extends Thread implements Closeable{
 							res.setMq(mqReply);		
 							try {
 								consumer.reply(res);
+								if(verbose){
+									long end = System.currentTimeMillis();
+									log.info("[REP-Produce]: Time cost={}ms\n{}", (end-start), res);
+								}
 							} catch (IOException e) {
 								log.error(e.getMessage(), e);
 							}

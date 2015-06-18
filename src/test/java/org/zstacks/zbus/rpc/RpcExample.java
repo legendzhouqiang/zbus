@@ -6,6 +6,7 @@ import java.util.Random;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.broker.SingleBroker;
 import org.zstacks.zbus.client.broker.SingleBrokerConfig;
+import org.zstacks.zbus.client.rpc.RpcConfig;
 import org.zstacks.zbus.client.rpc.RpcProxy;
 import org.zstacks.zbus.rpc.biz.Interface;
 import org.zstacks.zbus.rpc.biz.MyEnum;
@@ -63,15 +64,20 @@ public class RpcExample {
 	
 
 	public static void main(String[] args) throws Exception { 
-		SingleBrokerConfig config = new SingleBrokerConfig();
-		config.setBrokerAddress("10.19.1.32:15555");
-		Broker broker = new SingleBroker(config);
+		SingleBrokerConfig brokerConfig = new SingleBrokerConfig();
+		brokerConfig.setBrokerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(brokerConfig);
 
 		RpcProxy proxy = new RpcProxy(broker); 
-		Interface hello = proxy.getService(Interface.class, "mq=MyRpc&&timeout=10000");
-		for(int i=0;i<1000000;i++){
-			System.out.println(">>>>>>"+i);
-			test2(hello); 
+		
+		RpcConfig config = new RpcConfig();
+		config.setMq("MyRpc");
+		config.setVerbose(true);
+		config.setTimeout(10000);
+		
+		Interface hello = proxy.getService(Interface.class, config);
+		for(int i=0;i<1;i++){ 
+			test(hello); 
 		}
 		
 		broker.close();

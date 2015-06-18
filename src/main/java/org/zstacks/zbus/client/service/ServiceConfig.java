@@ -10,7 +10,7 @@ public class ServiceConfig extends MqConfig {
 	private int threadCount = 20; 
 	private int consumerCount = 1;
 	private int readTimeout = 10000;
-	private Broker[] brokers;
+	private Broker[] brokers; 
 	
 	public ServiceConfig(Broker... brokers){
 		this.brokers = brokers;
@@ -66,7 +66,8 @@ public class ServiceConfig extends MqConfig {
 		return (ServiceConfig)super.clone();
 	}
 	
-	
+
+
 	@Override
 	public String toString() {
 		return "ServiceConfig [serviceHandler=" + serviceHandler

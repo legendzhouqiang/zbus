@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.broker.SingleBroker;
 import org.zstacks.zbus.client.broker.SingleBrokerConfig;
+import org.zstacks.zbus.client.rpc.RpcConfig;
 import org.zstacks.zbus.client.rpc.RpcProxy;
 import org.zstacks.zbus.rpc.biz.Interface;
 import org.zstacks.znet.Helper;
@@ -48,18 +49,23 @@ public class RpcPerf {
 		final int loopCount = Helper.option(args, "-loop", 10000);
 		final String serviceName = Helper.option(args, "-service", "MyRpc");
 		final int timeout = Helper.option(args, "-timeout", 10000);
+		final boolean verbose = Helper.option(args, "-verbose", false);
 		
-		SingleBrokerConfig config = new SingleBrokerConfig(); 
-		config.setBrokerAddress(brokerAddress);
-		config.setMaxTotal(threadCount);
-		config.setMaxIdle(threadCount);  
+		SingleBrokerConfig brokerConfig = new SingleBrokerConfig(); 
+		brokerConfig.setBrokerAddress(brokerAddress);
+		brokerConfig.setMaxTotal(threadCount);
+		brokerConfig.setMaxIdle(threadCount);  
 		
-		final Broker broker = new SingleBroker(config);
+		final Broker broker = new SingleBroker(brokerConfig);
 		
 		RpcProxy proxy = new RpcProxy(broker); 
-		String url = String.format("mq=%s&&timeout=%d", serviceName, timeout);
 		
-		Interface biz = proxy.getService(Interface.class, url);
+		RpcConfig config = new RpcConfig();
+		config.setMq(serviceName);
+		config.setTimeout(timeout);
+		config.setVerbose(verbose);
+		
+		Interface biz = proxy.getService(Interface.class, config);
 		
 		AtomicLong counter = new AtomicLong(0);
 		AtomicLong faileCounter = new AtomicLong(0);
