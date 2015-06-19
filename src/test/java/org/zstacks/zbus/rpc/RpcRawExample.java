@@ -26,10 +26,10 @@ public class RpcRawExample {
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
 		
-		Rpc rpc = new Rpc(broker, "MyRpc"); 
+		Rpc rpc = new Rpc(broker, "gta_srv"); 
 		rpc.setVerbose(true);
 		//rpc.setModule("User");
-		String res = (String)rpc.invokeSync("getString", "hong");
+		String res = (String)rpc.invokeSync("IfTest");
 		
 		System.out.println(res);
 		
