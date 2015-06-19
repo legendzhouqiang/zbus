@@ -24,11 +24,10 @@ public class RpcExample {
 	}
 	
 	public static void test2(Interface hello) throws Exception{ 
-		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
-				String.class };
+		int res = hello.plus(1,2);
+		System.out.println(res);
 		
-		int saved = hello.saveObjectArray(array);
-		System.out.println(saved);
+		//System.out.println(hello.testEncoding());
 	}
 	
 	public static void test(Interface hello) throws Exception{ 
@@ -73,11 +72,12 @@ public class RpcExample {
 		RpcConfig config = new RpcConfig();
 		config.setMq("MyRpc");
 		config.setVerbose(true);
-		config.setTimeout(10000);
+		config.setTimeout(10000); 
+		
 		
 		Interface hello = proxy.getService(Interface.class, config);
-		for(int i=0;i<1;i++){ 
-			test(hello); 
+		for(int i=0;i<10;i++){ 
+			test2(hello); 
 		}
 		
 		broker.close();

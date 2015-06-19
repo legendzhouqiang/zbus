@@ -12,6 +12,10 @@ public class ServiceConfig extends MqConfig {
 	private int readTimeout = 10000;
 	private Broker[] brokers; 
 	
+	public ServiceConfig(){
+		super();
+	}
+	
 	public ServiceConfig(Broker... brokers){
 		this.brokers = brokers;
 		if(brokers.length > 0){

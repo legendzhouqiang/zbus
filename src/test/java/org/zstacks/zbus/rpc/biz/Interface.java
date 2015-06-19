@@ -42,6 +42,8 @@ public interface Interface{
 	
 	List<Map<String, Object>> listMap();
 	
+	String testEncoding();
+	
 	Class<?> classTest(Class<?> inClass);
 	
 	void testTimeout();

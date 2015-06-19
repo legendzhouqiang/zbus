@@ -41,6 +41,10 @@ public class InterfaceImpl implements Interface{
 		return "Hello World ZBUS " + name;
 	}
 
+	@Override
+	public String testEncoding() { 
+		return "中文";
+	}
 	
 	public String[] stringArray() {
 		return new String[]{"hong", "leiming"};

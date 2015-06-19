@@ -184,7 +184,7 @@ public class RpcServiceHandler implements ServiceHandler {
 			
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];  
-			Object[] reqParams = req.getParams();
+			Object[] reqParams = req.getParams(); 
 			for(int i=0; i<targetParamTypes.length; i++){ 
 				invokeParams[i] = codec.normalize(reqParams[i], targetParamTypes[i]);
 			} 

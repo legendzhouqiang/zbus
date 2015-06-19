@@ -26,7 +26,7 @@ public class CallerExample {
 		
 		Message msg = new Message();
 		msg.setBody("hello world");
-		for(int i=0;i<1;i++){
+		for(int i=0;i<10;i++){
 		Message res = caller.invokeSync(msg, 2500);
 		System.out.println(res);} 
 		

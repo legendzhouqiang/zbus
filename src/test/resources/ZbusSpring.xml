@@ -43,12 +43,13 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
 		<constructor-arg>  
 			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
-				<constructor-arg> <!-- 支持多总线注册 -->
+			    <!-- 支持多总线注册 -->
+				<constructor-arg> 
 					<list>
 						<ref bean="broker"/>
 						<ref bean="broker2"/>
 					</list>
-				</constructor-arg> 
+				</constructor-arg>  
 				<property name="mq" value="MyRpc"/>
 				<property name="consumerCount" value="2"/>
 				<property name="threadCount" value="20"/>
