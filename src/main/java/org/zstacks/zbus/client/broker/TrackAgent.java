@@ -35,9 +35,9 @@ public class TrackAgent implements Closeable {
 	
 
 	public TrackAgent(String trackServerList, Dispatcher dispatcher) throws IOException {  	
+		this.trackServerList = trackServerList;
 		this.dispatcher = dispatcher;  
 		this.connectToTrackServers();
-		
 	} 
 	
 	public void waitForReady(long timeout){

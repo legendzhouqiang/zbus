@@ -100,14 +100,12 @@ public class Consumer extends MqAdmin implements Closeable{
     protected ExecutorService executorService = null;
     private MessageCallback callback;
     public void onMessage(MessageCallback cb) throws IOException{
-    	this.callback = cb;
-    	if(executorService == null){
-    		executorService = new ThreadPoolExecutor(messageCallbackThreadCount, 
-    				256, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-    	} else {  
-    		return;
-    	}
-  
+    	this.callback = cb; 
+    	if(executorService != null) return;
+    	
+    	executorService = new ThreadPoolExecutor(messageCallbackThreadCount, 
+    		messageCallbackThreadCount, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+    	
     	executorService.submit(new Runnable() { 
 			public void run() { 
 				for(;;){
@@ -128,6 +126,7 @@ public class Consumer extends MqAdmin implements Closeable{
 				}
 			}
 		});
+    	
     }
     
     
