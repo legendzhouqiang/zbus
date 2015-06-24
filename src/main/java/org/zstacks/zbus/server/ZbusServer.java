@@ -275,6 +275,7 @@ public class ZbusServer extends RemotingServer {
     
     
     public static class ZbusServerConfig{
+    	public String serverHost = "0.0.0.0";
     	public int serverPort = 15555;
     	public String adminToken = "";
     	public String trackServerAddr; //用分号分割, 127.0.0.1:16666;127.0.0.1:16667
@@ -286,7 +287,8 @@ public class ZbusServer extends RemotingServer {
 
     @SuppressWarnings("resource")
     public static void main(String[] args) throws Exception{
-    	ZbusServerConfig config = new ZbusServerConfig();
+    	ZbusServerConfig config = new ZbusServerConfig(); 
+    	config.serverHost = Helper.option(args, "-h", "0.0.0.0"); 
     	config.serverPort = Helper.option(args, "-p", 15555); 
     	config.adminToken = Helper.option(args, "-admin", "");
     	config.trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
@@ -299,7 +301,7 @@ public class ZbusServer extends RemotingServer {
     		.selectorCount(config.selectorCount)
     		.executorCount(config.executorCount); 
     	
-		ZbusServer zbus = new ZbusServer(config.serverPort, dispatcher);  
+		ZbusServer zbus = new ZbusServer(config.serverHost, config.serverPort, dispatcher);  
 		zbus.setAdminToken(config.adminToken);
 		zbus.setMessageStoreType(config.storeType);
 		zbus.setVerbose(config.verbose);
