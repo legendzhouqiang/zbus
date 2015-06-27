@@ -15,7 +15,7 @@ public class ConsumerExample {
 	public static void main(String[] args) throws IOException{  
 		//1）创建Broker代表
 		SingleBrokerConfig brokerConfig = new SingleBrokerConfig();
-		brokerConfig.setBrokerAddress("123.57.11.40:15555");
+		brokerConfig.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);
 		
 		MqConfig config = new MqConfig(); 
