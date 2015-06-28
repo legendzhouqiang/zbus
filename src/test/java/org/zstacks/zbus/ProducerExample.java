@@ -17,11 +17,14 @@ public class ProducerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ(); //如果已经确定存在，不需要创建
 		
-		for(int i=0;i<10;i++){
+		for(int i=0;i<1000000;i++){
 			Message msg = new Message(); 
 			msg.setBody("hello world");  
 			Message res = producer.sendSync(msg, 1000);
-			System.out.println(res); 
+			//System.out.println(res); 
+			if(i % 1000 == 0){
+				System.out.println("done: "+ i);
+			}
 		}
 		
 		//3）销毁Broker
