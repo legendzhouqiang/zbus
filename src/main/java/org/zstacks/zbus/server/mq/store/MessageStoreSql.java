@@ -38,8 +38,7 @@ public class MessageStoreSql implements MessageStore {
 	private String url = "jdbc:hsqldb:db/zbus";
 	private String user = "sa";
 	private String password = "";
-	private String sqlMsgs = "CREATE TABLE IF NOT EXISTS msgs(id VARCHAR(128), msg_str VARCHAR(10240000), PRIMARY KEY(id) )";
-	private String sqlMqMsgs = "CREATE TABLE IF NOT EXISTS mq_msgs(mq_id VARCHAR(128), msg_id VARCHAR(128) )";
+	private String sqlMsgs = "CREATE TABLE IF NOT EXISTS msgs(id VARCHAR(128), mq_id VARCHAR(128), msg_str VARCHAR(10240000), PRIMARY KEY(id) )";
 	private String sqlMqs = "CREATE TABLE IF NOT EXISTS mqs(id VARCHAR(512), mq_info VARCHAR(10240000), PRIMARY KEY(id) )";
 	
 	
@@ -91,7 +90,7 @@ public class MessageStoreSql implements MessageStore {
 	}
 	
 	private String msgKey(Message msg){
-		return msg.getMsgId();
+		return msg.getHead("seq");
 	}
 	private String mqKey(String mq){
 		return String.format("%s-%s", brokerKey, mq);
@@ -100,8 +99,7 @@ public class MessageStoreSql implements MessageStore {
 		try{
 			String msgId = msgKey(msg);
 			String mqId = mqKey(msg.getMq());
-			this.update("INSERT INTO msgs(id, msg_str) VALUES(?,?)",msgId, msg.toString());
-			this.update("INSERT INTO mq_msgs(mq_id, msg_id) VALUES(?,?)", mqId, msgId);
+			this.update("INSERT INTO msgs(id, mq_id, msg_str) VALUES(?,?,?)",msgId, mqId, msg.toString());
 			if(log.isDebugEnabled()){
 				log.debug("save " + msgId);
 			}
@@ -114,7 +112,6 @@ public class MessageStoreSql implements MessageStore {
 		try{
 			String msgId = msgKey(msg);
 			this.update("DELETE FROM msgs WHERE id=?", msgId);
-			this.update("DELETE FROM mq_msgs WHERE msg_id=?", msgId);
 			if(log.isDebugEnabled()){
 				log.debug("delete " + msgId);
 			}
@@ -146,6 +143,9 @@ public class MessageStoreSql implements MessageStore {
 	public ConcurrentMap<String, MessageQueue> loadMqTable() throws SQLException {
 		ConcurrentHashMap<String, MessageQueue> res = new ConcurrentHashMap<String, MessageQueue>();
 		ResultSet mqRs = this.query("SELECT * FROM mqs");
+		if( null == mqRs ){
+			return res;
+		}
 		while(mqRs.next()) {
 			String mqId = mqRs.getString("id");
 			String mqName = mqId.substring(mqId.indexOf('-')+1);
@@ -162,20 +162,22 @@ public class MessageStoreSql implements MessageStore {
 			mq.setCreator(info.getCreator());
 			mq.setMessageStore(this);
 			
-			String sql = String.format("SELECT msg_str FROM mq_msgs, msgs WHERE mq_msgs.msg_id = msgs.id AND mq_msgs.mq_id='%s'", mqId);
+			String sql = String.format("SELECT msg_str FROM msgs WHERE mq_id='%s' order by id", mqId);
 			ResultSet msgRs = this.query(sql);
 			List<Message> msgs = new ArrayList<Message>();
-			while(msgRs.next()){
-				String msgString = msgRs.getString("msg_str");
-				IoBuffer buf = IoBuffer.wrap(msgString);
-				Message msg = (Message) codec.decode(buf);
-				if(msg != null){
-					msgs.add(msg);
-				} else {
-					log.error("message decode error");
+			if( msgRs != null ){
+				while(msgRs.next()){
+					String msgString = msgRs.getString("msg_str");
+					IoBuffer buf = IoBuffer.wrap(msgString);
+					Message msg = (Message) codec.decode(buf);
+					if(msg != null){
+						msgs.add(msg);
+					} else {
+						log.error("message decode error");
+					}
 				}
+				msgRs.close();
 			}
-			msgRs.close();
 			mq.loadMessageList(msgs);
 			res.put(mqName, mq);
 		}
@@ -185,10 +187,8 @@ public class MessageStoreSql implements MessageStore {
 	
 	private void initDbTable() throws SQLException{
 		sqlMsgs = props.getProperty("sql_msgs", sqlMsgs).trim();
-		sqlMqMsgs = props.getProperty("sql_mq_msgs", sqlMqMsgs).trim();
 		sqlMqs = props.getProperty("sql_mqs", sqlMqs).trim();
 		this.update(sqlMsgs);
-		this.update(sqlMqMsgs);
 		this.update(sqlMqs);
 	}
 	
