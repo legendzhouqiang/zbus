@@ -1,4 +1,4 @@
-## ZBUS--轻量级消息队列、服务总线
+## ZBUS = MQ + RPC + ServiceProxy
 
 ### ZBUS消息队列、服务总线业务常见场景
 
