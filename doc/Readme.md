@@ -50,7 +50,7 @@ ZBUS的消息队列MQ，远程方法调用RPC，总线代理等等功能设计�
 
 在消息队列基础上，可以衍生出C=B=S模式：这是CS模式的变种，客户端C请求消息统一到中介商B的队列中，服务端S获取中介商B队列的请求处理后返回给客户端C。这就是借助Broker来实现的C/S模式
 
-[img]
+![CBS请求应答](http://git.oschina.net/uploads/images/2015/0701/135128_bc247c16_7458.png "CBS请求应答")
 
 Client生产一个请求消息到Broker中，Service消费到请求消息处理后，生产一个应答消息给Broker，最后Client消费到应道消息
 
@@ -63,7 +63,7 @@ Client生产一个请求消息到Broker中，Service消费到请求消息处理�
 
 借助zbus可以将第三方服务（Thirdparty）适配成zbus支持的多语言跨平台的服务。结构逻辑如下，代理（Proxy）从zbus上消费取消息，将约定好的消息格式转化为第三方服务对应的协议，一般这个转化都是采用三方服务提供的SDK完成。可以是同步结构也可以是异步结构，由第三方决定，平台语言也由第三方决定，Proxy请求完成的应答最后生产消息回zbus。
 
-[img]
+![总线代理](http://git.oschina.net/uploads/images/2015/0701/135310_65aff197_7458.png "总线代理")
 
 总线代理结构在zbus用于系统整合主题上大量使用，适配后的第三方服务具备跨语言跨平台能力是这个代理结构的核心目标。
 目前zbus直接提供支持的代理主要在金融领域，比如zbus到金证、交易调度、手机证券、银行三方存管等等场景下。
@@ -71,7 +71,7 @@ Client生产一个请求消息到Broker中，Service消费到请求消息处理�
 #### 5 ZBUS典型应用结构图
 
 
-[img]
+![ZBUS典型应用结构图](http://git.oschina.net/uploads/images/2015/0701/135608_9e360343_7458.png "ZBUS典型应用结构图")
 
 
 ### ZBUS单机启动配置
