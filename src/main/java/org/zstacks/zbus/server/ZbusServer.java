@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class ZbusServer extends RemotingServer {
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long mqCleanInterval = 3000;  
 	
+	private AtomicLong seq = new AtomicLong(0L);
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -106,7 +108,8 @@ public class ZbusServer extends RemotingServer {
 					msg.setMsgId(UUID.randomUUID().toString());
 				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
-				msg.setHead(Message.HEADER_BROKER, serverAddr);  
+				msg.setHead(Message.HEADER_BROKER, serverAddr);
+				msg.setHead("seq", String.format("%x-%x", System.currentTimeMillis()/1000,seq.incrementAndGet()));  
 				String cmd = msg.getCommand();
 				
 				if(Proto.Heartbeat.equals(cmd) || Proto.Consume.equals(cmd) ||
