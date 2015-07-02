@@ -7,27 +7,24 @@ import org.zstacks.zbus.client.broker.SingleBrokerConfig;
 import org.zstacks.znet.Message;
 
 public class ProducerExample {
-	public static void main(String[] args) throws Exception{  
-		//1）创建Broker代理【重量级对象，需要释放】
+	public static void main(String[] args) throws Exception {
+		// 1）创建Broker代理（重量级对象，需要释放）
 		SingleBrokerConfig config = new SingleBrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
-		
-		//2) 创建生产者 【轻量级对象，不需要释放，随便使用】
+
+		// 2） 创建生产者 （轻量级对象，不需要释放，随便创建）
 		Producer producer = new Producer(broker, "MyMQ");
-		producer.createMQ(); //如果已经确定存在，不需要创建
+		producer.createMQ(); // 如果已经确定存在，不需要创建
+
+		//创建消息，消息体可以是任意binary，应用协议交给使用者
+		Message msg = new Message();
+		msg.setBody("hello world");
 		
-		for(int i=0;i<1;i++){
-			Message msg = new Message(); 
-			msg.setBody("hello world");  
-			Message res = producer.sendSync(msg, 1000);
-			System.out.println(res); 
-			if((i+1) % 1000 == 0){
-				System.out.println("done: "+ i);
-			}
-		}
+		Message res = producer.sendSync(msg, 1000);
+		System.out.println(res); 
 		
-		//3）销毁Broker
+		// 3）销毁Broker
 		broker.close();
-	} 
+	}
 }

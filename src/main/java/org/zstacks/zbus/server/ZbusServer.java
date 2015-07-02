@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,7 @@ public class ZbusServer extends RemotingServer {
 	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
  
 	private boolean verbose = true;
-	private MessageStore messageStore;
-	private String messageStoreType = "dummy"; 
+	private MessageStore messageStore; 
 	private String adminToken = "";  
 	private final AdminHandler adminHandler;
 	private final TrackReport trackReport; 
@@ -44,6 +44,7 @@ public class ZbusServer extends RemotingServer {
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long mqCleanInterval = 3000;  
 	
+	private AtomicLong msgSequence = new AtomicLong(0L);
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -106,9 +107,10 @@ public class ZbusServer extends RemotingServer {
 					msg.setMsgId(UUID.randomUUID().toString());
 				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
-				msg.setHead(Message.HEADER_BROKER, serverAddr);  
-				String cmd = msg.getCommand();
+				msg.setHead(Message.HEADER_BROKER, serverAddr); 
+				msg.setHead(Message.HEADER_SEQ, String.format("%X-%X", System.currentTimeMillis(), msgSequence.incrementAndGet()));  
 				
+				String cmd = msg.getCommand(); 
 				if(Proto.Heartbeat.equals(cmd) || Proto.Consume.equals(cmd) ||
 					cmd == null || "".equals(cmd)){
 					return;
@@ -170,12 +172,13 @@ public class ZbusServer extends RemotingServer {
 	public void start() throws IOException { 
 		super.start();
 		//build message store
-		this.messageStore = MessageStoreFactory.getMessageStore(this.serverAddr, this.messageStoreType);
+		this.messageStore = MessageStoreFactory.getMessageStore(this.serverAddr);
 		this.adminHandler.setMessageStore(this.messageStore); 
 		{
 			log.info("message store loading ....");
 			this.mqTable.clear();
 			try{
+				this.messageStore.start();
 				ConcurrentMap<String, MessageQueue> mqs = this.messageStore.loadMqTable();
 				Iterator<Entry<String, MessageQueue>> iter = mqs.entrySet().iterator();
 				while(iter.hasNext()){
@@ -202,6 +205,12 @@ public class ZbusServer extends RemotingServer {
 	}
 	
 	public void close() throws IOException{  
+		try {
+			this.messageStore.shutdown();
+		} catch (Exception e) { 
+			log.error(e.getMessage(), e);
+		}
+		
 		this.scheduledExecutor.shutdown(); 
 		this.trackReport.close(); 
 		
@@ -216,11 +225,6 @@ public class ZbusServer extends RemotingServer {
 		}
 	}
 
-	public void setMessageStoreType(String messageStoreType) {
-		this.messageStoreType = messageStoreType;
-	}
-	
-	 
     @Override
     public void onException(Throwable e, Session sess) throws IOException {
     	if(! (e instanceof IOException) ){
@@ -278,8 +282,7 @@ public class ZbusServer extends RemotingServer {
     	public String serverHost = "0.0.0.0";
     	public int serverPort = 15555;
     	public String adminToken = "";
-    	public String trackServerAddr; //用分号分割, 127.0.0.1:16666;127.0.0.1:16667
-    	public String storeType = "dummy";  
+    	public String trackServerAddr; //用分号分割, 127.0.0.1:16666;127.0.0.1:16667 
     	public int selectorCount = 1;
     	public int executorCount = 4;
     	public boolean verbose = true;
@@ -292,7 +295,6 @@ public class ZbusServer extends RemotingServer {
     	config.serverPort = Helper.option(args, "-p", 15555); 
     	config.adminToken = Helper.option(args, "-admin", "");
     	config.trackServerAddr = Helper.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
-    	config.storeType = Helper.option(args, "-store", "dummy");   
     	config.selectorCount = Helper.option(args, "-selector", 1);   
     	config.executorCount = Helper.option(args, "-executor", 16); 
     	config.verbose = Helper.option(args, "-verbose", true); 
@@ -302,8 +304,7 @@ public class ZbusServer extends RemotingServer {
     		.executorCount(config.executorCount); 
     	
 		ZbusServer zbus = new ZbusServer(config.serverHost, config.serverPort, dispatcher);  
-		zbus.setAdminToken(config.adminToken);
-		zbus.setMessageStoreType(config.storeType);
+		zbus.setAdminToken(config.adminToken); 
 		zbus.setVerbose(config.verbose);
 		
 		//HA高可用模式下，启动链接TrackServer，上报当前节点拓扑信息
