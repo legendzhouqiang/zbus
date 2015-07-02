@@ -17,7 +17,8 @@ public class MessageStoreFactory {
     public static MessageStore getMessageStore(String borker) {   
     	InputStream stream = MessageStoreFactory.class.getClassLoader().getResourceAsStream(CONFIG_FILE);
     	if(stream == null) {
-    		log.info("Using MessageStore="+MessageStoreDummy.class.getSimpleName());
+    		log.warn("Missing persist.properties");
+    		log.info("Using default MessageStoreDummy");
     		return new MessageStoreDummy(); 
     	}
     	
@@ -25,13 +26,15 @@ public class MessageStoreFactory {
 	    try {
 			props.load(stream);
 		} catch (IOException e) {  
-			log.warn("Missing persist.properties, default to dummy store");
+			log.warn("Can not load persist.properties",e);
+			log.info("Using default MessageStoreDummy");
 			return new MessageStoreDummy();
 		}
 	    
 	    String configClass =  props.getProperty("class");
 	    if(configClass == null){ 
-	    	log.warn("Missing class=xxx.MessateStoreImpl line in " + CONFIG_FILE);
+	    	log.warn("Missing class=xxx.MessateStoreImpl line in " + CONFIG_FILE + "");
+	    	log.info("Using default MessageStoreDummy");
 	    	return new MessageStoreDummy();
 	    }
 	    
@@ -42,24 +45,20 @@ public class MessageStoreFactory {
 			constructor.setAccessible(true);   
 			temp = constructor.newInstance(borker, props);
 			if (temp instanceof MessageStore){ 
-				log.info("Using MessageStore="+configClass);
+				log.info("Using MessageStore="+c.getSimpleName());
 				return (MessageStore)temp;
 			} else {
 				log.warn("Class:"+ configClass + " must implements the MessageStore interface");
-				log.warn("default to dummy store");
 			}
 		} catch (ClassNotFoundException e) {
 			log.warn("Class:" + configClass + " can not found!", e);
-			log.warn("default to dummy store");
 		} catch (NoSuchMethodException e){
-			log.warn("Class:" + configClass + " must have a constructor method with String parameter like this: ***MessageStoreImpl(String broker, Properties props)" , e);
-			log.warn("default to dummy store");
+			log.warn("Class:" + configClass + " must have a constructor method like this: ***MessageStoreImpl(String broker, Properties props)" , e);
 		} catch (Exception e){
 			log.warn("Can not create instance of class: " + configClass , e);
-			log.warn("default to dummy store");
 		} 
 		
-		log.info("Using MessageStore="+MessageStoreDummy.class.getSimpleName());
+		log.info("Using default MessageStoreDummy");
 		return new MessageStoreDummy(); 
     }
 }
