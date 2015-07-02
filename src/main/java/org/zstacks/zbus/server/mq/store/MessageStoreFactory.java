@@ -33,7 +33,7 @@ public class MessageStoreFactory {
 	    
 	    String configClass =  props.getProperty("class");
 	    if(configClass == null){ 
-	    	log.warn("Missing class=xxx.MessateStoreImpl line in " + CONFIG_FILE + "");
+	    	log.warn("Missing class=xxx.MessateStoreImpl line in " + CONFIG_FILE);
 	    	log.info("Using default MessageStoreDummy");
 	    	return new MessageStoreDummy();
 	    }
