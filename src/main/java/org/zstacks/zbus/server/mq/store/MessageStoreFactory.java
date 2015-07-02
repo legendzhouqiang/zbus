@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 public class MessageStoreFactory {  
 	private static final Logger log = LoggerFactory.getLogger(MessageStoreFactory.class);  
 	public static final String CONFIG_FILE = "persist.properties";
-	
+	 
     public static MessageStore getMessageStore(String borker) {   
     	InputStream stream = MessageStoreFactory.class.getClassLoader().getResourceAsStream(CONFIG_FILE);
     	if(stream == null) {
     		log.info("Using MessageStore="+MessageStoreDummy.class.getSimpleName());
-    		return new MessageStoreDummy();
+    		return new MessageStoreDummy(); 
     	}
     	
 	    final Properties props = new Properties();

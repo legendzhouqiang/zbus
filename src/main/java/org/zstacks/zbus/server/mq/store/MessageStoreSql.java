@@ -76,8 +76,8 @@ public class MessageStoreSql implements MessageStore {
 		}
 	}
 	
-	private String msgKey(Message msg){
-		return msg.getHead(Message.HEADER_SEQ);
+	private String msgKey(Message msg){ 
+		return msg.getHead(Message.HEADER_SEQ); 
 	}
 	
 	private String mqKey(String mq){

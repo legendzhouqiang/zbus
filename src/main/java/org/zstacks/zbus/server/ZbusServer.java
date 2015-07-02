@@ -42,9 +42,8 @@ public class ZbusServer extends RemotingServer {
 	
 	private final ExecutorService executorService;
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-	private long mqCleanInterval = 3000;  
-	
-	private AtomicLong msgSequence = new AtomicLong(0L);
+	private long mqCleanInterval = 3000;   
+	private AtomicLong msgSequence = new AtomicLong(0L); 
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -106,9 +105,10 @@ public class ZbusServer extends RemotingServer {
 				if(msg.getMsgId() == null){
 					msg.setMsgId(UUID.randomUUID().toString());
 				}
-				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress());
+				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress()); 
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
 				msg.setHead(Message.HEADER_SEQ, String.format("%X-%X", System.currentTimeMillis(), msgSequence.incrementAndGet()));  
+ 
 				
 				String cmd = msg.getCommand(); 
 				if(Proto.Heartbeat.equals(cmd) || Proto.Consume.equals(cmd) ||
