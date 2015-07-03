@@ -169,29 +169,29 @@ public class ZbusServer extends RemotingServer {
 	} 
 	
 	@Override
-	public void start() throws IOException { 
-		super.start();
+	public void start() throws IOException {  
 		//build message store
-		this.messageStore = MessageStoreFactory.getMessageStore(this.serverAddr);
-		this.adminHandler.setMessageStore(this.messageStore); 
-		{
-			log.info("message store loading ....");
-			this.mqTable.clear();
-			try{
-				this.messageStore.start();
-				ConcurrentMap<String, MessageQueue> mqs = this.messageStore.loadMqTable();
-				Iterator<Entry<String, MessageQueue>> iter = mqs.entrySet().iterator();
-				while(iter.hasNext()){
-					MessageQueue mq = iter.next().getValue();
-					mq.setExecutor(this.executorService);
-				} 
-				this.mqTable.putAll(mqs);
-				log.info("message store loaded");
-			} catch(Exception e){
-				log.info("message store loading error: {}", e.getMessage(), e);
+		this.messageStore = MessageStoreFactory.getMessageStore();
+		this.adminHandler.setMessageStore(this.messageStore);  
+		
+		log.info("message store loading ....");
+		this.mqTable.clear();
+		try{
+			this.messageStore.start();
+			ConcurrentMap<String, MessageQueue> mqs = this.messageStore.loadMqTable();
+			Iterator<Entry<String, MessageQueue>> iter = mqs.entrySet().iterator();
+			while(iter.hasNext()){
+				MessageQueue mq = iter.next().getValue();
+				mq.setExecutor(this.executorService);
 			} 
-		} 
+			this.mqTable.putAll(mqs);
+			log.info("message store loaded");
+		} catch(Exception e){
+			log.info("message store loading error: {}", e.getMessage(), e);
+		}  
 	
+		super.start();
+		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
 				Iterator<Entry<String, MessageQueue>> iter = mqTable.entrySet().iterator();
@@ -201,7 +201,7 @@ public class ZbusServer extends RemotingServer {
 		    		mq.cleanSession();
 		    	}
 			}
-		}, 1000, mqCleanInterval, TimeUnit.MILLISECONDS);
+		}, 1000, mqCleanInterval, TimeUnit.MILLISECONDS); 
 	}
 	
 	public void close() throws IOException{  

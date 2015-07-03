@@ -38,10 +38,8 @@ public class MessageStoreSql implements MessageStore {
 	private String sqlMsgs = "CREATE TABLE IF NOT EXISTS msgs(id VARCHAR(128), mq_id VARCHAR(128), msg_str VARCHAR(10240000), PRIMARY KEY(id) )";
 	private String sqlMqs = "CREATE TABLE IF NOT EXISTS mqs(id VARCHAR(512), mq_info VARCHAR(10240000), PRIMARY KEY(id) )";
 	
-	
-	private final String brokerKey;
-	public MessageStoreSql(String broker, Properties props) throws Exception {  
-		this.brokerKey = broker;
+	 
+	public MessageStoreSql(Properties props) throws Exception {   
 		this.props = props;
 	}
 	
@@ -81,7 +79,7 @@ public class MessageStoreSql implements MessageStore {
 	}
 	
 	private String mqKey(String mq){
-		return String.format("%s-%s", brokerKey, mq);
+		return String.format("%s", mq);
 	}
 	public void saveMessage(Message msg) {
 		try{

@@ -14,7 +14,7 @@ public class MessageStoreFactory {
 	private static final Logger log = LoggerFactory.getLogger(MessageStoreFactory.class);  
 	public static final String CONFIG_FILE = "persist.properties";
 	 
-    public static MessageStore getMessageStore(String borker) {   
+    public static MessageStore getMessageStore() {   
     	InputStream stream = MessageStoreFactory.class.getClassLoader().getResourceAsStream(CONFIG_FILE);
     	if(stream == null) {
     		log.info("Using MessageStore="+MessageStoreDummy.class.getSimpleName());
@@ -38,9 +38,9 @@ public class MessageStoreFactory {
 	    Object temp = null; 
 		try {
 			Class<?> c = Class.forName(configClass);
-			Constructor<?> constructor=c.getDeclaredConstructor(String.class, Properties.class);   
+			Constructor<?> constructor = c.getDeclaredConstructor(Properties.class);   
 			constructor.setAccessible(true);   
-			temp = constructor.newInstance(borker, props);
+			temp = constructor.newInstance(props);
 			if (temp instanceof MessageStore){ 
 				log.info("Using MessageStore="+configClass);
 				return (MessageStore)temp;
@@ -52,7 +52,7 @@ public class MessageStoreFactory {
 			log.warn("Class:" + configClass + " can not found!", e);
 			log.warn("default to dummy store");
 		} catch (NoSuchMethodException e){
-			log.warn("Class:" + configClass + " must have a constructor method with String parameter like this: ***MessageStoreImpl(String broker, Properties props)" , e);
+			log.warn("Class:" + configClass + " must have a constructor method with String parameter like this: ***MessageStoreImpl(Properties props)" , e);
 			log.warn("default to dummy store");
 		} catch (Exception e){
 			log.warn("Can not create instance of class: " + configClass , e);

@@ -14,7 +14,7 @@ zbus-6.0.0
 5. Broker、RemotingClient退出时偶尔出现的read InterruptException。
 
 zbus-6.1.0-SNAPSHOT
-1. MessageStoreSql 获取SQL用户名bug @玛雅牛
+1. MessageStoreSql 获取SQL用户名bug, 取消存储broker前缀，先加载历史消息再启动zbus  @玛雅牛
 2. 增加protocol 支持查询MQ状态, 可以查询出当前使用队列的诸如消息数目等具体信息 @刘浪 
 3. Service增加多总线注册模式
-4. Rpc错误提示中增加原始消息跟踪，Rpc服务端增加verbose选项，监控消息
+4. Rpc错误提示中增加原始消息跟踪，Rpc服务端增加verbose选项，监控消息 
