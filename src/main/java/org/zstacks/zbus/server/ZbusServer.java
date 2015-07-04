@@ -43,7 +43,8 @@ public class ZbusServer extends RemotingServer {
 	private final ExecutorService executorService;
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long mqCleanInterval = 3000;   
-	private AtomicLong msgSequence = new AtomicLong(0L); 
+	private AtomicLong msgSequence = new AtomicLong(0L);
+	private Thread shutdownHook;
 	
 	
 	public ZbusServer(int serverPort, Dispatcher dispatcher) throws IOException {
@@ -168,13 +169,46 @@ public class ZbusServer extends RemotingServer {
 		this.adminToken = adminToken;
 	} 
 	
+	/**
+	 * 注册JVM的ShutdownHook
+	 * @Title: registerShutdownHook  
+	 * @Description: 通过ShutdownHook实现当JVM关掉的时候执行一些清理现场(关闭)操作，以下场合会自动回调
+	 * 				1）正常退出
+	 * 				2）使用System.exit()
+	 * 				3）终端使用Ctrl+C触发的中断
+	 *				4）系统关闭
+	 * 				5）使用Kill pid命令或者 kill -15 pid干掉进程
+	 * 	注意：使用kill -9 pid命令干掉进程时不会回调
+	 * 
+	 * @author lifei_osc
+	 */
+	private void registerShutdownHook() {
+		if (this.shutdownHook == null) {
+			this.shutdownHook = new Thread() {
+				@Override
+				public void run() {
+					log.info("ZbusServer shutting down ...");
+					try {
+						close();
+						log.info("ZbusServer shutdown complete");
+		                log.info("Halting JVM");
+					} catch (IOException e) {
+						log.error("Error occurred while shutting down zbus, " +
+	                            "it may not be a clean shutdown", e);
+					}
+				}
+			};
+			Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+		}
+	}
+	
 	@Override
 	public void start() throws IOException {  
 		//build message store
 		this.messageStore = MessageStoreFactory.getMessageStore();
 		this.adminHandler.setMessageStore(this.messageStore);  
 		
-		log.info("message store loading ....");
+		log.info("Message store loading ....");
 		this.mqTable.clear();
 		try{
 			this.messageStore.start();
@@ -185,12 +219,13 @@ public class ZbusServer extends RemotingServer {
 				mq.setExecutor(this.executorService);
 			} 
 			this.mqTable.putAll(mqs);
-			log.info("message store loaded");
+			log.info("Message store loaded");
 		} catch(Exception e){
-			log.info("message store loading error: {}", e.getMessage(), e);
+			log.info("Message store loading error: {}", e.getMessage(), e);
 		}  
 	
 		super.start();
+		this.registerShutdownHook();
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -298,6 +333,8 @@ public class ZbusServer extends RemotingServer {
     	config.selectorCount = Helper.option(args, "-selector", 1);   
     	config.executorCount = Helper.option(args, "-executor", 16); 
     	config.verbose = Helper.option(args, "-verbose", true); 
+   	 
+    	log.info("ZbusServer starting ...");
     	 
 		Dispatcher dispatcher = new Dispatcher() 
     		.selectorCount(config.selectorCount)
@@ -313,6 +350,8 @@ public class ZbusServer extends RemotingServer {
 		}
 		
 		zbus.start();
+		
+		log.info("ZbusServer started successfully");
 	}  
 }
 
