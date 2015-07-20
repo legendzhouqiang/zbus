@@ -28,7 +28,7 @@ class Task extends Thread{
 	}
 }
 
-public class ServicePerf {
+public class MFQPerf {
 	public static void main(String[] args) throws Exception { 
 		MFQueuePool.init("c:\\MFQ");
 		
