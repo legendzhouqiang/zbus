@@ -21,7 +21,7 @@ public class ProducerExample {
 		Message msg = new Message();
 		msg.setBody("hello world");
 		
-		Message res = producer.sendSync(msg, 1000);
+		Message res = producer.sendSync(msg, 1000); 
 		System.out.println(res); 
 		
 		// 3）销毁Broker
