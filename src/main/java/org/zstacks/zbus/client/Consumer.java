@@ -7,17 +7,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.callback.MessageCallback;
+import org.zstacks.znet.log.Logger;
 
 
 public class Consumer extends MqAdmin implements Closeable{    
-	private static final Logger log = LoggerFactory.getLogger(Consumer.class);  
+	private static final Logger log = Logger.getLogger(Consumer.class);  
 	private RemotingClient client;  //消费者拥有一个物理链接
 	//为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
 	private String topic = null;

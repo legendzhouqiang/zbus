@@ -2,35 +2,34 @@ package org.zstacks.zbus.store;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.zstacks.zbus.store.MFQueuePool.MFQueue;
 
-class Task extends Thread{ 
-	int loopCount = 10000; 
-	long startTime;
-	AtomicLong counter;
-	@Override
-	public void run() { 
-		MFQueue q = MFQueuePool.getFQueue("test");
-		for(int i=0;i<loopCount;i++){ 
-			try {
-				q.offer(new byte[10]);
-				long count = counter.incrementAndGet();
-				if(count%20000 == 0){
-					long end = System.currentTimeMillis();
-					System.out.format("QPS: %.2f\n", count*1000.0/(end-startTime));
+public class DiskQueuePerf {
+	static class Task extends Thread{ 
+		int loopCount = 10000; 
+		long startTime;
+		AtomicLong counter;
+		@Override
+		public void run() { 
+			DiskQueue q = DiskQueuePool.getDiskQueue("test");
+			for(int i=0;i<loopCount;i++){ 
+				try {
+					q.offer(new byte[1024]);
+					long count = counter.incrementAndGet();
+					if(count%20000 == 0){
+						long end = System.currentTimeMillis();
+						System.out.format("QPS: %.2f\n", count*1000.0/(end-startTime));
+					}
+					
+				} catch (Exception e) { 
+					e.printStackTrace();
 				}
 				
-			} catch (Exception e) { 
-				e.printStackTrace();
 			}
-			
 		}
 	}
-}
 
-public class MFQPerf {
 	public static void main(String[] args) throws Exception { 
-		MFQueuePool.init("c:\\MFQ");
+		DiskQueuePool.init("c:\\MFQ");
 		
 		final int loopCount = 10000000; 
 		final int threadCount = 16;
@@ -52,7 +51,7 @@ public class MFQPerf {
 			task.join();
 		}
 		
-		MFQueuePool.destory();
+		DiskQueuePool.destory();
 		System.out.println("===done==="); 
 	}
 }

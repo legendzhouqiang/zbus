@@ -7,17 +7,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.ConsumerInfo;
 import org.zstacks.zbus.server.ServerHelper;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Session;
 
 public class ReplyQueue extends MessageQueue {    
 	private static final long serialVersionUID = -2343230968503191635L;
 
-	private static final Logger log = LoggerFactory.getLogger(ReplyQueue.class); 
+	private static final Logger log = Logger.getLogger(ReplyQueue.class); 
 	
 	protected final ConcurrentMap<String, Message> msgQ = new ConcurrentHashMap<String, Message>();
 	transient PullSession pullSession = null;

@@ -7,14 +7,13 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.protocol.TrackTable;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.callback.ErrorCallback;
 import org.zstacks.znet.callback.MessageCallback;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 import org.zstacks.znet.ticket.ResultCallback;
@@ -26,7 +25,7 @@ interface TrackListener{
 }
 
 public class TrackAgent implements Closeable {
-	private static final Logger log = LoggerFactory.getLogger(TrackAgent.class);
+	private static final Logger log = Logger.getLogger(TrackAgent.class);
 	private String trackServerList="127.0.0.1:16666"; 
 	private final List<RemotingClient> clients = new ArrayList<RemotingClient>();
 	private Dispatcher dispatcher;  

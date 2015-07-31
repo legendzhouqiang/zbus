@@ -10,8 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.BrokerInfo;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.protocol.TrackTable;
@@ -20,6 +18,7 @@ import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageHandler;
 import org.zstacks.znet.RemotingClient;
 import org.zstacks.znet.RemotingServer;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 
@@ -27,9 +26,9 @@ import com.alibaba.fastjson.JSON;
  
  
 public class TrackServer extends RemotingServer {  
-	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
+	private static final Logger log = Logger.getLogger(TrackServer.class); 
 
-	private long publishInterval = 10000;
+	private long publishInterval = 3000;
 	private long probeInterval = 3000; 
 	
 	private final TrackTable trackTable = new TrackTable(); 

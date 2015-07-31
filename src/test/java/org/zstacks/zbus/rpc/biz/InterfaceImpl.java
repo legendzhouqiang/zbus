@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.zstacks.znet.log.Logger;
  
 /**
  * 私有异常，测试前端未知场景
@@ -151,17 +150,17 @@ public class InterfaceImpl implements Interface{
 		}
 	}
 	
-	private static final Logger log = LoggerFactory.getLogger(InterfaceImpl.class);
+	private static final Logger log = Logger.getLogger(InterfaceImpl.class);
 	int timeBiggerThan100ms = 0;
 	@Override
 	public int getUserScore() { 
 		Random r = new Random(System.currentTimeMillis());
 		int time = 10 + r.nextInt(100);
-		try { Thread.sleep(time); } catch (InterruptedException e) {}
+		try { Thread.sleep(time); } catch (InterruptedException e) { }
 		if(time > 100){
 			timeBiggerThan100ms++;
 			if(timeBiggerThan100ms % 100 == 0){
-				log.info("Got {} requests cost > 100ms", timeBiggerThan100ms);
+				log.info("Got %d requests cost > 100ms", timeBiggerThan100ms);
 			}
 		}
 		return time;

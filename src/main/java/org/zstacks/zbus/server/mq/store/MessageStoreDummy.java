@@ -3,13 +3,12 @@ package org.zstacks.zbus.server.mq.store;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.server.mq.MessageQueue;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
  
 public class MessageStoreDummy implements MessageStore {
-	private static final Logger log = LoggerFactory.getLogger(MessageStoreDummy.class);
+	private static final Logger log = Logger.getLogger(MessageStoreDummy.class);
 	
 	public void saveMessage(Message message) { 
 		if(log.isDebugEnabled()){

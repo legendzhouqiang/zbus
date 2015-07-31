@@ -11,17 +11,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.ConsumerInfo;
 import org.zstacks.zbus.server.ServerHelper;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Session;
 
 public class PubsubQueue extends MessageQueue {   
 	private static final long serialVersionUID = -593851217778104787L;
 
-	private static final Logger log = LoggerFactory.getLogger(PubsubQueue.class);	
+	private static final Logger log = Logger.getLogger(PubsubQueue.class);	
 	
 	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	//保留所有的订阅Session

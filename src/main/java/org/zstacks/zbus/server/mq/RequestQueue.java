@@ -8,17 +8,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.ConsumerInfo;
 import org.zstacks.zbus.server.ServerHelper;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Session;
 
 public class RequestQueue extends MessageQueue {     
 	private static final long serialVersionUID = -7640938066598234399L;
 
-	private static final Logger log = LoggerFactory.getLogger(RequestQueue.class); 
+	private static final Logger log = Logger.getLogger(RequestQueue.class); 
 	
 	protected final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>();
 	transient BlockingQueue<PullSession> sessQ = new LinkedBlockingQueue<PullSession>();

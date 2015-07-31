@@ -13,8 +13,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.server.mq.MessageQueue;
@@ -25,12 +23,13 @@ import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageHandler;
 import org.zstacks.znet.RemotingServer;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.nio.Session;
 
 
 public class ZbusServer extends RemotingServer {
-	private static final Logger log = LoggerFactory.getLogger(ZbusServer.class);
+	private static final Logger log = Logger.getLogger(ZbusServer.class);
 	
 	private final ConcurrentMap<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();  
  
@@ -108,7 +107,7 @@ public class ZbusServer extends RemotingServer {
 				}
 				msg.setHead(Message.HEADER_REMOTE_ADDR, sess.getRemoteAddress()); 
 				msg.setHead(Message.HEADER_BROKER, serverAddr); 
-				msg.setHead(Message.HEADER_SEQ, String.format("%X-%X", System.currentTimeMillis(), msgSequence.incrementAndGet()));  
+				msg.setHead(Message.HEADER_SEQ, String.format("%x-%x", System.currentTimeMillis(), msgSequence.incrementAndGet()));  
  
 				
 				String cmd = msg.getCommand(); 
@@ -118,7 +117,7 @@ public class ZbusServer extends RemotingServer {
 				}
 				
 				if(verbose){
-					log.info("\n{}", msg);
+					log.info("\n%s", msg);
 				} 
 			}
 		}); 
@@ -221,7 +220,7 @@ public class ZbusServer extends RemotingServer {
 			this.mqTable.putAll(mqs);
 			log.info("Message store loaded");
 		} catch(Exception e){
-			log.info("Message store loading error: {}", e.getMessage(), e);
+			log.info("Message store loading error: %s", e.getMessage(), e);
 		}  
 	
 		super.start();

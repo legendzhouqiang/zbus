@@ -2,8 +2,6 @@ package org.zstacks.zbus.rpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.broker.SingleBroker;
 import org.zstacks.zbus.client.broker.SingleBrokerConfig;
@@ -11,9 +9,10 @@ import org.zstacks.zbus.client.rpc.RpcConfig;
 import org.zstacks.zbus.client.rpc.RpcProxy;
 import org.zstacks.zbus.rpc.biz.Interface;
 import org.zstacks.znet.Helper;
+import org.zstacks.znet.log.Logger;
 
 class Task extends Thread{
-	private static final Logger log = LoggerFactory.getLogger(Task.class);
+	private static final Logger log = Logger.getLogger(Task.class);
 	Interface biz;
 	int loopCount = 10000; 
 	long startTime;
@@ -29,14 +28,14 @@ class Task extends Thread{
 				if(count%1000 == 0){
 					long end = System.currentTimeMillis();
 					String qps = String.format("%.2f", count*1000.0/(end-startTime));
-					log.info("QPS: {}, Failed/Total={}/{}({}%)",
+					log.info("QPS: %.2f, Failed/Total=%d/%d(.2f%)",
 							qps, failCounter.get(), counter.get(), 
 							failCounter.get()*1.0/counter.get()*100);
 				} 
 			} catch (Exception e) { 
 				failCounter.incrementAndGet();
 				log.info(e.getMessage(), e);
-				log.info("total failure {} of {} request", failCounter.get(), counter.get());
+				log.info("total failure %d of %d request", failCounter.get(), counter.get());
 			}
 		}
 	}

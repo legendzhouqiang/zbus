@@ -6,8 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.Proto;
 import org.zstacks.zbus.server.mq.MessageQueue;
@@ -17,13 +15,14 @@ import org.zstacks.zbus.server.mq.store.MessageStore;
 import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageHandler;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Session;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 public class AdminHandler extends SubCommandHandler {
-	private static final Logger log = LoggerFactory.getLogger(AdminHandler.class); 
+	private static final Logger log = Logger.getLogger(AdminHandler.class); 
 	private final ConcurrentMap<String, MessageQueue> mqTable;
 	private final ExecutorService executorService;
 	private final String serverAddr;
@@ -94,7 +93,7 @@ public class AdminHandler extends SubCommandHandler {
 		    				}
 		    			}  
 			    		mqTable.putIfAbsent(mqName, mq);
-						log.info("MQ Created: {}", mq);
+						log.info("MQ Created: %s", mq);
 						ServerHelper.reply200(msgId, sess); 
 						
 			    		trackReport.reportToTrackServer();
@@ -140,6 +139,9 @@ public class AdminHandler extends SubCommandHandler {
 				msg.setStatus("200");
 				msg.setHead("content-type","text/html");
 				String body = Helper.loadFileContent("zbus.htm"); 
+				if("".equals(body)){
+					body = "<strong>找不到资源文件zbus.htm</strong>";
+				}
 				msg.setBody(body); 
 				sess.write(msg);  
 			}

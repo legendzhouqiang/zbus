@@ -7,9 +7,8 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
+import org.zstacks.znet.log.Logger;
  
 /**
  * 
@@ -18,7 +17,7 @@ import org.zstacks.zbus.client.Broker;
  *
  */
 public class RpcProxy {
-	private static final Logger log = LoggerFactory.getLogger(RpcProxy.class);
+	private static final Logger log = Logger.getLogger(RpcProxy.class);
 	private static Constructor<RpcInvoker> rpcInvokerCtor;
 	private Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
 	private final Broker broker;
@@ -101,7 +100,7 @@ public class RpcProxy {
 				config.setEncoding(val);
 			} else if("timeout".equals(key)){
 				int timeout = 2500;//default
-				try{ timeout = Integer.valueOf(val); }catch(Exception e){}
+				try{ timeout = Integer.valueOf(val); }catch(Exception e){ }
 				config.setTimeout(timeout);
 			} else if("accessToken".equals(key)){
 				config.setAccessToken(val);
@@ -111,11 +110,11 @@ public class RpcProxy {
 				config.setTopic(val);
 			} else if("verbose".equals(key)){
 				boolean verbose = false;
-				try{ verbose = Boolean.valueOf(val); }catch(Exception e){}
+				try{ verbose = Boolean.valueOf(val); }catch(Exception e){ }
 				config.setVerbose(verbose);
 			} else if("mode".equals(key)){
 				int mode = 0;
-				try{ mode = Integer.valueOf(val); }catch(Exception e){}
+				try{ mode = Integer.valueOf(val); }catch(Exception e){ }
 				config.setMode(mode);
 			} 
 		}

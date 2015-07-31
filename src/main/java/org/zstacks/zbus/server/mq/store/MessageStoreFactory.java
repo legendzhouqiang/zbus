@@ -5,13 +5,12 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.zstacks.znet.log.Logger;
 
  
 
 public class MessageStoreFactory {  
-	private static final Logger log = LoggerFactory.getLogger(MessageStoreFactory.class);  
+	private static final Logger log = Logger.getLogger(MessageStoreFactory.class);  
 	public static final String CONFIG_FILE = "persist.properties";
 	 
     public static MessageStore getMessageStore() {   

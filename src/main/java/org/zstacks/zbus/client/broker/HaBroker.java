@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.ClientHint;
 import org.zstacks.zbus.client.ZbusException;
@@ -20,12 +18,13 @@ import org.zstacks.zbus.protocol.TrackTable;
 import org.zstacks.znet.Helper;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.ticket.ResultCallback;
  
 
 public class HaBroker implements Broker, TrackListener {
-	private static final Logger log = LoggerFactory.getLogger(HaBroker.class);
+	private static final Logger log = Logger.getLogger(HaBroker.class);
 	private final String requestIp = Helper.getLocalIp();
 	private volatile TrackTable trackTable = new TrackTable();
 	private String trackAddressList;
@@ -63,6 +62,7 @@ public class HaBroker implements Broker, TrackListener {
 	} 
 	
 	public void onTrackTableUpdated(TrackTable trackTable) {
+		System.out.println(trackTable);
 		this.trackTable = trackTable; 
 		for (String brokerAddress : trackTable.brokerAddresses()) {
 			SingleBroker broker = this.brokers.get(brokerAddress);

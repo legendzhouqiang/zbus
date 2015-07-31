@@ -10,43 +10,38 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.AbstractQueue;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.zstacks.znet.log.Logger;
 
-public class MFQueuePool { 
-    private static final Logger log = LoggerFactory.getLogger(MFQueuePool.class);
+public class DiskQueuePool { 
+    private static final Logger log = Logger.getLogger(DiskQueuePool.class);
     private static final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
     
-    private static MFQueuePool instance = null;
+    private static DiskQueuePool instance = null;
     private String fileBackupPath;
-    private Map<String, MFQueue> fQueueMap;
+    private Map<String, DiskQueue> queueMap;
     private ScheduledExecutorService syncService;
  
-    private MFQueuePool(String fileBackupPath) {
+    private DiskQueuePool(String fileBackupPath) {
         this.fileBackupPath = fileBackupPath;
         File fileBackupDir = new File(fileBackupPath);
         if (!fileBackupDir.exists() && !fileBackupDir.mkdir()) {
             throw new IllegalArgumentException("can not create directory");
         }
-        this.fQueueMap = scanDir(fileBackupDir);
+        this.queueMap = scanDir(fileBackupDir);
         this.syncService = Executors.newSingleThreadScheduledExecutor();
         this.syncService.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                for (MFQueue MFQueue : fQueueMap.values()) {
-                    MFQueue.sync();
+                for (DiskQueue q : queueMap.values()) {
+                    q.sync();
                 }
                 deleteBlockFile();
             }
@@ -59,7 +54,7 @@ public class MFQueuePool {
             File delFile = new File(blockFilePath);
             try {
                 if (!delFile.delete()) {
-                    log.warn("block file:{} delete failed", blockFilePath);
+                    log.warn("block file:%d delete failed", blockFilePath);
                 }
             } catch (SecurityException e) {
                 log.error("security manager exists, delete denied");
@@ -67,25 +62,25 @@ public class MFQueuePool {
         }
     }
  
-    private static void toClear(String filePath) {
+    static void toClear(String filePath) {
         deletingQueue.add(filePath);
     }
  
-    private Map<String, MFQueue> scanDir(File fileBackupDir) {
+    private Map<String, DiskQueue> scanDir(File fileBackupDir) {
         if (!fileBackupDir.isDirectory()) {
             throw new IllegalArgumentException("it is not a directory");
         }
-        Map<String, MFQueue> exitsFQueues = new HashMap<String, MFQueue>();
+        Map<String, DiskQueue> exitsFQueues = new HashMap<String, DiskQueue>();
         File[] indexFiles = fileBackupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return MFQueueIndex.isIndexFile(name);
+                return DiskQueueIndex.isIndexFile(name);
             }
         });
         if (indexFiles != null && indexFiles.length> 0) {
             for (File indexFile : indexFiles) {
-                String queueName = MFQueueIndex.parseQueueName(indexFile.getName());
-                exitsFQueues.put(queueName, new MFQueue(queueName, fileBackupPath));
+                String queueName = DiskQueueIndex.parseQueueName(indexFile.getName());
+                exitsFQueues.put(queueName, new DiskQueue(queueName, fileBackupPath));
             }
         }
         return exitsFQueues;
@@ -93,14 +88,14 @@ public class MFQueuePool {
  
     public synchronized static void init(String deployPath) {
         if (instance == null) {
-            instance = new MFQueuePool(deployPath);
+            instance = new DiskQueuePool(deployPath);
         }
     }
  
-    private void disposal() {
+    private void dispose() {
         this.syncService.shutdown();
-        for (MFQueue MFQueue : fQueueMap.values()) {
-            MFQueue.close();
+        for (DiskQueue q : queueMap.values()) {
+            q.close();
         }
         while (!deletingQueue.isEmpty()) {
             deleteBlockFile();
@@ -109,157 +104,28 @@ public class MFQueuePool {
  
     public synchronized static void destory() {
         if (instance != null) {
-            instance.disposal();
+            instance.dispose();
             instance = null;
         }
     }
  
-    private MFQueue getQueueFromPool(String queueName) {
-        if (fQueueMap.containsKey(queueName)) {
-            return fQueueMap.get(queueName);
+    private DiskQueue getQueueFromPool(String queueName) {
+        if (queueMap.containsKey(queueName)) {
+            return queueMap.get(queueName);
         }
-        MFQueue MFQueue = new MFQueue(queueName, fileBackupPath);
-        fQueueMap.put(queueName, MFQueue);
+        DiskQueue MFQueue = new DiskQueue(queueName, fileBackupPath);
+        queueMap.put(queueName, MFQueue);
         return MFQueue;
     }
  
-    public synchronized static MFQueue getFQueue(String queueName) {
+    public synchronized static DiskQueue getDiskQueue(String queueName) {
         if (queueName==null || queueName.trim().equals("")) {
             throw new IllegalArgumentException("empty queue name");
         }
         return instance.getQueueFromPool(queueName);
     }
  
-    public static class MFQueue extends AbstractQueue<byte[]> {
- 
-        private String queueName;
-        private String fileBackupDir;
-        private MFQueueIndex index;
-        private MFQueueBlock readBlock;
-        private MFQueueBlock writeBlock;
-        private ReentrantLock readLock;
-        private ReentrantLock writeLock;
-        private AtomicInteger size;
- 
-        public MFQueue(String queueName, String fileBackupDir) {
-            this.queueName = queueName;
-            this.fileBackupDir = fileBackupDir;
-            this.readLock = new ReentrantLock();
-            this.writeLock = new ReentrantLock();
-            this.index = new MFQueueIndex(MFQueueIndex.formatIndexFilePath(queueName, fileBackupDir));
-            this.size = new AtomicInteger(index.getWriteCounter() - index.getReadCounter());
-            this.writeBlock = new MFQueueBlock(index, MFQueueBlock.formatBlockFilePath(queueName,
-                    index.getWriteNum(), fileBackupDir));
-            if (index.getReadNum() == index.getWriteNum()) {
-                this.readBlock = this.writeBlock.duplicate();
-            } else {
-                this.readBlock = new MFQueueBlock(index, MFQueueBlock.formatBlockFilePath(queueName,
-                        index.getReadNum(), fileBackupDir));
-            }
-        }
- 
-        @Override
-        public Iterator<byte[]> iterator() {
-            throw new UnsupportedOperationException();
-        }
- 
-        @Override
-        public int size() {
-            return this.size.get();
-        }
- 
-        private void rotateNextWriteBlock() {
-            int nextWriteBlockNum = index.getWriteNum() + 1;
-            nextWriteBlockNum = (nextWriteBlockNum < 0) ? 0 : nextWriteBlockNum;
-            writeBlock.putEOF();
-            if (index.getReadNum() == index.getWriteNum()) {
-                writeBlock.sync();
-            } else {
-                writeBlock.close();
-            }
-            writeBlock = new MFQueueBlock(index, MFQueueBlock.formatBlockFilePath(queueName,
-                    nextWriteBlockNum, fileBackupDir));
-            index.putWriteNum(nextWriteBlockNum);
-            index.putWritePosition(0);
-        }
- 
-        @Override
-        public boolean offer(byte[] bytes) {
-            if (bytes == null || bytes.length == 0) {
-                return true;
-            }
-            writeLock.lock();
-            try {
-                if (!writeBlock.isSpaceAvailable(bytes.length)) {
-                    rotateNextWriteBlock();
-                }
-                writeBlock.write(bytes);
-                size.incrementAndGet();
-                return true;
-            } finally {
-                writeLock.unlock();
-            }
-        }
- 
-        private void rotateNextReadBlock() {
-            if (index.getReadNum() == index.getWriteNum()) {
-                // 读缓存块的滑动必须发生在写缓存块滑动之后
-                return;
-            }
-            int nextReadBlockNum = index.getReadNum() + 1;
-            nextReadBlockNum = (nextReadBlockNum < 0) ? 0 : nextReadBlockNum;
-            readBlock.close();
-            String blockPath = readBlock.getBlockFilePath();
-            if (nextReadBlockNum == index.getWriteNum()) {
-                readBlock = writeBlock.duplicate();
-            } else {
-                readBlock = new MFQueueBlock(index, MFQueueBlock.formatBlockFilePath(queueName,
-                        nextReadBlockNum, fileBackupDir));
-            }
-            index.putReadNum(nextReadBlockNum);
-            index.putReadPosition(0);
-            MFQueuePool.toClear(blockPath);
-        }
- 
-        @Override
-        public byte[] poll() {
-            readLock.lock();
-            try {
-                if (readBlock.eof()) {
-                    rotateNextReadBlock();
-                }
-                byte[] bytes = readBlock.read();
-                if (bytes != null) {
-                    size.decrementAndGet();
-                }
-                return bytes;
-            } finally {
-                readLock.unlock();
-            }
-        }
- 
-        @Override
-        public byte[] peek() {
-            throw new UnsupportedOperationException();
-        }
- 
-        public void sync() {
-            index.sync();
-            // read block只读，不用同步
-            writeBlock.sync();
-        }
- 
-        public void close() {
-            writeBlock.close();
-            if (index.getReadNum() != index.getWriteNum()) {
-                readBlock.close();
-            }
-            index.reset();
-            index.close();
-        }
-    }
-  
-    private static class MFQueueIndex {
+    static class DiskQueueIndex {
  
         private static final String MAGIC = "v.1.0000";
         private static final String INDEX_FILE_SUFFIX = ".idx";
@@ -288,7 +154,7 @@ public class MFQueuePool {
         private MappedByteBuffer writeIndex;
         private MappedByteBuffer readIndex;
  
-        public MFQueueIndex(String indexFilePath) {
+        public DiskQueueIndex(String indexFilePath) {
             File file = new File(indexFilePath);
             try {
                 if (file.exists()) {
@@ -332,11 +198,11 @@ public class MFQueuePool {
  
         public static String parseQueueName(String indexFileName) {
             String fileName = indexFileName.substring(0, indexFileName.lastIndexOf('.'));
-            return fileName.split("_")[1];
+            return fileName;
         }
  
         public static String formatIndexFilePath(String queueName, String fileBackupDir) {
-            return fileBackupDir + File.separator + String.format("findex_%s%s", queueName, INDEX_FILE_SUFFIX);
+            return fileBackupDir + File.separator + String.format("%s%s", queueName, INDEX_FILE_SUFFIX);
         }
  
         public int getReadNum() {
@@ -449,7 +315,7 @@ public class MFQueuePool {
         }
     }
  
-    private static class MFQueueBlock {
+    static class DiskQueueBlock {
  
         private static final String BLOCK_FILE_SUFFIX = ".blk"; // 数据文件
         private static final int BLOCK_SIZE = 32 * 1024 * 1024; // 32MB
@@ -457,13 +323,13 @@ public class MFQueuePool {
         private final int EOF = -1;
  
         private String blockFilePath;
-        private MFQueueIndex index;
+        private DiskQueueIndex index;
         private RandomAccessFile blockFile;
         private FileChannel fileChannel;
         private ByteBuffer byteBuffer;
         private MappedByteBuffer mappedBlock;
  
-        public MFQueueBlock(String blockFilePath, MFQueueIndex index, RandomAccessFile blockFile, FileChannel fileChannel,
+        public DiskQueueBlock(String blockFilePath, DiskQueueIndex index, RandomAccessFile blockFile, FileChannel fileChannel,
                             ByteBuffer byteBuffer, MappedByteBuffer mappedBlock) {
             this.blockFilePath = blockFilePath;
             this.index = index;
@@ -473,7 +339,7 @@ public class MFQueuePool {
             this.mappedBlock = mappedBlock;
         }
  
-        public MFQueueBlock(MFQueueIndex index, String blockFilePath) {
+        public DiskQueueBlock(DiskQueueIndex index, String blockFilePath) {
             this.index = index;
             this.blockFilePath = blockFilePath;
             try {
@@ -487,13 +353,13 @@ public class MFQueuePool {
             }
         }
  
-        public MFQueueBlock duplicate() {
-            return new MFQueueBlock(this.blockFilePath, this.index, this.blockFile, this.fileChannel,
+        public DiskQueueBlock duplicate() {
+            return new DiskQueueBlock(this.blockFilePath, this.index, this.blockFile, this.fileChannel,
                     this.byteBuffer.duplicate(), this.mappedBlock);
         }
  
         public static String formatBlockFilePath(String queueName, int fileNum, String fileBackupDir) {
-            return fileBackupDir + File.separator + String.format("fblock_%s_%d%s", queueName, fileNum, BLOCK_FILE_SUFFIX);
+            return fileBackupDir + File.separator + String.format("%s_%d%s", queueName, fileNum, BLOCK_FILE_SUFFIX);
         }
  
         public String getBlockFilePath() {

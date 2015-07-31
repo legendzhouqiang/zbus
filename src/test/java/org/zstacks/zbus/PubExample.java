@@ -19,8 +19,8 @@ public class PubExample {
 		producer.createMQ(); //创建MQ，如果确定存在的MQ可以不创建
 		
 		Message msg = new Message();
-		msg.setTopic("hong");
-		msg.setBody("hello world2");
+		msg.setTopic("sse2");
+		msg.setBody("hello world");
 		
 		Message res = producer.sendSync(msg, 2500);
 		System.out.println(res);

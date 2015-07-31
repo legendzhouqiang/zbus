@@ -22,7 +22,7 @@ public class SubExample {
 		//2) 创建消费者
 		@SuppressWarnings("resource")
 		Consumer c = new Consumer(broker, "MyPubSub", MessageMode.PubSub); 
-		c.setTopic("hong");
+		c.setTopic("sse");
 		
 		c.onMessage(new MessageCallback() { 
 			public void onMessage(Message msg, Session sess) throws IOException {

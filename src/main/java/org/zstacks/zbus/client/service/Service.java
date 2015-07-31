@@ -6,14 +6,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.Consumer;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 
 public class Service implements Closeable {   
-	private static final Logger log = LoggerFactory.getLogger(Service.class);
+	private static final Logger log = Logger.getLogger(Service.class);
 	private final ServiceConfig config; 
 	private ConsumerThread[][] brokerConsumerThreads;
 	private final ThreadPoolExecutor threadPoolExecutor;
@@ -68,7 +67,7 @@ public class Service implements Closeable {
 
 
 class ConsumerThread extends Thread implements Closeable{
-	private static final Logger log = LoggerFactory.getLogger(ConsumerThread.class);
+	private static final Logger log = Logger.getLogger(ConsumerThread.class);
 	private ServiceConfig config = null;  
 	private Consumer consumer;
 	private ThreadPoolExecutor threadPoolExecutor;
@@ -89,7 +88,7 @@ class ConsumerThread extends Thread implements Closeable{
 				
 				final long start = System.currentTimeMillis();
 				if(verbose){
-					log.info("[REQ-Consume]:\n{}", msg);
+					log.info("[REQ-Consume]:\n%s", msg);
 				}
 				
 				final String mqReply = msg.getMqReply();
@@ -109,7 +108,7 @@ class ConsumerThread extends Thread implements Closeable{
 								consumer.reply(res);
 								if(verbose){
 									long end = System.currentTimeMillis();
-									log.info("[REP-Produce]: Time cost={}ms\n{}", (end-start), res);
+									log.info("[REP-Produce]: Time cost=%dms\n%s", (end-start), res);
 								}
 							} catch (IOException e) {
 								log.error(e.getMessage(), e);
@@ -124,7 +123,7 @@ class ConsumerThread extends Thread implements Closeable{
 				log.error(e.getMessage(), e);
 			}
 		} 
-		log.info("Service thread({}) closed", this.getId());
+		log.info("Service thread(%d) closed", this.getId());
 		if(this.consumer != null){
 			try {
 				consumer.close();

@@ -12,20 +12,19 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.MessageMode;
 import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.server.mq.MessageQueue;
 import org.zstacks.zbus.server.mq.RequestQueue;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.MessageAdaptor;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.IoBuffer;
 
 import com.alibaba.fastjson.JSON;
 
 public class MessageStoreSql implements MessageStore {
-	private static final Logger log = LoggerFactory.getLogger(MessageStoreSql.class);
+	private static final Logger log = Logger.getLogger(MessageStoreSql.class);
 	private static final MessageAdaptor codec = new MessageAdaptor();
 	
 	private Properties props;

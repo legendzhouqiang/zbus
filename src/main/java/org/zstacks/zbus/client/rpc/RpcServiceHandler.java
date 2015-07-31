@@ -27,10 +27,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.service.ServiceHandler;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 
 class MethodInstance{
 	public Method method;
@@ -48,7 +47,7 @@ class MethodInstance{
 }
 
 public class RpcServiceHandler implements ServiceHandler {
-	private static final Logger log = LoggerFactory.getLogger(RpcServiceHandler.class); 
+	private static final Logger log = Logger.getLogger(RpcServiceHandler.class); 
 	private static final Codec codec = new JsonCodec();//TODO configurable
 	
 	private Map<String,MethodInstance> methods = new HashMap<String, MethodInstance>();

@@ -2,19 +2,18 @@ package org.zstacks.zbus.client.broker;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.ClientHint;
 import org.zstacks.zbus.client.ZbusException;
 import org.zstacks.znet.Message;
 import org.zstacks.znet.RemotingClient;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Dispatcher;
 import org.zstacks.znet.pool.RemotingClientPool;
 import org.zstacks.znet.ticket.ResultCallback;
 
 public class SingleBroker implements Broker {
-	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
+	private static final Logger log = Logger.getLogger(SingleBroker.class);     
 	private RemotingClientPool pool; 
 	private String brokerAddress; 
 	

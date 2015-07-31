@@ -76,7 +76,7 @@ public class RpcExample {
 		
 		
 		Interface hello = proxy.getService(Interface.class, config);
-		for(int i=0;i<10;i++){ 
+		for(int i=0;i<1;i++){ 
 			test2(hello); 
 		}
 		

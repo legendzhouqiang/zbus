@@ -28,7 +28,7 @@ public class ConsumerExample {
 		
 		c.onMessage(new MessageCallback() {
 			public void onMessage(Message msg, Session sess) throws IOException {
-				//System.out.println(msg);
+				System.out.println(msg);
 			}
 		});
 	} 

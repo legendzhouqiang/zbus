@@ -25,15 +25,14 @@ package org.zstacks.zbus.client.rpc;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.client.Broker;
 import org.zstacks.zbus.client.ZbusException;
 import org.zstacks.zbus.client.service.Caller;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 
 public class Rpc extends Caller{  
-	private static final Logger log = LoggerFactory.getLogger(Rpc.class);
+	private static final Logger log = Logger.getLogger(Rpc.class);
 	private static final Codec codec = new JsonCodec();
 	public static final String DEFAULT_ENCODING = "UTF-8";  
 	
@@ -91,14 +90,14 @@ public class Rpc extends Caller{
 			long start = System.currentTimeMillis();
 			msgReq = codec.encodeRequest(req); 
 			if(isVerbose()){
-				log.info("[REQ]: {}", msgReq);
+				log.info("[REQ]: %s", msgReq);
 			} 
 			
 			msgRes = this.invokeSync(msgReq, this.timeout); 
 			
 			if(isVerbose()){
 				long end = System.currentTimeMillis();
-				log.info("[REP]: Time cost={}ms\n{}",(end-start), msgRes);
+				log.info("[REP]: Time cost=%dms\n%s",(end-start), msgRes);
 			} 
 			
 		} catch (IOException e) {

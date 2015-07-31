@@ -5,18 +5,17 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zstacks.zbus.protocol.ConsumerInfo;
 import org.zstacks.zbus.protocol.MqInfo;
 import org.zstacks.zbus.server.mq.store.MessageStore;
 import org.zstacks.znet.Message;
+import org.zstacks.znet.log.Logger;
 import org.zstacks.znet.nio.Session;
 
 public abstract class MessageQueue implements Serializable{   
 	private static final long serialVersionUID = 5719362844495027862L;
 
-	private static final Logger log = LoggerFactory.getLogger(MessageQueue.class);
+	private static final Logger log = Logger.getLogger(MessageQueue.class);
 	
 	protected final String broker; 
 	protected final String name; 
