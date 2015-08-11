@@ -24,7 +24,10 @@ package org.zstacks.zbus.client.rpc;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.zstacks.zbus.client.service.ServiceHandler;
@@ -55,9 +58,18 @@ public class RpcServiceHandler implements ServiceHandler {
 	public RpcServiceHandler(Object... services){
 		addModule(services);
 	}
+	
+	static List<Class<?>> getAllInterfaces(Class<?> clazz){
+		List<Class<?>> res = new ArrayList<Class<?>>();
+		while(clazz != null){ 
+			res.addAll(Arrays.asList(clazz.getInterfaces()));
+			clazz = clazz.getSuperclass();
+		}
+		return res;
+	}
 	public void addModule(Object... services){
 		for(Object obj : services){
-			for(Class<?> intf : obj.getClass().getInterfaces()){
+			for(Class<?> intf : getAllInterfaces(obj.getClass())){
 				addModule(intf.getSimpleName(), obj);
 				addModule(intf.getCanonicalName(), obj);
 			}
