@@ -138,14 +138,18 @@ public class DiskQueuePool {
         private static final int WRITE_POS_OFFSET = 24;
         private static final int WRITE_CNT_OFFSET = 28;
  
+        @SuppressWarnings("unused")
         private int p11, p12, p13, p14, p15, p16, p17, p18; // 缓存行填充 32B
         private volatile int readPosition;   // 12   读索引位置
         private volatile int readNum;        // 8   读索引文件号
         private volatile int readCounter;    // 16   总读取数量
-        private int p21, p22, p23, p24, p25, p26, p27, p28; // 缓存行填充 32B
+        
+        @SuppressWarnings("unused")
+		private int p21, p22, p23, p24, p25, p26, p27, p28; // 缓存行填充 32B
         private volatile int writePosition;  // 24  写索引位置
         private volatile int writeNum;       // 20  写索引文件号
         private volatile int writeCounter;   // 28 总写入数量
+        @SuppressWarnings("unused")
         private int p31, p32, p33, p34, p35, p36, p37, p38; // 缓存行填充 32B
  
         private RandomAccessFile indexFile;
@@ -293,11 +297,12 @@ public class DiskQueuePool {
                 }
                 sync();
                 AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
+                	@SuppressWarnings("restriction")
+                	public Object run() {
                         try {
                             Method getCleanerMethod = writeIndex.getClass().getMethod("cleaner");
                             getCleanerMethod.setAccessible(true);
-                            sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(writeIndex);
+							sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(writeIndex);
                             cleaner.clean();
                         } catch (Exception e) {
                             log.error("close fqueue index file failed", e);
@@ -428,7 +433,8 @@ public class DiskQueuePool {
                 }
                 sync();
                 AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
+                	@SuppressWarnings("restriction")
+                	public Object run() {
                         try {
                             Method getCleanerMethod = mappedBlock.getClass().getMethod("cleaner");
                             getCleanerMethod.setAccessible(true);
