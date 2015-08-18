@@ -21,7 +21,7 @@ zbus-dist选择zbus.sh或者zbus.bat直接执行
 
 ![简单监控](http://git.oschina.net/uploads/images/2015/0818/132153_425b58e9_7458.png)
 
-总线默认占用**15555**端口， [http://localhost:15555](http://localhost:15555 "默认监控地址") 可以直接进入监控，注意zbus因为原生兼容HTTP协议所以监控与消息队列使用同一个端口
+总线默认占用 **15555** 端口， [http://localhost:15555](http://localhost:15555 "默认监控地址") 可以直接进入监控，注意zbus因为原生兼容HTTP协议所以监控与消息队列使用同一个端口
 
 
 ## ZBUS 角色概要
