@@ -7,9 +7,9 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
 	
 	<!-- 暴露的的接口实现示例 -->
-	<bean id="interface" class="org.zstacks.zbus.rpc.biz.InterfaceImpl"></bean>
+	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
 	
-	<bean id="serviceHandler" class="org.zstacks.zbus.client.rpc.RpcServiceHandler">
+	<bean id="serviceHandler" class="org.zbus.rpc.RpcServiceHandler">
 		<constructor-arg>
 			<list>
 				<!-- 放入你需要的暴露的的接口 -->
@@ -17,11 +17,10 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 			</list>
 		</constructor-arg>
 	</bean>
-	
-	<!-- 切换至高可用模式，只需要把broker的实现改为HaBroker配置 -->
-	<bean id="broker" class="org.zstacks.zbus.client.broker.SingleBroker">
+	 
+	<bean id="broker" class="org.zbus.mq.SingleBroker">
 		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
+			<bean class="org.zbus.mq.BrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
 				<property name="maxTotal" value="20"/>
 				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
@@ -29,25 +28,14 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		</constructor-arg>
 	</bean>
 	
-	<bean id="broker2" class="org.zstacks.zbus.client.broker.SingleBroker">
-		<constructor-arg>
-			<bean class="org.zstacks.zbus.client.broker.SingleBrokerConfig">
-				<property name="brokerAddress" value="127.0.0.1:15556" />
-				<property name="maxTotal" value="20"/>
-				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
-			</bean>
-		</constructor-arg>
-	</bean>
-	
 	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
-	<bean id="zbusService" class="org.zstacks.zbus.client.service.Service" init-method="start">
+	<bean id="zbusService" class="org.zbus.rpc.service.Service" init-method="start">
 		<constructor-arg>  
-			<bean class="org.zstacks.zbus.client.service.ServiceConfig">
+			<bean class="org.zbus.rpc.service.ServiceConfig">
 			    <!-- 支持多总线注册 -->
 				<constructor-arg> 
 					<list>
-						<ref bean="broker"/>
-						<ref bean="broker2"/>
+						<ref bean="broker"/> 
 					</list>
 				</constructor-arg>  
 				<property name="mq" value="MyRpc"/>

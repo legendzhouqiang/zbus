@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>ZBUS Admin</title>
-<script type="text/javascript" src="/?sub_cmd=jquery"></script>
+<title>ZBUS Admin Console</title>
+<script type="text/javascript" src="?sub_cmd=jquery"></script>
 <style>
 table {
   font-family: "Helvetica Neue", Helvetica, sans-serif
@@ -49,14 +49,18 @@ tfoot tr th:last-child {
   font-family: monospace;
 }
 
+#slogan {
+text-align: center; 
+font:bold 24px arial,sans-serif; 
+margin: 30px 30px;
+}
 
 </style>
 </head>
 <body> 
-<h2 style="text-align: center;">ZBUS服务总线监控管理【<label id="broker"></label>】</h2>
-
-<div align="center">
-
+<h2 id="slogan" align="center">
+ZBUS = MQ + RPC + PROXY  <label id="broker" style="color: orange;" ></label>
+</h2>
 
 <script type="text/javascript">
 Date.prototype.Format = function (fmt) { //author: meizz 
@@ -85,94 +89,56 @@ var MODE_MQ = 1;
 var MODE_PUBSUB = 2; 
 var MODE_TEMP = 4;
 
-$.getJSON('/?sub_cmd=data',function(data){ 
+$.getJSON('?sub_cmd=data',function(data){ 
     $("#broker").html(data.broker); 
      
     $.each(data.mqTable, function(key, mq){  
     	if(key=='@type') return;
-    	if((mq.mode & MODE_PUBSUB) != 0) return; //pubsub
-    	if((mq.mode & MODE_TEMP) != 0) return;
+    	if((mq.mode & MODE_MQ) == 0) return;
+    	
         $("#mq_table").append(
 			"<tr>\
 				<td>"+ mq.name +"</td>\
-				<td style='text-align:left;'>队列</td>\
+				<td style='text-align:left;'>MQ</td>\
 				<td>"+ mq.consumerInfoList.length +"</td>\
 				<td>"+ mq.unconsumedMsgCount +"</td>\
-				<td>"+ timeConverter(mq.createdTime) +" </td>\
+				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
 				<td>"+ mq.creator +" </td>\
-				<td><a href=''>清空消息</a></td>\
+				<td><a href=''>Empty</a></td>\
 			</tr>"
 		);
     }); 
     $.each(data.mqTable, function(key, mq){  
     	if(key=='@type') return;
-    	if((mq.mode & MODE_PUBSUB) == 0) return;
-    	if((mq.mode & MODE_TEMP) != 0) return;
+    	if((mq.mode & MODE_PUBSUB) == 0) return; 
         $("#mq_table").append(
 			"<tr>\
 				<td>"+ mq.name +"</td>\
-				<td style='text-align:left;'>订阅</td>\
+				<td style='text-align:left;'>PubSub</td>\
 				<td>"+ mq.consumerInfoList.length +"</td>\
 				<td>"+ mq.unconsumedMsgCount +"</td>\
-				<td>"+ timeConverter(mq.createdTime) +" </td>\
+				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
 				<td>"+ mq.creator +" </td>\
-				<td><a href=''>清空消息</a></td>\
+				<td><a href=''>Empty</a></td>\
 			</tr>"
 		);
     }); 
-    
-    $.each(data.mqTable, function(key, mq){  
-    	return;
-    	if(key=='@type') return;
-    	if((mq.mode & MODE_PUBSUB) != 0) return; //pubsub
-    	if((mq.mode & MODE_TEMP) == 0) return;
-        $("#mq_table").append(
-			"<tr>\
-				<td>"+ mq.name +"</td>\
-				<td style='text-align:left;'>队列【临时】</td>\
-				<td>"+ mq.consumerInfoList.length +"</td>\
-				<td>"+ mq.unconsumedMsgCount +"</td>\
-				<td>"+ timeConverter(mq.createdTime) +" </td>\
-				<td>"+ mq.creator +" </td>\
-				<td><a href=''>清空消息</a></td>\
-			</tr>"
-		);
-    }); 
-    
-    $.each(data.mqTable, function(key, mq){  
-    	return;//TODO
-    	if(key=='@type') return;
-    	if((mq.mode & MODE_PUBSUB) == 0) return;
-    	if((mq.mode & MODE_TEMP) == 0) return;
-        $("#mq_table").append(
-			"<tr>\
-				<td>"+ mq.name +"</td>\
-				<td style='text-align:left;'>订阅【临时】</td>\
-				<td>"+ mq.consumerInfoList.length +"</td>\
-				<td>"+ mq.unconsumedMsgCount +"</td>\
-				<td>"+ timeConverter(mq.createdTime) +" </td>\
-				<td>"+ mq.creator +" </td>\
-				<td><a href=''>清空消息</a></td>\
-			</tr>"
-		);
-    }); 
-   
-    
 }); 
 
 });
 </script> 
-	
+
+<div align="center">
 <table>
 	<thead>
 	<tr>
-	<th>消息队列标识</th>
-	<th>类型</th>
-	<th>消费者(服务)</th>
-	<th>未消费消息</th> 
-	<th>创建时间</th> 
-	<th>创建者</th> 
-	<th>操作</th>
+	<th>MQ</th>
+	<th>Mode</th>
+	<th>Consumers</th>
+	<th>MessageInQueue</th> 
+	<th>LastUpdated</th> 
+	<th>Creator</th> 
+	<th>Operation</th>
 	</tr>
 	</thead>
 
@@ -180,9 +146,8 @@ $.getJSON('/?sub_cmd=data',function(data){
 
 </tbody>
 
-
 </table> 
-
+</div>	
 </body>
 
 </html>

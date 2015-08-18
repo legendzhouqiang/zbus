@@ -1,0 +1,27 @@
+package org.zbus;
+
+import org.zbus.mq.Broker;
+import org.zbus.mq.BrokerConfig;
+import org.zbus.mq.Producer;
+import org.zbus.mq.SingleBroker;
+import org.zbus.net.http.Message;
+
+public class ProducerExample {
+	public static void main(String[] args) throws Exception { 
+		//创建Broker代理
+		BrokerConfig config = new BrokerConfig();
+		config.setBrokerAddress("127.0.0.1:15555");
+		final Broker broker = new SingleBroker(config);
+ 
+		Producer producer = new Producer(broker, "MyMQ");
+		producer.createMQ(); // 如果已经确定存在，不需要创建
+
+		//创建消息，消息体可以是任意binary，应用协议交给使用者
+		Message msg = new Message();
+		msg.setBody("hello world");
+		producer.sendSync(msg);  
+		
+		//销毁Broker
+		broker.close();
+	}
+}

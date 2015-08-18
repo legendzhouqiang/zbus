@@ -3,11 +3,11 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>jar</packaging>
-	<groupId>org.zstacks</groupId>
+	<groupId>org.zbus</groupId>
 	<artifactId>zbus</artifactId>
-	<version>6.1.0</version>
+	<version>6.2.0-SNAPSHOT</version>
 	<name>zbus</name>
-	<description>lightweight message queue, service bus</description>
+	<description>lightweight MQ, RPC, Proxy</description>
 	<url>https://zbus.org</url>
 
 
@@ -45,16 +45,26 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-			<version>1.1.41</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<version>2.2</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.zstacks</groupId>
-			<artifactId>znet</artifactId>
-			<version>6.1.0</version>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.3</version>
+			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+			<scope>provided</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -62,19 +72,25 @@
 			<version>2.5.6</version>
 			<optional>true</optional>
 			<scope>test</scope>
-		</dependency> 
- 
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<version>2.3.2</version>
-			<scope>provided</scope>
 		</dependency>
-		
+
+
 	</dependencies>
 
 
 	<build>
+		<!-- 
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>*.properties</exclude>
+					<exclude>*.xml</exclude>
+				</excludes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+		 -->
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -94,6 +110,17 @@
 		<profile>
 			<id>release</id>
 			<build>
+				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+						<excludes>
+							<exclude>*.properties</exclude>
+							<exclude>*.xml</exclude> 
+						</excludes>
+						<filtering>false</filtering>
+					</resource>
+				</resources>
+
 				<plugins>
 					<!-- Source -->
 					<plugin>

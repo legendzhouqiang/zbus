@@ -1,0 +1,89 @@
+package org.zbus.net;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.zbus.net.TicketManager.Ticket;
+import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.Session;
+
+public class InvokingClient<REQ extends Id, RES extends Id> extends Client<REQ, RES> {	
+	protected final TicketManager<REQ, RES> ticketManager = new TicketManager<REQ, RES>();
+	
+	public InvokingClient(String host, int port, Dispatcher dispatcher) {
+		super(host, port, dispatcher); 
+	} 
+	
+	public InvokingClient(String address, Dispatcher dispatcher) {
+		super(address, dispatcher); 
+	} 
+	 
+	public void send(REQ req) throws IOException{
+    	connectSyncIfNeed(); 
+    	if(req.getId() == null){
+			req.setId(Ticket.uuid());
+		} 
+    	this.session.write(req);
+    } 
+	
+	@Override
+    protected void onMessage(Object obj, Session sess) throws IOException {  
+		@SuppressWarnings("unchecked")
+		RES res = (RES)obj; 
+    	//先验证是否有Ticket处理
+    	Ticket<REQ, RES> ticket = ticketManager.removeTicket(res.getId());
+    	if(ticket != null){
+    		ticket.notifyResponse(res); 
+    		return;
+    	}  
+    	
+    	super.onMessage(obj, sess);
+	}
+	
+	public void invokeAsync(REQ req, ResultCallback<RES> callback) throws IOException { 
+    	connectSyncIfNeed();
+    	
+		Ticket<REQ, RES> ticket = null;
+		if(callback != null){
+			ticket = ticketManager.createTicket(req, readTimeout, callback);
+		} else {
+			if(req.getId() == null){
+				req.setId(Ticket.uuid());
+			}
+		} 
+		try{
+			session.write(req);  
+		} catch(IOException e) {
+			if(ticket != null){
+				ticketManager.removeTicket(ticket.getId());
+			}
+			throw e;
+		}  
+	} 
+	
+	public RES invokeSync(REQ req) throws IOException, InterruptedException {
+		return this.invokeSync(req, this.readTimeout);
+	}
+
+	public RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException {
+		Ticket<REQ, RES> ticket = null;
+		try {
+			connectSyncIfNeed();
+			ticket = ticketManager.createTicket(req, timeout);
+			session.write(req);
+
+			if (!ticket.await(timeout, TimeUnit.MILLISECONDS)) {
+				if (!session.isActive()) {
+					throw new IOException("Connection reset by peer");
+				} else {
+					return null;
+				}
+			}
+			return ticket.response();
+		} finally {
+			if (ticket != null) {
+				ticketManager.removeTicket(ticket.getId());
+			}
+		}
+	}
+}
