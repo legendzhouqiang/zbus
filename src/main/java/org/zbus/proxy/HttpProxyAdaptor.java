@@ -56,22 +56,22 @@ public class HttpProxyAdaptor extends BindingAdaptor{
     @Override
     protected void onMessage(Object obj, Session sess) throws IOException {
     	Message msg = (Message)obj; 
-    	String uri = msg.getUri(); 
+    	String uri = msg.getRequestString(); 
     	int idx = uri.indexOf('/', 1);
     	if(idx == -1) idx = uri.indexOf('?');
     	String entry = uri.substring(1);
     	if(idx != -1){
     		entry = uri.substring(1, idx);
     		uri = uri.substring(idx);
-    		msg.setUri(uri);
+    		msg.setRequestString(uri);
     	} else {
-    		msg.setUri("/");
+    		msg.setRequestString("/");
     	}
     	
     	
     	String targetAddress = urlMap.get(entry);
     	if(targetAddress == null){
-    		msg.setStatus(404);
+    		msg.setResponseStatus(404);
     		msg.setBody(entry + " Not Found"); 
     		sess.write(msg);
     		return;

@@ -40,7 +40,7 @@ public class MultiZbusServerExample {
 			public Message handleRequest(Message request) { 
 				//System.out.println(request);
 				Message result = new Message();
-				result.setStatus("200");
+				result.setResponseStatus("200");
 				result.setBody("Server time: "+System.currentTimeMillis());	
 				return result;
 			}

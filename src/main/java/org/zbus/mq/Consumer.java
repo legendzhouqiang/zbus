@@ -81,7 +81,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 			if(res != null){
 				res.setId(res.getRawId());
-				res.removeHead(Message.HEADER_RAWID);
+				res.removeHead(Message.RAWID);
 			}
 		} catch (ClosedByInterruptException e) {
 			throw new InterruptedException(e.getMessage());

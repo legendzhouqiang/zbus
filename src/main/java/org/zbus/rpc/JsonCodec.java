@@ -107,13 +107,13 @@ public class JsonCodec implements Codec {
 	
 	public Message encodeResponse(Response response) {
 		Message msg = new Message(); 
-		msg.setStatus("200"); 
+		msg.setResponseStatus("200"); 
 		if(response.getError() != null){
 			Throwable error = response.getError(); 
 			if(error instanceof IllegalArgumentException){
-				msg.setStatus("400");
+				msg.setResponseStatus("400");
 			} else {
-				msg.setStatus("500");
+				msg.setResponseStatus("500");
 			} 
 		}  
 		String encoding = response.getEncoding();

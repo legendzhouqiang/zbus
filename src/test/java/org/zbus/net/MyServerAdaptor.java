@@ -10,14 +10,19 @@ import org.zbus.net.http.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 import org.zbus.net.http.Message;
 
-public class MyServer extends MessageAdaptor{
+public class MyServerAdaptor extends MessageAdaptor{
 	
-	public MyServer(){  
-		this.registerHandler("hello", new MessageHandler() {
+	public MyServerAdaptor(){  
+		this.registerHandler("/hello", new MessageHandler() {
 			public void handle(Message msg, Session sess) throws IOException { 
-				msg.setStatus(200);   
-				msg.setBody("hello world");
-				sess.write(msg);
+				System.out.println(msg);
+				Message res = new Message();
+				
+				res.setId(msg.getId());
+				
+				res.setResponseStatus(200);   
+				res.setBody("hello world");
+				sess.write(res);
 			}
 		});
 	}
@@ -32,7 +37,7 @@ public class MyServer extends MessageAdaptor{
 			.selectorCount(selectorCount)   //Selector线程数配置
 			.executorCount(executorCount); //Message后台处理线程数配置
 		
-		IoAdaptor ioAdaptor = new MyServer();
+		IoAdaptor ioAdaptor = new MyServerAdaptor();
 		Server server = new Server(dispatcher, ioAdaptor, 80);
     	server.start(); 
 	}

@@ -33,7 +33,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setMq(msg.getMq());
-		res.setStatus(200);
+		res.setResponseStatus(200);
 		res.setBody("" + System.currentTimeMillis());
 
 		sess.write(res);
@@ -43,7 +43,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setStatus(404);
+		res.setResponseStatus(404);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) Not Found", mqName));
 
@@ -54,7 +54,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setStatus(403);
+		res.setResponseStatus(403);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) forbbiden", mqName));
 
@@ -64,7 +64,7 @@ public class ReplyKit {
 	public static void reply400(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
-		res.setStatus(400);
+		res.setResponseStatus(400);
 		res.setMq(msg.getMq());
 		res.setBody(String.format("Bad format: %s", msg.getBodyString()));
 		sess.write(res);

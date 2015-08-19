@@ -73,7 +73,7 @@ public class PubSub extends AbstractMQ{
 				} 
 				if(sess.isTopicMatched(topic)){ 
 					Message copy = Message.copyWithoutBody(msg);
-					copy.setStatus(200);
+					copy.setResponseStatus(200);
 					sess.getMsgQ().offer(copy);
 				}
 			}
@@ -94,7 +94,7 @@ public class PubSub extends AbstractMQ{
 				msg = pull.getMsgQ().poll();
 				if(msg == null) break;
 				
-				msg.setStatus(200); //支持浏览器
+				msg.setResponseStatus(200); //支持浏览器
 				msg.setRawId(msg.getId());
 				msg.setId(pullMessage.getId()); 
 				

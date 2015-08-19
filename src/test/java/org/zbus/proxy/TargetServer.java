@@ -15,7 +15,7 @@ public class TargetServer extends MessageAdaptor {
 		registerHandler("hello", new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				msg.setStatus(200);
+				msg.setResponseStatus(200);
 				msg.setBody(""+System.currentTimeMillis());
 				sess.write(msg);
 			}

@@ -51,39 +51,40 @@ public class MessageAdaptor extends IoAdaptor{
 	}  
     
     public String findHandlerKey(Message msg){
-    	String cmd = msg.getCmd();
+    	String cmd = msg.getCmd(); //优先使用cmd扩展
 		if(cmd == null){
-			return msg.getPath();
+			return msg.getRequestPath();
 		}
 		return cmd;
     }
     
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
+    	final String msgId = msg.getId();
     	if(this.globalHandler != null){
     		this.globalHandler.handle(msg, sess);
     	}
     	
-    	String cmd = findHandlerKey(msg);
-    	if(cmd == null){ 
+    	String key = findHandlerKey(msg);
+    	if(key == null){ 
     		Message res = new Message();
-    		res.setId(msg.getId()); 
-        	res.setStatus(400);
-        	res.setBody("Bad format: missing command"); 
+    		res.setId(msgId); 
+        	res.setResponseStatus(400);
+        	res.setBody("Bad Format(400): Missing Command"); 
         	sess.write(res);
     		return;
     	}
     	
-    	MessageHandler handler = handlerMap.get(cmd);
+    	MessageHandler handler = handlerMap.get(key);
     	if(handler != null){
     		handler.handle(msg, sess);
     		return;
     	}
     	
     	Message res = new Message();
-    	res.setId(msg.getId()); 
-    	res.setStatus(400);
-    	String text = String.format("Bad format: command(%s) not support", cmd);
+    	res.setId(msgId); 
+    	res.setResponseStatus(404);
+    	String text = String.format("Not Found(404): %s", key);
     	res.setBody(text); 
     	sess.write(res); 
     } 

@@ -48,7 +48,7 @@ public class MessageCodec implements Codec{
 		msg.decodeHeaders(buf.array(), buf.position(), headerLen);
 		buf.position(buf.position()+headerLen);
 		
-		String contentLength = msg.getHeadOrParam(Message.HEADER_CONTENT_LENGTH);
+		String contentLength = msg.getHead(Message.CONTENT_LENGTH);
 		if(contentLength == null){ //just head 
 			return msg;
 		}

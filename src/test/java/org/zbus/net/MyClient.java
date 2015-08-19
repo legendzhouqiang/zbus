@@ -11,8 +11,9 @@ public class MyClient {
 		
 		final MessageClient client = new MessageClient("127.0.0.1:80", dispatcher);
 		
-		Message msg = new Message();
-		msg.setCmd("hello"); 
+		Message msg = new Message(); 
+		msg.setRequestString("/hello"); 
+		
 		msg.setBody("hello world"); 
 		Message res = client.invokeSync(msg);
 		System.out.println(res); 

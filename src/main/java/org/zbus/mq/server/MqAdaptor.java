@@ -114,7 +114,7 @@ public class MqAdaptor extends IoAdaptor {
     	
     	Message res = new Message();
     	res.setId(msg.getId()); 
-    	res.setStatus(400);
+    	res.setResponseStatus(400);
     	String text = String.format("Bad format: command(%s) not support", cmd);
     	res.setBody(text); 
     	sess.write(res); 
@@ -142,8 +142,8 @@ public class MqAdaptor extends IoAdaptor {
 			AbstractMQ mq = findMQ(msg, sess);
 			if(mq == null) return;
 			boolean ack = msg.isAck();
-			msg.removeHead(Message.HEADER_CMD);
-			msg.removeHead(Message.HEADER_ACK);
+			msg.removeHead(Message.CMD);
+			msg.removeHead(Message.ACK);
 			
 			mq.produce(msg, sess);
 			mq.lastUpdateTime = System.currentTimeMillis();
@@ -174,9 +174,9 @@ public class MqAdaptor extends IoAdaptor {
 				log.warn("Missing target %s", recver); 
 				return; //just ignore
 			} 
-			msg.removeHead(Message.HEADER_ACK);
-			msg.removeHead(Message.HEADER_RECVER);
-			msg.removeHead(Message.HEADER_CMD);
+			msg.removeHead(Message.ACK);
+			msg.removeHead(Message.RECVER);
+			msg.removeHead(Message.CMD);
 			target.write(msg);
 		}
 	}; 
@@ -312,8 +312,14 @@ public class MqAdaptor extends IoAdaptor {
 		}
 
 		public void handle(Message msg, Session sess) throws IOException {
-			String subCmd = msg.getSubCmd();
-			if (subCmd == null) subCmd = "";
+			String subCmd = msg.getSubCmd(); //from header first
+			if (subCmd == null){
+				subCmd = msg.getRequestParam(Message.SUB_CMD); //from request Param
+			}
+			if(subCmd == null){ //default to home
+				subCmd = "";
+			}
+			
 			MessageHandler handler = this.handlerMap.get(subCmd);
 			if (handler == null) {
 				msg.setBody("sub_cmd=%s Not Found", subCmd);
@@ -326,7 +332,7 @@ public class MqAdaptor extends IoAdaptor {
 		private MessageHandler homeHandler = new MessageHandler() {
 			public void handle(Message msg, Session sess) throws IOException {
 				msg = new Message();
-				msg.setStatus("200");
+				msg.setResponseStatus("200");
 				msg.setHead("content-type", "text/html");
 				String body = FileKit.loadFileContent("zbus.htm");
 				if ("".equals(body)) {
@@ -340,7 +346,7 @@ public class MqAdaptor extends IoAdaptor {
 		private MessageHandler jqueryHandler = new MessageHandler() {
 			public void handle(Message msg, Session sess) throws IOException {
 				msg = new Message();
-				msg.setStatus("200");
+				msg.setResponseStatus("200");
 				msg.setHead("content-type", "application/javascript");
 				String body = FileKit.loadFileContent("jquery.js");
 				msg.setBody(body);
@@ -353,7 +359,7 @@ public class MqAdaptor extends IoAdaptor {
 				BrokerInfo info = getStatInfo();
 
 				Message data = new Message();
-				data.setStatus("200");
+				data.setResponseStatus("200");
 				data.setId(msg.getId());
 				data.setHead("content-type", "application/json");
 				data.setBody(JsonKit.toJson(info));
