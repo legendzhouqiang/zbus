@@ -56,7 +56,7 @@ import org.zbus.net.core.IoBuffer;
  */
 public class Message implements Id {  
 	private static final Logger log = Logger.getLogger(Message.class); 
-	public static final String HEARTBEAT  = "heartbeat"; //心跳消息
+	public static final String HEARTBEAT        = "heartbeat"; //心跳消息
 	
 	//使用到的标准HTTP头部
 	public static final String REMOTE_ADDR      = "remote-addr";
@@ -463,28 +463,17 @@ public class Message implements Id {
 		}
 		bb.flip();
 		return bb;
-	}
-	
-	
-	public static void main(String[] args){
-		Meta meta = new Meta(); 
-		meta.setRequestString("/hello/?hong=kee");
-		meta.setRequestParam("a", "b");
-		meta.setRequestPath("/xx");
-		System.out.println(meta.requestPath);
-		System.out.println(meta);
-	}
-
+	} 
 
 	static class Meta{  
 		//HTTP响应头部: 状态(200)
 		String status; //根据status是否设置来决定Meta是请求还是应答	
 		//HTTP请求头部: 方法(GET/POST)-RequestString-KV参数
 		String method = "GET"; 
-		String requestString;
-		 
-		String requestPath; 
-		Map<String,String> requestParams;
+		
+		String requestString = "/";         //请求串 （最终决定，下面两个辅助动态更新）
+		String requestPath = requestString; //请求路径
+		Map<String,String> requestParams;   //请求参数KV
 		
 		
 		static Set<String> httpMethod = new HashSet<String>();
@@ -513,9 +502,7 @@ public class Message implements Id {
 			httpStatus.put("405", "Method Not Allowed"); 
 			httpStatus.put("416", "Requested Range Not Satisfiable");
 			httpStatus.put("500", "Internal Server Error");
-		}
-		
-	
+		} 
 		
 		@Override
 		public String toString() { 
@@ -539,11 +526,12 @@ public class Message implements Id {
 				bb.writeString(desc);  
 			} else {
 				String method = this.method; 
-				if(this.method == null) method = "";
-				String uri = getRequestString();
+				if(method == null) method = ""; 
 				bb.writeString(method);
-				bb.writeBytes(BLANK);
-				bb.writeString(uri);
+				bb.writeBytes(BLANK); 
+				String requestString = this.requestString;
+				if(requestString == null) requestString = "";
+				bb.writeString(requestString);
 				bb.writeBytes(SUFFIX); 
 			}
 			return bb;
@@ -577,13 +565,16 @@ public class Message implements Id {
 			decodeRequestString(this.requestString);
 		} 
 		
+		public void setMethod(String method){
+			this.method = method;
+		}
+		
 		public void setRequestString(String requestString){
 			this.requestString = requestString;
 			decodeRequestString(requestString);
-		}
+		} 
 		
-		public String getRequestString(){
-			if(this.requestString != null) return this.requestString; //uri priority
+		private void calcRequestString(){
 			StringBuilder sb = new StringBuilder();
 			if(this.requestPath != null){ 
 				sb.append(this.requestPath);
@@ -599,7 +590,7 @@ public class Message implements Id {
 					}
 				}
 			}
-			return sb.toString(); 
+			this.requestString = sb.toString(); 
 		}
 		private void decodeRequestString(String commandString){
 			int idx = commandString.indexOf('?');
@@ -612,8 +603,9 @@ public class Message implements Id {
 				this.requestPath = this.requestPath.substring(0, this.requestPath.length()-1);
 			}
 			if(idx < 0) return;
-			
-			this.requestParams = new HashMap<String, String>(); 
+			if(this.requestParams == null){
+				this.requestParams = new ConcurrentHashMap<String, String>(); 
+			}
 			String paramString = commandString.substring(idx+1); 
 			StringTokenizer st = new StringTokenizer(paramString, "&");
 	        while (st.hasMoreTokens()) {
@@ -652,6 +644,7 @@ public class Message implements Id {
 		
 		public void setRequestPath(String path){
 			this.requestPath = path;
+			calcRequestString();
 		}
 		
 		public void setRequestParam(String key, String value){
@@ -659,6 +652,15 @@ public class Message implements Id {
 				requestParams = new HashMap<String, String>();
 			}
 			requestParams.put(key, value);
+			calcRequestString();
 		}
+	}
+	
+	
+	public static void main(String[] args){
+		Meta meta = new Meta(); 
+		
+		meta.setRequestString("/hello/?hong=kee");  
+		System.out.println(meta.getRequestParam("hong"));
 	}
 }

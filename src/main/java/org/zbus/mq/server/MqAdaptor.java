@@ -77,7 +77,7 @@ public class MqAdaptor extends IoAdaptor {
 		registerHandler(Protocol.Route, routeHandler);  
 		registerHandler(Protocol.CreateMQ, createMqHandler);  
 		registerHandler(Protocol.Admin, new AdminHandler()); 
-		registerHandler(Protocol.Heartbeat, heartbeatHandler);  
+		registerHandler(Message.HEARTBEAT, heartbeatHandler);  
 		
 		this.cleanExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -377,7 +377,7 @@ public class MqAdaptor extends IoAdaptor {
 		config.serverPort = ConfigKit.option(args, "-p", 15555);
 		config.selectorCount = ConfigKit.option(args, "-selector", 1);
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
-		config.verbose = ConfigKit.option(args, "-verbose", false);
+		config.verbose = ConfigKit.option(args, "-verbose", true);
 		config.storePath = ConfigKit.option(args, "-store", "mq");
 
 		String configFile = ConfigKit.option(args, "-conf", "zbus.properties");

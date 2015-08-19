@@ -15,7 +15,7 @@ public class MyClient {
 		msg.setRequestString("/hello?key=value"); 
 		
 		msg.setBody("hello world"); 
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<1;i++){
 			Message res = client.invokeSync(msg);
 			System.out.println(res); 
 		}

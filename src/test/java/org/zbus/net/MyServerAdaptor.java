@@ -9,6 +9,7 @@ public class MyServerAdaptor extends MessageAdaptor{
 	public MyServerAdaptor(){   
 		uri("/hello", new UriHandler() {  
 			public Message process(Message req) {  
+				System.out.println(req);
 				Message res = new Message(); 
 				res.setBody("hello world");
 				return res;
