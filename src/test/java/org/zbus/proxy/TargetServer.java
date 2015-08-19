@@ -12,7 +12,7 @@ import org.zbus.net.http.MessageHandler;
 public class TargetServer extends MessageAdaptor { 
 	
 	public TargetServer(){
-		registerHandler("hello", new MessageHandler() { 
+		cmd("hello", new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
 				msg.setResponseStatus(200);

@@ -1,44 +1,24 @@
 package org.zbus.net;
 
-import java.io.IOException;
-
-import org.zbus.kit.ConfigKit;
 import org.zbus.net.core.Dispatcher;
-import org.zbus.net.core.IoAdaptor;
-import org.zbus.net.core.Session;
-import org.zbus.net.http.MessageHandler;
-import org.zbus.net.http.MessageAdaptor;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.MessageAdaptor;
+import org.zbus.net.http.UriHandler;
 
-public class MyServerAdaptor extends MessageAdaptor{
-	
-	public MyServerAdaptor(){  
-		this.registerHandler("/hello", new MessageHandler() {
-			public void handle(Message msg, Session sess) throws IOException { 
-				System.out.println(msg);
-				Message res = new Message();
-				
-				res.setId(msg.getId());
-				
-				res.setResponseStatus(200);   
+public class MyServerAdaptor extends MessageAdaptor{ 
+	public MyServerAdaptor(){   
+		uri("/hello", new UriHandler() {  
+			public Message process(Message req) {  
+				Message res = new Message(); 
 				res.setBody("hello world");
-				sess.write(res);
+				return res;
 			}
-		});
-	}
-	
-
+		}); 
+	} 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
-		int selectorCount = ConfigKit.option(args, "-selector", 1);
-		int executorCount = ConfigKit.option(args, "-executor", 128);
-		
-		Dispatcher dispatcher = new Dispatcher()
-			.selectorCount(selectorCount)   //Selector线程数配置
-			.executorCount(executorCount); //Message后台处理线程数配置
-		
-		IoAdaptor ioAdaptor = new MyServerAdaptor();
-		Server server = new Server(dispatcher, ioAdaptor, 80);
+		Dispatcher dispatcher = new Dispatcher();  
+		Server server = new Server(dispatcher, new MyServerAdaptor(), 80);
     	server.start(); 
 	}
 }

@@ -149,10 +149,12 @@ public class Message implements Id {
 		meta.setRequestPath(path);
 	}
 	
+	public Map<String, String> getRequestParams(){
+		return meta.requestParams;
+	}
 	public String getRequestParam(String key){
 		return meta.getRequestParam(key); 
-	} 
-	
+	}  
 	public void setRequestParam(String key, String value){
 		meta.setRequestParam(key, value);
 	}
@@ -342,6 +344,9 @@ public class Message implements Id {
 		if(msgId == null) return;
 		this.setHead(ID, msgId); 
 	}	
+	public void setId(long id){
+		setId(""+id);
+	}
 	
 	
 	public String getRawId() {

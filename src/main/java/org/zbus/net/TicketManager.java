@@ -27,8 +27,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TicketManager<REQ extends Id, RES extends Id> { 
+	private static AtomicLong idGenerator = new AtomicLong(0);
+	private static boolean useUuid = false;
+	public static void enableUuid(boolean useUuid){
+		TicketManager.useUuid = useUuid;
+	}
 	
 	public static class Ticket<REQ extends Id, RES> {    
 		private CountDownLatch latch = new CountDownLatch(1);
@@ -43,7 +49,7 @@ public class TicketManager<REQ extends Id, RES extends Id> {
 		
 		
 		public Ticket(REQ request, long timeout) {   
-			this.id = uuid(); 
+			this.id = nextId();
 			if(request != null){
 				request.setId(this.id);
 			}
@@ -52,8 +58,11 @@ public class TicketManager<REQ extends Id, RES extends Id> {
 			this.timeout = timeout;
 		} 
 		
-		public static String uuid(){
-			return UUID.randomUUID().toString(); 
+		public static String nextId(){
+			if(useUuid){
+				return UUID.randomUUID().toString(); 
+			}
+			return ""+idGenerator.incrementAndGet();
 		}
 	 
 		public boolean await(long timeout, TimeUnit unit)

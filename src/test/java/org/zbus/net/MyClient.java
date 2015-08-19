@@ -11,12 +11,14 @@ public class MyClient {
 		
 		final MessageClient client = new MessageClient("127.0.0.1:80", dispatcher);
 		
-		Message msg = new Message(); 
-		msg.setRequestString("/hello"); 
+		Message msg = new Message();  
+		msg.setRequestString("/hello?key=value"); 
 		
 		msg.setBody("hello world"); 
-		Message res = client.invokeSync(msg);
-		System.out.println(res); 
+		for(int i=0;i<100000;i++){
+			Message res = client.invokeSync(msg);
+			System.out.println(res); 
+		}
 		
 		client.close();
 		dispatcher.close();

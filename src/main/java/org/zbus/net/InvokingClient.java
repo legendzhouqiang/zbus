@@ -43,7 +43,7 @@ public class InvokingClient<REQ extends Id, RES extends Id> extends Client<REQ, 
 	public void send(REQ req) throws IOException{
     	connectSyncIfNeed(); 
     	if(req.getId() == null){
-			req.setId(Ticket.uuid());
+			req.setId(Ticket.nextId());
 		} 
     	this.session.write(req);
     } 
@@ -70,7 +70,7 @@ public class InvokingClient<REQ extends Id, RES extends Id> extends Client<REQ, 
 			ticket = ticketManager.createTicket(req, readTimeout, callback);
 		} else {
 			if(req.getId() == null){
-				req.setId(Ticket.uuid());
+				req.setId(Ticket.nextId());
 			}
 		} 
 		try{

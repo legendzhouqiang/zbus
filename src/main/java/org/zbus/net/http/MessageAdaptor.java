@@ -30,61 +30,90 @@ import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 
 public class MessageAdaptor extends IoAdaptor{   
-	protected Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
-	protected MessageHandler globalHandler;  
+	//全局处理器，优先级最高
+	protected MessageHandler filterHandler;  
+	//根据cmd处理，优先级次之
+	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
+	//根据Uri处理，优先级最低
+	protected Map<String, UriHandler> uriHandlerMap = new ConcurrentHashMap<String, UriHandler>();
+
 
 	public MessageAdaptor(){
 		codec(new MessageCodec()); //个性化消息编解码
-		this.registerHandler(Message.HEARTBEAT, new MessageHandler() { 
+		this.cmd(Message.HEARTBEAT, new MessageHandler() { 
 			public void handle(Message msg, Session sess) throws IOException { 
 				//ignore
 			}
 		});
 	}
 	 
-	public void registerHandler(String command, MessageHandler handler){
-    	this.handlerMap.put(command, handler);
+	public void cmd(String command, MessageHandler handler){
+    	this.cmdHandlerMap.put(command, handler);
     }
+	
+	public void uri(String path, UriHandler handler){
+		this.uriHandlerMap.put(path, handler);
+	}
     
-    public void registerGlobalHandler(MessageHandler globalHandler) {
-		this.globalHandler = globalHandler;
+    public void registerFilterHandler(MessageHandler filterHandler) {
+		this.filterHandler = filterHandler;
 	}  
-    
-    public String findHandlerKey(Message msg){
-    	String cmd = msg.getCmd(); //优先使用cmd扩展
-		if(cmd == null){
-			return msg.getRequestPath();
-		}
-		return cmd;
-    }
     
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	final String msgId = msg.getId();
-    	if(this.globalHandler != null){
-    		this.globalHandler.handle(msg, sess);
+    	
+    	if(this.filterHandler != null){
+    		this.filterHandler.handle(msg, sess);
     	}
     	
-    	String key = findHandlerKey(msg);
-    	if(key == null){ 
+    	String cmd = msg.getCmd();
+    	if(cmd != null){ //cmd
+    		MessageHandler handler = cmdHandlerMap.get(cmd);
+        	if(handler != null){
+        		handler.handle(msg, sess);
+        		return;
+        	}
+    	}
+    	
+    	String path = msg.getRequestPath(); //requestPath
+    	if(path == null){ 
     		Message res = new Message();
     		res.setId(msgId); 
         	res.setResponseStatus(400);
-        	res.setBody("Bad Format(400): Missing Command"); 
+        	res.setBody("Bad Format(400): Missing Command and RequestPath"); 
         	sess.write(res);
     		return;
     	}
     	
-    	MessageHandler handler = handlerMap.get(key);
-    	if(handler != null){
-    		handler.handle(msg, sess);
+    	UriHandler uriHandler = uriHandlerMap.get(path);
+    	if(uriHandler != null){
+    		Message res = null; 
+    		try{
+    			res = uriHandler.process(msg); 
+	    		if(res != null){
+	    			res.setId(msgId);
+	    			if(res.getResponseStatus() == null){
+	    				res.setResponseStatus(200);// default to 200
+	    			}
+	    			sess.write(res);
+	    		}
+    		} catch (IOException e){ 
+    			throw e;
+    		} catch (Exception e) { 
+    			res = new Message();
+    			res.setResponseStatus(500);
+    			res.setBody("Internal Error(500): " + e);
+    			sess.write(res);
+			}
+    
     		return;
-    	}
+    	} 
     	
     	Message res = new Message();
     	res.setId(msgId); 
     	res.setResponseStatus(404);
-    	String text = String.format("Not Found(404): %s", key);
+    	String text = String.format("Not Found(404): %s", path);
     	res.setBody(text); 
     	sess.write(res); 
     } 
