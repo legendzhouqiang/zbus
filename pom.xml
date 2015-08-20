@@ -7,7 +7,7 @@
 	<artifactId>zbus</artifactId>
 	<version>6.2.0-SNAPSHOT</version>
 	<name>zbus</name>
-	<description>lightweight MQ, RPC, Proxy</description>
+	<description>lightweight MQ, RPC, PROXY</description>
 	<url>https://zbus.org</url>
 
 

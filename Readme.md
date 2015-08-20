@@ -49,7 +49,7 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 
 ## ZBUS API
 
-* [Java API](http://git.oschina.net/rushmore/zbus/tree/master/src/main/java/org/zstacks/zbus/client "zbus") 
+* [Java API](http://git.oschina.net/rushmore/zbus "zbus") 
 * [C/C++ API](http://git.oschina.net/rushmore/zbus-api-c "zbus-api-c") 
 * [Python API](http://git.oschina.net/rushmore/zbus-api-python "zbus-api-python") 
 * [C# API](http://git.oschina.net/rushmore/zbus-api-csharp "zbus-api-csharp") 
