@@ -8,15 +8,13 @@ import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 
 public class PubExample {
-	public static void main(String[] args) throws Exception{  
-		//1）创建Broker代理【重量级对象，需要释放】
+	public static void main(String[] args) throws Exception{   
 		BrokerConfig config = new BrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
-		
-		//2) 创建生产者 【轻量级对象，不需要释放，随便使用】
+		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
-		producer.createMQ(); //创建MQ，如果确定存在的MQ可以不创建
+		producer.createMQ();  
 		
 		Message msg = new Message();
 		msg.setTopic("sse");

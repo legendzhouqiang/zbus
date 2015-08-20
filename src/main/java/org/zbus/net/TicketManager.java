@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TicketManager<REQ extends Id, RES extends Id> { 
 	private static AtomicLong idGenerator = new AtomicLong(0);
-	private static boolean useUuid = false;
+	private static boolean useUuid = true;
 	public static void enableUuid(boolean useUuid){
 		TicketManager.useUuid = useUuid;
 	}
