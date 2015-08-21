@@ -19,7 +19,7 @@ public class PubExample {
 		Message msg = new Message();
 		msg.setTopic("sse");
 		
-		for(int i=0;i<1000;i++){
+		for(int i=0;i<1000000;i++){
 			msg.setBody("hello world"+i);
 			producer.sendSync(msg); 
 		}

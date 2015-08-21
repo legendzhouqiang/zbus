@@ -52,7 +52,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 
 	protected Session session; 
 	
-	protected MsgHandler<RES> msgHandler; 
+	protected volatile MsgHandler<RES> msgHandler; 
 	protected ErrorHandler errorHandler;
 	
 	public Client(String address, Dispatcher dispatcher) { 

@@ -98,6 +98,7 @@ public class PubSub extends AbstractMQ{
 				msg.setRawId(msg.getId());
 				msg.setId(pullMessage.getId()); 
 				
+				pull.pullMessage = null;
 				pull.getSession().write(msg);
 			} catch(IOException ex){
 				log.error(ex.getMessage(), ex);
