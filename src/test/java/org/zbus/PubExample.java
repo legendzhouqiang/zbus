@@ -18,10 +18,11 @@ public class PubExample {
 		
 		Message msg = new Message();
 		msg.setTopic("sse");
-		msg.setBody("hello world");
 		
-		Message res = producer.sendSync(msg);
-		System.out.println(res);
+		for(int i=0;i<1000;i++){
+			msg.setBody("hello world"+i);
+			producer.sendSync(msg); 
+		}
 		
 		broker.close();
 	} 
