@@ -18,8 +18,10 @@ public class ProducerExample {
 
 		//创建消息，消息体可以是任意binary，应用协议交给使用者
 		Message msg = new Message();
-		msg.setBody("hello world");
-		producer.sendSync(msg);  
+		msg.setBody(new byte[10240]);
+		for(int i=0;i<10000;i++){
+			producer.sendSync(msg);  
+		}
 		
 		//销毁Broker
 		broker.close();

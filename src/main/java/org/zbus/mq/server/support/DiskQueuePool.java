@@ -63,7 +63,7 @@ public class DiskQueuePool {
         }
         this.queueMap = scanDir(fileBackupDir);
         this.syncService = Executors.newSingleThreadScheduledExecutor();
-        this.syncService.scheduleWithFixedDelay(new Runnable() {
+        this.syncService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 for (DiskQueue q : queueMap.values()) {
@@ -71,7 +71,7 @@ public class DiskQueuePool {
                 }
                 deleteBlockFile();
             }
-        }, 10L, 10L, TimeUnit.SECONDS);
+        }, 1000, 10000, TimeUnit.MILLISECONDS);
     }
     
     public static Map<String, DiskQueue> getQueryMap(){
@@ -79,8 +79,11 @@ public class DiskQueuePool {
     }
  
     private void deleteBlockFile() {
-        String blockFilePath = deletingQueue.poll();
-        if (blockFilePath==null || blockFilePath.trim().equals("")) {
+        String blockFilePath = null;
+        while( (blockFilePath = deletingQueue.poll()) != null){
+        	blockFilePath = blockFilePath.trim();
+        	if(blockFilePath.equals("")) continue;
+        	log.info("Delete File[%s]", blockFilePath);   
             File delFile = new File(blockFilePath);
             try {
                 if (!delFile.delete()) {
@@ -88,7 +91,7 @@ public class DiskQueuePool {
                 }
             } catch (SecurityException e) {
                 log.error("security manager exists, delete denied");
-            }
+            } 
         }
     }
  
@@ -100,7 +103,7 @@ public class DiskQueuePool {
         if (!fileBackupDir.isDirectory()) {
             throw new IllegalArgumentException("it is not a directory");
         }
-        Map<String, DiskQueue> exitsFQueues = new HashMap<String, DiskQueue>();
+        Map<String, DiskQueue> queues = new HashMap<String, DiskQueue>();
         File[] indexFiles = fileBackupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -110,10 +113,10 @@ public class DiskQueuePool {
         if (indexFiles != null && indexFiles.length> 0) {
             for (File indexFile : indexFiles) {
                 String queueName = DiskQueueIndex.parseQueueName(indexFile.getName());
-                exitsFQueues.put(queueName, new DiskQueue(queueName, fileBackupPath));
+                queues.put(queueName, new DiskQueue(queueName, fileBackupPath));
             }
         }
-        return exitsFQueues;
+        return queues;
     }
  
     public synchronized static void init(String deployPath) {

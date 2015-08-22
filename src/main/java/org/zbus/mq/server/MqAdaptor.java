@@ -397,9 +397,19 @@ public class MqAdaptor extends IoAdaptor {
 
 		String address = config.serverHost + ":" + config.serverPort; 
 		
-		MqAdaptor mqAdaptor = new MqAdaptor(address);
+		final MqAdaptor mqAdaptor = new MqAdaptor(address);
 		mqAdaptor.setVerbose(config.verbose); 
 		mqAdaptor.loadMQ(config.storePath);
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					mqAdaptor.close();
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});
 		
 		Server server = new Server(dispatcher, mqAdaptor, address);
 		server.setServerName("MqServer");
