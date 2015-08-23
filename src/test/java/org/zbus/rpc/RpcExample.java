@@ -1,4 +1,4 @@
-package org.zbus.rpc.broking;
+package org.zbus.rpc;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -7,11 +7,10 @@ import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.rpc.RpcConfig;
-import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
+import org.zbus.rpc.broking.BrokingInvoker;
 
 public class RpcExample {
 	public static User getUser(String name) {
@@ -68,6 +67,7 @@ public class RpcExample {
 		brokerConfig.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);
 
+		//MessageInvoker invoker = new DirectInvoker(broker);
 		MessageInvoker invoker = new BrokingInvoker(broker, "MyRpc");
 		
 		RpcFactory factory = new RpcFactory(invoker); 

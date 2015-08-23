@@ -13,8 +13,7 @@ public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
 		String address = ConfigKit.option(args, "-b", "127.0.0.1:15555"); 
 		int conusmerCount = ConfigKit.option(args, "-consumer", 20); //消费者数目 
-		String service = ConfigKit.option(args, "-service", "MyRpc");
-		boolean verbose = ConfigKit.option(args, "-verbose", true);
+		String service = ConfigKit.option(args, "-service", "MyRpc"); 
 		
 		//配置Broker
 		BrokerConfig brokerCfg = new BrokerConfig();
@@ -24,15 +23,14 @@ public class RpcServiceExample {
 		ServiceConfig config = new ServiceConfig();
 		config.setConsumerCount(conusmerCount); 
 		config.setMq(service); 
-		config.setBroker(broker);
-		config.setVerbose(verbose);
+		config.setBroker(broker); 
 		
-		RpcProcessor handler = new RpcProcessor(); 
+		RpcProcessor processor = new RpcProcessor(); 
 		//增加模块，模块名在调用时需要指定
-		handler.addModule(new InterfaceImpl());   
+		processor.addModule(new InterfaceImpl());   
 				
 		//处理逻辑
-		config.setMessageProcessor(handler);
+		config.setMessageProcessor(processor);
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);

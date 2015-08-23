@@ -8,11 +8,11 @@ import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
 import org.zbus.rpc.direct.Service;
 
-public class ServiceExample {
+public class RpcServiceExample {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
-		int port = ConfigKit.option(args, "-port", 8080);
+		int port = ConfigKit.option(args, "-port", 15555);
 		Dispatcher dispatcher = new Dispatcher();
 		
 		RpcProcessor processor = new RpcProcessor();

@@ -22,8 +22,7 @@
  */
 package org.zbus.pool;
 
-public class PoolConfig {
-	
+public class PoolConfig { 
 	private int maxTotal = 8;
     private int maxIdle = 8;
     private int minIdle = 0;

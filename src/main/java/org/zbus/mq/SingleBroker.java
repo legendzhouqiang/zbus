@@ -57,8 +57,7 @@ public class SingleBroker implements Broker {
 		this.dispatcher.start(); 
 		
 		this.pool = Pool.getPool(new MessageClientFactory(), this.config); 
-	} 
-	 
+	}  
 
 	@Override
 	public void close() throws IOException { 
@@ -70,15 +69,13 @@ public class SingleBroker implements Broker {
 				log.error(e.getMessage(), e);
 			}
 		}
-	}
-
+	} 
 	
 	public String getBrokerAddress() {
 		return brokerAddress;
 	}
  
-	public void invokeAsync(Message msg, ResultCallback<Message> callback)
-			throws IOException {  
+	public void invokeAsync(Message msg, ResultCallback<Message> callback) throws IOException {  
 		MessageClient client = null;
 		try {
 			client = this.pool.borrowObject(); 
@@ -109,6 +106,7 @@ public class SingleBroker implements Broker {
 			}
 		}
 	}
+	
 	public MessageClient getClient(ClientHint hint) throws IOException{ 
 		return new MessageClient(this.brokerAddress, this.dispatcher);
 	}
@@ -130,8 +128,7 @@ public class SingleBroker implements Broker {
 			try {
 				client.close();
 			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-				//ignore
+				log.error(e.getMessage(), e); 
 			}
 		}
 		

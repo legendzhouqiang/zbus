@@ -1,4 +1,4 @@
-package org.zbus.rpc.broking;
+package org.zbus.rpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -8,9 +8,8 @@ import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.rpc.RpcConfig;
-import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
+import org.zbus.rpc.broking.BrokingInvoker;
 
 class Task extends Thread{
 	private static final Logger log = Logger.getLogger(Task.class);
@@ -26,7 +25,7 @@ class Task extends Thread{
 				long count = counter.incrementAndGet();
 				biz.getOrder();
 				
-				if(count%1000 == 0){
+				if(count%5000 == 0){
 					long end = System.currentTimeMillis();
 					String qps = String.format("%.2f", count*1000.0/(end-startTime));
 					log.info("QPS: %s, Failed/Total=%d/%d(%.2f)",
@@ -46,10 +45,8 @@ public class RpcPerf {
 	public static void main(String[] args) throws Exception { 
 		final String brokerAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 60);
-		final int loopCount = ConfigKit.option(args, "-loop", 10000);
-		final String serviceName = ConfigKit.option(args, "-service", "MyRpc");
-		final int timeout = ConfigKit.option(args, "-timeout", 10000);
-		final boolean verbose = ConfigKit.option(args, "-verbose", false);
+		final int loopCount = ConfigKit.option(args, "-loop", 10000);  
+		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
 		
 		BrokerConfig brokerConfig = new BrokerConfig(); 
 		brokerConfig.setBrokerAddress(brokerAddress);
@@ -57,15 +54,13 @@ public class RpcPerf {
 		brokerConfig.setMaxIdle(threadCount);  
 		
 		final Broker broker = new SingleBroker(brokerConfig);
-		MessageInvoker invoker = new BrokingInvoker(broker, serviceName);
 		
-		RpcFactory proxy = new RpcFactory(invoker); 
+		//MessageInvoker invoker = new DirectInvoker(broker);
+		MessageInvoker invoker = new BrokingInvoker(broker, mq);
 		
-		RpcConfig config = new RpcConfig(); 
-		config.setTimeout(timeout);
-		config.setVerbose(verbose);
+		RpcFactory proxy = new RpcFactory(invoker);  
 		
-		Interface biz = proxy.getService(Interface.class, config);
+		Interface biz = proxy.getService(Interface.class);
 		
 		AtomicLong counter = new AtomicLong(0);
 		AtomicLong faileCounter = new AtomicLong(0);
