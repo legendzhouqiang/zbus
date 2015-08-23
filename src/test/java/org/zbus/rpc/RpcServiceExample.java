@@ -6,7 +6,7 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
-import org.zbus.rpc.RpcHandler;
+import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
 import org.zbus.rpc.broking.Service;
 import org.zbus.rpc.broking.ServiceConfig;
@@ -29,12 +29,12 @@ public class RpcServiceExample {
 		config.setBroker(broker);
 		config.setVerbose(verbose);
 		
-		RpcHandler handler = new RpcHandler(); 
+		RpcProcessor handler = new RpcProcessor(); 
 		//增加模块，模块名在调用时需要指定
 		handler.addModule(new InterfaceImpl());   
 				
 		//处理逻辑
-		config.setServiceHandler(handler);
+		config.setMessageProcessor(handler);
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);

@@ -33,7 +33,7 @@ public class ServiceExample {
 		config.setConsumerCount(consumerCount);
 		
 		//处理逻辑
-		config.setServiceHandler(new MessageProcessor() { 
+		config.setMessageProcessor(new MessageProcessor() { 
 			@Override
 			public Message process(Message request) {  
 				//System.out.println(request);

@@ -56,8 +56,10 @@ public class MessageAdaptor extends IoAdaptor{
 		cmd(path, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
+				final String msgId = msg.getId();
 				Message res = processor.process(msg);
 				if(res != null){
+					res.setId(msgId);
 					sess.write(res);
 				}
 			}

@@ -46,7 +46,7 @@ public class Service implements Closeable {
 		if(config.getMq() == null || "".equals(config.getMq())){
 			throw new IllegalArgumentException("MQ required");
 		}
-		if(config.getServiceHandler() == null){
+		if(config.getMessageProcessor() == null){
 			throw new IllegalArgumentException("ServiceHandler required");
 		}  
 		threadPoolExecutor = new ThreadPoolExecutor(config.getThreadCount(),
@@ -67,7 +67,7 @@ public class Service implements Closeable {
 	public void start() throws IOException{ 
 		if(isStarted) return;
 		
-		final MessageProcessor serviceHandler = config.getServiceHandler();
+		final MessageProcessor serviceHandler = config.getMessageProcessor();
 		Broker[] brokers = config.getBrokers();
 		int consumerCount = config.getConsumerCount();
 		if(brokers.length < 1 || consumerCount < 1) return;

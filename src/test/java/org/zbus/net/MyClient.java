@@ -12,7 +12,7 @@ public class MyClient {
 		final MessageClient client = new MessageClient("127.0.0.1:80", dispatcher);
 		
 		Message msg = new Message();  
-		msg.setRequestString("/hello?key=value"); 
+		msg.setCmd("/hello");
 		
 		msg.setBody("hello world"); 
 		for(int i=0;i<1;i++){

@@ -37,13 +37,13 @@ import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
 
 
-public class RpcHandler implements MessageProcessor {
-	private static final Logger log = Logger.getLogger(RpcHandler.class); 
+public class RpcProcessor implements MessageProcessor{
+	private static final Logger log = Logger.getLogger(RpcProcessor.class); 
 	private static final RpcCodec codec = new JsonRpcCodec();//TODO configurable
 	
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
-	public RpcHandler(Object... services){
+	public RpcProcessor(Object... services){
 		addModule(services);
 	}
 	

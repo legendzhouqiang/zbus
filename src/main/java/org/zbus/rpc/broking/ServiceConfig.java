@@ -79,12 +79,12 @@ public class ServiceConfig extends MqConfig {
 		this.consumerCount = consumerCount;
 	}
 
-	public MessageProcessor getServiceHandler() {
+	public MessageProcessor getMessageProcessor() {
 		return messageProcessor;
 	}
 
-	public void setServiceHandler(MessageProcessor serviceHandler) {
-		this.messageProcessor = serviceHandler;
+	public void setMessageProcessor(MessageProcessor messageProcessor) {
+		this.messageProcessor = messageProcessor;
 	}
 	
 	@Override
