@@ -1,28 +1,27 @@
 package org.zbus.rpc.direct;
 
-import org.zbus.net.core.Dispatcher;
-import org.zbus.net.http.MessageClient;
+import org.zbus.mq.Broker;
+import org.zbus.mq.BrokerConfig;
+import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.pool.Pool;
 import org.zbus.rpc.RpcInvoker;
+import org.zbus.rpc.direct.DirectInvoker;
 
 public class RpcRawExample {
 
 	public static void main(String[] args) throws Exception {
-		Dispatcher dispatcher = new Dispatcher();
-		String serverAddress = "127.0.0.1:8080";
-		MessageClientPool clientPool = new MessageClientPool(dispatcher, serverAddress);
+		BrokerConfig config = new BrokerConfig();
+		config.setBrokerAddress("127.0.0.1:8080");
+		Broker broker = new SingleBroker(config);
+	
+		MessageInvoker invoker = new DirectInvoker(broker);
 		
-		Pool<MessageClient> pool = clientPool.getPool();
+		RpcInvoker rpc = new RpcInvoker(invoker);   
 		
-		MessageInvoker invoker = new DirectInvoker(pool); 
-		
-		RpcInvoker rpc = new RpcInvoker(invoker); 
-
 		String res = rpc.invokeSync(String.class, "getString", "test");
+		
 		System.out.println(res);
 		
-		pool.close();
-		dispatcher.close(); 
+		broker.close();
 	}
 }

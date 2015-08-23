@@ -7,7 +7,6 @@ import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.RpcConfig;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
-import org.zbus.rpc.broking.BrokingInvoker;
 
 public class RpcTimeoutExample {
 

@@ -6,6 +6,7 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.direct.Service;
 
 public class ServiceExample {
 	

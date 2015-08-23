@@ -27,8 +27,7 @@ import org.zbus.mq.MqConfig;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.MessageProcessor;
 
-public class ServiceConfig extends MqConfig {
-	
+public class ServiceConfig extends MqConfig { 
 	private MessageProcessor messageProcessor;
 	private int threadCount = 20;
 	private int consumerCount = 1; 
