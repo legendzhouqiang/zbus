@@ -67,7 +67,7 @@ public class Service implements Closeable {
 	public void start() throws IOException{ 
 		if(isStarted) return;
 		
-		final MessageProcessor serviceHandler = config.getMessageProcessor();
+		final MessageProcessor processor = config.getMessageProcessor();
 		Broker[] brokers = config.getBrokers();
 		int consumerCount = config.getConsumerCount();
 		if(brokers.length < 1 || consumerCount < 1) return;
@@ -92,7 +92,7 @@ public class Service implements Closeable {
 						final String mq = msg.getMq();
 						final String msgId  = msg.getId();
 						final String sender = msg.getSender();
-						Message res = serviceHandler.process(msg);
+						Message res = processor.process(msg);
 						res.setId(msgId);
 						res.setMq(mq);  
 						res.setRecver(sender); 

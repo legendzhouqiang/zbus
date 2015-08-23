@@ -121,6 +121,7 @@ public class SingleBroker implements Broker {
 	private class MessageClientFactory implements ObjectFactory<MessageClient> {		
 		@Override
 		public boolean validateObject(MessageClient client) { 
+			if(client == null) return false;
 			return client.hasConnected();
 		}
 		

@@ -37,7 +37,7 @@ public class BrokerConfig extends PoolConfig{
 	private Dispatcher dispatcher;
 	
 	private int selectorCount = 1;
-	private int executorCount = 16;
+	private int executorCount = 64;
 	public String getBrokerAddress() {
 		return brokerAddress;
 	}
