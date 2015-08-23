@@ -7,11 +7,11 @@ import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.MessageProcessor;
 import org.zbus.pool.Pool;
 import org.zbus.pool.impl.DefaultPoolFactory;
-import org.zbus.rpc.service.Service;
-import org.zbus.rpc.service.ServiceConfig;
-import org.zbus.rpc.service.ServiceHandler;
+import org.zbus.rpc.broking.Service;
+import org.zbus.rpc.broking.ServiceConfig;
 
 public class ServiceExample {
 	
@@ -33,8 +33,9 @@ public class ServiceExample {
 		config.setConsumerCount(consumerCount);
 		
 		//处理逻辑
-		config.setServiceHandler(new ServiceHandler() { 
-			public Message handleRequest(Message request) { 
+		config.setServiceHandler(new MessageProcessor() { 
+			@Override
+			public Message process(Message request) {  
 				//System.out.println(request);
 				Message result = new Message();
 				result.setResponseStatus("200");

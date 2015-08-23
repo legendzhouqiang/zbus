@@ -35,7 +35,7 @@ public class MessageAdaptor extends IoAdaptor{
 	//根据cmd处理，优先级次之
 	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	//根据Uri处理，优先级最低
-	protected Map<String, UriHandler> uriHandlerMap = new ConcurrentHashMap<String, UriHandler>();
+	protected Map<String, MessageProcessor> uriHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
 
 
 	public MessageAdaptor(){
@@ -51,8 +51,17 @@ public class MessageAdaptor extends IoAdaptor{
     	this.cmdHandlerMap.put(command, handler);
     }
 	
-	public void uri(String path, UriHandler handler){
-		this.uriHandlerMap.put(path, handler);
+	public void uri(String path, final MessageProcessor processor){
+		this.uriHandlerMap.put(path, processor);
+		cmd(path, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {
+				Message res = processor.process(msg);
+				if(res != null){
+					sess.write(res);
+				}
+			}
+		});
 	}
     
     public void registerFilterHandler(MessageHandler filterHandler) {
@@ -86,7 +95,7 @@ public class MessageAdaptor extends IoAdaptor{
     		return;
     	}
     	
-    	UriHandler uriHandler = uriHandlerMap.get(path);
+    	MessageProcessor uriHandler = uriHandlerMap.get(path);
     	if(uriHandler != null){
     		Message res = null; 
     		try{

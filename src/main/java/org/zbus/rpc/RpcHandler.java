@@ -32,30 +32,18 @@ import java.util.Map;
 
 import org.zbus.log.Logger;
 import org.zbus.net.http.Message;
-import org.zbus.rpc.service.ServiceHandler;
+import org.zbus.net.http.MessageProcessor;
+import org.zbus.rpc.RpcCodec.Request;
+import org.zbus.rpc.RpcCodec.Response;
 
-class MethodInstance{
-	public Method method;
-	public Object instance;
-	
-	public MethodInstance(Method method, Object instance){
-		this.method = method;
-		this.instance = instance;
-	}
 
-	@Override
-	public String toString() {
-		return "MethodInstance [method=" + method + ", instance=" + instance + "]";
-	} 
-}
-
-public class RpcServiceHandler implements ServiceHandler {
-	private static final Logger log = Logger.getLogger(RpcServiceHandler.class); 
-	private static final Codec codec = new JsonCodec();//TODO configurable
+public class RpcHandler implements MessageProcessor {
+	private static final Logger log = Logger.getLogger(RpcHandler.class); 
+	private static final RpcCodec codec = new JsonRpcCodec();//TODO configurable
 	
-	private Map<String,MethodInstance> methods = new HashMap<String, MethodInstance>();
+	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
-	public RpcServiceHandler(Object... services){
+	public RpcHandler(Object... services){
 		addModule(services);
 	}
 	
@@ -187,7 +175,7 @@ public class RpcServiceHandler implements ServiceHandler {
 		}
 	}
 	
-	public Message handleRequest(Message msg){  
+	public Message process(Message msg){  
 		Response resp = new Response();
 		try {
 			Request req = decodeRequest(msg);
@@ -214,5 +202,15 @@ public class RpcServiceHandler implements ServiceHandler {
 			log.error(e.getMessage(), e.getCause());
 		} 
 		return null; //should not here
+	}
+	
+	class MethodInstance{
+		public Method method;
+		public Object instance;
+		
+		public MethodInstance(Method method, Object instance){
+			this.method = method;
+			this.instance = instance;
+		} 
 	}
 }

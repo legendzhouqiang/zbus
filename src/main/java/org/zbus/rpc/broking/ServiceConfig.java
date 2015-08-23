@@ -20,15 +20,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.service;
+package org.zbus.rpc.broking;
 
 import org.zbus.mq.Broker;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Protocol.MqMode;
+import org.zbus.net.http.MessageProcessor;
 
 public class ServiceConfig extends MqConfig {
 	
-	private ServiceHandler serviceHandler;
+	private MessageProcessor messageProcessor;
 	private int threadCount = 20;
 	private int consumerCount = 1; 
 	private Broker[] brokers;
@@ -78,12 +79,12 @@ public class ServiceConfig extends MqConfig {
 		this.consumerCount = consumerCount;
 	}
 
-	public ServiceHandler getServiceHandler() {
-		return serviceHandler;
+	public MessageProcessor getServiceHandler() {
+		return messageProcessor;
 	}
 
-	public void setServiceHandler(ServiceHandler serviceHandler) {
-		this.serviceHandler = serviceHandler;
+	public void setServiceHandler(MessageProcessor serviceHandler) {
+		this.messageProcessor = serviceHandler;
 	}
 	
 	@Override

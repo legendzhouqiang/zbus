@@ -25,57 +25,53 @@ package org.zbus.rpc;
 import java.io.IOException;
 
 import org.zbus.log.Logger;
-import org.zbus.mq.Broker;
 import org.zbus.net.http.Message;
-import org.zbus.rpc.service.Caller;
+import org.zbus.net.http.MessageInvoker;
+import org.zbus.rpc.RpcCodec.Request;
+import org.zbus.rpc.RpcCodec.Response;
 
-public class Rpc extends Caller{  
-	private static final Logger log = Logger.getLogger(Rpc.class);
-	private static final Codec codec = new JsonCodec();
-	public static final String DEFAULT_ENCODING = "UTF-8";  
+public class RpcInvoker{  
+	private static final Logger log = Logger.getLogger(RpcInvoker.class);
+	private static final RpcCodec codec = new JsonRpcCodec(); 
+	
+	private MessageInvoker invoker; 
 	
 	private String module = ""; 
-	private String encoding = DEFAULT_ENCODING;
+	private String encoding = "UTF-8";
 	private int timeout = 10000;  
 	private boolean verbose = false;
 
-	public Rpc(Broker broker, String mq) {
-		super(broker, mq); 
+	public RpcInvoker(MessageInvoker invoker){
+		this.invoker = invoker;
 	}
 	
-	public Rpc(RpcConfig config){
-		super(config);
+	public RpcInvoker(MessageInvoker invoker, RpcConfig config){ 
+		this.invoker = invoker; 
 		this.module = config.getModule();
 		this.timeout = config.getTimeout(); 
 		this.encoding = config.getEncoding();
 		this.verbose = config.isVerbose();
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
-		Object netObj = invokeSync(method, args);
-		try {
-			return (T) codec.normalize(netObj, clazz);
-		} catch (ClassNotFoundException e) { 
-			throw new RpcException(e.getMessage(), e.getCause());
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T> T invokeSyncWithType(Class<T> clazz, String method, Class<?>[] types, Object... args){
-		Object netObj = invokeSyncWithType(method, types, args);
-		try {
-			return (T) codec.normalize(netObj, clazz);
-		} catch (ClassNotFoundException e) { 
-			throw new RpcException(e.getMessage(), e.getCause());
-		}
+		return invokeSync(clazz, method, (Class<?>[])null, args);
 	}
 	
 	public Object invokeSync(String method, Object... args) {
-		return invokeSyncWithType(method, null, args);
-	} 
+		return invokeSync(method, (Class<?>[])null, args);
+	}
 	
-	public Object invokeSyncWithType(String method, Class<?>[] types, Object... args) {	
+	@SuppressWarnings("unchecked")
+	public <T> T invokeSync(Class<T> clazz, String method, Class<?>[] types, Object... args){
+		Object netObj = invokeSync(method, types, args);
+		try {
+			return (T) codec.normalize(netObj, clazz);
+		} catch (ClassNotFoundException e) { 
+			throw new RpcException(e.getMessage(), e.getCause());
+		}
+	}
+
+	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
 		Request req = new Request();
 		req.setModule(this.module);
 		req.setMethod(method); 
@@ -91,7 +87,7 @@ public class Rpc extends Caller{
 				log.info("[REQ]: %s", msgReq);
 			} 
 			
-			msgRes = this.invokeSync(msgReq, this.timeout); 
+			msgRes = invoker.invokeSync(msgReq, this.timeout); 
 			
 			if(isVerbose()){
 				long end = System.currentTimeMillis();
@@ -100,11 +96,13 @@ public class Rpc extends Caller{
 			
 		} catch (IOException e) {
 			throw new RpcException(e.getMessage(), e);
+		} catch (InterruptedException e) {
+			throw new RpcException(e.getMessage(), e);
 		}
 		
 		if (msgRes == null) { 
-			String errorMsg = String.format("MQ(%s)-module(%s)-method(%s) request timeout\n%s", 
-					mq,  module, method, msgReq.toString());
+			String errorMsg = String.format("module(%s)-method(%s) request timeout\n%s", 
+					module, method, msgReq.toString());
 			throw new RpcException(errorMsg);
 		}
 		
@@ -141,7 +139,7 @@ public class Rpc extends Caller{
 		this.module = module;
 	}
 	
-	public Rpc module(String module) {
+	public RpcInvoker module(String module) {
 		this.module = module;
 		return this;
 	}

@@ -36,7 +36,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
  
 
-public class JsonCodec implements Codec {  
+public class JsonRpcCodec implements RpcCodec {  
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
 	public Message encodeRequest(Request request) {

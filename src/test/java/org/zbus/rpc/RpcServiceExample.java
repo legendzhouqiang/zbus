@@ -6,10 +6,10 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
-import org.zbus.rpc.RpcServiceHandler;
+import org.zbus.rpc.RpcHandler;
 import org.zbus.rpc.biz.InterfaceImpl;
-import org.zbus.rpc.service.Service;
-import org.zbus.rpc.service.ServiceConfig;
+import org.zbus.rpc.broking.Service;
+import org.zbus.rpc.broking.ServiceConfig;
 
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
@@ -29,7 +29,7 @@ public class RpcServiceExample {
 		config.setBroker(broker);
 		config.setVerbose(verbose);
 		
-		RpcServiceHandler handler = new RpcServiceHandler(); 
+		RpcHandler handler = new RpcHandler(); 
 		//增加模块，模块名在调用时需要指定
 		handler.addModule(new InterfaceImpl());   
 				

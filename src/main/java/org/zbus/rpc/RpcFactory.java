@@ -30,51 +30,35 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.log.Logger;
-import org.zbus.mq.Broker;
- 
+import org.zbus.net.http.MessageInvoker;
 
-public class RpcProxy {
-	private static final Logger log = Logger.getLogger(RpcProxy.class);
-	private static Constructor<RpcInvoker> rpcInvokerCtor;
-	private Map<String,RpcInvoker> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvoker>();
-	private final Broker broker;
+
+public class RpcFactory { 
+	private static final Logger log = Logger.getLogger(RpcFactory.class);
+	private static Constructor<RpcInvocationHandler> rpcInvokerCtor;
+	private Map<String,RpcInvocationHandler> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvocationHandler>();
+	private final MessageInvoker invoker; 
 	static {
 		try {
-			rpcInvokerCtor = RpcInvoker.class.getConstructor(new Class[] {Rpc.class });
+			rpcInvokerCtor = RpcInvocationHandler.class.getConstructor(new Class[] {RpcInvoker.class });
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}  
 	
-	public RpcProxy(Broker broker) {
-		this.broker = broker;
+	public RpcFactory(MessageInvoker invoker) {
+		this.invoker = invoker;
 	}
-	
-	/**
-	 * mq=TRADE&&encoding=utf8
-	 *
-	 * parameters after ? got default values
-	 * 
-	 * encoding=UTF8
-	 * module=
-	 * timeout=10000
-	 * token= 
-	 * 
-	 * @param api
-	 * @param serviceURL
-	 */
+	public <T> T getService(Class<T> api) throws Exception{
+		return getService(api, new RpcConfig());
+	}
 	public <T> T getService(Class<T> api, String serviceUrl) throws Exception {   
-		RpcConfig config = parseRpcConfig(serviceUrl);
+		RpcConfig config = parseRpcConfig(serviceUrl);  
 		return getService(api, config);
 	} 
 	
 	@SuppressWarnings("unchecked")
 	public <T> T getService(Class<T> api, RpcConfig config) throws Exception {   
-		config.setBroker(this.broker);
-		String mq = config.getMq(); 
-		if(mq == null){
-			throw new IllegalArgumentException("Missing argument mq");
-		}
 		String module = config.getModule();
 		if(module == null ||module.trim().length()==0){
 			module = api.getSimpleName();
@@ -84,14 +68,12 @@ public class RpcProxy {
 		String encoding = config.getEncoding();
 		int timeout = config.getTimeout(); 
 		
-		String cacheKey = String.format(
-				"mq=%s&&module=%s&&encoding=%s&&timeout=%d",
-				mq, module, encoding, timeout);
+		String cacheKey = String.format("module=%s&&encoding=%s&&timeout=%d", module, encoding, timeout);
 		
-		RpcInvoker rpcInvoker = rpcInvokerCache.get(cacheKey);
+		RpcInvocationHandler rpcInvoker = rpcInvokerCache.get(cacheKey);
 		Class<T>[] interfaces = new Class[] { api };
 		if(rpcInvoker == null){
-			Rpc rpc = new Rpc(config);
+			RpcInvoker rpc = new RpcInvoker(invoker, config);
 			rpcInvoker = rpcInvokerCtor.newInstance(rpc); 
 			rpcInvokerCache.put(cacheKey, rpcInvoker); 
 		}
@@ -100,7 +82,7 @@ public class RpcProxy {
 	} 
 	 
 	private static RpcConfig parseRpcConfig(String kvstring) {
-		RpcConfig config = new RpcConfig(); 
+		RpcConfig config = new RpcConfig();  
 		String[] parts = kvstring.split("\\&");
 		for(String kv : parts){
 			String[] kvp = kv.split("=");
@@ -109,35 +91,29 @@ public class RpcProxy {
 			if(kvp.length>1){
 				val = kvp[1].trim();
 			} 
-			if("mq".equals(key)){
-				config.setMq(val);
+			if("module".equals(key)){
+				config.setModule(val);
 			} else if("encoding".equals(key)){
 				config.setEncoding(val);
 			} else if("timeout".equals(key)){
 				int timeout = 2500;//default
 				try{ timeout = Integer.valueOf(val); }catch(Exception e){}
 				config.setTimeout(timeout);
-			} else if("topic".equals(key)){
-				config.setTopic(val);
 			} else if("verbose".equals(key)){
 				boolean verbose = false;
 				try{ verbose = Boolean.valueOf(val); }catch(Exception e){}
 				config.setVerbose(verbose);
-			} else if("mode".equals(key)){
-				int mode = 0;
-				try{ mode = Integer.valueOf(val); }catch(Exception e){}
-				config.setMode(mode);
 			} 
 		}
 		return config;
 	} 
 }
 
-class RpcInvoker implements InvocationHandler {  
-	private Rpc rpc; 
+class RpcInvocationHandler implements InvocationHandler {  
+	private RpcInvoker rpc; 
 	private static final Object REMOTE_METHOD_CALL = new Object();
 
-	public RpcInvoker(Rpc rpc) {
+	public RpcInvocationHandler(RpcInvoker rpc) {
 		this.rpc = rpc;
 	}
 	
@@ -148,7 +124,7 @@ class RpcInvoker implements InvocationHandler {
 		Object value = handleLocalMethod(proxy, method, args);
 		if (value != REMOTE_METHOD_CALL) return value; 
 		Class<?> returnType = method.getReturnType(); 
-		return rpc.invokeSyncWithType(returnType, method.getName(),method.getParameterTypes(), args);
+		return rpc.invokeSync(returnType, method.getName(),method.getParameterTypes(), args);
 	}
 
 	protected Object handleLocalMethod(Object proxy, Method method,
@@ -161,12 +137,12 @@ class RpcInvoker implements InvocationHandler {
 			Object value0 = args[0];
 			if (value0 == null || !Proxy.isProxyClass(value0.getClass()))
 				return new Boolean(false);
-			RpcInvoker handler = (RpcInvoker) Proxy.getInvocationHandler(value0);
+			RpcInvocationHandler handler = (RpcInvocationHandler) Proxy.getInvocationHandler(value0);
 			return new Boolean(this.rpc.equals(handler.rpc));
 		} else if (methodName.equals("hashCode") && params.length == 0) {
 			return new Integer(this.rpc.hashCode());
 		} else if (methodName.equals("toString") && params.length == 0) {
-			return "RpcInvoker[" + this.rpc + "]";
+			return "RpcInvocationHandler[" + this.rpc + "]";
 		}
 		return REMOTE_METHOD_CALL;
 	} 

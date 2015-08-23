@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.service;
+package org.zbus.rpc.broking;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -34,6 +34,7 @@ import org.zbus.mq.MqConfig;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageHandler;
+import org.zbus.net.http.MessageProcessor;
 
 public class Service implements Closeable {   
 	private final ServiceConfig config; 
@@ -66,7 +67,7 @@ public class Service implements Closeable {
 	public void start() throws IOException{ 
 		if(isStarted) return;
 		
-		final ServiceHandler serviceHandler = config.getServiceHandler();
+		final MessageProcessor serviceHandler = config.getServiceHandler();
 		Broker[] brokers = config.getBrokers();
 		int consumerCount = config.getConsumerCount();
 		if(brokers.length < 1 || consumerCount < 1) return;
@@ -91,7 +92,7 @@ public class Service implements Closeable {
 						final String mq = msg.getMq();
 						final String msgId  = msg.getId();
 						final String sender = msg.getSender();
-						Message res = serviceHandler.handleRequest(msg);
+						Message res = serviceHandler.process(msg);
 						res.setId(msgId);
 						res.setMq(mq);  
 						res.setRecver(sender); 

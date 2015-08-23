@@ -52,7 +52,7 @@ public class Producer extends MqAdmin{
 	}
 	
 	
-	public Message sendSync(Message msg, int timeout) throws IOException{
+	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException{
 		msg.setCmd(Protocol.Produce);
 		msg.setMq(this.mq); 
 		msg.setAck(true);
@@ -60,7 +60,7 @@ public class Producer extends MqAdmin{
 		return broker.invokeSync(msg, timeout);
 	}
 	
-	public Message sendSync(Message msg) throws IOException{
+	public Message sendSync(Message msg) throws IOException, InterruptedException{
 		return sendSync(msg, 10000);
 	}
 	

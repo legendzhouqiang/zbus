@@ -20,10 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.service; 
+package org.zbus.net.http;
 
-import org.zbus.net.http.Message;
-
-public interface ServiceHandler { 
-	public Message handleRequest(Message request);
+public interface MessageProcessor { 
+	Message process(Message request);
 }

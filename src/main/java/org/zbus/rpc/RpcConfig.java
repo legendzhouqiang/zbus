@@ -22,15 +22,13 @@
  */
 package org.zbus.rpc;
 
-import org.zbus.mq.MqConfig;
 
-public class RpcConfig extends MqConfig {
-	public static final String DEFAULT_ENCODING = "UTF-8";  
-	
+public class RpcConfig{   
 	protected String module = ""; 
 	protected int timeout = 10000;
-	protected String encoding = DEFAULT_ENCODING;
-	
+	protected String encoding = "UTF-8"; 
+	protected boolean verbose = false;
+
 	public String getModule() {
 		return module;
 	}
@@ -49,5 +47,10 @@ public class RpcConfig extends MqConfig {
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
-	
+	public boolean isVerbose() {
+		return verbose;
+	}
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	} 
 }

@@ -29,7 +29,9 @@ import org.zbus.net.TicketManager.Ticket;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 
-public class InvokingClient<REQ extends Id, RES extends Id> extends Client<REQ, RES> {	
+public class InvokingClient<REQ extends Id, RES extends Id> 
+		extends Client<REQ, RES> implements MsgInvoker<REQ, RES> {	
+	
 	protected final TicketManager<REQ, RES> ticketManager = new TicketManager<REQ, RES>();
 	
 	public InvokingClient(String host, int port, Dispatcher dispatcher) {
@@ -41,11 +43,10 @@ public class InvokingClient<REQ extends Id, RES extends Id> extends Client<REQ, 
 	} 
 	 
 	public void send(REQ req) throws IOException{
-    	connectSyncIfNeed(); 
-    	if(req.getId() == null){
+		if(req.getId() == null){
 			req.setId(Ticket.nextId());
 		} 
-    	this.session.write(req);
+    	super.send(req);
     } 
 	
 	@Override

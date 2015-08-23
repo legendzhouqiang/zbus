@@ -7,9 +7,9 @@ import org.zbus.log.Logger;
 import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
-import org.zbus.rpc.RpcConfig;
-import org.zbus.rpc.RpcProxy;
+import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
+import org.zbus.rpc.broking.BrokingInvoker;
 
 class Task extends Thread{
 	private static final Logger log = Logger.getLogger(Task.class);
@@ -56,11 +56,11 @@ public class RpcPerf {
 		brokerConfig.setMaxIdle(threadCount);  
 		
 		final Broker broker = new SingleBroker(brokerConfig);
+		MessageInvoker invoker = new BrokingInvoker(broker, serviceName);
 		
-		RpcProxy proxy = new RpcProxy(broker); 
+		RpcFactory proxy = new RpcFactory(invoker); 
 		
-		RpcConfig config = new RpcConfig();
-		config.setMq(serviceName);
+		RpcConfig config = new RpcConfig(); 
 		config.setTimeout(timeout);
 		config.setVerbose(verbose);
 		

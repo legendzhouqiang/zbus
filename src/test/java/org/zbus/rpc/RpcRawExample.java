@@ -6,8 +6,9 @@ import java.util.Random;
 import org.zbus.mq.Broker;
 import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.SingleBroker;
-import org.zbus.rpc.Rpc;
+import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.User;
+import org.zbus.rpc.broking.BrokingInvoker;
 
 public class RpcRawExample {
 	public static User getUser(String name) {
@@ -25,11 +26,12 @@ public class RpcRawExample {
 		BrokerConfig config = new BrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
+	
+		MessageInvoker invoker = new BrokingInvoker(broker, "MyRpc");
 		
-		Rpc rpc = new Rpc(broker, "gta_srv"); 
-		rpc.setVerbose(true);
-		//rpc.setModule("User");
-		String res = (String)rpc.invokeSync("IfTest");
+		RpcInvoker rpc = new RpcInvoker(invoker);   
+		
+		String res = rpc.invokeSync(String.class, "getString", "test");
 		
 		System.out.println(res);
 		
