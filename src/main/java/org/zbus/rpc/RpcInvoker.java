@@ -34,19 +34,19 @@ public class RpcInvoker{
 	private static final Logger log = Logger.getLogger(RpcInvoker.class);
 	private static final RpcCodec codec = new JsonRpcCodec(); 
 	
-	private MessageInvoker invoker; 
+	private MessageInvoker messageInvoker; 
 	
 	private String module = ""; 
 	private String encoding = "UTF-8";
 	private int timeout = 10000;  
 	private boolean verbose = false;
 
-	public RpcInvoker(MessageInvoker invoker){
-		this.invoker = invoker;
+	public RpcInvoker(MessageInvoker messageInvoker){
+		this.messageInvoker = messageInvoker;
 	}
 	
-	public RpcInvoker(MessageInvoker invoker, RpcConfig config){ 
-		this.invoker = invoker; 
+	public RpcInvoker(MessageInvoker messageInvoker, RpcConfig config){ 
+		this.messageInvoker = messageInvoker; 
 		this.module = config.getModule();
 		this.timeout = config.getTimeout(); 
 		this.encoding = config.getEncoding();
@@ -87,7 +87,7 @@ public class RpcInvoker{
 				log.info("[REQ]: %s", msgReq);
 			} 
 			
-			msgRes = invoker.invokeSync(msgReq, this.timeout); 
+			msgRes = messageInvoker.invokeSync(msgReq, this.timeout); 
 			
 			if(isVerbose()){
 				long end = System.currentTimeMillis();
