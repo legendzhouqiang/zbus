@@ -20,14 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq;
+package org.zbus.broker;
 
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.zbus.net.ResultCallback;
-import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.MessageInvoker;
 
 
 /**
@@ -40,7 +39,7 @@ import org.zbus.net.http.MessageClient;
  * @author 洪磊明(rushmore)
  *
  */
-public interface Broker extends Closeable{
+public interface Broker extends MessageInvoker, Closeable{
 	/**
 	 * 向Broker索取一个链接对象
 	 * @param hint
@@ -54,28 +53,6 @@ public interface Broker extends Closeable{
 	 * @throws IOException
 	 */
 	void closeClient(MessageClient client) throws IOException;
-
-	/**
-	 * 请求Broker代理执行一个zbus消息请求，异步消息模式
-	 * 
-	 * 具体请求算法，由实现确定，单节点时采用不做节点探测失败，多节点时做节点负载均衡和容错
-	 * @param msg
-	 * @param callback
-	 * @throws IOException
-	 */
-	void invokeAsync(Message msg, final ResultCallback<Message> callback) throws IOException;
-	
-	/**
-	 * 请求Broker代理执行一个zbus消息请求，同步消息模式
-	 * 
-	 * 具体请求算法，由实现确定，单节点时采用不做节点探测失败，多节点时做节点负载均衡和容错
-	 * @param req
-	 * @param timeout
-	 * @return
-	 * @throws IOException
-	 */
-	Message invokeSync(Message req, int timeout) throws IOException;  
-	
 	
 	public static class ClientHint { 
 		private String mq;

@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.broking;
+package org.zbus.rpc.mq;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.mq.Broker;
+import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.core.Session;

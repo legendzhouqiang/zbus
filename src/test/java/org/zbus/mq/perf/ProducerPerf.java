@@ -2,11 +2,11 @@ package org.zbus.mq.perf;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
 import org.zbus.mq.Producer;
-import org.zbus.mq.SingleBroker;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
 

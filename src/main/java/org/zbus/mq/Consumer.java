@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.ExecutorService;
 
+import org.zbus.broker.Broker;
 import org.zbus.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;

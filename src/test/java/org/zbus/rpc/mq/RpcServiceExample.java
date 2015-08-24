@@ -1,13 +1,15 @@
-package org.zbus.rpc.broking;
+package org.zbus.rpc.mq;
 
 import java.io.IOException;
 
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
-import org.zbus.mq.SingleBroker;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
 
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  

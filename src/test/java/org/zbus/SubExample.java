@@ -2,11 +2,11 @@ package org.zbus;
 
 import java.io.IOException;
 
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.mq.SingleBroker;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageHandler;

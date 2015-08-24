@@ -20,10 +20,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq;
+package org.zbus.broker;
 
+import org.zbus.broker.pool.PoolConfig;
 import org.zbus.net.core.Dispatcher;
-import org.zbus.pool.PoolConfig;
 
 
 

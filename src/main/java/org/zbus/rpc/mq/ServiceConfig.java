@@ -20,9 +20,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.broking;
+package org.zbus.rpc.mq;
 
-import org.zbus.mq.Broker;
+import org.zbus.broker.Broker;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.MessageProcessor;

@@ -22,6 +22,7 @@
  */
 package org.zbus.mq;
 
+import org.zbus.broker.Broker;
 import org.zbus.mq.Protocol.MqMode;
 
 public class MqConfig implements Cloneable { 

@@ -1,8 +1,8 @@
 package org.zbus.net.pool;
 
-import org.zbus.pool.ObjectFactory;
-import org.zbus.pool.Pool;
-import org.zbus.pool.PoolConfig;
+import org.zbus.broker.pool.ObjectFactory;
+import org.zbus.broker.pool.Pool;
+import org.zbus.broker.pool.PoolConfig;
 
 
 public class PoolExample {

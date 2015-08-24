@@ -20,19 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.pool.impl;
+package org.zbus.broker.pool;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.zbus.pool.ObjectFactory;
-import org.zbus.pool.Pool;
-import org.zbus.pool.PoolConfig;
- 
+import org.zbus.log.Logger;
 
-public class CommonsPool2<T> extends Pool<T> {
+public class CommonsPool2Factory implements PoolFactory {
+	private static final Logger log = Logger.getLogger(Pool.class);
+	@Override
+	public <T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config) { 
+		log.info("Using Apache Commons-pool2");
+		return new CommonsPool2<T>(factory, config);
+	}
+}
+
+class CommonsPool2<T> extends Pool<T> {
 	private GenericObjectPool<T> support; 
 	
 	public CommonsPool2(ObjectFactory<T> supportFactory, PoolConfig config) {   
@@ -95,5 +101,3 @@ public class CommonsPool2<T> extends Pool<T> {
 		}
 	}
 }
-
-

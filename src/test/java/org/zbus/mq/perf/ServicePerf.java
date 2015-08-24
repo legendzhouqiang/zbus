@@ -2,12 +2,12 @@ package org.zbus.mq.perf;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
-import org.zbus.mq.SingleBroker;
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.rpc.broking.BrokingInvoker;
+import org.zbus.rpc.mq.MqInvoker;
 
 class Task extends Thread{
 	Broker broker;
@@ -17,7 +17,7 @@ class Task extends Thread{
 	AtomicLong counter;
 	@Override
 	public void run() { 
-		MessageInvoker p = new BrokingInvoker(broker, service);
+		MessageInvoker p = new MqInvoker(broker, service);
 		for(int i=0;i<loopCount;i++){ 
 			try {
 				Message msg = new Message();

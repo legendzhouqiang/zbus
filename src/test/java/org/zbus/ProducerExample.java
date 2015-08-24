@@ -1,9 +1,9 @@
 package org.zbus;
 
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Producer;
-import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.Message;
 
 public class ProducerExample {

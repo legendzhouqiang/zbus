@@ -24,7 +24,8 @@ package org.zbus.mq;
 
 import java.io.IOException;
 
-import org.zbus.mq.Broker.ClientHint;
+import org.zbus.broker.Broker;
+import org.zbus.broker.Broker.ClientHint;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 

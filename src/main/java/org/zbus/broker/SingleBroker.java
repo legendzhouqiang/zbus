@@ -20,17 +20,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq;
+package org.zbus.broker;
 
 import java.io.IOException;
 
+import org.zbus.broker.pool.ObjectFactory;
+import org.zbus.broker.pool.Pool;
 import org.zbus.log.Logger;
+import org.zbus.mq.MqException;
 import org.zbus.net.ResultCallback;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
-import org.zbus.pool.ObjectFactory;
-import org.zbus.pool.Pool;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = Logger.getLogger(SingleBroker.class);     

@@ -2,14 +2,14 @@ package org.zbus.rpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.log.Logger;
-import org.zbus.mq.Broker;
-import org.zbus.mq.BrokerConfig;
-import org.zbus.mq.SingleBroker;
 import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
-import org.zbus.rpc.broking.BrokingInvoker;
+import org.zbus.rpc.mq.MqInvoker;
 
 class Task extends Thread{
 	private static final Logger log = Logger.getLogger(Task.class);
@@ -56,7 +56,7 @@ public class RpcPerf {
 		final Broker broker = new SingleBroker(brokerConfig);
 		
 		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new BrokingInvoker(broker, mq);
+		MessageInvoker invoker = new MqInvoker(broker, mq);
 		
 		RpcFactory proxy = new RpcFactory(invoker);  
 		

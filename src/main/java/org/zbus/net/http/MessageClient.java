@@ -28,7 +28,7 @@ import org.zbus.net.InvokingClient;
 import org.zbus.net.core.Dispatcher;
 
 
-public class MessageClient extends InvokingClient<Message, Message>{   
+public class MessageClient extends InvokingClient<Message, Message> implements MessageInvoker{   
 	public MessageClient(String host, int port, Dispatcher dispatcher){
 		super(host, port, dispatcher);
 		codec(new MessageCodec());

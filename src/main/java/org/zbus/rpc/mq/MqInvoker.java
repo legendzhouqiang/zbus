@@ -1,20 +1,18 @@
-package org.zbus.rpc.broking;
+package org.zbus.rpc.mq;
 
 import java.io.IOException;
 
-import org.zbus.mq.Broker;
 import org.zbus.mq.Protocol;
 import org.zbus.net.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageInvoker;
 
-public class BrokingInvoker implements MessageInvoker{
-	
-	private final Broker broker;
+public class MqInvoker implements MessageInvoker{
+	private final MessageInvoker messageInvoker;
 	private final String mq;
 	
-	public BrokingInvoker(Broker broker, String mq){
-		this.broker = broker;
+	public MqInvoker(MessageInvoker messageInvoker, String mq){
+		this.messageInvoker = messageInvoker;
 		this.mq = mq;
 	}
 	
@@ -28,13 +26,13 @@ public class BrokingInvoker implements MessageInvoker{
 	public Message invokeSync(Message req, int timeout) throws IOException,
 			InterruptedException { 
 		fillBrokerMessage(req);
-		return this.broker.invokeSync(req, timeout); 
+		return this.messageInvoker.invokeSync(req, timeout); 
 	}
 
 	@Override
 	public void invokeAsync(Message req, ResultCallback<Message> callback)
 			throws IOException { 
 		fillBrokerMessage(req);
-		this.broker.invokeAsync(req, callback);
+		this.messageInvoker.invokeAsync(req, callback);
 	} 
 }
