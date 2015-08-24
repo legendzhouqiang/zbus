@@ -23,7 +23,7 @@
 package org.zbus.rpc;
 
 
-public class RpcException extends RuntimeException { 
+public class RpcException extends RuntimeException {  
 	private static final long serialVersionUID = 8445590420018236422L;
 
 	public RpcException(String message) {
