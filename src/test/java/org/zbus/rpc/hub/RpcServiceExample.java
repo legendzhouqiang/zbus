@@ -1,4 +1,4 @@
-package org.zbus.rpc.mq;
+package org.zbus.rpc.hub;
 
 import java.io.IOException;
 
