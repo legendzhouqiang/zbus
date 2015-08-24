@@ -25,14 +25,14 @@ package org.zbus.net;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.net.TicketManager.Ticket;
+import org.zbus.net.Synchronizer.Ticket;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 
 public class InvokingClient<REQ extends Id, RES extends Id> 
 		extends Client<REQ, RES> implements MsgInvoker<REQ, RES> {	
 	
-	protected final TicketManager<REQ, RES> ticketManager = new TicketManager<REQ, RES>();
+	protected final Synchronizer<REQ, RES> synchronizer = new Synchronizer<REQ, RES>();
 	
 	public InvokingClient(String host, int port, Dispatcher dispatcher) {
 		super(host, port, dispatcher); 
@@ -54,7 +54,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 		@SuppressWarnings("unchecked")
 		RES res = (RES)obj; 
     	//先验证是否有Ticket处理
-    	Ticket<REQ, RES> ticket = ticketManager.removeTicket(res.getId());
+    	Ticket<REQ, RES> ticket = synchronizer.removeTicket(res.getId());
     	if(ticket != null){
     		ticket.notifyResponse(res); 
     		return;
@@ -68,7 +68,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
     	
 		Ticket<REQ, RES> ticket = null;
 		if(callback != null){
-			ticket = ticketManager.createTicket(req, readTimeout, callback);
+			ticket = synchronizer.createTicket(req, readTimeout, callback);
 		} else {
 			if(req.getId() == null){
 				req.setId(Ticket.nextId());
@@ -78,7 +78,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 			session.write(req);  
 		} catch(IOException e) {
 			if(ticket != null){
-				ticketManager.removeTicket(ticket.getId());
+				synchronizer.removeTicket(ticket.getId());
 			}
 			throw e;
 		}  
@@ -92,7 +92,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 		Ticket<REQ, RES> ticket = null;
 		try {
 			connectSyncIfNeed();
-			ticket = ticketManager.createTicket(req, timeout);
+			ticket = synchronizer.createTicket(req, timeout);
 			session.write(req);
 
 			if (!ticket.await(timeout, TimeUnit.MILLISECONDS)) {
@@ -105,7 +105,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 			return ticket.response();
 		} finally {
 			if (ticket != null) {
-				ticketManager.removeTicket(ticket.getId());
+				synchronizer.removeTicket(ticket.getId());
 			}
 		}
 	}

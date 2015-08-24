@@ -6,9 +6,11 @@ import java.util.Random;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
+import org.zbus.rpc.mq.MqInvoker;
 
 public class RpcExample {
 	public static User getUser(String name) {
@@ -59,23 +61,18 @@ public class RpcExample {
 		System.out.println(e);
 	}
 	
+	
 
 	public static void main(String[] args) throws Exception { 
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setBrokerAddress("127.0.0.1:15555");
-		Broker broker = new SingleBroker(brokerConfig);
-
-		//MessageInvoker invoker = new DirectInvoker(broker);
-		//MessageInvoker invoker = new BrokingInvoker(broker, "MyRpc");
+		Broker broker = new SingleBroker(brokerConfig); 
+		 
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
 		
-		RpcFactory factory = new RpcFactory(broker); 
+		RpcFactory factory = new RpcFactory(invoker); 
 		
-		RpcConfig config = new RpcConfig(); 
-		config.setVerbose(true);
-		config.setTimeout(10000); 
-		
-		
-		Interface hello = factory.getService(Interface.class, config);
+		Interface hello = factory.getService(Interface.class);
 		for(int i=0;i<1;i++){ 
 			test(hello); 
 		}

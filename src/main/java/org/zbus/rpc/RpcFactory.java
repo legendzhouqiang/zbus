@@ -37,7 +37,7 @@ public class RpcFactory {
 	private static final Logger log = Logger.getLogger(RpcFactory.class);
 	private static Constructor<RpcInvocationHandler> rpcInvokerCtor;
 	private Map<String,RpcInvocationHandler> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvocationHandler>();
-	private final MessageInvoker invoker; 
+	private final MessageInvoker messageInvoker; 
 	static {
 		try {
 			rpcInvokerCtor = RpcInvocationHandler.class.getConstructor(new Class[] {RpcInvoker.class });
@@ -46,8 +46,8 @@ public class RpcFactory {
 		}
 	}  
 	
-	public RpcFactory(MessageInvoker invoker) {
-		this.invoker = invoker;
+	public RpcFactory(MessageInvoker messageInvoker) {
+		this.messageInvoker = messageInvoker;
 	}
 	public <T> T getService(Class<T> api) throws Exception{
 		return getService(api, new RpcConfig());
@@ -73,7 +73,7 @@ public class RpcFactory {
 		RpcInvocationHandler rpcInvoker = rpcInvokerCache.get(cacheKey);
 		Class<T>[] interfaces = new Class[] { api };
 		if(rpcInvoker == null){
-			RpcInvoker rpc = new RpcInvoker(invoker, config);
+			RpcInvoker rpc = new RpcInvoker(messageInvoker, config);
 			rpcInvoker = rpcInvokerCtor.newInstance(rpc); 
 			rpcInvokerCache.put(cacheKey, rpcInvoker); 
 		}
