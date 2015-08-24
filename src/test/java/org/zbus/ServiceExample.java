@@ -10,8 +10,8 @@ import org.zbus.broker.pool.Pool;
 import org.zbus.kit.ConfigKit;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageProcessor;
-import org.zbus.rpc.mq.Service;
-import org.zbus.rpc.mq.ServiceConfig;
+import org.zbus.rpc.hub.Service;
+import org.zbus.rpc.hub.ServiceConfig;
 
 public class ServiceExample {
 	

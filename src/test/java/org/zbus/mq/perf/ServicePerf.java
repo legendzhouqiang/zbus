@@ -7,7 +7,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.rpc.mq.MqInvoker;
+import org.zbus.rpc.hub.HubInvoker;
 
 class Task extends Thread{
 	Broker broker;
@@ -17,7 +17,7 @@ class Task extends Thread{
 	AtomicLong counter;
 	@Override
 	public void run() { 
-		MessageInvoker p = new MqInvoker(broker, service);
+		MessageInvoker p = new HubInvoker(broker, service);
 		for(int i=0;i<loopCount;i++){ 
 			try {
 				Message msg = new Message();

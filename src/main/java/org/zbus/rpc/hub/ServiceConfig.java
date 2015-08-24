@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.mq;
+package org.zbus.rpc.hub;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.MqConfig;
