@@ -10,7 +10,7 @@ import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
-import org.zbus.rpc.broking.BrokingInvoker;
+import org.zbus.rpc.direct.DirectInvoker;
 
 public class RpcExample {
 	public static User getUser(String name) {
@@ -67,8 +67,8 @@ public class RpcExample {
 		brokerConfig.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);
 
-		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new BrokingInvoker(broker, "MyRpc");
+		MessageInvoker invoker = new DirectInvoker(broker);
+		//MessageInvoker invoker = new BrokingInvoker(broker, "MyRpc");
 		
 		RpcFactory factory = new RpcFactory(invoker); 
 		

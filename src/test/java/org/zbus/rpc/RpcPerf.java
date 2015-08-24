@@ -23,7 +23,7 @@ class Task extends Thread{
 		for(int i=0;i<loopCount;i++){ 
 			try { 
 				long count = counter.incrementAndGet();
-				biz.getOrder();
+				biz.getString("test");
 				
 				if(count%5000 == 0){
 					long end = System.currentTimeMillis();
@@ -45,7 +45,7 @@ public class RpcPerf {
 	public static void main(String[] args) throws Exception { 
 		final String brokerAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 60);
-		final int loopCount = ConfigKit.option(args, "-loop", 10000);  
+		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
 		
 		BrokerConfig brokerConfig = new BrokerConfig(); 

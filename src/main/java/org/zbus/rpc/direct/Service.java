@@ -54,7 +54,10 @@ public class Service extends Server{
 			final String msgId = msg.getId();
 			Message res = processor.process(msg);
 			if(res != null){
-				res.setId(msgId);
+				res.setId(msgId); 
+				if(res.getResponseStatus() == null){
+					res.setResponseStatus(200); //default to 200
+				}
 				sess.write(res);
 			}
 		}
