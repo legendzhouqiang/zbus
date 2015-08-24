@@ -27,7 +27,6 @@ import java.io.IOException;
 import org.zbus.broker.pool.ObjectFactory;
 import org.zbus.broker.pool.Pool;
 import org.zbus.log.Logger;
-import org.zbus.mq.MqException;
 import org.zbus.net.ResultCallback;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
@@ -81,9 +80,11 @@ public class SingleBroker implements Broker {
 		try {
 			client = this.pool.borrowObject(); 
 			client.invokeAsync(msg, callback);
+		} catch(IOException e){
+			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			throw new MqException(e.getMessage(), e);
+			throw new BrokerException(e.getMessage(), e);
 		} finally{
 			if(client != null){
 				this.pool.returnObject(client);
@@ -100,7 +101,7 @@ public class SingleBroker implements Broker {
 			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			throw new MqException(e.getMessage(), e);
+			throw new BrokerException(e.getMessage(), e);
 		} finally{
 			if(client != null){
 				this.pool.returnObject(client);
