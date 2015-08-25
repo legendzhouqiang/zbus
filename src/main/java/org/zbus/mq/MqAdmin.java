@@ -53,7 +53,7 @@ public class MqAdmin{
 	
 	protected ClientHint myClientHint(){
 		ClientHint hint = new ClientHint();
-		hint.setMq(this.mq);  
+		hint.setEntry(this.mq);  
 		return hint;
 	}
 	

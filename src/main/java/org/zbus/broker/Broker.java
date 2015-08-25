@@ -45,14 +45,14 @@ public interface Broker extends MessageInvoker, Closeable{
 	void closeClient(MessageClient client) throws IOException;
 	
 	public static class ClientHint { 
-		private String mq;
+		private String entry;
 		private String broker;  
 		
-		public String getMq() {
-			return mq;
+		public String getEntry() {
+			return entry;
 		}
-		public void setMq(String mq) {
-			this.mq = mq;
+		public void setEntry(String entry) {
+			this.entry = entry;
 		}
 		public String getBroker() {
 			return broker;

@@ -15,12 +15,12 @@ public class ConsumerExample {
 	public static void main(String[] args) throws Exception{  
 		//创建Broker代表
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setBrokerAddress("127.0.0.1:15555");
+		brokerConfig.setBrokerAddress("zbus.org:80");
 		Broker broker = new SingleBroker(brokerConfig);
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq("MyMQ");
+		config.setMq("MyMQ2");
 		
 		//创建消费者
 		@SuppressWarnings("resource")
