@@ -46,6 +46,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.zbus.log.Logger;
 
+/**
+ *  Many thanks to @huamingweiwen in OSChina who presented us a light weight solution
+ *  of disk-based queue design and implementation, DiskQueuePool is mainly refined from
+ *  his brilliant work.
+ *  
+ *  http://my.oschina.net/xnkl/blog/477690
+ */
 public class DiskQueuePool { 
     private static final Logger log = Logger.getLogger(DiskQueuePool.class);
     private static final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
