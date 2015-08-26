@@ -9,7 +9,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	<!-- 暴露的的接口实现示例 -->
 	<bean id="interface" class="org.zbus.rpc.biz.InterfaceImpl"></bean>
 	
-	<bean id="serviceHandler" class="org.zbus.rpc.RpcServiceHandler">
+	<bean id="serviceProcessor" class="org.zbus.rpc.RpcProcessor">
 		<constructor-arg>
 			<list>
 				<!-- 放入你需要的暴露的的接口 -->
@@ -18,9 +18,9 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		</constructor-arg>
 	</bean>
 	 
-	<bean id="broker" class="org.zbus.mq.SingleBroker">
+	<bean id="broker" class="org.zbus.broker.SingleBroker">
 		<constructor-arg>
-			<bean class="org.zbus.mq.BrokerConfig">
+			<bean class="org.zbus.broker.BrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
 				<property name="maxTotal" value="20"/>
 				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
@@ -29,9 +29,9 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	</bean>
 	
 	<!-- 默认调用了start方法，由Spring容器直接带起来注册到zbus总线上 -->
-	<bean id="zbusService" class="org.zbus.rpc.service.Service" init-method="start">
+	<bean id="zbusService" class="org.zbus.rpc.hub.Service" init-method="start">
 		<constructor-arg>  
-			<bean class="org.zbus.rpc.service.ServiceConfig">
+			<bean class="org.zbus.rpc.hub.ServiceConfig">
 			    <!-- 支持多总线注册 -->
 				<constructor-arg> 
 					<list>
@@ -41,7 +41,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 				<property name="mq" value="MyRpc"/>
 				<property name="consumerCount" value="2"/>
 				<property name="threadCount" value="20"/>
-				<property name="serviceHandler" ref="serviceHandler"/>
+				<property name="messageProcessor" ref="serviceProcessor"/>
 			</bean>
 		</constructor-arg>
 	</bean>

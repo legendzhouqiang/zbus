@@ -81,5 +81,11 @@ class PriorityEntrySet extends TreeSet<BrokerEntry>{
 	public PriorityEntrySet(Comparator<BrokerEntry> comparator){
 		super(comparator);
 	} 
+	
+	public String getMode(){
+		BrokerEntry be = first();
+		if(be == null) return null;
+		return be.getMode();
+	}
 }
 
