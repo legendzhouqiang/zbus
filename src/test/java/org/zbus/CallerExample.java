@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageInvoker;
-import org.zbus.rpc.hub.HubInvoker;
+import org.zbus.rpc.hub.MqInvoker;
 
 public class CallerExample {
 	public static void main(String[] args) throws Exception { 
@@ -19,7 +19,7 @@ public class CallerExample {
 		config.setBrokerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
  
-		MessageInvoker invoker = new HubInvoker(broker, "MyService");
+		MessageInvoker invoker = new MqInvoker(broker, "MyService");
 
 		Message msg = new Message();
 		msg.setBody("hello world");

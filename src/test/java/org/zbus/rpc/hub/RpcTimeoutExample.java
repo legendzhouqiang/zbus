@@ -7,7 +7,7 @@ import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.RpcConfig;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
-import org.zbus.rpc.hub.HubInvoker;
+import org.zbus.rpc.hub.MqInvoker;
 
 public class RpcTimeoutExample {
 
@@ -16,7 +16,7 @@ public class RpcTimeoutExample {
 		BrokerConfig config = new BrokerConfig();
 		config.setBrokerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config); 
-		MessageInvoker invoker = new HubInvoker(broker, "MyRpc");
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
 		
 		RpcFactory proxy = new RpcFactory(invoker); 
 		

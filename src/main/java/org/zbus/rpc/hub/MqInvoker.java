@@ -7,11 +7,11 @@ import org.zbus.net.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageInvoker;
 
-public class HubInvoker implements MessageInvoker{
+public class MqInvoker implements MessageInvoker{
 	private final MessageInvoker messageInvoker;
 	private final String mq;
 	
-	public HubInvoker(MessageInvoker messageInvoker, String mq){
+	public MqInvoker(MessageInvoker messageInvoker, String mq){
 		this.messageInvoker = messageInvoker;
 		this.mq = mq;
 	}

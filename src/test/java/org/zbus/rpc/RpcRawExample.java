@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.RpcInvoker;
-import org.zbus.rpc.hub.HubInvoker;
+import org.zbus.rpc.hub.MqInvoker;
 
 public class RpcRawExample {
 
@@ -15,7 +15,7 @@ public class RpcRawExample {
 		Broker broker = new SingleBroker(config);
 	
 		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new HubInvoker(broker, "MyMQ");
+		MessageInvoker invoker = new MqInvoker(broker, "MyMQ");
 		
 		RpcInvoker rpc = new RpcInvoker(invoker);   
 		

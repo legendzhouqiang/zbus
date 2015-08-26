@@ -12,7 +12,7 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.MessageCodec;
 
 public class TrackServer extends Server {  
-	Map<String, List<Entry>> entryTable = new ConcurrentHashMap<String, List<Entry>>();
+	Map<String, List<BrokerEntry>> entryTable = new ConcurrentHashMap<String, List<BrokerEntry>>();
 	
 	public TrackServer(Dispatcher dispatcher, IoAdaptor serverAdaptor, int port) {
 		super(dispatcher, serverAdaptor, port); 
@@ -33,14 +33,6 @@ public class TrackServer extends Server {
 		server.start();
 	}
 
-}
-
-class Entry{
-	public String name;
-	public String mode; //RPC/MQ/PubSub
-	public String serverAddr; 
-	public long lastUpdateTime;
-	public Object attachment;
 }
 
 class TrackAdaptor extends IoAdaptor{

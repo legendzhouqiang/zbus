@@ -9,7 +9,7 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.log.Logger;
 import org.zbus.net.http.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
-import org.zbus.rpc.hub.HubInvoker;
+import org.zbus.rpc.hub.MqInvoker;
 
 class Task extends Thread{
 	private static final Logger log = Logger.getLogger(Task.class);
@@ -56,7 +56,7 @@ public class RpcPerf {
 		final Broker broker = new SingleBroker(brokerConfig);
 		
 		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new HubInvoker(broker, mq);
+		MessageInvoker invoker = new MqInvoker(broker, mq);
 		
 		RpcFactory proxy = new RpcFactory(invoker);  
 		
