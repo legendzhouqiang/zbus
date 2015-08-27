@@ -32,7 +32,7 @@ import java.util.Map;
 
 import org.zbus.log.Logger;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageProcessor;
+import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
 

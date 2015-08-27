@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.log.Logger;
-import org.zbus.net.http.MessageInvoker;
+import org.zbus.net.http.Message.MessageInvoker;
 
 
 public class RpcFactory { 

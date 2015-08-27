@@ -3,11 +3,10 @@ package org.zbus.rpc.hub;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.net.http.MessageInvoker;
+import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcConfig;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
-import org.zbus.rpc.hub.MqInvoker;
 
 public class RpcTimeoutExample {
 

@@ -2,8 +2,8 @@ package org.zbus.net;
 
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.net.http.MessageAdaptor;
-import org.zbus.net.http.MessageProcessor;
 
 public class MyServerAdaptor extends MessageAdaptor{ 
 	public MyServerAdaptor(){  

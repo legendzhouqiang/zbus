@@ -3,9 +3,9 @@ package org.zbus.rpc.hub;
 import java.io.IOException;
 
 import org.zbus.mq.Protocol;
-import org.zbus.net.ResultCallback;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageInvoker;
+import org.zbus.net.http.Message.MessageInvoker;
 
 public class MqInvoker implements MessageInvoker{
 	private final MessageInvoker messageInvoker;

@@ -2,6 +2,9 @@ package org.zbus.net;
 
 import java.io.IOException;
 
+import org.zbus.net.Sync.Id;
+import org.zbus.net.Sync.ResultCallback;
+
 public interface MsgInvoker<REQ extends Id, RES> { 
 	/**
 	 * 同步消息模式

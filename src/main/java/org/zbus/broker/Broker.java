@@ -25,8 +25,8 @@ package org.zbus.broker;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.http.MessageClient;
-import org.zbus.net.http.MessageInvoker;
 
 
 public interface Broker extends MessageInvoker, Closeable{

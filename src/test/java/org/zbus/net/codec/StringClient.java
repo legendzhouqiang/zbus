@@ -3,8 +3,6 @@ package org.zbus.net.codec;
 import java.io.IOException;
 
 import org.zbus.net.Client;
-import org.zbus.net.ErrorHandler;
-import org.zbus.net.MsgHandler;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 

@@ -4,7 +4,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageInvoker;
+import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.hub.MqInvoker;
 
 public class CallerExample {
@@ -24,7 +24,7 @@ public class CallerExample {
 		Message msg = new Message();
 		msg.setBody("hello world");
 		for (int i = 0; i < 1000000; i++) {
-			Message res = invoker.invokeSync(msg, 2500);
+			Message res = invoker.invokeSync(msg, 2500); 
 			System.out.println(res);
 		}
 

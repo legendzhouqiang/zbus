@@ -203,4 +203,12 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		this.attributes.put(key, value);
 	}
 	
+	public static interface ErrorHandler { 
+		public void onError(IOException e, Session sess) throws IOException;   
+	}
+	public static interface MsgHandler<T> { 
+		public void handle(T msg, Session sess) throws IOException;   
+	}
+
+
 }

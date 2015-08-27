@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
+import org.zbus.net.http.Message.MessageHandler;
+import org.zbus.net.http.Message.MessageProcessor;
 
 public class MessageAdaptor extends IoAdaptor{   
 	//全局处理器，优先级最高

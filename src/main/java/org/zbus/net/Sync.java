@@ -29,11 +29,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Synchronizer<REQ extends Id, RES extends Id> { 
+import org.zbus.net.Sync.Id;
+
+public class Sync<REQ extends Id, RES extends Id> { 
 	private static AtomicLong idGenerator = new AtomicLong(0);
 	private static boolean useUuid = true;
 	public static void enableUuid(boolean useUuid){
-		Synchronizer.useUuid = useUuid;
+		Sync.useUuid = useUuid;
 	}
 	
 	public static class Ticket<REQ extends Id, RES> {    
@@ -148,4 +150,13 @@ public class Synchronizer<REQ extends Id, RES extends Id> {
 		return tickets.remove(id);
 	}
 	
+	
+	public static interface Id {
+		void setId(String id);
+		String getId();
+	}
+	
+	public static interface ResultCallback<T> { 
+		public void onReturn(T result);  
+	}
 }

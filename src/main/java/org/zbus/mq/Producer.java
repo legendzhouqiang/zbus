@@ -26,7 +26,7 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.ResultCallback;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 public class Producer extends MqAdmin{  

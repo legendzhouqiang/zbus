@@ -29,8 +29,8 @@ import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.net.http.MessageCodec;
-import org.zbus.net.http.MessageProcessor;
 
 public class Service extends Server{     
 	

@@ -25,14 +25,16 @@ package org.zbus.net;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.net.Synchronizer.Ticket;
+import org.zbus.net.Sync.Id;
+import org.zbus.net.Sync.ResultCallback;
+import org.zbus.net.Sync.Ticket;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 
 public class InvokingClient<REQ extends Id, RES extends Id> 
 		extends Client<REQ, RES> implements MsgInvoker<REQ, RES> {	
 	
-	protected final Synchronizer<REQ, RES> synchronizer = new Synchronizer<REQ, RES>();
+	protected final Sync<REQ, RES> synchronizer = new Sync<REQ, RES>();
 	
 	public InvokingClient(String host, int port, Dispatcher dispatcher) {
 		super(host, port, dispatcher); 
@@ -108,5 +110,6 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 				synchronizer.removeTicket(ticket.getId());
 			}
 		}
-	}
+	} 
+	
 }

@@ -6,8 +6,8 @@ import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
-import org.zbus.net.http.MessageHandler;
 
 public class TargetServer extends MessageAdaptor { 
 	

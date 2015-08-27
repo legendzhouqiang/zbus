@@ -8,7 +8,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Producer;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.ResultCallback;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 public class PubPerf {

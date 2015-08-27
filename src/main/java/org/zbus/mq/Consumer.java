@@ -31,8 +31,8 @@ import org.zbus.broker.Broker;
 import org.zbus.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
-import org.zbus.net.http.MessageHandler;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = Logger.getLogger(Consumer.class);

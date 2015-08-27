@@ -27,7 +27,7 @@ import java.io.IOException;
 import org.zbus.broker.pool.ObjectFactory;
 import org.zbus.broker.pool.Pool;
 import org.zbus.log.Logger;
-import org.zbus.net.ResultCallback;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;

@@ -52,8 +52,8 @@ import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageCodec;
-import org.zbus.net.http.MessageHandler;
 
 public class MqAdaptor extends IoAdaptor {
 	private static final Logger log = Logger.getLogger(MqAdaptor.class);

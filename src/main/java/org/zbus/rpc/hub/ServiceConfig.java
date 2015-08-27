@@ -25,7 +25,7 @@ package org.zbus.rpc.hub;
 import org.zbus.broker.Broker;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.http.MessageProcessor;
+import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig extends MqConfig { 
 	private MessageProcessor messageProcessor;

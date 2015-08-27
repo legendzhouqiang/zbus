@@ -41,7 +41,10 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.log.Logger;
-import org.zbus.net.Id;
+import org.zbus.net.MsgInvoker;
+import org.zbus.net.Client.MsgHandler;
+import org.zbus.net.Sync.Id;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.core.IoBuffer;
 
 /**
@@ -655,12 +658,12 @@ public class Message implements Id {
 			calcRequestString();
 		}
 	}
+
+	public static interface MessageHandler extends MsgHandler<Message> { }
+	public static interface MessageInvoker extends MsgInvoker<Message, Message> { }
+	public static interface MessageCallback extends ResultCallback<Message> {}
 	
-	
-	public static void main(String[] args){
-		Meta meta = new Meta(); 
-		
-		meta.setRequestString("/hello/?hong=kee");  
-		System.out.println(meta.getRequestParam("hong"));
+	public static interface MessageProcessor { 
+		Message process(Message request);
 	}
 }

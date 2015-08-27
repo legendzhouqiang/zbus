@@ -9,7 +9,7 @@ import org.zbus.mq.Consumer;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageHandler;
+import org.zbus.net.http.Message.MessageHandler;
 
 public class SubExample {
 	public static void main(String[] args) throws Exception{  

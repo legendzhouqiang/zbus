@@ -6,7 +6,7 @@ import java.util.List;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.BrokerException;
-import org.zbus.net.ResultCallback;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 

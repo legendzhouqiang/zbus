@@ -33,8 +33,8 @@ import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageHandler;
-import org.zbus.net.http.MessageProcessor;
+import org.zbus.net.http.Message.MessageHandler;
+import org.zbus.net.http.Message.MessageProcessor;
 
 public class Service implements Closeable {   
 	private final ServiceConfig config; 

@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import org.zbus.net.InvokingClient;
 import org.zbus.net.core.Dispatcher;
+import org.zbus.net.http.Message.MessageInvoker;
 
 
 public class MessageClient extends InvokingClient<Message, Message> implements MessageInvoker{   
