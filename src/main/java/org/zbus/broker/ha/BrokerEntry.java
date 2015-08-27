@@ -1,5 +1,13 @@
 package org.zbus.broker.ha;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 public class BrokerEntry{
 	public static final String RPC    = "RPC";
@@ -92,5 +100,71 @@ public class BrokerEntry{
 		return true;
 	} 
 	
+	
+	public static class BrokerEntryPrioritySet extends TreeSet<BrokerEntry>{ 
+		private static final long serialVersionUID = -7110508385050187452L; 
+		
+		public BrokerEntryPrioritySet(){
+			
+		}
+		public BrokerEntryPrioritySet(Comparator<BrokerEntry> comparator){
+			super(comparator);
+		} 
+		
+		public String getMode(){
+			BrokerEntry be = first();
+			if(be == null) return null;
+			return be.getMode();
+		}
+	}
+	
+
+	
+	public static class HaBrokerEntrySet{
+		//entry_id ==> list of same entries from different brokers
+		Map<String, BrokerEntryPrioritySet> entryId2EntrySet = new ConcurrentHashMap<String, BrokerEntryPrioritySet>();
+		//broker_addr ==> list of entries from same broker
+		Map<String, Set<BrokerEntry>> broker2EntrySet = new ConcurrentHashMap<String, Set<BrokerEntry>>();
+		
+		public boolean isNewBroker(BrokerEntry be){
+			return !broker2EntrySet.containsKey(be.getBroker());
+		}
+		
+		public void updateBrokerEntry(BrokerEntry be){
+			String entryId = be.getId(); 
+			BrokerEntryPrioritySet prioSet = entryId2EntrySet.get(entryId);
+			if(prioSet == null){
+				prioSet = new BrokerEntryPrioritySet();
+				entryId2EntrySet.put(entryId, prioSet);
+			}
+			//update
+			prioSet.remove(be);
+			prioSet.add(be);
+			 
+			String brokerAddr = be.getBroker();
+			Set<BrokerEntry> entries = broker2EntrySet.get(brokerAddr);
+			if(entries == null){
+				entries = Collections.synchronizedSet(new HashSet<BrokerEntry>());
+				broker2EntrySet.put(brokerAddr, entries); 
+			}
+			entries.remove(be);
+			entries.add(be); 
+		}
+		
+		public void removeBroker(String broker){
+			Set<BrokerEntry> brokerEntries = broker2EntrySet.get(broker);
+			if(brokerEntries == null) return;
+			for(BrokerEntry be : brokerEntries){
+				Set<BrokerEntry> entryOfId = entryId2EntrySet.get(be.getId());
+				if(entryOfId == null) continue; 
+				entryOfId.remove(be);
+			}
+		}
+		
+		public Map<String, BrokerEntryPrioritySet> entryTable(){
+			return entryId2EntrySet;
+		}
+	}
+
 }
 

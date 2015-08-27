@@ -24,8 +24,10 @@ package org.zbus.broker.ha;
 
 
 
-public class Protocol {  
+
+public interface Protocol {  
 	public static final String EntryUpdate   = "entry_update"; 
 	public static final String EntryQueryAll = "entry_query"; 
-	public static final String EntrySub = "entry_sub"; 
+	public static final String EntrySubscribe = "entry_sub";  
+	
 }

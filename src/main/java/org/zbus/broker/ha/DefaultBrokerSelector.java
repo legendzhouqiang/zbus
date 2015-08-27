@@ -3,20 +3,19 @@ package org.zbus.broker.ha;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ha.BrokerEntry.BrokerEntryPrioritySet;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class DefaultBrokerSelector implements BrokerSelector{
-	Map<String, PriorityEntrySet> entryTable = new ConcurrentHashMap<String, PriorityEntrySet>();
+	Map<String, BrokerEntryPrioritySet> entryTable = new ConcurrentHashMap<String, BrokerEntryPrioritySet>();
 	Map<String, SingleBroker> brokerTable = new ConcurrentHashMap<String, SingleBroker>();
 
 	private Broker getBroker(String brokerAddr){
@@ -35,7 +34,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(broker != null) return broker;
 		
 		if(hint.getEntry() != null){
-			PriorityEntrySet p = entryTable.get(hint.getEntry());
+			BrokerEntryPrioritySet p = entryTable.get(hint.getEntry());
 			if(p != null){
 				BrokerEntry e = p.first(); 
 				broker = getBroker(e.getBroker());
@@ -60,7 +59,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		
 		String entry = getEntry(msg);
 		
-		PriorityEntrySet p = entryTable.get(entry);
+		BrokerEntryPrioritySet p = entryTable.get(entry);
 		if(p == null || p.size()==0) return null;
 		
 
@@ -96,19 +95,3 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	}
 }
 
-class PriorityEntrySet extends TreeSet<BrokerEntry>{ 
-	private static final long serialVersionUID = -7110508385050187452L; 
-	
-	public PriorityEntrySet(){
-		
-	}
-	public PriorityEntrySet(Comparator<BrokerEntry> comparator){
-		super(comparator);
-	} 
-	
-	public String getMode(){
-		BrokerEntry be = first();
-		if(be == null) return null;
-		return be.getMode();
-	}
-}

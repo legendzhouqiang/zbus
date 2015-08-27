@@ -34,7 +34,7 @@ import org.zbus.net.core.Session;
 public class InvokingClient<REQ extends Id, RES extends Id> 
 		extends Client<REQ, RES> implements MsgInvoker<REQ, RES> {	
 	
-	protected final Sync<REQ, RES> synchronizer = new Sync<REQ, RES>();
+	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();
 	
 	public InvokingClient(String host, int port, Dispatcher dispatcher) {
 		super(host, port, dispatcher); 
@@ -56,7 +56,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 		@SuppressWarnings("unchecked")
 		RES res = (RES)obj; 
     	//先验证是否有Ticket处理
-    	Ticket<REQ, RES> ticket = synchronizer.removeTicket(res.getId());
+    	Ticket<REQ, RES> ticket = sync.removeTicket(res.getId());
     	if(ticket != null){
     		ticket.notifyResponse(res); 
     		return;
@@ -70,7 +70,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
     	
 		Ticket<REQ, RES> ticket = null;
 		if(callback != null){
-			ticket = synchronizer.createTicket(req, readTimeout, callback);
+			ticket = sync.createTicket(req, readTimeout, callback);
 		} else {
 			if(req.getId() == null){
 				req.setId(Ticket.nextId());
@@ -80,7 +80,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 			session.write(req);  
 		} catch(IOException e) {
 			if(ticket != null){
-				synchronizer.removeTicket(ticket.getId());
+				sync.removeTicket(ticket.getId());
 			}
 			throw e;
 		}  
@@ -94,7 +94,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 		Ticket<REQ, RES> ticket = null;
 		try {
 			connectSyncIfNeed();
-			ticket = synchronizer.createTicket(req, timeout);
+			ticket = sync.createTicket(req, timeout);
 			session.write(req);
 
 			if (!ticket.await(timeout, TimeUnit.MILLISECONDS)) {
@@ -107,7 +107,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 			return ticket.response();
 		} finally {
 			if (ticket != null) {
-				synchronizer.removeTicket(ticket.getId());
+				sync.removeTicket(ticket.getId());
 			}
 		}
 	} 
