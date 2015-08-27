@@ -1,4 +1,4 @@
-package org.zbus.rpc.hub;
+package org.zbus.rpc.mq;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;

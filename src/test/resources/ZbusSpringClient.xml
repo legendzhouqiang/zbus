@@ -15,7 +15,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	
 	<bean id="myRpcFactory" class="org.zbus.rpc.RpcFactory">
 		<constructor-arg> 
-			<bean class="org.zbus.rpc.hub.MqInvoker"> 
+			<bean class="org.zbus.rpc.mq.MqInvoker"> 
 				<constructor-arg><ref bean="broker"/></constructor-arg>
 				<constructor-arg value="MyRpc"/>
 				
