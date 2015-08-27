@@ -12,7 +12,7 @@ import org.zbus.net.http.MessageClient;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
-import org.zbus.rpc.hub.MqInvoker;
+import org.zbus.rpc.mq.MqInvoker;
 
 public class RpcExample {
 	public static User getUser(String name) {

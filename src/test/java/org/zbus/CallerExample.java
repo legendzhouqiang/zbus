@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.rpc.hub.MqInvoker;
+import org.zbus.rpc.mq.MqInvoker;
 
 public class CallerExample {
 	public static void main(String[] args) throws Exception { 

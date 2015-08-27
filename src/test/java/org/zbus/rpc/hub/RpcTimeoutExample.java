@@ -7,6 +7,7 @@ import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcConfig;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
+import org.zbus.rpc.mq.MqInvoker;
 
 public class RpcTimeoutExample {
 

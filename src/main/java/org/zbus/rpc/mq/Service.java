@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.rpc.hub;
+package org.zbus.rpc.mq;
 
 import java.io.Closeable;
 import java.io.IOException;

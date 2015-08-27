@@ -8,8 +8,8 @@ import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
-import org.zbus.rpc.hub.Service;
-import org.zbus.rpc.hub.ServiceConfig;
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
 
 public class RpcServiceExample {
 	public static void main(String[] args) throws IOException{  
