@@ -124,9 +124,7 @@ public class MqAdaptor extends IoAdaptor {
 		String mqName = msg.getMq();
 		AbstractMQ mq = mqTable.get(mqName); 
     	if(mq == null){
-    		if(msg.isAck()){
-    			ReplyKit.reply404(msg, sess);
-    		}
+    		ReplyKit.reply404(msg, sess); 
     		return null;
     	} 
     	return mq;
