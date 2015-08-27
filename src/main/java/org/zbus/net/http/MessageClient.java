@@ -51,5 +51,5 @@ public class MessageClient extends InvokingClient<Message, Message> implements M
 				//ignore
 			}
 		}
-	}
+	} 
 }

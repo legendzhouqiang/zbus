@@ -19,8 +19,7 @@ public class AsyncClient {
 		msg.setCmd("hello");
 		msg.setBody("hello");
 		//异步请求
-		client.invokeAsync(msg, new ResultCallback<Message>() {
-			
+		client.invokeAsync(msg, new ResultCallback<Message>() { 
 			@Override
 			public void onReturn(Message result) {
 				System.out.println(result);
