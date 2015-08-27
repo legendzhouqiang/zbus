@@ -18,6 +18,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 			<bean class="org.zbus.rpc.hub.MqInvoker"> 
 				<constructor-arg><ref bean="broker"/></constructor-arg>
 				<constructor-arg value="MyRpc"/>
+				
 			</bean>
 		</constructor-arg>
 	</bean>
@@ -25,6 +26,11 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	<!-- 动态代理由RpcProxy的getService生成，需要知道对应的MQ配置信息（第二个参数） -->
 	<bean id="interface" factory-bean="myRpcFactory" factory-method="getService">
 		<constructor-arg type="java.lang.Class" value="org.zbus.rpc.biz.Interface"/> 
+		<constructor-arg>
+			<bean class="org.zbus.rpc.RpcConfig">
+				<property name="timeout" value="10000"/>
+			</bean>
+		</constructor-arg>
 	</bean>
 	
 	<bean id="client" class="org.zbus.spring.ZbusSpringClient"> 

@@ -110,7 +110,9 @@ public class SingleBroker implements Broker {
 	}
 	
 	public MessageClient getClient(ClientHint hint) throws IOException{ 
-		return new MessageClient(this.brokerAddress, this.dispatcher);
+		MessageClient client = new MessageClient(this.brokerAddress, this.dispatcher);
+		client.attr("broker", brokerAddress);
+		return client;
 	}
 
 	public void closeClient(MessageClient client) throws IOException {

@@ -1,9 +1,7 @@
 package org.zbus.broker.ha;
 
-import java.util.Comparator;
-import java.util.TreeSet;
 
-public class BrokerEntry implements Comparable<BrokerEntry>{
+public class BrokerEntry{
 	public static final String RPC    = "RPC";
 	public static final String MQ     = "MQ";
 	public static final String PubSub = "PubSub";
@@ -14,12 +12,7 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 	
 	public long lastUpdateTime; 
 	public long unconsumedMsgCount;
-	public long consumerCount;
-	
-	@Override
-	public int compareTo(BrokerEntry o) { 
-		return 0;
-	}
+	public long consumerCount; 
 
 	public String getId() {
 		return id;
@@ -67,25 +60,37 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 
 	public void setConsumerCount(long consumerCount) {
 		this.consumerCount = consumerCount;
-	} 
-	
-	
-}
+	}
 
-class PriorityEntrySet extends TreeSet<BrokerEntry>{ 
-	private static final long serialVersionUID = -7110508385050187452L; 
-	
-	public PriorityEntrySet(){
-		
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((broker == null) ? 0 : broker.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
 	}
-	public PriorityEntrySet(Comparator<BrokerEntry> comparator){
-		super(comparator);
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		
+		BrokerEntry other = (BrokerEntry) obj; 
+		if (broker == null) {
+			if (other.broker != null) return false;
+		} else if (!broker.equals(other.broker)){
+			return false;
+		}
+		
+		if (id == null) {
+			if (other.id != null) return false;
+		} else if (!id.equals(other.id)){
+			return false;
+		}
+		return true;
 	} 
 	
-	public String getMode(){
-		BrokerEntry be = first();
-		if(be == null) return null;
-		return be.getMode();
-	}
 }
 

@@ -12,8 +12,16 @@ import org.zbus.net.http.MessageClient;
 
 public class HaBroker implements Broker {   
 	final BrokerSelector brokerSelector; 
+	final boolean ownBrokerSelector;
+	
+	public HaBroker(BrokerConfig config) throws IOException{ 
+		this.brokerSelector = new DefaultBrokerSelector();
+		ownBrokerSelector = true;
+	}
+	
 	public HaBroker(BrokerSelector brokerSelector, BrokerConfig config) throws IOException{ 
 		this.brokerSelector = brokerSelector;
+		ownBrokerSelector = false;
 	}
 	
 	@Override
@@ -62,6 +70,8 @@ public class HaBroker implements Broker {
 
 	@Override
 	public void close() throws IOException { 
-		
+		if(ownBrokerSelector){
+			brokerSelector.close();
+		}
 	} 
 }

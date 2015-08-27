@@ -42,7 +42,11 @@ public class Server implements Closeable{
 	protected String serverName = "Server";
 	protected ServerSocketChannel serverChannel;
 	
-	protected final IoAdaptor serverAdaptor;
+	protected IoAdaptor serverAdaptor;
+	
+	public Server(Dispatcher dispatcher, int port){
+		this(dispatcher, null, "0.0.0.0:"+port);
+	}
 	
 	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, int port){
 		this(dispatcher, serverAdaptor, "0.0.0.0:"+port);
@@ -64,6 +68,9 @@ public class Server implements Closeable{
 	}
 	
 	public void start() throws IOException{  
+		if(serverAdaptor == null){
+			throw new IllegalStateException("Missing serverIoAdaptor");
+		}
     	if(serverChannel != null){
     		log.info("Server already started");
     		return;
@@ -86,4 +93,12 @@ public class Server implements Closeable{
     public void setServerName(String serverName){
     	this.serverName = serverName;
     }
+
+	public IoAdaptor getServerAdaptor() {
+		return serverAdaptor;
+	}
+
+	public void setServerAdaptor(IoAdaptor serverAdaptor) {
+		this.serverAdaptor = serverAdaptor;
+	} 
 }
