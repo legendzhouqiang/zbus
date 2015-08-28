@@ -36,13 +36,13 @@ public class Server implements Closeable{
 	
 	protected Dispatcher dispatcher; 
 	protected String host = "0.0.0.0";
-	protected int port;
+	protected int port = 80;
 	
-	protected String serverAddr;
+	protected String serverAddr = host+":"+port;
 	protected String serverName = "Server";
 	protected ServerSocketChannel serverChannel;
 	
-	protected IoAdaptor serverAdaptor;
+	protected IoAdaptor serverAdaptor; 
 	
 	public Server(Dispatcher dispatcher, int port){
 		this(dispatcher, null, "0.0.0.0:"+port);

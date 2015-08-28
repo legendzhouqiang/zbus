@@ -7,14 +7,14 @@ import org.zbus.net.http.MessageAdaptor;
 
 public class MyServerAdaptor extends MessageAdaptor{ 
 	public MyServerAdaptor(){  
-		uri("/hello", new MessageProcessor() {  
-			public Message process(Message req) {  
-				System.out.println(req);
-				Message res = new Message(); 
-				res.setBody("hello world");
-				return res;
+		uri("/hello", new MessageProcessor() {
+			
+			@Override
+			public Message process(Message request) { 
+				request.setBody("hello");
+				return request;
 			}
-		}); 
+		});
 	} 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   

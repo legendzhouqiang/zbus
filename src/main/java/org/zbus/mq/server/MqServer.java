@@ -34,6 +34,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.zbus.broker.ha.BrokerEntry;
+import org.zbus.broker.ha.TrackClient.TrackClientSet;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
@@ -55,8 +57,8 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageCodec;
 
-public class MqAdaptor extends IoAdaptor {
-	private static final Logger log = Logger.getLogger(MqAdaptor.class);
+class MqServer extends IoAdaptor {
+	private static final Logger log = Logger.getLogger(MqServer.class);
 
 	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
@@ -68,7 +70,7 @@ public class MqAdaptor extends IoAdaptor {
 	private final ScheduledExecutorService cleanExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long cleanInterval = 3000; 
  
-	public MqAdaptor(String serverAddr){
+	public MqServer(String serverAddr){
 		codec(new MessageCodec());   
 		this.serverAddr = NetKit.getLocalAddress(serverAddr);
 		
@@ -229,6 +231,8 @@ public class MqAdaptor extends IoAdaptor {
     			log.info("MQ Created: %s", mq);
     			mqTable.put(mqName, mq);
     			ReplyKit.reply200(msg, sess);
+    			
+    			pubEntryUpdate(mq);
     		}
 		}
 	};  
@@ -292,6 +296,9 @@ public class MqAdaptor extends IoAdaptor {
 			mq.lastUpdateTime = System.currentTimeMillis(); 
 			mq.creator = "System";
 			mqTable.put(name, mq);
+			
+			//notify
+			pubEntryUpdate(mq);
 		}
     }   
     
@@ -367,6 +374,22 @@ public class MqAdaptor extends IoAdaptor {
 		
 	}
     
+    private TrackClientSet trackClientSet;
+    public void setupTracker(Dispatcher dispatcher, String trackServerList){
+    	trackClientSet = new TrackClientSet(dispatcher, trackServerList);
+    } 
+    public void pubEntryUpdate(AbstractMQ mq){
+    	BrokerEntry be = new BrokerEntry();
+    	be.setId(mq.getName());
+    	be.setBroker(serverAddr);
+    	be.setConsumerCount(mq.getMqInfo().consumerInfoList.size());
+    	be.setMode(""+mq.getMqInfo().mode);
+    	be.setUnconsumedMsgCount(mq.getMqInfo().unconsumedMsgCount);
+    	be.setLastUpdateTime(mq.lastUpdateTime);
+
+    	trackClientSet.pubEntryUpdate(be);
+    }
+    
     
     @SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
@@ -377,6 +400,7 @@ public class MqAdaptor extends IoAdaptor {
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", true);
 		config.storePath = ConfigKit.option(args, "-store", "mq");
+		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
 
 		String configFile = ConfigKit.option(args, "-conf", "zbus.properties");
 		InputStream is = FileKit.loadFile(configFile);
@@ -395,9 +419,14 @@ public class MqAdaptor extends IoAdaptor {
 
 		String address = config.serverHost + ":" + config.serverPort; 
 		
-		final MqAdaptor mqAdaptor = new MqAdaptor(address);
+		final MqServer mqAdaptor = new MqServer(address);
+		if(config.trackServerList != null){
+			mqAdaptor.setupTracker(dispatcher, config.trackServerList);
+		}
 		mqAdaptor.setVerbose(config.verbose); 
 		mqAdaptor.loadMQ(config.storePath);
+		
+		
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
@@ -416,6 +445,5 @@ public class MqAdaptor extends IoAdaptor {
 		log.info("MqServer started successfully");
 	}
 }
-
 
 

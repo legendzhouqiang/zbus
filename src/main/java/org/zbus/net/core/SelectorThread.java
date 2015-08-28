@@ -142,7 +142,7 @@ public class SelectorThread extends Thread {
 	}
 	
 	private void disconnectWithException(final SelectionKey key, final Throwable e){  
-		Session sess = (Session)key.attachment();
+		final Session sess = (Session)key.attachment();
 		if(sess == null){
 			try{ 
 				key.channel().close();   
@@ -151,18 +151,23 @@ public class SelectorThread extends Thread {
 				log.error(e.getMessage(), ex);
 			} 
 			return;
-		}
+		} 
 		
-		try{ 
-			sess.setStatus(SessionStatus.ON_ERROR);
-			sess.getIoAdaptor().onException(e, sess);
-		} catch (Throwable ex){
-			if(!dispatcher.isStarted()){
-				log.debug(e.getMessage(), ex);
-			} else {
-				log.error(e.getMessage(), ex);
+		sess.setStatus(SessionStatus.ON_ERROR);
+		dispatcher.asyncRun(new Runnable() { 
+			@Override
+			public void run() {
+				try{ 
+					sess.getIoAdaptor().onException(e, sess);
+				} catch (Throwable ex){
+					if(!dispatcher.isStarted()){
+						log.debug(e.getMessage(), ex);
+					} else {
+						log.error(e.getMessage(), ex);
+					}
+				}
 			}
-		}
+		}); 
 		
 		try{ 
 			sess.close(); 

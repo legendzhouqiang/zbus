@@ -54,6 +54,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	
 	protected volatile MsgHandler<RES> msgHandler; 
 	protected ErrorHandler errorHandler;
+	protected ConnectedHandler connectedHandler;
 	
 	public Client(String address, Dispatcher dispatcher) { 
 		String[] blocks = address.split("[:]");
@@ -106,6 +107,9 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	@Override
 	protected void onSessionConnected(Session sess) throws IOException { 
 		super.onSessionConnected(sess);
+		if(this.connectedHandler != null){
+			this.connectedHandler.onConnected(sess);
+		}
 		log.info("Connected: "+sess);
 	}
 	
@@ -141,6 +145,10 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
     
     public void onError(ErrorHandler errorHandler){
     	this.errorHandler = errorHandler;
+    } 
+    
+    public void onConnected(ConnectedHandler connectedHandler){
+    	this.connectedHandler = connectedHandler;
     } 
 
 	@Override
@@ -203,11 +211,16 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		this.attributes.put(key, value);
 	}
 	
-	public static interface ErrorHandler { 
-		public void onError(IOException e, Session sess) throws IOException;   
+	public static interface ConnectedHandler { 
+		void onConnected(Session sess) throws IOException;   
 	}
+	
+	public static interface ErrorHandler { 
+		void onError(IOException e, Session sess) throws IOException;   
+	}
+	
 	public static interface MsgHandler<T> { 
-		public void handle(T msg, Session sess) throws IOException;   
+		void handle(T msg, Session sess) throws IOException;   
 	}
 
 

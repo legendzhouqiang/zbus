@@ -26,9 +26,9 @@ public class TrackServer extends MessageAdaptor{
 	Map<String, Session> brokers = new ConcurrentHashMap<String, Session>();
 	
 	public TrackServer(){  
-		cmd(Protocol.EntryUpdate, entryUpdateHandler); 
+		cmd(Protocol.EntryPub, entryPubHandler); 
 		cmd(Protocol.EntryQueryAll, entryQueryAllHandler);
-		cmd(Protocol.EntrySubscribe, entrySubscribeHandler);
+		cmd(Protocol.EntrySub, entrySubHandler);
 	}  
 	
 	private BrokerEntry parseBrokerEntry(Message msg){
@@ -69,9 +69,10 @@ public class TrackServer extends MessageAdaptor{
 		}); 
 	}
 	
-	private MessageHandler entryUpdateHandler = new MessageHandler() { 
+	private MessageHandler entryPubHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
+			System.out.println(msg);
 			BrokerEntry be = null;
 			try{
 				be = parseBrokerEntry(msg);
@@ -111,7 +112,7 @@ public class TrackServer extends MessageAdaptor{
 		}
 	};
 	
-	private MessageHandler entrySubscribeHandler = new MessageHandler() {
+	private MessageHandler entrySubHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			subscribers.put(sess.id(), sess);

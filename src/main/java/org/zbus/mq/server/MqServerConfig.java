@@ -37,6 +37,8 @@ import org.zbus.log.Logger;
 public class MqServerConfig{
 	private static final Logger log = Logger.getLogger(MqServerConfig.class);
 	
+	public String trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
+	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555; 
 	public int selectorCount = 1;
