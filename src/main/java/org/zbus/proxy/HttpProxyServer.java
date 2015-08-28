@@ -42,13 +42,13 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageCodec;
 
 
-public class HttpProxyAdaptor extends BindingAdaptor{ 
-	private static final Logger log = Logger.getLogger(HttpProxyAdaptor.class);     
+public class HttpProxyServer extends BindingAdaptor{ 
+	private static final Logger log = Logger.getLogger(HttpProxyServer.class);     
 	
 	private final Map<String, String> urlMap;  
 	private static final DownStreamBindingAdaptor downstreamAdaptor = new DownStreamBindingAdaptor();
 
-    public HttpProxyAdaptor(Map<String, String> urlMap){  
+    public HttpProxyServer(Map<String, String> urlMap){  
     	codec(new MessageCodec()); 
     	this.urlMap = Collections.synchronizedMap(urlMap); 
     } 
@@ -175,7 +175,7 @@ public class HttpProxyAdaptor extends BindingAdaptor{
 		
 		
 		Dispatcher dispatcher = new Dispatcher(); 
-		IoAdaptor ioAdaptor = new HttpProxyAdaptor(urlMap);
+		IoAdaptor ioAdaptor = new HttpProxyServer(urlMap);
 		
 		@SuppressWarnings("resource")
 		Server server = new Server(dispatcher, ioAdaptor, serverAddress);

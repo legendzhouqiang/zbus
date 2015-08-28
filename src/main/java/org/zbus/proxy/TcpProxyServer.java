@@ -32,12 +32,12 @@ import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
  
-public class TcpProxyAdaptor extends BindingAdaptor{ 
-	private static final Logger log = Logger.getLogger(TcpProxyAdaptor.class);   
+public class TcpProxyServer extends BindingAdaptor{ 
+	private static final Logger log = Logger.getLogger(TcpProxyServer.class);   
 	
 	private String targetAddress;   
 	
-    public TcpProxyAdaptor(String targetAddress){ 
+    public TcpProxyServer(String targetAddress){ 
     	codec(new ProxyCodec());  
         this.targetAddress = targetAddress;
     } 
@@ -71,7 +71,7 @@ public class TcpProxyAdaptor extends BindingAdaptor{
 		String target = ConfigKit.option(args, "-target", "127.0.0.1:15555");
 		Dispatcher dispatcher = new Dispatcher();
 		
-		IoAdaptor ioAdaptor = new TcpProxyAdaptor(target);
+		IoAdaptor ioAdaptor = new TcpProxyServer(target);
 		
 		@SuppressWarnings("resource")
 		Server server = new Server(dispatcher, ioAdaptor, serverPort);
