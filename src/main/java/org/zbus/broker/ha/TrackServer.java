@@ -16,27 +16,18 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 
-import com.alibaba.fastjson.JSON;
-
 public class TrackServer extends MessageAdaptor{
 	static final Logger log = Logger.getLogger(TrackServer.class); 
-	HaBrokerEntrySet brokerEntrySet = new HaBrokerEntrySet(); 
+	HaBrokerEntrySet haBrokerEntrySet = new HaBrokerEntrySet(); 
 	
 	Map<String, Session> subscribers =  new ConcurrentHashMap<String, Session>();
 	Map<String, Session> brokers = new ConcurrentHashMap<String, Session>();
 	
 	public TrackServer(){  
-		cmd(Protocol.EntryPub, entryPubHandler); 
-		cmd(Protocol.EntryQueryAll, entryQueryAllHandler);
-		cmd(Protocol.EntrySub, entrySubHandler);
+		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
+		cmd(HaCommand.QueryAll, entryQueryAllHandler);
+		cmd(HaCommand.Subscribe, entrySubHandler);
 	}  
-	
-	private BrokerEntry parseBrokerEntry(Message msg){
-		return JSON.parseObject(msg.getBodyString(), BrokerEntry.class);
-	} 
-	private String brokerEntryTableJson(){
-		return JSON.toJSONString(brokerEntrySet.entryTable());
-	}
 	
 	private void onNewBroker(final String brokerAddr, Session sess) throws IOException{
 		
@@ -45,7 +36,7 @@ public class TrackServer extends MessageAdaptor{
 				brokers.remove(sess.id());
 				String broker = sess.attr("broker");
 				if(broker == null) return;
-				brokerEntrySet.removeBroker(broker);
+				haBrokerEntrySet.removeBroker(broker);
 			}
 			
 			@Override
@@ -69,20 +60,20 @@ public class TrackServer extends MessageAdaptor{
 		}); 
 	}
 	
-	private MessageHandler entryPubHandler = new MessageHandler() { 
+	private MessageHandler entryUpdateHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			log.info("EntryPub: "+ msg);
+			log.info("%s", msg);
 			BrokerEntry be = null;
 			try{
-				be = parseBrokerEntry(msg);
+				be = BrokerEntry.parseJson(msg.getBodyString());
 			} catch(Exception e){
 				log.error(e.getMessage(), e);
 				return;
 			}
-			boolean isNewBroker = brokerEntrySet.isNewBroker(be);
+			boolean isNewBroker = haBrokerEntrySet.isNewBroker(be);
 			
-			brokerEntrySet.updateBrokerEntry(be);
+			haBrokerEntrySet.updateBrokerEntry(be);
 			if(isNewBroker){
 				onNewBroker(be.getBroker(), sess);
 			}
@@ -107,7 +98,7 @@ public class TrackServer extends MessageAdaptor{
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
 			res.setId(msg.getId());
-			res.setBody(brokerEntryTableJson());
+			res.setBody(haBrokerEntrySet.toJsonString());
 			sess.write(res);
 		}
 	};
@@ -115,7 +106,7 @@ public class TrackServer extends MessageAdaptor{
 	private MessageHandler entrySubHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
-			log.info("EntrySub: "+ msg);
+			log.info("%s", msg);
 			subscribers.put(sess.id(), sess);
 		}
 	};
@@ -129,10 +120,7 @@ public class TrackServer extends MessageAdaptor{
 		subscribers.remove(sess);
 		super.onException(e, sess);
 	}
-	
-	
-	
-	
+
 	public static void main(String[] args) throws Exception { 
 		Dispatcher dispatcher = new Dispatcher();
 		IoAdaptor ioAdaptor = new TrackServer();

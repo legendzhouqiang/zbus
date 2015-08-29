@@ -25,9 +25,12 @@ package org.zbus.broker.ha;
 
 
 
-public interface Protocol {  
-	public static final String EntryPub      = "entry_pub"; 
-	public static final String EntryQueryAll = "entry_all"; 
-	public static final String EntrySub      = "entry_sub";  
+public interface HaCommand {  
+	public static final String EntryUpdate   = "entry_update"; 
+	public static final String EntryRemove   = "entry_remove";
+	public static final String BrokerJoin    = "broker_join";
+	public static final String BrokerLeave   = "broker_leave";
 	
+	public static final String QueryAll      = "query_all"; 
+	public static final String Subscribe     = "subscribe";   
 }

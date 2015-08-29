@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alibaba.fastjson.JSON;
+
 
 public class BrokerEntry implements Comparable<BrokerEntry>{
 	public static final String RPC    = "RPC";
@@ -105,6 +107,12 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 		return true;
 	} 
 	
+	public static BrokerEntry parseJson(String msg){
+		return JSON.parseObject(msg, BrokerEntry.class);
+	}  
+	public String toJsonString(){
+		return JSON.toJSONString(this);
+	}
 	
 	public static class BrokerEntryPrioritySet extends TreeSet<BrokerEntry>{ 
 		private static final long serialVersionUID = -7110508385050187452L; 
@@ -130,6 +138,10 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 		Map<String, BrokerEntryPrioritySet> entryId2EntrySet = new ConcurrentHashMap<String, BrokerEntryPrioritySet>();
 		//broker_addr ==> list of entries from same broker
 		Map<String, Set<BrokerEntry>> broker2EntrySet = new ConcurrentHashMap<String, Set<BrokerEntry>>();
+		
+		public BrokerEntryPrioritySet getPrioritySet(String entryId){
+			return entryId2EntrySet.get(entryId);
+		}
 		
 		public boolean isNewBroker(BrokerEntry be){
 			return !broker2EntrySet.containsKey(be.getBroker());
@@ -166,8 +178,8 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 			}
 		}
 		
-		public Map<String, BrokerEntryPrioritySet> entryTable(){
-			return entryId2EntrySet;
+		public String toJsonString(){
+			return JSON.toJSONString(entryId2EntrySet);
 		}
 	}
 

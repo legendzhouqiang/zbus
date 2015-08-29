@@ -61,7 +61,7 @@ public class TrackSub implements Closeable{
 	private void clientSubEntryUpdate(MessageClient client){
 		try { 
     		Message msg = new Message(); 
-    		msg.setCmd(Protocol.EntrySub);
+    		msg.setCmd(HaCommand.Subscribe);
     		client.send(msg);
 		} catch (IOException e) { 
 			//log.error(e.getMessage(), e);

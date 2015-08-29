@@ -80,7 +80,6 @@ public class HaBroker implements Broker {
 		config.setTrackServerList("127.0.0.1:16666");
 		
 		@SuppressWarnings({ "resource", "unused" })
-		HaBroker broker = new HaBroker(config); 
-		
+		HaBroker broker = new HaBroker(config);  
 	}
 }

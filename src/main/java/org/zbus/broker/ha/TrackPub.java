@@ -13,8 +13,6 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
-import com.alibaba.fastjson.JSON;
-
 public class TrackPub implements Closeable{  
 	private static final Logger log = Logger.getLogger(TrackSub.class);
 	private Set<MessageClient> allClients = new HashSet<MessageClient>();
@@ -60,8 +58,8 @@ public class TrackPub implements Closeable{
 	public void pubEntryUpdate(BrokerEntry be){ 
 		for(MessageClient client : healthyClients){
 			Message msg = new Message();
-			msg.setBody(JSON.toJSONString(be));
-			msg.setCmd(Protocol.EntryPub); 
+			msg.setBody(be.toJsonString());
+			msg.setCmd(HaCommand.EntryUpdate); 
 			try{
 				client.send(msg);
 			}catch(IOException e){
