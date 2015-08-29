@@ -9,15 +9,51 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
+import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.broker.ha.BrokerEntry.BrokerEntryPrioritySet;
+import org.zbus.log.Logger;
+import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
 
 public class DefaultBrokerSelector implements BrokerSelector{
-	Map<String, BrokerEntryPrioritySet> entryTable = new ConcurrentHashMap<String, BrokerEntryPrioritySet>();
-	Map<String, SingleBroker> brokerTable = new ConcurrentHashMap<String, SingleBroker>();
-
+	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
+	
+	private Map<String, BrokerEntryPrioritySet> entryTable = new ConcurrentHashMap<String, BrokerEntryPrioritySet>();
+	private Map<String, SingleBroker> brokerTable = new ConcurrentHashMap<String, SingleBroker>();
+	
+	private TrackSub trackSub;
+	
+	private Dispatcher dispatcher = null;
+	private boolean ownDispatcher = false;
+	private BrokerConfig config;
+	
+	public DefaultBrokerSelector(BrokerConfig config){
+		this.config = config;
+		if(config.getDispatcher() == null){
+			this.ownDispatcher = true;
+			this.dispatcher = new Dispatcher();
+			this.config.setDispatcher(dispatcher);
+		} else {
+			this.dispatcher = config.getDispatcher();
+			this.ownDispatcher = false;
+		}
+		this.dispatcher.start(); 
+		
+		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
+		
+		trackSub.onMessage(new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				log.info(""+msg);
+			}
+		});
+		trackSub.subEntryUpdate();
+	}
+	
 	private Broker getBroker(String brokerAddr){
 		if(brokerAddr == null) return null;
 		return brokerTable.get(brokerAddr); 
@@ -91,7 +127,9 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	@Override
 	public void close() throws IOException { 
-		
+		if(ownDispatcher){
+			dispatcher.close();
+		}
 	}
 }
 

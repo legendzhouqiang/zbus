@@ -27,14 +27,7 @@ import java.io.StringWriter;
 
 import org.zbus.net.http.Message;
 
-/**
- * RPC请求应答编解码
- * 并提供强类型转换
- * 典型实现: JsonCodec
- * 
- * @author 洪磊明(rushmore)
- *
- */
+
 public interface RpcCodec {
 	Message  encodeRequest(Request request); 
 	Message  encodeResponse(Response response); 

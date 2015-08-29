@@ -35,7 +35,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.ha.BrokerEntry;
-import org.zbus.broker.ha.TrackClient.TrackClientSet;
+import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
@@ -374,12 +374,12 @@ class MqServer extends IoAdaptor {
 		
 	}
     
-    private TrackClientSet trackClientSet;
-    public void setupTracker(Dispatcher dispatcher, String trackServerList){
-    	trackClientSet = new TrackClientSet(dispatcher, trackServerList);
+    private TrackPub trackPub;
+    public void setupTracker(String trackServerList, Dispatcher dispatcher){
+    	trackPub = new TrackPub(trackServerList, dispatcher);
     } 
     public void pubEntryUpdate(AbstractMQ mq){
-    	if(trackClientSet == null) return;
+    	if(trackPub == null) return;
     	
     	BrokerEntry be = new BrokerEntry();
     	be.setId(mq.getName());
@@ -389,7 +389,7 @@ class MqServer extends IoAdaptor {
     	be.setUnconsumedMsgCount(mq.getMqInfo().unconsumedMsgCount);
     	be.setLastUpdateTime(mq.lastUpdateTime);
 
-    	trackClientSet.pubEntryUpdate(be);
+    	trackPub.pubEntryUpdate(be);
     }
     
     
@@ -402,7 +402,7 @@ class MqServer extends IoAdaptor {
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", true);
 		config.storePath = ConfigKit.option(args, "-store", "mq");
-		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666;127.0.0.1:16667");
+		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
 
 		String configFile = ConfigKit.option(args, "-conf", "zbus.properties");
 		InputStream is = FileKit.loadFile(configFile);
@@ -423,7 +423,7 @@ class MqServer extends IoAdaptor {
 		
 		final MqServer mqAdaptor = new MqServer(address);
 		if(config.trackServerList != null){
-			mqAdaptor.setupTracker(dispatcher, config.trackServerList);
+			mqAdaptor.setupTracker(config.trackServerList, dispatcher);
 		}
 		mqAdaptor.setVerbose(config.verbose); 
 		mqAdaptor.loadMQ(config.storePath);

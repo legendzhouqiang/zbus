@@ -72,7 +72,7 @@ public class TrackServer extends MessageAdaptor{
 	private MessageHandler entryPubHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			System.out.println(msg);
+			log.info("EntryPub: "+ msg);
 			BrokerEntry be = null;
 			try{
 				be = parseBrokerEntry(msg);
@@ -115,6 +115,7 @@ public class TrackServer extends MessageAdaptor{
 	private MessageHandler entrySubHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
+			log.info("EntrySub: "+ msg);
 			subscribers.put(sess.id(), sess);
 		}
 	};

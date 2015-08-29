@@ -9,7 +9,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public class BrokerEntry{
+public class BrokerEntry implements Comparable<BrokerEntry>{
 	public static final String RPC    = "RPC";
 	public static final String MQ     = "MQ";
 	public static final String PubSub = "PubSub";
@@ -68,6 +68,11 @@ public class BrokerEntry{
 
 	public void setConsumerCount(long consumerCount) {
 		this.consumerCount = consumerCount;
+	}
+	
+	@Override
+	public int compareTo(BrokerEntry o) { 
+		return (int)(this.consumerCount - o.consumerCount);
 	}
 
 	@Override
