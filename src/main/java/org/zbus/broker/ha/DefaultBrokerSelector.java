@@ -46,10 +46,32 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		
 		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
 		
-		trackSub.onMessage(new MessageHandler() { 
+		trackSub.cmd(HaCommand.BrokerJoin, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
-				log.info("%s", msg);
+				String broker = msg.getBroker();
+				if(haBrokerEntrySet.isNewBroker(broker)){
+					onNewBroker(broker);
+				}
+			}
+		});
+		
+		trackSub.cmd(HaCommand.BrokerLeave, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				String brokerAddr = msg.getBroker();
+				haBrokerEntrySet.removeBroker(brokerAddr);
+				synchronized (allBrokers) {
+					Broker broker = allBrokers.remove(brokerAddr);
+					if(broker == null) return;
+					broker.close(); 
+				}
+			}
+		}); 
+		
+		trackSub.cmd(HaCommand.EntryUpdate, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {  
 				BrokerEntry be = null;
 				try{
 					be = BrokerEntry.parseJson(msg.getBodyString());
@@ -65,6 +87,15 @@ public class DefaultBrokerSelector implements BrokerSelector{
 					onNewBroker(be.getBroker());
 				}
 			}
+		});
+		
+		trackSub.cmd(HaCommand.EntryRemove, new MessageHandler() {
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				String broker = msg.getBroker();
+				String entryId = msg.getMq();
+				haBrokerEntrySet.removeBrokerEntry(broker, entryId);
+			} 
 		});
 		
 		trackSub.start();

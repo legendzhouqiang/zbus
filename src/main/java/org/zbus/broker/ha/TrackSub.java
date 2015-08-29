@@ -3,7 +3,9 @@ package org.zbus.broker.ha;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
@@ -19,6 +21,8 @@ public class TrackSub implements Closeable{
 	private Set<MessageClient> allClients = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyClients = new HashSet<MessageClient>();
 	private int reconnectTimeout = 3000; //ms
+	
+	private Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	
 	public TrackSub(String trackServerList, Dispatcher dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
@@ -49,7 +53,27 @@ public class TrackSub implements Closeable{
     				clientSubscribe(client);
     			}
 			}); 
-    	} 
+    		
+    		client.onMessage(new MessageHandler() { 
+				@Override
+				public void handle(Message msg, Session sess) throws IOException { 
+					log.info("%s", msg);
+					String cmd = msg.getCmd();
+			    	if(cmd != null){ //cmd
+			    		MessageHandler handler = cmdHandlerMap.get(cmd);
+			        	if(handler != null){
+			        		handler.handle(msg, sess);
+			        		return;
+			        	}
+			    	}
+			    	log.warn("Missing handler for command(%s)\n%s", cmd, msg);
+				}
+			});
+    	}  
+    }
+	
+	public void cmd(String command, MessageHandler handler){
+    	this.cmdHandlerMap.put(command, handler);
     }
 	
 	public void start(){
@@ -70,13 +94,7 @@ public class TrackSub implements Closeable{
 		} catch (IOException e) { 
 			//log.error(e.getMessage(), e);
 		}
-	} 
-    
-    public void onMessage(MessageHandler msgHandler){
-    	for(MessageClient client : this.allClients){
-    		client.onMessage(msgHandler);
-    	}
-    } 
+	}  
 	
     @Override
     public void close() throws IOException { 

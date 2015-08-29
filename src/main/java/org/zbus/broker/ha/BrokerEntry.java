@@ -1,9 +1,11 @@
 package org.zbus.broker.ha;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -144,8 +146,12 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 			return entryId2EntrySet.get(entryId);
 		}
 		
+		public boolean isNewBroker(String broker){
+			return !broker2EntrySet.containsKey(broker);
+		}
+		
 		public boolean isNewBroker(BrokerEntry be){
-			return !broker2EntrySet.containsKey(be.getBroker());
+			return isNewBroker(be.getBroker());
 		}
 		
 		public void updateBrokerEntry(BrokerEntry be){
@@ -205,6 +211,14 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 		
 		public String toJsonString(){
 			return JSON.toJSONString(entryId2EntrySet);
+		}
+		
+		public List<BrokerEntry> getAllBrokerEntries(){
+			List<BrokerEntry> entries = new ArrayList<BrokerEntry>();
+			for(Set<BrokerEntry> set :broker2EntrySet.values()){
+				entries.addAll(set);
+			}
+			return entries;
 		}
 	}
 

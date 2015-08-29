@@ -2,6 +2,7 @@ package org.zbus.broker.ha;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -120,6 +121,13 @@ public class TrackServer extends MessageAdaptor{
 		public void handle(Message msg, Session sess) throws IOException {
 			log.info("%s", msg);
 			subscribers.put(sess.id(), sess);
+			List<BrokerEntry> entries = haBrokerEntrySet.getAllBrokerEntries();
+			for(BrokerEntry be : entries){ 
+				msg.setCmd(HaCommand.EntryUpdate);
+				msg.setBody(be.toJsonString());  
+				
+				sess.write(msg);
+			}
 		}
 	};
 	
@@ -127,10 +135,18 @@ public class TrackServer extends MessageAdaptor{
 		Dispatcher dispatcher = sess.dispatcher();
 		dispatcher.createClientSession(brokerAddr, new MessageAdaptor() {
 			private void cleanSession(Session sess){
+				log.info("Sending BrokerLeave Message>>>");
 				brokers.remove(sess.id());
 				String broker = sess.attr("broker");
 				if(broker == null) return;
 				haBrokerEntrySet.removeBroker(broker);
+				
+				
+				Message msg = new Message();
+				msg.setCmd(HaCommand.BrokerLeave);
+				msg.setBroker(broker);
+				
+				pubMessage(msg);
 			}
 			
 			@Override
