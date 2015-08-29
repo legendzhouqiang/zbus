@@ -379,6 +379,8 @@ class MqServer extends IoAdaptor {
     	trackClientSet = new TrackClientSet(dispatcher, trackServerList);
     } 
     public void pubEntryUpdate(AbstractMQ mq){
+    	if(trackClientSet == null) return;
+    	
     	BrokerEntry be = new BrokerEntry();
     	be.setId(mq.getName());
     	be.setBroker(serverAddr);

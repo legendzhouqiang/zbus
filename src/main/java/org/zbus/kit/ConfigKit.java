@@ -44,6 +44,7 @@ public class ConfigKit {
 		for(int i=0; i<args.length;i++){
 			if(args[i].equals(opt)){
 				if(i<args.length-1) return args[i+1];
+				else return null;
 			} 
 		}
 		return defaultValue;
