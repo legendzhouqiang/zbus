@@ -14,10 +14,11 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class TrackPub implements Closeable{  
-	private static final Logger log = Logger.getLogger(TrackSub.class);
+	private static final Logger log = Logger.getLogger(TrackPub.class);
 	private Set<MessageClient> allClients = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyClients = new HashSet<MessageClient>();
 	private int reconnectTimeout = 3000; //ms
+	private ConnectedHandler connectedHandler;
 	
 	public TrackPub(String trackServerList, Dispatcher dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
@@ -44,30 +45,67 @@ public class TrackPub implements Closeable{
     			public void onConnected(Session sess) throws IOException {  
     				log.info("TrackServer(%s) connected", address);
     				healthyClients.add(client); 
+    				if(connectedHandler != null){
+    					connectedHandler.onConnected(sess);
+    				}
     			}
-			});
-    		
-    		try {
-				client.connectAsync();
-			} catch (IOException e) { 
-				e.printStackTrace();
-			}
+			}); 
     	} 
     }
 	
-	public void pubEntryUpdate(BrokerEntry be){ 
-		for(MessageClient client : healthyClients){
-			Message msg = new Message();
-			msg.setBody(be.toJsonString());
-			msg.setCmd(HaCommand.EntryUpdate); 
+	public void start(){
+		for(MessageClient client : allClients){
+			try {
+				client.connectAsync();
+			} catch (IOException e) { 
+				log.error(e.getMessage(), e);
+			}
+		}
+	}
+	
+	private void sendToAll(Message msg){
+		for(MessageClient client : healthyClients){ 
 			try{
+				msg.removeHead(Message.ID);
 				client.send(msg);
 			}catch(IOException e){
 				log.error(e.getMessage(), e);
 			}
     	}
+	}
+	
+	public void pubBrokerJoin(String broker){
+		Message msg = new Message();
+		msg.setCmd(HaCommand.BrokerJoin);
+		msg.setBroker(broker);
+		sendToAll(msg);
+	}
+	
+	public void pubBrokerLeave(String broker){
+		Message msg = new Message();
+		msg.setCmd(HaCommand.BrokerLeave);
+		msg.setBroker(broker);
+		sendToAll(msg);
+	}
+	
+	public void pubEntryUpdate(BrokerEntry be){ 
+		Message msg = new Message();
+		msg.setBody(be.toJsonString());
+		msg.setCmd(HaCommand.EntryUpdate);  
+		sendToAll(msg);
 	} 
-	 
+	
+	public void pubEntryRemove(String entryId){ 
+		Message msg = new Message();
+		msg.setBody(entryId);
+		msg.setCmd(HaCommand.EntryRemove);  
+		sendToAll(msg);
+	} 
+	
+	public void onConnected(ConnectedHandler connectedHandler){
+		this.connectedHandler = connectedHandler;
+	}
+	
     @Override
     public void close() throws IOException { 
     	for(MessageClient client : allClients){

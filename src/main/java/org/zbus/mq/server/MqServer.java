@@ -49,6 +49,7 @@ import org.zbus.mq.server.support.DiskQueuePool;
 import org.zbus.mq.server.support.DiskQueuePool.DiskQueue;
 import org.zbus.mq.server.support.MessageDiskQueue;
 import org.zbus.mq.server.support.MessageMemoryQueue;
+import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
@@ -377,7 +378,18 @@ class MqServer extends IoAdaptor {
     private TrackPub trackPub;
     public void setupTracker(String trackServerList, Dispatcher dispatcher){
     	trackPub = new TrackPub(trackServerList, dispatcher);
+    	trackPub.onConnected(new ConnectedHandler() {
+    		@Override
+    		public void onConnected(Session sess) throws IOException { 
+    			trackPub.pubBrokerJoin(serverAddr);
+    			for(AbstractMQ mq : mqTable.values()){
+    				pubEntryUpdate(mq);
+    			}
+    		}
+		});
+    	trackPub.start();
     } 
+    
     public void pubEntryUpdate(AbstractMQ mq){
     	if(trackPub == null) return;
     	

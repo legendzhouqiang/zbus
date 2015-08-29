@@ -3,6 +3,7 @@ package org.zbus.broker.ha;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -176,6 +177,30 @@ public class BrokerEntry implements Comparable<BrokerEntry>{
 				if(entryOfId == null) continue; 
 				entryOfId.remove(be);
 			}
+		}
+		
+		public void removeBrokerEntry(String broker, String entryId){
+			if(broker == null || entryId == null) return;
+			
+			Set<BrokerEntry> brokerEntries = broker2EntrySet.get(broker);
+			if(brokerEntries == null) return;
+			Iterator<BrokerEntry> iter = brokerEntries.iterator();
+			while(iter.hasNext()){
+				BrokerEntry be = iter.next();
+				if(entryId.equals(be.getId())){
+					iter.remove();
+				}
+			}
+			
+			BrokerEntryPrioritySet ps = entryId2EntrySet.get(entryId);
+			if(ps == null) return;
+			iter = ps.iterator();
+			while(iter.hasNext()){
+				BrokerEntry be = iter.next();
+				if(broker.equals(be.getBroker())){
+					iter.remove();
+				}
+			} 
 		}
 		
 		public String toJsonString(){

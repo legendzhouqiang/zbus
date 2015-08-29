@@ -46,19 +46,23 @@ public class TrackSub implements Closeable{
     				log.info("TrackServer(%s) connected", address);
     				healthyClients.add(client); 
     				
-    				clientSubEntryUpdate(client);
+    				clientSubscribe(client);
     			}
-			});
-    		
-    		try {
-				client.connectAsync();
-			} catch (IOException e) { 
-				e.printStackTrace();
-			}
+			}); 
     	} 
     }
 	
-	private void clientSubEntryUpdate(MessageClient client){
+	public void start(){
+		for(MessageClient client : this.allClients){
+			try {
+				client.connectAsync();
+			} catch (IOException e) { 
+				log.error(e.getMessage(), e);
+			}
+		}
+	}
+	
+	private void clientSubscribe(MessageClient client){
 		try { 
     		Message msg = new Message(); 
     		msg.setCmd(HaCommand.Subscribe);
@@ -66,13 +70,7 @@ public class TrackSub implements Closeable{
 		} catch (IOException e) { 
 			//log.error(e.getMessage(), e);
 		}
-	}
-    
-    public void subEntryUpdate(){   
-    	for(MessageClient client : this.allClients){
-	    	clientSubEntryUpdate(client);
-    	}
-    }
+	} 
     
     public void onMessage(MessageHandler msgHandler){
     	for(MessageClient client : this.allClients){

@@ -66,7 +66,8 @@ public class DefaultBrokerSelector implements BrokerSelector{
 				}
 			}
 		});
-		trackSub.subEntryUpdate();
+		
+		trackSub.start();
 	}
 	
 	private void onNewBroker(final String brokerAddr) throws IOException{
