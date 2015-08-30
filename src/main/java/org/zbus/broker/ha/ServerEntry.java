@@ -156,25 +156,29 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			return isNewServer(be.getServerAddr());
 		}
 		
-		public void updateServerEntry(ServerEntry be){
-			String entryId = be.getEntryId(); 
-			ServerEntryPrioritySet prioSet = entryIdToEntrySet.get(entryId);
-			if(prioSet == null){
-				prioSet = new ServerEntryPrioritySet();
-				entryIdToEntrySet.put(entryId, prioSet);
+		public void updateServerEntry(ServerEntry be){ 
+			synchronized (entryIdToEntrySet) {
+				String entryId = be.getEntryId(); 
+				ServerEntryPrioritySet prioSet = entryIdToEntrySet.get(entryId);
+				if(prioSet == null){
+					prioSet = new ServerEntryPrioritySet();
+					entryIdToEntrySet.put(entryId, prioSet);
+				}
+				//update
+				prioSet.remove(be);
+				prioSet.add(be);
 			}
-			//update
-			prioSet.remove(be);
-			prioSet.add(be);
-			 
-			String serverAddr = be.getServerAddr();
-			Set<ServerEntry> entries = serverToEntrySet.get(serverAddr);
-			if(entries == null){
-				entries = Collections.synchronizedSet(new HashSet<ServerEntry>());
-				serverToEntrySet.put(serverAddr, entries); 
-			}
-			entries.remove(be);
-			entries.add(be); 
+			
+			synchronized (serverToEntrySet) {
+				String serverAddr = be.getServerAddr();
+				Set<ServerEntry> entries = serverToEntrySet.get(serverAddr);
+				if(entries == null){
+					entries = Collections.synchronizedSet(new HashSet<ServerEntry>());
+					serverToEntrySet.put(serverAddr, entries); 
+				}
+				entries.remove(be);
+				entries.add(be); 
+			} 
 		}
 		
 		public void removeServer(String serverAddr){

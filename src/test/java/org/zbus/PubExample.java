@@ -5,7 +5,6 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Producer;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 public class PubExample {
@@ -18,18 +17,11 @@ public class PubExample {
 		producer.createMQ();  
 		
 		Message msg = new Message();
-		msg.setTopic("sse");
+		msg.setTopic("sse"); 
+		msg.setBody("hello world");
 		
-		for(int i=0;i<100000;i++){
-			msg.setBody("hello world"+i);
-			producer.sendSync(msg); 
-			producer.sendAsync(msg, new ResultCallback<Message>() { 
-				@Override
-				public void onReturn(Message result) { 
-					
-				}
-			});
-		}
+		producer.sendSync(msg);
+		
 		
 		broker.close();
 	} 

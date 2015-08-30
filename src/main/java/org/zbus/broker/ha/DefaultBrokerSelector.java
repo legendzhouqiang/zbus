@@ -112,12 +112,12 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		
 		try {
 			syncFromTracker.await(3, TimeUnit.SECONDS);
-			log.info("Synchronized from Tracker");
+			log.debug("Synchronized from Tracker");
 		} catch (InterruptedException e) { 
 			//ignore
 		}
 		if(syncFromTracker.getCount() > 0){
-			log.info("Timeout synchronizing from Tracker");
+			log.debug("Timeout synchronizing from Tracker");
 		}
 		
 	}
