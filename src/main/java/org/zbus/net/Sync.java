@@ -147,6 +147,7 @@ public class Sync<REQ extends Id, RES extends Id> {
 	} 
 	
 	public  Ticket<REQ, RES> removeTicket(String id) {
+		if(id == null) return null;
 		return tickets.remove(id);
 	}
 	

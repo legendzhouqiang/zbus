@@ -74,12 +74,4 @@ public class HaBroker implements Broker {
 			brokerSelector.close();
 		}
 	} 
-	 
-	public static void main(String[] args) throws Exception{
-		BrokerConfig config = new BrokerConfig();
-		config.setTrackServerList("127.0.0.1:16666");
-		
-		@SuppressWarnings({ "resource", "unused" })
-		HaBroker broker = new HaBroker(config);  
-	}
 }

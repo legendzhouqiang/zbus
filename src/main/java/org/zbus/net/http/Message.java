@@ -74,7 +74,7 @@ public class Message implements Id {
 	public static final String RECVER   = "recver";
 	public static final String ID      	= "id";	    //消息ID
 	public static final String RAWID    = "rawid";  //原始消息ID 
-	public static final String BROKER   = "broker"; 
+	public static final String SERVER   = "server"; 
 	public static final String TOPIC    = "topic";  //使用,分隔 
 	public static final String ACK      = "ack";	 	 
 	public static final String WINDOW   = "window"; 
@@ -297,10 +297,10 @@ public class Message implements Id {
 	
 	
 	public String getServer(){
-		return this.getHead(BROKER);
+		return this.getHead(SERVER);
 	}  
 	public void setServer(String value){
-		this.setHead(BROKER, value);
+		this.setHead(SERVER, value);
 	}
 	
 	

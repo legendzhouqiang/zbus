@@ -409,20 +409,20 @@ class MqServer extends IoAdaptor {
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig();
 		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
-		config.serverPort = ConfigKit.option(args, "-p", 15555);
+		config.serverPort = ConfigKit.option(args, "-p", 15556);
 		config.selectorCount = ConfigKit.option(args, "-selector", 1);
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
-		config.verbose = ConfigKit.option(args, "-verbose", true);
-		config.storePath = ConfigKit.option(args, "-store", "mq");
+		config.verbose = ConfigKit.option(args, "-verbose", false);
+		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
 
-		String configFile = ConfigKit.option(args, "-conf", "zbus.properties");
-		InputStream is = FileKit.loadFile(configFile);
-		if(is != null){
-			log.info("Using file config options from(%s)", configFile);
-			config.load(configFile);
-		} else {
-			log.info("Using command line config options");
+		String configFile = ConfigKit.option(args, "-conf", null);
+		if(configFile != null){
+			InputStream is = FileKit.loadFile(configFile);
+			if(is != null){
+				log.info("Using file config options from(%s)", configFile);
+				config.load(configFile);
+			}  
 		}
 		
 		log.info("MqServer starting ...");

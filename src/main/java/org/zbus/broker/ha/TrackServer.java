@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
 import org.zbus.log.Logger;
+import org.zbus.net.Client.ConnectedHandler;
+import org.zbus.net.Client.ErrorHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
@@ -16,13 +18,14 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
+import org.zbus.net.http.MessageClient;
 
 public class TrackServer extends MessageAdaptor{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
 	private HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
-	private Map<String, Session> joinedServers = new ConcurrentHashMap<String, Session>();
+	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
 	
 	public TrackServer(){  
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
@@ -41,6 +44,7 @@ public class TrackServer extends MessageAdaptor{
 			Entry<String, Session> entry = iter.next();
 			Session sub = entry.getValue();
 			try{
+				msg.removeHead(Message.ID);
 				sub.write(msg);
 			}catch(Exception e){
 				iter.remove();
@@ -120,62 +124,51 @@ public class TrackServer extends MessageAdaptor{
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			log.info("%s", msg);
-			trackSubs.put(sess.id(), sess);
+			trackSubs.put(sess.id(), sess); 
 			List<ServerEntry> entries = haServerEntrySet.getAllServerEntries();
 			for(ServerEntry be : entries){ 
 				msg.setCmd(HaCommand.EntryUpdate);
-				msg.setBody(be.toJsonString());  
-				
+				msg.setBody(be.toJsonString());   
 				sess.write(msg);
 			}
 		}
 	};
 	
 	private void onNewServer(final String serverAddr, Session sess) throws IOException{
+		
 		synchronized (joinedServers) {
-			if(joinedServers.containsKey(serverAddr)) return;
-			Session target = connectToNewServer(serverAddr, sess); 
-			joinedServers.put(serverAddr, target); 
-		} 
-	}
-	
-	private Session connectToNewServer(final String serverAddr, Session s) throws IOException{
-		Dispatcher dispatcher = s.dispatcher();
-		return dispatcher.registerClientChannel(serverAddr, new MessageAdaptor() {
-			private void cleanSession(Session sess){ 
-				joinedServers.remove(sess.id());
-				String serverAddr = sess.attr("server");
-				if(serverAddr == null) return;
-				haServerEntrySet.removeServer(serverAddr);
-				
-				
-				Message msg = new Message();
-				msg.setCmd(HaCommand.ServerLeave);
-				msg.setServer(serverAddr);
-				
-				pubMessage(msg);
-			}
+			if(joinedServers.containsKey(serverAddr)) return; 
+			 
+			log.info(">>>>>>>>>>>New Server: "+ serverAddr);
+			final MessageClient client = new MessageClient(serverAddr, sess.dispatcher()); 
+			joinedServers.put(serverAddr, client); 
 			
-			@Override
-			protected void onSessionConnected(Session sess) throws IOException { 
-				joinedServers.put(sess.id(), sess);
-				sess.attr("server", serverAddr);
-				super.onSessionConnected(sess);
-			}
+			client.onConnected(new ConnectedHandler() { 
+				@Override
+				public void onConnected(Session sess) throws IOException { 
+					joinedServers.put(serverAddr, client); 
+				}
+			});
 			
-			@Override
-			protected void onException(Throwable e, Session sess)
-					throws IOException { 
-				cleanSession(sess);
-				super.onException(e, sess);
-			}
+			client.onError(new ErrorHandler() { 
+				@Override
+				public void onError(IOException e, Session sess) throws IOException { 
+					log.warn("Server(%s) down", serverAddr);
+					joinedServers.remove(serverAddr); 
+					haServerEntrySet.removeServer(serverAddr);  
+					client.close();
+					
+					log.info("Sending ServerLeave message");
+					Message msg = new Message();
+					msg.setCmd(HaCommand.ServerLeave);
+					msg.setServer(serverAddr);
+					
+					pubMessage(msg);
+				}
+			}); 
 			
-			@Override
-			protected void onSessionDestroyed(Session sess) throws IOException {
-				cleanSession(sess);
-				super.onSessionDestroyed(sess);
-			} 
-		}); 
+			client.connectAsync(); 
+		}
 	}
 	
 	protected void onSessionDestroyed(Session sess) throws IOException {
