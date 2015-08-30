@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.broker.ha.BrokerEntry.HaBrokerEntrySet;
+import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
 import org.zbus.log.Logger;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
@@ -19,24 +19,24 @@ import org.zbus.net.http.MessageAdaptor;
 
 public class TrackServer extends MessageAdaptor{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
-	private HaBrokerEntrySet haBrokerEntrySet = new HaBrokerEntrySet(); 
+	private HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
 	
-	private Map<String, Session> subscribers =  new ConcurrentHashMap<String, Session>();
-	private Map<String, Session> brokers = new ConcurrentHashMap<String, Session>();
+	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
+	private Map<String, Session> targetServers = new ConcurrentHashMap<String, Session>();
 	
 	public TrackServer(){  
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
-		cmd(HaCommand.BrokerJoin, brokerJoinHandler);
-		cmd(HaCommand.BrokerLeave, brokerLeaveHandler);
+		cmd(HaCommand.TargetJoin, targetJoinHandler);
+		cmd(HaCommand.TargetLeave, targetLeaveHandler);
 		
-		cmd(HaCommand.QueryAll, queryAllHandler);
-		cmd(HaCommand.Subscribe, subscribeHandler);
+		cmd(HaCommand.PubAll, pubAllHandler);
+		cmd(HaCommand.SubAll, subAllHandler);
 	}   
 	
 	private void pubMessage(Message msg){
-		Iterator<Entry<String, Session>> iter = subscribers.entrySet().iterator();
+		Iterator<Entry<String, Session>> iter = trackSubs.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<String, Session> entry = iter.next();
 			Session sub = entry.getValue();
@@ -49,25 +49,25 @@ public class TrackServer extends MessageAdaptor{
 		}
 	}
 	
-	private MessageHandler brokerJoinHandler = new MessageHandler() { 
+	private MessageHandler targetJoinHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
-			String broker = msg.getBroker();
-			if(broker == null) return;
-			onNewBroker(broker, sess);
+			String serverAddr = msg.getServer();
+			if(serverAddr == null) return;
+			onNewServer(serverAddr, sess);
 			
 			pubMessage(msg);
 		}
 	};
 	
-	private MessageHandler brokerLeaveHandler = new MessageHandler() { 
+	private MessageHandler targetLeaveHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
-			String broker = msg.getBroker();
-			if(broker == null) return; 
-			haBrokerEntrySet.removeBroker(broker);
+			String serverAddr = msg.getServer();
+			if(serverAddr == null) return; 
+			haServerEntrySet.removeServer(serverAddr);
 			
 			pubMessage(msg);
 		}
@@ -77,18 +77,18 @@ public class TrackServer extends MessageAdaptor{
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
-			BrokerEntry be = null;
+			ServerEntry be = null;
 			try{
-				be = BrokerEntry.parseJson(msg.getBodyString());
+				be = ServerEntry.parseJson(msg.getBodyString());
 			} catch(Exception e){
 				log.error(e.getMessage(), e);
 				return;
 			}
-			boolean isNewBroker = haBrokerEntrySet.isNewBroker(be);
+			boolean isNewServer = haServerEntrySet.isNewServer(be);
 			
-			haBrokerEntrySet.updateBrokerEntry(be);
-			if(isNewBroker){
-				onNewBroker(be.getBroker(), sess);
+			haServerEntrySet.updateServerEntry(be);
+			if(isNewServer){
+				onNewServer(be.getServerAddr(), sess);
 			}
 			
 			pubMessage(msg);
@@ -98,31 +98,31 @@ public class TrackServer extends MessageAdaptor{
 	private MessageHandler entryRemoveHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
-			String broker = msg.getBroker();
+			String serverAddr = msg.getServer();
 			String entryId = msg.getMq(); //use mq for entryId
-			haBrokerEntrySet.removeBrokerEntry(broker, entryId);
+			haServerEntrySet.removeServerEntry(serverAddr, entryId);
 			
 			pubMessage(msg);
 		}
 	};
 	
-	private MessageHandler queryAllHandler = new MessageHandler() {
+	private MessageHandler pubAllHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
 			res.setId(msg.getId());
-			res.setBody(haBrokerEntrySet.toJsonString());
+			res.setBody(haServerEntrySet.toJsonString());
 			sess.write(res);
 		}
 	};
 	
-	private MessageHandler subscribeHandler = new MessageHandler() {
+	private MessageHandler subAllHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			log.info("%s", msg);
-			subscribers.put(sess.id(), sess);
-			List<BrokerEntry> entries = haBrokerEntrySet.getAllBrokerEntries();
-			for(BrokerEntry be : entries){ 
+			trackSubs.put(sess.id(), sess);
+			List<ServerEntry> entries = haServerEntrySet.getAllServerEntries();
+			for(ServerEntry be : entries){ 
 				msg.setCmd(HaCommand.EntryUpdate);
 				msg.setBody(be.toJsonString());  
 				
@@ -131,28 +131,28 @@ public class TrackServer extends MessageAdaptor{
 		}
 	};
 	
-	private void connectToNewBroker(final String brokerAddr, Session sess) throws IOException{
+	private void connectToNewServer(final String serverAddr, Session sess) throws IOException{
 		Dispatcher dispatcher = sess.dispatcher();
-		dispatcher.createClientSession(brokerAddr, new MessageAdaptor() {
+		dispatcher.createClientSession(serverAddr, new MessageAdaptor() {
 			private void cleanSession(Session sess){
-				log.info("Sending BrokerLeave Message>>>");
-				brokers.remove(sess.id());
-				String broker = sess.attr("broker");
-				if(broker == null) return;
-				haBrokerEntrySet.removeBroker(broker);
+				log.info("Sending ServerLeave Message>>>");
+				targetServers.remove(sess.id());
+				String serverAddr = sess.attr("server");
+				if(serverAddr == null) return;
+				haServerEntrySet.removeServer(serverAddr);
 				
 				
 				Message msg = new Message();
-				msg.setCmd(HaCommand.BrokerLeave);
-				msg.setBroker(broker);
+				msg.setCmd(HaCommand.TargetLeave);
+				msg.setServer(serverAddr);
 				
 				pubMessage(msg);
 			}
 			
 			@Override
 			protected void onSessionConnected(Session sess) throws IOException { 
-				brokers.put(sess.id(), sess);
-				sess.attr("broker", brokerAddr);
+				targetServers.put(sess.id(), sess);
+				sess.attr("server", serverAddr);
 				super.onSessionConnected(sess);
 			}
 			@Override
@@ -170,21 +170,21 @@ public class TrackServer extends MessageAdaptor{
 		}); 
 	}
 	
-	private void onNewBroker(final String brokerAddr, Session sess) throws IOException{
-		synchronized (brokers) {
-			if(brokers.containsKey(brokerAddr)) return;
-			brokers.put(brokerAddr, null);
-			connectToNewBroker(brokerAddr, sess);
+	private void onNewServer(final String serverAddr, Session sess) throws IOException{
+		synchronized (targetServers) {
+			if(targetServers.containsKey(serverAddr)) return;
+			targetServers.put(serverAddr, null);
+			connectToNewServer(serverAddr, sess);
 		} 
 	}
 	
 	protected void onSessionDestroyed(Session sess) throws IOException {
-		subscribers.remove(sess); 
+		trackSubs.remove(sess); 
 	}
 	
 	@Override
 	protected void onException(Throwable e, Session sess) throws IOException {
-		subscribers.remove(sess);
+		trackSubs.remove(sess);
 		super.onException(e, sess);
 	}
 

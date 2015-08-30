@@ -16,7 +16,7 @@ public class CallerExample {
 
 	public static void test() throws Exception { 
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setServerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
  
 		MessageInvoker invoker = new MqInvoker(broker, "MyService");

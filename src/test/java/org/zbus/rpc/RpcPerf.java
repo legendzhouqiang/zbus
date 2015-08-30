@@ -49,7 +49,7 @@ public class RpcPerf {
 		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
 		
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setBrokerAddress(brokerAddress);
+		brokerConfig.setServerAddress(brokerAddress);
 		brokerConfig.setMaxTotal(threadCount);
 		brokerConfig.setMaxIdle(threadCount);  
 		

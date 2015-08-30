@@ -83,7 +83,7 @@ public class RpcExample {
 
 	public static void main2(String[] args) throws Exception { 
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setBrokerAddress("127.0.0.1:15555");
+		brokerConfig.setServerAddress("127.0.0.1:15555"); 
 		Broker broker = new SingleBroker(brokerConfig); 
 		 
 		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");

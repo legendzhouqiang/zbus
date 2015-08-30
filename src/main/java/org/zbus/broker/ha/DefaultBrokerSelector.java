@@ -11,8 +11,8 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.broker.ha.BrokerEntry.BrokerEntryPrioritySet;
-import org.zbus.broker.ha.BrokerEntry.HaBrokerEntrySet;
+import org.zbus.broker.ha.ServerEntry.ServerEntryPrioritySet;
+import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
@@ -23,7 +23,7 @@ import org.zbus.net.http.MessageClient;
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
 	
-	private HaBrokerEntrySet haBrokerEntrySet = new HaBrokerEntrySet();
+	private HaServerEntrySet haBrokerEntrySet = new HaServerEntrySet();
 	private Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
@@ -46,21 +46,21 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		
 		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
 		
-		trackSub.cmd(HaCommand.BrokerJoin, new MessageHandler() { 
+		trackSub.cmd(HaCommand.TargetJoin, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
-				String broker = msg.getBroker();
-				if(haBrokerEntrySet.isNewBroker(broker)){
-					onNewBroker(broker);
+				String broker = msg.getServer();
+				if(haBrokerEntrySet.isNewServer(broker)){
+					onNewServer(broker);
 				}
 			}
 		});
 		
-		trackSub.cmd(HaCommand.BrokerLeave, new MessageHandler() { 
+		trackSub.cmd(HaCommand.TargetLeave, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
-				String brokerAddr = msg.getBroker();
-				haBrokerEntrySet.removeBroker(brokerAddr);
+				String brokerAddr = msg.getServer();
+				haBrokerEntrySet.removeServer(brokerAddr);
 				synchronized (allBrokers) {
 					Broker broker = allBrokers.remove(brokerAddr);
 					if(broker == null) return;
@@ -72,19 +72,19 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.cmd(HaCommand.EntryUpdate, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {  
-				BrokerEntry be = null;
+				ServerEntry be = null;
 				try{
-					be = BrokerEntry.parseJson(msg.getBodyString());
+					be = ServerEntry.parseJson(msg.getBodyString());
 				} catch(Exception e){
 					log.error(e.getMessage(), e);
 					return;
 				}
-				boolean isNewBroker = haBrokerEntrySet.isNewBroker(be);
+				boolean isNewBroker = haBrokerEntrySet.isNewServer(be);
 				
-				haBrokerEntrySet.updateBrokerEntry(be);
+				haBrokerEntrySet.updateServerEntry(be);
 				
 				if(isNewBroker){
-					onNewBroker(be.getBroker());
+					onNewServer(be.getServerAddr());
 				}
 			}
 		});
@@ -92,43 +92,44 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.cmd(HaCommand.EntryRemove, new MessageHandler() {
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
-				String broker = msg.getBroker();
+				String broker = msg.getServer();
 				String entryId = msg.getMq();
-				haBrokerEntrySet.removeBrokerEntry(broker, entryId);
+				haBrokerEntrySet.removeServerEntry(broker, entryId);
 			} 
 		});
 		
 		trackSub.start();
 	}
 	
-	private void onNewBroker(final String brokerAddr) throws IOException{
+	private void onNewServer(final String serverAddr) throws IOException{
 		synchronized (allBrokers) {
-			if(allBrokers.containsKey(brokerAddr)) return;
+			if(allBrokers.containsKey(serverAddr)) return;
+			this.config.setServerAddress(serverAddr);
 			Broker broker = new SingleBroker(this.config);
-			allBrokers.put(brokerAddr, broker); 
+			allBrokers.put(serverAddr, broker); 
 		} 
 	}
 	
-	private Broker getBroker(String brokerAddr){
-		if(brokerAddr == null) return null;
-		return allBrokers.get(brokerAddr); 
+	private Broker getBroker(String serverAddr){
+		if(serverAddr == null) return null;
+		return allBrokers.get(serverAddr); 
 	}
 	
-	private Broker getBroker(BrokerEntry entry){
+	private Broker getBroker(ServerEntry entry){
 		if(entry == null) return null; 
-		return allBrokers.get(entry.getBroker()); 
+		return allBrokers.get(entry.getServerAddr()); 
 	}
 	
 	@Override
 	public Broker selectByClientHint(ClientHint hint) { 
-		Broker broker = getBroker(hint.getBroker());
+		Broker broker = getBroker(hint.getServer());
 		if(broker != null) return broker;
 		
 		if(hint.getEntry() != null){
-			BrokerEntryPrioritySet p = haBrokerEntrySet.getPrioritySet(hint.getEntry());
+			ServerEntryPrioritySet p = haBrokerEntrySet.getPrioritySet(hint.getEntry());
 			if(p != null){
-				BrokerEntry e = p.first(); 
-				broker = getBroker(e.getBroker());
+				ServerEntry e = p.first(); 
+				broker = getBroker(e.getServerAddr());
 				if(broker != null) return broker;
 			}
 		} 
@@ -143,21 +144,21 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	@Override
 	public List<Broker> selectByRequestMsg(Message msg) {  
-		Broker broker = getBroker(msg.getBroker());
+		Broker broker = getBroker(msg.getServer());
 		if(broker != null){
 			return Arrays.asList(broker);
 		}
 		
 		String entry = getEntry(msg);
 		
-		BrokerEntryPrioritySet p = haBrokerEntrySet.getPrioritySet(entry);
+		ServerEntryPrioritySet p = haBrokerEntrySet.getPrioritySet(entry);
 		if(p == null || p.size()==0) return null;
 		
 
 		String mode = p.getMode();
-		if(BrokerEntry.PubSub.equals(mode)){
+		if(ServerEntry.PubSub.equals(mode)){
 			List<Broker> res = new ArrayList<Broker>();
-			for(BrokerEntry e : p){ 
+			for(ServerEntry e : p){ 
 				broker = getBroker(e);
 				if(broker != null){
 					res.add(broker);

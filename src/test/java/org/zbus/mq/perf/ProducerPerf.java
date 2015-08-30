@@ -62,7 +62,7 @@ public class ProducerPerf {
 		dispatcher.start();
 	 
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress(serverAddress);
+		config.setServerAddress(serverAddress);
 		config.setDispatcher(dispatcher);
 		
 		final Broker broker = new SingleBroker(config);

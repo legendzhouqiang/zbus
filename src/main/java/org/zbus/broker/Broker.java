@@ -46,7 +46,7 @@ public interface Broker extends MessageInvoker, Closeable{
 	
 	public static class ClientHint { 
 		private String entry;
-		private String broker;  
+		private String server;  
 		
 		public String getEntry() {
 			return entry;
@@ -54,11 +54,11 @@ public interface Broker extends MessageInvoker, Closeable{
 		public void setEntry(String entry) {
 			this.entry = entry;
 		}
-		public String getBroker() {
-			return broker;
+		public String getServer() {
+			return server;
 		}
-		public void setBroker(String broker) {
-			this.broker = broker;
+		public void setServer(String server) {
+			this.server = server;
 		} 
 	}
 }

@@ -296,10 +296,10 @@ public class Message implements Id {
 	}   
 	
 	
-	public String getBroker(){
+	public String getServer(){
 		return this.getHead(BROKER);
 	}  
-	public void setBroker(String value){
+	public void setServer(String value){
 		this.setHead(BROKER, value);
 	}
 	

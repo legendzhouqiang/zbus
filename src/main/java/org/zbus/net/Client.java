@@ -109,8 +109,9 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		super.onSessionConnected(sess);
 		if(this.connectedHandler != null){
 			this.connectedHandler.onConnected(sess);
+		} else {
+			log.info("Connected: "+sess);
 		}
-		log.info("Connected: "+sess);
 	}
 	
 	public void send(REQ req) throws IOException{

@@ -14,7 +14,7 @@ import org.zbus.net.http.Message;
 public class PubPerf {
 	public static void main(String[] args) throws Exception { 
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress("10.19.1.32:15555");
+		config.setServerAddress("10.19.1.32:15555");
 		final Broker broker = new SingleBroker(config);
 		
 		final long total = 100000;

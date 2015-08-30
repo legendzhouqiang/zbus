@@ -24,7 +24,7 @@ public class ServiceExample {
 		
 		//配置Broker
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setBrokerAddress(address); 
+		brokerConfig.setServerAddress(address); 
 		Broker broker = new SingleBroker(brokerConfig);
 		
 		ServiceConfig config = new ServiceConfig(); 

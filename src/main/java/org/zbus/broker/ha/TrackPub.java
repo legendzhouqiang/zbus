@@ -15,8 +15,8 @@ import org.zbus.net.http.MessageClient;
 
 public class TrackPub implements Closeable{  
 	private static final Logger log = Logger.getLogger(TrackPub.class);
-	private Set<MessageClient> allClients = new HashSet<MessageClient>();
-	private Set<MessageClient> healthyClients = new HashSet<MessageClient>();
+	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
+	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
 	private int reconnectTimeout = 3000; //ms
 	private ConnectedHandler connectedHandler;
 	
@@ -27,14 +27,14 @@ public class TrackPub implements Closeable{
     		if(address.equals("")) continue;
     		
     		final MessageClient client = new MessageClient(address, dispatcher); 
-    		allClients.add(client);
+    		allTrackers.add(client);
     		
     		client.onError(new ErrorHandler() {
     			@Override
     			public void onError(IOException e, Session sess)
     					throws IOException { 
-    				healthyClients.remove(client);
-    				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
+    				healthyTrackers.remove(client);
+    				log.debug("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
     				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
     				client.connectAsync();
     			}  
@@ -44,7 +44,7 @@ public class TrackPub implements Closeable{
     			@Override
     			public void onConnected(Session sess) throws IOException {  
     				log.info("TrackServer(%s) connected", address);
-    				healthyClients.add(client); 
+    				healthyTrackers.add(client); 
     				if(connectedHandler != null){
     					connectedHandler.onConnected(sess);
     				}
@@ -54,7 +54,7 @@ public class TrackPub implements Closeable{
     }
 	
 	public void start(){
-		for(MessageClient client : allClients){
+		for(MessageClient client : allTrackers){
 			try {
 				client.connectAsync();
 			} catch (IOException e) { 
@@ -63,8 +63,8 @@ public class TrackPub implements Closeable{
 		}
 	}
 	
-	private void sendToAll(Message msg){
-		for(MessageClient client : healthyClients){ 
+	public void sendToAllTrackers(Message msg){
+		for(MessageClient client : healthyTrackers){ 
 			try{
 				msg.removeHead(Message.ID);
 				client.send(msg);
@@ -74,32 +74,32 @@ public class TrackPub implements Closeable{
     	}
 	}
 	
-	public void pubBrokerJoin(String broker){
+	public void pubTargetJoin(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.BrokerJoin);
-		msg.setBroker(broker);
-		sendToAll(msg);
+		msg.setCmd(HaCommand.TargetJoin);
+		msg.setServer(targetServerAddr); 
+		sendToAllTrackers(msg);
 	}
 	
-	public void pubBrokerLeave(String broker){
+	public void pubTargetLeave(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.BrokerLeave);
-		msg.setBroker(broker);
-		sendToAll(msg);
+		msg.setCmd(HaCommand.TargetLeave);
+		msg.setServer(targetServerAddr);
+		sendToAllTrackers(msg);
 	}
 	
-	public void pubEntryUpdate(BrokerEntry be){ 
+	public void pubEntryUpdate(ServerEntry be){ 
 		Message msg = new Message();
 		msg.setBody(be.toJsonString());
 		msg.setCmd(HaCommand.EntryUpdate);  
-		sendToAll(msg);
+		sendToAllTrackers(msg);
 	} 
 	
 	public void pubEntryRemove(String entryId){ 
 		Message msg = new Message();
 		msg.setBody(entryId);
 		msg.setCmd(HaCommand.EntryRemove);  
-		sendToAll(msg);
+		sendToAllTrackers(msg);
 	} 
 	
 	public void onConnected(ConnectedHandler connectedHandler){
@@ -108,10 +108,10 @@ public class TrackPub implements Closeable{
 	
     @Override
     public void close() throws IOException { 
-    	for(MessageClient client : allClients){
+    	for(MessageClient client : allTrackers){
     		client.close();
     	}
-    	allClients.clear();
-    	healthyClients.clear();
+    	allTrackers.clear();
+    	healthyTrackers.clear();
     }
 }

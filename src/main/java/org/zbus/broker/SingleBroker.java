@@ -36,7 +36,7 @@ public class SingleBroker implements Broker {
 	private static final Logger log = Logger.getLogger(SingleBroker.class);     
 	
 	private final Pool<MessageClient> pool; 
-	private String brokerAddress; 
+	private String serverAddress; 
 	
 	private BrokerConfig config;
 	private Dispatcher dispatcher = null;
@@ -44,7 +44,7 @@ public class SingleBroker implements Broker {
 	 
 	public SingleBroker(BrokerConfig config) throws IOException{ 
 		this.config = config;
-		this.brokerAddress = config.getBrokerAddress(); 
+		this.serverAddress = config.getServerAddress(); 
 		
 		if(config.getDispatcher() == null){
 			this.ownDispatcher = true;
@@ -69,12 +69,8 @@ public class SingleBroker implements Broker {
 				log.error(e.getMessage(), e);
 			}
 		}
-	} 
+	}  
 	
-	public String getBrokerAddress() {
-		return brokerAddress;
-	}
- 
 	public void invokeAsync(Message msg, ResultCallback<Message> callback) throws IOException {  
 		MessageClient client = null;
 		try {
@@ -110,8 +106,8 @@ public class SingleBroker implements Broker {
 	}
 	
 	public MessageClient getClient(ClientHint hint) throws IOException{ 
-		MessageClient client = new MessageClient(this.brokerAddress, this.dispatcher);
-		client.attr("broker", brokerAddress);
+		MessageClient client = new MessageClient(this.serverAddress, this.dispatcher);
+		client.attr("server", serverAddress);
 		return client;
 	}
 
@@ -138,7 +134,7 @@ public class SingleBroker implements Broker {
 		
 		@Override
 		public MessageClient createObject() { 
-			return new MessageClient(brokerAddress, dispatcher); 
+			return new MessageClient(serverAddress, dispatcher); 
 		}
 	}
 }

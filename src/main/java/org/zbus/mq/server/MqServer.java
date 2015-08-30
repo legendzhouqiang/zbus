@@ -34,7 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.broker.ha.BrokerEntry;
+import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
@@ -97,7 +97,7 @@ class MqServer extends IoAdaptor {
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
-		msg.setBroker(serverAddr); 
+		msg.setServer(serverAddr); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
 		
 		if(verbose){
@@ -381,7 +381,7 @@ class MqServer extends IoAdaptor {
     	trackPub.onConnected(new ConnectedHandler() {
     		@Override
     		public void onConnected(Session sess) throws IOException { 
-    			trackPub.pubBrokerJoin(serverAddr);
+    			trackPub.pubTargetJoin(serverAddr);
     			for(AbstractMQ mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
@@ -393,9 +393,9 @@ class MqServer extends IoAdaptor {
     public void pubEntryUpdate(AbstractMQ mq){
     	if(trackPub == null) return;
     	
-    	BrokerEntry be = new BrokerEntry();
-    	be.setId(mq.getName());
-    	be.setBroker(serverAddr);
+    	ServerEntry be = new ServerEntry();
+    	be.setEntryId(mq.getName());
+    	be.setServerAddr(serverAddr);
     	be.setConsumerCount(mq.getMqInfo().consumerInfoList.size());
     	be.setMode(""+mq.getMqInfo().mode);
     	be.setUnconsumedMsgCount(mq.getMqInfo().unconsumedMsgCount);
@@ -435,6 +435,7 @@ class MqServer extends IoAdaptor {
 		
 		final MqServer mqAdaptor = new MqServer(address);
 		if(config.trackServerList != null){
+			log.info("Running at HA mode, try to connect to TrackServers");
 			mqAdaptor.setupTracker(config.trackServerList, dispatcher);
 		}
 		mqAdaptor.setVerbose(config.verbose); 

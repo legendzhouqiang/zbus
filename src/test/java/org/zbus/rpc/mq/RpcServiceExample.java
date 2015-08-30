@@ -19,7 +19,7 @@ public class RpcServiceExample {
 		
 		//配置Broker
 		BrokerConfig brokerCfg = new BrokerConfig();
-		brokerCfg.setBrokerAddress(address);
+		brokerCfg.setServerAddress(address);
 		Broker broker = new SingleBroker(brokerCfg);
 		
 		ServiceConfig config = new ServiceConfig();

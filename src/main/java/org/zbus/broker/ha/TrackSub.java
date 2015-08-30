@@ -18,11 +18,12 @@ import org.zbus.net.http.MessageClient;
 
 public class TrackSub implements Closeable{  
 	private static final Logger log = Logger.getLogger(TrackSub.class);
-	private Set<MessageClient> allClients = new HashSet<MessageClient>();
-	private Set<MessageClient> healthyClients = new HashSet<MessageClient>();
+	
+	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
+	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
 	private int reconnectTimeout = 3000; //ms
 	
-	private Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
+	private Map<String, MessageHandler> cmdHandlers = new ConcurrentHashMap<String, MessageHandler>();
 	
 	public TrackSub(String trackServerList, Dispatcher dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
@@ -31,13 +32,13 @@ public class TrackSub implements Closeable{
     		if(address.equals("")) continue;
     		
     		final MessageClient client = new MessageClient(address, dispatcher); 
-    		allClients.add(client);
+    		allTrackers.add(client);
     		
     		client.onError(new ErrorHandler() {
     			@Override
     			public void onError(IOException e, Session sess)
     					throws IOException { 
-    				healthyClients.remove(client);
+    				healthyTrackers.remove(client);
     				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
     				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
     				client.connectAsync();
@@ -48,7 +49,7 @@ public class TrackSub implements Closeable{
     			@Override
     			public void onConnected(Session sess) throws IOException {  
     				log.info("TrackServer(%s) connected", address);
-    				healthyClients.add(client); 
+    				healthyTrackers.add(client); 
     				
     				clientSubscribe(client);
     			}
@@ -60,7 +61,7 @@ public class TrackSub implements Closeable{
 					log.info("%s", msg);
 					String cmd = msg.getCmd();
 			    	if(cmd != null){ //cmd
-			    		MessageHandler handler = cmdHandlerMap.get(cmd);
+			    		MessageHandler handler = cmdHandlers.get(cmd);
 			        	if(handler != null){
 			        		handler.handle(msg, sess);
 			        		return;
@@ -73,11 +74,11 @@ public class TrackSub implements Closeable{
     }
 	
 	public void cmd(String command, MessageHandler handler){
-    	this.cmdHandlerMap.put(command, handler);
+    	this.cmdHandlers.put(command, handler);
     }
 	
 	public void start(){
-		for(MessageClient client : this.allClients){
+		for(MessageClient client : this.allTrackers){
 			try {
 				client.connectAsync();
 			} catch (IOException e) { 
@@ -89,7 +90,7 @@ public class TrackSub implements Closeable{
 	private void clientSubscribe(MessageClient client){
 		try { 
     		Message msg = new Message(); 
-    		msg.setCmd(HaCommand.Subscribe);
+    		msg.setCmd(HaCommand.SubAll);
     		client.send(msg);
 		} catch (IOException e) { 
 			//log.error(e.getMessage(), e);
@@ -98,10 +99,10 @@ public class TrackSub implements Closeable{
 	
     @Override
     public void close() throws IOException { 
-    	for(MessageClient client : allClients){
+    	for(MessageClient client : allTrackers){
     		client.close();
     	}
-    	allClients.clear();
-    	healthyClients.clear();
+    	allTrackers.clear();
+    	healthyTrackers.clear();
     }
 }
