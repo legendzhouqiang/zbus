@@ -6,7 +6,7 @@ import org.zbus.broker.ha.HaBroker;
 import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
 
-public class ProducerExample {
+public class Producer1 {
 	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig brokerConfig = new BrokerConfig();
@@ -15,12 +15,20 @@ public class ProducerExample {
  
 		Producer producer = new Producer(broker, "MyMQ");
 		//producer.createMQ(); // 如果已经确定存在，不需要创建
-
-		//创建消息，消息体可以是任意binary，应用协议交给使用者
-		Message msg = new Message();
-		msg.setBody("hello world");
-		producer.sendSync(msg);   
+ 
+		for(int i=0; i<10000;i++){
+			Message msg = new Message();
+			msg.setBody("hello world, from HA broker "+ System.currentTimeMillis());
+			try{
+				producer.sendSync(msg);  
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+			System.out.println("sent: " + msg);
+			Thread.sleep(1000);
+		}
 		
+		System.out.println("===DONE===");
 		//销毁Broker
 		broker.close();
 	}

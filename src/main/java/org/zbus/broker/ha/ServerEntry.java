@@ -182,7 +182,7 @@ public class ServerEntry implements Comparable<ServerEntry>{
 		}
 		
 		public void removeServer(String serverAddr){
-			Set<ServerEntry> serverEntries = serverToEntrySet.get(serverAddr);
+			Set<ServerEntry> serverEntries = serverToEntrySet.remove(serverAddr);
 			if(serverEntries == null) return;
 			for(ServerEntry be : serverEntries){
 				Set<ServerEntry> entryOfId = entryIdToEntrySet.get(be.getEntryId());
