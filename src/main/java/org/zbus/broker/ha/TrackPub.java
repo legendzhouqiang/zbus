@@ -74,14 +74,14 @@ public class TrackPub implements Closeable{
     	}
 	}
 	
-	public void pubTargetJoin(String targetServerAddr){
+	public void pubServerJoin(String targetServerAddr){
 		Message msg = new Message();
 		msg.setCmd(HaCommand.ServerJoin);
 		msg.setServer(targetServerAddr); 
 		sendToAllTrackers(msg);
 	}
 	
-	public void pubTargetLeave(String targetServerAddr){
+	public void pubServerLeave(String targetServerAddr){
 		Message msg = new Message();
 		msg.setCmd(HaCommand.ServerLeave);
 		msg.setServer(targetServerAddr);

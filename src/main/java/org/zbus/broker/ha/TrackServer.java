@@ -22,14 +22,14 @@ public class TrackServer extends MessageAdaptor{
 	private HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
-	private Map<String, Session> targetServers = new ConcurrentHashMap<String, Session>();
+	private Map<String, Session> joinedServers = new ConcurrentHashMap<String, Session>();
 	
 	public TrackServer(){  
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
-		cmd(HaCommand.ServerJoin, targetJoinHandler);
-		cmd(HaCommand.ServerLeave, targetLeaveHandler);
+		cmd(HaCommand.ServerJoin, serverJoinHandler);
+		cmd(HaCommand.ServerLeave, serverLeaveHandler);
 		
 		cmd(HaCommand.PubAll, pubAllHandler);
 		cmd(HaCommand.SubAll, subAllHandler);
@@ -49,7 +49,7 @@ public class TrackServer extends MessageAdaptor{
 		}
 	}
 	
-	private MessageHandler targetJoinHandler = new MessageHandler() { 
+	private MessageHandler serverJoinHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
@@ -61,7 +61,7 @@ public class TrackServer extends MessageAdaptor{
 		}
 	};
 	
-	private MessageHandler targetLeaveHandler = new MessageHandler() { 
+	private MessageHandler serverLeaveHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
@@ -131,11 +131,19 @@ public class TrackServer extends MessageAdaptor{
 		}
 	};
 	
+	private void onNewServer(final String serverAddr, Session sess) throws IOException{
+		synchronized (joinedServers) {
+			if(joinedServers.containsKey(serverAddr)) return;
+			Session target = connectToNewServer(serverAddr, sess); 
+			joinedServers.put(serverAddr, target); 
+		} 
+	}
+	
 	private Session connectToNewServer(final String serverAddr, Session s) throws IOException{
 		Dispatcher dispatcher = s.dispatcher();
 		return dispatcher.registerClientChannel(serverAddr, new MessageAdaptor() {
 			private void cleanSession(Session sess){ 
-				targetServers.remove(sess.id());
+				joinedServers.remove(sess.id());
 				String serverAddr = sess.attr("server");
 				if(serverAddr == null) return;
 				haServerEntrySet.removeServer(serverAddr);
@@ -150,15 +158,16 @@ public class TrackServer extends MessageAdaptor{
 			
 			@Override
 			protected void onSessionConnected(Session sess) throws IOException { 
-				targetServers.put(sess.id(), sess);
+				joinedServers.put(sess.id(), sess);
 				sess.attr("server", serverAddr);
 				super.onSessionConnected(sess);
 			}
+			
 			@Override
 			protected void onException(Throwable e, Session sess)
 					throws IOException { 
 				cleanSession(sess);
-				//super.onException(e, sess);
+				super.onException(e, sess);
 			}
 			
 			@Override
@@ -167,14 +176,6 @@ public class TrackServer extends MessageAdaptor{
 				super.onSessionDestroyed(sess);
 			} 
 		}); 
-	}
-	
-	private void onNewServer(final String serverAddr, Session sess) throws IOException{
-		synchronized (targetServers) {
-			if(targetServers.containsKey(serverAddr)) return;
-			Session target = connectToNewServer(serverAddr, sess); 
-			targetServers.put(serverAddr, target); 
-		} 
 	}
 	
 	protected void onSessionDestroyed(Session sess) throws IOException {

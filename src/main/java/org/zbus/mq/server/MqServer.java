@@ -381,7 +381,7 @@ class MqServer extends IoAdaptor {
     	trackPub.onConnected(new ConnectedHandler() {
     		@Override
     		public void onConnected(Session sess) throws IOException { 
-    			trackPub.pubTargetJoin(serverAddr);
+    			trackPub.pubServerJoin(serverAddr);
     			for(AbstractMQ mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
