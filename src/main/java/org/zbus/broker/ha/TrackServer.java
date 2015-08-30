@@ -2,7 +2,6 @@ package org.zbus.broker.ha;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,10 +112,7 @@ public class TrackServer extends MessageAdaptor{
 	private MessageHandler pubAllHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
-			Message res = new Message();
-			res.setId(msg.getId());
-			res.setBody(haServerEntrySet.toJsonString());
-			sess.write(res);
+			
 		}
 	};
 	
@@ -125,12 +121,9 @@ public class TrackServer extends MessageAdaptor{
 		public void handle(Message msg, Session sess) throws IOException {
 			log.info("%s", msg);
 			trackSubs.put(sess.id(), sess); 
-			List<ServerEntry> entries = haServerEntrySet.getAllServerEntries();
-			for(ServerEntry be : entries){ 
-				msg.setCmd(HaCommand.EntryUpdate);
-				msg.setBody(be.toJsonString());   
-				sess.write(msg);
-			}
+			msg.setCmd(HaCommand.PubAll);
+			msg.setBody(haServerEntrySet.toJsonString());
+			sess.write(msg);
 		}
 	};
 	

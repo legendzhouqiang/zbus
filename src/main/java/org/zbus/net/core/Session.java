@@ -179,7 +179,7 @@ public class Session implements Closeable{
 					try{
 						ioAdaptor.onMessage(theMsg, Session.this);
 					} catch(Throwable e){ 
-						//log.error(e.getMessage(), e);
+						log.error(e.getMessage(), e);
 						try {
 							ioAdaptor.onException(e, Session.this);
 						} catch (IOException e1) { 

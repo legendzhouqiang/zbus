@@ -1,10 +1,10 @@
-package org.zbus;
+package org.zbus.ha;
 
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ha.HaBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.core.Session;
@@ -15,8 +15,8 @@ public class ConsumerExample {
 	public static void main(String[] args) throws Exception{  
 		//创建Broker代表
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setServerAddress("127.0.0.1:15555");
-		Broker broker = new SingleBroker(brokerConfig);
+		brokerConfig.setTrackServerList("127.0.0.1:16666");
+		Broker broker = new HaBroker(brokerConfig);
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);

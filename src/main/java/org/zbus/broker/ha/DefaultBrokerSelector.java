@@ -6,13 +6,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.broker.ha.ServerEntry.ServerEntryPrioritySet;
 import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
+import org.zbus.broker.ha.ServerEntry.ServerEntryPrioritySet;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
@@ -23,7 +25,7 @@ import org.zbus.net.http.MessageClient;
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
 	
-	private HaServerEntrySet haServerEntrySet = new HaServerEntrySet();
+	private volatile HaServerEntrySet haServerEntrySet = new HaServerEntrySet();
 	private Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
@@ -31,6 +33,8 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private Dispatcher dispatcher = null;
 	private boolean ownDispatcher = false;
 	private BrokerConfig config;
+	
+	private CountDownLatch syncFromTracker = new CountDownLatch(1);
 	
 	public DefaultBrokerSelector(BrokerConfig config){
 		this.config = config;
@@ -73,20 +77,14 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.cmd(HaCommand.EntryUpdate, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {  
-				ServerEntry be = null;
+				ServerEntry entry = null;
 				try{
-					be = ServerEntry.parseJson(msg.getBodyString());
+					entry = ServerEntry.parseJson(msg.getBodyString());
 				} catch(Exception e){
 					log.error(e.getMessage(), e);
 					return;
 				}
-				boolean isNewServer = haServerEntrySet.isNewServer(be);
-				
-				haServerEntrySet.updateServerEntry(be);
-				
-				if(isNewServer){
-					onNewServer(be.getServerAddr());
-				}
+				updateServerEntry(entry);
 			}
 		});
 		
@@ -99,9 +97,38 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			} 
 		});
 		
+		trackSub.cmd(HaCommand.PubAll, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {
+				List<ServerEntry> serverEntries = HaServerEntrySet.parseJson(msg.getBodyString());
+				for(ServerEntry entry : serverEntries){ 
+					updateServerEntry(entry); 
+				}
+				syncFromTracker.countDown();
+			}
+		});
+		
 		trackSub.start();
+		
+		try {
+			syncFromTracker.await(3, TimeUnit.SECONDS);
+			log.info("Synchronized from Tracker");
+		} catch (InterruptedException e) { 
+			//ignore
+		}
+		if(syncFromTracker.getCount() > 0){
+			log.info("Timeout synchronizing from Tracker");
+		}
+		
 	}
 	
+	private void updateServerEntry(ServerEntry entry) throws IOException{
+		boolean isNewServer = haServerEntrySet.isNewServer(entry); 
+		haServerEntrySet.updateServerEntry(entry); 
+		if(isNewServer){
+			onNewServer(entry.getServerAddr());
+		}
+	}
 	private void onNewServer(final String serverAddr) throws IOException{
 		synchronized (allBrokers) {
 			if(allBrokers.containsKey(serverAddr)) return;
@@ -111,17 +138,22 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			allBrokers.put(serverAddr, broker); 
 		} 
 	}
+	
+	private Broker getBroker(String serverAddr){
+		if(serverAddr == null) return null;
+		return allBrokers.get(serverAddr);
+	}
 
 	@Override
 	public Broker selectByClientHint(ClientHint hint) { 
-		Broker broker = allBrokers.get(hint.getServer());
+		Broker broker = getBroker(hint.getServer());
 		if(broker != null) return broker;
 		
 		if(hint.getEntry() != null){
 			ServerEntryPrioritySet p = haServerEntrySet.getPrioritySet(hint.getEntry());
 			if(p != null){
 				ServerEntry e = p.first(); 
-				broker = allBrokers.get(e.getServerAddr());
+				broker = getBroker(e.getServerAddr());
 				if(broker != null) return broker;
 			}
 		} 
@@ -134,14 +166,25 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		return msg.getMq();
 	}
 	
+	private List<Broker> defaultBroker(){
+		Broker defaultBroker = allBrokers.values().iterator().next();
+		if(defaultBroker == null){
+			return null;
+		}
+		return Arrays.asList(defaultBroker);
+	}
+	
 	@Override
 	public List<Broker> selectByRequestMsg(Message msg) {  
-		Broker broker = allBrokers.get(msg.getServer());
+		Broker broker = getBroker(msg.getServer());
 		if(broker != null){
 			return Arrays.asList(broker);
 		}
 		
 		String entry = getEntry(msg);
+		if(entry == null){
+			return defaultBroker();
+		}
 		
 		ServerEntryPrioritySet p = haServerEntrySet.getPrioritySet(entry);
 		if(p == null || p.size()==0) return null;
@@ -151,13 +194,14 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(ServerEntry.PubSub.equals(mode)){
 			List<Broker> res = new ArrayList<Broker>();
 			for(ServerEntry e : p){ 
-				broker = allBrokers.get(e);
+				broker = getBroker(e.getServerAddr());
 				if(broker != null){
 					res.add(broker);
 				}
 			}
 		} else {
-			broker = allBrokers.get(entry);
+			String serverAddr = p.first().getServerAddr(); //TODO 负载均衡算法
+			broker = getBroker(serverAddr);
 			if(broker != null){
 				return Arrays.asList(broker);
 			}
@@ -174,12 +218,12 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	@Override
 	public void close() throws IOException { 
-		if(allBrokers != null){
-			for(Broker broker : allBrokers.values()){
-				broker.close();
-			}
-			allBrokers.clear();
+		for(Broker broker : allBrokers.values()){
+			broker.close();
 		}
+		allBrokers.clear();
+		trackSub.close();
+		
 		
 		if(ownDispatcher){
 			dispatcher.close();
@@ -190,9 +234,9 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	public static void main(String[] args) throws Exception{
 		BrokerConfig config = new BrokerConfig();
 		config.setTrackServerList("127.0.0.1:16666");
-		
-		@SuppressWarnings({ "resource", "unused" })
+		 
 		HaBroker broker = new HaBroker(config);  
+		broker.close();
 	}
 }
 

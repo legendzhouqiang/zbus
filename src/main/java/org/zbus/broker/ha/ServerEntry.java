@@ -12,6 +12,8 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 
 public class ServerEntry implements Comparable<ServerEntry>{
@@ -207,11 +209,23 @@ public class ServerEntry implements Comparable<ServerEntry>{
 					iter.remove();
 				}
 			} 
-		}
+		}  
 		
 		public String toJsonString(){
-			return JSON.toJSONString(entryIdToEntrySet);
+			return JSON.toJSONString(getAllServerEntries());
 		}
+		 
+		public static List<ServerEntry> parseJson(String jsonString){
+			JSONArray jsonArray = JSON.parseArray(jsonString);
+			List<ServerEntry> res = new ArrayList<ServerEntry>();
+			for(Object obj : jsonArray){
+				JSONObject json = (JSONObject)obj;
+				ServerEntry entry = JSON.toJavaObject(json, ServerEntry.class);
+				res.add(entry);
+			}
+			return res;
+		}
+		
 		
 		public List<ServerEntry> getAllServerEntries(){
 			List<ServerEntry> entries = new ArrayList<ServerEntry>();
