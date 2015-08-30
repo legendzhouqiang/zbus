@@ -51,7 +51,7 @@ public class TrackSub implements Closeable{
     				log.info("TrackServer(%s) connected", address);
     				healthyTrackers.add(client); 
     				
-    				clientSubscribe(client);
+    				clientSubAll(client);
     			}
 			}); 
     		
@@ -87,7 +87,7 @@ public class TrackSub implements Closeable{
 		}
 	}
 	
-	private void clientSubscribe(MessageClient client){
+	private void clientSubAll(MessageClient client){
 		try { 
     		Message msg = new Message(); 
     		msg.setCmd(HaCommand.SubAll);

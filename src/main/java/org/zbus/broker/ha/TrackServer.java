@@ -28,8 +28,8 @@ public class TrackServer extends MessageAdaptor{
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
-		cmd(HaCommand.TargetJoin, targetJoinHandler);
-		cmd(HaCommand.TargetLeave, targetLeaveHandler);
+		cmd(HaCommand.ServerJoin, targetJoinHandler);
+		cmd(HaCommand.ServerLeave, targetLeaveHandler);
 		
 		cmd(HaCommand.PubAll, pubAllHandler);
 		cmd(HaCommand.SubAll, subAllHandler);
@@ -131,11 +131,10 @@ public class TrackServer extends MessageAdaptor{
 		}
 	};
 	
-	private void connectToNewServer(final String serverAddr, Session sess) throws IOException{
-		Dispatcher dispatcher = sess.dispatcher();
-		dispatcher.createClientSession(serverAddr, new MessageAdaptor() {
-			private void cleanSession(Session sess){
-				log.info("Sending ServerLeave Message>>>");
+	private Session connectToNewServer(final String serverAddr, Session s) throws IOException{
+		Dispatcher dispatcher = s.dispatcher();
+		return dispatcher.registerClientChannel(serverAddr, new MessageAdaptor() {
+			private void cleanSession(Session sess){ 
 				targetServers.remove(sess.id());
 				String serverAddr = sess.attr("server");
 				if(serverAddr == null) return;
@@ -143,7 +142,7 @@ public class TrackServer extends MessageAdaptor{
 				
 				
 				Message msg = new Message();
-				msg.setCmd(HaCommand.TargetLeave);
+				msg.setCmd(HaCommand.ServerLeave);
 				msg.setServer(serverAddr);
 				
 				pubMessage(msg);
@@ -159,7 +158,7 @@ public class TrackServer extends MessageAdaptor{
 			protected void onException(Throwable e, Session sess)
 					throws IOException { 
 				cleanSession(sess);
-				super.onException(e, sess);
+				//super.onException(e, sess);
 			}
 			
 			@Override
@@ -173,18 +172,18 @@ public class TrackServer extends MessageAdaptor{
 	private void onNewServer(final String serverAddr, Session sess) throws IOException{
 		synchronized (targetServers) {
 			if(targetServers.containsKey(serverAddr)) return;
-			targetServers.put(serverAddr, null);
-			connectToNewServer(serverAddr, sess);
+			Session target = connectToNewServer(serverAddr, sess); 
+			targetServers.put(serverAddr, target); 
 		} 
 	}
 	
 	protected void onSessionDestroyed(Session sess) throws IOException {
-		trackSubs.remove(sess); 
+		trackSubs.remove(sess.id()); 
 	}
 	
 	@Override
 	protected void onException(Throwable e, Session sess) throws IOException {
-		trackSubs.remove(sess);
+		trackSubs.remove(sess.id());
 		super.onException(e, sess);
 	}
 

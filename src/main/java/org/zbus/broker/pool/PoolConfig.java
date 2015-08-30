@@ -22,7 +22,7 @@
  */
 package org.zbus.broker.pool;
 
-public class PoolConfig { 
+public class PoolConfig implements Cloneable{ 
 	private int maxTotal = 8;
     private int maxIdle = 8;
     private int minIdle = 0;

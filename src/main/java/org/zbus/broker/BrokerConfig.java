@@ -70,4 +70,13 @@ public class BrokerConfig extends PoolConfig{
 	public void setTrackServerList(String trackServerList) {
 		this.trackServerList = trackServerList;
 	} 
+	
+	@Override
+	public BrokerConfig clone() { 
+		try {
+			return (BrokerConfig)super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
+	}
 }

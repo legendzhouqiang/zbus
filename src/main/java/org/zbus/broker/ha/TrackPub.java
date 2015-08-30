@@ -34,7 +34,7 @@ public class TrackPub implements Closeable{
     			public void onError(IOException e, Session sess)
     					throws IOException { 
     				healthyTrackers.remove(client);
-    				log.debug("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
+    				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
     				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
     				client.connectAsync();
     			}  
@@ -76,14 +76,14 @@ public class TrackPub implements Closeable{
 	
 	public void pubTargetJoin(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.TargetJoin);
+		msg.setCmd(HaCommand.ServerJoin);
 		msg.setServer(targetServerAddr); 
 		sendToAllTrackers(msg);
 	}
 	
 	public void pubTargetLeave(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.TargetLeave);
+		msg.setCmd(HaCommand.ServerLeave);
 		msg.setServer(targetServerAddr);
 		sendToAllTrackers(msg);
 	}
