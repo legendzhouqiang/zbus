@@ -1,15 +1,22 @@
 package org.zbus.broker.ha;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -112,6 +119,17 @@ public class ServerEntry implements Comparable<ServerEntry>{
 		return true;
 	} 
 	
+	
+	
+	@Override
+	public String toString() {
+		return "{server=" + serverAddr
+				+ ", mode=" + mode 
+				+ ", consumers=" + consumerCount 
+				+ ", msgCount=" + unconsumedMsgCount 
+				+ ", entry=" + entryId + "}";
+	}
+
 	public static ServerEntry parseJson(String msg){
 		return JSON.parseObject(msg, ServerEntry.class);
 	}  
@@ -138,11 +156,39 @@ public class ServerEntry implements Comparable<ServerEntry>{
 	
 
 	
-	public static class HaServerEntrySet{
+	public static class HaServerEntrySet implements Closeable{
 		//entry_id ==> list of same entries from different target_servers
 		Map<String, ServerEntryPrioritySet> entryIdToEntrySet = new ConcurrentHashMap<String, ServerEntryPrioritySet>();
 		//server_addr ==> list of entries from same target_server
 		Map<String, Set<ServerEntry>> serverToEntrySet = new ConcurrentHashMap<String, Set<ServerEntry>>();
+		
+		private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
+		
+		public HaServerEntrySet(){
+			dumpExecutor.scheduleAtFixedRate(new Runnable() { 
+				@Override
+				public void run() { 
+					dump();
+				}
+			}, 1000, 5000, TimeUnit.MILLISECONDS);
+		}
+		
+		@Override
+		public void close() throws IOException {  
+			dumpExecutor.shutdown(); 
+		}
+		
+		public void dump(){
+			System.out.format("===============HaServerEntrySet(%s)=================\n", new Date());
+			Iterator<Entry<String, ServerEntryPrioritySet>> iter = entryIdToEntrySet.entrySet().iterator();
+			while(iter.hasNext()){
+				Entry<String, ServerEntryPrioritySet> e = iter.next();
+				System.out.format("%s\n", e.getKey());
+				for(ServerEntry se : e.getValue()){
+					System.out.format("  %s\n", se);
+				} 
+			}
+		}
 		
 		public ServerEntryPrioritySet getPrioritySet(String entryId){
 			return entryIdToEntrySet.get(entryId);
@@ -156,28 +202,29 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			return isNewServer(be.getServerAddr());
 		}
 		
-		public void updateServerEntry(ServerEntry be){ 
+		public void updateServerEntry(ServerEntry se){ 
 			synchronized (entryIdToEntrySet) {
-				String entryId = be.getEntryId(); 
+				String entryId = se.getEntryId(); 
 				ServerEntryPrioritySet prioSet = entryIdToEntrySet.get(entryId);
 				if(prioSet == null){
 					prioSet = new ServerEntryPrioritySet();
 					entryIdToEntrySet.put(entryId, prioSet);
 				}
 				//update
-				prioSet.remove(be);
-				prioSet.add(be);
+				//prioSet.remove(be);
+				System.out.println("Add: "+se);
+				prioSet.add(se);
 			}
 			
 			synchronized (serverToEntrySet) {
-				String serverAddr = be.getServerAddr();
+				String serverAddr = se.getServerAddr();
 				Set<ServerEntry> entries = serverToEntrySet.get(serverAddr);
 				if(entries == null){
 					entries = Collections.synchronizedSet(new HashSet<ServerEntry>());
 					serverToEntrySet.put(serverAddr, entries); 
 				}
-				entries.remove(be);
-				entries.add(be); 
+				entries.remove(se);
+				entries.add(se); 
 			} 
 		}
 		
@@ -239,6 +286,20 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			return entries;
 		}
 	}
-
+	
+	public static void main(String[] args){
+		HaServerEntrySet ha = new HaServerEntrySet();
+		ServerEntry se = new ServerEntry();
+		se.setServerAddr("127.0.0.1:15555");
+		se.setEntryId("MyMQ");
+		
+		ha.updateServerEntry(se);
+		System.out.println(se.hashCode());
+		ServerEntry se2 = new ServerEntry();
+		se2.setEntryId("MyMQ2");
+		se2.setServerAddr("127.0.0.1:15556");
+		System.out.println(se2.hashCode());
+		ha.updateServerEntry(se2);
+	}
 }
 

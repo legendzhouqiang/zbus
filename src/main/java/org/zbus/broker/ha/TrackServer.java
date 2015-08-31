@@ -1,5 +1,6 @@
 package org.zbus.broker.ha;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,9 +20,9 @@ import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 import org.zbus.net.http.MessageClient;
 
-public class TrackServer extends MessageAdaptor{
+public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
-	private HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
+	private final HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
@@ -172,6 +173,11 @@ public class TrackServer extends MessageAdaptor{
 	protected void onException(Throwable e, Session sess) throws IOException {
 		trackSubs.remove(sess.id());
 		super.onException(e, sess);
+	}
+	
+	@Override
+	public void close() throws IOException { 
+		haServerEntrySet.close(); 
 	}
 
 	public static void main(String[] args) throws Exception { 

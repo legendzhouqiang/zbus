@@ -25,7 +25,7 @@ import org.zbus.net.http.MessageClient;
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
 	
-	private volatile HaServerEntrySet haServerEntrySet = new HaServerEntrySet();
+	private final HaServerEntrySet haServerEntrySet = new HaServerEntrySet();
 	private Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
@@ -223,7 +223,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		}
 		allBrokers.clear();
 		trackSub.close();
-		
+		haServerEntrySet.close();
 		
 		if(ownDispatcher){
 			dispatcher.close();
