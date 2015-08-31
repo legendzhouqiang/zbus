@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -137,28 +135,23 @@ public class ServerEntry implements Comparable<ServerEntry>{
 		return JSON.toJSONString(this);
 	}
 	
-	public static class ServerEntryPrioritySet extends TreeSet<ServerEntry>{ 
-		private static final long serialVersionUID = -7110508385050187452L; 
-		
-		public ServerEntryPrioritySet(){
-			
-		}
-		public ServerEntryPrioritySet(Comparator<ServerEntry> comparator){
-			super(comparator);
-		} 
+	public static class EntryServerList extends ArrayList<ServerEntry> { 
+		private static final long serialVersionUID = 3926922201519785237L; 
 		
 		public String getMode(){
-			ServerEntry be = first();
-			if(be == null) return null;
-			return be.getMode();
+			if(size() <= 0) return null;
+			return get(0).mode;
+		}  
+		
+		public ServerEntry choose(){
+			return get(0);
 		}
-	}
-	
+	} 
 
 	
 	public static class HaServerEntrySet implements Closeable{
 		//entry_id ==> list of same entries from different target_servers
-		Map<String, ServerEntryPrioritySet> entryIdToEntrySet = new ConcurrentHashMap<String, ServerEntryPrioritySet>();
+		Map<String, EntryServerList> entryIdToEntrySet = new ConcurrentHashMap<String, EntryServerList>();
 		//server_addr ==> list of entries from same target_server
 		Map<String, Set<ServerEntry>> serverToEntrySet = new ConcurrentHashMap<String, Set<ServerEntry>>();
 		
@@ -180,9 +173,9 @@ public class ServerEntry implements Comparable<ServerEntry>{
 		
 		public void dump(){
 			System.out.format("===============HaServerEntrySet(%s)=================\n", new Date());
-			Iterator<Entry<String, ServerEntryPrioritySet>> iter = entryIdToEntrySet.entrySet().iterator();
+			Iterator<Entry<String, EntryServerList>> iter = entryIdToEntrySet.entrySet().iterator();
 			while(iter.hasNext()){
-				Entry<String, ServerEntryPrioritySet> e = iter.next();
+				Entry<String, EntryServerList> e = iter.next();
 				System.out.format("%s\n", e.getKey());
 				for(ServerEntry se : e.getValue()){
 					System.out.format("  %s\n", se);
@@ -190,7 +183,7 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			}
 		}
 		
-		public ServerEntryPrioritySet getPrioritySet(String entryId){
+		public EntryServerList getPrioritySet(String entryId){
 			return entryIdToEntrySet.get(entryId);
 		}
 		
@@ -205,13 +198,13 @@ public class ServerEntry implements Comparable<ServerEntry>{
 		public void updateServerEntry(ServerEntry se){ 
 			synchronized (entryIdToEntrySet) {
 				String entryId = se.getEntryId(); 
-				ServerEntryPrioritySet prioSet = entryIdToEntrySet.get(entryId);
+				EntryServerList prioSet = entryIdToEntrySet.get(entryId);
 				if(prioSet == null){
-					prioSet = new ServerEntryPrioritySet();
+					prioSet = new EntryServerList();
 					entryIdToEntrySet.put(entryId, prioSet);
 				}
 				//update
-				//prioSet.remove(be);
+				prioSet.remove(se);
 				System.out.println("Add: "+se);
 				prioSet.add(se);
 			}
@@ -232,7 +225,7 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			Set<ServerEntry> serverEntries = serverToEntrySet.remove(serverAddr);
 			if(serverEntries == null) return;
 			for(ServerEntry be : serverEntries){
-				Set<ServerEntry> entryOfId = entryIdToEntrySet.get(be.getEntryId());
+				EntryServerList entryOfId = entryIdToEntrySet.get(be.getEntryId());
 				if(entryOfId == null) continue; 
 				entryOfId.remove(be);
 			}
@@ -251,7 +244,7 @@ public class ServerEntry implements Comparable<ServerEntry>{
 				}
 			}
 			
-			ServerEntryPrioritySet ps = entryIdToEntrySet.get(entryId);
+			EntryServerList ps = entryIdToEntrySet.get(entryId);
 			if(ps == null) return;
 			iter = ps.iterator();
 			while(iter.hasNext()){
@@ -285,21 +278,6 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			}
 			return entries;
 		}
-	}
-	
-	public static void main(String[] args){
-		HaServerEntrySet ha = new HaServerEntrySet();
-		ServerEntry se = new ServerEntry();
-		se.setServerAddr("127.0.0.1:15555");
-		se.setEntryId("MyMQ");
-		
-		ha.updateServerEntry(se);
-		System.out.println(se.hashCode());
-		ServerEntry se2 = new ServerEntry();
-		se2.setEntryId("MyMQ2");
-		se2.setServerAddr("127.0.0.1:15556");
-		System.out.println(se2.hashCode());
-		ha.updateServerEntry(se2);
-	}
+	} 
 }
 

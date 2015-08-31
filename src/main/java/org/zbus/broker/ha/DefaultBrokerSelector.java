@@ -13,8 +13,8 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ha.ServerEntry.EntryServerList;
 import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
-import org.zbus.broker.ha.ServerEntry.ServerEntryPrioritySet;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
@@ -150,9 +150,9 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(broker != null) return broker;
 		
 		if(hint.getEntry() != null){
-			ServerEntryPrioritySet p = haServerEntrySet.getPrioritySet(hint.getEntry());
+			EntryServerList p = haServerEntrySet.getPrioritySet(hint.getEntry());
 			if(p != null){
-				ServerEntry e = p.first(); 
+				ServerEntry e = p.choose(); 
 				broker = getBroker(e.getServerAddr());
 				if(broker != null) return broker;
 			}
@@ -186,7 +186,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			return defaultBroker();
 		}
 		
-		ServerEntryPrioritySet p = haServerEntrySet.getPrioritySet(entry);
+		EntryServerList p = haServerEntrySet.getPrioritySet(entry);
 		if(p == null || p.size()==0) return null;
 		
 
@@ -200,7 +200,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 				}
 			}
 		} else {
-			String serverAddr = p.first().getServerAddr(); //TODO 负载均衡算法
+			String serverAddr = p.choose().getServerAddr(); //TODO 负载均衡算法
 			broker = getBroker(serverAddr);
 			if(broker != null){
 				return Arrays.asList(broker);

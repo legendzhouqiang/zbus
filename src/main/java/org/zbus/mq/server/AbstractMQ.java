@@ -54,6 +54,8 @@ public abstract class AbstractMQ{
 
 	abstract void dispatch() throws IOException; 
 	
+	public abstract void cleanSession(Session sess);
+	
 	public abstract void cleanSession();
 	
 	public abstract MqInfo getMqInfo();

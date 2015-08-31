@@ -91,6 +91,18 @@ public class MQ extends AbstractMQ{
 			} 
 		} 
 	}
+
+	@Override
+	public void cleanSession(Session sess) {
+		Iterator<PullSession> iter = pullQ.iterator();
+		while(iter.hasNext()){
+			PullSession pull = iter.next();
+			if(sess == pull.session){
+				iter.remove();
+				break;
+			}
+		}
+	}
 	
 	@Override
 	public void cleanSession() { 
