@@ -20,11 +20,11 @@ public class Producer1 {
 			Message msg = new Message();
 			msg.setBody("hello world, from HA broker "+ System.currentTimeMillis());
 			try{
-				producer.sendSync(msg);  
+				Message res = producer.sendSync(msg);  
+				System.out.println(res);
 			}catch (Exception e){
 				e.printStackTrace();
-			}
-			System.out.println("sent: " + msg);
+			} 
 			Thread.sleep(1000);
 		}
 		
