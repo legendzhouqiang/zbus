@@ -105,7 +105,7 @@ public class SingleBroker implements Broker {
 		}
 	}
 	
-	public MessageClient getClient(ClientHint hint) throws IOException{ 
+	public MessageClient getClient(BrokerHint hint) throws IOException{ 
 		MessageClient client = new MessageClient(this.serverAddress, this.dispatcher);
 		client.attr("server", serverAddress);
 		return client;

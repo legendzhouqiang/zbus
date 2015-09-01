@@ -37,7 +37,7 @@ public interface Broker extends MessageInvoker, Closeable{
 	 * @return
 	 * @throws IOException
 	 */
-	MessageClient getClient(ClientHint hint) throws IOException;
+	MessageClient getClient(BrokerHint hint) throws IOException;
 	/**
 	 * 通知Broker可以关闭当前链接（具体是否关闭视实现而定，带有连接池功能，一般不执行物理关闭）
 	 * @param client
@@ -45,10 +45,11 @@ public interface Broker extends MessageInvoker, Closeable{
 	 */
 	void closeClient(MessageClient client) throws IOException;
 	
-	public static class ClientHint { 
+	
+	public static class BrokerHint {   
 		private static final String requestIp = NetKit.getLocalIp();
-		private String entry;
 		private String server;  
+		private String entry;   
 		
 		public String getRequestIp(){
 			return requestIp;
@@ -64,6 +65,6 @@ public interface Broker extends MessageInvoker, Closeable{
 		}
 		public void setServer(String server) {
 			this.server = server;
-		} 
+		}  
 	}
 }

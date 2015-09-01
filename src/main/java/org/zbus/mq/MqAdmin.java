@@ -25,7 +25,7 @@ package org.zbus.mq;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.Broker.ClientHint;
+import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 
@@ -51,8 +51,8 @@ public class MqAdmin{
 		this.mode = config.getMode();
 	}
 	
-	protected ClientHint myClientHint(){
-		ClientHint hint = new ClientHint();
+	protected BrokerHint brokerHint(){
+		BrokerHint hint = new BrokerHint();
 		hint.setEntry(this.mq);  
 		return hint;
 	}
@@ -71,7 +71,7 @@ public class MqAdmin{
     	Message req = new Message();
     	req.setCmd(Protocol.CreateMQ); 
     	req.setHead("mq_name", mq);
-    	req.setHead("mq_mode", "" + mode);
+    	req.setHead("mq_mode", "" + mode); 
     	
     	Message res = invokeCreateMQ(req);
     	if(res == null) return false;

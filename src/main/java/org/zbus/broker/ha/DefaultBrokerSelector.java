@@ -3,6 +3,7 @@ package org.zbus.broker.ha;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,22 +11,24 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
+import org.zbus.kit.NetKit;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.Message.MessageHandler;
 
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
+	private static final String localIp = NetKit.getLocalIp();
 	
-	private final ServerEntryTable haServerEntrySet = new ServerEntryTable();
-	private Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
+	private final ServerEntryTable serverEntryTable = new ServerEntryTable();
+	private final Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
 	
@@ -51,6 +54,147 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		subscribeNotification(); 
 	}
 	
+	
+	
+	private Broker getBroker(String serverAddr){
+		if(serverAddr == null) return null;
+		return allBrokers.get(serverAddr);
+	}
+	
+	private Broker defaultBroker(){
+		Iterator<Broker> iter = allBrokers.values().iterator();
+		if(iter.hasNext()){
+			return iter.next();
+		} 
+		return null;
+	}
+	
+	private Broker getBrokerByIpCluster(){
+		if(allBrokers.isEmpty()) return null;
+		ArrayList<Broker> brokers = new ArrayList<Broker>(allBrokers.values());
+		int idx = localIp.hashCode()%brokers.size();
+		return brokers.get(idx);
+	}
+	
+	@Override
+	public String getEntry(Message msg) {
+		return msg.getMq();
+	} 
+	
+	/**
+	 * 优先级顺序:
+	 * 1) 指定Server
+	 * 2) 指定Entry
+	 */
+	public Broker selectByBrokerHint(BrokerHint hint) { 
+		//1) Server最高优先级
+		Broker broker = getBroker(hint.getServer()); //优先级最高
+		if(broker != null) return broker;
+		
+		//2) Entry次之
+		String entryId = hint.getEntry(); 
+		if(entryId!= null){
+			ServerList p = serverEntryTable.getServerList(entryId); 
+			if(p != null && !p.isEmpty()){ 
+				ServerEntry se = p.msgFirstList.get(0);
+				if(se.unconsumedMsgCount > 0){ //存在未能消费掉消息的Entry，优先选择
+					broker = getBroker(se.serverAddr);
+					if(broker != null) return broker;
+				}
+			}
+		} 
+		
+		//最后使用默认按IP簇集
+		return getBrokerByIpCluster();
+	} 
+	
+	
+	@Override
+	public List<Broker> selectByRequestMsg(Message msg) {  
+		Broker broker = getBroker(msg.getServer());
+		if(broker != null){
+			return Arrays.asList(broker);
+		}
+		
+		String entry = getEntry(msg);
+		if(entry == null){
+			broker = defaultBroker();
+			if(broker != null){
+				return Arrays.asList(broker);
+			} else {
+				return null;
+			}
+		}
+		
+		ServerList p = serverEntryTable.getServerList(entry);
+		if(p == null || p.isEmpty()){
+			broker = defaultBroker();
+			if(broker != null){
+				return Arrays.asList(broker);
+			} else {
+				return null;
+			}
+		}
+		
+
+		String mode = p.getMode();
+		if(ServerEntry.PubSub.equals(mode)){
+			List<Broker> res = new ArrayList<Broker>();
+			for(ServerEntry e : p){ 
+				broker = getBroker(e.serverAddr);
+				if(broker != null){
+					res.add(broker);
+				}
+			}
+			return res;
+		} 
+		
+		int withConsumerCount = 0;
+		Iterator<ServerEntry> iter = p.consumerFirstList.iterator();
+		while(iter.hasNext()){
+			ServerEntry se = iter.next();
+			if(se.consumerCount > 0) withConsumerCount++;
+		}
+		if(withConsumerCount > 0){
+			int idx = localIp.hashCode()%withConsumerCount;
+			ServerEntry se = p.consumerFirstList.get(idx);
+			if(se != null){
+				broker = getBroker(se.serverAddr);
+				if(broker != null){
+					return Arrays.asList(broker);
+				} 
+			}
+		} 
+		
+		broker = getBrokerByIpCluster();
+		if(broker != null){
+			return Arrays.asList(broker);
+		}
+		
+		return null;
+	}
+
+	@Override
+	public Broker selectByClient(MessageClient client) { 
+		String brokerAddr = client.attr("server"); 
+		return allBrokers.get(brokerAddr); 
+	}
+	
+	@Override
+	public void close() throws IOException { 
+		for(Broker broker : allBrokers.values()){
+			broker.close();
+		}
+		allBrokers.clear();
+		trackSub.close();
+		serverEntryTable.close();
+		
+		if(ownDispatcher){
+			dispatcher.close();
+		}
+	}
+	
+	
 	private void subscribeNotification(){
 		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
 		
@@ -58,7 +202,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
 				String serverAddr = msg.getServer();
-				if(haServerEntrySet.isNewServer(serverAddr)){
+				if(serverEntryTable.isNewServer(serverAddr)){
 					onNewServer(serverAddr);
 				}
 			}
@@ -68,7 +212,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
 				String serverAddr = msg.getServer();
-				haServerEntrySet.removeServer(serverAddr);
+				serverEntryTable.removeServer(serverAddr);
 				synchronized (allBrokers) {
 					Broker broker = allBrokers.remove(serverAddr);
 					if(broker == null) return;
@@ -97,7 +241,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			public void handle(Message msg, Session sess) throws IOException { 
 				String serverAddr = msg.getServer();
 				String entryId = msg.getMq();
-				haServerEntrySet.removeServerEntry(serverAddr, entryId);
+				serverEntryTable.removeServerEntry(serverAddr, entryId);
 			} 
 		});
 		
@@ -126,8 +270,8 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	}
 	
 	private void updateServerEntry(ServerEntry entry) throws IOException{
-		boolean isNewServer = haServerEntrySet.isNewServer(entry); 
-		haServerEntrySet.updateServerEntry(entry); 
+		boolean isNewServer = serverEntryTable.isNewServer(entry); 
+		serverEntryTable.updateServerEntry(entry); 
 		if(isNewServer){
 			onNewServer(entry.serverAddr);
 		}
@@ -142,108 +286,4 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			allBrokers.put(serverAddr, broker); 
 		} 
 	}
-	
-	private Broker getBroker(String serverAddr){
-		if(serverAddr == null) return null;
-		return allBrokers.get(serverAddr);
-	}
-
-	
-	
-	@Override
-	public Broker selectByClientHint(ClientHint hint) { 
-		Broker broker = getBroker(hint.getServer());
-		if(broker != null) return broker;
-		
-		if(hint.getEntry() != null){
-			ServerList p = haServerEntrySet.getEntryServerList(hint.getEntry());
-			if(p != null){
-				ServerEntry e = p.iterator().next();
-				broker = getBroker(e.serverAddr);
-				if(broker != null) return broker;
-			}
-		} 
-		
-		return null;
-	}
-
-	@Override
-	public String getEntry(Message msg) {
-		return msg.getMq();
-	}
-	
-	private List<Broker> defaultBroker(){
-		Broker defaultBroker = allBrokers.values().iterator().next();
-		if(defaultBroker == null){
-			return null;
-		}
-		return Arrays.asList(defaultBroker);
-	}
-	
-	@Override
-	public List<Broker> selectByRequestMsg(Message msg) {  
-		Broker broker = getBroker(msg.getServer());
-		if(broker != null){
-			return Arrays.asList(broker);
-		}
-		
-		String entry = getEntry(msg);
-		if(entry == null){
-			return defaultBroker();
-		}
-		
-		ServerList p = haServerEntrySet.getEntryServerList(entry);
-		if(p == null || p.isEmpty()) return null;
-		
-
-		String mode = p.getMode();
-		if(ServerEntry.PubSub.equals(mode)){
-			List<Broker> res = new ArrayList<Broker>();
-			for(ServerEntry e : p){ 
-				broker = getBroker(e.serverAddr);
-				if(broker != null){
-					res.add(broker);
-				}
-			}
-			return res;
-		} 
-
-		String serverAddr = p.iterator().next().serverAddr; //TODO 负载均衡算法
-		broker = getBroker(serverAddr);
-		if(broker != null){
-			return Arrays.asList(broker);
-		} 
-		
-		return null;
-	}
-
-	@Override
-	public Broker selectByClient(MessageClient client) { 
-		String brokerAddr = client.attr("server"); 
-		return allBrokers.get(brokerAddr); 
-	}
-	
-	@Override
-	public void close() throws IOException { 
-		for(Broker broker : allBrokers.values()){
-			broker.close();
-		}
-		allBrokers.clear();
-		trackSub.close();
-		haServerEntrySet.close();
-		
-		if(ownDispatcher){
-			dispatcher.close();
-		}
-	}
-	
-	 
-	public static void main(String[] args) throws Exception{
-		BrokerConfig config = new BrokerConfig();
-		config.setTrackServerList("127.0.0.1:16666");
-		 
-		HaBroker broker = new HaBroker(config);  
-		broker.close();
-	}
 }
-

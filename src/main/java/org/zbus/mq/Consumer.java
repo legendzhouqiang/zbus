@@ -53,7 +53,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		if(this.client == null){
     		synchronized (this) {
 				if(this.client == null){
-					this.client = broker.getClient(myClientHint()); 
+					this.client = broker.getClient(brokerHint()); 
 				}
 			} 
     	}
@@ -90,7 +90,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			log.error(e.getMessage(), e);
 			try {
 				broker.closeClient(client);
-				client = broker.getClient(myClientHint());
+				client = broker.getClient(brokerHint());
 			} catch (IOException ex) {
 				log.error(e.getMessage(), e);
 			}

@@ -25,8 +25,8 @@ public class HaBroker implements Broker {
 	}
 	
 	@Override
-	public MessageClient getClient(ClientHint hint) throws IOException { 
-		Broker broker = brokerSelector.selectByClientHint(hint);
+	public MessageClient getClient(BrokerHint hint) throws IOException { 
+		Broker broker = brokerSelector.selectByBrokerHint(hint);
 		if(broker == null){
 			throw new BrokerException("Missing broker for " + hint);
 		}
@@ -74,4 +74,13 @@ public class HaBroker implements Broker {
 			brokerSelector.close();
 		}
 	} 
+	
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws Exception{
+		BrokerConfig config = new BrokerConfig();
+		config.setTrackServerList("127.0.0.1:16666");
+		 
+		new HaBroker(config);   
+	}
 }
+

@@ -38,11 +38,11 @@ public class ServerEntryTable implements Closeable{
 			public void run() { 
 				dump();
 			}
-		}, 1000, 5000, TimeUnit.MILLISECONDS);
+		}, 1000, 1000, TimeUnit.MILLISECONDS);
 	} 
 	
 	public void dump(){
-		System.out.format("===============HaServerEntryTable(%s)=================\n", new Date());
+		System.out.format("===============ServerEntryTable(%s)=================\n", new Date());
 		Iterator<Entry<String, ServerList>> iter = entry2ServerList.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<String, ServerList> e = iter.next();
@@ -53,7 +53,7 @@ public class ServerEntryTable implements Closeable{
 		}
 	}
 	
-	public ServerList getEntryServerList(String entryId){
+	public ServerList getServerList(String entryId){
 		return entry2ServerList.get(entryId);
 	}
 	
@@ -164,31 +164,45 @@ public class ServerEntryTable implements Closeable{
 	public static class ServerList implements Iterable<ServerEntry>{
 		public final String entryId;
 		public Map<String, ServerEntry> serverTable = new ConcurrentHashMap<String, ServerEntry>();		
-		public List<ServerEntry> serverList = Collections.synchronizedList(new ArrayList<ServerEntry>());
+		public List<ServerEntry> consumerFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
+		public List<ServerEntry> msgFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
 		
-		private static final Comparator<ServerEntry> comparator = new ConsumerFirstComparator();
+		private static final Comparator<ServerEntry> consumerFirst = new ConsumerFirstComparator();
+		private static final Comparator<ServerEntry> msgFirst = new MsgFirstComparator();
+		
 		public ServerList(String entryId){
 			this.entryId = entryId;
 		}
 		
 		public String getMode(){ 
-			if(serverList.isEmpty()) return null;
-			return serverList.get(0).mode;
+			if(consumerFirstList.isEmpty()) return null;
+			return consumerFirstList.get(0).mode;
 		}
 		
 		public void updateServerEntry(ServerEntry se){
 			if(!se.entryId.equals(entryId)) return;
 			
 			serverTable.put(se.serverAddr, se);
-			serverList.remove(se);
-			serverList.add(se);
-			Collections.sort(serverList, comparator);
+			consumerFirstList.remove(se);
+			consumerFirstList.add(se);
+			msgFirstList.remove(se);
+			msgFirstList.add(se);
+			
+			Collections.sort(consumerFirstList, consumerFirst);
+			Collections.sort(msgFirstList, msgFirst);
 		}
 		
 		public void removeServer(String serverAddr){
 			serverTable.remove(serverAddr);
 			
-			Iterator<ServerEntry> iter = serverList.iterator();
+			Iterator<ServerEntry> iter = consumerFirstList.iterator();
+			while(iter.hasNext()){
+				ServerEntry se = iter.next();
+				if(se.serverAddr.equals(serverAddr)){
+					iter.remove();
+				}
+			}
+			iter = msgFirstList.iterator();
 			while(iter.hasNext()){
 				ServerEntry se = iter.next();
 				if(se.serverAddr.equals(serverAddr)){
@@ -199,11 +213,11 @@ public class ServerEntryTable implements Closeable{
 		}
 		
 		public Iterator<ServerEntry> iterator(){
-			return serverList.iterator();
+			return consumerFirstList.iterator();
 		}
 		
 		public boolean isEmpty(){
-			return serverList.isEmpty();
+			return consumerFirstList.isEmpty();
 		} 
 		
 		static class ConsumerFirstComparator implements Comparator<ServerEntry>{
@@ -212,6 +226,16 @@ public class ServerEntryTable implements Closeable{
 				int rc = se2.consumerCount - se1.consumerCount;
 				if(rc != 0) return rc;
 				return (int)(se2.unconsumedMsgCount - se1.unconsumedMsgCount);
+			} 
+		}
+		
+		static class MsgFirstComparator implements Comparator<ServerEntry>{
+			@Override
+			public int compare(ServerEntry se1, ServerEntry se2) { 
+				long rc = se2.unconsumedMsgCount - se1.unconsumedMsgCount;
+				if(rc > 0) return 1;
+				if(rc < 0) return -1;
+				return se1.consumerCount - se2.consumerCount;
 			} 
 		}
 	} 

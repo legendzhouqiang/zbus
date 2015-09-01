@@ -77,7 +77,7 @@ public class Message implements Id {
 	public static final String SERVER   = "server"; 
 	public static final String TOPIC    = "topic";  //使用,分隔 
 	public static final String ACK      = "ack";	 	 
-	public static final String WINDOW   = "window"; 
+	public static final String WINDOW   = "window";  
 	
 	 
 	//HTTP协议第一行（请求串或者返回状态码）
@@ -349,7 +349,6 @@ public class Message implements Id {
 	public void setId(long id){
 		setId(""+id);
 	}
-	
 	
 	public String getRawId() {
 		return this.getHead(RAWID);
