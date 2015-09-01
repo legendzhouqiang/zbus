@@ -25,6 +25,7 @@ package org.zbus.broker;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.zbus.kit.NetKit;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.http.MessageClient;
 
@@ -45,9 +46,13 @@ public interface Broker extends MessageInvoker, Closeable{
 	void closeClient(MessageClient client) throws IOException;
 	
 	public static class ClientHint { 
+		private static final String requestIp = NetKit.getLocalIp();
 		private String entry;
 		private String server;  
 		
+		public String getRequestIp(){
+			return requestIp;
+		} 
 		public String getEntry() {
 			return entry;
 		}

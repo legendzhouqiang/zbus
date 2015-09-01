@@ -13,8 +13,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.ClientHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.broker.ha.ServerEntry.EntryServerList;
-import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
+import org.zbus.broker.ha.ServerEntryTable.ServerList;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
@@ -25,7 +24,7 @@ import org.zbus.net.http.MessageClient;
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
 	
-	private final HaServerEntrySet haServerEntrySet = new HaServerEntrySet();
+	private final ServerEntryTable haServerEntrySet = new ServerEntryTable();
 	private Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
@@ -35,6 +34,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private BrokerConfig config;
 	
 	private CountDownLatch syncFromTracker = new CountDownLatch(1);
+	private int syncFromTrackerTimeout = 3000;
 	
 	public DefaultBrokerSelector(BrokerConfig config){
 		this.config = config;
@@ -48,6 +48,10 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		}
 		this.dispatcher.start(); 
 		
+		subscribeNotification(); 
+	}
+	
+	private void subscribeNotification(){
 		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
 		
 		trackSub.cmd(HaCommand.ServerJoin, new MessageHandler() { 
@@ -100,7 +104,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.cmd(HaCommand.PubAll, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				List<ServerEntry> serverEntries = HaServerEntrySet.parseJson(msg.getBodyString());
+				List<ServerEntry> serverEntries = ServerEntryTable.parseJson(msg.getBodyString());
 				for(ServerEntry entry : serverEntries){ 
 					updateServerEntry(entry); 
 				}
@@ -111,7 +115,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.start();
 		
 		try {
-			syncFromTracker.await(3, TimeUnit.SECONDS);
+			syncFromTracker.await(syncFromTrackerTimeout, TimeUnit.MILLISECONDS);
 			log.debug("Synchronized from Tracker");
 		} catch (InterruptedException e) { 
 			//ignore
@@ -119,16 +123,16 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(syncFromTracker.getCount() > 0){
 			log.debug("Timeout synchronizing from Tracker");
 		}
-		
 	}
 	
 	private void updateServerEntry(ServerEntry entry) throws IOException{
 		boolean isNewServer = haServerEntrySet.isNewServer(entry); 
 		haServerEntrySet.updateServerEntry(entry); 
 		if(isNewServer){
-			onNewServer(entry.getServerAddr());
+			onNewServer(entry.serverAddr);
 		}
 	}
+	
 	private void onNewServer(final String serverAddr) throws IOException{
 		synchronized (allBrokers) {
 			if(allBrokers.containsKey(serverAddr)) return;
@@ -144,16 +148,18 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		return allBrokers.get(serverAddr);
 	}
 
+	
+	
 	@Override
 	public Broker selectByClientHint(ClientHint hint) { 
 		Broker broker = getBroker(hint.getServer());
 		if(broker != null) return broker;
 		
 		if(hint.getEntry() != null){
-			EntryServerList p = haServerEntrySet.getPrioritySet(hint.getEntry());
+			ServerList p = haServerEntrySet.getEntryServerList(hint.getEntry());
 			if(p != null){
-				ServerEntry e = p.choose(); 
-				broker = getBroker(e.getServerAddr());
+				ServerEntry e = p.iterator().next();
+				broker = getBroker(e.serverAddr);
 				if(broker != null) return broker;
 			}
 		} 
@@ -186,26 +192,27 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			return defaultBroker();
 		}
 		
-		EntryServerList p = haServerEntrySet.getPrioritySet(entry);
-		if(p == null || p.size()==0) return null;
+		ServerList p = haServerEntrySet.getEntryServerList(entry);
+		if(p == null || p.isEmpty()) return null;
 		
 
 		String mode = p.getMode();
 		if(ServerEntry.PubSub.equals(mode)){
 			List<Broker> res = new ArrayList<Broker>();
 			for(ServerEntry e : p){ 
-				broker = getBroker(e.getServerAddr());
+				broker = getBroker(e.serverAddr);
 				if(broker != null){
 					res.add(broker);
 				}
 			}
-		} else {
-			String serverAddr = p.choose().getServerAddr(); //TODO 负载均衡算法
-			broker = getBroker(serverAddr);
-			if(broker != null){
-				return Arrays.asList(broker);
-			}
-		}
+			return res;
+		} 
+
+		String serverAddr = p.iterator().next().serverAddr; //TODO 负载均衡算法
+		broker = getBroker(serverAddr);
+		if(broker != null){
+			return Arrays.asList(broker);
+		} 
 		
 		return null;
 	}

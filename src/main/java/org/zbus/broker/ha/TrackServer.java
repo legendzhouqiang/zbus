@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.broker.ha.ServerEntry.HaServerEntrySet;
 import org.zbus.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.ErrorHandler;
@@ -22,7 +21,7 @@ import org.zbus.net.http.MessageClient;
 
 public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
-	private final HaServerEntrySet haServerEntrySet = new HaServerEntrySet(); 
+	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
@@ -71,7 +70,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			log.info("%s", msg);
 			String serverAddr = msg.getServer();
 			if(serverAddr == null) return; 
-			haServerEntrySet.removeServer(serverAddr);
+			serverEntryTable.removeServer(serverAddr);
 			
 			pubMessage(msg);
 		}
@@ -81,18 +80,18 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			log.info("%s", msg);
-			ServerEntry be = null;
+			ServerEntry se = null;
 			try{
-				be = ServerEntry.parseJson(msg.getBodyString());
+				se = ServerEntry.parseJson(msg.getBodyString());
 			} catch(Exception e){
 				log.error(e.getMessage(), e);
 				return;
 			}
-			boolean isNewServer = haServerEntrySet.isNewServer(be);
+			boolean isNewServer = serverEntryTable.isNewServer(se);
 			
-			haServerEntrySet.updateServerEntry(be);
+			serverEntryTable.updateServerEntry(se);
 			if(isNewServer){
-				onNewServer(be.getServerAddr(), sess);
+				onNewServer(se.serverAddr, sess);
 			}
 			
 			pubMessage(msg);
@@ -104,7 +103,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		public void handle(Message msg, Session sess) throws IOException {
 			String serverAddr = msg.getServer();
 			String entryId = msg.getMq(); //use mq for entryId
-			haServerEntrySet.removeServerEntry(serverAddr, entryId);
+			serverEntryTable.removeServerEntry(serverAddr, entryId);
 			
 			pubMessage(msg);
 		}
@@ -123,7 +122,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			log.info("%s", msg);
 			trackSubs.put(sess.id(), sess); 
 			msg.setCmd(HaCommand.PubAll);
-			msg.setBody(haServerEntrySet.toJsonString());
+			msg.setBody(serverEntryTable.toJsonString());
 			sess.write(msg);
 		}
 	};
@@ -149,7 +148,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 				public void onError(IOException e, Session sess) throws IOException { 
 					log.warn("Server(%s) down", serverAddr);
 					joinedServers.remove(serverAddr); 
-					haServerEntrySet.removeServer(serverAddr);  
+					serverEntryTable.removeServer(serverAddr);  
 					client.close();
 					
 					log.info("Sending ServerLeave message");
@@ -177,7 +176,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	
 	@Override
 	public void close() throws IOException { 
-		haServerEntrySet.close(); 
+		serverEntryTable.close(); 
 	}
 
 	public static void main(String[] args) throws Exception { 

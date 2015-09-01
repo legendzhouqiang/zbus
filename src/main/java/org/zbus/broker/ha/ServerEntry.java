@@ -1,24 +1,6 @@
 package org.zbus.broker.ha;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 
 
 public class ServerEntry implements Comparable<ServerEntry>{
@@ -32,56 +14,8 @@ public class ServerEntry implements Comparable<ServerEntry>{
 	
 	public long lastUpdateTime; 
 	public long unconsumedMsgCount;
-	public long consumerCount; 
-
-	public String getEntryId() {
-		return entryId;
-	}
-
-	public void setEntryId(String id) {
-		this.entryId = id;
-	}
-
-	public String getMode() {
-		return mode;
-	}
-
-	public void setMode(String mode) {
-		this.mode = mode;
-	}
-
-	public String getServerAddr() {
-		return serverAddr;
-	}
-
-	public void setServerAddr(String setServerAddr) {
-		this.serverAddr = setServerAddr;
-	}
-
-	public long getLastUpdateTime() {
-		return lastUpdateTime;
-	}
-
-	public void setLastUpdateTime(long lastUpdateTime) {
-		this.lastUpdateTime = lastUpdateTime;
-	}
-
-	public long getUnconsumedMsgCount() {
-		return unconsumedMsgCount;
-	}
-
-	public void setUnconsumedMsgCount(long unconsumedMsgCount) {
-		this.unconsumedMsgCount = unconsumedMsgCount;
-	}
-
-	public long getConsumerCount() {
-		return consumerCount;
-	}
-
-	public void setConsumerCount(long consumerCount) {
-		this.consumerCount = consumerCount;
-	}
-	
+	public int consumerCount; 
+ 
 	@Override
 	public int compareTo(ServerEntry o) { 
 		return (int)(this.consumerCount - o.consumerCount);
@@ -115,9 +49,7 @@ public class ServerEntry implements Comparable<ServerEntry>{
 			return false;
 		}
 		return true;
-	} 
-	
-	
+	}  
 	
 	@Override
 	public String toString() {
@@ -131,153 +63,9 @@ public class ServerEntry implements Comparable<ServerEntry>{
 	public static ServerEntry parseJson(String msg){
 		return JSON.parseObject(msg, ServerEntry.class);
 	}  
+	
 	public String toJsonString(){
 		return JSON.toJSONString(this);
-	}
-	
-	public static class EntryServerList extends ArrayList<ServerEntry> { 
-		private static final long serialVersionUID = 3926922201519785237L; 
-		
-		public String getMode(){
-			if(size() <= 0) return null;
-			return get(0).mode;
-		}  
-		
-		public ServerEntry choose(){
-			return get(0);
-		}
-	} 
-
-	
-	public static class HaServerEntrySet implements Closeable{
-		//entry_id ==> list of same entries from different target_servers
-		Map<String, EntryServerList> entryIdToEntrySet = new ConcurrentHashMap<String, EntryServerList>();
-		//server_addr ==> list of entries from same target_server
-		Map<String, Set<ServerEntry>> serverToEntrySet = new ConcurrentHashMap<String, Set<ServerEntry>>();
-		
-		private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
-		
-		public HaServerEntrySet(){
-			dumpExecutor.scheduleAtFixedRate(new Runnable() { 
-				@Override
-				public void run() { 
-					dump();
-				}
-			}, 1000, 5000, TimeUnit.MILLISECONDS);
-		}
-		
-		@Override
-		public void close() throws IOException {  
-			dumpExecutor.shutdown(); 
-		}
-		
-		public void dump(){
-			System.out.format("===============HaServerEntrySet(%s)=================\n", new Date());
-			Iterator<Entry<String, EntryServerList>> iter = entryIdToEntrySet.entrySet().iterator();
-			while(iter.hasNext()){
-				Entry<String, EntryServerList> e = iter.next();
-				System.out.format("%s\n", e.getKey());
-				for(ServerEntry se : e.getValue()){
-					System.out.format("  %s\n", se);
-				} 
-			}
-		}
-		
-		public EntryServerList getPrioritySet(String entryId){
-			return entryIdToEntrySet.get(entryId);
-		}
-		
-		public boolean isNewServer(String serverAddr){
-			return !serverToEntrySet.containsKey(serverAddr);
-		}
-		
-		public boolean isNewServer(ServerEntry be){
-			return isNewServer(be.getServerAddr());
-		}
-		
-		public void updateServerEntry(ServerEntry se){ 
-			synchronized (entryIdToEntrySet) {
-				String entryId = se.getEntryId(); 
-				EntryServerList prioSet = entryIdToEntrySet.get(entryId);
-				if(prioSet == null){
-					prioSet = new EntryServerList();
-					entryIdToEntrySet.put(entryId, prioSet);
-				}
-				//update
-				prioSet.remove(se);
-				System.out.println("Add: "+se);
-				prioSet.add(se);
-			}
-			
-			synchronized (serverToEntrySet) {
-				String serverAddr = se.getServerAddr();
-				Set<ServerEntry> entries = serverToEntrySet.get(serverAddr);
-				if(entries == null){
-					entries = Collections.synchronizedSet(new HashSet<ServerEntry>());
-					serverToEntrySet.put(serverAddr, entries); 
-				}
-				entries.remove(se);
-				entries.add(se); 
-			} 
-		}
-		
-		public void removeServer(String serverAddr){
-			Set<ServerEntry> serverEntries = serverToEntrySet.remove(serverAddr);
-			if(serverEntries == null) return;
-			for(ServerEntry be : serverEntries){
-				EntryServerList entryOfId = entryIdToEntrySet.get(be.getEntryId());
-				if(entryOfId == null) continue; 
-				entryOfId.remove(be);
-			}
-		}
-		
-		public void removeServerEntry(String serverAddr, String entryId){
-			if(serverAddr == null || entryId == null) return;
-			
-			Set<ServerEntry> serverEntries = serverToEntrySet.get(serverAddr);
-			if(serverEntries == null) return;
-			Iterator<ServerEntry> iter = serverEntries.iterator();
-			while(iter.hasNext()){
-				ServerEntry be = iter.next();
-				if(entryId.equals(be.getEntryId())){
-					iter.remove();
-				}
-			}
-			
-			EntryServerList ps = entryIdToEntrySet.get(entryId);
-			if(ps == null) return;
-			iter = ps.iterator();
-			while(iter.hasNext()){
-				ServerEntry be = iter.next();
-				if(serverAddr.equals(be.getServerAddr())){
-					iter.remove();
-				}
-			} 
-		}  
-		
-		public String toJsonString(){
-			return JSON.toJSONString(getAllServerEntries());
-		}
-		 
-		public static List<ServerEntry> parseJson(String jsonString){
-			JSONArray jsonArray = JSON.parseArray(jsonString);
-			List<ServerEntry> res = new ArrayList<ServerEntry>();
-			for(Object obj : jsonArray){
-				JSONObject json = (JSONObject)obj;
-				ServerEntry entry = JSON.toJavaObject(json, ServerEntry.class);
-				res.add(entry);
-			}
-			return res;
-		}
-		
-		
-		public List<ServerEntry> getAllServerEntries(){
-			List<ServerEntry> entries = new ArrayList<ServerEntry>();
-			for(Set<ServerEntry> set :serverToEntrySet.values()){
-				entries.addAll(set);
-			}
-			return entries;
-		}
 	} 
 }
 

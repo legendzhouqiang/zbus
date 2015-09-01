@@ -131,7 +131,7 @@ public class MqServer extends Server{
 					log.error(e.getMessage(), e);
 				}
 			}
-		});  
+		});   
 	} 
 }
 
@@ -491,14 +491,16 @@ class MqAdaptor extends IoAdaptor implements Closeable {
     
     public void pubEntryUpdate(AbstractMQ mq){
     	if(trackPub == null) return;
+    	 
+    	MqInfo info = mq.getMqInfo();
     	
     	ServerEntry be = new ServerEntry();
-    	be.setEntryId(mq.getName());
-    	be.setServerAddr(serverAddr);
-    	be.setConsumerCount(mq.getMqInfo().consumerInfoList.size());
-    	be.setMode(""+mq.getMqInfo().mode);
-    	be.setUnconsumedMsgCount(mq.getMqInfo().unconsumedMsgCount);
-    	be.setLastUpdateTime(mq.lastUpdateTime);
+    	be.entryId = info.name;
+    	be.serverAddr = serverAddr;
+    	be.consumerCount = info.consumerInfoList.size();
+    	be.mode = ""+info.mode;
+    	be.unconsumedMsgCount = info.unconsumedMsgCount;
+    	be.lastUpdateTime = mq.lastUpdateTime;
 
     	trackPub.pubEntryUpdate(be);
     }
