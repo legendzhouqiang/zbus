@@ -42,10 +42,10 @@ public class Server implements Closeable{
 	protected String serverName = "Server";
 	protected ServerSocketChannel serverChannel;
 	
-	protected IoAdaptor serverAdaptor; 
+	protected IoAdaptor serverAdaptor;  
 	
-	public Server(Dispatcher dispatcher, int port){
-		this(dispatcher, null, "0.0.0.0:"+port);
+	public Server(String address){
+		this(null, null, address);
 	}
 	
 	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, int port){
@@ -79,10 +79,9 @@ public class Server implements Closeable{
     	
     	serverChannel = dispatcher.registerServerChannel(host, port, serverAdaptor);
     	log.info("%s listening [%s:%d]", this.serverName, host, port);
-    }
-    
-    
-    @Override
+    } 
+
+	@Override
     public void close() throws IOException { 
     	if(serverChannel != null){
     		serverChannel.close();
@@ -90,13 +89,13 @@ public class Server implements Closeable{
     	}
     }
     
+	public void setDispatcher(Dispatcher dispatcher) {
+		this.dispatcher = dispatcher;
+	}
+	
     public void setServerName(String serverName){
     	this.serverName = serverName;
-    }
-
-	public IoAdaptor getServerAdaptor() {
-		return serverAdaptor;
-	}
+    } 
 
 	public void setServerAdaptor(IoAdaptor serverAdaptor) {
 		this.serverAdaptor = serverAdaptor;

@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.AbstractQueue;
@@ -58,8 +59,85 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageCodec;
 
-class MqServer extends IoAdaptor {
-	private static final Logger log = Logger.getLogger(MqServer.class);
+public class MqServer extends Server{ 
+	private static final Logger log = Logger.getLogger(MqServer.class); 
+	private MqAdaptor mqAdaptor;
+	private MqServerConfig config;
+	
+	@SuppressWarnings("resource")
+	public MqServer(MqServerConfig config) {
+		super(config.getServerAddress());  
+		this.config = config;  
+		
+		this.dispatcher = new Dispatcher()
+			.selectorCount(config.selectorCount)
+			.executorCount(config.executorCount);
+		
+		serverAdaptor = mqAdaptor = new MqAdaptor(config.getServerAddress()); 
+		mqAdaptor.setVerbose(config.verbose); 
+	}
+	
+	@Override
+	public void start() throws IOException { 
+		log.info("MqServer starting ...");
+		super.start();
+		
+		if(config.trackServerList!= null){
+			log.info("Running at HA mode, connect to TrackServers");
+			mqAdaptor.setupTracker(config.trackServerList, dispatcher);
+		} 
+		mqAdaptor.loadMQ(config.storePath);  
+		
+		log.info("MqServer started successfully");
+	}
+	
+	@Override
+	public void close() throws IOException { 
+		mqAdaptor.close();
+		super.close();
+		
+		if(dispatcher != null){
+			dispatcher.close();
+		}
+	}
+	
+	public static void main(String[] args) throws Exception {
+		MqServerConfig config = new MqServerConfig();
+		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
+		config.serverPort = ConfigKit.option(args, "-p", 15555);
+		config.selectorCount = ConfigKit.option(args, "-selector", 1);
+		config.executorCount = ConfigKit.option(args, "-executor", 64);
+		config.verbose = ConfigKit.option(args, "-verbose", false);
+		config.storePath = ConfigKit.option(args, "-store", "store");
+		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
+
+		String configFile = ConfigKit.option(args, "-conf", null);
+		if(configFile != null){
+			InputStream is = FileKit.loadFile(configFile);
+			if(is != null){
+				log.info("Using file config options from(%s)", configFile);
+				config.load(configFile);
+			}  
+		} 
+		
+		final MqServer server = new MqServer(config);
+		server.start();
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					server.close();
+					log.info("MqServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});  
+	} 
+}
+
+
+class MqAdaptor extends IoAdaptor implements Closeable {
+	private static final Logger log = Logger.getLogger(MqAdaptor.class);
 
 	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
@@ -71,7 +149,7 @@ class MqServer extends IoAdaptor {
 	private final ScheduledExecutorService cleanExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long cleanInterval = 3000; 
  
-	public MqServer(String serverAddr){
+	public MqAdaptor(String serverAddr){
 		codec(new MessageCodec());   
 		this.serverAddr = NetKit.getLocalAddress(serverAddr);
 		
@@ -160,6 +238,12 @@ class MqServer extends IoAdaptor {
 			AbstractMQ mq = findMQ(msg, sess);
 			if(mq == null) return;
 			mq.consume(msg, sess);
+			
+			String mqName = sess.attr("mq");
+			if(!msg.getMq().equals(mqName)){
+				sess.attr("mq", mq.getName()); //mark
+				pubEntryUpdate(mq); //notify TrackServer
+			} 
 		}
 	}; 
 	
@@ -245,6 +329,18 @@ class MqServer extends IoAdaptor {
 		}
 	};
 	
+	private void cleanSession(Session sess){
+		sessionTable.remove(sess.id());
+		String mqName = sess.attr("mq");
+		if(mqName == null) return;
+		
+		AbstractMQ mq = mqTable.get(mqName); 
+		if(mq == null) return; 
+		mq.cleanSession(sess);
+		
+		pubEntryUpdate(mq); 
+	}
+	
 	protected void onSessionAccepted(Session sess) throws IOException {
 		sessionTable.put(sess.id(), sess);
 		super.onSessionAccepted(sess); 
@@ -252,13 +348,13 @@ class MqServer extends IoAdaptor {
 
 	@Override
 	protected void onException(Throwable e, Session sess) throws IOException { 
-		sessionTable.remove(sess.id());
+		cleanSession(sess);
 		super.onException(e, sess);
 	}
 	
 	@Override
 	protected void onSessionDestroyed(Session sess) throws IOException { 
-		sessionTable.remove(sess.id());
+		cleanSession(sess);
 		super.onSessionDestroyed(sess);
 	} 
 	
@@ -306,6 +402,9 @@ class MqServer extends IoAdaptor {
     public void close() throws IOException {   
     	this.cleanExecutor.shutdownNow();
     	DiskQueuePool.destory(); 
+    	if(trackPub != null){
+    		trackPub.close();
+    	}
     }
     
     
@@ -403,62 +502,6 @@ class MqServer extends IoAdaptor {
 
     	trackPub.pubEntryUpdate(be);
     }
-    
-    
-    @SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {
-		MqServerConfig config = new MqServerConfig();
-		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
-		config.serverPort = ConfigKit.option(args, "-p", 15556);
-		config.selectorCount = ConfigKit.option(args, "-selector", 1);
-		config.executorCount = ConfigKit.option(args, "-executor", 64);
-		config.verbose = ConfigKit.option(args, "-verbose", false);
-		config.storePath = ConfigKit.option(args, "-store", "store");
-		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
-
-		String configFile = ConfigKit.option(args, "-conf", null);
-		if(configFile != null){
-			InputStream is = FileKit.loadFile(configFile);
-			if(is != null){
-				log.info("Using file config options from(%s)", configFile);
-				config.load(configFile);
-			}  
-		}
-		
-		log.info("MqServer starting ...");
-
-		Dispatcher dispatcher = new Dispatcher()
-			.selectorCount(config.selectorCount)
-			.executorCount(config.executorCount);
-
-		String address = config.serverHost + ":" + config.serverPort; 
-		
-		final MqServer mqAdaptor = new MqServer(address);
-		if(config.trackServerList != null){
-			log.info("Running at HA mode, try to connect to TrackServers");
-			mqAdaptor.setupTracker(config.trackServerList, dispatcher);
-		}
-		mqAdaptor.setVerbose(config.verbose); 
-		mqAdaptor.loadMQ(config.storePath);
-		
-		
-		
-		Runtime.getRuntime().addShutdownHook(new Thread(){ 
-			public void run() { 
-				try {
-					mqAdaptor.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		});
-		
-		Server server = new Server(dispatcher, mqAdaptor, address);
-		server.setServerName("MqServer");
-		server.start();
-		
-		log.info("MqServer started successfully");
-	}
 }
 
 

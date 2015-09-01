@@ -52,6 +52,11 @@ public class MqServerConfig{
 	public Set<MqEntry> mqs = new HashSet<MqEntry>(); 
 	public Set<MqEntry> pubsubs = new HashSet<MqEntry>(); 
 	
+	
+	public String getServerAddress(){
+		return serverHost + ":" + serverPort;
+	}
+	
 	public void load(InputStream is) throws IOException{
 		Properties props = new Properties();
 		if(is == null){
