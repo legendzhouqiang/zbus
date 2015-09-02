@@ -6,11 +6,14 @@ import java.util.List;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.BrokerException;
+import org.zbus.log.Logger;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class HaBroker implements Broker {   
+	private static final Logger log = Logger.getLogger(HaBroker.class);
+	
 	final BrokerSelector brokerSelector; 
 	final boolean ownBrokerSelector;
 	
@@ -37,9 +40,10 @@ public class HaBroker implements Broker {
 	public void closeClient(MessageClient client) throws IOException { 
 		Broker broker = brokerSelector.selectByClient(client);
 		if(broker == null){
-			throw new BrokerException("Missing broker for " + client);
-		} 
-		broker.closeClient(client); 
+			log.warn("Missing broker for " + client);
+		} else {
+			broker.closeClient(client); 
+		}
 	}
 	
 	@Override

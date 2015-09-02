@@ -25,7 +25,7 @@ public class Producer1 {
 			}catch (Exception e){
 				e.printStackTrace();
 			} 
-			//Thread.sleep(1000);
+			Thread.sleep(1000);
 		}
 		
 		System.out.println("===DONE===");

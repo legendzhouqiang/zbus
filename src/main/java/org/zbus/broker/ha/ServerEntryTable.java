@@ -32,7 +32,7 @@ public class ServerEntryTable implements Closeable{
 
 	private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
 	
-	public boolean verbose = true;
+	public boolean verbose = false;
 	
 	public ServerEntryTable(){
 		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
