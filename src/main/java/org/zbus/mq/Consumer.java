@@ -39,7 +39,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	private MessageClient client; // 消费者拥有一个物理链接
 	private String topic = null; // 为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
-
+	private int consumeTimeout = 10000; //ms
 	public Consumer(Broker broker, String mq, MqMode... mode) {
 		super(broker, mq, mode);
 	}
@@ -142,7 +142,7 @@ public class Consumer extends MqAdmin implements Closeable {
 					try {
 						final Message msg;
 						try { 
-							msg = recv(10000); 
+							msg = recv(consumeTimeout); 
 						} catch (InterruptedException e) { 
 							break;
 						}
@@ -171,8 +171,12 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void onMessage(final MessageHandler handler) throws IOException{
 		ensureClient();  
 		onMessage(handler, client.getExecutorService());
-	}
+	} 
 	
+	public void setConsumeTimeout(int consumeTimeout) {
+		this.consumeTimeout = consumeTimeout;
+	}
+
 	public void stop(){
 		if(messageThread != null){
 			messageThread.interrupt();

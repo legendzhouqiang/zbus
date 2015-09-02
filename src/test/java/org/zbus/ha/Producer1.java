@@ -10,7 +10,7 @@ public class Producer1 {
 	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setTrackServerList("127.0.0.1:16666");
+		brokerConfig.setTrackServerList("127.0.0.1:16666;127.0.0.1:16667");
 		Broker broker = new HaBroker(brokerConfig);
  
 		Producer producer = new Producer(broker, "MyMQ");
