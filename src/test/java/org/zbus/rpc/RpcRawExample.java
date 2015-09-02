@@ -3,8 +3,6 @@ package org.zbus.rpc;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.rpc.mq.MqInvoker;
 
 public class RpcRawExample {
 
@@ -12,11 +10,10 @@ public class RpcRawExample {
 		BrokerConfig config = new BrokerConfig();
 		config.setServerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
-	
-		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
+	 
+		//MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
 		
-		RpcInvoker rpc = new RpcInvoker(invoker);   
+		RpcInvoker rpc = new RpcInvoker(broker);   
 		
 		String res = rpc.invokeSync(String.class, "getString", "testxxxx");
 		

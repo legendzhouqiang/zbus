@@ -2,24 +2,26 @@ package org.zbus.rpc.direct;
 
 import java.io.IOException;
 
-import org.zbus.kit.ConfigKit;
-import org.zbus.net.core.Dispatcher;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
-import org.zbus.rpc.direct.Service;
 
 public class RpcServiceExample {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
-		int port = ConfigKit.option(args, "-port", 15555);
-		Dispatcher dispatcher = new Dispatcher();
-		
 		RpcProcessor processor = new RpcProcessor();
 		// 增加模块，模块名在调用时需要指定
 		processor.addModule(new InterfaceImpl());
+
 		
-		Service svc = new Service(dispatcher, port, processor);
+		
+		ServiceConfig config = new ServiceConfig();
+		config.trackServerList = "127.0.0.1:16666";
+		config.serverPort = 15555; 
+		config.messageProcessor = processor;
+		config.entryId = "MyRpc";
+		
+		Service svc = new Service(config);
 		svc.start(); 
 	} 
 }
