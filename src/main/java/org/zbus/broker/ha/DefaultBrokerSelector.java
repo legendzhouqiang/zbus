@@ -122,8 +122,8 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			return null;
 		} 
 
-		String mode = serverList.getMode();
-		if(ServerEntry.PubSub.equals(mode)){
+		int mode = serverList.getMode();
+		if(ServerEntry.PubSub == mode){
 			List<Broker> res = new ArrayList<Broker>();
 			for(ServerEntry e : serverList){ 
 				broker = getBroker(e.serverAddr);

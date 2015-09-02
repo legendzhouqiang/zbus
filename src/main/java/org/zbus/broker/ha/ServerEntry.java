@@ -3,14 +3,14 @@ package org.zbus.broker.ha;
 import com.alibaba.fastjson.JSON;
 
 
-public class ServerEntry implements Comparable<ServerEntry>{
-	public static final String RPC    = "RPC";
-	public static final String MQ     = "MQ";
-	public static final String PubSub = "PubSub";
+public class ServerEntry implements Comparable<ServerEntry>{ 
+	public static final int MQ     = 1<<0;
+	public static final int PubSub = 1<<1;
+	public static final int RPC    = 1<<3;  //参看mq中MqMode
 	
 	public String entryId;
 	public String serverAddr; 
-	public String mode; //RPC/MQ/PubSub 
+	public int mode; //RPC/MQ/PubSub 
 	
 	public long lastUpdateTime; 
 	public long unconsumedMsgCount;

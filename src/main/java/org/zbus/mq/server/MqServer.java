@@ -511,7 +511,7 @@ class MqAdaptor extends IoAdaptor implements Closeable {
     	be.entryId = info.name;
     	be.serverAddr = serverAddr;
     	be.consumerCount = info.consumerCount;
-    	be.mode = ""+info.mode;
+    	be.mode = info.mode;
     	be.unconsumedMsgCount = info.unconsumedMsgCount;
     	be.lastUpdateTime = mq.lastUpdateTime;
 

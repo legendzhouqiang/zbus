@@ -14,7 +14,7 @@ public class Pub1 {
 		final Broker broker = new HaBroker(brokerConfig);
 		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
-		//producer.createMQ();  
+		producer.createMQ();  
 		
 		Message msg = new Message();
 		msg.setTopic("sse"); 

@@ -14,11 +14,11 @@ public class RpcRawExample {
 		Broker broker = new SingleBroker(config);
 	
 		//MessageInvoker invoker = new DirectInvoker(broker);
-		MessageInvoker invoker = new MqInvoker(broker, "MyRpc2");
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
 		
 		RpcInvoker rpc = new RpcInvoker(invoker);   
 		
-		String res = rpc.invokeSync(String.class, "getString2", "testxxxx");
+		String res = rpc.invokeSync(String.class, "getString", "testxxxx");
 		
 		System.out.println(res);
 		

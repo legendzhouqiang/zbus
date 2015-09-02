@@ -200,8 +200,8 @@ public class ServerEntryTable implements Closeable{
 			this.entryId = entryId;
 		}
 		
-		public String getMode(){ 
-			if(consumerFirstList.isEmpty()) return null;
+		public int getMode(){ 
+			if(consumerFirstList.isEmpty()) return -1;
 			return consumerFirstList.get(0).mode;
 		}
 		
