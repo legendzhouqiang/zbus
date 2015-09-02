@@ -7,7 +7,7 @@ import org.zbus.mq.Producer;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 
-public class PubExample {
+public class PubSync {
 	public static void main(String[] args) throws Exception{   
 		BrokerConfig config = new BrokerConfig();
 		config.setServerAddress("127.0.0.1:15555");

@@ -11,7 +11,7 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class ConsumerExample {
+public class ConsumerAsync {
 	public static void main(String[] args) throws Exception{  
 		//创建Broker代表
 		BrokerConfig brokerConfig = new BrokerConfig();
