@@ -24,7 +24,7 @@ public class TrackSub implements Closeable{
 	private int reconnectTimeout = 3000; //ms
 	
 	private Map<String, MessageHandler> cmdHandlers = new ConcurrentHashMap<String, MessageHandler>();
-	
+	private boolean verbose = false;
 	public TrackSub(String trackServerList, Dispatcher dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
     	for(String block : blocks){
@@ -39,7 +39,9 @@ public class TrackSub implements Closeable{
     			public void onError(IOException e, Session sess)
     					throws IOException { 
     				healthyTrackers.remove(client);
-    				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
+    				if(verbose){
+    					log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
+    				}
     				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
     				client.connectAsync();
     			}  
@@ -105,4 +107,9 @@ public class TrackSub implements Closeable{
     	allTrackers.clear();
     	healthyTrackers.clear();
     }
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	} 
+    
 }

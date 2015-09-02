@@ -21,16 +21,16 @@ import org.zbus.net.http.MessageClient;
 
 public class TrackServer extends Server{ 
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
-	private TrackAdaptor trackAdaptor;
+	private TrackAdaptor trackAdaptor;  
 	public TrackServer(String address) {
-		super(address); 
+		super(address);  
 		dispatcher = new Dispatcher(); 
 		serverAdaptor = trackAdaptor = new TrackAdaptor();	
 		serverName = "TrackServer";
 	}
 	
 	@Override
-	public void start() throws IOException {
+	public void start() throws IOException {  
 		log.info("TrackServer starting ...");
 		super.start();
 		log.info("TrackServer started successfully");
@@ -42,11 +42,17 @@ public class TrackServer extends Server{
 		trackAdaptor.close();
 		dispatcher.close();
 	}
+	
+	public void setVerbose(boolean verbose){
+		trackAdaptor.setVerbose(verbose);
+	}
 
 	public static void main(String[] args) throws Exception { 
 		String host = ConfigKit.option(args, "-h", "0.0.0.0");
 		int port = ConfigKit.option(args, "-p", 16666);
+		boolean verbose = ConfigKit.option(args, "-verbose", true);
 		final TrackServer server = new TrackServer(host+":"+port);
+		server.setVerbose(verbose);
 		server.start();
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
