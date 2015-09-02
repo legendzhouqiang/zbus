@@ -41,6 +41,7 @@ public class HaBroker implements Broker {
 		Broker broker = brokerSelector.selectByClient(client);
 		if(broker == null){
 			log.warn("Missing broker for " + client);
+			client.close();
 		} else {
 			broker.closeClient(client); 
 		}

@@ -22,7 +22,9 @@
  */
 package org.zbus.broker;
 
-public class BrokerException extends RuntimeException {   
+import java.io.IOException;
+
+public class BrokerException extends IOException {   
 	private static final long serialVersionUID = -468381747145861969L;
 	
 	public BrokerException(String message){
