@@ -75,7 +75,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
 	private boolean verbose = false;
-	public TrackAdaptor(){  
+	public TrackAdaptor(){   
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
@@ -109,9 +109,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			}
 			String serverAddr = msg.getServer();
 			if(serverAddr == null) return;
-			onNewServer(serverAddr, sess);
-			
-			pubMessage(msg);
+			onNewServer(serverAddr, sess); 
 		}
 	};
 	
@@ -178,7 +176,14 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			if(verbose){
 				log.info("%s", msg);
 			}
-			trackSubs.put(sess.id(), sess); 
+			trackSubs.put(sess.id(), sess);  
+			for(String serverAddr : serverEntryTable.serverSet()){
+				Message m = new Message();
+				m.setCmd(HaCommand.ServerJoin);
+				m.setServer(serverAddr);
+				sess.write(m);
+			}
+			
 			msg.setCmd(HaCommand.PubAll);
 			msg.setBody(serverEntryTable.toJsonString());
 			sess.write(msg);
@@ -190,7 +195,8 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 		synchronized (joinedServers) {
 			if(joinedServers.containsKey(serverAddr)) return; 
 			 
-			log.info(">>New Server: "+ serverAddr);
+			log.info(">>New Server: "+ serverAddr); 
+			
 			final MessageClient client = new MessageClient(serverAddr, sess.dispatcher()); 
 			joinedServers.put(serverAddr, client); 
 			
@@ -198,6 +204,12 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 				@Override
 				public void onConnected(Session sess) throws IOException { 
 					joinedServers.put(serverAddr, client); 
+					
+					serverEntryTable.addServer(serverAddr);
+					Message msg = new Message();
+					msg.setCmd(HaCommand.ServerJoin);
+					msg.setServer(serverAddr);
+					pubMessage(msg);
 				}
 			});
 			
@@ -239,6 +251,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
+		serverEntryTable.setVerbose(verbose);
 	} 
 	
 }

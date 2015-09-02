@@ -14,7 +14,7 @@ public class Producer1 {
 		Broker broker = new HaBroker(brokerConfig);
  
 		Producer producer = new Producer(broker, "MyMQ");
-		//producer.createMQ(); // 如果已经确定存在，不需要创建
+		producer.createMQ(); // 如果已经确定存在，不需要创建
  
 		for(int i=0; i<1000000;i++){
 			Message msg = new Message();

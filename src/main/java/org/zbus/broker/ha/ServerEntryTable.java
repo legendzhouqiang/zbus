@@ -32,7 +32,7 @@ public class ServerEntryTable implements Closeable{
 
 	private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
 	
-	public boolean verbose = false;
+	private boolean verbose = false;
 	
 	public ServerEntryTable(){
 		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
@@ -98,6 +98,14 @@ public class ServerEntryTable implements Closeable{
 		} 
 	}
 	
+	public void addServer(String serverAddr){
+		synchronized (server2EntryList) {
+			if(server2EntryList.containsKey(serverAddr)) return;
+			
+			Set<ServerEntry> entryList = Collections.synchronizedSet(new HashSet<ServerEntry>());
+			server2EntryList.put(serverAddr, entryList);
+		}
+	}
 	
 	public void removeServer(String serverAddr){ 
 		server2EntryList.remove(serverAddr);
@@ -145,6 +153,10 @@ public class ServerEntryTable implements Closeable{
 		}
 	}  
 	
+	public Set<String> serverSet(){
+		return server2EntryList.keySet();
+	}
+	
 	public String toJsonString(){
 		List<ServerEntry> entries = new ArrayList<ServerEntry>();
 		for(Set<ServerEntry> entryList : server2EntryList.values()){
@@ -167,9 +179,14 @@ public class ServerEntryTable implements Closeable{
 	@Override
 	public void close() throws IOException {  
 		dumpExecutor.shutdown(); 
-	} 
+	}  
 	
-	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+
+
+
 	public static class ServerList implements Iterable<ServerEntry>{
 		public final String entryId;
 		public Map<String, ServerEntry> serverTable = new ConcurrentHashMap<String, ServerEntry>();		
