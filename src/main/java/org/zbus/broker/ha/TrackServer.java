@@ -7,26 +7,69 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.zbus.kit.ConfigKit;
 import org.zbus.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.ErrorHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
-import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 import org.zbus.net.http.MessageClient;
 
-public class TrackServer extends MessageAdaptor implements Closeable{
+public class TrackServer extends Server{ 
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
+	private TrackAdaptor trackAdaptor;
+	public TrackServer(String address) {
+		super(address); 
+		dispatcher = new Dispatcher(); 
+		serverAdaptor = trackAdaptor = new TrackAdaptor();	
+		serverName = "TrackServer";
+	}
+	
+	@Override
+	public void start() throws IOException {
+		log.info("TrackServer starting ...");
+		super.start();
+		log.info("TrackServer started successfully");
+	}
+	
+	@Override
+	public void close() throws IOException { 
+		super.close();
+		trackAdaptor.close();
+		dispatcher.close();
+	}
+
+	public static void main(String[] args) throws Exception { 
+		String host = ConfigKit.option(args, "-h", "0.0.0.0");
+		int port = ConfigKit.option(args, "-p", 16666);
+		final TrackServer server = new TrackServer(host+":"+port);
+		server.start();
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					server.close();
+					log.info("TrackServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});   
+	}  
+}
+
+
+class TrackAdaptor extends MessageAdaptor implements Closeable{
+	private static final Logger log = Logger.getLogger(TrackAdaptor.class); 
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
-	
-	public TrackServer(){  
+	private boolean verbose = false;
+	public TrackAdaptor(){  
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
@@ -55,7 +98,9 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageHandler serverJoinHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			log.info("%s", msg);
+			if(verbose){
+				log.info("%s", msg);
+			}
 			String serverAddr = msg.getServer();
 			if(serverAddr == null) return;
 			onNewServer(serverAddr, sess);
@@ -67,7 +112,10 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageHandler serverLeaveHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			log.info("%s", msg);
+			if(verbose){
+				log.info("%s", msg);
+			}
+			
 			String serverAddr = msg.getServer();
 			if(serverAddr == null) return; 
 			serverEntryTable.removeServer(serverAddr);
@@ -79,7 +127,9 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageHandler entryUpdateHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			log.info("%s", msg);
+			if(verbose){
+				log.info("%s", msg);
+			}
 			ServerEntry se = null;
 			try{
 				se = ServerEntry.parseJson(msg.getBodyString());
@@ -119,7 +169,9 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageHandler subAllHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
-			log.info("%s", msg);
+			if(verbose){
+				log.info("%s", msg);
+			}
 			trackSubs.put(sess.id(), sess); 
 			msg.setCmd(HaCommand.PubAll);
 			msg.setBody(serverEntryTable.toJsonString());
@@ -132,7 +184,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		synchronized (joinedServers) {
 			if(joinedServers.containsKey(serverAddr)) return; 
 			 
-			log.info(">>>>>>>>>>>New Server: "+ serverAddr);
+			log.info(">>New Server: "+ serverAddr);
 			final MessageClient client = new MessageClient(serverAddr, sess.dispatcher()); 
 			joinedServers.put(serverAddr, client); 
 			
@@ -179,13 +231,8 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		serverEntryTable.close(); 
 	}
 
-	public static void main(String[] args) throws Exception { 
-		Dispatcher dispatcher = new Dispatcher();
-		IoAdaptor ioAdaptor = new TrackServer();
-		
-		@SuppressWarnings("resource")
-		Server server = new Server(dispatcher, ioAdaptor, 16666);
-		server.setServerName("TrackServer");
-		server.start();
-	}  
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	} 
+	
 }

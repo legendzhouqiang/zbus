@@ -16,7 +16,7 @@ public class Producer1 {
 		Producer producer = new Producer(broker, "MyMQ");
 		//producer.createMQ(); // 如果已经确定存在，不需要创建
  
-		for(int i=0; i<10000;i++){
+		for(int i=0; i<1000000;i++){
 			Message msg = new Message();
 			msg.setBody("hello world, from HA broker "+ System.currentTimeMillis());
 			try{
@@ -25,7 +25,7 @@ public class Producer1 {
 			}catch (Exception e){
 				e.printStackTrace();
 			} 
-			Thread.sleep(1000);
+			//Thread.sleep(1000);
 		}
 		
 		System.out.println("===DONE===");

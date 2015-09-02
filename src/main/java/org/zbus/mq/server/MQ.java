@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.log.Logger;
@@ -39,6 +41,8 @@ import org.zbus.net.http.Message;
 public class MQ extends AbstractMQ{
 	private static final Logger log = Logger.getLogger(MQ.class);  
 	
+	protected final Map<String, Session> pullSessions = new ConcurrentHashMap<String, Session>();
+	
 	protected final BlockingQueue<PullSession> pullQ = new LinkedBlockingQueue<PullSession>();
 	
 	public MQ(String name, AbstractQueue<Message> msgQ) {
@@ -47,6 +51,9 @@ public class MQ extends AbstractMQ{
 	
 	@Override
 	public void consume(Message msg, Session sess) throws IOException {  
+		if(!pullSessions.containsKey(sess.id())){
+			pullSessions.put(sess.id(), sess);
+		}
 		for(PullSession pull : pullQ){
 			if(pull.getSession() == sess){
 				pull.setPullMessage(msg);
@@ -94,6 +101,8 @@ public class MQ extends AbstractMQ{
 
 	@Override
 	public void cleanSession(Session sess) {
+		pullSessions.remove(sess.id());
+		
 		Iterator<PullSession> iter = pullQ.iterator();
 		while(iter.hasNext()){
 			PullSession pull = iter.next();
@@ -110,6 +119,7 @@ public class MQ extends AbstractMQ{
 		while(iter.hasNext()){
 			PullSession pull = iter.next();
 			if(!pull.session.isActive()){
+				pullSessions.remove(pull.session.id());
 				iter.remove();
 			}
 		}
@@ -123,6 +133,7 @@ public class MQ extends AbstractMQ{
 		info.creator = creator;
 		info.mode = MqMode.MQ.intValue();
 		info.unconsumedMsgCount = msgQ.size();
+		info.consumerCount = pullSessions.size();
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();
 		for(PullSession pull : pullQ){ 
 			info.consumerInfoList.add(pull.getConsumerInfo());

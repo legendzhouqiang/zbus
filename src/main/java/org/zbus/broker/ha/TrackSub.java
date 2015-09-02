@@ -58,7 +58,7 @@ public class TrackSub implements Closeable{
     		client.onMessage(new MessageHandler() { 
 				@Override
 				public void handle(Message msg, Session sess) throws IOException { 
-					log.info("%s", msg);
+					log.debug("%s", msg);
 					String cmd = msg.getCmd();
 			    	if(cmd != null){ //cmd
 			    		MessageHandler handler = cmdHandlers.get(cmd);

@@ -11,21 +11,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
 import org.zbus.kit.NetKit;
 import org.zbus.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageClient;
 import org.zbus.net.http.Message.MessageHandler;
+import org.zbus.net.http.MessageClient;
 
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
-	private static final String localIp = NetKit.getLocalIp();
+	private static final int localIpHashCode = Math.abs(NetKit.getLocalIp().hashCode());
 	
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable();
 	private final Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
@@ -60,21 +60,13 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(serverAddr == null) return null;
 		return allBrokers.get(serverAddr);
 	}
-	
-	private Broker defaultBroker(){
-		Iterator<Broker> iter = allBrokers.values().iterator();
-		if(iter.hasNext()){
-			return iter.next();
-		} 
-		return null;
-	}
-	
+	 	
 	private Broker getBrokerByIpCluster(){
 		if(allBrokers.isEmpty()) return null;
 		ArrayList<Broker> brokers = new ArrayList<Broker>(allBrokers.values());
-		int idx = localIp.hashCode()%brokers.size();
+		int idx = localIpHashCode%brokers.size();
 		return brokers.get(idx);
-	}
+	} 
 	
 	@Override
 	public String getEntry(Message msg) {
@@ -118,29 +110,22 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		
 		String entry = getEntry(msg);
 		if(entry == null){
-			broker = defaultBroker();
-			if(broker != null){
-				return Arrays.asList(broker);
-			} else {
-				return null;
-			}
+			broker = getBrokerByIpCluster();
+			if(broker != null) return Arrays.asList(broker);
+			return null;
 		}
 		
-		ServerList p = serverEntryTable.getServerList(entry);
-		if(p == null || p.isEmpty()){
-			broker = defaultBroker();
-			if(broker != null){
-				return Arrays.asList(broker);
-			} else {
-				return null;
-			}
-		}
-		
+		ServerList serverList = serverEntryTable.getServerList(entry);
+		if(serverList == null || serverList.isEmpty()){
+			broker = getBrokerByIpCluster();
+			if(broker != null) return Arrays.asList(broker);
+			return null;
+		} 
 
-		String mode = p.getMode();
+		String mode = serverList.getMode();
 		if(ServerEntry.PubSub.equals(mode)){
 			List<Broker> res = new ArrayList<Broker>();
-			for(ServerEntry e : p){ 
+			for(ServerEntry e : serverList){ 
 				broker = getBroker(e.serverAddr);
 				if(broker != null){
 					res.add(broker);
@@ -149,28 +134,23 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			return res;
 		} 
 		
-		int withConsumerCount = 0;
-		Iterator<ServerEntry> iter = p.consumerFirstList.iterator();
+		int activeCount = 0;
+		Iterator<ServerEntry> iter = serverList.consumerFirstList.iterator();
 		while(iter.hasNext()){
 			ServerEntry se = iter.next();
-			if(se.consumerCount > 0) withConsumerCount++;
+			if(se.consumerCount > 0) activeCount++; 
 		}
-		if(withConsumerCount > 0){
-			int idx = localIp.hashCode()%withConsumerCount;
-			ServerEntry se = p.consumerFirstList.get(idx);
-			if(se != null){
-				broker = getBroker(se.serverAddr);
-				if(broker != null){
-					return Arrays.asList(broker);
-				} 
-			}
+		if(activeCount == 0){
+			activeCount = allBrokers.size();
 		} 
-		
-		broker = getBrokerByIpCluster();
-		if(broker != null){
-			return Arrays.asList(broker);
-		}
-		
+		int idx = localIpHashCode%activeCount;
+		ServerEntry se = serverList.consumerFirstList.get(idx);
+		if(se != null){
+			broker = getBroker(se.serverAddr);
+			if(broker != null){
+				return Arrays.asList(broker);
+			} 
+		} 
 		return null;
 	}
 

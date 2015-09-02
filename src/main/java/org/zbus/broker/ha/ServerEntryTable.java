@@ -32,17 +32,19 @@ public class ServerEntryTable implements Closeable{
 
 	private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
 	
+	public boolean verbose = true;
+	
 	public ServerEntryTable(){
 		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
 			@Override
 			public void run() { 
-				dump();
+				if(verbose) dump();
 			}
 		}, 1000, 1000, TimeUnit.MILLISECONDS);
 	} 
 	
 	public void dump(){
-		System.out.format("===============ServerEntryTable(%s)=================\n", new Date());
+		System.out.format("===============ServerEntryTable(%s)===============\n", new Date());
 		Iterator<Entry<String, ServerList>> iter = entry2ServerList.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<String, ServerList> e = iter.next();
@@ -51,6 +53,14 @@ public class ServerEntryTable implements Closeable{
 				System.out.format("  %s\n", se);
 			} 
 		}
+		System.out.println("----------------------------------------------------------------------------");
+		for(Entry<String, Set<ServerEntry>> e : server2EntryList.entrySet()){
+			System.out.format("Server: %s\n", e.getKey());
+			for(ServerEntry se : e.getValue()){
+				System.out.format("  %s\n", se);
+			} 
+		}
+		System.out.println();
 	}
 	
 	public ServerList getServerList(String entryId){
@@ -72,9 +82,7 @@ public class ServerEntryTable implements Closeable{
 			if(serverList == null){
 				serverList = new ServerList(entryId);
 				entry2ServerList.put(entryId, serverList);
-			}
-			//update 
-			log.info("Added: %s", se);
+			} 
 			serverList.updateServerEntry(se);
 		}
 		
@@ -85,6 +93,7 @@ public class ServerEntryTable implements Closeable{
 				entryList = Collections.synchronizedSet(new HashSet<ServerEntry>());
 				server2EntryList.put(serverAddr, entryList);
 			}
+			entryList.remove(se);
 			entryList.add(se);
 		} 
 	}
@@ -183,9 +192,12 @@ public class ServerEntryTable implements Closeable{
 			if(!se.entryId.equals(entryId)) return;
 			
 			serverTable.put(se.serverAddr, se);
-			consumerFirstList.remove(se);
-			consumerFirstList.add(se);
+			if(!consumerFirstList.remove(se)){
+				log.info("Added: %s", se);
+			}
 			msgFirstList.remove(se);
+			
+			consumerFirstList.add(se); 
 			msgFirstList.add(se);
 			
 			Collections.sort(consumerFirstList, consumerFirst);

@@ -85,6 +85,7 @@ public class Protocol {
 		public int mode;
 		public String creator;
 		public long lastUpdateTime;
+		public int consumerCount;
 		public long unconsumedMsgCount;
 		public List<ConsumerInfo> consumerInfoList = new ArrayList<ConsumerInfo>();
 	}

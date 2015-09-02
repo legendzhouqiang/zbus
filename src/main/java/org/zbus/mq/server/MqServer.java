@@ -75,6 +75,7 @@ public class MqServer extends Server{
 		
 		serverAdaptor = mqAdaptor = new MqAdaptor(config.getServerAddress()); 
 		mqAdaptor.setVerbose(config.verbose); 
+		serverName = "MqServer";
 	}
 	
 	@Override
@@ -146,8 +147,9 @@ class MqAdaptor extends IoAdaptor implements Closeable {
 	private boolean verbose = false;   
 	private final String serverAddr;
 	
-	private final ScheduledExecutorService cleanExecutor = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long cleanInterval = 3000; 
+	private long trackInterval = 5000;
  
 	public MqAdaptor(String serverAddr){
 		codec(new MessageCodec());   
@@ -160,7 +162,7 @@ class MqAdaptor extends IoAdaptor implements Closeable {
 		registerHandler(Protocol.Admin, new AdminHandler()); 
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);  
 		
-		this.cleanExecutor.scheduleAtFixedRate(new Runnable() { 
+		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
 				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){
@@ -400,7 +402,7 @@ class MqAdaptor extends IoAdaptor implements Closeable {
     }   
     
     public void close() throws IOException {   
-    	this.cleanExecutor.shutdownNow();
+    	this.scheduledExecutor.shutdownNow();
     	DiskQueuePool.destory(); 
     	if(trackPub != null){
     		trackPub.close();
@@ -487,7 +489,18 @@ class MqAdaptor extends IoAdaptor implements Closeable {
     		}
 		});
     	trackPub.start();
-    } 
+    	
+    	scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
+			@Override
+			public void run() { 
+				for(AbstractMQ mq : mqTable.values()){
+    				pubEntryUpdate(mq);
+    			}
+			}
+		}, 2000, trackInterval, TimeUnit.MILLISECONDS);
+    }  
+    
+    
     
     public void pubEntryUpdate(AbstractMQ mq){
     	if(trackPub == null) return;
@@ -497,13 +510,15 @@ class MqAdaptor extends IoAdaptor implements Closeable {
     	ServerEntry be = new ServerEntry();
     	be.entryId = info.name;
     	be.serverAddr = serverAddr;
-    	be.consumerCount = info.consumerInfoList.size();
+    	be.consumerCount = info.consumerCount;
     	be.mode = ""+info.mode;
     	be.unconsumedMsgCount = info.unconsumedMsgCount;
     	be.lastUpdateTime = mq.lastUpdateTime;
 
     	trackPub.pubEntryUpdate(be);
     }
+    
+    
 }
 
 
