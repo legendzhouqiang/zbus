@@ -37,6 +37,7 @@ class PrivateRuntimeException extends RuntimeException{
 public class InterfaceImpl implements Interface{
  
 	public String getString(String name) {
+		System.out.println(name);
 		return "Hello World ZBUS " + name;
 	}
 

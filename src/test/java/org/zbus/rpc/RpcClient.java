@@ -3,9 +3,6 @@ package org.zbus.rpc;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.zbus.broker.Broker;
-import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.http.MessageClient;
@@ -14,7 +11,7 @@ import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
 import org.zbus.rpc.mq.MqInvoker;
 
-public class RpcExample {
+public class RpcClient {
 	public static User getUser(String name) {
 		User user = new User();
 		user.setName(name);
@@ -78,22 +75,5 @@ public class RpcExample {
 		
 		client.close(); 
 		dispatcher.close();
-	} 
-	
-
-	public static void main2(String[] args) throws Exception { 
-		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setServerAddress("127.0.0.1:15555"); 
-		Broker broker = new SingleBroker(brokerConfig); 
-		 
-		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
-		
-		RpcFactory factory = new RpcFactory(invoker); 
-		
-		Interface hello = factory.getService(Interface.class);
-		
-		test(hello);  
-		
-		broker.close();
-	}
+	}  
 }

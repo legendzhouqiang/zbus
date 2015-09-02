@@ -4,7 +4,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 
-public class RpcRawExample {
+public class RpcClientRaw {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig config = new BrokerConfig();
