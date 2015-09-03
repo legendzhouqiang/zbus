@@ -147,16 +147,25 @@ public class Consumer extends MqAdmin implements Closeable {
 							break;
 						}
 						if(msg == null) continue;
-						executor.submit(new Runnable() { 
-							@Override
-							public void run() {
-								try {
-									handler.handle(msg, client.getSession());
-								} catch (IOException e) {
-									log.error(e.getMessage(), e);
-								} 
-							}
-						});
+						
+						if(executor == null){
+							try {
+								handler.handle(msg, client.getSession());
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							} 
+						} else {
+							executor.submit(new Runnable() { 
+								@Override
+								public void run() {
+									try {
+										handler.handle(msg, client.getSession());
+									} catch (IOException e) {
+										log.error(e.getMessage(), e);
+									} 
+								}
+							});
+						}
 						
 					} catch (IOException e) { 
 						log.error(e.getMessage(), e);
@@ -171,6 +180,11 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void onMessage(final MessageHandler handler) throws IOException{
 		ensureClient();  
 		onMessage(handler, client.getExecutorService());
+	} 
+	
+	public void onMessageSingleThreaded(final MessageHandler handler) throws IOException{
+		ensureClient();  
+		onMessage(handler, null);
 	} 
 	
 	public void setConsumeTimeout(int consumeTimeout) {

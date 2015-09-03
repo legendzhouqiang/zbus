@@ -1,11 +1,15 @@
 package org.zbus;
 
+import java.io.IOException;
+
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
+import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageHandler;
 
 public class ConsumerSync {
 	public static void main(String[] args) throws Exception{  
@@ -21,11 +25,13 @@ public class ConsumerSync {
 		//创建消费者
 		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);  
-		while(true){
-			Message msg = c.recv(10000);
-			if(msg == null) continue;
-			System.out.println(msg);
-		}
+		c.onMessageSingleThreaded(new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {
+				System.out.println(msg); 
+			}
+		});
 		
+		c.start();
 	} 
 }
