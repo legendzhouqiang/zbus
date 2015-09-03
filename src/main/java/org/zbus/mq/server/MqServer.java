@@ -110,7 +110,7 @@ public class MqServer extends Server{
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
-		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
+		config.trackServerList = ConfigKit.option(args, "-track", null);
 
 		String configFile = ConfigKit.option(args, "-conf", null);
 		if(configFile != null){
