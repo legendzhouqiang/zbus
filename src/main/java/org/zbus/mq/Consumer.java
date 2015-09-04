@@ -25,7 +25,6 @@ package org.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
-import java.util.concurrent.ExecutorService;
 
 import org.zbus.broker.Broker;
 import org.zbus.log.Logger;
@@ -131,8 +130,9 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.topic = topic;
 	}
 	
+	
 	private Thread messageThread = null;
-	public void onMessage(final MessageHandler handler, final ExecutorService executor) throws IOException{
+	public void onMessage(final MessageHandler handler) throws IOException{
 		stop();
 		
 		Runnable task = new Runnable() {
@@ -148,25 +148,11 @@ public class Consumer extends MqAdmin implements Closeable {
 						}
 						if(msg == null) continue;
 						
-						if(executor == null){
-							try {
-								handler.handle(msg, client.getSession());
-							} catch (IOException e) {
-								log.error(e.getMessage(), e);
-							} 
-						} else {
-							executor.submit(new Runnable() { 
-								@Override
-								public void run() {
-									try {
-										handler.handle(msg, client.getSession());
-									} catch (IOException e) {
-										log.error(e.getMessage(), e);
-									} 
-								}
-							});
-						}
-						
+						try {
+							handler.handle(msg, client.getSession());
+						} catch (IOException e) {
+							log.error(e.getMessage(), e);
+						}  
 					} catch (IOException e) { 
 						log.error(e.getMessage(), e);
 					}
@@ -176,16 +162,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		messageThread = new Thread(task);  
 	}
-	
-	public void onMessage(final MessageHandler handler) throws IOException{
-		ensureClient();  
-		onMessage(handler, client.getExecutorService());
-	} 
-	
-	public void onMessageSingleThreaded(final MessageHandler handler) throws IOException{
-		ensureClient();  
-		onMessage(handler, null);
-	} 
 	
 	public void setConsumeTimeout(int consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;

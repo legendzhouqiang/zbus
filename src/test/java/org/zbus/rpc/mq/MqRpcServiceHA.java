@@ -8,7 +8,7 @@ import org.zbus.broker.ha.HaBroker;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
 
-public class HaRpcService {
+public class MqRpcServiceHA {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {

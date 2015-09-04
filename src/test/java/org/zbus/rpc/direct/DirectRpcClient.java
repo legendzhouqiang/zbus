@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.rpc.RpcInvoker;
 
-public class SingleRpcClient {
+public class DirectRpcClient {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig(); 

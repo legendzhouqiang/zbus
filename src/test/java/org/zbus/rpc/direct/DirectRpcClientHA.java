@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ha.HaBroker;
 import org.zbus.rpc.RpcInvoker;
 
-public class HaRpcClient {
+public class DirectRpcClientHA {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig();

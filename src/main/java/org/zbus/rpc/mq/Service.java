@@ -24,9 +24,6 @@ package org.zbus.rpc.mq;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
@@ -38,8 +35,7 @@ import org.zbus.net.http.Message.MessageProcessor;
 
 public class Service implements Closeable {   
 	private final ServiceConfig config; 
-	private Consumer[][] consumerGroups;
-	private final ThreadPoolExecutor threadPoolExecutor;
+	private Consumer[][] consumerGroups; 
 	private boolean isStarted = false;
 	public Service(ServiceConfig config){
 		this.config = config;
@@ -49,8 +45,6 @@ public class Service implements Closeable {
 		if(config.getMessageProcessor() == null){
 			throw new IllegalArgumentException("ServiceHandler required");
 		}  
-		threadPoolExecutor = new ThreadPoolExecutor(config.getThreadCount(),
-				config.getThreadCount(), 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 	}
 	 
 	@Override
@@ -99,7 +93,7 @@ public class Service implements Closeable {
 						//route back message
 						c.routeMessage(res);
 					}
-				}, threadPoolExecutor);
+				});
 			}
 		}
 		

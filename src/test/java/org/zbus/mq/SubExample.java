@@ -5,22 +5,20 @@ import java.io.IOException;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.mq.Consumer;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class SubAsync {
+public class SubExample {
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代表
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
-		
+		config.setServerAddress("127.0.0.1:15555"); 
 		final Broker broker = new SingleBroker(config);
 		
-		//2) 创建消费者
-		@SuppressWarnings("resource")
+		//2) 创建消费者 
 		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
 		c.setTopic("sse"); 
 
@@ -31,7 +29,6 @@ public class SubAsync {
 			}
 		});
 		
-		c.start();
-		
+		c.start(); 
 	} 
 }

@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
 
-public class SingleRpcService {
+public class DirectRpcService {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
