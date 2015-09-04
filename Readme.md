@@ -77,9 +77,10 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 ### 生产者
 
 
+	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setServerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
  
 		Producer producer = new Producer(broker, "MyMQ");
@@ -90,15 +91,16 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 		msg.setBody("hello world");
 		producer.sendSync(msg);  
 		
-		//销毁Broker
 		broker.close();
+	}
 
 
 ### 消费者
 
+	public static void main(String[] args) throws Exception{  
 		//创建Broker代表
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setBrokerAddress("127.0.0.1:15555");
+		brokerConfig.setServerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);
 		
 		MqConfig config = new MqConfig(); 
@@ -118,6 +120,8 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 
 		//启动消费线程
 		c.start();   
+		
+	}  
 
  
 ### RPC动态代理【各类复杂类型】
