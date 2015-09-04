@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 
 /**
  *  Many thanks to @huamingweiwen in OSChina who presented us a light weight solution

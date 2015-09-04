@@ -38,7 +38,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
  
 
 public class Dispatcher implements Closeable {

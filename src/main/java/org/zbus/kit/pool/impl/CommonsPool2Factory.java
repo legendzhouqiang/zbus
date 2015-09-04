@@ -20,14 +20,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.pool;
+package org.zbus.kit.pool.impl;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
+import org.zbus.kit.pool.ObjectFactory;
+import org.zbus.kit.pool.Pool;
+import org.zbus.kit.pool.PoolConfig;
+import org.zbus.kit.pool.PoolFactory;
 
 public class CommonsPool2Factory implements PoolFactory {
 	private static final Logger log = Logger.getLogger(Pool.class);

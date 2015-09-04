@@ -33,7 +33,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.kit.NetKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Session.SessionStatus;
 
 public class SelectorThread extends Thread {

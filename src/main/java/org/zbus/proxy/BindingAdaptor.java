@@ -26,7 +26,7 @@ package org.zbus.proxy;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Codec;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.IoBuffer;

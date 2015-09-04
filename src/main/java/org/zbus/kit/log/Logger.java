@@ -20,9 +20,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.log;
+package org.zbus.kit.log;
 
-import org.zbus.log.impl.JdkLoggerFactory;
+import org.zbus.kit.log.impl.JdkLoggerFactory;
 
 public abstract class Logger { 
 	private static LoggerFactory factory;

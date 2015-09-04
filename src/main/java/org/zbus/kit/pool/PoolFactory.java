@@ -20,43 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.pool;
+package org.zbus.kit.pool;
 
-public class PoolConfig implements Cloneable{ 
-	private int maxTotal = 8;
-    private int maxIdle = 8;
-    private int minIdle = 0;
-    private long minEvictableIdleTimeMillis = 1000L * 60L * 30L;
-    private Object support;
-	
-    public int getMaxTotal() {
-		return maxTotal;
-	}
-	public void setMaxTotal(int maxTotal) {
-		this.maxTotal = maxTotal;
-	}
-	public int getMaxIdle() {
-		return maxIdle;
-	}
-	public void setMaxIdle(int maxIdle) {
-		this.maxIdle = maxIdle;
-	}
-	public int getMinIdle() {
-		return minIdle;
-	}
-	public void setMinIdle(int minIdle) {
-		this.minIdle = minIdle;
-	}
-	public long getMinEvictableIdleTimeMillis() {
-		return minEvictableIdleTimeMillis;
-	}
-	public void setMinEvictableIdleTimeMillis(long minEvictableIdleTimeMillis) {
-		this.minEvictableIdleTimeMillis = minEvictableIdleTimeMillis;
-	}
-	public Object getSupport() {
-		return support;
-	}
-	public void setSupport(Object support) {
-		this.support = support;
-	}   
+public interface PoolFactory {
+	<T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config);
 }

@@ -16,7 +16,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
 import org.zbus.kit.NetKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;

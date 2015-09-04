@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.ErrorHandler;
 import org.zbus.net.core.Dispatcher;

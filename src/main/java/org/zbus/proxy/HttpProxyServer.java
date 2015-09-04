@@ -33,7 +33,7 @@ import java.util.Set;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;

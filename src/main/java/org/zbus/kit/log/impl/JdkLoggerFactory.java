@@ -20,12 +20,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.log; 
+package org.zbus.kit.log.impl;
 
-public interface LoggerFactory {
-	
-	Logger getLogger(Class<?> clazz);
-	
-	Logger getLogger(String name);
+import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
+public class JdkLoggerFactory implements LoggerFactory {
+	
+	public Logger getLogger(Class<?> clazz) {
+		return new JdkLogger(clazz);
+	}
+	
+	public Logger getLogger(String name) {
+		return new JdkLogger(name);
+	}
 }

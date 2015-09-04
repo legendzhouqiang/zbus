@@ -37,7 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.NetKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 
 public class Session implements Closeable{
 	public static enum SessionStatus {

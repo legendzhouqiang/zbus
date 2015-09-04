@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.ErrorHandler;
 import org.zbus.net.core.Dispatcher;

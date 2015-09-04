@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;

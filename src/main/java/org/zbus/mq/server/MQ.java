@@ -31,7 +31,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.Protocol.MqMode;

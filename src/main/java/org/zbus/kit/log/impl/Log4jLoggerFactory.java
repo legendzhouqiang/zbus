@@ -20,10 +20,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.log.impl;
+package org.zbus.kit.log.impl;
 
-import org.zbus.log.Logger;
-import org.zbus.log.LoggerFactory;
+import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 public class Log4jLoggerFactory implements LoggerFactory {
 	

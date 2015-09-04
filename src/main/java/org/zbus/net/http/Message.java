@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.MsgInvoker;
 import org.zbus.net.Sync.Id;

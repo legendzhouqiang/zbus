@@ -20,13 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.pool;
+package org.zbus.kit.log; 
 
-public interface ObjectFactory<T> {
+public interface LoggerFactory {
 	
-	T createObject() throws Exception;
+	Logger getLogger(Class<?> clazz);
 	
-	void destroyObject(T obj);
-	
-	boolean validateObject(T obj);
+	Logger getLogger(String name);
+
 }

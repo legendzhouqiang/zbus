@@ -41,7 +41,7 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
 import org.zbus.kit.NetKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
 import org.zbus.mq.Protocol.MqInfo;

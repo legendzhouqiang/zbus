@@ -20,18 +20,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.log.impl;
+package org.zbus.kit.pool;
 
-import org.zbus.log.Logger;
-import org.zbus.log.LoggerFactory;
-
-public class JdkLoggerFactory implements LoggerFactory {
+public class PoolConfig implements Cloneable{ 
+	private int maxTotal = 8;
+    private int maxIdle = 8;
+    private int minIdle = 0;
+    private long minEvictableIdleTimeMillis = 1000L * 60L * 30L;
+    private Object support;
 	
-	public Logger getLogger(Class<?> clazz) {
-		return new JdkLogger(clazz);
+    public int getMaxTotal() {
+		return maxTotal;
 	}
-	
-	public Logger getLogger(String name) {
-		return new JdkLogger(name);
+	public void setMaxTotal(int maxTotal) {
+		this.maxTotal = maxTotal;
 	}
+	public int getMaxIdle() {
+		return maxIdle;
+	}
+	public void setMaxIdle(int maxIdle) {
+		this.maxIdle = maxIdle;
+	}
+	public int getMinIdle() {
+		return minIdle;
+	}
+	public void setMinIdle(int minIdle) {
+		this.minIdle = minIdle;
+	}
+	public long getMinEvictableIdleTimeMillis() {
+		return minEvictableIdleTimeMillis;
+	}
+	public void setMinEvictableIdleTimeMillis(long minEvictableIdleTimeMillis) {
+		this.minEvictableIdleTimeMillis = minEvictableIdleTimeMillis;
+	}
+	public Object getSupport() {
+		return support;
+	}
+	public void setSupport(Object support) {
+		this.support = support;
+	}   
 }

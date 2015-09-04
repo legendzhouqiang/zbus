@@ -6,7 +6,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.mq.MqInvoker;

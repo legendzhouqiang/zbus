@@ -22,7 +22,7 @@
  */
 package org.zbus.broker;
 
-import org.zbus.broker.pool.PoolConfig;
+import org.zbus.kit.pool.PoolConfig;
 import org.zbus.net.core.Dispatcher;
 
 

@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.rpc.RpcCodec.Request;
@@ -98,7 +98,7 @@ public class RpcProcessor implements MessageProcessor{
 				String key = module + ":" + method+":"+paramMD5; 
 				String key2 = module + ":" + method;
 				if(this.methods.containsKey(key)){
-					log.error(key + " duplicated"); 
+					log.warn(key + " duplicated"); 
 				} else {
 					log.debug("register "+service.getClass().getSimpleName()+"\t" + key);
 					log.debug("register "+service.getClass().getSimpleName()+"\t"  + key2);

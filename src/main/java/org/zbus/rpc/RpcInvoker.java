@@ -24,7 +24,7 @@ package org.zbus.rpc;
 
 import java.io.IOException;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcCodec.Request;

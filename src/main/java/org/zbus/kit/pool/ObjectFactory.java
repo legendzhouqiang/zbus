@@ -20,8 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.pool;
+package org.zbus.kit.pool;
 
-public interface PoolFactory {
-	<T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config);
+public interface ObjectFactory<T> {
+	
+	T createObject() throws Exception;
+	
+	void destroyObject(T obj);
+	
+	boolean validateObject(T obj);
 }

@@ -32,7 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.zbus.kit.FileKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 
 public class MqServerConfig{
 	private static final Logger log = Logger.getLogger(MqServerConfig.class);

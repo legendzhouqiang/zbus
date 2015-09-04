@@ -34,7 +34,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zbus.kit.ConfigKit;
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
 import org.zbus.net.Server;
 import org.zbus.net.core.Codec;
 import org.zbus.net.core.Dispatcher;

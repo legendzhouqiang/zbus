@@ -20,9 +20,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.pool;
+package org.zbus.kit.pool;
 
 import java.io.Closeable;
+
+import org.zbus.kit.pool.impl.DefaultPoolFactory;
 
 
 public abstract class Pool<T> implements Closeable { 

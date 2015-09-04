@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.zbus.log.Logger;
+import org.zbus.kit.log.Logger;
  
 /**
  * 私有异常，测试前端未知场景
