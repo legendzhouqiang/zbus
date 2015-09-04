@@ -1,4 +1,4 @@
-package org.zbus;
+package org.zbus.mq;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class ConsumerAsync {
+public class ConsumerSync {
 	public static void main(String[] args) throws Exception{  
 		//创建Broker代表
 		BrokerConfig brokerConfig = new BrokerConfig();
@@ -25,16 +25,13 @@ public class ConsumerAsync {
 		//创建消费者
 		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);  
-		
-		c.onMessage(new MessageHandler() { 
+		c.onMessageSingleThreaded(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg);
+				System.out.println(msg); 
 			}
 		});
-
-		//启动消费线程
-		c.start();   
 		
+		c.start();
 	} 
 }

@@ -3,9 +3,9 @@ package org.zbus.rpc;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.zbus.net.core.Dispatcher;
-import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.net.http.MessageClient;
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.SingleBroker;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
@@ -21,14 +21,7 @@ public class RpcClient {
 		user.setRoles(Arrays.asList("admin", "common"));
 		return user;
 	}
-	
-	public static void test2(Interface hello) throws Exception{ 
-		int res = hello.plus(1,2);
-		System.out.println(res);
-		
-		//System.out.println(hello.testEncoding());
-	}
-	
+	 
 	public static void test(Interface hello) throws Exception{ 
 
 		Object[] res = hello.objectArray("xzx");
@@ -61,19 +54,20 @@ public class RpcClient {
 	}
 	
 	public static void main(String[] args) throws Exception { 
-		Dispatcher dispatcher = new Dispatcher();
-		
-		MessageClient client = new MessageClient("127.0.0.1:15555", dispatcher);
+		//1)创建Broker代表（可用高可用替代）
+		BrokerConfig config = new BrokerConfig();
+		config.setServerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(config);
 		 
-		MessageInvoker invoker = new MqInvoker(client, "MyRpc");
-		
+		//2)创建基于MQ的Invoker以及Rpc工厂，指定RPC采用的MQ为MyRpc
+		MqInvoker invoker = new MqInvoker(broker, "MyRpc"); 
 		RpcFactory factory = new RpcFactory(invoker); 
 		
+		//3) 动态代理出实现类
 		Interface hello = factory.getService(Interface.class);
 		
 		test(hello);  
 		
-		client.close(); 
-		dispatcher.close();
+		broker.close();
 	}  
 }

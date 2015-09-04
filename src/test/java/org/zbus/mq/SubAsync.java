@@ -1,4 +1,4 @@
-package org.zbus;
+package org.zbus.mq;
 
 import java.io.IOException;
 
@@ -6,32 +6,32 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
-import org.zbus.mq.MqConfig;
+import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class ConsumerSync {
+public class SubAsync {
 	public static void main(String[] args) throws Exception{  
-		//创建Broker代表
-		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setServerAddress("127.0.0.1:15555");
-		Broker broker = new SingleBroker(brokerConfig);
+		//1）创建Broker代表
+		BrokerConfig config = new BrokerConfig();
+		config.setServerAddress("127.0.0.1:15555");
 		
-		MqConfig config = new MqConfig(); 
-		config.setBroker(broker);
-		config.setMq("MyMQ");
+		final Broker broker = new SingleBroker(config);
 		
-		//创建消费者
+		//2) 创建消费者
 		@SuppressWarnings("resource")
-		Consumer c = new Consumer(config);  
-		c.onMessageSingleThreaded(new MessageHandler() { 
+		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
+		c.setTopic("sse"); 
+
+		c.onMessage(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg); 
+				System.out.println(msg);
 			}
 		});
 		
 		c.start();
+		
 	} 
 }

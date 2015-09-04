@@ -1,4 +1,4 @@
-package org.zbus.mq.perf;
+package org.zbus.mq.diskq;
 
 import java.util.AbstractQueue;
 

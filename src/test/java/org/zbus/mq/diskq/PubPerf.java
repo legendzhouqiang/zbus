@@ -1,4 +1,4 @@
-package org.zbus.mq.perf;
+package org.zbus.mq.diskq;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;

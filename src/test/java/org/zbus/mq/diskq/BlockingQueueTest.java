@@ -1,4 +1,4 @@
-package org.zbus.mq;
+package org.zbus.mq.diskq;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

@@ -1,22 +1,22 @@
-package org.zbus.mq;
+package org.zbus.mq.diskq;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.zbus.mq.server.support.DiskQueuePool;
-import org.zbus.mq.server.support.DiskQueuePool.DiskQueue;
 
-
-public class DiskQueuePerf {
+public class BlockingQueuePerf {
+	
 	static class Task extends Thread{ 
 		int loopCount = 10000; 
 		long startTime;
 		AtomicLong counter;
+		BlockingQueue<byte[]> q;
 		@Override
 		public void run() { 
-			DiskQueue q = DiskQueuePool.getDiskQueue("test");
 			for(int i=0;i<loopCount;i++){ 
 				try {
-					q.offer(new byte[1024]);
+					q.offer(new byte[10]);
 					long count = counter.incrementAndGet();
 					if(count%20000 == 0){
 						long end = System.currentTimeMillis();
@@ -30,10 +30,8 @@ public class DiskQueuePerf {
 			}
 		}
 	}
-
 	public static void main(String[] args) throws Exception { 
-		DiskQueuePool.init("c:\\MFQ");
-		
+		BlockingQueue<byte[]> q = new LinkedBlockingQueue<byte[]>();
 		final int loopCount = 10000000; 
 		final int threadCount = 16;
 		
@@ -45,6 +43,7 @@ public class DiskQueuePerf {
 			tasks[i].loopCount = loopCount;
 			tasks[i].startTime = start;
 			tasks[i].counter = counter;
+			tasks[i].q = q;
 		}
 		
 		for(Task task : tasks){
@@ -54,7 +53,6 @@ public class DiskQueuePerf {
 			task.join();
 		}
 		
-		DiskQueuePool.destory();
 		System.out.println("===done==="); 
 	}
 }

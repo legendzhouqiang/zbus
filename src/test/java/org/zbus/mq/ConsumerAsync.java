@@ -1,4 +1,4 @@
-package org.zbus;
+package org.zbus.mq;
 
 import java.io.IOException;
 
@@ -6,32 +6,35 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
-import org.zbus.mq.Protocol.MqMode;
+import org.zbus.mq.MqConfig;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class SubAsync {
+public class ConsumerAsync {
 	public static void main(String[] args) throws Exception{  
-		//1）创建Broker代表
-		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
+		//创建Broker代表
+		BrokerConfig brokerConfig = new BrokerConfig();
+		brokerConfig.setServerAddress("127.0.0.1:15555");
+		Broker broker = new SingleBroker(brokerConfig);
 		
-		final Broker broker = new SingleBroker(config);
+		MqConfig config = new MqConfig(); 
+		config.setBroker(broker);
+		config.setMq("MyMQ");
 		
-		//2) 创建消费者
+		//创建消费者
 		@SuppressWarnings("resource")
-		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
-		c.setTopic("sse"); 
-
+		Consumer c = new Consumer(config);  
+		
 		c.onMessage(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
 				System.out.println(msg);
 			}
 		});
-		
-		c.start();
+
+		//启动消费线程
+		c.start();   
 		
 	} 
 }
