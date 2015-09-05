@@ -2,7 +2,9 @@ package org.zbus.kit.json;
 
 import java.util.HashMap;
 
-public class JSONObject extends HashMap<String, Object> {  
+import org.zbus.kit.json.impl.CastKit;
+
+public class JsonObject extends HashMap<String, Object> {  
 	private static final long serialVersionUID = -3007199945096476930L;
 	
 	public Integer getInt(String key) {
@@ -33,28 +35,28 @@ public class JSONObject extends HashMap<String, Object> {
 		return CastKit.stringValue(get(key));
 	}
 	public <T> T getBean(String key, Class<T> clazz) {
-		return CastKit.objectValue(getJSONObject(key), clazz);
+		return CastKit.objectValue(getJsonObject(key), clazz);
 	}
 
-	public JSONObject getJSONObject(String key) {
+	public JsonObject getJsonObject(String key) {
 		Object obj = get(key);
-		return obj instanceof JSONObject ? JSONObject.class.cast(obj) : null;
+		return obj instanceof JsonObject ? JsonObject.class.cast(obj) : null;
 	}
 
-	public JSONArray getJSONArray(String key) {
+	public JsonArray getJsonArray(String key) {
 		Object obj = get(key);
-		return obj instanceof JSONArray ? JSONArray.class.cast(obj) : null;
+		return obj instanceof JsonArray ? JsonArray.class.cast(obj) : null;
 	}
 
 	public <T> T toBean(Class<T> clazz) {
 		return CastKit.objectValue(this, clazz);
 	}
 	
-	public String toJSONString() {
-		return JSON.toJSONString(this);
+	public String toJsonString() {
+		return Json.toJson(this);
 	}
 
 	public String toString() {
-		return toJSONString();
+		return toJsonString();
 	}
 }

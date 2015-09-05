@@ -2,7 +2,9 @@ package org.zbus.kit.json;
 
 import java.util.ArrayList;
 
-public class JSONArray extends ArrayList<Object> {  
+import org.zbus.kit.json.impl.CastKit;
+
+public class JsonArray extends ArrayList<Object> {  
 	private static final long serialVersionUID = 6699808953410831664L;
 
 	public Integer getInt(int i) {
@@ -33,25 +35,25 @@ public class JSONArray extends ArrayList<Object> {
 		return CastKit.stringValue(get(i));
 	}
 	public <T> T getBean(int i, Class<T> clazz) {
-		return CastKit.objectValue(getJSONObject(i), clazz);
+		return CastKit.objectValue(getJsonObject(i), clazz);
 	}
 
-	public JSONObject getJSONObject(int i) {
+	public JsonObject getJsonObject(int i) {
 		Object obj = get(i);
-		return obj instanceof JSONObject ? JSONObject.class.cast(obj) : null;
+		return obj instanceof JsonObject ? JsonObject.class.cast(obj) : null;
 	}
 
-	public JSONArray getJSONArray(int i) {
+	public JsonArray getJsonArray(int i) {
 		Object obj = get(i);
-		return obj instanceof JSONArray ? JSONArray.class.cast(obj) : null;
+		return obj instanceof JsonArray ? JsonArray.class.cast(obj) : null;
 	}
 
-	public String toJSONString() {
-		return JSON.toJSONString(this);
+	public String toJsonString() {
+		return Json.toJson(this);
 	}
 
 	public String toString() {
-		return toJSONString();
+		return toJsonString();
 	}
 
 }
