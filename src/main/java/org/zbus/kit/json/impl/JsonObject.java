@@ -1,8 +1,8 @@
-package org.zbus.kit.json;
+package org.zbus.kit.json.impl;
 
 import java.util.HashMap;
 
-import org.zbus.kit.json.impl.CastKit;
+import org.zbus.kit.json.Json;
 
 public class JsonObject extends HashMap<String, Object> {  
 	private static final long serialVersionUID = -3007199945096476930L;

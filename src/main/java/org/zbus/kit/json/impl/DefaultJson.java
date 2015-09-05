@@ -10,19 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.zbus.kit.json.JsonArray;
 import org.zbus.kit.json.JsonConvertor;
-import org.zbus.kit.json.JsonObject;
-import org.zbus.kit.log.Logger;
 
 public class DefaultJson implements JsonConvertor {
-	private static final Logger log = Logger.getLogger(DefaultJson.class);
 	public static String TimestampPattern = "yyyy-MM-dd HH:mm:ss";
 	public static String DatePattern = "yyyy-MM-dd";
-	
-	public DefaultJson(){
-		log.info("Using Default Json");
-	}
 	
 	@SuppressWarnings("unchecked")
 	public String toJson(Object value) {
@@ -80,7 +72,7 @@ public class DefaultJson implements JsonConvertor {
 		}
 		
 		if (value instanceof Enum) {
-			return "\"" + ((Enum<?>)value).toString() + "\"";
+			return ((Enum<?>)value).toString();
 		}
 		
 		String result = beanToJson(value);  

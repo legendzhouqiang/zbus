@@ -1,8 +1,10 @@
 package org.zbus.kit.json;
 
 import org.zbus.kit.json.impl.DefaultJson;
+import org.zbus.kit.log.Logger;
 
 public class Json {
+	private static final Logger log = Logger.getLogger(Json.class);
 	private static JsonConvertor convertor;
 	
 	static {
@@ -27,9 +29,9 @@ public class Json {
 			Class.forName("com.alibaba.fastjson.JSON");
 			Class<?> convertorClass = Class.forName(defaultConvertor);
 			Json.convertor = (JsonConvertor)convertorClass.newInstance();
-			
-		} catch (Exception e) { 
-			e.printStackTrace();
+			log.info("Using alibaba fastjon");
+		} catch (Exception e) {  
+			log.info("Using zbus DefaultJson");
 			Json.convertor = new DefaultJson();
 		}
 	}

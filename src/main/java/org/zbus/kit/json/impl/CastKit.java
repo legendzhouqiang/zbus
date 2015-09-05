@@ -2,8 +2,6 @@ package org.zbus.kit.json.impl;
 
 import java.lang.reflect.Method;
 
-import org.zbus.kit.json.JsonObject;
-
 public class CastKit { 
 	
 	public static Integer intValue(Object value) {

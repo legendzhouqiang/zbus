@@ -28,8 +28,7 @@ import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig extends MqConfig { 
-	private MessageProcessor messageProcessor;
-	private int threadCount = 20;
+	private MessageProcessor messageProcessor; 
 	private int consumerCount = 1; 
 	private Broker[] brokers;
 
@@ -60,14 +59,6 @@ public class ServiceConfig extends MqConfig {
 			}
 		}
 		return this.brokers;
-	}
-
-	public int getThreadCount() {
-		return threadCount;
-	}
-
-	public void setThreadCount(int threadCount) {
-		this.threadCount = threadCount;
 	}
 
 	public int getConsumerCount() {

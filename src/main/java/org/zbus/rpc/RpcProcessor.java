@@ -39,12 +39,16 @@ import org.zbus.rpc.RpcCodec.Response;
 
 public class RpcProcessor implements MessageProcessor{
 	private static final Logger log = Logger.getLogger(RpcProcessor.class); 
-	private static final RpcCodec codec = new JsonRpcCodec();//TODO configurable
 	
+	private RpcCodec codec = new JsonRpcCodec();
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
 	public RpcProcessor(Object... services){
 		addModule(services);
+	}
+	
+	public void codec(RpcCodec codec){
+		this.codec = codec;
 	}
 	
 	static List<Class<?>> getAllInterfaces(Class<?> clazz){
@@ -186,7 +190,7 @@ public class RpcProcessor implements MessageProcessor{
 			Object[] invokeParams = new Object[targetParamTypes.length];  
 			Object[] reqParams = req.getParams(); 
 			for(int i=0; i<targetParamTypes.length; i++){ 
-				invokeParams[i] = codec.normalize(reqParams[i], targetParamTypes[i]);
+				invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
 			} 
 			Object result = target.method.invoke(target.instance, invokeParams);
 			resp.setResult(result); 

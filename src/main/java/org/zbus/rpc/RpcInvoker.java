@@ -31,10 +31,10 @@ import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
 
 public class RpcInvoker{  
-	private static final Logger log = Logger.getLogger(RpcInvoker.class);
-	private static final RpcCodec codec = new JsonRpcCodec(); 
+	private static final Logger log = Logger.getLogger(RpcInvoker.class); 
 	
 	private MessageInvoker messageInvoker; 
+	private RpcCodec codec; 
 	
 	private String module = ""; 
 	private String encoding = "UTF-8";
@@ -42,41 +42,48 @@ public class RpcInvoker{
 	private boolean verbose = false;
 
 	public RpcInvoker(MessageInvoker messageInvoker){
-		this.messageInvoker = messageInvoker;
+		this(messageInvoker, new JsonRpcCodec(), null);
 	}
 	
-	public RpcInvoker(MessageInvoker messageInvoker, RpcConfig config){ 
+	public RpcInvoker(MessageInvoker messageInvoker, RpcCodec codec){
+		this(messageInvoker, codec, null);
+	}
+	
+	public RpcInvoker(MessageInvoker messageInvoker, RpcConfig config){
+		this(messageInvoker, new JsonRpcCodec(), config);
+	}
+	
+	public RpcInvoker(MessageInvoker messageInvoker, RpcCodec codec, RpcConfig config){ 
 		this.messageInvoker = messageInvoker; 
-		this.module = config.getModule();
-		this.timeout = config.getTimeout(); 
-		this.encoding = config.getEncoding();
-		this.verbose = config.isVerbose();
+		this.codec = codec;
+		if(config != null){
+			this.module = config.getModule();
+			this.timeout = config.getTimeout(); 
+			this.encoding = config.getEncoding();
+			this.verbose = config.isVerbose();
+		}
 	}
 	
 	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
 		return invokeSync(clazz, method, (Class<?>[])null, args);
 	}
 	
-	public Object invokeSync(String method, Object... args) {
-		return invokeSync(method, (Class<?>[])null, args);
-	}
-	
 	@SuppressWarnings("unchecked")
 	public <T> T invokeSync(Class<T> clazz, String method, Class<?>[] types, Object... args){
 		Object netObj = invokeSync(method, types, args);
 		try {
-			return (T) codec.normalize(netObj, clazz);
+			return (T) codec.convert(netObj, clazz);
 		} catch (ClassNotFoundException e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
 	}
 
-	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
+	private Object invokeSync(String method, Class<?>[] types, Object... args) {	
 		Request req = new Request();
 		req.setModule(this.module);
 		req.setMethod(method); 
 		req.setParams(args); 
-		req.assignParamTypes(types); 
+		req.setParamTypes(types); 
 		req.setEncoding(this.encoding);
 		 
 		Message msgReq= null, msgRes = null;

@@ -87,11 +87,14 @@ public class Service implements Closeable {
 						final String msgId  = msg.getId();
 						final String sender = msg.getSender();
 						Message res = processor.process(msg);
-						res.setId(msgId);
-						res.setMq(mq);  
-						res.setRecver(sender); 
-						//route back message
-						c.routeMessage(res);
+						
+						if(res != null){
+							res.setId(msgId);
+							res.setMq(mq);  
+							res.setRecver(sender); 
+							//route back message
+							c.routeMessage(res);
+						}
 					}
 				});
 			}

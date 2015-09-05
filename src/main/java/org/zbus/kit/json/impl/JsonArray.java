@@ -1,8 +1,8 @@
-package org.zbus.kit.json;
+package org.zbus.kit.json.impl;
 
 import java.util.ArrayList;
 
-import org.zbus.kit.json.impl.CastKit;
+import org.zbus.kit.json.Json;
 
 public class JsonArray extends ArrayList<Object> {  
 	private static final long serialVersionUID = 6699808953410831664L;

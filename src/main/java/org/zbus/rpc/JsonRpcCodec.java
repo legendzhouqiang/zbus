@@ -79,7 +79,7 @@ public class JsonRpcCodec implements RpcCodec {
 		}
 	}
 	
-	public Object normalize(Object param, Class<?> targetType) throws ClassNotFoundException {
+	public Object convert(Object param, Class<?> targetType) throws ClassNotFoundException {
 		
 		if(targetType.isEnum()){ 
 			return TypeUtils.castToJavaBean(param, targetType);
