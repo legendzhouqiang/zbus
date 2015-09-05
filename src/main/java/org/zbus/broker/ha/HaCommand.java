@@ -22,9 +22,6 @@
  */
 package org.zbus.broker.ha;
 
-
-
-
 public interface HaCommand {  
 	public static final String EntryUpdate   = "entry_update"; 
 	public static final String EntryRemove   = "entry_remove";
