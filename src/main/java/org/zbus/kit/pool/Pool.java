@@ -54,7 +54,7 @@ public abstract class Pool<T> implements Closeable {
 		if (factory != null){
 			return ;
 		}
-		String defaultFactory = String.format("%s.CommonsPool2Factory", Pool.class.getPackage().getName());
+		String defaultFactory = String.format("%s.impl.CommonsPool2Factory", Pool.class.getPackage().getName());
 		try {
 			//default to Log4j
 			Class.forName("org.apache.commons.pool2.BasePooledObjectFactory");
