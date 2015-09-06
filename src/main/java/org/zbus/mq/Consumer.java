@@ -91,7 +91,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				broker.closeClient(client);
 				client = broker.getClient(brokerHint());
 			} catch (IOException ex) {
-				log.error(e.getMessage(), e);
+				log.error(ex.getMessage(), ex);
 			}
 		}
 		return res;
