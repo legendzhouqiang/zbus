@@ -130,7 +130,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.topic = topic;
 	} 
 	
-	private volatile Thread messageThread = null;
+	private volatile Thread consumerThread = null;
 	private volatile MessageHandler consumerHandler;
 	private final Runnable consumerTask = new Runnable() {
 		@Override
@@ -165,9 +165,9 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 	
 	public void stop(){
-		if(messageThread != null){
-			messageThread.interrupt();
-			messageThread = null;
+		if(consumerThread != null){
+			consumerThread.interrupt();
+			consumerThread = null;
 		}
 		try {
 			client.close();
@@ -178,12 +178,12 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 	
 	public void start(){
-		if(messageThread == null){
-			messageThread = new Thread(consumerTask);  
+		if(consumerThread == null){
+			consumerThread = new Thread(consumerTask);  
 		}
 		
-		if(messageThread.isAlive()) return;
-		messageThread.start();
+		if(consumerThread.isAlive()) return;
+		consumerThread.start();
 	}
 	
 	public void setConsumeTimeout(int consumeTimeout) {
