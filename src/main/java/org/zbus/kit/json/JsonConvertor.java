@@ -22,11 +22,14 @@
  */
 package org.zbus.kit.json; 
 
+import java.util.List;
+
+
 public interface JsonConvertor {
 	
-	String toJson(Object value);
-	
-	Object parseJson(String text);
+	String toJSONString(Object value);
 
 	<T> T parseObject(String text, Class<T> clazz);
+	
+	<T> List<T> parseArray(String text, Class<T> clazz);
 }

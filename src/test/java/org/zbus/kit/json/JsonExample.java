@@ -8,7 +8,7 @@ public class JsonExample {
 		User user = new User();
 		user.setName("hong");
 		
-		String res = Json.toJson(user);
+		String res = Json.toJSONString(user);
 		System.out.println(res);
 	} 
 }

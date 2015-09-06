@@ -1,5 +1,7 @@
 package org.zbus.kit.json;
 
+import java.util.List;
+
 import org.zbus.kit.json.impl.DefaultJson;
 import org.zbus.kit.log.Logger;
 
@@ -36,15 +38,15 @@ public class Json {
 		}
 	}
 	
-	public static String toJson(Object value){
-		return convertor.toJson(value);
-	}
-	
-	public static Object parseJson(String text){
-		return convertor.parseJson(text);
-	}
+	public static String toJSONString(Object value){
+		return convertor.toJSONString(value);
+	} 
 
 	public static <T> T parseObject(String text, Class<T> clazz){
 		return convertor.parseObject(text, clazz);
+	}
+	
+	public static <T> List<T> parseArray(String text, Class<T> clazz){
+		return convertor.parseArray(text, clazz);
 	}
 }

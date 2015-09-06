@@ -1,5 +1,7 @@
 package org.zbus.kit.json.impl;
 
+import java.util.List;
+
 import org.zbus.kit.json.JsonConvertor;
 
 import com.alibaba.fastjson.JSON;
@@ -10,7 +12,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 public class FastJson implements JsonConvertor {
 
 	@Override
-	public String toJson(Object value) { 
+	public String toJSONString(Object value) { 
 		return JSON.toJSONString(value);
 	}
 	
@@ -19,8 +21,7 @@ public class FastJson implements JsonConvertor {
 				SerializerFeature.WriteMapNullValue,
 				SerializerFeature.WriteClassName);
 	}
-
-	@Override
+ 
 	public Object parseJson(String text) { 
 		return JSON.parse(text); 
 	}
@@ -29,6 +30,11 @@ public class FastJson implements JsonConvertor {
 	@Override
 	public <T> T parseObject(String text, Class<T> clazz) { 
 		return JSON.parseObject(text, clazz);
+	}
+	
+	@Override
+	public <T> List<T> parseArray(String text, Class<T> clazz) {
+		return JSON.parseArray(text, clazz);
 	}
 	
 	private static final byte[] toJSONBytes(Object object, String charsetName,

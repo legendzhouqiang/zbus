@@ -2,6 +2,7 @@ package org.zbus.kit.json.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ public class DefaultJson implements JsonConvertor {
 	public static String DatePattern = "yyyy-MM-dd";
 	
 	@SuppressWarnings("unchecked")
-	public String toJson(Object value) {
+	public String toJSONString(Object value) {
 		if(value == null) return "null";
 		
 		if(value instanceof String)
@@ -106,7 +107,7 @@ public class DefaultJson implements JsonConvertor {
         if(key == null) sb.append("null");
         else escape(key, sb);
 		sb.append('\"').append(':'); 
-		sb.append(toJson(value));  
+		sb.append(toJSONString(value));  
 	}
 
 	private String listToJson(List<Object> list) {
@@ -126,7 +127,7 @@ public class DefaultJson implements JsonConvertor {
 				sb.append("null");
 				continue;
 			}
-			sb.append(toJson(value));
+			sb.append(toJSONString(value));
 		}
         sb.append(']');
 		return sb.toString();
@@ -136,8 +137,9 @@ public class DefaultJson implements JsonConvertor {
 		Map<Object,Object> map = new HashMap<Object,Object>();
 		
 		//support for public fields
-		Field[] fields = model.getClass().getFields(); 
-		for(Field f : fields){ 
+		Field[] fields = model.getClass().getFields();
+		for(Field f : fields){   
+			if(Modifier.isStatic(f.getModifiers())) continue;
 			String attrName = f.getName();
 			Object value = null;
 			try { value = f.get(model); } catch (Exception e) {continue;}
@@ -244,12 +246,27 @@ public class DefaultJson implements JsonConvertor {
 	}
 	
 	
-	public <T extends Object> T parseObject(String text, Class<T> clazz) {
+	public <T> T parseObject(String text, Class<T> clazz) {
 		if(text == null || text.isEmpty()) return null;
 		if(clazz == null || clazz.isInterface()) return null;
 		
 		return CastKit.objectValue((JsonObject)parseJson(text), clazz);
 	}
+	
+	public <T> List<T> parseArray(String text, Class<T> clazz) {
+		if(text == null || text.isEmpty()) return null;
+		if(clazz == null || clazz.isInterface()) return null;
+
+		JsonArray array = (JsonArray)parseJson(text);
+		if(array == null) return null;
+		List<T> res = new ArrayList<T>(); 
+		for(Object elem : array){
+			T obj = CastKit.objectValue((JsonObject)elem, clazz);
+			res.add(obj);
+		}
+		return res;
+	}
+
 
 	public Object parseJson(String text) {
 		if(text == null) return null; 

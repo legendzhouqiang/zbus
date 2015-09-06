@@ -49,7 +49,7 @@ public class JsonArray extends ArrayList<Object> {
 	}
 
 	public String toJsonString() {
-		return Json.toJson(this);
+		return Json.toJSONString(this);
 	}
 
 	public String toString() {

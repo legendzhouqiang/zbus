@@ -469,7 +469,7 @@ class MqAdaptor extends IoAdaptor implements Closeable {
 				data.setResponseStatus("200");
 				data.setId(msg.getId());
 				data.setHead("content-type", "application/json");
-				data.setBody(Json.toJson(info));
+				data.setBody(Json.toJSONString(info));
 				sess.write(data);
 			}
 		};

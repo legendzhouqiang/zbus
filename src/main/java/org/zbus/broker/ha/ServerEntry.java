@@ -83,10 +83,12 @@ public class ServerEntry implements Comparable<ServerEntry>{
 
 	public static ServerEntry parseJson(String msg){
 		return JSON.parseObject(msg, ServerEntry.class);
+		//return new DefaultJson().parseObject(msg, ServerEntry.class);
 	}  
 	
 	public String toJsonString(){
 		return JSON.toJSONString(this);
-	} 
+		//return new DefaultJson().toJSONString(this);
+	}
 }
 

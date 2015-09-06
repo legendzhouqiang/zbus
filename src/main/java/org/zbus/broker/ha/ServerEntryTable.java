@@ -42,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.kit.log.Logger;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 
 public class ServerEntryTable implements Closeable{
 	private static final Logger log = Logger.getLogger(ServerEntryTable.class);
@@ -185,17 +183,12 @@ public class ServerEntryTable implements Closeable{
 			entries.addAll(entryList);
 		} 
 		return JSON.toJSONString(entries);
+		//return new DefaultJson().toJSONString(entries);
 	}
 	 
 	public static List<ServerEntry> parseJson(String jsonString){
-		JSONArray jsonArray = JSON.parseArray(jsonString);
-		List<ServerEntry> res = new ArrayList<ServerEntry>();
-		for(Object obj : jsonArray){
-			JSONObject json = (JSONObject)obj;
-			ServerEntry entry = JSON.toJavaObject(json, ServerEntry.class);
-			res.add(entry);
-		}
-		return res;
+		return JSON.parseArray(jsonString, ServerEntry.class);
+		//return new DefaultJson().parseArray(jsonString, ServerEntry.class);
 	} 
 	
 	@Override
