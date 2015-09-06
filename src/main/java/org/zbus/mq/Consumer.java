@@ -128,57 +128,66 @@ public class Consumer extends MqAdmin implements Closeable {
 			throw new IllegalStateException("topic require PubSub mode");
 		}
 		this.topic = topic;
-	}
+	} 
 	
-	
-	private Thread messageThread = null;
-	public void onMessage(final MessageHandler handler) throws IOException{
-		stop();
-		
-		Runnable task = new Runnable() {
-			@Override
-			public void run() { 
-				for(;;){
-					try {
-						final Message msg;
-						try { 
-							msg = recv(consumeTimeout); 
-						} catch (InterruptedException e) { 
-							break;
-						}
-						if(msg == null) continue;
-						
-						try {
-							handler.handle(msg, client.getSession());
-						} catch (IOException e) {
-							log.error(e.getMessage(), e);
-						}  
-					} catch (IOException e) { 
-						log.error(e.getMessage(), e);
+	private volatile Thread messageThread = null;
+	private volatile MessageHandler consumerHandler;
+	private final Runnable consumerTask = new Runnable() {
+		@Override
+		public void run() { 
+			while(true){
+				try {
+					final Message msg;
+					try { 
+						msg = recv(consumeTimeout); 
+					} catch (InterruptedException e) { 
+						break;
 					}
-				}
+					if(msg == null) continue;
+					if(consumerHandler == null){
+						log.warn("Missing consumer MessageHandler, call onMessage first");
+						continue;
+					}
+					try {
+						consumerHandler.handle(msg, client.getSession());
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}  
+				} catch (IOException e) { 
+					log.error(e.getMessage(), e);
+				} 
 			}
-		};
-		
-		messageThread = new Thread(task);  
+		}
+	};
+	
+	public void onMessage(final MessageHandler handler) throws IOException{
+		this.consumerHandler = handler;
 	}
 	
-	public void setConsumeTimeout(int consumeTimeout) {
-		this.consumeTimeout = consumeTimeout;
-	}
-
 	public void stop(){
 		if(messageThread != null){
 			messageThread.interrupt();
 			messageThread = null;
 		}
+		try {
+			client.close();
+			client = null;
+		} catch (IOException e) {
+			log.error(e.getMessage(), e); 
+		}
 	}
 	
 	public void start(){
-		if(messageThread == null) return;
+		if(messageThread == null){
+			messageThread = new Thread(consumerTask);  
+		}
+		
 		if(messageThread.isAlive()) return;
 		messageThread.start();
 	}
 	
+	public void setConsumeTimeout(int consumeTimeout) {
+		this.consumeTimeout = consumeTimeout;
+	} 
 	
 }
