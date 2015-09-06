@@ -170,7 +170,9 @@ public class Consumer extends MqAdmin implements Closeable {
 			consumerThread = null;
 		}
 		try {
-			client.close();
+			if(client != null){
+				client.close();
+			}
 			client = null;
 		} catch (IOException e) {
 			log.error(e.getMessage(), e); 
