@@ -158,7 +158,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			}
 			ServerEntry se = null;
 			try{
-				se = ServerEntry.parseJson(msg.getBodyString());
+				se = ServerEntry.unpack(msg.getBodyString());
 			} catch(Exception e){
 				log.error(e.getMessage(), e);
 				return;
@@ -207,7 +207,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			}
 			
 			msg.setCmd(HaCommand.PubAll);
-			msg.setBody(serverEntryTable.toJsonString());
+			msg.setBody(serverEntryTable.pack());
 			sess.write(msg);
 		}
 	};

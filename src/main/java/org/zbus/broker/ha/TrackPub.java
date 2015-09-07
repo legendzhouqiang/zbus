@@ -112,7 +112,7 @@ public class TrackPub implements Closeable{
 	
 	public void pubEntryUpdate(ServerEntry se){ 
 		Message msg = new Message();
-		msg.setBody(se.toJsonString());
+		msg.setBody(se.pack());
 		msg.setCmd(HaCommand.EntryUpdate);  
 		sendToAllTrackers(msg);
 	} 

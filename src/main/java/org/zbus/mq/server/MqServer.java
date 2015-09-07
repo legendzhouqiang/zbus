@@ -39,8 +39,8 @@ import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
+import org.zbus.kit.JsonKit;
 import org.zbus.kit.NetKit;
-import org.zbus.kit.json.Json;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
@@ -110,7 +110,7 @@ public class MqServer extends Server{
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
-		config.trackServerList = ConfigKit.option(args, "-track", null);
+		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
 
 		String configFile = ConfigKit.option(args, "-conf", null);
 		if(configFile != null){
@@ -469,7 +469,7 @@ class MqAdaptor extends IoAdaptor implements Closeable {
 				data.setResponseStatus("200");
 				data.setId(msg.getId());
 				data.setHead("content-type", "application/json");
-				data.setBody(Json.toJSONString(info));
+				data.setBody(JsonKit.toJson(info));
 				sess.write(data);
 			}
 		};

@@ -22,15 +22,14 @@
  */
 package org.zbus.broker.ha;
 
-import com.alibaba.fastjson.JSON;
 
 public class ServerEntry implements Comparable<ServerEntry>{ 
 	public static final int MQ     = 1<<0;
 	public static final int PubSub = 1<<1;
 	public static final int RPC    = 1<<3;  //参看mq中MqMode
 	
-	public String entryId;
-	public String serverAddr; 
+	public String entryId = "";
+	public String serverAddr = ""; 
 	public int mode; //RPC/MQ/PubSub 
 	
 	public long lastUpdateTime; 
@@ -80,15 +79,37 @@ public class ServerEntry implements Comparable<ServerEntry>{
 				+ ", msgCount=" + unconsumedMsgCount 
 				+ ", entry=" + entryId + "}";
 	}
-
-	public static ServerEntry parseJson(String msg){
-		return JSON.parseObject(msg, ServerEntry.class);
-		//return new DefaultJson().parseObject(msg, ServerEntry.class);
-	}  
 	
-	public String toJsonString(){
-		return JSON.toJSONString(this);
-		//return new DefaultJson().toJSONString(this);
+	public String pack(){
+		final String SPLIT = "\t";
+		StringBuilder sb = new StringBuilder();
+		sb.append(entryId+SPLIT);
+		sb.append(serverAddr+SPLIT);
+		sb.append(mode+SPLIT);
+		sb.append(lastUpdateTime+SPLIT);
+		sb.append(unconsumedMsgCount+SPLIT);
+		sb.append(consumerCount);
+		return sb.toString();
+	}
+	
+	public static ServerEntry unpack(String packedString){
+		String[] ss = packedString.split("[\t]");
+		if(ss.length < 6){
+			return null;
+		}
+		ServerEntry se = new ServerEntry();
+		try{
+			se.entryId = ss[0];
+			se.serverAddr = ss[1];
+			se.mode = Integer.valueOf(ss[2]);
+			se.lastUpdateTime = Long.valueOf(ss[3]);
+			se.unconsumedMsgCount = Long.valueOf(ss[4]);
+			se.consumerCount = Integer.valueOf(ss[5]);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+		return se;
 	}
 }
 

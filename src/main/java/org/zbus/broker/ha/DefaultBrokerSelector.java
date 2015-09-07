@@ -229,7 +229,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			public void handle(Message msg, Session sess) throws IOException {  
 				ServerEntry entry = null;
 				try{
-					entry = ServerEntry.parseJson(msg.getBodyString());
+					entry = ServerEntry.unpack(msg.getBodyString());
 				} catch(Exception e){
 					log.error(e.getMessage(), e);
 					return;
@@ -250,7 +250,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.cmd(HaCommand.PubAll, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				List<ServerEntry> serverEntries = ServerEntryTable.parseJson(msg.getBodyString());
+				List<ServerEntry> serverEntries = ServerEntryTable.unpack(msg.getBodyString());
 				for(ServerEntry entry : serverEntries){ 
 					updateServerEntry(entry); 
 				}

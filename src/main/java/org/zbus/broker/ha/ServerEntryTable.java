@@ -41,8 +41,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
 
-import com.alibaba.fastjson.JSON;
-
 public class ServerEntryTable implements Closeable{
 	private static final Logger log = Logger.getLogger(ServerEntryTable.class);
 	//entry_id ==> list of same entries from different target_servers
@@ -177,19 +175,30 @@ public class ServerEntryTable implements Closeable{
 		return server2EntryList.keySet();
 	}
 	
-	public String toJsonString(){
-		List<ServerEntry> entries = new ArrayList<ServerEntry>();
+	public String pack(){ 
+		StringBuilder sb = new StringBuilder(); 
 		for(Set<ServerEntry> entryList : server2EntryList.values()){
-			entries.addAll(entryList);
+			for(ServerEntry se : entryList){
+				sb.append(se.pack() + "\n");
+			}
 		} 
-		return JSON.toJSONString(entries);
-		//return new DefaultJson().toJSONString(entries);
+		if(sb.length() > 0){ //remove last \n
+			sb.setLength(sb.length()-1);
+		}
+		return sb.toString();
 	}
-	 
-	public static List<ServerEntry> parseJson(String jsonString){
-		return JSON.parseArray(jsonString, ServerEntry.class);
-		//return new DefaultJson().parseArray(jsonString, ServerEntry.class);
-	} 
+	
+	public static List<ServerEntry> unpack(String packedString){
+		List<ServerEntry> res = new ArrayList<ServerEntry>();
+		String[] ss = packedString.split("[\n]");
+		for(String s : ss){
+			ServerEntry se = ServerEntry.unpack(s);
+			if(se != null){
+				res.add(se);
+			}
+		}
+		return res;
+	}
 	
 	@Override
 	public void close() throws IOException {  

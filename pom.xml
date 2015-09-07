@@ -65,32 +65,21 @@
 			<scope>provided</scope>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring</artifactId>
 			<version>2.5.6</version>
 			<optional>true</optional>
 			<scope>test</scope>
-		</dependency>
-
+		</dependency> 
 
 	</dependencies>
 
 
 	<build>
-		<!-- 
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>*.properties</exclude>
-					<exclude>*.xml</exclude>
-				</excludes>
-				<filtering>false</filtering>
-			</resource>
-		</resources>
-		 -->
+		<!-- <resources> <resource> <directory>src/main/resources</directory> <excludes> 
+			<exclude>*.properties</exclude> <exclude>*.xml</exclude> </excludes> <filtering>false</filtering> 
+			</resource> </resources> -->
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -115,7 +104,7 @@
 						<directory>src/main/resources</directory>
 						<excludes>
 							<exclude>*.properties</exclude>
-							<exclude>*.xml</exclude> 
+							<exclude>*.xml</exclude>
 						</excludes>
 						<filtering>false</filtering>
 					</resource>

@@ -1,4 +1,4 @@
-package org.zbus.kit.json.impl;
+package org.zbus.kit;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -9,16 +9,42 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
-import org.zbus.kit.json.JsonConvertor;
+public class JsonKit {
+	private static Method fastjsonMethod;
+	
+	static{
+		try { 
+			Class<?> fastjon = Class.forName("com.alibaba.fastjson.JSON");  
+			fastjsonMethod = fastjon.getMethod("toJSONString", Object.class); 
+		} catch (Exception e) {  
+			//ignore
+		}
+	}
+	
+	public static String toJson(Object value) {
+		if(fastjsonMethod != null){
+			try {
+				return (String)fastjsonMethod.invoke(null, value);
+			} catch (Exception e) { 
+				e.printStackTrace();
+			}
+		}
+		return JsonWriter.toJson(value);
+	}
+	
+	public static void main(String[] args){
+		System.out.println(JsonKit.toJson("xx"));
+	}
+}
 
-public class DefaultJson implements JsonConvertor {
+
+
+class JsonWriter {
 	public static String TimestampPattern = "yyyy-MM-dd HH:mm:ss";
 	public static String DatePattern = "yyyy-MM-dd";
-	
 	@SuppressWarnings("unchecked")
-	public String toJSONString(Object value) {
+	public static String toJson(Object value) {
 		if(value == null) return "null";
 		
 		if(value instanceof String)
@@ -83,7 +109,7 @@ public class DefaultJson implements JsonConvertor {
 		return "\"" + escape(value.toString()) + "\"";
 	}
 	
-	private String mapToJson(Map<Object,Object> map) {
+	private static String mapToJson(Map<Object,Object> map) {
 		if(map == null) return "null";  
 		
         StringBuilder sb = new StringBuilder();
@@ -102,15 +128,15 @@ public class DefaultJson implements JsonConvertor {
 		return sb.toString();
 	}
 	
-	private void appendKV(String key, Object value, StringBuilder sb){
+	private static void appendKV(String key, Object value, StringBuilder sb){
 		sb.append('\"');
         if(key == null) sb.append("null");
         else escape(key, sb);
 		sb.append('\"').append(':'); 
-		sb.append(toJSONString(value));  
+		sb.append(toJson(value));  
 	}
 
-	private String listToJson(List<Object> list) {
+	private static String listToJson(List<Object> list) {
 		if(list == null) return "null";
 		
         boolean first = true;
@@ -127,13 +153,13 @@ public class DefaultJson implements JsonConvertor {
 				sb.append("null");
 				continue;
 			}
-			sb.append(toJSONString(value));
+			sb.append(toJson(value));
 		}
         sb.append(']');
 		return sb.toString();
 	} 
 	
-	private String beanToJson(Object model) {
+	private static String beanToJson(Object model) {
 		Map<Object,Object> map = new HashMap<Object,Object>();
 		
 		//support for public fields
@@ -243,104 +269,5 @@ public class DefaultJson implements JsonConvertor {
 				}
 			}
 		}
-	}
-	
-	
-	public <T> T parseObject(String text, Class<T> clazz) {
-		if(text == null || text.isEmpty()) return null;
-		if(clazz == null || clazz.isInterface()) return null;
-		
-		return CastKit.objectValue((JsonObject)parseJson(text), clazz);
-	}
-	
-	public <T> List<T> parseArray(String text, Class<T> clazz) {
-		if(text == null || text.isEmpty()) return null;
-		if(clazz == null || clazz.isInterface()) return null;
-
-		JsonArray array = (JsonArray)parseJson(text);
-		if(array == null) return null;
-		List<T> res = new ArrayList<T>(); 
-		for(Object elem : array){
-			T obj = CastKit.objectValue((JsonObject)elem, clazz);
-			res.add(obj);
-		}
-		return res;
-	}
-
-
-	public Object parseJson(String text) {
-		if(text == null) return null; 
-		text = text.trim();
-		if(text.isEmpty()) return null;
-		
-		Stack<String> stack = new Stack<String>();
-		Stack<Object> objects = new Stack<Object>();
-		Stack<String> keys = new Stack<String>();
-		Stack<Boolean> types = new Stack<Boolean>();
-		int idx = 0;
-		int pos = 0;
-		Object obj = null;
-		do {
-			switch (text.charAt(idx++)) {
-			case '[':
-			case '{':
-				boolean isMap = text.charAt(idx - 1) == '{';
-				if (stack.size() != 0 && stack.lastElement().equals("\"")) {
-					break;
-				}
-				stack.push("}");
-				types.push(isMap);
-				if (null != obj)
-					objects.push(obj);
-				obj = CastKit.newInstance(isMap ? JsonObject.class : JsonArray.class);
-				pos = idx;
-				break;
-			case ']':
-			case '}':
-				if (pos != idx) {
-					String value = text.substring(pos, idx - (text.charAt(idx - 2) == '"' ? 2 : 1)).trim();
-					if (obj instanceof HashMap) {
-						JsonObject.class.cast(obj).put(keys.pop(), value);
-					} else {
-						JsonArray.class.cast(obj).add(value);
-					}
-				}
-				types.pop();
-				stack.pop();
-				if (objects.size() > 0) {
-					if (objects.lastElement() instanceof HashMap) {
-						JsonObject.class.cast(objects.lastElement()).put(keys.pop(), obj);
-					} else {
-						JsonArray.class.cast(objects.lastElement()).add(obj);
-					}
-					obj = objects.pop();
-				}
-				pos = idx + 1;
-				break;
-			case '"':
-				if (stack.lastElement().equals("\"")) {
-					stack.pop();
-				} else {
-					stack.push("\"");
-					pos = idx;
-				}
-				break;
-			case ',':
-				if (pos != idx) {
-					String value = text.substring(pos, idx - (text.charAt(idx - 2) == '"' ? 2 : 1)).trim();
-					if (types.lastElement()) {
-						JsonObject.class.cast(obj).put(keys.pop(), value);
-					} else {
-						JsonArray.class.cast(obj).add(value);
-					}
-				}
-				pos = idx;
-				break;
-			case ':':
-				keys.push(text.substring(pos, (pos = idx) - 2));
-				break;
-			}
-		} while (idx < text.length());
-		return obj;
-	}
+	} 
 }
