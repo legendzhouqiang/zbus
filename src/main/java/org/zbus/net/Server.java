@@ -25,6 +25,9 @@ package org.zbus.net;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
@@ -34,18 +37,23 @@ import org.zbus.net.core.IoAdaptor;
 public class Server implements Closeable{
 	private static final Logger log = Logger.getLogger(Server.class);  
 	
-	protected Dispatcher dispatcher; 
-	protected String host = "0.0.0.0";
-	protected int port = 80;
+	private static class ServerAdaptor{
+		public String serverAddr;
+		public ServerSocketChannel serverChannel;
+		public IoAdaptor serverAdaptor;
+	}
 	
-	protected String serverAddr = host+":"+port;
-	protected String serverName = "Server";
-	protected ServerSocketChannel serverChannel;
+	protected Dispatcher dispatcher;   
+	protected String serverAddr; //第一个Server注册的地址
+	protected String serverName = "Server";  
 	
-	protected IoAdaptor serverAdaptor;  
+	protected Map<String, ServerAdaptor> adaptors = new ConcurrentHashMap<String, ServerAdaptor>();
 	
-	public Server(String address){
-		this(null, null, address);
+	public Server(){	
+	}
+	
+	public Server(Dispatcher dispatcher){
+		this.dispatcher = dispatcher;
 	}
 	
 	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, int port){
@@ -54,39 +62,57 @@ public class Server implements Closeable{
 	
 	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, String address){
 		this.dispatcher = dispatcher;
-		this.serverAdaptor = serverAdaptor;
+		registerAdaptor(address, serverAdaptor);
+	}
+	
+	public void registerAdaptor(int port, IoAdaptor ioAdaptor){
+		registerAdaptor("0.0.0.0:"+port, ioAdaptor);
+	}
+	
+	public void registerAdaptor(String address, IoAdaptor ioAdaptor){
+		ServerAdaptor adaptor = new ServerAdaptor();
 		String[] blocks = address.split("[:]");
 		if(blocks.length != 2){
 			throw new IllegalArgumentException(address + " is invalid address");
-		} 
-		this.host = blocks[0];
-		this.port = Integer.valueOf(blocks[1]);
-		
-		if("0.0.0.0".equals(host)){
-			serverAddr = String.format("%s:%d",NetKit.getLocalIp(), port);
+		}  
+		adaptor.serverAddr = address; 
+		adaptor.serverAdaptor = ioAdaptor;  
+		 
+		if(adaptors.isEmpty()){
+			this.serverAddr = address;
+			String host = blocks[0];
+			int port = Integer.valueOf(blocks[1]);
+			if("0.0.0.0".equals(host)){
+				this.serverAddr = String.format("%s:%d",NetKit.getLocalIp(), port);
+			} 
 		}
+		
+		adaptors.put(address, adaptor);
 	}
 	
-	public void start() throws IOException{  
-		if(serverAdaptor == null){
-			throw new IllegalStateException("Missing serverIoAdaptor");
+	public void start() throws IOException{   
+		if(dispatcher == null){
+			throw new IllegalStateException("Missing Dispatcher");
 		}
-    	if(serverChannel != null){
-    		log.info("Server already started");
-    		return;
-    	}
-    	this.dispatcher.start(); 
+    	this.dispatcher.start();  
     	
-    	serverChannel = dispatcher.registerServerChannel(host, port, serverAdaptor);
-    	log.info("%s listening [%s:%d]", this.serverName, host, port);
+    	for(Entry<String, ServerAdaptor> e : adaptors.entrySet()){ 
+    		ServerAdaptor adaptor = e.getValue();
+    		if(adaptor.serverChannel != null) continue;
+    		
+    		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.serverAddr, adaptor.serverAdaptor);
+        	log.info("%s listening [%s]", this.serverName, adaptor.serverAddr);
+    	}  
     } 
 
 	@Override
     public void close() throws IOException { 
-    	if(serverChannel != null){
-    		serverChannel.close();
-    		dispatcher.unregisterServerChannel(serverChannel);
-    	}
+		for(Entry<String, ServerAdaptor> e : adaptors.entrySet()){ 
+    		ServerAdaptor adaptor = e.getValue();
+    		dispatcher.unregisterServerChannel(adaptor.serverChannel);
+    		adaptor.serverChannel = null;
+    	}  
+		adaptors.clear();
     }
     
 	public void setDispatcher(Dispatcher dispatcher) {
@@ -95,12 +121,8 @@ public class Server implements Closeable{
 	
     public void setServerName(String serverName){
     	this.serverName = serverName;
-    } 
-
-	public void setServerAdaptor(IoAdaptor serverAdaptor) {
-		this.serverAdaptor = serverAdaptor;
-	}
-
+    }  
+    
 	public String getServerAddr() {
 		return serverAddr;
 	} 

@@ -53,19 +53,19 @@ public class MqServer extends Server{
 	
 	private MqAdaptor mqAdaptor;
 	private MqServerConfig config;
-	
-	@SuppressWarnings("resource")
-	public MqServer(MqServerConfig config) {
-		super(config.getServerAddress());  
+	 
+	public MqServer(MqServerConfig config){ 
 		this.config = config;  
 		
-		this.dispatcher = new Dispatcher()
-			.selectorCount(config.selectorCount)
-			.executorCount(config.executorCount);
+		serverName = "MqServer";   
+		dispatcher = new Dispatcher();
+		dispatcher.selectorCount(config.selectorCount);
+		dispatcher.executorCount(config.executorCount);
 		
-		serverAdaptor = mqAdaptor = new MqAdaptor(this); 
+		mqAdaptor = new MqAdaptor(this); 
 		mqAdaptor.setVerbose(config.verbose); 
-		serverName = "MqServer";
+		
+		registerAdaptor(config.getServerAddress(), mqAdaptor);
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -161,6 +161,7 @@ public class MqServer extends Server{
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
+		config.trackServerList = ConfigKit.option(args, "-track", null);
 		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
 
 		String configFile = ConfigKit.option(args, "-conf", null);

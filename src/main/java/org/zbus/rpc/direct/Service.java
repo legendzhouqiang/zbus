@@ -40,10 +40,11 @@ public class Service extends Server {
 	private final String trackServerList;
 	private final String entryId;
 	
-	public Service(ServiceConfig config){
-		super(config.serverHost+":"+config.serverPort);
+	public Service(ServiceConfig config){ 
+		serverName = "RpcServer";  
 		trackServerList = config.trackServerList;
 		entryId = config.entryId;
+		
 		if(config.dispatcher != null){
 			dispatcher = config.dispatcher;
 		} else {
@@ -53,8 +54,9 @@ public class Service extends Server {
 			ownDispatcher = true;
 		}
 		
-		serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
-		serverName = "RpcServer"; 
+		IoAdaptor serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
+		String address = config.serverHost+":"+config.serverPort;
+		registerAdaptor(address, serverAdaptor);
 	}
 	
 	@Override

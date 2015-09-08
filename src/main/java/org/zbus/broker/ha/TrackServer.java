@@ -45,10 +45,11 @@ public class TrackServer extends Server{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
 	private TrackAdaptor trackAdaptor;  
 	public TrackServer(String address) {
-		super(address);  
-		dispatcher = new Dispatcher(); 
-		serverAdaptor = trackAdaptor = new TrackAdaptor();	
 		serverName = "TrackServer";
+		dispatcher = new Dispatcher(); 
+		trackAdaptor = new TrackAdaptor();	
+		
+		registerAdaptor(address, trackAdaptor);
 	}
 	
 	@Override
