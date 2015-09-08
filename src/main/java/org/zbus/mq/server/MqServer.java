@@ -38,8 +38,8 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.kit.FileKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqInfo;
-import org.zbus.net.Server;
 import org.zbus.net.Client.ConnectedHandler;
+import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 
@@ -51,21 +51,14 @@ public class MqServer extends Server{
 	private long cleanInterval = 3000; 
 	private long trackInterval = 5000;
 	
-	private MqAdaptor mqAdaptor;
 	private MqServerConfig config;
-	 
+	
 	public MqServer(MqServerConfig config){ 
-		this.config = config;  
-		
+		this.config = config;   
 		serverName = "MqServer";   
 		dispatcher = new Dispatcher();
 		dispatcher.selectorCount(config.selectorCount);
-		dispatcher.executorCount(config.executorCount);
-		
-		mqAdaptor = new MqAdaptor(this); 
-		mqAdaptor.setVerbose(config.verbose); 
-		
-		registerAdaptor(config.getServerAddress(), mqAdaptor);
+		dispatcher.executorCount(config.executorCount); 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -79,28 +72,35 @@ public class MqServer extends Server{
 		}, 1000, cleanInterval, TimeUnit.MILLISECONDS); 
 	}
 	
+	private MqAdaptor mqAdaptor;
+	public void registerDefaultMqAdaptor(){
+		//将MqAdaptor与MqServer分离是为了做其他编码支持
+		mqAdaptor = new MqAdaptor(this); 
+		mqAdaptor.setVerbose(config.verbose);
+		mqAdaptor.loadMQ(config.storePath);  
+		registerAdaptor(config.getServerAddress(), mqAdaptor);
+	}
+	
 	@Override
 	public void start() throws IOException { 
 		log.info("MqServer starting ...");
-		super.start();
-		
+		super.start(); 
 		if(config.trackServerList!= null){
 			log.info("Running at HA mode, connect to TrackServers");
 			setupTracker(config.trackServerList, dispatcher);
-		} 
-		mqAdaptor.loadMQ(config.storePath);  
-		
+		}  
 		log.info("MqServer started successfully");
 	}
 	
 	@Override
 	public void close() throws IOException { 
-		mqAdaptor.close();
+		if(mqAdaptor != null){
+			mqAdaptor.close();
+		}
 		if(trackPub != null){
     		trackPub.close();
     	}
 		scheduledExecutor.shutdown();
-		
 		super.close();  
 		if(dispatcher != null){
 			dispatcher.close();
@@ -130,9 +130,7 @@ public class MqServer extends Server{
 			}
 		}, 2000, trackInterval, TimeUnit.MILLISECONDS);
     }  
-    
-    
-    
+     
     public void pubEntryUpdate(AbstractMQ mq){
     	if(trackPub == null) return;
     	 
@@ -162,7 +160,7 @@ public class MqServer extends Server{
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", null);
-		config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
+		//config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
 
 		String configFile = ConfigKit.option(args, "-conf", null);
 		if(configFile != null){
@@ -171,13 +169,17 @@ public class MqServer extends Server{
 				log.info("Using file config options from(%s)", configFile);
 				config.load(configFile);
 			}  
-		} 
+		}  
 		
-		final MqServer server = new MqServer(config);
+		final MqServer server = new MqServer(config); 
+		//将MqAdaptor与MqServer分离是为了做其他协议适配支持
+		server.registerDefaultMqAdaptor(); 
+		
 		server.start(); 
+		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
-				try {
+				try { 
 					server.close();
 					log.info("MqServer shutdown completed");
 				} catch (IOException e) {
