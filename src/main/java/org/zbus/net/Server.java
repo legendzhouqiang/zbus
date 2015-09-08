@@ -99,5 +99,10 @@ public class Server implements Closeable{
 
 	public void setServerAdaptor(IoAdaptor serverAdaptor) {
 		this.serverAdaptor = serverAdaptor;
+	}
+
+	public String getServerAddr() {
+		return serverAddr;
 	} 
+	
 }
