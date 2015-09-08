@@ -145,6 +145,7 @@ class ServerBindingAdaptor extends BindingAdaptor{
 }
 
 public class DmzServer implements Closeable{  
+	private static final Logger log = Logger.getLogger(DmzServer.class); 
     private Server notifyServer;
     private Server upServer;
     private Server downServer;
@@ -187,8 +188,18 @@ public class DmzServer implements Closeable{
 		
 		Dispatcher dispatcher = new Dispatcher();
 
-		@SuppressWarnings("resource")
-		DmzServer dmz = new DmzServer(dispatcher, up, down, notify);
-		dmz.start(); 
+		final DmzServer dmzServer = new DmzServer(dispatcher, up, down, notify);
+		dmzServer.start(); 
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					dmzServer.close();
+					log.info("DmzServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}); 
 	}
 }

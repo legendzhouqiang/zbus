@@ -118,7 +118,18 @@ public class DmzClient extends Client<Integer, Integer>{
 		
 		Dispatcher dispatcher = new Dispatcher();
  
-		DmzClient dmzClient = new DmzClient(dispatcher, dmzNotify, dmzDown, target);
+		final DmzClient dmzClient = new DmzClient(dispatcher, dmzNotify, dmzDown, target);
 		dmzClient.start(); 
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					dmzClient.close();
+					log.info("DmzClient shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});   
 	}
 }

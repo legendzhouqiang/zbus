@@ -177,9 +177,19 @@ public class HttpProxyServer extends BindingAdaptor{
 		Dispatcher dispatcher = new Dispatcher(); 
 		IoAdaptor ioAdaptor = new HttpProxyServer(urlMap);
 		
-		@SuppressWarnings("resource")
-		Server server = new Server(dispatcher, ioAdaptor, serverAddress);
+		final Server server = new Server(dispatcher, ioAdaptor, serverAddress);
 		server.setServerName("HttpProxyServer");
 		server.start();
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					server.close();
+					log.info("DmzServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}); 
 	}
 }

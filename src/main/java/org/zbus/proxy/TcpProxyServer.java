@@ -72,10 +72,20 @@ public class TcpProxyServer extends BindingAdaptor{
 		Dispatcher dispatcher = new Dispatcher();
 		
 		IoAdaptor ioAdaptor = new TcpProxyServer(target);
-		
-		@SuppressWarnings("resource")
-		Server server = new Server(dispatcher, ioAdaptor, serverPort);
+
+		final Server server = new Server(dispatcher, ioAdaptor, serverPort);
 		server.setServerName("TcpProxyServer");
 		server.start();
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					server.close();
+					log.info("DmzServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}); 
 	}
 }
