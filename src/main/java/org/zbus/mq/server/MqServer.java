@@ -46,6 +46,7 @@ import org.zbus.net.core.Session;
 public class MqServer extends Server{ 
 	private static final Logger log = Logger.getLogger(MqServer.class); 
 	
+	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
 	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private long cleanInterval = 3000; 
@@ -149,6 +150,10 @@ public class MqServer extends Server{
 	
 	public Map<String, AbstractMQ> getMqTable() {
 		return mqTable;
+	} 
+
+	public Map<String, Session> getSessionTable() {
+		return sessionTable;
 	}
 
 	public static void main(String[] args) throws Exception {

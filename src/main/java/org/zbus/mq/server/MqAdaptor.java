@@ -29,7 +29,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private static final Logger log = Logger.getLogger(MqAdaptor.class);
 
 	private final Map<String, AbstractMQ> mqTable;
-	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
+	private final Map<String, Session> sessionTable;
 	private final Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	
 	private boolean verbose = false;   
@@ -41,6 +41,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		codec(new MessageCodec());   
 		this.mqServer = mqServer;
 		this.mqTable = mqServer.getMqTable();
+		this.sessionTable = mqServer.getSessionTable();
 		this.serverAddr = mqServer.getServerAddr();
 		
 		registerHandler(Protocol.Produce, produceHandler); 
