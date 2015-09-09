@@ -209,10 +209,22 @@ public final class IoBuffer {
 			this.buf = newBuffer;
 		}
 	}
-
+	
+	
 	@Override
 	public String toString() {
-		return "IoBuffer [remaining=" + buf.remaining() + "]";
+		String str = new String(buf.array(), buf.position(), buf.remaining());
+		StringBuffer sb = new StringBuffer();
+		sb.append(String.format("IoBuffer(%d)=", buf.remaining())); 
+		for(int i=0; i<str.length();i++){
+			char c = str.charAt(i);
+			if(Character.isLetter(c)){
+				sb.append(c); 
+			} else {
+				sb.append(String.format("<%s>", Integer.toBinaryString(c))); 
+			}
+		}
+		return sb.toString();
 	} 
 	
 }

@@ -27,7 +27,7 @@ public class TargetServer extends MessageAdaptor {
 		TargetServer ioAdaptor = new TargetServer();
 		
 		@SuppressWarnings("resource")
-		Server server = new Server(dispatcher, ioAdaptor, 8080);
+		Server server = new Server(dispatcher, ioAdaptor, 15555);
 		server.start(); 
 	}
 

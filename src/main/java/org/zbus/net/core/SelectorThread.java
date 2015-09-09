@@ -157,13 +157,13 @@ public class SelectorThread extends Thread {
 		dispatcher.asyncRun(new Runnable() { 
 			@Override
 			public void run() {
-				try{ 
+				try{  
 					sess.getIoAdaptor().onException(e, sess);
 				} catch (Throwable ex){
 					if(!dispatcher.isStarted()){
-						log.debug(e.getMessage(), ex);
+						log.debug(ex.getMessage(), ex);
 					} else {
-						log.error(e.getMessage(), ex);
+						log.error(ex.getMessage(), ex);
 					}
 				}
 			}
