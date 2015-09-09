@@ -83,7 +83,7 @@ public class RpcInvoker{
 		req.setModule(this.module);
 		req.setMethod(method); 
 		req.setParams(args); 
-		req.setParamTypes(types); 
+		req.assignParamTypes(types); 
 		req.setEncoding(this.encoding);
 		 
 		Message msgReq= null, msgRes = null;
