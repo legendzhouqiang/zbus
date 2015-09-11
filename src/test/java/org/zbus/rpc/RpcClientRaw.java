@@ -15,24 +15,17 @@ public class RpcClientRaw {
 		config.setServerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(config);
 	 
-		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");
-		RpcConfig rpcConfig = new RpcConfig();
-		rpcConfig.setVerbose(true);
-		RpcInvoker rpc = new RpcInvoker(invoker, rpcConfig);   
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc"); 
+		RpcInvoker rpc = new RpcInvoker(invoker);   
+		  
 		
 		
-		//同步
-		String res = rpc.invokeSync(String.class, "getString", "testxxxx");
-		System.out.println(res);
-		
-		
-		//更多配置项目
-		Request req = new Request()
-			.module("")
+		Request req = new Request() 
 			.method("getString")
 			.params("testXXX"); 
 		
-		res = rpc.invokeSync(String.class, req);
+		//同步
+		String res = rpc.invokeSync(String.class, req);
 		System.out.println(res);
 		
 		 

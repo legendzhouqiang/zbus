@@ -185,12 +185,12 @@ public class RpcInvoker{
 				public void onReturn(Message result) { 
 					if(isVerbose()){
 						long end = System.currentTimeMillis();
-						log.info("[REP]: Time cost=%dms\n%s",(end-start), result);
-						Response resp = codec.decodeResponse(result);
-						if(callback != null){
-							callback.onReturn(resp);
-						}
+						log.info("[REP]: Time cost=%dms\n%s",(end-start), result); 
 					} 
+					Response resp = codec.decodeResponse(result);
+					if(callback != null){
+						callback.onReturn(resp);
+					}
 				}
 			});
 		} catch (IOException e) {
