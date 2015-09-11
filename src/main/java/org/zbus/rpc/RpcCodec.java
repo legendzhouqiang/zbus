@@ -91,6 +91,32 @@ public interface RpcCodec {
 			}
 		}
 		
+		public Request method(String method){
+			this.method = method;
+			return this;
+		}
+		public Request module(String module){
+			this.module = module;
+			return this;
+		}
+		public Request params(Object... params){
+			this.params = params;
+			return this;
+		}
+		public Request encoding(String encoding){
+			this.encoding = encoding;
+			return this;
+		}
+		public Request paramTypes(Class<?>... types){
+			if(types == null) return this;
+			this.paramTypes = new String[types.length];
+			for(int i=0; i<types.length; i++){
+				this.paramTypes[i]= types[i].getCanonicalName(); 
+			}
+			return this;
+		}
+		
+		
 		public static void normalize(Request req){
 			if(req.module == null){
 				req.module = "";

@@ -25,6 +25,7 @@ package org.zbus.rpc;
 import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcCodec.Request;
@@ -65,31 +66,70 @@ public class RpcInvoker{
 	}
 	
 	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
-		return invokeSync(clazz, method, (Class<?>[])null, args);
+		Request request = new Request()
+			.module(module)
+			.method(method)  
+			.params(args)
+			.encoding(encoding);
+
+		return invokeSync(clazz, request);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> T invokeSync(Class<T> clazz, String method, Class<?>[] types, Object... args){
-		Object netObj = invokeSync(method, types, args);
+		Request request = new Request()
+			.module(module)
+			.method(method) 
+			.paramTypes(types)
+			.params(args)
+			.encoding(encoding);
+	
+		return invokeSync(clazz, request);
+	}
+	
+	
+	public <T> T invokeSync(Class<T> clazz, String module, String method, Class<?>[] types, Object... args){
+		Request request = new Request()
+			.module(module)
+			.method(method) 
+			.paramTypes(types)
+			.params(args)
+			.encoding(encoding);
+		
+		return invokeSync(clazz, request);
+	}
+	
+	public <T> T invokeSync(Class<T> clazz, Request request){
+		Response resp = invokeSync(request);
 		try {
-			return (T) codec.convert(netObj, clazz);
+			@SuppressWarnings("unchecked")
+			T res = (T)codec.convert(extractResult(resp), clazz);
+			return res;
 		} catch (ClassNotFoundException e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
 	}
-
-	private Object invokeSync(String method, Class<?>[] types, Object... args) {	
-		Request req = new Request();
-		req.setModule(this.module);
-		req.setMethod(method); 
-		req.setParams(args); 
-		req.assignParamTypes(types); 
-		req.setEncoding(this.encoding);
+	
+	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
+		return invokeSync(this.module, method, types, args);
+	} 
+	
+	public Object invokeSync(String module, String method, Class<?>[] types, Object... args) {	
+		Request req = new Request()
+			.module(module)
+			.method(method) 
+			.paramTypes(types)
+			.params(args)
+			.encoding(encoding); 
 		 
+		Response resp = invokeSync(req);
+		return extractResult(resp);
+	} 
+	
+	public Response invokeSync(Request request){
 		Message msgReq= null, msgRes = null;
 		try {
 			long start = System.currentTimeMillis();
-			msgReq = codec.encodeRequest(req); 
+			msgReq = codec.encodeRequest(request); 
 			if(isVerbose()){
 				log.info("[REQ]: %s", msgReq);
 			} 
@@ -109,13 +149,57 @@ public class RpcInvoker{
 		
 		if (msgRes == null) { 
 			String errorMsg = String.format("module(%s)-method(%s) request timeout\n%s", 
-					module, method, msgReq.toString());
+					module, request.getMethod(), msgReq.toString());
 			throw new RpcException(errorMsg);
 		}
 		
-		Response resp = codec.decodeResponse(msgRes);
-		
-		
+		return codec.decodeResponse(msgRes);
+	}
+
+	
+	public <T> void invokeAsync(final Class<T> clazz, Request request,  final ResultCallback<T> callback){
+		invokeAsync(request, new ResultCallback<Response>() { 
+			@Override
+			public void onReturn(Response resp) {  
+				Object netObj = extractResult(resp);
+				try {
+					@SuppressWarnings("unchecked")
+					T target = (T) codec.convert(netObj, clazz);
+					callback.onReturn(target);
+				} catch (ClassNotFoundException e) { 
+					throw new RpcException(e.getMessage(), e.getCause());
+				}
+			}
+		});
+	}
+	
+	public void invokeAsync(Request request, final ResultCallback<Response> callback){ 
+		final long start = System.currentTimeMillis();
+		final Message msgReq = codec.encodeRequest(request); 
+		if(isVerbose()){
+			log.info("[REQ]: %s", msgReq);
+		}  
+		try {
+			messageInvoker.invokeAsync(msgReq, new ResultCallback<Message>() {
+				@Override
+				public void onReturn(Message result) { 
+					if(isVerbose()){
+						long end = System.currentTimeMillis();
+						log.info("[REP]: Time cost=%dms\n%s",(end-start), result);
+						Response resp = codec.decodeResponse(result);
+						if(callback != null){
+							callback.onReturn(resp);
+						}
+					} 
+				}
+			});
+		} catch (IOException e) {
+			throw new RpcException(e.getMessage(), e);
+		}  
+	}
+
+	
+	private Object extractResult(Response resp){
 		if(resp.getStackTrace() != null){
 			Throwable error = resp.getError();
 			if(error != null){
@@ -129,7 +213,7 @@ public class RpcInvoker{
 		} 
 		return resp.getResult();
 	}
-
+	
 	public String getEncoding() {
 		return encoding;
 	}
