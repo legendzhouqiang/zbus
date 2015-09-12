@@ -41,6 +41,8 @@ public class MqServerConfig{
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555; 
+	public String thriftServer = "0.0.0.0:25555"; 
+	
 	public int selectorCount = 1;
 	public int executorCount = 64;
 	public boolean verbose = true;
