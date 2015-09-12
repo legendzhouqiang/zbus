@@ -34,6 +34,7 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.net.http.MessageCodec;
+import org.zbus.proxy.thrift.ThriftCodec;
 
 public class Service extends Server {  
 	private boolean ownDispatcher = false;
@@ -57,6 +58,12 @@ public class Service extends Server {
 		IoAdaptor serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
 		String address = config.serverHost+":"+config.serverPort;
 		registerAdaptor(address, serverAdaptor);
+		
+		if(config.thriftServer != null){
+			DirectMessageAdaptor thriftAdaptor = new DirectMessageAdaptor(config.messageProcessor);
+			thriftAdaptor.codec(new ThriftCodec()); 
+			registerAdaptor(config.thriftServer, thriftAdaptor);
+		}
 	}
 	
 	@Override

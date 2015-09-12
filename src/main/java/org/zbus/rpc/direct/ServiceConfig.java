@@ -27,11 +27,13 @@ import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig {  
 	public String serverHost = "0.0.0.0";
-	public int serverPort = 15555; 
+	public int serverPort = 15555;  
 	public int selectorCount = 1;
 	public int executorCount = 64; 
 	public Dispatcher dispatcher;
 	public MessageProcessor messageProcessor;
+	
+	public String thriftServer; //需要thrift支持才启动
 	
 	//如果加入高可用HA才需要填写
 	public String trackServerList; 

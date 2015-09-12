@@ -15,6 +15,7 @@ public class DirectRpcService {
 		
 		ServiceConfig config = new ServiceConfig(); 
 		config.serverPort = 15555; 
+		config.thriftServer = "0.0.0.0:25555";
 		config.messageProcessor = processor; 
 		
 		Service svc = new Service(config);
