@@ -146,7 +146,7 @@ class ServerBindingAdaptor extends BindingAdaptor{
 public class DmzServer{  
 	private static final Logger log = Logger.getLogger(DmzServer.class);  
 	public static void main(String[] args) throws Exception {  
-		int up = ConfigKit.option(args, "-up", 80);
+		int up = ConfigKit.option(args, "-up", 8080);
 		int down = ConfigKit.option(args, "-down", 15557);
 		int notify = ConfigKit.option(args, "-notify", 15558);
 		
