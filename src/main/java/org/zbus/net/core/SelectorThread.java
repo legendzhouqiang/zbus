@@ -130,13 +130,13 @@ public class SelectorThread extends Thread {
 				} 
 				handleUnregister();
 			}
-		} catch(Throwable e) {
+		} catch(Throwable e) { 
 			if(!dispatcher.isStarted()){
 				if(log.isDebugEnabled()){
 					log.debug(e.getMessage(), e);
 				}
 			} else {
-				log.error(e.getMessage(), e);
+				log.error("SelectorThread exit for fatal error:%s", e);
 			}
 		}
 	}
@@ -165,16 +165,16 @@ public class SelectorThread extends Thread {
 					} else {
 						log.error(ex.getMessage(), ex);
 					}
-				}
-				try{ 
-					sess.close(); 
-					key.cancel();
-				} catch(Throwable ex){
-					log.error(e.getMessage(), ex);
-				}
+				} 
 			}
 		}); 
 		
+		try{ 
+			sess.close(); 
+			key.cancel();
+		} catch(Throwable ex){
+			log.error(e.getMessage(), ex);
+		}
 
 	}
 	

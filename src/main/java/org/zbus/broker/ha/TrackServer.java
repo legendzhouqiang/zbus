@@ -241,9 +241,9 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 				public void onDisconnected() throws IOException {
 					log.warn("Server(%s) down", serverAddr);
 					joinedServers.remove(serverAddr); 
-					serverEntryTable.removeServer(serverAddr);  
-					client.close();
+					serverEntryTable.removeServer(serverAddr);   
 					
+					client.close();
 					log.info("Sending ServerLeave message");
 					Message msg = new Message();
 					msg.setCmd(HaCommand.ServerLeave);

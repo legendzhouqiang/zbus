@@ -103,7 +103,20 @@ public class Session implements Closeable{
 			this.channel.close();  
 		}  
 		
-		this.getIoAdaptor().onSessionDestroyed(this); 
+		dispatcher.asyncRun(new Runnable() { 
+			@Override
+			public void run() {
+				try{   
+					getIoAdaptor().onSessionDestroyed(Session.this); 
+				} catch (Throwable ex){
+					if(!dispatcher.isStarted()){
+						log.debug(ex.getMessage(), ex);
+					} else {
+						log.error(ex.getMessage(), ex);
+					}
+				} 
+			}
+		});  
 	}
 	
 	public void asyncClose() throws IOException{ 
@@ -114,7 +127,7 @@ public class Session implements Closeable{
 		if(selector == null){
 			throw new IOException("failed to find dispatcher for session: "+this);
 		}
-		
+		ioAdaptor.onSessionToDestroy(this);
 		selector.unregisterSession(this);
 	}
 	
@@ -152,8 +165,7 @@ public class Session implements Closeable{
 			data.clear();
 		}
 		
-		if(n < 0){
-			ioAdaptor.onSessionToDestroy(this);
+		if(n < 0){ 
 			asyncClose(); 
 			return;
 		} 
