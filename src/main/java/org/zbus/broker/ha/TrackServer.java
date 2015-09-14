@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.Client.ErrorHandler;
+import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
@@ -236,9 +236,9 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 				}
 			});
 			
-			client.onError(new ErrorHandler() { 
+			client.onDisconnected(new DisconnectedHandler() { 
 				@Override
-				public void onError(IOException e, Session sess) throws IOException { 
+				public void onDisconnected() throws IOException {
 					log.warn("Server(%s) down", serverAddr);
 					joinedServers.remove(serverAddr); 
 					serverEntryTable.removeServer(serverAddr);  
@@ -250,14 +250,14 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 					msg.setServer(serverAddr);
 					
 					pubMessage(msg);
-				}
+				} 
 			}); 
 			
 			client.connectAsync(); 
 		}
 	}
 	
-	protected void onSessionDestroyed(Session sess) throws IOException {
+	protected void onSessionToDestroy(Session sess) throws IOException {
 		trackSubs.remove(sess.id()); 
 	}
 	

@@ -7,3 +7,4 @@ MAIN_OPTS="-h 0.0.0.0 -p 15555 -verbose false -conf zbus.properties -store store
 LIB_OPTS="$ZBUS_HOME/lib:$ZBUS_HOME/*"
 nohup $JAVA_HOME/bin/java $JAVA_OPTS -cp $LIB_OPTS $MAIN_CLASS $MAIN_OPTS &
 
+

@@ -69,8 +69,18 @@ public abstract class IoAdaptor implements Codec{
 		//默认关注读写事件
 		sess.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 	}
+	
 	/**
 	 * Session注销前回调
+	 * @param sess
+	 * @throws IOException
+	 */
+	protected void onSessionToDestroy(Session sess) throws IOException{
+		
+	}
+	
+	/**
+	 * Session注销后回调
 	 * @param sess
 	 * @throws IOException
 	 */

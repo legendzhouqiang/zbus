@@ -103,6 +103,7 @@ public class Session implements Closeable{
 			this.channel.close();  
 		}  
 		
+		this.getIoAdaptor().onSessionDestroyed(this); 
 	}
 	
 	public void asyncClose() throws IOException{ 
@@ -152,7 +153,7 @@ public class Session implements Closeable{
 		}
 		
 		if(n < 0){
-			ioAdaptor.onSessionDestroyed(this);
+			ioAdaptor.onSessionToDestroy(this);
 			asyncClose(); 
 			return;
 		} 

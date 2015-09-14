@@ -107,13 +107,13 @@ public class Server implements Closeable{
     	this.dispatcher.start();  
     	
     	for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
-    		IoAdaptorInfo adaptorInfo = e.getValue();
-    		if(adaptorInfo.serverChannel != null) continue;
+    		IoAdaptorInfo adaptor = e.getValue();
+    		if(adaptor.serverChannel != null) continue;
     		
-    		adaptorInfo.serverChannel = dispatcher.registerServerChannel(adaptorInfo.adaptorAddr, adaptorInfo.serverAdaptor);
-        	String info = String.format("%s-%s listening [%s]", this.serverName, adaptorInfo.adaptorName, adaptorInfo.adaptorAddr);
-    		if(adaptorInfo.adaptorName == null){
-    			info = String.format("%s listening [%s]", this.serverName, adaptorInfo.adaptorAddr);
+    		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.adaptorAddr, adaptor.serverAdaptor);
+        	String info = String.format("%s-%s listening [%s]", this.serverName, adaptor.adaptorName, adaptor.adaptorAddr);
+    		if(adaptor.adaptorName == null){
+    			info = String.format("%s listening [%s]", this.serverName, adaptor.adaptorAddr);
     		}
         	log.info(info);
     	}  

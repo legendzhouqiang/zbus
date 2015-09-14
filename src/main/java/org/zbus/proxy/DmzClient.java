@@ -42,6 +42,7 @@ public class DmzClient extends Client<Integer, Integer>{
 	
 	private String dmzDownAddress;   
 	private String targetAddress;  
+	private int reconnectTime = 1000; //ms
     
     public DmzClient(final Dispatcher dispatcher,
     		String dmzNotifyAddress,
@@ -53,6 +54,21 @@ public class DmzClient extends Client<Integer, Integer>{
     	this.dispatcher = dispatcher;
     	this.dmzDownAddress = dmzDownAddress;
         this.targetAddress = targetAddress;
+        
+        onDisconnected(new DisconnectedHandler() {
+			@Override
+			public void onDisconnected() throws IOException {
+				log.info("Disconnected, try to reconnect in %.1f seconds", reconnectTime/1000.0);
+				try {
+					Thread.sleep(reconnectTime);
+				} catch (InterruptedException ex) {  
+				}
+				
+				DmzClient.this.connectAsync();
+			}
+		});
+        
+     
     }
     
 	@Override
@@ -96,18 +112,10 @@ public class DmzClient extends Client<Integer, Integer>{
 		}
 	}
 	
-	@Override
-	public void onException(Throwable e, Session sess) throws IOException {
-		if(e instanceof IOException){
-			this.connectAsync();
-		} else {
-			super.onException(e, sess);
-		}
-	}
 	
     public void start() throws Exception{  
     	this.dispatcher.start();  
-    	this.connectSyncIfNeed();
+    	this.connectAsync();
     }
      
     
@@ -116,7 +124,7 @@ public class DmzClient extends Client<Integer, Integer>{
 		String dmzNotify = ConfigKit.option(args, "-dmzNotify", "127.0.0.1:15558");
 		String target = ConfigKit.option(args, "-target", "127.0.0.1:15555");
 		
-		Dispatcher dispatcher = new Dispatcher();
+		final Dispatcher dispatcher = new Dispatcher();
  
 		final DmzClient dmzClient = new DmzClient(dispatcher, dmzNotify, dmzDown, target);
 		dmzClient.start(); 
@@ -125,6 +133,7 @@ public class DmzClient extends Client<Integer, Integer>{
 			public void run() { 
 				try {
 					dmzClient.close();
+					dispatcher.close();
 					log.info("DmzClient shutdown completed");
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);

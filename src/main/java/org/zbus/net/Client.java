@@ -55,6 +55,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	protected volatile MsgHandler<RES> msgHandler; 
 	protected ErrorHandler errorHandler;
 	protected ConnectedHandler connectedHandler;
+	protected DisconnectedHandler disconnectedHandler;
 	
 	public Client(String address, Dispatcher dispatcher) { 
 		String[] blocks = address.split("[:]");
@@ -140,6 +141,14 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		}
 	}
 	
+	@Override
+	protected void onSessionDestroyed(Session sess) throws IOException { 
+		super.onSessionDestroyed(sess);
+		if(disconnectedHandler != null){
+			disconnectedHandler.onDisconnected();
+		}
+	}
+	
 	public void onMessage(MsgHandler<RES> msgHandler){
     	this.msgHandler = msgHandler;
     }
@@ -150,6 +159,10 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
     
     public void onConnected(ConnectedHandler connectedHandler){
     	this.connectedHandler = connectedHandler;
+    } 
+    
+    public void onDisconnected(DisconnectedHandler disconnectedHandler){
+    	this.disconnectedHandler = disconnectedHandler;
     } 
 
 	@Override
@@ -214,6 +227,10 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	
 	public static interface ConnectedHandler { 
 		void onConnected(Session sess) throws IOException;   
+	}
+	
+	public static interface DisconnectedHandler { 
+		void onDisconnected() throws IOException;   
 	}
 	
 	public static interface ErrorHandler { 

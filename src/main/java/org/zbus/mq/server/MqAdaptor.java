@@ -235,9 +235,9 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	}
 	
 	@Override
-	protected void onSessionDestroyed(Session sess) throws IOException { 
+	protected void onSessionToDestroy(Session sess) throws IOException { 
 		cleanSession(sess);
-		super.onSessionDestroyed(sess);
+		super.onSessionToDestroy(sess);
 	} 
 	
     public void setVerbose(boolean verbose) {

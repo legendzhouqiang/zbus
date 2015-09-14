@@ -88,9 +88,9 @@ class NotifyAdaptor extends IoAdaptor{
 	}
 	
 	@Override
-	protected void onSessionDestroyed(Session sess) throws IOException {
+	protected void onSessionToDestroy(Session sess) throws IOException {
 		sessions.remove(sess);
-		super.onSessionDestroyed(sess);
+		super.onSessionToDestroy(sess);
 	}  
 	
 	public void notifyDownstream(){

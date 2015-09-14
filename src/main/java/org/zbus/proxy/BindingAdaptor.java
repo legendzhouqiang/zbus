@@ -91,7 +91,7 @@ public class BindingAdaptor extends IoAdaptor{
 	}
 	
 	@Override
-	public void onSessionDestroyed(Session sess) throws IOException {  
+	public void onSessionToDestroy(Session sess) throws IOException {  
 		cleanSession(sess);
 	}
 	

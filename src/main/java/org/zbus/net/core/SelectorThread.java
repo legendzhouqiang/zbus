@@ -157,7 +157,7 @@ public class SelectorThread extends Thread {
 		dispatcher.asyncRun(new Runnable() { 
 			@Override
 			public void run() {
-				try{  
+				try{   
 					sess.getIoAdaptor().onException(e, sess);
 				} catch (Throwable ex){
 					if(!dispatcher.isStarted()){
@@ -166,15 +166,16 @@ public class SelectorThread extends Thread {
 						log.error(ex.getMessage(), ex);
 					}
 				}
+				try{ 
+					sess.close(); 
+					key.cancel();
+				} catch(Throwable ex){
+					log.error(e.getMessage(), ex);
+				}
 			}
 		}); 
 		
-		try{ 
-			sess.close(); 
-			key.cancel();
-		} catch(Throwable ex){
-			log.error(e.getMessage(), ex);
-		}
+
 	}
 	
 	protected void handleRegister(){
@@ -201,8 +202,8 @@ public class SelectorThread extends Thread {
 	protected void handleUnregister(){
 		Session sess = null;
 		while( (sess = this.unregister.poll()) != null ){
-			try {
-				sess.close();
+			try { 
+				sess.close(); 
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			}

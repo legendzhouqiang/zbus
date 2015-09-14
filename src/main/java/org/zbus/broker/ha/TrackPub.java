@@ -29,7 +29,7 @@ import java.util.Set;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.Client.ErrorHandler;
+import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
@@ -51,10 +51,9 @@ public class TrackPub implements Closeable{
     		final MessageClient client = new MessageClient(address, dispatcher); 
     		allTrackers.add(client);
     		
-    		client.onError(new ErrorHandler() {
-    			@Override
-    			public void onError(IOException e, Session sess)
-    					throws IOException { 
+    		client.onDisconnected(new DisconnectedHandler() { 
+				@Override
+				public void onDisconnected() throws IOException { 
     				healthyTrackers.remove(client);
     				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
     				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
