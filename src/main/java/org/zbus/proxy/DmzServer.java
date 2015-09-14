@@ -23,7 +23,6 @@
 package org.zbus.proxy;
  
  
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
@@ -144,14 +143,14 @@ class ServerBindingAdaptor extends BindingAdaptor{
 	}
 }
 
-public class DmzServer implements Closeable{  
-	private static final Logger log = Logger.getLogger(DmzServer.class); 
-    private Server notifyServer;
-    private Server upServer;
-    private Server downServer;
-    
-    public DmzServer(final Dispatcher dispatcher, int upPort, int downPort, int notifyPort){   
-        NotifyAdaptor notifyAdaptor = new NotifyAdaptor();
+public class DmzServer{  
+	private static final Logger log = Logger.getLogger(DmzServer.class);  
+	public static void main(String[] args) throws Exception {  
+		int up = ConfigKit.option(args, "-up", 80);
+		int down = ConfigKit.option(args, "-down", 15557);
+		int notify = ConfigKit.option(args, "-notify", 15558);
+		
+		NotifyAdaptor notifyAdaptor = new NotifyAdaptor();
         ServerBindingAdaptor upAdaptor = new ServerBindingAdaptor();
         ServerBindingAdaptor downAdaptor = new ServerBindingAdaptor();
         
@@ -159,42 +158,20 @@ public class DmzServer implements Closeable{
         downAdaptor.peer = upAdaptor;
         upAdaptor.notify = notifyAdaptor;
         
-        this.upServer = new Server(dispatcher, upAdaptor, upPort);
-        this.downServer = new Server(dispatcher, downAdaptor, downPort);
-        this.notifyServer = new Server(dispatcher, notifyAdaptor, notifyPort);
+        final Dispatcher dispatcher = new Dispatcher();
+        final Server dmzServer = new Server(dispatcher);
+        dmzServer.registerAdaptor(up, upAdaptor, "Up");
+        dmzServer.registerAdaptor(down, downAdaptor, "Down");
+        dmzServer.registerAdaptor(notify, notifyAdaptor, "Notify");
+        dmzServer.setServerName("DMZServer");
         
-        this.notifyServer.setServerName("DMZ Notify");
-        this.upServer.setServerName("DMZ Up");
-        this.downServer.setServerName("DMZ Down");
-    } 
-    
-    public void start() throws IOException{    
-    	this.upServer.start();
-    	this.downServer.start();
-    	this.notifyServer.start();
-    }
-    
-    @Override
-    public void close() throws IOException {
-    	this.notifyServer.close();
-    	this.upServer.close();
-    	this.downServer.close();
-    }
-    
-	public static void main(String[] args) throws Exception {  
-		int up = ConfigKit.option(args, "-up", 80);
-		int down = ConfigKit.option(args, "-down", 15557);
-		int notify = ConfigKit.option(args, "-notify", 15558);
-		
-		Dispatcher dispatcher = new Dispatcher();
-
-		final DmzServer dmzServer = new DmzServer(dispatcher, up, down, notify);
-		dmzServer.start(); 
+        dmzServer.start(); 
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
 				try {
 					dmzServer.close();
+					dispatcher.close();
 					log.info("DmzServer shutdown completed");
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);

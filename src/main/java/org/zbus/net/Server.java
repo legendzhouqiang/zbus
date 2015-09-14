@@ -37,8 +37,9 @@ import org.zbus.net.core.IoAdaptor;
 public class Server implements Closeable{
 	private static final Logger log = Logger.getLogger(Server.class);  
 	
-	private static class ServerAdaptor{
-		public String serverAddr;
+	private static class IoAdaptorInfo{
+		public String adaptorName;
+		public String adaptorAddr;
 		public ServerSocketChannel serverChannel;
 		public IoAdaptor serverAdaptor;
 	}
@@ -47,7 +48,7 @@ public class Server implements Closeable{
 	protected String serverAddr; //第一个Server注册的地址
 	protected String serverName = "Server";  
 	
-	protected Map<String, ServerAdaptor> adaptors = new ConcurrentHashMap<String, ServerAdaptor>();
+	protected Map<String, IoAdaptorInfo> adaptors = new ConcurrentHashMap<String, IoAdaptorInfo>();
 	
 	public Server(){	
 	}
@@ -66,16 +67,25 @@ public class Server implements Closeable{
 	}
 	
 	public void registerAdaptor(int port, IoAdaptor ioAdaptor){
-		registerAdaptor("0.0.0.0:"+port, ioAdaptor);
+		registerAdaptor("0.0.0.0:"+port, ioAdaptor, null);
+	}
+	
+	public void registerAdaptor(int port, IoAdaptor ioAdaptor, String name){
+		registerAdaptor("0.0.0.0:"+port, ioAdaptor, name);
 	}
 	
 	public void registerAdaptor(String address, IoAdaptor ioAdaptor){
-		ServerAdaptor adaptor = new ServerAdaptor();
+		registerAdaptor(address, ioAdaptor, null);
+	}
+
+	public void registerAdaptor(String address, IoAdaptor ioAdaptor, String name){
+		IoAdaptorInfo adaptor = new IoAdaptorInfo();
 		String[] blocks = address.split("[:]");
 		if(blocks.length != 2){
 			throw new IllegalArgumentException(address + " is invalid address");
 		}  
-		adaptor.serverAddr = address; 
+		adaptor.adaptorName = name;
+		adaptor.adaptorAddr = address; 
 		adaptor.serverAdaptor = ioAdaptor;  
 		 
 		if(adaptors.isEmpty()){
@@ -96,19 +106,23 @@ public class Server implements Closeable{
 		}
     	this.dispatcher.start();  
     	
-    	for(Entry<String, ServerAdaptor> e : adaptors.entrySet()){ 
-    		ServerAdaptor adaptor = e.getValue();
-    		if(adaptor.serverChannel != null) continue;
+    	for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
+    		IoAdaptorInfo adaptorInfo = e.getValue();
+    		if(adaptorInfo.serverChannel != null) continue;
     		
-    		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.serverAddr, adaptor.serverAdaptor);
-        	log.info("%s listening [%s]", this.serverName, adaptor.serverAddr);
+    		adaptorInfo.serverChannel = dispatcher.registerServerChannel(adaptorInfo.adaptorAddr, adaptorInfo.serverAdaptor);
+        	String info = String.format("%s-%s listening [%s]", this.serverName, adaptorInfo.adaptorName, adaptorInfo.adaptorAddr);
+    		if(adaptorInfo.adaptorName == null){
+    			info = String.format("%s listening [%s]", this.serverName, adaptorInfo.adaptorAddr);
+    		}
+        	log.info(info);
     	}  
     } 
 
 	@Override
     public void close() throws IOException { 
-		for(Entry<String, ServerAdaptor> e : adaptors.entrySet()){ 
-    		ServerAdaptor adaptor = e.getValue();
+		for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
+    		IoAdaptorInfo adaptor = e.getValue();
     		dispatcher.unregisterServerChannel(adaptor.serverChannel);
     		adaptor.serverChannel = null;
     	}  

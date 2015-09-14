@@ -80,7 +80,7 @@ public class MqServer extends Server{
 		mqAdaptor = new MqAdaptor(this); 
 		mqAdaptor.setVerbose(config.verbose);
 		mqAdaptor.loadMQ(config.storePath);  
-		registerAdaptor(config.getServerAddress(), mqAdaptor);
+		registerAdaptor(config.getServerAddress(), mqAdaptor, "Main");
 	}
 	
 	@Override
@@ -186,7 +186,7 @@ public class MqServer extends Server{
 		if(config.thriftServer != null){
 			MqAdaptor thriftAdaptor = new MqAdaptor(server);
 			thriftAdaptor.codec(new ThriftCodec());
-			server.registerAdaptor(config.thriftServer, thriftAdaptor);
+			server.registerAdaptor(config.thriftServer, thriftAdaptor, "Thrift");
 		}
 		
 		server.start(); 
