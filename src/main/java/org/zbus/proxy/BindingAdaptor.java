@@ -83,9 +83,10 @@ public class BindingAdaptor extends IoAdaptor{
 	public void onSessionConnected(Session sess) throws IOException {  
 		Session chain = sess.chain;
 		if(chain == null){
+			log.info("Missing chain");
 			sess.asyncClose();
 			return; 
-		}
+		} 
 		sess.register(SelectionKey.OP_READ);
 		chain.register(SelectionKey.OP_READ);
 	}

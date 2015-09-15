@@ -37,12 +37,15 @@ import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
+import org.zbus.broker.ha.TrackSub.EntryRemoveHandler;
+import org.zbus.broker.ha.TrackSub.EntryUpdateHandler;
+import org.zbus.broker.ha.TrackSub.PubServerEntryListHandler;
+import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
+import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Dispatcher;
-import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
 
 public class DefaultBrokerSelector implements BrokerSelector{
@@ -196,24 +199,19 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		}
 	}
 	
-	
 	private void subscribeNotification(){
 		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
 		
-		trackSub.cmd(HaCommand.ServerJoin, new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException { 
-				String serverAddr = msg.getServer();
+		trackSub.onServerJoinHandler(new ServerJoinHandler() {  
+			public void onServerJoin(String serverAddr) throws IOException {
 				if(serverEntryTable.isNewServer(serverAddr)){
-					onNewServer(serverAddr);
+					onNewServer(serverAddr); 
 				}
 			}
 		});
 		
-		trackSub.cmd(HaCommand.ServerLeave, new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException { 
-				String serverAddr = msg.getServer();
+		trackSub.onServerLeaveHandler(new ServerLeaveHandler() {  
+			public void onServerLeave(String serverAddr) throws IOException {
 				serverEntryTable.removeServer(serverAddr);
 				synchronized (allBrokers) {
 					Broker broker = allBrokers.remove(serverAddr);
@@ -222,35 +220,22 @@ public class DefaultBrokerSelector implements BrokerSelector{
 					broker.close(); 
 				}
 			}
-		}); 
+		});
 		
-		trackSub.cmd(HaCommand.EntryUpdate, new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException {  
-				ServerEntry entry = null;
-				try{
-					entry = ServerEntry.unpack(msg.getBodyString());
-				} catch(Exception e){
-					log.error(e.getMessage(), e);
-					return;
-				}
+		trackSub.onEntryUpdateHandler(new EntryUpdateHandler() {  
+			public void onEntryUpdate(ServerEntry entry) throws IOException { 
 				updateServerEntry(entry);
 			}
 		});
 		
-		trackSub.cmd(HaCommand.EntryRemove, new MessageHandler() {
-			@Override
-			public void handle(Message msg, Session sess) throws IOException { 
-				String serverAddr = msg.getServer();
-				String entryId = msg.getMq();
+		trackSub.onEntryRemoveHandler(new EntryRemoveHandler() {  
+			public void onEntryRemove(String entryId, String serverAddr) throws IOException { 
 				serverEntryTable.removeServerEntry(serverAddr, entryId);
-			} 
+			}
 		});
 		
-		trackSub.cmd(HaCommand.PubAll, new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException {
-				List<ServerEntry> serverEntries = ServerEntryTable.unpack(msg.getBodyString());
+		trackSub.onPubServerEntryList(new PubServerEntryListHandler() {  
+			public void onPubServerEntryList(List<ServerEntry> serverEntries) throws IOException { 
 				for(ServerEntry entry : serverEntries){ 
 					updateServerEntry(entry); 
 				}

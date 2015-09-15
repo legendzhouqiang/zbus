@@ -25,6 +25,7 @@ package org.zbus.broker.ha;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +48,8 @@ public class TrackSub implements Closeable{
 	
 	private Map<String, MessageHandler> cmdHandlers = new ConcurrentHashMap<String, MessageHandler>();
 	private boolean verbose = false;
+	
+	
 	public TrackSub(String trackServerList, Dispatcher dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
     	for(String block : blocks){
@@ -94,7 +97,69 @@ public class TrackSub implements Closeable{
 				}
 			});
     	}  
+    	
+    	
+    	initDefaultHandlers();
     }
+	
+	public void initDefaultHandlers(){
+		cmd(HaCommand.ServerJoin, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				String serverAddr = msg.getServer();
+				if(serverJoinHandler != null){
+					serverJoinHandler.onServerJoin(serverAddr);
+				}
+			}
+		});
+		
+		cmd(HaCommand.ServerLeave, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				String serverAddr = msg.getServer();
+				if(serverLeaveHandler != null){
+					serverLeaveHandler.onServerLeave(serverAddr);
+				}
+			}
+		}); 
+		
+		cmd(HaCommand.EntryUpdate, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {  
+				ServerEntry entry = null;
+				try{
+					entry = ServerEntry.unpack(msg.getBodyString());
+				} catch(Exception e){
+					log.error(e.getMessage(), e);
+					return;
+				}
+				if(entryUpdateHandler != null){
+					entryUpdateHandler.onEntryUpdate(entry);
+				}
+			}
+		});
+		
+		cmd(HaCommand.EntryRemove, new MessageHandler() {
+			@Override
+			public void handle(Message msg, Session sess) throws IOException { 
+				String serverAddr = msg.getServer();
+				String entryId = msg.getMq();
+				if(entryRemoveHandler != null){
+					entryRemoveHandler.onEntryRemove(entryId, serverAddr);
+				}
+			} 
+		});
+		
+		cmd(HaCommand.PubAll, new MessageHandler() { 
+			@Override
+			public void handle(Message msg, Session sess) throws IOException {
+				List<ServerEntry> serverEntries = ServerEntryTable.unpack(msg.getBodyString());
+				if(pubServerEntryListHandler != null){
+					pubServerEntryListHandler.onPubServerEntryList(serverEntries);
+				}
+			}
+		});
+	}
 	
 	public void cmd(String command, MessageHandler handler){
     	this.cmdHandlers.put(command, handler);
@@ -107,6 +172,12 @@ public class TrackSub implements Closeable{
 			} catch (IOException e) { 
 				log.error(e.getMessage(), e);
 			}
+		}
+	}
+	
+	public void sendSubAll(){
+		for(MessageClient client : this.allTrackers){
+			clientSubAll(client);
 		}
 	}
 	
@@ -132,5 +203,46 @@ public class TrackSub implements Closeable{
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	} 
+	
+	public void onPubServerEntryList(PubServerEntryListHandler pubServerEntryListHandler){
+		this.pubServerEntryListHandler = pubServerEntryListHandler;
+	}
+
+	public void onServerJoinHandler(ServerJoinHandler serverJoinHandler){
+		this.serverJoinHandler = serverJoinHandler;
+	}
+	
+	public void onServerLeaveHandler(ServerLeaveHandler serverLeaveHandler){
+		this.serverLeaveHandler = serverLeaveHandler;
+	}
+	
+	public void onEntryUpdateHandler(EntryUpdateHandler entryUpdateHandler){
+		this.entryUpdateHandler = entryUpdateHandler;
+	}
+
+	public void onEntryRemoveHandler(EntryRemoveHandler entryRemoveHandler){
+		this.entryRemoveHandler = entryRemoveHandler;
+	}
+	
+	private PubServerEntryListHandler pubServerEntryListHandler;
+	private ServerJoinHandler serverJoinHandler;
+	private ServerLeaveHandler serverLeaveHandler;
+	private EntryUpdateHandler entryUpdateHandler;
+	private EntryRemoveHandler entryRemoveHandler;
     
+	public static interface PubServerEntryListHandler{
+		void onPubServerEntryList(List<ServerEntry> serverEntries) throws IOException;
+	}
+	public static interface ServerJoinHandler{
+		void onServerJoin(String serverAddr) throws IOException;
+	}
+	public static interface ServerLeaveHandler{
+		void onServerLeave(String serverAddr) throws IOException;
+	}
+	public static interface EntryUpdateHandler{
+		void onEntryUpdate(ServerEntry entry) throws IOException;
+	}
+	public static interface EntryRemoveHandler{
+		void onEntryRemove(String entryId, String serverAddr)throws IOException;
+	}
 }

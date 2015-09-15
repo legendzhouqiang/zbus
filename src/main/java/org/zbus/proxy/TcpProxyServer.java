@@ -44,10 +44,8 @@ public class TcpProxyServer extends BindingAdaptor{
     
     @Override
     protected void onSessionAccepted(Session sess) throws IOException {
-    	if(log.isDebugEnabled()){
-    		log.debug("Bind upstream: %s", sess); 
-    		log.debug("Try to connect downstream(%s)", targetAddress);
-    	}
+    	log.info("Bind upstream: %s", sess); 
+    	log.info("Try to connect downstream(%s)", targetAddress);
     	
     	Session target = null;
     	Dispatcher dispatcher = sess.getDispatcher();
@@ -67,8 +65,8 @@ public class TcpProxyServer extends BindingAdaptor{
     } 
     
 	public static void main(String[] args) throws Exception {  
-		int serverPort = ConfigKit.option(args, "-server", 80);
-		String target = ConfigKit.option(args, "-target", "127.0.0.1:15555");
+		int serverPort = ConfigKit.option(args, "-server", 8600);
+		String target = ConfigKit.option(args, "-target", "10.17.1.22:8600");
 		Dispatcher dispatcher = new Dispatcher();
 		
 		IoAdaptor ioAdaptor = new TcpProxyServer(target);
