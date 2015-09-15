@@ -121,7 +121,7 @@ public class Dispatcher implements Closeable {
 		for (SelectorThread dispatcher : this.selectors) {
 			dispatcher.start();
 		} 
-		log.info("%s(SelecctorCount=%d) started", this.dispatcherName, this.selectorCount);
+		log.info("%s(SelectorCount=%d) started", this.dispatcherName, this.selectorCount);
 	}
 	
 	public synchronized void stop() {
@@ -133,7 +133,7 @@ public class Dispatcher implements Closeable {
 			dispatcher.interrupt();
 		} 
 		executor.shutdown();
-		log.info("%s(SelecctorCount=%d) stopped", this.dispatcherName, this.selectorCount);
+		log.info("%s(SelectorCount=%d) stopped", this.dispatcherName, this.selectorCount);
 	} 
 	 
 	public void close() throws IOException {
