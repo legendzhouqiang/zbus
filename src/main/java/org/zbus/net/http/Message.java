@@ -207,6 +207,14 @@ public class Message implements Id {
 		return this;
 	}
 	
+	public Message setBody(String body, String encoding){
+		try {
+			return setBody(body.getBytes(encoding));
+		} catch (UnsupportedEncodingException e) { //just ignore
+			return setBody(body);
+		}
+	}
+	
 	public Message setBody(String body){
 		return setBody(body.getBytes());
 	} 
