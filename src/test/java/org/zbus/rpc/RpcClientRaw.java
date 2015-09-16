@@ -21,8 +21,8 @@ public class RpcClientRaw {
 		
 		
 		Request req = new Request() 
-			.method("getString")
-			.params("testXXX"); 
+			.method("testEncoding")
+			.encoding("gbk");
 		
 		//同步
 		String res = rpc.invokeSync(String.class, req);

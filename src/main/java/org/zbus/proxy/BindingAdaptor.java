@@ -25,6 +25,7 @@ package org.zbus.proxy;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Codec;
@@ -57,11 +58,9 @@ class ProxyCodec implements Codec{
 }
 public class BindingAdaptor extends IoAdaptor{ 
 	private static final Logger log = Logger.getLogger(BindingAdaptor.class); 
-	
-	public BindingAdaptor(){ }
-	
-	public BindingAdaptor(Codec codec) {
-		codec(codec);
+	protected final AtomicLong bindedCount = new AtomicLong(0);
+	public BindingAdaptor(){
+		codec(new ProxyCodec());
 	}
 	
 	@Override
@@ -73,12 +72,7 @@ public class BindingAdaptor extends IoAdaptor{
 		} 
 		chain.write(msg); 
 	}
-	
-	@Override
-	public void onException(Throwable e, Session sess) throws IOException { 
-		cleanSession(sess);
-	} 
-	
+	 
 	@Override
 	public void onSessionConnected(Session sess) throws IOException {  
 		Session chain = sess.chain;
@@ -86,9 +80,12 @@ public class BindingAdaptor extends IoAdaptor{
 			log.info("Missing chain");
 			sess.asyncClose();
 			return; 
-		} 
-		sess.register(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
-		chain.register(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		}   
+		if(sess.isActive() && chain.isActive()){
+			log.info("~~~bind(%d)~~~\n%s\n%s", bindedCount.incrementAndGet(), sess.chain, sess);
+			sess.register(SelectionKey.OP_READ);
+			chain.register(SelectionKey.OP_READ);
+		}
 	}
 	
 	@Override
@@ -96,8 +93,7 @@ public class BindingAdaptor extends IoAdaptor{
 		cleanSession(sess);
 	}
 	
-	public static void cleanSession(final Session sess) {
-		log.info("Clean: %s", sess);
+	public void cleanSession(final Session sess) {
 		try {
 			sess.close();
 		} catch (IOException e) {
@@ -105,8 +101,7 @@ public class BindingAdaptor extends IoAdaptor{
 		}
 		
 		if (sess.chain == null) return;
-		
-		log.info("Clean chain: %s", sess.chain);
+		log.info("<<<detach(%d)>>>\n%s\n%s", bindedCount.decrementAndGet(), sess, sess.chain); 
 		try {	
 			sess.chain.close();	
 			sess.chain.chain = null;

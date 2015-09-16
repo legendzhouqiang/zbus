@@ -116,13 +116,10 @@ class NotifyAdaptor extends IoAdaptor{
 
 
 class ServerBindingAdaptor extends BindingAdaptor{  
+	private static final Logger log = Logger.getLogger(ServerBindingAdaptor.class);  
 	public final BlockingQueue<Session> myPendings = new ArrayBlockingQueue<Session>(1024);
 	public ServerBindingAdaptor peer; 
 	public NotifyAdaptor notify;
-	
-	public ServerBindingAdaptor(){
-		codec(new ProxyCodec());
-	}
 	
 	@Override
 	protected void onSessionAccepted(Session sess) throws IOException { 
@@ -130,6 +127,7 @@ class ServerBindingAdaptor extends BindingAdaptor{
 		if(peerSess == null){
 			myPendings.offer(sess);
 			if(notify != null){ //上游具有通知机制，通知target链接上来
+				log.info(">>>>Upstream request: %s", sess);
 				notify.notifyDownstream();
 			}
 			return;
@@ -138,6 +136,7 @@ class ServerBindingAdaptor extends BindingAdaptor{
 		sess.chain = peerSess;
 		peerSess.chain = sess; 
 		
+		log.info("~~~bind(%d)~~~\n%s\n%s", bindedCount.getAndIncrement(), sess, peerSess);
 		sess.register(SelectionKey.OP_READ);
 		peerSess.register(SelectionKey.OP_READ);
 	}
@@ -146,7 +145,7 @@ class ServerBindingAdaptor extends BindingAdaptor{
 public class DmzServer{  
 	private static final Logger log = Logger.getLogger(DmzServer.class);  
 	public static void main(String[] args) throws Exception {  
-		int up = ConfigKit.option(args, "-up", 8080);
+		int up = ConfigKit.option(args, "-up", 3306);
 		int down = ConfigKit.option(args, "-down", 15557);
 		int notify = ConfigKit.option(args, "-notify", 15558);
 		

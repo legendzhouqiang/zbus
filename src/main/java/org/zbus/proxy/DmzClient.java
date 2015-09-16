@@ -36,7 +36,7 @@ import org.zbus.net.core.Session;
 public class DmzClient extends Client<Integer, Integer>{  
 	private static final Logger log = Logger.getLogger(DmzClient.class);  
 	
-	private static final BindingAdaptor bindingAdaptor = new BindingAdaptor(new ProxyCodec());
+	private static final BindingAdaptor bindingAdaptor = new BindingAdaptor();
 	
 	private final Dispatcher dispatcher;  
 	
@@ -122,7 +122,8 @@ public class DmzClient extends Client<Integer, Integer>{
 	public static void main(String[] args) throws Exception {  
 		String dmzDown = ConfigKit.option(args, "-dmzDown", "127.0.0.1:15557");
 		String dmzNotify = ConfigKit.option(args, "-dmzNotify", "127.0.0.1:15558");
-		String target = ConfigKit.option(args, "-target", "127.0.0.1:15555");
+		String target = ConfigKit.option(args, "-target", "10.17.2.30:3306");
+		//String target = ConfigKit.option(args, "-target", "10.17.2.30:3306");
 		
 		final Dispatcher dispatcher = new Dispatcher();
  
