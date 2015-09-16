@@ -59,13 +59,13 @@ public class TcpProxyServer extends BindingAdaptor{
     		return;
     	}
     	
-    	dispatcher.registerSession(SelectionKey.OP_CONNECT, target);  
     	sess.chain = target;
     	target.chain = sess; 
+    	dispatcher.registerSession(SelectionKey.OP_CONNECT, target);  
     } 
     
 	public static void main(String[] args) throws Exception {  
-		int serverPort = ConfigKit.option(args, "-server", 8600);
+		int serverPort = ConfigKit.option(args, "-server", 8601);
 		String target = ConfigKit.option(args, "-target", "10.17.1.22:8600");
 		Dispatcher dispatcher = new Dispatcher();
 		

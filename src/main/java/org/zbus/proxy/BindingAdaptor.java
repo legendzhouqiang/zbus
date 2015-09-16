@@ -87,8 +87,8 @@ public class BindingAdaptor extends IoAdaptor{
 			sess.asyncClose();
 			return; 
 		} 
-		sess.register(SelectionKey.OP_READ);
-		chain.register(SelectionKey.OP_READ);
+		sess.register(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		chain.register(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 	}
 	
 	@Override
@@ -97,9 +97,7 @@ public class BindingAdaptor extends IoAdaptor{
 	}
 	
 	public static void cleanSession(final Session sess) {
-		if (log.isDebugEnabled()) {
-			log.debug("Clean: %s", sess);
-		}
+		log.info("Clean: %s", sess);
 		try {
 			sess.close();
 		} catch (IOException e) {
@@ -108,9 +106,7 @@ public class BindingAdaptor extends IoAdaptor{
 		
 		if (sess.chain == null) return;
 		
-		if (log.isDebugEnabled()) {
-			log.debug("Clean chain: %s", sess.chain);
-		} 
+		log.info("Clean chain: %s", sess.chain);
 		try {	
 			sess.chain.close();	
 			sess.chain.chain = null;

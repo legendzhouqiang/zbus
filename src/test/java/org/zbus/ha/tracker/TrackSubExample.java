@@ -14,7 +14,7 @@ public class TrackSubExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		Dispatcher dispatcher = new Dispatcher(); 
-		String trackList = "127.0.0.1:16666"; 
+		String trackList = "127.0.0.1:16666;127.0.0.1:16667"; 
 		
 		TrackSub trackSub = new TrackSub(trackList, dispatcher);
 			
@@ -27,18 +27,13 @@ public class TrackSubExample {
 			}
 		});
 		
-		trackSub.onServerJoinHandler(new ServerJoinHandler() {
-			
-			@Override
+		trackSub.onServerJoinHandler(new ServerJoinHandler() { 
 			public void onServerJoin(String serverAddr) { 
-				System.out.println("server joined: " + serverAddr);
-				
+				System.out.println("server joined: " + serverAddr); 
 			}
 		});
 		
-		trackSub.onServerLeaveHandler(new ServerLeaveHandler() {
-			
-			@Override
+		trackSub.onServerLeaveHandler(new ServerLeaveHandler() { 
 			public void onServerLeave(String serverAddr) throws IOException {
 				System.out.println("server leave: " + serverAddr);
 				
