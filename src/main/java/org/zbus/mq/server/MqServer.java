@@ -80,7 +80,7 @@ public class MqServer extends Server{
 		mqAdaptor = new MqAdaptor(this); 
 		mqAdaptor.setVerbose(config.verbose);
 		mqAdaptor.loadMQ(config.storePath);  
-		registerAdaptor(config.getServerAddress(), mqAdaptor, "Main");
+		registerAdaptor(config.getServerAddress(), mqAdaptor, "HttpExt");
 	}
 	
 	@Override

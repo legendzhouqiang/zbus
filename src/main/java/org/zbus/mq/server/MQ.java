@@ -140,4 +140,11 @@ public class MQ extends AbstractMQ{
 		} 
 		return info;
 	}
+
+	@Override
+	public String toString() {
+		return "MQ [name=" + name + ", creator=" + creator + "]";
+	}
+	
+	
 }

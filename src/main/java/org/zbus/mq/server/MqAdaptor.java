@@ -211,7 +211,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	};
 	
 	private void cleanSession(Session sess){
-		log.info("Try to clean sess: " + sess);
+		log.info("Clean: " + sess);
 		sessionTable.remove(sess.id());
 		String mqName = sess.attr("mq");
 		if(mqName == null) return;
