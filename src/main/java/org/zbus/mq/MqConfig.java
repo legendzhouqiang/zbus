@@ -55,6 +55,10 @@ public class MqConfig implements Cloneable {
 	public void setMode(int mode) {
 		this.mode = mode;
 	}
+	
+	public void setMode(MqMode... mode){
+		this.mode = MqMode.intValue(mode);
+	}
 
 	public String getTopic() {
 		return topic;

@@ -4,6 +4,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Producer;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 public class ProducerAsync {
@@ -20,8 +21,13 @@ public class ProducerAsync {
 		
 		for(int i=0;i<100000;i++){
 			Message msg = new Message();
-			msg.setBody("hello world"+i);
-			producer.sendAsync(msg);  
+			msg.setBody("hello world"+i); 
+			producer.sendAsync(msg, new ResultCallback<Message>() { 
+				@Override
+				public void onReturn(Message result) { 
+					System.out.println(result);
+				}
+			});
 		}
 		
 		System.out.println("---done---");

@@ -10,7 +10,7 @@ public class ProducerSync {
 	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
+		config.setServerAddress("10.8.60.250:15555");
 		final Broker broker = new SingleBroker(config);
  
 		Producer producer = new Producer(broker, "MyMQ");
@@ -18,10 +18,15 @@ public class ProducerSync {
 
 		//创建消息，消息体可以是任意binary，应用协议交给使用者
 		
+		long total = 0;
 		for(int i=0;i<100000;i++){
+			long start = System.currentTimeMillis();
 			Message msg = new Message();
 			msg.setBody("hello world"+i);
 			producer.sendSync(msg);  
+			long end = System.currentTimeMillis();
+			total += (end-start);
+			System.out.format("Time: %.1f\n", total*1.0/(i+1));
 		}
 		
 		broker.close();
