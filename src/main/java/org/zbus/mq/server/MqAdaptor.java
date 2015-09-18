@@ -32,8 +32,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private final Map<String, Session> sessionTable;
 	private final Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	
-	private boolean verbose = false;   
-	private final String serverAddr;
+	private boolean verbose = false;    
 	private final MqServer mqServer;
 
  
@@ -41,8 +40,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		codec(new MessageCodec());   
 		this.mqServer = mqServer;
 		this.mqTable = mqServer.getMqTable();
-		this.sessionTable = mqServer.getSessionTable();
-		this.serverAddr = mqServer.getServerAddr();
+		this.sessionTable = mqServer.getSessionTable(); 
 		
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  
@@ -56,7 +54,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
-		msg.setServer(serverAddr); 
+		msg.setServer(mqServer.getServerAddr()); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
 		
 		if(verbose){
@@ -250,7 +248,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
    			table.put(e.getKey(), e.getValue().getMqInfo());
    		}  
 		BrokerInfo info = new BrokerInfo();
-		info.broker = serverAddr;
+		info.broker = mqServer.getServerAddr();
 		info.mqTable = table;  
 		return info;
     }
