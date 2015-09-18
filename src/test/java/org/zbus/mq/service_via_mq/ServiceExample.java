@@ -1,4 +1,4 @@
-package org.zbus.mq;
+package org.zbus.mq.service_via_mq;
 
 import java.io.IOException;
 
