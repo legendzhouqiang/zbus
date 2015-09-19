@@ -23,7 +23,6 @@
 package org.zbus.mq.server;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ConfigKit;
-import org.zbus.kit.FileKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.net.Client.ConnectedHandler;
@@ -72,15 +70,17 @@ public class MqServer extends Server{
 		    	}
 			}
 		}, 1000, cleanInterval, TimeUnit.MILLISECONDS); 
+		registerDefaultMqAdaptor();
 	}
 	
-	private MqAdaptor mqAdaptor;
-	public void registerDefaultMqAdaptor(){
+	private MqAdaptor defaultMqAdaptor;
+	private void registerDefaultMqAdaptor(){
+		if(defaultMqAdaptor != null) return;
 		//将MqAdaptor与MqServer分离是为了做其他编码支持
-		mqAdaptor = new MqAdaptor(this); 
-		mqAdaptor.setVerbose(config.verbose);
-		mqAdaptor.loadMQ(config.storePath);  
-		registerAdaptor(config.getServerAddress(), mqAdaptor, "HttpExt");
+		defaultMqAdaptor = new MqAdaptor(this); 
+		defaultMqAdaptor.setVerbose(config.verbose);
+		defaultMqAdaptor.loadMQ(config.storePath);  
+		registerAdaptor(config.getServerAddress(), defaultMqAdaptor, "HttpExt");
 	}
 	
 	@Override
@@ -96,8 +96,8 @@ public class MqServer extends Server{
 	
 	@Override
 	public void close() throws IOException { 
-		if(mqAdaptor != null){
-			mqAdaptor.close();
+		if(defaultMqAdaptor != null){
+			defaultMqAdaptor.close();
 		}
 		if(trackPub != null){
     		trackPub.close();
@@ -166,23 +166,9 @@ public class MqServer extends Server{
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", null);
-		//config.trackServerList = ConfigKit.option(args, "-track", "127.0.0.1:16666");
+		config.thriftServer = ConfigKit.option(args, "-thrift", null);
 		
-		config.thriftServer = ConfigKit.option(args, "-thrift", "0.0.0.0:25555");
-
-		String configFile = ConfigKit.option(args, "-conf", null);
-		if(configFile != null){
-			InputStream is = FileKit.loadFile(configFile);
-			if(is != null){
-				log.info("Using file config options from(%s)", configFile);
-				config.load(configFile);
-			}  
-		}  
-		
-		final MqServer server = new MqServer(config); 
-		//将MqAdaptor与MqServer分离是为了做其他协议适配支持
-		server.registerDefaultMqAdaptor(); 
-		
+		final MqServer server = new MqServer(config);  
 		if(config.thriftServer != null){
 			MqAdaptor thriftAdaptor = new MqAdaptor(server);
 			thriftAdaptor.codec(new ThriftCodec());
