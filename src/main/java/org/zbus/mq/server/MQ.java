@@ -89,7 +89,9 @@ public class MQ extends AbstractMQ{
 				
 				writeMsg.setRawId(msg.getId());  //保留原始消息ID
 				writeMsg.setId(pullMsg.getId()); //配对订阅消息！
-				
+				if(writeMsg.getResponseStatus() == null){
+					writeMsg.setResponseStatus(200); //default to 200
+				}
 				pull.getSession().write(writeMsg); 
 			
 			} catch (IOException ex) {   
