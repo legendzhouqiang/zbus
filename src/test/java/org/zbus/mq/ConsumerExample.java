@@ -32,6 +32,6 @@ public class ConsumerExample {
 			}
 		});
 		
-		c.start();
+		c.start(); 
 	} 
 }
