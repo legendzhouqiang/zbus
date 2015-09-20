@@ -43,7 +43,7 @@ public class Producer extends MqAdmin{
 			throws IOException {
 		msg.setCmd(Protocol.Produce);
 		msg.setMq(this.mq); 
-		msg.setAck(false);
+		msg.setAck(true);
 		
 		broker.invokeAsync(msg, callback);
 	}

@@ -102,7 +102,7 @@ public class RpcProcessor implements MessageProcessor{
 				String key = module + ":" + method+":"+paramMD5; 
 				String key2 = module + ":" + method;
 				if(this.methods.containsKey(key)){
-					log.warn(key + " duplicated"); 
+					log.debug(key + " duplicated"); 
 				} else {
 					log.debug("register "+service.getClass().getSimpleName()+"\t" + key);
 					log.debug("register "+service.getClass().getSimpleName()+"\t"  + key2);
@@ -181,6 +181,8 @@ public class RpcProcessor implements MessageProcessor{
 	
 	public Message process(Message msg){  
 		Response resp = new Response();
+		int status = 200;
+		final String msgId = msg.getId();
 		try {
 			Request req = decodeRequest(msg);
 			MethodInstance target = findMethod(req);
@@ -197,11 +199,16 @@ public class RpcProcessor implements MessageProcessor{
 			resp.setEncoding(msg.getEncoding());
 		} catch (InvocationTargetException e) { 
 			resp.setError(e.getTargetException());
+			status = 500;
 		} catch (Throwable e) { 
 			resp.setError(e);
+			status = 500;
 		} 
 		try{
-			return codec.encodeResponse(resp);
+			Message res = codec.encodeResponse(resp);
+			res.setId(msgId); 
+			res.setResponseStatus(status);
+			return res;
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e.getCause());
 		} 

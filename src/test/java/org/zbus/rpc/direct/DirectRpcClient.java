@@ -15,13 +15,9 @@ public class DirectRpcClient {
 		
 		RpcInvoker rpc = new RpcInvoker(broker);    
 		
-		for(int i=0;i<100000;i++){
-			try{
-				String res = rpc.invokeSync(String.class, "getString", "testxxxx"); 
-				System.out.println(res);
-			}catch(Exception e){
-				//
-			}
+		for(int i=0;i<1000000;i++){
+			String res = rpc.invokeSync(String.class, "getString", "testxxxx"); 
+			System.out.println(res);
 		}
 		
 		broker.close();

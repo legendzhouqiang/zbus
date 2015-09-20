@@ -18,7 +18,7 @@ public class MqInvoker implements MessageInvoker{
 	
 	private void fillBrokerMessage(Message req){
 		req.setCmd(Protocol.Produce);
-		req.setAck(false);
+		req.setAck(false); //ACK 必须设置为false，等待service的结果
 		req.setMq(this.mq);
 	}
 	
