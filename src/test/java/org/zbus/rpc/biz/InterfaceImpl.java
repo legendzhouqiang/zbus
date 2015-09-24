@@ -39,6 +39,11 @@ public class InterfaceImpl implements Interface{
 	public String getString(String name) { 
 		return "Hello World ZBUS " + name;
 	}
+	
+	@Override
+	public String getString(String name, int c) {
+		return String.format("%s, %d", name, c);
+	}
 
 	@Override
 	public String testEncoding() { 

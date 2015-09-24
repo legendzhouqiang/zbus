@@ -6,6 +6,7 @@ import java.util.Random;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.biz.MyEnum;
 import org.zbus.rpc.biz.User;
@@ -60,7 +61,8 @@ public class RpcClient {
 		Broker broker = new SingleBroker(config);
 		 
 		//2)创建基于MQ的Invoker以及Rpc工厂，指定RPC采用的MQ为MyRpc
-		MqInvoker invoker = new MqInvoker(broker, "MyRpc"); 
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc"); 
+		//MessageInvoker invoker = broker; //Direct模式打开
 		RpcFactory factory = new RpcFactory(invoker); 
 		
 		//3) 动态代理出实现类

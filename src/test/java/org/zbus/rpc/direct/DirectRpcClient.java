@@ -15,10 +15,12 @@ public class DirectRpcClient {
 		
 		RpcInvoker rpc = new RpcInvoker(broker);    
 		
-		for(int i=0;i<1000000;i++){
-			String res = rpc.invokeSync(String.class, "getString", "testxxxx"); 
-			System.out.println(res);
-		}
+		String res = rpc.invokeSync(String.class, "getString", "version1"); 
+		System.out.println(res);
+		
+		res = rpc.invokeSync(String.class, "getString", new Class[]{String.class, int.class}, "version2", 2); 
+		System.out.println(res);
+		
 		
 		broker.close();
 	}

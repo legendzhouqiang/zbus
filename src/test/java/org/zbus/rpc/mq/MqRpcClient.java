@@ -15,6 +15,7 @@ public class MqRpcClient {
 		
 		MqInvoker messageInvoker = new MqInvoker(broker, "MyRpc"); 
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);    
+		rpc.setModule("Interface"); 
 		
 		for(int i=0;i<100000;i++){
 			try{

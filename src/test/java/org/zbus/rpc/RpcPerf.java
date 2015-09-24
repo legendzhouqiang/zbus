@@ -59,7 +59,7 @@ public class RpcPerf {
 		//MessageInvoker invoker = broker; //DirectRpc时，直接用broker
 		
 		RpcFactory proxy = new RpcFactory(invoker);  
-		
+		 
 		Interface biz = proxy.getService(Interface.class);
 		
 		AtomicLong counter = new AtomicLong(0);

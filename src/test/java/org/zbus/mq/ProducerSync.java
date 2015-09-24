@@ -10,7 +10,7 @@ public class ProducerSync {
 	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
+		config.setServerAddress("182.92.180.201:15556");
 		final Broker broker = new SingleBroker(config);
  
 		Producer producer = new Producer(broker, "MyMQ");

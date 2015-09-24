@@ -17,6 +17,8 @@ public interface Interface{
 	
 	String getString(String name);
 	
+	String getString(String name, int c);
+	
 	String[] stringArray();
 	
 	int plus(int a, int b);
