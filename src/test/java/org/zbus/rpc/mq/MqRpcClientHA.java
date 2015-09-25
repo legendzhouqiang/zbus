@@ -18,7 +18,7 @@ public class MqRpcClientHA {
 		
 		for(int i=0;i<100000;i++){
 			try{
-				String res = rpc.invokeSync(String.class, "getString", "testxxxx"); 
+				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
 				System.out.println(res);
 			}catch(Exception e){
 				//

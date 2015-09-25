@@ -36,6 +36,11 @@ class PrivateRuntimeException extends RuntimeException{
 }
 public class InterfaceImpl implements Interface{
  
+	@Override
+	public String echo(String string) { 
+		return string;
+	}
+	
 	public String getString(String name) { 
 		return "Hello World ZBUS " + name;
 	}

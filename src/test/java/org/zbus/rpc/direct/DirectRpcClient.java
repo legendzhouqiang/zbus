@@ -14,11 +14,10 @@ public class DirectRpcClient {
 		
 		
 		RpcInvoker rpc = new RpcInvoker(broker);    
-		
-		String res = rpc.invokeSync(String.class, "getString", "version1"); 
-		System.out.println(res);
-		
-		res = rpc.invokeSync(String.class, "getString", new Class[]{String.class, int.class}, "version2", 2); 
+		 
+		String res = rpc.invokeSync(String.class, "echo","test");
+		//调用重载的方法需要指定类型参数
+		//res = rpc.invokeSync(String.class, "getString", new Class[]{String.class, int.class}, "version2", 2); 
 		System.out.println(res);
 		
 		

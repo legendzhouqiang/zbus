@@ -15,6 +15,8 @@ public interface Interface{
   
 	int getUserScore();
 	
+	String echo(String string);
+	
 	String getString(String name);
 	
 	String getString(String name, int c);
