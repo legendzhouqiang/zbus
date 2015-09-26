@@ -62,7 +62,6 @@ public class Message implements Id {
 	
 	//使用到的标准HTTP头部
 	public static final String REMOTE_ADDR      = "remote-addr";
-	public static final String CONTENT_ENCODING = "content-encoding";
 	public static final String CONTENT_LENGTH   = "content-length";
 	public static final String CONTENT_TYPE     = "content-type";
 	
@@ -78,6 +77,7 @@ public class Message implements Id {
 	public static final String TOPIC    = "topic";  //使用,分隔 
 	public static final String ACK      = "ack";	 	 
 	public static final String WINDOW   = "window";  
+	public static final String ENCODING = "encoding";
 	
 	 
 	//HTTP协议第一行（请求串或者返回状态码）
@@ -340,10 +340,10 @@ public class Message implements Id {
 	
 	
 	public String getEncoding() {
-		return this.getHead(CONTENT_ENCODING);
+		return this.getHead(ENCODING);
 	} 
 	public Message setEncoding(String encoding) {
-		this.setHead(CONTENT_ENCODING, encoding);
+		this.setHead(ENCODING, encoding);
 		return this;
 	}
 	
