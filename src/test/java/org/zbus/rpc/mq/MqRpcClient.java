@@ -9,7 +9,7 @@ public class MqRpcClient {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress("127.0.0.1:15555");
+		brokerConfig.setServerAddress("127.0.0.1:15556");
 		Broker broker = new SingleBroker(brokerConfig);  
 		
 		
@@ -17,7 +17,7 @@ public class MqRpcClient {
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);    
 		rpc.setModule("Interface"); 
 		
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<10;i++){
 			try{
 				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
 				System.out.println(res);

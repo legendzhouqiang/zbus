@@ -193,7 +193,7 @@ public class TrackSub implements Closeable{
 	
     @Override
     public void close() throws IOException { 
-    	for(MessageClient client : allTrackers){
+    	for(MessageClient client : allTrackers){ 
     		client.close();
     	}
     	allTrackers.clear();

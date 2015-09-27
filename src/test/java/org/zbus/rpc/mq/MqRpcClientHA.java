@@ -16,7 +16,7 @@ public class MqRpcClientHA {
 		
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);    
 		
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<100;i++){
 			try{
 				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
 				System.out.println(res);

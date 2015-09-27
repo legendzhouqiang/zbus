@@ -53,9 +53,9 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	protected Session session; 
 	
 	protected volatile MsgHandler<RES> msgHandler; 
-	protected ErrorHandler errorHandler;
-	protected ConnectedHandler connectedHandler;
-	protected DisconnectedHandler disconnectedHandler;
+	protected volatile ErrorHandler errorHandler;
+	protected volatile ConnectedHandler connectedHandler;
+	protected volatile DisconnectedHandler disconnectedHandler;
 	
 	public Client(String address, Dispatcher dispatcher) { 
 		String[] blocks = address.split("[:]");
@@ -167,6 +167,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 
 	@Override
 	public void close() throws IOException {
+		this.onDisconnected(null); //clear disconnection handler
 		if (this.session != null) {
 			this.session.close();
 		}

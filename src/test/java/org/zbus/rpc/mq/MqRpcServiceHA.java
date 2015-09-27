@@ -18,7 +18,7 @@ public class MqRpcServiceHA {
  
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setTrackServerList("182.92.180.201:16666;182.92.180.201:16667");
+		brokerConfig.setTrackServerList("127.0.0.1:16666;127.0.01:16667");
 		Broker broker = new HaBroker(brokerConfig);
 		
 		ServiceConfig config = new ServiceConfig();

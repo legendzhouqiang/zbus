@@ -12,7 +12,7 @@ import org.zbus.net.core.Dispatcher;
 
 public class TrackSubExample {
 	@SuppressWarnings("resource")
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		Dispatcher dispatcher = new Dispatcher(); 
 		String trackList = "127.0.0.1:16666;127.0.0.1:16667"; 
 		
@@ -40,6 +40,6 @@ public class TrackSubExample {
 			}
 		});
 		
-		trackSub.start(); 
+		trackSub.start();  
 	}
 }
