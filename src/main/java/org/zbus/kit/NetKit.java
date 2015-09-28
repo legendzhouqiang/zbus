@@ -81,12 +81,20 @@ public class NetKit {
 							continue;
 						} 
 						if(ip.startsWith("172.")){
+							if(condidate == null){
+								condidate = ip;
+								continue;
+							}
 							if(!condidate.startsWith("10.")){
 								condidate = ip;
 							}
 							continue;
 						}
 						if(ip.startsWith("192.")){
+							if(condidate == null){
+								condidate = ip;
+								continue;
+							}
 							if(!condidate.startsWith("10.") && !condidate.startsWith("172.")){
 								condidate = ip;
 							}
