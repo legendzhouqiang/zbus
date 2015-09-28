@@ -64,28 +64,46 @@ public class NetKit {
 	
 	public static String getLocalIp() {
 		try {
-			Pattern pattern = Pattern.compile("(192|172|10)\\.[0-9]+\\.[0-9]+\\.[0-9]+");
+			Pattern pattern = Pattern.compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+");
 			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-
+			String condidate = null;
 			while (interfaces.hasMoreElements()) {
 				NetworkInterface ni = interfaces.nextElement();
-				Enumeration<InetAddress> en = ni.getInetAddresses();
+				Enumeration<InetAddress> en = ni.getInetAddresses(); 
 				while (en.hasMoreElements()) {
 					InetAddress addr = en.nextElement();
-					String ip = addr.getHostAddress();
+					String ip = addr.getHostAddress(); 
 					Matcher matcher = pattern.matcher(ip);
-					if (matcher.matches()) {
+					if (matcher.matches()) { 
+						if(ip.startsWith("127.")) continue;  
+						if(ip.startsWith("10.")){
+							condidate = ip;
+							continue;
+						} 
+						if(ip.startsWith("172.")){
+							if(!condidate.startsWith("10.")){
+								condidate = ip;
+							}
+							continue;
+						}
+						if(ip.startsWith("192.")){
+							if(!condidate.startsWith("10.") && !condidate.startsWith("172.")){
+								condidate = ip;
+							}
+							continue;
+						}
+						
 						return ip;
-					}
-				}
+					} 
+				} 
 			} 
+			if(condidate != null) return condidate;
 			return "0.0.0.0";
 		} catch (Throwable e) {
 			e.printStackTrace(); 
 			return "0.0.0.0";
 		}
 	}
-  
 	public static String remoteAddress(SocketChannel channel){
 		SocketAddress addr = channel.socket().getRemoteSocketAddress();
 		String res = String.format("%s", addr);
