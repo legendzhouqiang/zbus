@@ -17,7 +17,7 @@ public class HttpClientRpc {
 	public static void main(String[] args) throws Exception {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		
-		HttpPost http = new HttpPost("http://localhost:15555/"); 
+		HttpPost http = new HttpPost("http://localhost:15555"); 
 
 		//zbus扩展HTTP头部协议，主要两个MQ和命令CMD
 		http.addHeader(Message.CMD, Protocol.Produce);
@@ -26,7 +26,7 @@ public class HttpClientRpc {
 		http.addHeader(Message.ACK, "false"); 
 		
 		JSONObject json = new JSONObject();
-		json.put("method", "getString");
+		json.put("method", "echo");
 		json.put("params", Arrays.asList("param1")); //params 数组
 		
 		StringEntity body = new StringEntity(json.toJSONString());

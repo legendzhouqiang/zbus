@@ -37,6 +37,7 @@ public class RpcClientRaw {
 			}
 		});
 		
-		//broker.close(); //异步时候不能立刻关闭 TODO
+		Thread.sleep(1000);
+		broker.close(); //异步时候不能立刻关闭 TODO
 	}
 }
