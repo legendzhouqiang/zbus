@@ -113,6 +113,14 @@ public class RpcInvoker{
 		return invokeSync(this.module, method, types, args);
 	} 
 	
+	public Object invokeSync(String method, Object... args) {	
+		return invokeSync(this.module, method, null, args);
+	} 
+	
+	public Object invokeSync(String module, String method, Object... args){
+		return invokeSync(module, method, null, args);
+	}
+	
 	public Object invokeSync(String module, String method, Class<?>[] types, Object... args) {	
 		Request req = new Request()
 			.module(module)

@@ -19,13 +19,17 @@ public class RpcClientRaw {
 		RpcInvoker rpc = new RpcInvoker(invoker);   
 		  
 		
+		Object obj = rpc.invokeSync("testEncoding");
+		System.out.println(obj);
 		
 		Request req = new Request() 
 			.method("testEncoding")
 			.encoding("gbk");
 		
+		String res; 
+		
 		//同步
-		String res = rpc.invokeSync(String.class, req);
+		res = rpc.invokeSync(String.class, req);
 		System.out.println(res);
 		
 		 
