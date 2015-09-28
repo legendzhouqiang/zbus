@@ -72,44 +72,27 @@ public class NetKit {
 				Enumeration<InetAddress> en = ni.getInetAddresses(); 
 				while (en.hasMoreElements()) {
 					InetAddress addr = en.nextElement();
-					String ip = addr.getHostAddress(); 
+					String ip = addr.getHostAddress();  
 					Matcher matcher = pattern.matcher(ip);
 					if (matcher.matches()) { 
 						if(ip.startsWith("127.")) continue;  
-						if(ip.startsWith("10.")){
-							condidate = ip;
-							continue;
-						} 
-						if(ip.startsWith("172.")){
+						if(ip.startsWith("10.") 
+								|| ip.startsWith("172.")
+								|| ip.startsWith("192.")
+								){
 							if(condidate == null){
-								condidate = ip;
-								continue;
-							}
-							if(!condidate.startsWith("10.")){
 								condidate = ip;
 							}
 							continue;
 						}
-						if(ip.startsWith("192.")){
-							if(condidate == null){
-								condidate = ip;
-								continue;
-							}
-							if(!condidate.startsWith("10.") && !condidate.startsWith("172.")){
-								condidate = ip;
-							}
-							continue;
-						}
-						
 						return ip;
 					} 
 				} 
 			} 
 			if(condidate != null) return condidate;
-			return "0.0.0.0";
-		} catch (Throwable e) {
-			e.printStackTrace(); 
-			return "0.0.0.0";
+			return "127.0.0.1";
+		} catch (Throwable e) { 
+			return "127.0.0.1";
 		}
 	}
 	public static String remoteAddress(SocketChannel channel){
