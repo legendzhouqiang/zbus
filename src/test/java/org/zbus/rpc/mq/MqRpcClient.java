@@ -9,7 +9,7 @@ public class MqRpcClient {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress("127.0.0.1:15556");
+		brokerConfig.setServerAddress("127.0.0.1:15555");
 		Broker broker = new SingleBroker(brokerConfig);  
 		
 		
