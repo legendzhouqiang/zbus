@@ -16,12 +16,12 @@ public class ConsumerPerf {
 		//创建消息，消息体可以是任意binary，应用协议交给使用者
 		
 		long total = 0;
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<1000000;i++){
 			long start = System.currentTimeMillis();
 			c.recv(10000);
 			long end = System.currentTimeMillis();
 			total += (end-start);
-			System.out.format("Time: %.1f\n", total*1.0/(i+1));
+			System.out.format("Time: %.4f\n", total*1.0/(i+1));
 		}
 		
 		c.close();

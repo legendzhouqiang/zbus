@@ -28,8 +28,9 @@ import org.zbus.broker.Broker;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageInvoker;
 
-public class Producer extends MqAdmin{  
+public class Producer extends MqAdmin implements MessageInvoker{  
 	
 	public Producer(Broker broker, String mq, MqMode... mode) {
 		super(broker, mq, mode);
@@ -41,11 +42,7 @@ public class Producer extends MqAdmin{
 	
 	public void sendAsync(Message msg, final ResultCallback<Message> callback)
 			throws IOException {
-		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq); 
-		msg.setAck(true);
-		
-		broker.invokeAsync(msg, callback);
+		invokeAsync(msg, callback);
 	}
 	
 	public void sendAsync(Message msg) throws IOException {
@@ -54,15 +51,32 @@ public class Producer extends MqAdmin{
 	
 	
 	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException{
+		return invokeSync(msg, timeout);
+	}
+	
+	public Message sendSync(Message msg) throws IOException, InterruptedException{
+		return sendSync(msg, 10000);
+	}
+
+	
+	@Override
+	public Message invokeSync(Message msg, int timeout) throws IOException,
+			InterruptedException { 
 		msg.setCmd(Protocol.Produce);
 		msg.setMq(this.mq); 
 		msg.setAck(true);
 		
 		return broker.invokeSync(msg, timeout);
 	}
-	
-	public Message sendSync(Message msg) throws IOException, InterruptedException{
-		return sendSync(msg, 10000);
+
+	@Override
+	public void invokeAsync(Message msg, ResultCallback<Message> callback)
+			throws IOException { 
+		msg.setCmd(Protocol.Produce);
+		msg.setMq(this.mq); 
+		msg.setAck(true);
+		
+		broker.invokeAsync(msg, callback);
 	}
 	
 }

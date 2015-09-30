@@ -1,34 +1,36 @@
 package org.zbus.perf;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
+import org.zbus.net.http.Message.MessageInvoker;
 
-public class ProducerPerf {
+public class ProducerPerf{
+	
 	public static void main(String[] args) throws Exception { 
-		//创建Broker代理
-		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
-		final Broker broker = new SingleBroker(config);
- 
-		Producer producer = new Producer(broker, "MyMQ");
-		producer.createMQ(); // 如果已经确定存在，不需要创建
-
-		//创建消息，消息体可以是任意binary，应用协议交给使用者
+		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
+		final int threadCount = ConfigKit.option(args, "-c", 32);
+		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
+		final String mq = ConfigKit.option(args, "-mq", "MyMQ");
+		 
+		Perf perf = new Perf(){
+			@Override
+			public MessageInvoker setupInvoker(Broker broker) {
+				return new Producer(broker, mq);
+			}
+			
+			@Override
+			public void doInvoking(MessageInvoker invoker) throws Exception {
+				Message msg = new Message();
+				msg.setBody("hello world");
+				invoker.invokeSync(msg, 10000);
+			}
+		};
+		perf.serverAddress = serverAddress;
+		perf.threadCount = threadCount;
+		perf.loopCount = loopCount;
 		
-		long total = 0;
-		for(int i=0;i<100000;i++){
-			long start = System.currentTimeMillis();
-			Message msg = new Message();
-			msg.setBody("hello world"+i);
-			producer.sendSync(msg);  
-			long end = System.currentTimeMillis();
-			total += (end-start);
-			System.out.format("Time: %.1f\n", total*1.0/(i+1));
-		}
-		
-		broker.close();
+		perf.run();
 	}
 }
