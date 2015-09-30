@@ -1,33 +1,28 @@
-package org.zbus.performance.latency;
+package org.zbus.perf.latency;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
-import org.zbus.mq.Producer;
-import org.zbus.net.http.Message;
+import org.zbus.mq.Consumer;
 
-public class ProducerLatency {
-	private static final Logger log = Logger.getLogger(ProducerLatency.class);
-	public static void main(String[] args) throws Exception { 
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
+public class ConsumerLatency {
+	private static final Logger log = Logger.getLogger(ConsumerLatency.class);
+	public static void main(String[] args) throws Exception {  
+		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555"); 
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ");
-		 
+		
 		BrokerConfig config = new BrokerConfig();
 		config.setServerAddress(serverAddress);
 		final Broker broker = new SingleBroker(config);
  
-		Producer producer = new Producer(broker, mq);
-		producer.createMQ(); 
-  
+		Consumer c = new Consumer(broker, mq); 
 		long total = 0;
 		for(int i=0;i<loopCount;i++){
 			long start = System.currentTimeMillis();
-			Message msg = new Message();
-			msg.setBody("hello world"+i);
-			producer.sendSync(msg);  
+			c.recv(10000);
 			long end = System.currentTimeMillis();
 			total += (end-start);
 			if(i%1000 == 0){
@@ -35,6 +30,7 @@ public class ProducerLatency {
 			}
 		}
 		
+		c.close();
 		broker.close();
 	}
 }

@@ -1,4 +1,4 @@
-package org.zbus.performance;
+package org.zbus.perf;
 
 import java.util.concurrent.atomic.AtomicLong;
 
