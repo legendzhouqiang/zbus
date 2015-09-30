@@ -1,4 +1,4 @@
-package org.zbus.mq;
+package org.zbus.perf;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -6,7 +6,7 @@ import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
 
-public class ProducerSync {
+public class ProducerPerf {
 	public static void main(String[] args) throws Exception { 
 		//创建Broker代理
 		BrokerConfig config = new BrokerConfig();
