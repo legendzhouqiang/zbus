@@ -217,11 +217,10 @@ public class SelectorThread extends Thread {
 		SocketChannel channel = server.accept();
 		channel.configureBlocking(false); 
 		
-		if(log.isDebugEnabled()){ 
-			log.debug("ACCEPT: server(%s) %s=>%s", NetKit.remoteAddress(channel), NetKit.localAddress(channel));
-		}
-		
 		SocketAddress serverAddress = server.socket().getLocalSocketAddress();
+		if(log.isDebugEnabled()){ 
+			log.debug("ACCEPT: server(%s) %s=>%s", serverAddress, NetKit.remoteAddress(channel), NetKit.localAddress(channel));
+		} 
 		
 		IoAdaptor ioAdaptor = dispatcher.ioAdaptor(serverAddress);
 		if(ioAdaptor == null){
