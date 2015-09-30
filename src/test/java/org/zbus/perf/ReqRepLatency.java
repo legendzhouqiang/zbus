@@ -27,7 +27,7 @@ public class ReqRepLatency {
 			invoker.invokeSync(msg, 2500);
 			long end = System.currentTimeMillis();
 			total += (end-start);
-			System.out.format("Time: %.1f\n", total*1.0/(i+1));
+			System.out.format("Time: %.4f\n", total*1.0/(i+1));
 		} 
 		
 		broker.close();

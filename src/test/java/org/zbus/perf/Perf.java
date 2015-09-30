@@ -71,8 +71,8 @@ public class Perf {
 					doInvoking(invoker);  
 					if(count%1000 == 0){
 						long end = System.currentTimeMillis();
-						String qps = String.format("%.2f", count*1000.0/(end-startTime));
-						log.info("QPS: %s, Failed/Total=%d/%d(%.2f)",
+						String qps = String.format("%.4f", count*1000.0/(end-startTime));
+						log.info("QPS: %s, Failed/Total=%d/%d(%.4f)",
 								qps, failCounter.get(), counter.get(), 
 								failCounter.get()*1.0/counter.get()*100);
 					} 
