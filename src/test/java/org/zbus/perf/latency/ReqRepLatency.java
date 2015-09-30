@@ -1,4 +1,4 @@
-package org.zbus.perf;
+package org.zbus.perf.latency;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
