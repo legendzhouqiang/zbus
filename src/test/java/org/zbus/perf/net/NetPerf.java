@@ -9,7 +9,7 @@ import org.zbus.perf.Perf;
 public class NetPerf{
 	
 	public static void main(String[] args) throws Exception { 
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
+		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:8080");
 		final int threadCount = ConfigKit.option(args, "-c", 48);
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);   
 		 

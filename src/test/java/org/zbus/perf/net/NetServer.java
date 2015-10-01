@@ -1,5 +1,6 @@
 package org.zbus.perf.net;
 
+import org.zbus.kit.ConfigKit;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.IoAdaptor;
@@ -21,14 +22,17 @@ public class NetServer extends MessageAdaptor{
 	} 
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {   
-		final Dispatcher dispatcher = new Dispatcher();   
+	public static void main(String[] args) throws Exception { 
+		final int selectCount = ConfigKit.option(args, "-selector", 1);
+		final int executorCount = ConfigKit.option(args, "-thread", 48);
+		final Dispatcher dispatcher = new Dispatcher(); 
+		dispatcher.selectorCount(selectCount);
+		dispatcher.executorCount(executorCount);
 		final Server server = new Server(dispatcher);
 		
 		//相同的业务处理逻辑可以便捷的侦听多个地址
-		IoAdaptor ioAdaptor = new NetServer();
-		server.registerAdaptor(80, ioAdaptor);
-		server.registerAdaptor(15555, ioAdaptor);
+		IoAdaptor ioAdaptor = new NetServer(); 
+		server.registerAdaptor(8080, ioAdaptor);
 		
     	server.start(); 
 	}
