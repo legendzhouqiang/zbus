@@ -14,7 +14,7 @@ public class ReqRepService {
 	public static void main(String[] args) throws IOException{    
 		//配置Broker
 		BrokerConfig brokerCfg = new BrokerConfig();
-		brokerCfg.setServerAddress("127.0.0.1:15555");
+		brokerCfg.setServerAddress("127.0.0.1:15555"); 
 		Broker broker = new SingleBroker(brokerCfg);
 		
 		ServiceConfig config = new ServiceConfig();

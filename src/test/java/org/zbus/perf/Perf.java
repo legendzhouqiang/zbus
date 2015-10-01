@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
@@ -14,6 +15,7 @@ public class Perf {
 	public String serverAddress = "127.0.0.1:15555";
 	public int threadCount = 16;
 	public int loopCount = 1000000;
+	public int logInterval = 1000;
 	public long startTime;
 	public AtomicLong counter = new AtomicLong(0);
 	public AtomicLong failCounter = new AtomicLong(0);
@@ -69,7 +71,7 @@ public class Perf {
 				try { 
 					long count = counter.incrementAndGet(); 
 					doInvoking(invoker);  
-					if(count%1000 == 0){
+					if(count%logInterval == 0){
 						long end = System.currentTimeMillis();
 						String qps = String.format("%.4f", count*1000.0/(end-startTime));
 						log.info("QPS: %s, Failed/Total=%d/%d(%.4f)",
@@ -83,5 +85,15 @@ public class Perf {
 				}
 			}
 		}
+	}
+	
+	public static Broker buildBroker(String[] args) throws Exception{
+		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
+		final int threadCount = ConfigKit.option(args, "-c", 64);	 
+		BrokerConfig config = new BrokerConfig();
+		config.setServerAddress(serverAddress);
+		config.setMaxTotal(threadCount);
+		config.setMaxIdle(threadCount); 
+		return new SingleBroker(config); 
 	}
 }
