@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>ZBUS Admin Console</title>
+<title>ZBUS Monitor</title>
 <script type="text/javascript" src="?sub_cmd=jquery"></script>
 <style>
 table {
@@ -59,19 +59,19 @@ margin: 30px 30px;
 </head>
 <body> 
 <h2 id="slogan" align="center">
-ZBUS = MQ + PubSub + RPC + PROXY  <label id="broker" style="color: orange;" ></label>
+ZBUS = MQ + RPC + PROXY  <label id="broker" style="color: orange;" ></label>
 </h2>
 
 <script type="text/javascript">
 Date.prototype.Format = function (fmt) { //author: meizz 
     var o = {
-        "M+": this.getMonth() + 1, //月份 
-        "d+": this.getDate(), //日 
-        "h+": this.getHours(), //小时 
-        "m+": this.getMinutes(), //分 
-        "s+": this.getSeconds(), //秒 
-        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
-        "S": this.getMilliseconds() //毫秒 
+        "M+": this.getMonth() + 1, 
+        "d+": this.getDate(), 
+        "h+": this.getHours(), 
+        "m+": this.getMinutes(), 
+        "s+": this.getSeconds(),  
+        "q+": Math.floor((this.getMonth() + 3) / 3),  
+        "S": this.getMilliseconds()  
     };
     if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
     for (var k in o)

@@ -52,10 +52,12 @@ public class MqServer extends Server{
 	private long trackInterval = 5000;
 	
 	private MqServerConfig config;
+	private String registerToken = "";
 	
 	public MqServer(MqServerConfig config){ 
 		this.config = config;   
 		serverName = "MqServer";   
+		registerToken = config.registerToken;
 		dispatcher = new Dispatcher();
 		dispatcher.selectorCount(config.selectorCount);
 		dispatcher.executorCount(config.executorCount); 
@@ -149,6 +151,10 @@ public class MqServer extends Server{
     	trackPub.pubEntryUpdate(se);
     } 
 	
+    public String getRegisterToken(){
+    	return registerToken;
+    }
+    
 	public Map<String, AbstractMQ> getMqTable() {
 		return mqTable;
 	} 

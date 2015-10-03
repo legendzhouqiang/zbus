@@ -34,6 +34,8 @@ public class MqAdmin{
 	protected final Broker broker;      
 	protected String mq;            //队列唯一性标识 
 	protected final int mode;  
+	protected String accessToken = "";
+	protected String registerToken = "";
 	
 	public MqAdmin(Broker broker, String mq, MqMode... mode){  
 		this.broker = broker;
@@ -49,6 +51,8 @@ public class MqAdmin{
 		this.broker = config.getBroker();
 		this.mq = config.getMq(); 
 		this.mode = config.getMode();
+		this.accessToken = config.getAccessToken();
+		this.registerToken = config.getRegisterToken();
 	}
 	
 	protected BrokerHint brokerHint(){
@@ -71,7 +75,9 @@ public class MqAdmin{
     	Message req = new Message();
     	req.setCmd(Protocol.CreateMQ); 
     	req.setHead("mq_name", mq);
-    	req.setHead("mq_mode", "" + mode); 
+    	req.setHead("mq_mode", "" + mode);  
+    	req.setHead("register_token", registerToken); 
+    	req.setHead("access_token", accessToken);
     	
     	Message res = invokeCreateMQ(req);
     	if(res == null) return false;

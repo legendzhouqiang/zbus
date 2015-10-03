@@ -30,7 +30,10 @@ public class MqConfig implements Cloneable {
 	protected String mq;     //MQ标识，必须设置  
 	protected int mode = MqMode.MQ.intValue(); //创建消息队列时采用到
 	protected String topic = null; //发布订阅模式下使用
-	private boolean verbose = false;
+	protected boolean verbose = false;
+	protected String registerToken = "";
+	protected String accessToken = "";
+	
 	
 	public Broker getBroker() {
 		return broker;
@@ -76,6 +79,24 @@ public class MqConfig implements Cloneable {
 		this.verbose = verbose;
 	}
 	
+	
+	
+	public String getRegisterToken() {
+		return registerToken;
+	}
+
+	public void setRegisterToken(String registerToken) {
+		this.registerToken = registerToken;
+	}
+
+	public String getAccessToken() {
+		return accessToken;
+	}
+
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
 	@Override
 	public MqConfig clone() { 
 		try {

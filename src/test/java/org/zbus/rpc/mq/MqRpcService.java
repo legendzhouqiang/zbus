@@ -17,14 +17,14 @@ public class MqRpcService {
 		
 		//配置Broker
 		BrokerConfig brokerCfg = new BrokerConfig();
-		brokerCfg.setServerAddress("127.0.0.1:15555");
+		brokerCfg.setServerAddress("127.0.0.1:15555"); 
 		Broker broker = new SingleBroker(brokerCfg);
 		
 		ServiceConfig config = new ServiceConfig();
-		config.setConsumerCount(20); 
+		config.setConsumerCount(80); 
 		config.setMq("MyRpc"); 
-		config.setBroker(broker);   
-		config.setMessageProcessor(processor);
+		config.setBroker(broker);    
+		config.setMessageProcessor(processor); 
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);

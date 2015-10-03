@@ -20,7 +20,8 @@ public class ConsumerExample {
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq("MyMQ");
+		config.setMq("MyMQ5");
+		config.setAccessToken("111");
 		
 		//创建消费者
 		@SuppressWarnings("resource")

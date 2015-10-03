@@ -64,6 +64,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
+		req.setHead("token", accessToken);
 		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
 			if (this.topic != null) {
 				req.setTopic(this.topic);
@@ -73,16 +74,18 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message res = null;
 		try {
 			res = client.invokeSync(req, timeout);
-			if (res != null && res.isStatus404()) {
+			if(res == null) return res; 
+			res.setId(res.getRawId());
+			res.removeHead(Message.RAWID);
+			if(res.isStatus200()) return res;
+			
+			if(res.isStatus404()) { 
 				if (!this.createMQ()) {
-					throw new IllegalStateException("register error");
+					throw new MqException(res.getBodyString());
 				}
 				return recv(timeout);
 			}
-			if(res != null){
-				res.setId(res.getRawId());
-				res.removeHead(Message.RAWID);
-			}
+			throw new MqException(res.getBodyString());
 		} catch (ClosedByInterruptException e) {
 			throw new InterruptedException(e.getMessage());
 		} catch (IOException e) { 

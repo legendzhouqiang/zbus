@@ -34,6 +34,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	
 	private boolean verbose = false;    
 	private final MqServer mqServer;
+	private String registerToken = "";
 
  
 	public MqAdaptor(MqServer mqServer){
@@ -41,6 +42,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		this.mqServer = mqServer;
 		this.mqTable = mqServer.getMqTable();
 		this.sessionTable = mqServer.getSessionTable(); 
+		this.registerToken = mqServer.getRegisterToken();
 		
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  
@@ -99,6 +101,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		public void handle(Message msg, Session sess) throws IOException { 
 			AbstractMQ mq = findMQ(msg, sess);
 			if(mq == null) return;
+			if(!auth(mq, msg)){ 
+				ReplyKit.reply403(msg, sess);
+				return;
+			}
+			
 			boolean ack = msg.isAck();
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK);
@@ -116,6 +123,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		public void handle(Message msg, Session sess) throws IOException { 
 			AbstractMQ mq = findMQ(msg, sess);
 			if(mq == null) return;
+			if(!auth(mq, msg)){ 
+				ReplyKit.reply403(msg, sess);
+				return;
+			}
+			
 			mq.consume(msg, sess);
 			
 			String mqName = sess.attr("mq");
@@ -148,6 +160,13 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private MessageHandler createMqHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
+			String registerToken = msg.getHead("register_token", "");
+			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+				msg.setBody("registerToken unmatched");
+				ReplyKit.reply403(msg, sess);
+				return; 
+			}
+    		
 			String mqName = msg.getHead("mq_name", "");
 			mqName = mqName.trim();
 			if("".equals(mqName)){
@@ -166,11 +185,12 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     		try{
     			mode = Integer.valueOf(mqMode); 
     		} catch (Exception e){
-    			msg.setBody("mqMode invalid");
+    			msg.setBody("mq_mode invalid");
     			ReplyKit.reply400(msg, sess);
         		return;  
     		}
     		
+    		String accessToken = msg.getHead("access_token", ""); 
     		AbstractMQ mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(mqName);
@@ -192,6 +212,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     				mq = new MQ(mqName, support);
     			}
     			mq.creator = sess.getRemoteAddress();
+    			mq.setAccessToken(accessToken);
+    			
     			log.info("MQ Created: %s", mq);
     			mqTable.put(mqName, mq);
     			ReplyKit.reply200(msg, sess);
@@ -237,6 +259,12 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		cleanSession(sess);
 		super.onSessionToDestroy(sess);
 	} 
+	
+	private boolean auth(AbstractMQ mq, Message msg){
+		String appid = msg.getHead("appid", "");
+		String token = msg.getHead("token", "");
+		return mq.auth(appid, token);
+	}
 	
     public void setVerbose(boolean verbose) {
 		this.verbose = verbose;

@@ -35,6 +35,9 @@ public abstract class AbstractMQ{
 	protected long lastUpdateTime = System.currentTimeMillis();
 	
 	protected final AbstractQueue<Message> msgQ;
+	protected String accessToken = "";
+	
+	protected Auth auth;
 	
 	public AbstractMQ(String name, AbstractQueue<Message> msgQ) {
 		this.msgQ = msgQ;
@@ -59,4 +62,19 @@ public abstract class AbstractMQ{
 	public abstract void cleanSession();
 	
 	public abstract MqInfo getMqInfo();
+	
+	public void setAccessToken(String accessToken){
+		this.accessToken = accessToken;
+		this.auth = new DefaultAuth(this.accessToken);
+	}
+	
+	public void setAuth(Auth auth){
+		this.auth = auth;
+	}
+	
+	public boolean auth(String appid, String token){
+		if(this.auth == null) return true;
+		return this.auth.auth(appid, token);
+	}
+	
 }

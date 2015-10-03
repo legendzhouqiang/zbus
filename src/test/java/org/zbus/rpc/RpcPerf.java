@@ -44,7 +44,7 @@ class Task extends Thread{
 public class RpcPerf {
 	public static void main(String[] args) throws Exception { 
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 100);
+		final int threadCount = ConfigKit.option(args, "-c", 80);
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
 		 
