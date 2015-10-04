@@ -22,11 +22,11 @@
  */
 package org.zbus.mq.server.support;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.AccessController;
@@ -34,7 +34,7 @@ import java.security.PrivilegedAction;
 
 import org.zbus.kit.log.Logger;
 
-public class DiskQueueBlock {
+public class DiskQueueBlock implements Closeable{
 	private static final Logger log = Logger.getLogger(DiskQueueBlock.class);
     private static final String BLOCK_FILE_SUFFIX = ".blk"; // 数据文件
     private static final int BLOCK_SIZE = 32 * 1024 * 1024; // 32MB
@@ -44,18 +44,17 @@ public class DiskQueueBlock {
     private String blockFilePath;
     private DiskQueueIndex index;
     private RandomAccessFile blockFile;
-    private FileChannel fileChannel;
-    private ByteBuffer byteBuffer;
-    private MappedByteBuffer mappedBlock;
+    private FileChannel fileChannel; 
+    private MappedByteBuffer byteBuffer;
 
-    public DiskQueueBlock(String blockFilePath, DiskQueueIndex index, RandomAccessFile blockFile, FileChannel fileChannel,
-                        ByteBuffer byteBuffer, MappedByteBuffer mappedBlock) {
+    public DiskQueueBlock(String blockFilePath, DiskQueueIndex index, 
+    		RandomAccessFile blockFile, FileChannel fileChannel,
+            MappedByteBuffer byteBuffer) {
         this.blockFilePath = blockFilePath;
         this.index = index;
         this.blockFile = blockFile;
         this.fileChannel = fileChannel;
-        this.byteBuffer = byteBuffer;
-        this.mappedBlock = mappedBlock;
+        this.byteBuffer = byteBuffer; 
     }
 
     public DiskQueueBlock(DiskQueueIndex index, String blockFilePath) {
@@ -65,8 +64,8 @@ public class DiskQueueBlock {
             File file = new File(blockFilePath);
             this.blockFile = new RandomAccessFile(file, "rw");
             this.fileChannel = blockFile.getChannel();
-            this.mappedBlock = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, BLOCK_SIZE);
-            this.byteBuffer = mappedBlock.load();
+            this.byteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, BLOCK_SIZE);
+            this.byteBuffer = byteBuffer.load();
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
@@ -74,7 +73,7 @@ public class DiskQueueBlock {
 
     public DiskQueueBlock duplicate() {
         return new DiskQueueBlock(this.blockFilePath, this.index, this.blockFile, this.fileChannel,
-                this.byteBuffer.duplicate(), this.mappedBlock);
+                (MappedByteBuffer)this.byteBuffer.duplicate());
     }
 
     public static String formatBlockFilePath(String queueName, int fileNum, String fileBackupDir) {
@@ -146,14 +145,14 @@ public class DiskQueueBlock {
     }
 
     public void sync() {
-        if (mappedBlock != null) {
-            mappedBlock.force();
+        if (byteBuffer != null) {
+            byteBuffer.force();
         }
     }
 
     public void close() {
         try {
-            if (mappedBlock == null) {
+            if (byteBuffer == null) {
                 return;
             }
             sync();
@@ -161,17 +160,16 @@ public class DiskQueueBlock {
                 @SuppressWarnings("restriction")
 				public Object run() {
                     try {
-                        Method getCleanerMethod = mappedBlock.getClass().getMethod("cleaner");
+                        Method getCleanerMethod = byteBuffer.getClass().getMethod("cleaner");
                         getCleanerMethod.setAccessible(true);
-                        sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(mappedBlock);
+                        sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(byteBuffer);
                         cleaner.clean();
                     } catch (Exception e) {
                         log.error("close fqueue block file failed", e);
                     }
                     return null;
                 }
-            });
-            mappedBlock = null;
+            }); 
             byteBuffer = null;
             fileChannel.close();
             blockFile.close();

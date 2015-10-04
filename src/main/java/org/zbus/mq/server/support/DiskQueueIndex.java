@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server.support;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -33,7 +34,7 @@ import java.security.PrivilegedAction;
 
 import org.zbus.kit.log.Logger;
 
-public class DiskQueueIndex {
+public class DiskQueueIndex implements Closeable {
 	private static final Logger log = Logger.getLogger(DiskQueueIndex.class);
     private static final String MAGIC = "v100";
     private static final String INDEX_FILE_SUFFIX = ".idx";
@@ -47,26 +48,19 @@ public class DiskQueueIndex {
     private static final int WRITE_POS_OFFSET = 24;
     private static final int WRITE_CNT_OFFSET = 28;
 
-    private int flag;
-    
-    @SuppressWarnings("unused")
-	private int p11, p12, p13, p14, p15, p16, p17, p18; // 缓存行填充 32B
-    private volatile int readPosition;   // 12   读索引位置
+    private int flag; 
+  
     private volatile int readNum;        // 8   读索引文件号
-    private volatile int readCounter;    // 16   总读取数量
+    private volatile int readPosition;   // 12  读索引位置 
+    private volatile int readCounter;    // 16  总读取数量 
     
-    @SuppressWarnings("unused")
-	private int p21, p22, p23, p24, p25, p26, p27, p28; // 缓存行填充 32B
-    private volatile int writePosition;  // 24  写索引位置
     private volatile int writeNum;       // 20  写索引文件号
-    private volatile int writeCounter;   // 28 总写入数量
-
-    @SuppressWarnings("unused")
-	private int p31, p32, p33, p34, p35, p36, p37, p38; // 缓存行填充 32B
-
+    private volatile int writePosition;  // 24  写索引位置 
+    private volatile int writeCounter;   // 28  总写入数量
+ 
     private RandomAccessFile indexFile;
     private FileChannel fileChannel;
-    // 读写分离
+
     private MappedByteBuffer writeIndex;
     private MappedByteBuffer readIndex;
      
@@ -84,6 +78,7 @@ public class DiskQueueIndex {
                 this.readNum = indexFile.readInt();
                 this.readPosition = indexFile.readInt();
                 this.readCounter = indexFile.readInt();
+                
                 this.writeNum = indexFile.readInt();
                 this.writePosition = indexFile.readInt();
                 this.writeCounter = indexFile.readInt();
