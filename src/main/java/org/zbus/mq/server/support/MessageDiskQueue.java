@@ -25,7 +25,6 @@ package org.zbus.mq.server.support;
 import java.util.AbstractQueue;
 import java.util.Iterator;
 
-import org.zbus.mq.server.support.DiskQueuePool.DiskQueue;
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageCodec;
