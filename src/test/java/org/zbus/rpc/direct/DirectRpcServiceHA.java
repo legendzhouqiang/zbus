@@ -14,8 +14,9 @@ public class DirectRpcServiceHA {
 		processor.addModule(new InterfaceImpl());
  
 		
-		ServiceConfig config = new ServiceConfig(); 
-		config.serverPort = 15555; 
+		ServiceConfig config = new ServiceConfig();  
+		config.serverPort = 15555;
+		
 		config.messageProcessor = processor;
 		
 		//HA配置， TrackServer地址列表+Entry识别标识

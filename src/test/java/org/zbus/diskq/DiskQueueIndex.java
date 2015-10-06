@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq.server.support;
+package org.zbus.diskq;
 
 import java.io.Closeable;
 import java.io.File;
@@ -48,7 +48,7 @@ public class DiskQueueIndex implements Closeable {
     private static final int WRITE_POS_OFFSET = 24;
     private static final int WRITE_CNT_OFFSET = 28;
 
-    private volatile int flag; 
+    private int flag; 
   
     private volatile int readNum;        // 8   读索引文件号
     private volatile int readPosition;   // 12  读索引位置 
@@ -64,7 +64,8 @@ public class DiskQueueIndex implements Closeable {
     private MappedByteBuffer writeIndex;
     private MappedByteBuffer readIndex;
      
-    public DiskQueueIndex(String indexFilePath) { 
+    public DiskQueueIndex(String queueName, String fileBackupDir) { 
+    	String indexFilePath = formatIndexFilePath(queueName, fileBackupDir);
         File file = new File(indexFilePath);
         try {
             if (file.exists()) {

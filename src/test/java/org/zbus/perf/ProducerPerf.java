@@ -16,8 +16,10 @@ public class ProducerPerf{
 		 
 		Perf perf = new Perf(){
 			@Override
-			public MessageInvoker setupInvoker(Broker broker) {
-				return new Producer(broker, mq);
+			public MessageInvoker setupInvoker(Broker broker) throws Exception {
+				Producer producer = new Producer(broker, mq);
+				producer.createMQ();
+				return producer;
 			}
 			
 			@Override
