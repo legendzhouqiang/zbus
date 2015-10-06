@@ -49,6 +49,8 @@ public class SingleBroker implements Broker {
 		if(config.getDispatcher() == null){
 			this.ownDispatcher = true;
 			this.dispatcher = new Dispatcher();
+			this.dispatcher.selectorCount(config.getSelectorCount());
+			this.dispatcher.executorCount(config.getExecutorCount());
 			this.config.setDispatcher(dispatcher);
 		} else {
 			this.dispatcher = config.getDispatcher();

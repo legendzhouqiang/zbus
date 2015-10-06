@@ -23,8 +23,11 @@ public class NetServer extends MessageAdaptor{
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception { 
-		final int selectCount = ConfigKit.option(args, "-selector", 1);
-		final int executorCount = ConfigKit.option(args, "-thread", 48);
+		//8核以上给2+会有整体性能提升
+		final int selectCount = ConfigKit.option(args, "-selector", 1); 
+		
+		final int executorCount = ConfigKit.option(args, "-executor", 32);
+		
 		final Dispatcher dispatcher = new Dispatcher(); 
 		dispatcher.selectorCount(selectCount);
 		dispatcher.executorCount(executorCount);

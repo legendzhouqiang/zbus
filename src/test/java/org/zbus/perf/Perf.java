@@ -13,6 +13,8 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class Perf {
 	private static final Logger log = Logger.getLogger(Perf.class);
 	public String serverAddress = "127.0.0.1:15555";
+	public int selectorCount = 1;
+	public int executorCount = 32;
 	public int threadCount = 16;
 	public int loopCount = 1000000;
 	public int logInterval = 1000;
@@ -39,6 +41,8 @@ public class Perf {
 		brokerConfig.setServerAddress(serverAddress);
 		brokerConfig.setMaxTotal(threadCount);
 		brokerConfig.setMaxIdle(threadCount);  
+		brokerConfig.setSelectorCount(selectorCount);
+		brokerConfig.setExecutorCount(executorCount);
 		
 		this.broker = new SingleBroker(brokerConfig); 
 		 

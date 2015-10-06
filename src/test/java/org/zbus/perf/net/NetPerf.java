@@ -10,7 +10,11 @@ public class NetPerf{
 	
 	public static void main(String[] args) throws Exception { 
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:8080");
-		final int threadCount = ConfigKit.option(args, "-c", 48);
+		final int threadCount = ConfigKit.option(args, "-c", 48); //并发线程数
+		//8核以上给2+,压力测试程序本身可以提升
+		final int selectorCount = ConfigKit.option(args, "-selector", 2);
+		final int executorCount = ConfigKit.option(args, "-executor", 32);
+		
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);   
 		 
 		Perf perf = new Perf(){
@@ -27,7 +31,8 @@ public class NetPerf{
 			    invoker.invokeSync(msg, 10000); 
 			}
 		};
-		
+		perf.selectorCount = selectorCount;
+		perf.executorCount = executorCount;
 		perf.serverAddress = serverAddress;
 		perf.threadCount = threadCount;
 		perf.loopCount = loopCount;
