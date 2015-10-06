@@ -116,6 +116,9 @@ public class Service extends Server {
 
 		protected void onMessage(Object obj, Session sess) throws IOException {
 			Message msg = (Message) obj;
+			if(Message.HEARTBEAT.equals(msg.getCmd())){
+				return;
+			}
 			final String msgId = msg.getId();
 			Message res = processor.process(msg);
 			if (res != null) {

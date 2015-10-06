@@ -78,6 +78,24 @@ public class RpcProcessor implements MessageProcessor{
 		}
 	}
 	
+	public void removeModule(Object... services){
+		for(Object obj : services){
+			for(Class<?> intf : getAllInterfaces(obj.getClass())){
+				removeModule(intf.getSimpleName(), obj);
+				removeModule(intf.getCanonicalName(), obj);
+			}
+			removeModule("", obj);
+			removeModule(obj.getClass().getSimpleName(), obj);
+			removeModule(obj.getClass().getCanonicalName(), obj);
+		}
+	}
+	
+	public void removeModule(String module, Object... services){
+		for(Object service: services){
+			this.removeCommandTable(module, service);
+		}
+	}
+	
 	private void initCommandTable(String module, Object service){
 		try {  
 			Method [] methods = service.getClass().getMethods(); 
@@ -111,6 +129,37 @@ public class RpcProcessor implements MessageProcessor{
 				MethodInstance mi = new MethodInstance(m, service);
 				this.methods.put(key, mi);  
 				this.methods.put(key2, mi);  
+			}  
+		} catch (SecurityException e) {
+			log.error(e.getMessage(), e);
+		}   
+	}
+	
+	private void removeCommandTable(String module, Object service){
+		try {  
+			Method [] methods = service.getClass().getMethods(); 
+			for (Method m : methods) { 
+				String method = m.getName();
+				Remote cmd = m.getAnnotation(Remote.class);
+				if(cmd != null){ 
+					method = cmd.id();
+					if(cmd.exclude()) continue;
+					if("".equals(method)){
+						method = m.getName();
+					}  
+				}
+				
+				String paramMD5 = ""; 
+				Class<?>[] paramTypes = m.getParameterTypes();
+				StringBuilder sb = new StringBuilder();
+				for(int i=0;i<paramTypes.length;i++){ 
+					sb.append(paramTypes[i].getCanonicalName());
+				}
+				paramMD5 = sb.toString();
+				String key = module + ":" + method+":"+paramMD5; 
+				String key2 = module + ":" + method;
+				this.methods.remove(key);
+				this.methods.remove(key2);
 			}  
 		} catch (SecurityException e) {
 			log.error(e.getMessage(), e);
