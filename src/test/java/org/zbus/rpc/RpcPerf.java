@@ -44,14 +44,18 @@ class Task extends Thread{
 public class RpcPerf {
 	public static void main(String[] args) throws Exception { 
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 32);
+		final int threadCount = ConfigKit.option(args, "-c", 32); 
 		final int loopCount = ConfigKit.option(args, "-loop", 10000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
+		final int selectorCount = ConfigKit.option(args, "-selector", 1);
+		final int executorCount = ConfigKit.option(args, "-executor", 64);
 		 
 		BrokerConfig brokerConfig = new BrokerConfig(); 
 		brokerConfig.setServerAddress(serverAddress);
 		brokerConfig.setMaxTotal(threadCount);
 		brokerConfig.setMaxIdle(threadCount);  
+		brokerConfig.setSelectorCount(selectorCount);
+		brokerConfig.setExecutorCount(executorCount);
 		
 		final Broker broker = new SingleBroker(brokerConfig);
 		 
