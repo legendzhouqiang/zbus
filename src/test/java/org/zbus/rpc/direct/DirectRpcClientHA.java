@@ -21,7 +21,7 @@ public class DirectRpcClientHA {
 				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
 				System.out.println(res);
 			}catch(Exception e){
-				//
+				e.printStackTrace();
 			}
 		}
 		

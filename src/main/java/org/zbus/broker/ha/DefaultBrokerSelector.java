@@ -166,9 +166,13 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			if(se.consumerCount > 0) activeCount++; 
 		}
 		if(activeCount == 0){
-			activeCount = allBrokers.size();
+			activeCount = serverList.consumerFirstList.size();
 		} 
-		int idx = localIpHashCode%activeCount;
+		if(activeCount == 0){
+			return null;
+		}
+		
+		int idx = localIpHashCode%activeCount; 
 		ServerEntry se = serverList.consumerFirstList.get(idx);
 		if(se != null){
 			broker = getBroker(se.serverAddr);

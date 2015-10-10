@@ -207,7 +207,17 @@ public class ServerEntryTable implements Closeable{
 	
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
+	} 
+
+	public Map<String, ServerList> getEntry2ServerList() {
+		return entry2ServerList;
 	}
+
+	public Map<String, Set<ServerEntry>> getServer2EntryList() {
+		return server2EntryList;
+	}
+
+
 
 
 

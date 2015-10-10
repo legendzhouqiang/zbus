@@ -38,4 +38,59 @@ public class ServiceConfig {
 	//如果加入高可用HA才需要填写
 	public String trackServerList; 
 	public String entryId;
+	public String getServerHost() {
+		return serverHost;
+	}
+	
+	public void setServerHost(String serverHost) {
+		this.serverHost = serverHost;
+	}
+	public int getServerPort() {
+		return serverPort;
+	}
+	public void setServerPort(int serverPort) {
+		this.serverPort = serverPort;
+	}
+	public int getSelectorCount() {
+		return selectorCount;
+	}
+	public void setSelectorCount(int selectorCount) {
+		this.selectorCount = selectorCount;
+	}
+	public int getExecutorCount() {
+		return executorCount;
+	}
+	public void setExecutorCount(int executorCount) {
+		this.executorCount = executorCount;
+	}
+	public Dispatcher getDispatcher() {
+		return dispatcher;
+	}
+	public void setDispatcher(Dispatcher dispatcher) {
+		this.dispatcher = dispatcher;
+	}
+	public MessageProcessor getMessageProcessor() {
+		return messageProcessor;
+	}
+	public void setMessageProcessor(MessageProcessor messageProcessor) {
+		this.messageProcessor = messageProcessor;
+	}
+	public String getThriftServer() {
+		return thriftServer;
+	}
+	public void setThriftServer(String thriftServer) {
+		this.thriftServer = thriftServer;
+	}
+	public String getTrackServerList() {
+		return trackServerList;
+	}
+	public void setTrackServerList(String trackServerList) {
+		this.trackServerList = trackServerList;
+	}
+	public String getEntryId() {
+		return entryId;
+	}
+	public void setEntryId(String entryId) {
+		this.entryId = entryId;
+	} 
 }

@@ -1,6 +1,7 @@
 package org.zbus.mq;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -22,16 +23,23 @@ public class ConsumerExample {
 		config.setBroker(broker);
 		config.setMq("MyMQ"); 
 		
+		final AtomicLong counter = new AtomicLong(0);
+		for(int i=0;i<10;i++){
 		//创建消费者
-		@SuppressWarnings("resource")
-		Consumer c = new Consumer(config);  
-		c.onMessage(new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg); 
-			}
-		});
-		
-		c.start(); 
+			@SuppressWarnings("resource")
+			Consumer c = new Consumer(config);  
+			c.onMessage(new MessageHandler() { 
+				@Override
+				public void handle(Message msg, Session sess) throws IOException {
+					counter.incrementAndGet();
+					long curr = counter.get();
+					if(curr %10000 == 0){
+						System.out.println("consumed: "+curr);
+					}
+				}
+			});
+			
+			c.start(); 
+		}
 	} 
 }
