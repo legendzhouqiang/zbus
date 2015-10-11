@@ -1,7 +1,7 @@
 package org.zbus.mq.diskq;
 
-import org.zbus.mq.server.support.DiskQueue;
 import org.zbus.mq.server.support.DiskQueuePool;
+import org.zbus.mq.server.support.DiskQueuePool.DiskQueue;
 
 
 
