@@ -12,3 +12,4 @@ zbus-6.3.0 changelog
 1. fix net.Client close, disable disconnected handler when close actively.
 2. "content-encoding" in HTTP changed to "encoding" (extend HTTP) for 
 	compatibility to standard HTTP when using browser.
+3. 增加支持不指定随机端口启动Server

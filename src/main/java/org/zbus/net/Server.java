@@ -24,6 +24,7 @@ package org.zbus.net;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,7 +46,7 @@ public class Server implements Closeable{
 	}
 	
 	protected Dispatcher dispatcher;   
-	protected String serverAddr; //第一个Server注册的地址
+	protected String serverAddr; //第一个Server注册的地址, 当侦听启动后才有效
 	protected String serverName = "Server";  
 	
 	protected Map<String, IoAdaptorInfo> adaptors = new ConcurrentHashMap<String, IoAdaptorInfo>();
@@ -88,15 +89,6 @@ public class Server implements Closeable{
 		adaptor.adaptorAddr = address; 
 		adaptor.serverAdaptor = ioAdaptor;  
 		 
-		if(adaptors.isEmpty()){
-			this.serverAddr = address;
-			String host = blocks[0];
-			int port = Integer.valueOf(blocks[1]);
-			if("0.0.0.0".equals(host)){
-				this.serverAddr = String.format("%s:%d",NetKit.getLocalIp(), port);
-			} 
-		}
-		
 		adaptors.put(address, adaptor);
 	}
 	
@@ -110,8 +102,27 @@ public class Server implements Closeable{
     		IoAdaptorInfo adaptor = e.getValue();
     		if(adaptor.serverChannel != null) continue;
     		
+    		String address = adaptor.adaptorAddr; 
+    		String[] bb = address.split("[:]");
+    		if(bb.length !=2 ) continue;
+    		String host = bb[0];
+    		String port = bb[1];
+    		
     		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.adaptorAddr, adaptor.serverAdaptor);
-        	String info = String.format("%s-%s listening [%s]", this.serverName, adaptor.adaptorName, adaptor.adaptorAddr);
+        	
+    		ServerSocket ss = adaptor.serverChannel.socket();
+    		if(serverAddr == null){ 
+        		String localHost = host;
+        		if("0.0.0.0".equals(host)){
+        			localHost = NetKit.getLocalIp();
+        		}
+        		serverAddr = String.format("%s:%d", localHost, ss.getLocalPort());
+        	} 
+    		if("0".equals(port)){
+    			adaptor.adaptorAddr = String.format("%s:%d", host, ss.getLocalPort());
+    		} 
+    		
+    		String info = String.format("%s-%s listening [%s]", this.serverName, adaptor.adaptorName, adaptor.adaptorAddr);
     		if(adaptor.adaptorName == null){
     			info = String.format("%s listening [%s]", this.serverName, adaptor.adaptorAddr);
     		}

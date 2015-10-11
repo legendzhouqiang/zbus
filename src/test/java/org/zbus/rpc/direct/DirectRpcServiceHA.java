@@ -14,14 +14,12 @@ public class DirectRpcServiceHA {
 		processor.addModule(new InterfaceImpl());
  
 		
-		ServiceConfig config = new ServiceConfig();  
-		config.serverPort = 25555;
-		
+		ServiceConfig config = new ServiceConfig();    
 		config.messageProcessor = processor;
 		
 		//HA配置， TrackServer地址列表+Entry识别标识
 		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
-		config.entryId = "MyRpc2";
+		config.entryId = "MyRpc";
 		
 		Service svc = new Service(config);
 		svc.start(); 
