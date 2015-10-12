@@ -88,7 +88,11 @@ public class Server implements Closeable{
 		adaptor.adaptorName = name;
 		adaptor.adaptorAddr = address; 
 		adaptor.serverAdaptor = ioAdaptor;  
-		 
+		
+		if(adaptors.isEmpty()){ //the first
+			this.serverAddr = address;
+		}
+		
 		adaptors.put(address, adaptor);
 	}
 	
@@ -111,7 +115,7 @@ public class Server implements Closeable{
     		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.adaptorAddr, adaptor.serverAdaptor);
         	
     		ServerSocket ss = adaptor.serverChannel.socket();
-    		if(serverAddr == null){ 
+    		if(address.equals(serverAddr)){ 
         		String localHost = host;
         		if("0.0.0.0".equals(host)){
         			localHost = NetKit.getLocalIp();

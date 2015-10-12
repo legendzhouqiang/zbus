@@ -23,9 +23,13 @@
 package org.zbus.proxy;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.SelectionKey;
+import java.util.Properties;
 
 import org.zbus.kit.ConfigKit;
+import org.zbus.kit.FileKit;
+import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
@@ -62,14 +66,35 @@ public class TcpProxyServer extends BindingAdaptor{
     	dispatcher.registerSession(SelectionKey.OP_CONNECT, target);  
     } 
     
-	public static void main(String[] args) throws Exception {  
-		int serverPort = ConfigKit.option(args, "-server", 3306);
-		String target = ConfigKit.option(args, "-target", "10.17.2.30:3306");
-		Dispatcher dispatcher = new Dispatcher();
+	public static void main(String[] args) throws Exception {   
+		String conf = ConfigKit.option(args, "-conf", "proxy.properties");
 		
-		IoAdaptor ioAdaptor = new TcpProxyServer(target);
-
-		final Server server = new Server(dispatcher, ioAdaptor, serverPort);
+		InputStream inputStream = FileKit.loadFile(conf);
+		if(inputStream == null){ 
+			log.error("Missing configure file(%s)", conf);
+			return;
+		}
+		Properties props = new Properties();
+		props.load(inputStream); 
+		
+		Dispatcher dispatcher = new Dispatcher();
+		final Server server = new Server(dispatcher);
+		for(Object key : props.keySet()){
+			String sKey = (String)key;
+			if(!sKey.startsWith("tcp.")) continue;
+			String listenPort = sKey.substring(4);
+			int port;
+			try{
+				port = Integer.valueOf(listenPort);
+			}catch(Exception ex){
+				continue;
+			}
+			String target = props.getProperty(sKey);
+			IoAdaptor ioAdaptor = new TcpProxyServer(target);
+			server.registerAdaptor(port, ioAdaptor);
+			log.info("%s:%d====>%s", NetKit.getLocalIp(), port, target);
+		}
+	
 		server.setServerName("TcpProxyServer");
 		server.start();
 		
