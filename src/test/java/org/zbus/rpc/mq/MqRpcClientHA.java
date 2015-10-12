@@ -16,12 +16,12 @@ public class MqRpcClientHA {
 		
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);    
 		
-		for(int i=0;i<1000000;i++){
+		for(int i=0;i<10;i++){
 			try{
 				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
 				System.out.println(res);
 			}catch(Exception e){
-				//
+				e.printStackTrace();
 			}
 		}
 		
