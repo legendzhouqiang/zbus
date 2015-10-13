@@ -1,4 +1,4 @@
-package org.zbus.rpc;
+package org.zbus.perf.rpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -8,6 +8,7 @@ import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message.MessageInvoker;
+import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.biz.Interface;
 import org.zbus.rpc.mq.MqInvoker;
 
