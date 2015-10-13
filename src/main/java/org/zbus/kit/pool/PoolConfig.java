@@ -23,9 +23,9 @@
 package org.zbus.kit.pool;
 
 public class PoolConfig implements Cloneable{ 
-	private int maxTotal = 8;
-    private int maxIdle = 8;
-    private int minIdle = 0;
+	private int maxTotal = 64;
+    private int maxIdle = 64;
+    private int minIdle = 64;
     private long minEvictableIdleTimeMillis = 1000L * 60L * 30L;
     private Object support;
 	

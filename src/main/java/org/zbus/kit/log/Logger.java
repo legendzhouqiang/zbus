@@ -49,15 +49,29 @@ public abstract class Logger {
 		if (factory != null){
 			return ;
 		}
-		String defaultFactory = String.format("%s.impl.Log4jLoggerFactory", Logger.class.getPackage().getName());
+		
 		try {
 			//default to Log4j
 			Class.forName("org.apache.log4j.Logger");
+			String defaultFactory = String.format("%s.impl.Log4jLoggerFactory", Logger.class.getPackage().getName());
 			Class<?> factoryClass = Class.forName(defaultFactory);
 			factory = (LoggerFactory)factoryClass.newInstance();
+			return;
 		} catch (Exception e) { 
 			factory = new JdkLoggerFactory();
 		}
+		
+		try {
+			//try slf4j
+			Class.forName("org.slf4j.Logger");
+			String defaultFactory = String.format("%s.impl.Sl4jLoggerFactory", Logger.class.getPackage().getName());
+			Class<?> factoryClass = Class.forName(defaultFactory);
+			factory = (LoggerFactory)factoryClass.newInstance();
+			return;
+		} catch (Exception e) { 
+			factory = new JdkLoggerFactory();
+		} 
+		
 	}
 	
 	public void debug(String format, Object... args){
