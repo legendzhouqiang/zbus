@@ -42,6 +42,9 @@ public class InterfaceImpl implements Interface{
 	}
 	
 	public String getString(String name) { 
+		if(name == null){
+			System.out.println("got null: "+ name);
+		}
 		return "Hello World ZBUS " + name;
 	}
 	
