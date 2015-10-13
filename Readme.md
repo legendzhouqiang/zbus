@@ -4,13 +4,13 @@
 ##ZBUS = MQ + RPC + PROXY
 
 
-* **支持消息队列, 发布订阅, RPC, 代理（TCP/HTTP/DMZ）**
+* **支持消息队列, 发布订阅, RPC, 代理（TCP/DMZ）**
 * **亿级消息堆积能力、支持HA高可用**
 * **单个Jar包无依赖 ~300K**
 * **服务代理 -- 适配改造已有业务系统，使之具备跨平台与语言**
 * **丰富的API--JAVA/C/C++/C#/Python/Node.JS多语言接入** 
 
-## QQ群: 467741880, 如果喜欢该项目，请右上角star，好让更多人参与改进:)
+## QQ群: 467741880, 如果喜欢该项目，请右上角star，让更多人参与改进
 
 
 
@@ -70,7 +70,7 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 	<dependency>
 		<groupId>org.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>6.2.0</version>
+		<version>6.2.6</version>
 	</dependency>
 
 ### 生产者
