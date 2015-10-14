@@ -42,12 +42,14 @@ import org.zbus.kit.log.Logger;
  
 
 public class Dispatcher implements Closeable {
+	public static final int DEFAULT_EXECUTOR_COUNT = 64;
+	
 	private static final Logger log = Logger.getLogger(Dispatcher.class); 
 	
 	private ExecutorService executor;
 	
 	private int selectorCount = defaultSelectorCount();
-	private int executorCount = 64;
+	private int executorCount = DEFAULT_EXECUTOR_COUNT;
 	private SelectorThread[] selectors;
 	private AtomicInteger selectorIndex = new AtomicInteger(0);
 	private String dispatcherName = "Dispatcher";
@@ -166,12 +168,26 @@ public class Dispatcher implements Closeable {
 	}
 	
 	public Dispatcher selectorCount(int count){ 
-		this.selectorCount = count;
+		if(count <= 0){
+			this.selectorCount = defaultSelectorCount();
+		} else {
+			this.selectorCount = count;
+		}
 		return this;
 	}
 	
+	public static int defaultSelectorCount(){ 
+		int c = Runtime.getRuntime().availableProcessors()/4;
+		if(c <= 0) c = 1;
+		return c;
+	}
+	
 	public Dispatcher executorCount(int count){ 
-		this.executorCount = count;
+		if(count <= 0){
+			this.executorCount = DEFAULT_EXECUTOR_COUNT;
+		} else {
+			this.executorCount = count;
+		}
 		return this;
 	}
 	
@@ -245,12 +261,6 @@ public class Dispatcher implements Closeable {
     	channel.connect(new InetSocketAddress(host, port)); 
     	Session session = new Session(this, channel, ioAdaptor);
     	return session;
-	}
-	
-	public static int defaultSelectorCount(){ 
-		int c = Runtime.getRuntime().availableProcessors()/4;
-		if(c <= 0) c = 1;
-		return c;
 	}
 	
 }

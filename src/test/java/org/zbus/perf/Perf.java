@@ -13,8 +13,8 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class Perf {
 	private static final Logger log = Logger.getLogger(Perf.class);
 	public String serverAddress = "127.0.0.1:15555";
-	public int selectorCount = 1;
-	public int executorCount = 32;
+	public int selectorCount = 0; //0意味着适用默认值，CPU/4
+	public int executorCount = 0; //0意味着适用默认值，64
 	public int threadCount = 16;
 	public int loopCount = 1000000;
 	public int logInterval = 1000;

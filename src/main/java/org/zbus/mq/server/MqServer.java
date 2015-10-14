@@ -167,7 +167,7 @@ public class MqServer extends Server{
 		MqServerConfig config = new MqServerConfig();
 		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
 		config.serverPort = ConfigKit.option(args, "-p", 15555);
-		config.selectorCount = ConfigKit.option(args, "-selector", 1);
+		config.selectorCount = ConfigKit.option(args, "-selector", 0); //0 means default to CPU/4
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
