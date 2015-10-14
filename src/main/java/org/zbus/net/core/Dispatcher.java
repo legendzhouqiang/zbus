@@ -46,8 +46,8 @@ public class Dispatcher implements Closeable {
 	
 	private ExecutorService executor;
 	
-	private int selectorCount = 1;
-	private int executorCount = 32;
+	private int selectorCount = defaultSelectorCount();
+	private int executorCount = 64;
 	private SelectorThread[] selectors;
 	private AtomicInteger selectorIndex = new AtomicInteger(0);
 	private String dispatcherName = "Dispatcher";
@@ -245,6 +245,12 @@ public class Dispatcher implements Closeable {
     	channel.connect(new InetSocketAddress(host, port)); 
     	Session session = new Session(this, channel, ioAdaptor);
     	return session;
+	}
+	
+	public static int defaultSelectorCount(){ 
+		int c = Runtime.getRuntime().availableProcessors()/4;
+		if(c <= 0) c = 1;
+		return c;
 	}
 	
 }
