@@ -22,20 +22,18 @@ public class NetServer extends MessageAdaptor{
 	} 
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception { 
-		//8核以上给2+会有整体性能提升
-		final int selectCount = ConfigKit.option(args, "-selector", 1); 
-		
-		final int executorCount = ConfigKit.option(args, "-executor", 32);
+	public static void main(String[] args) throws Exception {  
+		final int selectCount = ConfigKit.option(args, "-selector", 0);  
+		final int executorCount = ConfigKit.option(args, "-executor", 0);
+		final int port = ConfigKit.option(args, "-p", 8080);
 		
 		final Dispatcher dispatcher = new Dispatcher(); 
 		dispatcher.selectorCount(selectCount);
 		dispatcher.executorCount(executorCount);
 		final Server server = new Server(dispatcher);
-		
-		//相同的业务处理逻辑可以便捷的侦听多个地址
+		 
 		IoAdaptor ioAdaptor = new NetServer(); 
-		server.registerAdaptor(8080, ioAdaptor);
+		server.registerAdaptor(port, ioAdaptor);
 		
     	server.start(); 
 	}
