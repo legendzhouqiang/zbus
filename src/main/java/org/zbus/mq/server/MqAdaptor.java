@@ -153,7 +153,12 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			msg.removeHead(Message.ACK);
 			msg.removeHead(Message.RECVER);
 			msg.removeHead(Message.CMD);
-			target.write(msg);
+			try{
+				target.write(msg);
+			} catch(Exception ex){
+				log.warn("Target(%s) write failed, Ignore", recver); 
+				return; //just ignore
+			}
 		}
 	}; 
 	

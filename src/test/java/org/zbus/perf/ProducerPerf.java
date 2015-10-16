@@ -32,6 +32,7 @@ public class ProducerPerf{
 		perf.serverAddress = serverAddress;
 		perf.threadCount = threadCount;
 		perf.loopCount = loopCount;
+		perf.logInterval = 10000;
 		
 		perf.run();
 	}

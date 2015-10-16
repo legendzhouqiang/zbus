@@ -13,3 +13,4 @@ zbus-6.3.0 changelog
 2. "content-encoding" in HTTP changed to "encoding" (extend HTTP) for 
 	compatibility to standard HTTP when using browser.
 3. 增加支持不指定随机端口启动Server
+4. 修复Rpc客户端运行中失败引起Sevice响应实例清除的bug
