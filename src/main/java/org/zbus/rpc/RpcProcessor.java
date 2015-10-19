@@ -43,6 +43,10 @@ public class RpcProcessor implements MessageProcessor{
 	private RpcCodec codec = new JsonRpcCodec();
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
+	public RpcProcessor(){
+		
+	}
+	
 	public RpcProcessor(Object... services){
 		addModule(services);
 	}
@@ -273,4 +277,12 @@ public class RpcProcessor implements MessageProcessor{
 			this.instance = instance;
 		} 
 	}
+
+	public RpcCodec getCodec() {
+		return codec;
+	}
+
+	public void setCodec(RpcCodec codec) {
+		this.codec = codec;
+	} 
 }

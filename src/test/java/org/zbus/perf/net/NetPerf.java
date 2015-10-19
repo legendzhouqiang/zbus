@@ -10,7 +10,7 @@ public class NetPerf{
 	
 	public static void main(String[] args) throws Exception { 
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:8080");
-		final int threadCount = ConfigKit.option(args, "-c", 1); //并发线程数 
+		final int threadCount = ConfigKit.option(args, "-c", 16); //并发线程数 
 		final int selectorCount = ConfigKit.option(args, "-selector", 0);
 		final int executorCount = ConfigKit.option(args, "-executor", 0);
 		
