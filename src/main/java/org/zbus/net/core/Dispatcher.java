@@ -177,7 +177,7 @@ public class Dispatcher implements Closeable {
 	}
 	
 	public static int defaultSelectorCount(){ 
-		int c = Runtime.getRuntime().availableProcessors()/4;
+		int c = Runtime.getRuntime().availableProcessors()/2;
 		if(c <= 0) c = 1;
 		return c;
 	}
