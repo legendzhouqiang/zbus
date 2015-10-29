@@ -1,0 +1,17 @@
+支持消息队列复制（不同业务维度消费同一个消息）
+
+Index与Block分离
+MyMQ.idx
+readNum
+readPos
+readCount
+
+MyMQ.idx
+MyMQ.fork
+
+
+
+sub-index-id，二级指针
+
+支持zbus内部事件消息通知PubSub
+

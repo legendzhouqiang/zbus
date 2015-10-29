@@ -1,0 +1,16 @@
+zbus-6.2.0 发布，整个项目模块化重构，改进内容：
+1. MQ默认直接采用持久化。MQ速度在SSD磁盘上可达200M+/s,数十亿级消息堆积测试（100G+磁盘）
+2. RPC支持分为直接RPC与基于MQ的RPC，直接RPC性能优于基于MQ的RPC。 
+3. Broker独立模型重构，支持HA高可用，不只面向MQ工作，可以方便支持直接RPC的负载均衡。
+4. 添加Thrfit协议接入（RPC）,整体上支持HTTP短链接，Extend HTTP的TCP长连接，Thrift客户端接入。
+5. 消息通讯基础zbus.NET保持小、模块化（~50K），方便个性化协议扩展
+6. 添加支持普通TCP代理，DMZ网络安全结构的的TCP代理
+7. 提供大量示例，包括MQ，PubSub，RPC，Proxy，Thrift，Simple HTTP等。
+
+
+zbus-6.3.0 changelog
+1. fix net.Client close, disable disconnected handler when close actively.
+2. "content-encoding" in HTTP changed to "encoding" (extend HTTP) for 
+	compatibility to standard HTTP when using browser.
+3. 增加支持不指定随机端口启动Server
+4. 修复Rpc客户端运行中失败引起Sevice响应实例清除的bug
