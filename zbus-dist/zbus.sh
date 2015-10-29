@@ -1,4 +1,5 @@
 #/usr/bin
+#cat zbus.sh | col -b > zbus.sh  ==> fix win=>lin
 JAVA_HOME=/apps/jdk7
 ZBUS_HOME=./
 JAVA_OPTS="-Dfile.encoding=UTF-8 -server -Xms64m -Xmx1024m -XX:+UseParallelGC"
