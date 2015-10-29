@@ -15,15 +15,16 @@ public class MqRpcClient {
 		
 		MqInvoker messageInvoker = new MqInvoker(broker, "MyRpc"); 
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);     
+		rpc.setVerbose(true);
 		
-		for(int i=0;i<10;i++){
-			try{
-				String res = rpc.invokeSync(String.class, "echo", "testxxxx"); 
-				System.out.println(res);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
+		Integer res = rpc.invokeSync(Integer.class, "plus", 1,2); 
+		System.out.println(res); 
+		
+		String res2 = rpc.invokeSync(String.class, "getString",
+				new Class[]{String.class, Integer.class}, "string", 2); 
+		System.out.println(res2); 
+			
+		
 		
 		broker.close();
 	}

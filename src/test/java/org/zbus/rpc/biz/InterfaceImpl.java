@@ -36,7 +36,7 @@ class PrivateRuntimeException extends RuntimeException{
 }
 public class InterfaceImpl implements Interface{
  
-	@Override
+	@Override 
 	public String echo(String string) { 
 		return string;
 	}
@@ -48,7 +48,6 @@ public class InterfaceImpl implements Interface{
 		return "Hello World ZBUS " + name;
 	}
 	
-	@Override
 	public String getString(String name, int c) {
 		return String.format("%s, %d", name, c);
 	}

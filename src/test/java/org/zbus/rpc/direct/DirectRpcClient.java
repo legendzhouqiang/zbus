@@ -9,7 +9,7 @@ public class DirectRpcClient {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress("127.0.0.1:15555");
+		brokerConfig.setServerAddress("127.0.0.1:8080");
 		Broker broker = new SingleBroker(brokerConfig); 
 		
 		

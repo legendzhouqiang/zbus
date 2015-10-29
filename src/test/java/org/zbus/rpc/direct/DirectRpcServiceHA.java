@@ -18,7 +18,7 @@ public class DirectRpcServiceHA {
 		config.messageProcessor = processor;
 		
 		//HA配置， TrackServer地址列表+Entry识别标识
-		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
+		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667"; 
 		config.entryId = "MyRpc";
 		
 		Service svc = new Service(config);

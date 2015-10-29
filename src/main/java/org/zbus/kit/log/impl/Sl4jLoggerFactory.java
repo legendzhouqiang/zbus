@@ -23,8 +23,7 @@
 package org.zbus.kit.log.impl;
  
 
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
+import org.slf4j.spi.LocationAwareLogger;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 
@@ -36,12 +35,17 @@ public class Sl4jLoggerFactory implements LoggerFactory {
 	
 	public Logger getLogger(String name) {
 		return new Sl4jLogger(name);
+	} 
+	
+	public static void main(String[] args){
+		Logger log = new Sl4jLogger(Sl4jLoggerFactory.class);
+		log.info("test");
 	}
 }
+
 class Sl4jLogger extends Logger { 
 	private org.slf4j.Logger log; 
-	
-	private static final Marker maker = MarkerFactory.getMarker(Log4jLogger.class.getName());
+	private final String FQCN = Sl4jLogger.class.getName();
 	
 	Sl4jLogger(Class<?> clazz) { 
 		log = org.slf4j.LoggerFactory.getLogger(clazz);
@@ -51,65 +55,64 @@ class Sl4jLogger extends Logger {
 		log = org.slf4j.LoggerFactory.getLogger(name);
 	}
 	
-	public void debug(String format, Object... args){
-		String msg = String.format(format, args); 
-		log.debug(maker, msg);
-	} 
-	
-	public void info(String format, Object... args){
-		String msg = String.format(format, args);
-		log.info(maker, msg);
-	}
-	
-	public void warn(String format, Object... args){ 
-		String msg = String.format(format, args);
-		log.warn(maker, msg);
-	}
-	
-	public void error(String format, Object... args){ 
-		String msg = String.format(format, args);
-		log.error(maker, msg);
-	}
-	
-	
-	public void info(String message) {
-		log.info(message);
+	public void info(String message) { 
+		info(message, (Throwable)null);
 	}
 	
 	public void info(String message, Throwable t) {
-		log.info(message, t);
+		if (log instanceof LocationAwareLogger) {
+	        ((LocationAwareLogger) log).log(null, FQCN, 
+	        		LocationAwareLogger.INFO_INT, message, null, t);
+	    } else {
+	        log.info(message, t);
+	    } 
 	}
 	
 	public void debug(String message) {
-		log.debug(message);
+		debug(message, (Throwable)null);
 	}
 	
 	public void debug(String message, Throwable t) {
-		log.debug(message, t);
+		if (log instanceof LocationAwareLogger) {
+	        ((LocationAwareLogger) log).log(null, FQCN, 
+	        		LocationAwareLogger.DEBUG_INT, message, null, t);
+	    } else {
+	        log.debug(message, t);
+	    } 
 	}
 	
 	public void warn(String message) {
-		log.warn(message);
+		warn(message, (Throwable)null);
 	}
 	
 	public void warn(String message, Throwable t) {
-		log.warn(message, t);
+		if (log instanceof LocationAwareLogger) {
+	        ((LocationAwareLogger) log).log(null, FQCN, 
+	        		LocationAwareLogger.WARN_INT, message, null, t);
+	    } else {
+	        log.debug(message);
+	    } 
 	}
 	
 	public void error(String message) {
-		log.error(message);
+		error(message, (Throwable)null);
 	}
 	
 	public void error(String message, Throwable t) {
-		log.error(message, t);
+		if (log instanceof LocationAwareLogger) {
+	        ((LocationAwareLogger) log).log(null, FQCN, 
+	        		LocationAwareLogger.ERROR_INT, message, null, t);
+	    } else {
+	        log.debug(message);
+	    } 
 	}
 	
 	public void fatal(String message) {
-		log.error(message);
+		error(message);
 	}
 	
 	public void fatal(String message, Throwable t) {
-		log.error(message, t);
+		error(message, t);
 	}
 	
 	public boolean isDebugEnabled() {

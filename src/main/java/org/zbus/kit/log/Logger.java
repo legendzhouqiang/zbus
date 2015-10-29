@@ -57,8 +57,7 @@ public abstract class Logger {
 			Class<?> factoryClass = Class.forName(defaultFactory);
 			factory = (LoggerFactory)factoryClass.newInstance();
 			return;
-		} catch (Exception e) { 
-			factory = new JdkLoggerFactory();
+		} catch (Exception e) {  
 		}
 		
 		try {
@@ -69,9 +68,11 @@ public abstract class Logger {
 			factory = (LoggerFactory)factoryClass.newInstance();
 			return;
 		} catch (Exception e) { 
-			factory = new JdkLoggerFactory();
 		} 
 		
+		if(factory == null){
+			factory = new JdkLoggerFactory();
+		}
 	}
 	
 	public void debug(String format, Object... args){

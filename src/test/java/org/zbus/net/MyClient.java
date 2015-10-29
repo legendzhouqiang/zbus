@@ -1,5 +1,6 @@
 package org.zbus.net;
 
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
@@ -15,7 +16,15 @@ public class MyClient {
 		msg.setCmd("hello");
 		
 		msg.setBody("hello world"); 
-		for(int i=0;i<1;i++){
+		for(int i=0;i<1;i++){ 
+			client.invokeAsync(msg, new ResultCallback<Message>() {
+
+				@Override
+				public void onReturn(Message result) { 
+					
+				}
+			});
+			
 			Message res = client.invokeSync(msg);
 			System.out.println(res); 
 		}
