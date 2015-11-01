@@ -21,7 +21,7 @@ public class MqRpcClient {
 		System.out.println(res); 
 		
 		String res2 = rpc.invokeSync(String.class, "getString",
-				new Class[]{String.class, Integer.class}, "string", 2); 
+				new Class[]{String.class, int.class}, "string", 2); 
 		System.out.println(res2); 
 			
 		
