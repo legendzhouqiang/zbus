@@ -34,13 +34,14 @@ public class Protocol {
 	public static final String Consume   = "consume";  //消费消息  
 	public static final String Route   	 = "route";  //请求等待应答消息  
 	public static final String CreateMQ  = "create_mq"; //创建队列
-	public static final String Auth      = "auth";
+	public static final String Auth      = "auth"; 
+	public static final String Query     = "query"; 
+	public static final String Test      = "test"; 
 	
-	public static final String Admin     = "admin";  //管理类消息 
 	
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery"; 
-	public static final String Test      = "test"; 
+	
 	
 	public static enum MqMode {
 		MQ,       //消息队列

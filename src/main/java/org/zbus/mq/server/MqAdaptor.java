@@ -49,6 +49,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		registerHandler(Protocol.Route, routeHandler);  
 		registerHandler(Protocol.CreateMQ, createMqHandler); 
 		registerHandler(Protocol.Test, testHandler);
+		registerHandler(Protocol.Query, queryHandler);
 		
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.Data, dataHandler); 
@@ -63,25 +64,36 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		if(url.empty){
 			msg.setCmd(""); //default to home monitor
 			return msg;
-		}  
-		if(url.cmd != null){
-			msg.setCmd(url.cmd);
-		}  
+		}   
 		
-		if(url.mq != null && url.method != null){
-			msg.setMq(url.mq);
-			msg.setAck(false); 
-			msg.setCmd(Protocol.Produce);
-			String module = url.module == null? "" : url.module;   
-			String json = "{";
-			json += "\"module\": " + "\"" + module + "\"";
-			json += ", \"method\": " + "\"" + url.method + "\"";
-			if(url.params != null){
-				json += ", \"params\": " + "[" + url.params + "]";  
+		if(url.mq != null){
+			if(msg.getMq() == null){
+				msg.setMq(url.mq);
 			}
-			json += "}";
-			msg.setJsonBody(json);	
+			
+			if(url.method != null){ 
+				msg.setMq(url.mq);
+				msg.setAck(false); 
+				msg.setCmd(Protocol.Produce);
+				String module = url.module == null? "" : url.module;   
+				String json = "{";
+				json += "\"module\": " + "\"" + module + "\"";
+				json += ", \"method\": " + "\"" + url.method + "\"";
+				if(url.params != null){
+					json += ", \"params\": " + "[" + url.params + "]";  
+				}
+				json += "}";
+				msg.setJsonBody(json);	
+			} else { //default to query
+				msg.setCmd(Protocol.Query);
+			}
 		} 
+		
+		if(url.cmd != null){
+			if(msg.getCmd() == null){
+				msg.setCmd(url.cmd);
+			}
+		}  
 		
 		return msg;
 	}
@@ -312,6 +324,30 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		}
 	};
 	
+	private MessageHandler queryHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			String json = "";
+			if(msg.getMq() == null){
+				BrokerInfo info = getStatInfo();
+				json = JsonKit.toJson(info);
+			} else { 
+				AbstractMQ mq = mqTable.get(msg.getMq()); 
+		    	if(mq == null){ 
+					json = "{}";
+				} else {
+					json = JsonKit.toJson(mq.getMqInfo());
+				}
+			}
+
+			Message data = new Message();
+			data.setResponseStatus("200");
+			data.setId(msg.getId());
+			data.setHead("content-type", "application/json");
+			data.setBody(json);
+			sess.write(data);
+		}
+	};
+	
 	private MessageHandler heartbeatHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
@@ -362,7 +398,9 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     public BrokerInfo getStatInfo(){
     	Map<String, MqInfo> table = new HashMap<String, MqInfo>();
    		for(Map.Entry<String, AbstractMQ> e : this.mqTable.entrySet()){
-   			table.put(e.getKey(), e.getValue().getMqInfo());
+   			MqInfo info = e.getValue().getMqInfo();
+   			info.consumerInfoList.clear(); //clear to avoid long list
+   			table.put(e.getKey(), info);
    		}  
 		BrokerInfo info = new BrokerInfo();
 		info.broker = mqServer.getServerAddr();

@@ -67,8 +67,19 @@ public class MqAdmin{
 	 * @return
 	 * @throws IOException
 	 */
-	protected Message invokeCreateMQ(Message req) throws IOException, InterruptedException{
+	protected Message invokeSync(Message req) throws IOException, InterruptedException{
 		return broker.invokeSync(req, 2500);
+	}
+	
+	public String queryMQ() throws IOException, InterruptedException{
+		Message req = new Message();
+    	req.setCmd(Protocol.Query); 
+    	req.setMq(this.mq); 
+    	req.setHead("register_token", registerToken); 
+    	req.setHead("access_token", accessToken);
+    	
+    	Message res = invokeSync(req);
+    	return res.getBodyString();
 	}
    
     public boolean createMQ() throws IOException, InterruptedException{
@@ -79,7 +90,7 @@ public class MqAdmin{
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken);
     	
-    	Message res = invokeCreateMQ(req);
+    	Message res = invokeSync(req);
     	if(res == null) return false;
     	return res.isStatus200();
     } 

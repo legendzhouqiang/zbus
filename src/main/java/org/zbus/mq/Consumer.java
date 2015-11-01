@@ -108,7 +108,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 
 	@Override
-	protected Message invokeCreateMQ(Message req) throws IOException,
+	protected Message invokeSync(Message req) throws IOException,
 			InterruptedException {
 		ensureClient();
 		return client.invokeSync(req);

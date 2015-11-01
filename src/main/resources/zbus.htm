@@ -98,13 +98,13 @@ $.getJSON('?cmd=data',function(data){
     	
         $("#mq_table").append(
 			"<tr>\
-				<td>"+ mq.name +"</td>\
+				<td><a target='_blank' href='/" + mq.name + "'>"+ mq.name +"</a></td>\
 				<td style='text-align:left;'>MQ</td>\
-				<td>"+ mq.consumerInfoList.length +"</td>\
+				<td>"+ mq.consumerCount +"</td>\
 				<td>"+ mq.unconsumedMsgCount +"</td>\
+				<td>0.0</td>\
 				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
-				<td>"+ mq.creator +" </td>\
-				<td><a href=''>Empty</a></td>\
+				<td><a href=''>Clear</a></td>\
 			</tr>"
 		);
     }); 
@@ -113,13 +113,13 @@ $.getJSON('?cmd=data',function(data){
     	if((mq.mode & MODE_PUBSUB) == 0) return; 
         $("#mq_table").append(
 			"<tr>\
-				<td>"+ mq.name +"</td>\
+				<td><a target='_blank' href='/" + mq.name + "'>"+ mq.name +"</a></td>\
 				<td style='text-align:left;'>PubSub</td>\
 				<td>"+ mq.consumerInfoList.length +"</td>\
 				<td>"+ mq.unconsumedMsgCount +"</td>\
+				<td>0.0</td>\
 				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
-				<td>"+ mq.creator +" </td>\
-				<td><a href=''>Empty</a></td>\
+				<td><a href=''>Clear</a></td>\
 			</tr>"
 		);
     }); 
@@ -134,10 +134,10 @@ $.getJSON('?cmd=data',function(data){
 	<tr>
 	<th>MQ</th>
 	<th>Mode</th>
-	<th>IdleConsumers</th>
-	<th>MsgInQueue</th> 
-	<th>LastUpdated</th> 
-	<th>Creator</th> 
+	<th>#Consumers</th>
+	<th>#MsgInQueue</th> 
+	<th>TPS</th>
+	<th>LastUpdated</th>  
 	<th>Operation</th>
 	</tr>
 	</thead>
