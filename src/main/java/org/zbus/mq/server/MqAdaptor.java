@@ -331,9 +331,9 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 				BrokerInfo info = getStatInfo();
 				json = JsonKit.toJson(info);
 			} else { 
-				AbstractMQ mq = mqTable.get(msg.getMq()); 
+				AbstractMQ mq = findMQ(msg, sess);
 		    	if(mq == null){ 
-					json = "{}";
+					return;
 				} else {
 					json = JsonKit.toJson(mq.getMqInfo());
 				}

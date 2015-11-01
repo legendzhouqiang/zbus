@@ -71,15 +71,14 @@ public class MqAdmin{
 		return broker.invokeSync(req, 2500);
 	}
 	
-	public String queryMQ() throws IOException, InterruptedException{
+	public Message queryMQ() throws IOException, InterruptedException{
 		Message req = new Message();
     	req.setCmd(Protocol.Query); 
     	req.setMq(this.mq); 
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken);
     	
-    	Message res = invokeSync(req);
-    	return res.getBodyString();
+    	return invokeSync(req); 
 	}
    
     public boolean createMQ() throws IOException, InterruptedException{

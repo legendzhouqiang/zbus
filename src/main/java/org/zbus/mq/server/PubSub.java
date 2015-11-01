@@ -138,11 +138,13 @@ public class PubSub extends AbstractMQ{
 		info.lastUpdateTime = lastUpdateTime;
 		info.creator = creator;
 		info.mode = MqMode.PubSub.intValue();
+		
 		info.unconsumedMsgCount = msgQ.size();
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();
 		for(PullSession pull : pullMap.values()){ 
 			info.consumerInfoList.add(pull.getConsumerInfo());
 		} 
+		info.consumerCount = info.consumerInfoList.size();
 		return info;
 	}
 }

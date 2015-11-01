@@ -3,6 +3,7 @@ package org.zbus.mq;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.net.http.Message;
 
 public class QueryMqExample {
 	public static void main(String[] args) throws Exception { 
@@ -13,7 +14,7 @@ public class QueryMqExample {
  
 		MqAdmin admin = new MqAdmin(broker, "MyMQ");
 		
-		String res = admin.queryMQ(); //保持zbus底层不依赖json包，使用者再解释json
+		Message res = admin.queryMQ(); //保持zbus底层不依赖json包，使用者再解释json
 		System.out.println(res);
 		
 		broker.close();
