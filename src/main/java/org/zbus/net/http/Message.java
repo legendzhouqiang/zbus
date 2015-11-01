@@ -89,14 +89,17 @@ public class Message implements Id {
 	
 	public Message(){
 		setBody((byte[])null);
+		setHead("connection", "Keep-Alive"); //since 6.3.0/6.2.8
 	} 
 	
 	public Message(String body){
 		setBody(body); 
+		setHead("connection", "Keep-Alive");
 	}
 	
 	public Message(byte[] body){
 		setBody(body);
+		setHead("connection", "Keep-Alive");
 	}
 	
 	public static Message copyWithoutBody(Message msg){

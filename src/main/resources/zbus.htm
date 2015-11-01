@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>ZBUS Monitor</title>
-<script type="text/javascript" src="?sub_cmd=jquery"></script>
+<script type="text/javascript" src="?cmd=jquery"></script>
 <style>
 table {
   font-family: "Helvetica Neue", Helvetica, sans-serif
@@ -89,7 +89,7 @@ var MODE_MQ = 1;
 var MODE_PUBSUB = 2; 
 var MODE_TEMP = 4;
 
-$.getJSON('?sub_cmd=data',function(data){ 
+$.getJSON('?cmd=data',function(data){ 
     $("#broker").html(data.broker); 
      
     $.each(data.mqTable, function(key, mq){  

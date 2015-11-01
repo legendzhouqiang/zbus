@@ -151,6 +151,13 @@ public class Sync<REQ extends Id, RES extends Id> {
 		return tickets.remove(id);
 	}
 	
+	public void clearTicket(){
+		for(Ticket<REQ, RES> ticket : tickets.values()){
+			ticket.countDown();
+		}
+		tickets.clear();
+	}
+	
 	
 	public static interface Id {
 		void setId(String id);

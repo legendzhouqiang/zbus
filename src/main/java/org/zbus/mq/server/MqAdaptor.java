@@ -47,11 +47,44 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  
 		registerHandler(Protocol.Route, routeHandler);  
-		registerHandler(Protocol.CreateMQ, createMqHandler);  
-		registerHandler(Protocol.Admin, new AdminHandler()); 
+		registerHandler(Protocol.CreateMQ, createMqHandler); 
+		registerHandler(Protocol.Test, testHandler);
+		
+		registerHandler("", homeHandler);  
+		registerHandler(Protocol.Data, dataHandler); 
+		registerHandler(Protocol.Jquery, jqueryHandler);
+		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
 	} 
+	
+	private Message handleUrlMessage(Message msg){
+		UrlInfo url = new UrlInfo(msg.getRequestString()); 
+		if(url.empty){
+			msg.setCmd(""); //default to home monitor
+			return msg;
+		}  
+		if(url.cmd != null){
+			msg.setCmd(url.cmd);
+		}  
+		
+		if(url.mq != null && url.method != null){
+			msg.setMq(url.mq);
+			msg.setAck(false); 
+			msg.setCmd(Protocol.Produce);
+			String module = url.module == null? "" : url.module;   
+			String json = "{";
+			json += "\"module\": " + "\"" + module + "\"";
+			json += ", \"method\": " + "\"" + url.method + "\"";
+			if(url.params != null){
+				json += ", \"params\": " + "[" + url.params + "]";  
+			}
+			json += "}";
+			msg.setJsonBody(json);	
+		} 
+		
+		return msg;
+	}
     
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
@@ -64,14 +97,17 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		}
 		
 		String cmd = msg.getCmd(); 
-		if(cmd == null){ //default to Admin
-			cmd = Protocol.Admin;
-		}
-    	
-    	MessageHandler handler = handlerMap.get(cmd);
-    	if(handler != null){
-    		handler.handle(msg, sess);
-    		return;
+		
+		if(cmd == null){ //处理URL消息格式，否则url忽略不计 
+			msg = handleUrlMessage(msg);
+			cmd = msg.getCmd();
+		} 
+    	if(cmd != null){
+	    	MessageHandler handler = handlerMap.get(cmd);
+	    	if(handler != null){
+	    		handler.handle(msg, sess);
+	    		return;
+	    	}
     	}
     	
     	Message res = new Message();
@@ -228,6 +264,54 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		}
 	};  
 	
+	private MessageHandler testHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = new Message();
+			res.setResponseStatus(200); 
+			res.setId(msg.getId()); 
+			res.setBody("OK");
+			sess.write(res);
+		}
+	};
+	
+	private MessageHandler homeHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			msg = new Message();
+			msg.setResponseStatus("200");
+			msg.setHead("content-type", "text/html");
+			String body = FileKit.loadFileContent("zbus.htm");
+			if ("".equals(body)) {
+				body = "<strong>zbus.htm file missing</strong>";
+			}
+			msg.setBody(body);
+			sess.write(msg);
+		}
+	};
+	
+	private MessageHandler jqueryHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			msg = new Message();
+			msg.setResponseStatus("200");
+			msg.setHead("content-type", "application/javascript");
+			String body = FileKit.loadFileContent("jquery.js");
+			msg.setBody(body);
+			sess.write(msg);
+		}
+	};
+	
+	private MessageHandler dataHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			BrokerInfo info = getStatInfo();
+
+			Message data = new Message();
+			data.setResponseStatus("200");
+			data.setId(msg.getId());
+			data.setHead("content-type", "application/json");
+			data.setBody(JsonKit.toJson(info));
+			sess.write(data);
+		}
+	};
+	
 	private MessageHandler heartbeatHandler = new MessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
@@ -314,73 +398,5 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     
     public void close() throws IOException {    
     	DiskQueuePool.destory();  
-    }
-    
-    
-    private class AdminHandler implements MessageHandler {
-		private Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
-		public AdminHandler() {
-			handlerMap.put("", homeHandler);
-			handlerMap.put("jquery", jqueryHandler);
-			handlerMap.put("data", dataHandler); 
-		}
-
-		public void handle(Message msg, Session sess) throws IOException {
-			String subCmd = msg.getSubCmd(); //from header first
-			if (subCmd == null){
-				subCmd = msg.getRequestParam(Message.SUB_CMD); //from request Param
-			}
-			if(subCmd == null){ //default to home
-				subCmd = "";
-			}
-			
-			MessageHandler handler = this.handlerMap.get(subCmd);
-			if (handler == null) {
-				msg.setBody("sub_cmd=%s Not Found", subCmd);
-				ReplyKit.reply404(msg, sess);
-				return;
-			}
-			handler.handle(msg, sess);
-		}
-		
-		private MessageHandler homeHandler = new MessageHandler() {
-			public void handle(Message msg, Session sess) throws IOException {
-				msg = new Message();
-				msg.setResponseStatus("200");
-				msg.setHead("content-type", "text/html");
-				String body = FileKit.loadFileContent("zbus.htm");
-				if ("".equals(body)) {
-					body = "<strong>zbus.htm file missing</strong>";
-				}
-				msg.setBody(body);
-				sess.write(msg);
-			}
-		};
-		
-		private MessageHandler jqueryHandler = new MessageHandler() {
-			public void handle(Message msg, Session sess) throws IOException {
-				msg = new Message();
-				msg.setResponseStatus("200");
-				msg.setHead("content-type", "application/javascript");
-				String body = FileKit.loadFileContent("jquery.js");
-				msg.setBody(body);
-				sess.write(msg);
-			}
-		};
-		
-		private MessageHandler dataHandler = new MessageHandler() {
-			public void handle(Message msg, Session sess) throws IOException {
-				BrokerInfo info = getStatInfo();
-
-				Message data = new Message();
-				data.setResponseStatus("200");
-				data.setId(msg.getId());
-				data.setHead("content-type", "application/json");
-				data.setBody(JsonKit.toJson(info));
-				sess.write(data);
-			}
-		};
-		
-	} 
-    
+    } 
 }

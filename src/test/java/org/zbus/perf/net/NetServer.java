@@ -25,7 +25,7 @@ public class NetServer extends MessageAdaptor{
 	public static void main(String[] args) throws Exception {  
 		final int selectCount = ConfigKit.option(args, "-selector", 0);  
 		final int executorCount = ConfigKit.option(args, "-executor", 0);
-		final int port = ConfigKit.option(args, "-p", 8080);
+		final int port = ConfigKit.option(args, "-p", 15555);
 		
 		final Dispatcher dispatcher = new Dispatcher(); 
 		dispatcher.selectorCount(selectCount);

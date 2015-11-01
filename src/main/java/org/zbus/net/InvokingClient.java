@@ -90,6 +90,12 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 		return this.invokeSync(req, this.readTimeout);
 	}
 
+	@Override
+	protected void onSessionDestroyed(Session sess) throws IOException { 
+		super.onSessionDestroyed(sess);
+		sync.clearTicket();
+	}
+	
 	public RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException {
 		Ticket<REQ, RES> ticket = null;
 		try {
