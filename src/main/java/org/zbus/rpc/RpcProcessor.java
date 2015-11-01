@@ -43,6 +43,8 @@ public class RpcProcessor implements MessageProcessor{
 	private RpcCodec codec = new JsonRpcCodec();
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
 	
+	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
+	
 	public RpcProcessor(){
 		
 	}
@@ -73,13 +75,58 @@ public class RpcProcessor implements MessageProcessor{
 			addModule("", obj);
 			addModule(obj.getClass().getSimpleName(), obj);
 			addModule(obj.getClass().getCanonicalName(), obj);
-		}
+		} 
 	}
 	
 	public void addModule(String module, Object... services){
 		for(Object service: services){
 			this.initCommandTable(module, service);
 		}
+	}
+	
+	private void addMoudleInfo(Object service){
+		String serviceKey = service.getClass().getCanonicalName();
+		if(object2Methods.containsKey(serviceKey)){
+			return;
+		}
+		List<String> modules = new ArrayList<String>(); 
+		modules.add(""); 
+		for(Class<?> intf : getAllInterfaces(service.getClass())){
+			modules.add(intf.getSimpleName());
+			modules.add(intf.getCanonicalName()); 
+		}
+		modules.add(service.getClass().getSimpleName()); 
+		modules.add(service.getClass().getCanonicalName());  
+		
+		Method [] methods = service.getClass().getMethods(); 
+		List<RpcMethod> rpcMethods = new ArrayList<RpcMethod>();
+		object2Methods.put(serviceKey,rpcMethods);
+		for (Method m : methods) { 
+			String method = m.getName();
+			Remote cmd = m.getAnnotation(Remote.class);
+			if(cmd != null){ 
+				method = cmd.id();
+				if(cmd.exclude()) continue;
+				if("".equals(method)){
+					method = m.getName();
+				}  
+			}
+			RpcMethod rpcm = new RpcMethod();
+			rpcm.setModules(modules);
+			rpcm.setName(method);
+			rpcm.setReturnType(m.getReturnType().getCanonicalName());
+			List<String> paramTypes = new ArrayList<String>();
+			for(Class<?> t : m.getParameterTypes()){
+				paramTypes.add(t.getCanonicalName());
+			}
+			rpcm.setParamTypes(paramTypes);
+			rpcMethods.add(rpcm);
+		} 
+	}
+	
+	private void removeMoudleInfo(Object service){
+		String serviceKey = service.getClass().getCanonicalName();
+		object2Methods.remove(serviceKey);
 	}
 	
 	public void removeModule(Object... services){
@@ -101,9 +148,13 @@ public class RpcProcessor implements MessageProcessor{
 	}
 	
 	private void initCommandTable(String module, Object service){
+		addMoudleInfo(service);
+		
 		try {  
 			Method [] methods = service.getClass().getMethods(); 
 			for (Method m : methods) { 
+				if(m.getDeclaringClass() == Object.class) continue;
+				
 				String method = m.getName();
 				Remote cmd = m.getAnnotation(Remote.class);
 				if(cmd != null){ 
@@ -140,6 +191,8 @@ public class RpcProcessor implements MessageProcessor{
 	}
 	
 	private void removeCommandTable(String module, Object service){
+		removeMoudleInfo(service);
+		
 		try {  
 			Method [] methods = service.getClass().getMethods(); 
 			for (Method m : methods) { 
@@ -174,14 +227,7 @@ public class RpcProcessor implements MessageProcessor{
 		return (value == null || "".equals(value.trim()));
 	}
 	
-	private Request decodeRequest(Message msg){
-		Request req = codec.decodeRequest(msg);
-		Request.normalize(req); //json未设置好的module或者params标准化
-		if(isBlank(req.getMethod())){
-			throw new IllegalArgumentException("missing method name");
-		}
-		return req;
-	}
+
 	
 	private MethodInstance findMethod(Request req){ 
 		String paramTypesMD5 = "";
@@ -237,19 +283,26 @@ public class RpcProcessor implements MessageProcessor{
 		int status = 200;
 		final String msgId = msg.getId();
 		try {
-			Request req = decodeRequest(msg);
-			MethodInstance target = findMethod(req);
-			checkParamTypes(target, req);
-			
-			Class<?>[] targetParamTypes = target.method.getParameterTypes();
-			Object[] invokeParams = new Object[targetParamTypes.length];  
-			Object[] reqParams = req.getParams(); 
-			for(int i=0; i<targetParamTypes.length; i++){ 
-				invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
+			Object result = null;
+			Request req = codec.decodeRequest(msg);
+			Request.normalize(req); 
+			if(isBlank(req.getMethod())){
+				result = object2Methods;
+			} else {
+				MethodInstance target = findMethod(req);
+				checkParamTypes(target, req);
+				
+				Class<?>[] targetParamTypes = target.method.getParameterTypes();
+				Object[] invokeParams = new Object[targetParamTypes.length];  
+				Object[] reqParams = req.getParams(); 
+				for(int i=0; i<targetParamTypes.length; i++){ 
+					invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
+				} 
+				result = target.method.invoke(target.instance, invokeParams);
 			} 
-			Object result = target.method.invoke(target.instance, invokeParams);
 			resp.setResult(result); 
 			resp.setEncoding(msg.getEncoding());
+				
 		} catch (InvocationTargetException e) { 
 			resp.setError(e.getTargetException());
 			status = 500;

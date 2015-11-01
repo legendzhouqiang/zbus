@@ -33,7 +33,7 @@ public class ServiceConfig extends MqConfig {
 	private Broker[] brokers;
 
 	public ServiceConfig() { 
-		mode = MqMode.intValue(MqMode.MQ, MqMode.Memory);
+		mode = MqMode.intValue(MqMode.MQ, MqMode.RPC);
 	}
 
 	public ServiceConfig(Broker... brokers) {

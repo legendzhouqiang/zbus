@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
-import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
@@ -137,7 +136,7 @@ public class PubSub extends AbstractMQ{
 		info.name = name;
 		info.lastUpdateTime = lastUpdateTime;
 		info.creator = creator;
-		info.mode = MqMode.PubSub.intValue();
+		info.mode = this.mode;
 		
 		info.unconsumedMsgCount = msgQ.size();
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();

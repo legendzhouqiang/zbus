@@ -34,7 +34,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
-import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
@@ -133,7 +132,7 @@ public class MQ extends AbstractMQ{
 		info.name = name;
 		info.lastUpdateTime = lastUpdateTime;
 		info.creator = creator;
-		info.mode = MqMode.MQ.intValue();
+		info.mode = this.mode;
 		info.unconsumedMsgCount = msgQ.size();
 		info.consumerCount = pullSessions.size();
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();

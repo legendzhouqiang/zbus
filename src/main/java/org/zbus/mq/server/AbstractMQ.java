@@ -32,6 +32,7 @@ import org.zbus.net.http.Message;
 public abstract class AbstractMQ{	
 	protected final String name;
 	protected String creator;
+	protected int mode;
 	protected long lastUpdateTime = System.currentTimeMillis();
 	
 	protected final AbstractQueue<Message> msgQ;
@@ -76,5 +77,12 @@ public abstract class AbstractMQ{
 		if(this.auth == null) return true;
 		return this.auth.auth(appid, token);
 	}
-	
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.mode = mode;
+	}  
 }

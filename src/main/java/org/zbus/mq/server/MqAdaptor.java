@@ -70,23 +70,27 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			if(msg.getMq() == null){
 				msg.setMq(url.mq);
 			}
-			
-			if(url.method != null){ 
-				msg.setMq(url.mq);
-				msg.setAck(false); 
-				msg.setCmd(Protocol.Produce);
-				String module = url.module == null? "" : url.module;   
-				String json = "{";
-				json += "\"module\": " + "\"" + module + "\"";
-				json += ", \"method\": " + "\"" + url.method + "\"";
-				if(url.params != null){
-					json += ", \"params\": " + "[" + url.params + "]";  
-				}
-				json += "}";
-				msg.setJsonBody(json);	
-			} else { //default to query
-				msg.setCmd(Protocol.Query);
+			String method = url.method;
+			if(method == null){
+				method = "";
 			}
+			if(url.method != null || url.cmd == null){ 
+				AbstractMQ mq = mqTable.get(url.mq);
+				if(mq != null && MqMode.isEnabled(mq.getMode(), MqMode.RPC)){
+					msg.setMq(url.mq);
+					msg.setAck(false); 
+					msg.setCmd(Protocol.Produce);
+					String module = url.module == null? "" : url.module;   
+					String json = "{";
+					json += "\"module\": " + "\"" + module + "\"";
+					json += ", \"method\": " + "\"" + method + "\"";
+					if(url.params != null){
+						json += ", \"params\": " + "[" + url.params + "]";  
+					}
+					json += "}";
+					msg.setJsonBody(json);	
+				}
+			} 
 		} 
 		
 		if(url.cmd != null){
@@ -253,7 +257,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     			}
     			
     			AbstractQueue<Message> support = null;
-				if(MqMode.isEnabled(mode, MqMode.Memory)){
+				if(MqMode.isEnabled(mode, MqMode.Memory) ||
+						MqMode.isEnabled(mode, MqMode.RPC)){
 					support = new MessageMemoryQueue();
 				} else {
 					support = new MessageDiskQueue(mqName, mode);
@@ -264,6 +269,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     			} else {
     				mq = new MQ(mqName, support);
     			}
+    			mq.setMode(mode);
     			mq.creator = sess.getRemoteAddress();
     			mq.setAccessToken(accessToken);
     			
@@ -421,10 +427,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			int flag = diskq.getFlag(); 
 			AbstractQueue<Message> queue = new MessageDiskQueue(name, diskq);
 			if( MqMode.isEnabled(flag, MqMode.PubSub)){ 
-				mq = new PubSub(name, queue);
+				mq = new PubSub(name, queue); 
 			}  else {
-				mq = new MQ(name, queue); 
+				mq = new MQ(name, queue);  
 			}
+			mq.setMode(flag);
 			mq.lastUpdateTime = System.currentTimeMillis(); 
 			mq.creator = "System";
 			mqTable.put(name, mq);

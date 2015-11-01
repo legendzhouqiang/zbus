@@ -46,7 +46,8 @@ public class Protocol {
 	public static enum MqMode {
 		MQ,       //消息队列
 		PubSub,   //发布订阅 
-		Memory;   //是否临时
+		Memory,   //是否临时
+		RPC;
 		
 		private MqMode(){
 	        mask = (1 << ordinal());

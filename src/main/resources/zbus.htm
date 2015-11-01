@@ -88,38 +88,33 @@ $(document).ready(function(){
 var MODE_MQ = 1;
 var MODE_PUBSUB = 2; 
 var MODE_TEMP = 4;
+var MODE_RPC = 8;
+
+function mode_name(mode){
+	if((mode & MODE_PUBSUB) != 0) return "PubSub";
+	if((mode & MODE_RPC) != 0) return "RPC";
+	return "MQ";
+}
 
 $.getJSON('?cmd=data',function(data){ 
     $("#broker").html(data.broker); 
      
     $.each(data.mqTable, function(key, mq){  
-    	if(key=='@type') return;
-    	if((mq.mode & MODE_MQ) == 0) return;
-    	
+    	if(key=='@type') return; 
+    	var link = "/" + mq.name + "/?cmd=query";
+    	var op = "Methods";
+    	if((mq.mode & MODE_RPC) == 0){ 
+    		op = ""
+    	}
         $("#mq_table").append(
 			"<tr>\
-				<td><a target='_blank' href='/" + mq.name + "'>"+ mq.name +"</a></td>\
-				<td style='text-align:left;'>MQ</td>\
+				<td><a target='_blank' href='" + link + "'>"+ mq.name +"</a></td>\
+				<td style='text-align:left;'>" + mode_name(mq.mode) +"</td>\
 				<td>"+ mq.consumerCount +"</td>\
 				<td>"+ mq.unconsumedMsgCount +"</td>\
 				<td>0.0</td>\
 				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
-				<td><a href=''>Clear</a></td>\
-			</tr>"
-		);
-    }); 
-    $.each(data.mqTable, function(key, mq){  
-    	if(key=='@type') return;
-    	if((mq.mode & MODE_PUBSUB) == 0) return; 
-        $("#mq_table").append(
-			"<tr>\
-				<td><a target='_blank' href='/" + mq.name + "'>"+ mq.name +"</a></td>\
-				<td style='text-align:left;'>PubSub</td>\
-				<td>"+ mq.consumerCount +"</td>\
-				<td>"+ mq.unconsumedMsgCount +"</td>\
-				<td>0.0</td>\
-				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
-				<td><a href=''>Clear</a></td>\
+				<td><a target='_blank' href='/" + mq.name + "'>" + op + "</a></td>\
 			</tr>"
 		);
     }); 
@@ -134,8 +129,8 @@ $.getJSON('?cmd=data',function(data){
 	<tr>
 	<th>MQ</th>
 	<th>Mode</th>
-	<th>#Consumers</th>
-	<th>#MsgInQueue</th> 
+	<th>#Consumer</th>
+	<th>#MsgInQ</th> 
 	<th>TPS</th>
 	<th>LastUpdated</th>  
 	<th>Operation</th>
