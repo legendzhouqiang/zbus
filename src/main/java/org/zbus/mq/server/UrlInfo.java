@@ -15,6 +15,10 @@ public class UrlInfo{
 	public boolean empty = false;
 	
 	public UrlInfo(String url){
+		this(url, false);
+	}
+	
+	public UrlInfo(String url, boolean directRpc){
 		if(url == null || "".equals(url)){
 			empty = true;
 			return;
@@ -33,29 +37,48 @@ public class UrlInfo{
 		String[] bb = url.split("[/?]+");  
 		if(hasKvs){
 			kvs = bb[bb.length-1]; 
-			if(bb.length >= 5){
-				mq = bb[1];
-				module = bb[2];
-				method = bb[3];
-			} else  if(bb.length >= 4){
-				mq = bb[1];
-				method = bb[2];
-			} else  if(bb.length >= 3){
-				mq = bb[1];
-			} 
+			if(!directRpc){
+				if(bb.length >= 5){
+					mq = bb[1];
+					module = bb[2];
+					method = bb[3];
+				} else  if(bb.length >= 4){
+					mq = bb[1];
+					method = bb[2];
+				} else  if(bb.length >= 3){
+					mq = bb[1];
+				}
+			} else {
+				if(bb.length >= 4){ 
+					module = bb[1];
+					method = bb[2];
+				} else  if(bb.length >= 3){
+					method = bb[1]; 
+				} 
+			}
 		} else {
-			if(bb.length >= 4){
-				mq = bb[1];
-				module = bb[2];
-				method = bb[3];
-			} else  if(bb.length >= 3){
-				mq = bb[1];
-				method = bb[2];
-			} else  if(bb.length >= 2){
-				mq = bb[1];
+			if(!directRpc){
+				if(bb.length >= 4){
+					mq = bb[1];
+					module = bb[2];
+					method = bb[3];
+				} else  if(bb.length >= 3){
+					mq = bb[1];
+					method = bb[2];
+				} else  if(bb.length >= 2){
+					mq = bb[1];
+				}
+			} else {
+				if(bb.length >= 3){ 
+					module = bb[1];
+					method = bb[2];
+				} else  if(bb.length >= 2){
+					method = bb[1]; 
+				} 
 			}
 			return;
 		} 
+		
 		bb = kvs.split("[&]+"); 
 		for(String b : bb){
 			if("".equals(b)) continue;
@@ -99,5 +122,10 @@ public class UrlInfo{
 				+ ", method=" + method + ", params=" + params + ", extra="
 				+ extra + "]";
 	} 
+	
+	public static void main(String[] args){
+		UrlInfo url = new UrlInfo("/t2/xxx?ok", true);
+		System.out.println(url);
+	}
 
 }

@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
+import org.zbus.mq.server.UrlInfo;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
@@ -113,13 +114,35 @@ public class Service extends Server {
 			codec(new MessageCodec());
 			this.processor = processor;
 		}
-
+		
+		private Message handleUrlMessage(Message msg, Session sess) throws IOException{
+			if(msg.getBody() == null || msg.getBody().length == 0){ 
+				UrlInfo url = new UrlInfo(msg.getRequestString(), true); 
+				
+				String module = url.module == null? "" : url.module; 
+				String method = url.method == null? "" : url.method;
+				String json = "{";
+				json += "\"module\": " + "\"" + module + "\"";
+				json += ", \"method\": " + "\"" + method + "\"";
+				if(url.params != null){
+					json += ", \"params\": " + "[" + url.params + "]";  
+				}
+				json += "}";
+				msg.setJsonBody(json);	
+			} 
+			return msg;
+		}
+		
 		protected void onMessage(Object obj, Session sess) throws IOException {
 			Message msg = (Message) obj;
 			if(Message.HEARTBEAT.equals(msg.getCmd())){
 				return;
 			}
-			final String msgId = msg.getId();
+			
+			final String msgId = msg.getId(); 
+			msg = handleUrlMessage(msg, sess);
+			if(msg == null) return;
+			
 			Message res = processor.process(msg);
 			if (res != null) {
 				res.setId(msgId);
