@@ -41,7 +41,7 @@ public class ServiceConfig extends MqConfig {
 		if (brokers.length > 0) {
 			setBroker(brokers[0]);
 		}
-		mode = MqMode.intValue(MqMode.MQ, MqMode.Memory);
+		mode = MqMode.intValue(MqMode.MQ, MqMode.RPC);
 	}
 
 	public void setBrokers(Broker[] brokers) {
