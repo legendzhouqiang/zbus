@@ -90,7 +90,7 @@ class Sl4jLogger extends Logger {
 	        ((LocationAwareLogger) log).log(null, FQCN, 
 	        		LocationAwareLogger.WARN_INT, message, null, t);
 	    } else {
-	        log.debug(message);
+	        log.warn(message);
 	    } 
 	}
 	
@@ -103,7 +103,7 @@ class Sl4jLogger extends Logger {
 	        ((LocationAwareLogger) log).log(null, FQCN, 
 	        		LocationAwareLogger.ERROR_INT, message, null, t);
 	    } else {
-	        log.debug(message);
+	        log.error(message);
 	    } 
 	}
 	
