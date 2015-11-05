@@ -316,7 +316,7 @@ public class RpcProcessor implements MessageProcessor{
 			res.setResponseStatus(status);
 			return res;
 		} catch (Throwable e) {
-			log.error(e.getMessage(), e.getCause());
+			log.error(e.getMessage(), e);
 		} 
 		return null; //should not here
 	}
