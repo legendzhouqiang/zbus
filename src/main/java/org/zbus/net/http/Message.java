@@ -221,7 +221,16 @@ public class Message implements Id {
 	}
 	
 	public Message setBody(String body){
-		return setBody(body.getBytes());
+		if (this.getBody() == null) return null;
+		String encoding = this.getEncoding();
+		if(encoding == null){
+			encoding = DEFAULT_ENCODING;
+		}
+		try {
+			return setBody(body.getBytes(encoding));
+		} catch (UnsupportedEncodingException e) { //just ignore
+			return setBody(body.getBytes());
+		}
 	} 
 	
 	public Message setBody(String format, Object ...args) { 
