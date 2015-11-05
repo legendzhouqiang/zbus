@@ -58,6 +58,8 @@ import org.zbus.net.core.IoBuffer;
  */
 public class Message implements Id {  
 	private static final Logger log = Logger.getLogger(Message.class); 
+	private static final String DEFAULT_ENCODING = "UTF-8"; 
+	
 	public static final String HEARTBEAT        = "heartbeat"; //心跳消息
 	
 	//使用到的标准HTTP头部
@@ -239,7 +241,11 @@ public class Message implements Id {
 	
 	public String getBodyString() {
 		if (this.getBody() == null) return null;
-		return new String(this.getBody());
+		String encoding = this.getEncoding();
+		if(encoding == null){
+			encoding = DEFAULT_ENCODING;
+		}
+		return getBodyString(encoding);
 	}
 
 	public String getBodyString(String encoding) {
