@@ -58,6 +58,7 @@ public class MqServer extends Server{
 		this.config = config;   
 		serverName = "MqServer";   
 		registerToken = config.registerToken;
+		serverMainIpOrder = config.serverMainIpOrder;
 		dispatcher = new Dispatcher();
 		dispatcher.selectorCount(config.selectorCount);
 		dispatcher.executorCount(config.executorCount); 
@@ -173,6 +174,7 @@ public class MqServer extends Server{
 		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", null);
 		config.thriftServer = ConfigKit.option(args, "-thrift", null);
+		config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
 		
 		final MqServer server = new MqServer(config);  
 		if(config.thriftServer != null){

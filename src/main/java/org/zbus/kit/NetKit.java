@@ -62,11 +62,37 @@ public class NetKit {
 		return address;
 	}
 	
-	public static String getLocalIp() {
+	private static int matchedIndex(String ip, String[] prefix){
+		for(int i=0; i<prefix.length; i++){
+			String p = prefix[i];
+			if("*".equals(p)){ //*假定为匹配外网IP
+				if(ip.startsWith("127.") ||
+				   ip.startsWith("10.") ||	
+				   ip.startsWith("172.") ||
+				   ip.startsWith("192.")){
+					continue;
+				}
+				return i;
+			} else {
+				if(ip.startsWith(p)){
+					return i;
+				}
+			} 
+		}
+		
+		return -1;
+	}
+	
+	public static String getLocalIp(String ipPreference) {
+		if(ipPreference == null){
+			ipPreference = "*>10>172>192>127";
+		}
+		String[] prefix = ipPreference.split("[> ]+");
 		try {
 			Pattern pattern = Pattern.compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+");
 			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-			String condidate = null;
+			String matchedIp = null;
+			int matchedIdx = -1;
 			while (interfaces.hasMoreElements()) {
 				NetworkInterface ni = interfaces.nextElement();
 				Enumeration<InetAddress> en = ni.getInetAddresses(); 
@@ -74,27 +100,32 @@ public class NetKit {
 					InetAddress addr = en.nextElement();
 					String ip = addr.getHostAddress();  
 					Matcher matcher = pattern.matcher(ip);
-					if (matcher.matches()) { 
-						if(ip.startsWith("127.")) continue;  
-						if(ip.startsWith("10.") 
-								|| ip.startsWith("172.")
-								|| ip.startsWith("192.")
-								){
-							if(condidate == null){
-								condidate = ip;
+					if (matcher.matches()) {  
+						int idx = matchedIndex(ip, prefix);
+						if(idx == -1) continue;
+						if(matchedIdx == -1){
+							matchedIdx = idx;
+							matchedIp = ip;
+						} else {
+							if(matchedIdx>idx){
+								matchedIdx = idx;
+								matchedIp = ip;
 							}
-							continue;
 						}
-						return ip;
 					} 
 				} 
 			} 
-			if(condidate != null) return condidate;
+			if(matchedIp != null) return matchedIp;
 			return "127.0.0.1";
 		} catch (Throwable e) { 
 			return "127.0.0.1";
 		}
 	}
+	
+	public static String getLocalIp() {
+		return getLocalIp("*>10>172>192>127");
+	}
+	
 	public static String remoteAddress(SocketChannel channel){
 		SocketAddress addr = channel.socket().getRemoteSocketAddress();
 		String res = String.format("%s", addr);
@@ -105,5 +136,11 @@ public class NetKit {
 		SocketAddress addr = channel.socket().getLocalSocketAddress();
 		String res = String.format("%s", addr);
 		return addr==null? res: res.substring(1);
+	}
+	
+	public static void main(String[] args){
+		String ip = getLocalIp("*>192>10");
+		System.out.println(ip);
+		System.out.println(getLocalIp());
 	}
 }

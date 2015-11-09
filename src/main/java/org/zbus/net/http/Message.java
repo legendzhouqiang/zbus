@@ -220,8 +220,7 @@ public class Message implements Id {
 		}
 	}
 	
-	public Message setBody(String body){
-		if (this.getBody() == null) return null;
+	public Message setBody(String body){ 
 		String encoding = this.getEncoding();
 		if(encoding == null){
 			encoding = DEFAULT_ENCODING;

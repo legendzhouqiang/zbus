@@ -35,6 +35,7 @@ public class MqServerConfig{
 	public boolean verbose = true;
 	public String storePath = "store";
 	public String registerToken = "";  
+	public String serverMainIpOrder = null;
 	
 	public String getServerAddress(){
 		return serverHost + ":" + serverPort;

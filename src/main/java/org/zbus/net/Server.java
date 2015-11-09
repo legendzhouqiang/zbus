@@ -48,6 +48,7 @@ public class Server implements Closeable{
 	protected Dispatcher dispatcher;   
 	protected String serverAddr; //第一个Server注册的地址, 当侦听启动后才有效
 	protected String serverName = "Server";  
+	protected String serverMainIpOrder = null;
 	
 	protected Map<String, IoAdaptorInfo> adaptors = new ConcurrentHashMap<String, IoAdaptorInfo>();
 	
@@ -118,7 +119,11 @@ public class Server implements Closeable{
     		if(address.equals(serverAddr)){ 
         		String localHost = host;
         		if("0.0.0.0".equals(host)){
-        			localHost = NetKit.getLocalIp();
+        			if(serverMainIpOrder == null){
+        				localHost = NetKit.getLocalIp();
+        			} else {
+        				localHost = NetKit.getLocalIp(serverMainIpOrder);
+        			}
         		}
         		serverAddr = String.format("%s:%d", localHost, ss.getLocalPort());
         	} 
