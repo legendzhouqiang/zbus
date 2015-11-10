@@ -1,9 +1,11 @@
-package org.zbus.rpc.direct;
+package org.zbus.rpc.direct.ha;
 
 import java.io.IOException;
 
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.direct.Service;
+import org.zbus.rpc.direct.ServiceConfig;
 
 public class DirectRpcServiceHA {
 	

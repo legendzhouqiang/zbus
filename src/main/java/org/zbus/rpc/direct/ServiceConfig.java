@@ -28,8 +28,8 @@ import org.zbus.net.http.Message.MessageProcessor;
 public class ServiceConfig {  
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 0;  
-	public int selectorCount = 1;
-	public int executorCount = 64; 
+	public int selectorCount = 0;
+	public int executorCount = 0; 
 	public Dispatcher dispatcher;
 	public MessageProcessor messageProcessor;
 	

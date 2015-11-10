@@ -1,9 +1,10 @@
-package org.zbus.rpc.direct;
+package org.zbus.rpc.direct.ha;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ha.HaBroker;
 import org.zbus.rpc.RpcInvoker;
+import org.zbus.rpc.direct.HaInvoker;
 
 public class DirectRpcClientHA {
 

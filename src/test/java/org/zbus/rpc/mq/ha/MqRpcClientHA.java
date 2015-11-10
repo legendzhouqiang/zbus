@@ -1,9 +1,10 @@
-package org.zbus.rpc.mq;
+package org.zbus.rpc.mq.ha;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ha.HaBroker;
 import org.zbus.rpc.RpcInvoker;
+import org.zbus.rpc.mq.MqInvoker;
 
 public class MqRpcClientHA {
 

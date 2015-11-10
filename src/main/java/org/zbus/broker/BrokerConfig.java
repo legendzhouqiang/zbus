@@ -50,8 +50,8 @@ import org.zbus.net.core.Dispatcher;
 public class BrokerConfig extends PoolConfig{
 	private String trackServerList = "127.0.0.1:16666"; //只在HA模式下才有效
 	private String serverAddress   = "127.0.0.1:15555"; 
-	private int selectorCount = 1;
-	private int executorCount = 64; 
+	private int selectorCount = 0; //0代表使用默认值
+	private int executorCount = 0; //0代表使用默认值
 	/**
 	 * 可选项
 	 * 如果配置不给出，Dispatcher内部生成，并自己管理关闭

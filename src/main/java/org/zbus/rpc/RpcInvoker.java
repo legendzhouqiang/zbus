@@ -65,63 +65,44 @@ public class RpcInvoker{
 		}
 	}
 	
-	public <T> T invokeSync(Class<T> clazz, String method, Object... args){
+	public <T> T invokeSync(Class<T> resultClass, String method, Object... args){
 		Request request = new Request()
 			.module(module)
 			.method(method)  
 			.params(args)
 			.encoding(encoding);
 
-		return invokeSync(clazz, request);
+		return invokeSync(resultClass, request);
 	}
 	
-	public <T> T invokeSync(Class<T> clazz, String method, Class<?>[] types, Object... args){
+	public <T> T invokeSync(Class<T> resultClass, String method, Class<?>[] paramTypes, Object... args){
 		Request request = new Request()
 			.module(module)
 			.method(method) 
-			.paramTypes(types)
+			.paramTypes(paramTypes)
 			.params(args)
 			.encoding(encoding);
 	
-		return invokeSync(clazz, request);
-	}
+		return invokeSync(resultClass, request);
+	} 
 	
-	
-	public <T> T invokeSync(Class<T> clazz, String module, String method, Class<?>[] types, Object... args){
-		Request request = new Request()
-			.module(module)
-			.method(method) 
-			.paramTypes(types)
-			.params(args)
-			.encoding(encoding);
-		
-		return invokeSync(clazz, request);
-	}
-	
-	public <T> T invokeSync(Class<T> clazz, Request request){
+	public <T> T invokeSync(Class<T> resultClass, Request request){
 		Response resp = invokeSync(request);
 		try {
 			@SuppressWarnings("unchecked")
-			T res = (T)codec.convert(extractResult(resp), clazz);
+			T res = (T)codec.convert(extractResult(resp), resultClass);
 			return res;
 		} catch (ClassNotFoundException e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
 	}
 	
-	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
-		return invokeSync(this.module, method, types, args);
-	} 
 	
 	public Object invokeSync(String method, Object... args) {	
-		return invokeSync(this.module, method, null, args);
-	} 
+		return invokeSync(method, null, args);
+	}  
 	
-	public Object invokeSync(String module, String method, Object... args){
-		return invokeSync(module, method, null, args);
-	}
-	
-	public Object invokeSync(String module, String method, Class<?>[] types, Object... args) {	
+	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
 		Request req = new Request()
 			.module(module)
 			.method(method) 

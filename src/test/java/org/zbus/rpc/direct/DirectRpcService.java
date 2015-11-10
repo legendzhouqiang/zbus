@@ -14,8 +14,7 @@ public class DirectRpcService {
 		processor.addModule(new InterfaceImpl()); 
 		
 		ServiceConfig config = new ServiceConfig(); 
-		config.serverPort = 8080; 
-		//config.thriftServer = "0.0.0.0:25555";
+		config.serverPort = 8080;  
 		config.messageProcessor = processor; 
 		
 		Service svc = new Service(config);

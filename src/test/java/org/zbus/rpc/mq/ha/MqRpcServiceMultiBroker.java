@@ -1,4 +1,4 @@
-package org.zbus.rpc.mq;
+package org.zbus.rpc.mq.ha;
 
 import java.io.IOException;
 
@@ -7,6 +7,8 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
 
 public class MqRpcServiceMultiBroker {
 	
