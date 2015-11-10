@@ -3,7 +3,7 @@ REM SET JAVA_HOME=D:\SDK\jdk6_x64
 SET ZBUS_HOME=..
 SET JAVA_OPTS=-server -Xms64m -Xmx1024m -XX:+UseParallelGC
 SET MAIN_CLASS=org.zbus.proxy.TcpProxyServer
-SET MAIN_OPTS=-server 8600 -target 10.17.1.22:8600
+SET MAIN_OPTS=
 SET LIB_OPTS=%ZBUS_HOME%/lib;%ZBUS_HOME%/*;
 
 IF NOT EXIST "%JAVA_HOME%" (
