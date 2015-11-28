@@ -8,7 +8,7 @@ SET MAIN_OPTS=-h 0.0.0.0 -p 15555 -verbose false -store store -track
 SET LIB_OPTS=%ZBUS_HOME%/lib/*;%ZBUS_HOME%/*;
 
 IF NOT EXIST "%JAVA_HOME%" (
-    SET JAVA=java 
+    SET JAVA=java
 ) ELSE (
     SET JAVA=%JAVA_HOME%\bin\java
 )
