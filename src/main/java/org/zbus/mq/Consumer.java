@@ -114,12 +114,22 @@ public class Consumer extends MqAdmin implements Closeable {
 		return client.invokeSync(req);
 	}
 	
+	private MessageClient replyClient; // Linux优化，Reply使用分离的Client
+	private void ensureReplyClient() throws IOException{
+		if(this.replyClient == null){
+    		synchronized (this) {
+				if(this.replyClient == null){
+					this.replyClient = broker.getClient(brokerHint());  
+				}
+			} 
+    	}
+	}
 	public void routeMessage(Message msg) throws IOException {
-		ensureClient();
+		ensureReplyClient();
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false); 
 		
-		client.send(msg);
+		replyClient.send(msg);
 	}
 
 	public String getTopic() {
@@ -177,6 +187,15 @@ public class Consumer extends MqAdmin implements Closeable {
 				this.broker.closeClient(this.client);
 			} 
 			client = null;
+		} catch (IOException e) {
+			log.error(e.getMessage(), e); 
+		}
+		
+		try {
+			if (this.replyClient != null) {
+				this.broker.closeClient(this.replyClient);
+			} 
+			replyClient = null;
 		} catch (IOException e) {
 			log.error(e.getMessage(), e); 
 		}

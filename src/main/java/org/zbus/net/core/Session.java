@@ -58,6 +58,7 @@ public class Session implements Closeable{
 	private final Dispatcher dispatcher;
 	private final SocketChannel channel;
 	private SelectionKey registeredKey = null;
+	private SelectorThread selectorThread;
 	
 	private ConcurrentMap<String, Object> attributes = null;
 
@@ -66,18 +67,11 @@ public class Session implements Closeable{
 	public Session chain; //for chain
 	
 	public Session(Dispatcher dispatcher, SocketChannel channel, IoAdaptor ioAdaptor){
-		this(dispatcher, channel, null, ioAdaptor); 
-	}
-	
-	public Session(Dispatcher dispatcher, SocketChannel channel, Object attachment, IoAdaptor ioAdaptor){
 		this.dispatcher = dispatcher;
 		this.id = UUID.randomUUID().toString();
-		this.channel = channel; 
-		this.attachment = attachment;
+		this.channel = channel;  
 		this.ioAdaptor = ioAdaptor;
-	}
-	
-	
+	} 
 	
 	public String id(){
 		return this.id;
@@ -146,8 +140,13 @@ public class Session implements Closeable{
 			throw new IOException(msg);
 		}
 		
-		registeredKey.interestOps(registeredKey.interestOps() | SelectionKey.OP_WRITE);
-		registeredKey.selector().wakeup(); //TODO
+		if(this.selectorThread == null){
+			String msg = "Session selectorThread not set";
+			log.warn(msg);
+			throw new IOException(msg);
+		} 
+		int ops = registeredKey.interestOps() | SelectionKey.OP_WRITE;
+		selectorThread.interestOps(registeredKey, ops); 
 	}
 	
 	
@@ -228,17 +227,15 @@ public class Session implements Closeable{
 		synchronized (writeBufferQ) {
 			while(true){
 				ByteBuffer buf = writeBufferQ.peek();
-				if(buf == null){
-					registeredKey.interestOps(SelectionKey.OP_READ);
-					//registeredKey.selector().wakeup(); //TODO
+				if(buf == null){ 
+					selectorThread.interestOps(registeredKey, SelectionKey.OP_READ);
+					//TODO wakeup?
 					break;
 				}
 				
 				int wbytes = this.channel.write(buf);
 				
-				if(wbytes == 0 && buf.remaining() > 0){
-					//registeredKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-					//registeredKey.selector().wakeup(); //TODO
+				if(wbytes == 0 && buf.remaining() > 0){//TODO
 					break;
 				}
 				
@@ -305,18 +302,17 @@ public class Session implements Closeable{
 		dispatcher.registerSession(interestOps, this);
 	}
 	
+	public void setSelectorThread(SelectorThread selectorThread) {
+		this.selectorThread = selectorThread;
+	}
+	
 	public void interestOps(int ops){
 		if(this.registeredKey == null){
 			throw new IllegalStateException("registered session required");
 		}
-		this.registeredKey.interestOps(ops); 
+		selectorThread.interestOps(registeredKey, ops); 
 	}
 	
-	public void interestOpsAndWakeup(int ops){
-		interestOps(ops);
-		this.registeredKey.selector().wakeup();
-	}
-
 	public SelectionKey getRegisteredKey() {
 		return registeredKey;
 	}

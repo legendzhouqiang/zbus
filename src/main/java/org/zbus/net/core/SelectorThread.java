@@ -31,6 +31,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
@@ -41,8 +42,10 @@ public class SelectorThread extends Thread {
 	
 	protected volatile java.nio.channels.Selector selector = null;
 	protected final Dispatcher dispatcher;
-	private final Queue<Object[]> register = new LinkedBlockingQueue<Object[]>();
-	private final Queue<Session> unregister = new LinkedBlockingQueue<Session>(); 
+	private final Queue<Object[]> registerSess = new LinkedBlockingQueue<Object[]>();
+	private final Queue<Session> unregisterSess = new LinkedBlockingQueue<Session>(); 
+	
+	private final Queue<Object[]> interestOps = new LinkedBlockingQueue<Object[]>();
 	
 	public SelectorThread(Dispatcher dispatcher, String name) throws IOException{
 		super(name);
@@ -64,25 +67,45 @@ public class SelectorThread extends Thread {
 	}
 	
 	public void registerChannel(SelectableChannel channel, int ops, Session sess) throws IOException{
+		if(sess != null){
+			sess.setSelectorThread(this);
+		}
 		if(Thread.currentThread() == this){
-			SelectionKey key = channel.register(this.selector, ops, sess);
-			if(sess != null){
+			SelectionKey key = channel.register(this.selector, ops, sess); 
+			if(sess != null){ 
 				sess.setRegisteredKey(key);
 				sess.setStatus(SessionStatus.CONNECTED);
 				sess.getIoAdaptor().onSessionRegistered(sess);
 			} 
 		} else { 
-			this.register.offer(new Object[]{channel, ops, sess});
-			this.selector.wakeup();
+			this.registerSess.offer(new Object[]{channel, ops, sess});
+			wakeup();
+		}
+	}
+	
+	public void interestOps(SelectionKey key, int ops){
+		if(Thread.currentThread() == this){
+			key.interestOps(ops);
+		} else { 
+			this.interestOps.offer(new Object[]{key, ops});
+			wakeup();
 		}
 	}
 	
 	public void unregisterSession(Session sess){
-		if(this.unregister.contains(sess)){
+		if(this.unregisterSess.contains(sess)){
 			return;
 		}
-		this.unregister.add(sess);
-		this.selector.wakeup();
+		this.unregisterSess.add(sess);
+		wakeup();
+	}
+	
+	private AtomicBoolean wakeup = new AtomicBoolean(false);
+	
+	public void wakeup(){
+		if(wakeup.compareAndSet(false, true)){
+			this.selector.wakeup();
+		}
 	}
 	
 	
@@ -94,15 +117,20 @@ public class SelectorThread extends Thread {
 		} catch (IOException e) { 
 			log.error(e.getMessage(), e);
 		}
-	}
-	
-	
+	} 
+   
 	@Override
 	public void run() { 
 		try{
-			while(!isInterrupted()){
-				selector.select(); 
+			while(!isInterrupted()){ 
+				wakeup.getAndSet(false); 
+				selector.select();
+				if (wakeup.get()) { 
+                    selector.wakeup();
+                }
+				
 				handleRegister(); 
+				handleInterestOps();
 				
 				Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
 				while(iter.hasNext()){
@@ -180,7 +208,7 @@ public class SelectorThread extends Thread {
 	
 	protected void handleRegister(){
 		Object[] item = null;
-		while( (item=this.register.poll()) != null){
+		while( (item=this.registerSess.poll()) != null){
 			try{
 				SelectableChannel channel = (SelectableChannel) item[0];
 				if (!channel.isOpen() ) continue;
@@ -196,12 +224,12 @@ public class SelectorThread extends Thread {
 			}catch(Exception e){
 				log.error(e.getMessage(), e);
 			}
-		}
+		} 
 	}
 	
 	protected void handleUnregister(){
 		Session sess = null;
-		while( (sess = this.unregister.poll()) != null ){
+		while( (sess = this.unregisterSess.poll()) != null ){
 			try { 
 				sess.close(); 
 			} catch (IOException e) {
@@ -210,6 +238,19 @@ public class SelectorThread extends Thread {
 		}
 	}
 	
+	protected void handleInterestOps(){
+		Object[] item = null;
+		while( (item=this.interestOps.poll()) != null){
+			try{
+				SelectionKey key = (SelectionKey) item[0];
+				if (!key.isValid()) continue;
+				int ops = (Integer)item[1]; 
+				key.interestOps(ops); 
+			}catch(Exception e){
+				log.error(e.getMessage(), e);
+			}
+		} 
+	}
 	
 	protected void handleAcceptEvent(SelectionKey key) throws IOException{ 
 		ServerSocketChannel server = (ServerSocketChannel) key.channel();
