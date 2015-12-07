@@ -129,7 +129,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
     		return;
     	}
     	
-    	log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
+    	log.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
 	} 
 	 
 	@Override
