@@ -70,7 +70,7 @@ ZBUS项目不依赖其他第三方库，消息通讯基于NIO完成（NET子项�
 	<dependency>
 		<groupId>org.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>6.2.6</version>
+		<version>6.2.9</version>
 	</dependency>
 
 ### 生产者
