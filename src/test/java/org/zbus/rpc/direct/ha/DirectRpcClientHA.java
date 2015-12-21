@@ -13,7 +13,7 @@ public class DirectRpcClientHA {
 		brokerConfig.setTrackServerList("127.0.0.1:16666;127.0.0.1:16667");
 		Broker broker = new HaBroker(brokerConfig);
 	  
-		HaInvoker messageInvoker = new HaInvoker(broker, "MyRpc");
+		HaInvoker messageInvoker = new HaInvoker(broker, "MyRpc2");
 		
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);    
 		
