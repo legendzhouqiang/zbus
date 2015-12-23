@@ -147,5 +147,8 @@ public class MQ extends AbstractMQ{
 		return "MQ [name=" + name + ", creator=" + creator + "]";
 	}
 	
+	public int consumerOnlineCount(){
+		return pullSessions.size();
+	}
 	
 }

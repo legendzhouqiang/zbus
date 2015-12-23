@@ -158,6 +158,14 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 				return;
 			}
 			
+			if(MqMode.isEnabled(mq.getMode(), MqMode.RPC)){
+				MQ q = (MQ)mq;
+				if(q.consumerOnlineCount() == 0){
+					ReplyKit.reply502(msg, sess);
+					return;
+				}
+			}
+			
 			boolean ack = msg.isAck();
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK);

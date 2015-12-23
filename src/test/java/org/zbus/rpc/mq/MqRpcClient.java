@@ -15,14 +15,14 @@ public class MqRpcClient {
 		
 		MqInvoker messageInvoker = new MqInvoker(broker, "MyRpc"); 
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);     
-		//rpc.setVerbose(true);
+		//rpc.setVerbose(true); 
 		
 		Integer res = rpc.invokeSync(Integer.class, "plus", 1,2); 
 		System.out.println(res); 
 		
 		String res2 = rpc.invokeSync(String.class, "getString",
 				new Class[]{String.class, int.class}, "string", 2); 
-		System.out.println(res2); 
+		System.out.println(res2);  
 			
 		
 		

@@ -49,6 +49,18 @@ public class ReplyKit {
 
 		sess.write(res);
 	}
+	
+	public static void reply502(Message msg, Session sess) throws IOException {
+		Message res = new Message();
+		String mqName = msg.getMq();
+		res.setId(msg.getId());
+		res.setResponseStatus(404);
+		res.setMq(mqName);
+		res.setBody(String.format("MQ(%s) Service Down", mqName));
+
+		sess.write(res);
+	}
+
 
 	public static void reply403(Message msg, Session sess) throws IOException {
 		Message res = new Message();
