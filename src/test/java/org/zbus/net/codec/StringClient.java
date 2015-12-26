@@ -14,6 +14,7 @@ public class StringClient extends Client<String, String> {
 		codec(new StringCodec());
 	}
 	
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
 		final Dispatcher dispatcher = new Dispatcher();  
 		 
@@ -41,7 +42,6 @@ public class StringClient extends Client<String, String> {
 				//e.printStackTrace();
 			}
 			Thread.sleep(1000);
-		}
-		
+		} 
 	}
 }

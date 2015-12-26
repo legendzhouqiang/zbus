@@ -149,7 +149,8 @@ public class JsonRpcCodec implements RpcCodec {
 			} 
 			if(json != null){
 				final String stackTrace = Response.KEY_STACK_TRACE;
-				if(json.containsKey(stackTrace)){ 
+				if(json.containsKey(stackTrace) &&
+						json.get(stackTrace) != null){ 
 					throw new RpcException(json.getString(stackTrace));
 				}
 				res.setResult(json.get(Response.KEY_RESULT));

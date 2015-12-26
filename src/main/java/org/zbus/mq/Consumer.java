@@ -173,7 +173,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	};
 	
-	public void onMessage(final MessageHandler handler) throws IOException{
+	public void onMessage(final MessageHandler handler) {
 		this.consumerHandler = handler;
 	}
 	
