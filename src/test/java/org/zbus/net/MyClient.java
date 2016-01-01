@@ -7,6 +7,7 @@ import org.zbus.net.http.MessageClient;
 
 public class MyClient {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		final Dispatcher dispatcher = new Dispatcher();
 

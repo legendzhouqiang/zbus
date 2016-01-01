@@ -35,6 +35,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private String registerToken = "";
+	private MqFilter mqFilter = new MemoryMqFilter();
 
  
 	public MqAdaptor(MqServer mqServer){
@@ -166,13 +167,19 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 				}
 			}
 			
-			boolean ack = msg.isAck();
+			if(!mqFilter.permit(msg) ){
+				if(msg.isAck()){
+					ReplyKit.reply200(msg, sess);
+				}
+				return;
+			}
+			 
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK);
 			
 			mq.produce(msg, sess);
 			mq.lastUpdateTime = System.currentTimeMillis();
-			if(ack){
+			if(msg.isAck()){
 				ReplyKit.reply200(msg, sess);
 			}
 		}

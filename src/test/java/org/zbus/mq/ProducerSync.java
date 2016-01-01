@@ -16,10 +16,12 @@ public class ProducerSync {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ(); // 如果已经确定存在，不需要创建
  
-		for(int i=0;i<1000;i++){ 
+		for(int i=0; i<10; i++){ 
 			Message msg = new Message(); 
+			msg.setHead("key", "hong");
 			msg.setBody("hello world"+i);
 			msg = producer.sendSync(msg); 
+			System.out.println(msg);
 		}
 		
 		broker.close();
