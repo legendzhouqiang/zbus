@@ -18,7 +18,7 @@ public class ProducerSync {
  
 		for(int i=0; i<10; i++){ 
 			Message msg = new Message(); 
-			msg.setHead("key", "hong");
+			msg.setHead("key", "hong"); //设置消息唯一性约束
 			msg.setBody("hello world"+i);
 			msg = producer.sendSync(msg); 
 			System.out.println(msg);

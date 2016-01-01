@@ -1,5 +1,6 @@
 package org.zbus.mq.server;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public interface MqFilter {
 
 
 class MemoryMqFilter implements MqFilter {
-	private Set<String> keySet = new HashSet<String>();
+	private Set<String> keySet = Collections.synchronizedSet(new HashSet<String>());
 	
 	@Override
 	public boolean permit(Message msg) { 
