@@ -40,24 +40,41 @@ public class Producer extends MqAdmin implements MessageInvoker{
 		super(config);
 	}
 	
+	/**
+	 * use invokeAsync instead
+	 * @deprecated 
+	 * @since 6.3.0
+	 */
 	public void sendAsync(Message msg, final ResultCallback<Message> callback)
 			throws IOException {
 		invokeAsync(msg, callback);
 	}
 	
+	/**
+	 * use invokeSync instead
+	 * @deprecated 
+	 * @since 6.3.0
+	 */
 	public void sendAsync(Message msg) throws IOException {
 		sendAsync(msg, null);
 	}
 	
-	
+	/**
+	 * use invokeSync instead
+	 * @deprecated 
+	 * @since 6.3.0
+	 */
 	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException{
 		return invokeSync(msg, timeout);
 	}
 	
+	/**
+	 * @deprecated 
+	 * @since 6.3.0
+	 */ 
 	public Message sendSync(Message msg) throws IOException, InterruptedException{
 		return sendSync(msg, 10000);
-	}
-
+	} 
 	
 	@Override
 	public Message invokeSync(Message msg, int timeout) throws IOException,

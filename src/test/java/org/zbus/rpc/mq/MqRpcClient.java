@@ -13,7 +13,7 @@ public class MqRpcClient {
 		Broker broker = new SingleBroker(brokerConfig);  
 		
 		
-		MqInvoker messageInvoker = new MqInvoker(broker, "MyRpc"); 
+		MqInvoker messageInvoker = new MqInvoker(broker, "MyRpc2"); 
 		RpcInvoker rpc = new RpcInvoker(messageInvoker);     
 		//rpc.setVerbose(true); 
 		

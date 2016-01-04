@@ -20,7 +20,7 @@ public class Pub1 {
 		msg.setTopic("sse"); 
 		msg.setBody("hello world");
 		
-		producer.sendSync(msg);   
+		producer.invokeSync(msg);   
 		
 		
 		broker.close();

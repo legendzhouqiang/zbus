@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
@@ -46,6 +47,12 @@ public class Consumer extends MqAdmin implements Closeable {
 	public Consumer(MqConfig config) {
 		super(config);
 		this.topic = config.getTopic();
+	}
+	
+	private BrokerHint brokerHint(){
+		BrokerHint hint = new BrokerHint();
+		hint.setEntry(this.mq);  
+		return hint;
 	}
 
 	private void ensureClient() throws IOException{
@@ -108,7 +115,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 
 	@Override
-	protected Message invokeSync(Message req) throws IOException,
+	public Message invokeSync(Message req) throws IOException,
 			InterruptedException {
 		ensureClient();
 		return client.invokeSync(req);

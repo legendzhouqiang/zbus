@@ -25,7 +25,6 @@ package org.zbus.mq;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 
@@ -53,13 +52,7 @@ public class MqAdmin{
 		this.mode = config.getMode();
 		this.accessToken = config.getAccessToken();
 		this.registerToken = config.getRegisterToken();
-	}
-	
-	protected BrokerHint brokerHint(){
-		BrokerHint hint = new BrokerHint();
-		hint.setEntry(this.mq);  
-		return hint;
-	}
+	} 
 	
 	/**
 	 * 默认使用broker代理创建，可以覆盖为Client直接创建，比如Consumer
@@ -67,7 +60,7 @@ public class MqAdmin{
 	 * @return
 	 * @throws IOException
 	 */
-	protected Message invokeSync(Message req) throws IOException, InterruptedException{
+	public Message invokeSync(Message req) throws IOException, InterruptedException{
 		return broker.invokeSync(req, 2500);
 	}
 	

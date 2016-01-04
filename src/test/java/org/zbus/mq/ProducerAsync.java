@@ -22,7 +22,7 @@ public class ProducerAsync {
 		for(int i=0;i<100000;i++){
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
-			producer.sendAsync(msg, new ResultCallback<Message>() { 
+			producer.invokeAsync(msg, new ResultCallback<Message>() { 
 				@Override
 				public void onReturn(Message result) { 
 					System.out.println(result);

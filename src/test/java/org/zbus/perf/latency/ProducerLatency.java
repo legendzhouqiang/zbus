@@ -23,7 +23,7 @@ public class ProducerLatency {
 			long start = System.currentTimeMillis();
 			Message msg = new Message();
 			msg.setBody("hello world"+i);
-			producer.sendSync(msg);  
+			producer.invokeSync(msg);  
 			long end = System.currentTimeMillis();
 			total += (end-start);
 			if(i%1000 == 0){

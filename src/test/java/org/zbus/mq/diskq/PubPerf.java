@@ -27,7 +27,7 @@ public class PubPerf {
 		for(int i=0;i<total;i++){
 			Message msg = new Message();
 			msg.setBody("hello");
-			p.sendAsync(msg, new ResultCallback<Message>() { 
+			p.invokeAsync(msg, new ResultCallback<Message>() { 
 				public void onReturn(Message result) { 
 					//System.out.println(result);
 					counter.incrementAndGet();

@@ -13,7 +13,7 @@ public class MqRpcService {
 	public static void main(String[] args) throws IOException{   
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 32); 
-		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
+		final String mq = ConfigKit.option(args, "-mq", "MyRpc2");
 		
 		RpcProcessor processor = new RpcProcessor(); 
 		//增加模块，模块名在调用时需要指定
@@ -32,6 +32,7 @@ public class MqRpcService {
 		config.setMq(mq); 
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor); 
+		config.setAccessToken("test");
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);

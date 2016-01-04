@@ -3,7 +3,6 @@ package org.zbus.mq;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
 
 public class ProducerSync {
@@ -20,7 +19,7 @@ public class ProducerSync {
 			Message msg = new Message(); 
 			msg.setHead("key", "hong"); //设置消息唯一性约束
 			msg.setBody("hello world"+i);
-			msg = producer.sendSync(msg); 
+			msg = producer.invokeSync(msg); 
 			System.out.println(msg);
 		}
 		
