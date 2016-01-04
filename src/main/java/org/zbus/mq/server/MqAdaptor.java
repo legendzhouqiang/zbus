@@ -167,19 +167,22 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 				}
 			}
 			
+
+			boolean ack = msg.isAck();
+			
 			if(!mqFilter.permit(msg) ){
-				if(msg.isAck()){
+				if(ack){
 					ReplyKit.reply200(msg, sess);
 				}
 				return;
 			}
-			 
-			msg.removeHead(Message.CMD);
-			msg.removeHead(Message.ACK);
 			
-			mq.produce(msg, sess);
+			msg.removeHead(Message.CMD);
+			msg.removeHead(Message.ACK); 
+			mq.produce(msg, sess); 
 			mq.lastUpdateTime = System.currentTimeMillis();
-			if(msg.isAck()){
+			
+			if(ack){
 				ReplyKit.reply200(msg, sess);
 			}
 		}
