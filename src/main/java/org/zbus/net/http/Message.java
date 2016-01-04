@@ -142,6 +142,14 @@ public class Message implements Id {
 		return setResponseStatus(status+"");
 	}
 	
+	public String getMethod(){
+		return meta.getMethod();
+	}
+	
+	public void setMethod(String method){
+		this.meta.setMethod(method);
+	}
+	
 	/**
 	 * HTTP请求串
 	 * eg. http://localhost/hello?xx=yy
@@ -590,6 +598,10 @@ public class Message implements Id {
 			this.requestString = st.nextToken();
 			decodeRequestString(this.requestString);
 		} 
+		
+		public String getMethod(){
+			return this.method;
+		}
 		
 		public void setMethod(String method){
 			this.method = method;
