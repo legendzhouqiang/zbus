@@ -20,7 +20,7 @@ public class StringClient extends Client<String, String> {
 		 
 		final StringClient client = new StringClient("127.0.0.1:8080", dispatcher);
 
-		client.onMessage(new MsgHandler<String>() {
+		client.onMessage(new DataHandler<String>() {
 			@Override
 			public void handle(String msg, Session sess) throws IOException { 
 				System.out.println(msg); 

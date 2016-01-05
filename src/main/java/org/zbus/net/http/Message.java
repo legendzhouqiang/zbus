@@ -41,8 +41,8 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
-import org.zbus.net.Client.MsgHandler;
-import org.zbus.net.MsgInvoker;
+import org.zbus.net.Client.DataHandler;
+import org.zbus.net.Invoker;
 import org.zbus.net.Sync.Id;
 import org.zbus.net.core.IoBuffer;
 
@@ -694,8 +694,8 @@ public class Message implements Id {
 		}
 	}
 
-	public static interface MessageHandler extends MsgHandler<Message> { }
-	public static interface MessageInvoker extends MsgInvoker<Message, Message> { }	
+	public static interface MessageHandler extends DataHandler<Message> { }
+	public static interface MessageInvoker extends Invoker<Message, Message> { }	
 	public static interface MessageProcessor { 
 		Message process(Message request);
 	}

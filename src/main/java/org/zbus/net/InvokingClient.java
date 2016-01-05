@@ -32,7 +32,7 @@ import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
 
 public class InvokingClient<REQ extends Id, RES extends Id> 
-		extends Client<REQ, RES> implements MsgInvoker<REQ, RES> {	
+		extends Client<REQ, RES> implements Invoker<REQ, RES> {	
 	
 	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();
 	

@@ -9,6 +9,8 @@ public class DiskQuequeProducer {
 		DiskQueque diskq = new DiskQueque("MyMQ");
 		diskq.offer(new byte[100]);
 		
+		System.out.println(diskq.size());
+		
 
 		DiskQueque.destory(); // 清理掉Q环境
 	}
