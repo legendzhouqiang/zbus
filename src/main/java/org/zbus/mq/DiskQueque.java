@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.zbus.mq.server.support.DiskQueuePool;
 
-public class JvmDiskQueque extends AbstractQueue<byte[]> {
+public class DiskQueque extends AbstractQueue<byte[]> {
 	private final org.zbus.mq.server.support.DiskQueuePool.DiskQueue support;
 	private final String name;
 	/** Main lock guarding all access */
@@ -18,7 +18,7 @@ public class JvmDiskQueque extends AbstractQueue<byte[]> {
 	/** Condition for waiting puts */
 	private final Condition notFull;
 
-	public JvmDiskQueque(String name) {
+	public DiskQueque(String name) {
 		this.name = name;
 		this.support = DiskQueuePool.getDiskQueue(name);
 		lock = new ReentrantLock();
