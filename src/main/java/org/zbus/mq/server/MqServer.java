@@ -40,7 +40,6 @@ import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
 import org.zbus.net.core.Session;
-import org.zbus.proxy.thrift.ThriftCodec;
 
 public class MqServer extends Server{ 
 	private static final Logger log = Logger.getLogger(MqServer.class); 
@@ -172,17 +171,10 @@ public class MqServer extends Server{
 		config.executorCount = ConfigKit.option(args, "-executor", 64);
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
-		config.trackServerList = ConfigKit.option(args, "-track", null);
-		config.thriftServer = ConfigKit.option(args, "-thrift", null);
+		config.trackServerList = ConfigKit.option(args, "-track", null); 
 		config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
 		
 		final MqServer server = new MqServer(config);  
-		if(config.thriftServer != null){
-			MqAdaptor thriftAdaptor = new MqAdaptor(server);
-			thriftAdaptor.codec(new ThriftCodec());
-			server.registerAdaptor(config.thriftServer, thriftAdaptor, "Thrift");
-		}
-		
 		server.start(); 
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 

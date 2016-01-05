@@ -6,10 +6,10 @@ import java.util.Iterator;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.zbus.mq.server.support.DiskQueuePool;
+import org.zbus.mq.disk.DiskQueuePool;
 
 public class DiskQueque extends AbstractQueue<byte[]> {
-	private final org.zbus.mq.server.support.DiskQueuePool.DiskQueue support;
+	private final org.zbus.mq.disk.DiskQueuePool.DiskQueue support;
 	private final String name;
 	/** Main lock guarding all access */
 	final ReentrantLock lock;

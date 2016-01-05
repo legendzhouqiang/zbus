@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq.server.support;
+package org.zbus.mq.disk;
 
 import java.util.concurrent.LinkedBlockingQueue;
 

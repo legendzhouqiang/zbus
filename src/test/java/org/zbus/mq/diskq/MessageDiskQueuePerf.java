@@ -2,8 +2,8 @@ package org.zbus.mq.diskq;
 
 import java.util.AbstractQueue;
 
-import org.zbus.mq.server.support.DiskQueuePool;
-import org.zbus.mq.server.support.MessageDiskQueue;
+import org.zbus.mq.disk.DiskQueuePool;
+import org.zbus.mq.disk.MessageDiskQueue;
 import org.zbus.net.http.Message;
 
 public class MessageDiskQueuePerf {

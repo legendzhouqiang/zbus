@@ -33,8 +33,6 @@ public class ServiceConfig {
 	public Dispatcher dispatcher;
 	public MessageProcessor messageProcessor;
 	
-	public String thriftServer; //需要thrift支持才启动
-	
 	//如果加入高可用HA才需要填写
 	public String trackServerList; 
 	public String entryId;
@@ -75,12 +73,7 @@ public class ServiceConfig {
 	public void setMessageProcessor(MessageProcessor messageProcessor) {
 		this.messageProcessor = messageProcessor;
 	}
-	public String getThriftServer() {
-		return thriftServer;
-	}
-	public void setThriftServer(String thriftServer) {
-		this.thriftServer = thriftServer;
-	}
+	
 	public String getTrackServerList() {
 		return trackServerList;
 	}

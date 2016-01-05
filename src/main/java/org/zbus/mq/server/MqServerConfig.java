@@ -27,8 +27,7 @@ public class MqServerConfig{
 	public String trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
 	
 	public String serverHost = "0.0.0.0";
-	public int serverPort = 15555; 
-	public String thriftServer = "0.0.0.0:25555"; 
+	public int serverPort = 15555;  
 	
 	public int selectorCount = 1;
 	public int executorCount = 64;

@@ -20,12 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.mq.server.support;
+package org.zbus.mq.disk;
 
 import java.util.AbstractQueue;
 import java.util.Iterator;
 
-import org.zbus.mq.server.support.DiskQueuePool.DiskQueue;
+import org.zbus.mq.disk.DiskQueuePool.DiskQueue;
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageCodec;
