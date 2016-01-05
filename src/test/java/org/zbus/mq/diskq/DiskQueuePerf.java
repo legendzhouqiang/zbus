@@ -2,8 +2,8 @@ package org.zbus.mq.diskq;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.zbus.mq.disk.DiskQueue;
 import org.zbus.mq.disk.DiskQueuePool;
-import org.zbus.mq.disk.DiskQueuePool.DiskQueue;
 
 
 public class DiskQueuePerf {
