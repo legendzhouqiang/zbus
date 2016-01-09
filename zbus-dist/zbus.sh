@@ -1,5 +1,5 @@
 #/usr/bin
-#cat zbus.sh | col -b > zbus2.sh  ==> fix win=>lin
+#cat zbus.sh | col -b > zbus2.sh
 if [ -z ${JAVA_HOME} ]; then
 JAVA_HOME=/apps/jdk7
 fi
