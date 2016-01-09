@@ -26,7 +26,7 @@ public class Consumer1 {
 		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);  
 		
-		c.onMessage(new MessageHandler() { 
+		c.onMessage(new MessageHandler() {
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
 				System.out.println(msg);
