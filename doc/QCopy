@@ -1,0 +1,12 @@
+The design of Queue Copy
+
+=======>||||||||  (MyMQ)  ====> consumers
+   |
+   ---->||||||||  (MyMQ-Copy1) ====> consumer group1 (application1)
+   |
+   ---->||||||||  (MyMQ-Copy2) ====> consumer group2 (application2)
+   
+      
+   
+
+   
