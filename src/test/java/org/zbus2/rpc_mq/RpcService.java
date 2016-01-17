@@ -1,4 +1,4 @@
-package org.zbus.rpc.mq;
+package org.zbus2.rpc_mq;
 
 import java.io.IOException;
 
@@ -6,10 +6,12 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
-import org.zbus.rpc.RpcProcessor;
-import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.RpcProcessor; 
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
+import org.zbus2.rpc_interface.InterfaceImpl;
 
-public class MqRpcService {
+public class RpcService {
 	public static void main(String[] args) throws IOException{   
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 32); 
@@ -31,8 +33,7 @@ public class MqRpcService {
 		config.setConsumerCount(threadCount); 
 		config.setMq(mq); 
 		config.setBroker(broker);    
-		config.setMessageProcessor(processor); 
-		config.setAccessToken("test");
+		config.setMessageProcessor(processor);  
 		
 		@SuppressWarnings("resource")
 		Service svc = new Service(config);

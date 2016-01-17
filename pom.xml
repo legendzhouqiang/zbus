@@ -65,21 +65,15 @@
 			<scope>provided</scope>
 		</dependency>
 
- 	
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.5</version>
 			<scope>provided</scope>
 		</dependency>
-<!--		
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.1.2</version>
-			<scope>provided</scope>
-		</dependency>
- --> 
+		<!-- <dependency> <groupId>ch.qos.logback</groupId> <artifactId>logback-classic</artifactId> 
+			<version>1.1.2</version> <scope>provided</scope> </dependency> -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -102,7 +96,7 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.4</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency> 
 	</dependencies>
 
 
@@ -155,21 +149,9 @@
 							</execution>
 						</executions>
 					</plugin>
-					<!-- Javadoc 
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.9.1</version>
-						<executions>
-							<execution>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					-->
+					<!-- Javadoc <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> 
+						<version>2.9.1</version> <executions> <execution> <phase>package</phase> 
+						<goals> <goal>jar</goal> </goals> </execution> </executions> </plugin> -->
 					<!-- GPG -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>

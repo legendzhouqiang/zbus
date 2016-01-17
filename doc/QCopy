@@ -7,6 +7,12 @@ The design of Queue Copy
    ---->||||||||  (MyMQ-Copy2) ====> consumer group2 (application2)
    
       
+   produce  message 
+   MyMQ message copy to MyMQ-Copy1, MyMQ-Copy2
    
+   
+
+   
+   topic/MQ
 
    
