@@ -48,6 +48,7 @@ public class PullSession {
 	public void subscribeTopics(String topicString){
 		if(topicString == null) return;  
 		String[] ts = topicString.split("[,]");
+		topicSet.clear();
 		for(String t : ts){
 			if(t.trim().length() == 0) continue;
 			topicSet.add(t.trim());

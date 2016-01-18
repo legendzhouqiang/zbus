@@ -1,6 +1,8 @@
 package org.zbus2.rpc_mq;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.zbus.broker.Broker;
@@ -26,6 +28,9 @@ public class RpcClient {
 	 
 	public static void test(Interface hello) throws Exception{ 
 
+		List<Map<String, Object>> list = hello.listMap();
+		System.out.println(list);
+		
 		Object[] res = hello.objectArray("xzx");
 		for (Object obj : res) {
 			System.out.println(obj);
