@@ -66,7 +66,7 @@ public class MqServer extends Server{
 		
 		if("persist".equals(config.mqFilter)){
 			if(ConfigKit.classExists("com.sleepycat.je.Environment")){
-				mqFilter = new PersistMqFilter(config.storePath + File.pathSeparator + "filter");
+				mqFilter = new PersistMqFilter(config.storePath + File.separator + "filter");
 			} else {
 				log.warn("mqFilter(perist type) missing BerkeleyDb jar, default to MemoryMqFilter");
 				mqFilter = new MemoryMqFilter(); 
