@@ -19,6 +19,7 @@ import org.zbus.mq.disk.DiskQueue;
 import org.zbus.mq.disk.DiskQueuePool;
 import org.zbus.mq.disk.MessageDiskQueue;
 import org.zbus.mq.disk.MessageMemoryQueue;
+import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
@@ -35,7 +36,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private String registerToken = "";
-	private MqFilter mqFilter = new MemoryMqFilter();
+	private MqFilter mqFilter;
 
  
 	public MqAdaptor(MqServer mqServer){
@@ -44,6 +45,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		this.mqTable = mqServer.getMqTable();
 		this.sessionTable = mqServer.getSessionTable(); 
 		this.registerToken = mqServer.getRegisterToken();
+		this.mqFilter = mqServer.getMqFilter();
 		
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  

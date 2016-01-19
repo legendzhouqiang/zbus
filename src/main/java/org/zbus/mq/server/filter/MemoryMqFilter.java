@@ -1,18 +1,13 @@
-package org.zbus.mq.server;
+package org.zbus.mq.server.filter;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.zbus.net.http.Message;
 
-public interface MqFilter {
-	void removeKey(String mq, String key);
-	boolean permit(Message msg);
-}
-
-
-class MemoryMqFilter implements MqFilter {
+public class MemoryMqFilter implements MqFilter {
 	private Set<String> keySet = Collections.synchronizedSet(new HashSet<String>());
 	
 	@Override
@@ -31,4 +26,9 @@ class MemoryMqFilter implements MqFilter {
 		key = mq + "#" + key;
 		keySet.remove(key);
 	} 
+	
+	@Override
+	public void close() throws IOException { 
+		
+	}
 }

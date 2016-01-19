@@ -36,6 +36,8 @@ import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.server.filter.MemoryMqFilter;
+import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
@@ -52,12 +54,16 @@ public class MqServer extends Server{
 	
 	private MqServerConfig config;
 	private String registerToken = "";
+	private MqFilter mqFilter;
 	
 	public MqServer(MqServerConfig config){ 
 		this.config = config;   
 		serverName = "MqServer";   
 		registerToken = config.registerToken;
 		serverMainIpOrder = config.serverMainIpOrder;
+		
+		mqFilter = new MemoryMqFilter();
+		
 		dispatcher = new Dispatcher();
 		dispatcher.selectorCount(config.selectorCount);
 		dispatcher.executorCount(config.executorCount); 
@@ -161,6 +167,11 @@ public class MqServer extends Server{
 
 	public Map<String, Session> getSessionTable() {
 		return sessionTable;
+	} 
+	
+
+	public MqFilter getMqFilter() {
+		return mqFilter;
 	}
 
 	public static void main(String[] args) throws Exception {

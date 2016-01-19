@@ -35,8 +35,89 @@ public class MqServerConfig{
 	public String storePath = "store";
 	public String registerToken = "";  
 	public String serverMainIpOrder = null;
+	public String mqFilter = "memory"; // or "perist"
 	
 	public String getServerAddress(){
 		return serverHost + ":" + serverPort;
-	} 
+	}
+
+	public String getTrackServerList() {
+		return trackServerList;
+	}
+
+	public void setTrackServerList(String trackServerList) {
+		this.trackServerList = trackServerList;
+	}
+
+	public String getServerHost() {
+		return serverHost;
+	}
+
+	public void setServerHost(String serverHost) {
+		this.serverHost = serverHost;
+	}
+
+	public int getServerPort() {
+		return serverPort;
+	}
+
+	public void setServerPort(int serverPort) {
+		this.serverPort = serverPort;
+	}
+
+	public int getSelectorCount() {
+		return selectorCount;
+	}
+
+	public void setSelectorCount(int selectorCount) {
+		this.selectorCount = selectorCount;
+	}
+
+	public int getExecutorCount() {
+		return executorCount;
+	}
+
+	public void setExecutorCount(int executorCount) {
+		this.executorCount = executorCount;
+	}
+
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+
+	public String getStorePath() {
+		return storePath;
+	}
+
+	public void setStorePath(String storePath) {
+		this.storePath = storePath;
+	}
+
+	public String getRegisterToken() {
+		return registerToken;
+	}
+
+	public void setRegisterToken(String registerToken) {
+		this.registerToken = registerToken;
+	}
+
+	public String getServerMainIpOrder() {
+		return serverMainIpOrder;
+	}
+
+	public void setServerMainIpOrder(String serverMainIpOrder) {
+		this.serverMainIpOrder = serverMainIpOrder;
+	}
+
+	public String getMqFilter() {
+		return mqFilter;
+	}
+
+	public void setMqFilter(String mqFilter) {
+		this.mqFilter = mqFilter;
+	}  
 }

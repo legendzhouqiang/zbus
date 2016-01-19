@@ -4,10 +4,12 @@ public class DiskQuequeProducer {
 
 
 	public static void main(String[] args) throws Exception { 
-		DiskQueque.init("c://test"); // 初始化MQ所在路径
+		DiskQueque.init("./test"); // 初始化MQ所在路径
 
 		DiskQueque diskq = new DiskQueque("MyMQ");
-		diskq.offer(new byte[100]);
+		for(int i=0;i<10000000;i++){
+			diskq.offer(new byte[1024]);
+		}
 		
 		System.out.println(diskq.size());
 		

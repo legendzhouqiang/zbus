@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.util.AbstractQueue;
 
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.server.auth.Auth;
+import org.zbus.mq.server.auth.DefaultAuth;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 

@@ -39,7 +39,8 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	private MessageClient client; // 消费者拥有一个物理链接
 	private String topic = null; // 为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
-	private int consumeTimeout = 300000; //5 minutes
+	private int consumeTimeout = 300000; // 5 minutes
+
 	public Consumer(Broker broker, String mq, MqMode... mode) {
 		super(broker, mq, mode);
 	}
@@ -48,26 +49,26 @@ public class Consumer extends MqAdmin implements Closeable {
 		super(config);
 		this.topic = config.getTopic();
 	}
-	
-	private BrokerHint brokerHint(){
+
+	private BrokerHint brokerHint() {
 		BrokerHint hint = new BrokerHint();
-		hint.setEntry(this.mq);  
+		hint.setEntry(this.mq);
 		return hint;
 	}
 
-	private void ensureClient() throws IOException{
-		if(this.client == null){
-    		synchronized (this) {
-				if(this.client == null){
-					this.client = broker.getClient(brokerHint());  
+	private void ensureClient() throws IOException {
+		if (this.client == null) {
+			synchronized (this) {
+				if (this.client == null) {
+					this.client = broker.getClient(brokerHint());
 				}
-			} 
-    	}
+			}
+		}
 	}
-	
+
 	public Message recv(int timeout) throws IOException, InterruptedException {
 		ensureClient();
-		
+
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
@@ -81,12 +82,14 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message res = null;
 		try {
 			res = client.invokeSync(req, timeout);
-			if(res == null) return res; 
+			if (res == null)
+				return res;
 			res.setId(res.getRawId());
 			res.removeHead(Message.RAWID);
-			if(res.isStatus200()) return res;
-			
-			if(res.isStatus404()) { 
+			if (res.isStatus200())
+				return res;
+
+			if (res.isStatus404()) {
 				if (!this.createMQ()) {
 					throw new MqException(res.getBodyString());
 				}
@@ -95,7 +98,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			throw new MqException(res.getBodyString());
 		} catch (ClosedByInterruptException e) {
 			throw new InterruptedException(e.getMessage());
-		} catch (IOException e) { 
+		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 			try {
 				broker.closeClient(client);
@@ -107,35 +110,45 @@ public class Consumer extends MqAdmin implements Closeable {
 		return res;
 	}
 
+	public Message take() throws InterruptedException, IOException {
+		while (true) {
+			Message message = recv(consumeTimeout);
+			if (message == null)
+				continue;
+			return message; 
+		}
+	}
+
 	public void close() throws IOException {
 		stop();
 		if (this.client != null) {
 			this.broker.closeClient(this.client);
-		} 
+		}
 	}
 
 	@Override
-	public Message invokeSync(Message req) throws IOException,
-			InterruptedException {
+	public Message invokeSync(Message req) throws IOException, InterruptedException {
 		ensureClient();
 		return client.invokeSync(req);
 	}
-	
+
 	private MessageClient replyClient; // Linux优化，Reply使用分离的Client
-	private void ensureReplyClient() throws IOException{
-		if(this.replyClient == null){
-    		synchronized (this) {
-				if(this.replyClient == null){
-					this.replyClient = broker.getClient(brokerHint());  
+
+	private void ensureReplyClient() throws IOException {
+		if (this.replyClient == null) {
+			synchronized (this) {
+				if (this.replyClient == null) {
+					this.replyClient = broker.getClient(brokerHint());
 				}
-			} 
-    	}
+			}
+		}
 	}
+
 	public void routeMessage(Message msg) throws IOException {
 		ensureReplyClient();
 		msg.setCmd(Protocol.Route);
-		msg.setAck(false); 
-		
+		msg.setAck(false);
+
 		replyClient.send(msg);
 	}
 
@@ -148,23 +161,24 @@ public class Consumer extends MqAdmin implements Closeable {
 			throw new IllegalStateException("topic require PubSub mode");
 		}
 		this.topic = topic;
-	} 
-	
+	}
+
 	private volatile Thread consumerThread = null;
 	private volatile MessageHandler consumerHandler;
 	private final Runnable consumerTask = new Runnable() {
 		@Override
-		public void run() { 
-			while(true){
+		public void run() {
+			while (true) {
 				try {
 					final Message msg;
-					try { 
-						msg = recv(consumeTimeout); 
-					} catch (InterruptedException e) { 
+					try {
+						msg = recv(consumeTimeout);
+					} catch (InterruptedException e) {
 						break;
 					}
-					if(msg == null) continue;
-					if(consumerHandler == null){
+					if (msg == null)
+						continue;
+					if (consumerHandler == null) {
 						log.warn("Missing consumer MessageHandler, call onMessage first");
 						continue;
 					}
@@ -172,53 +186,54 @@ public class Consumer extends MqAdmin implements Closeable {
 						consumerHandler.handle(msg, client.getSession());
 					} catch (IOException e) {
 						log.error(e.getMessage(), e);
-					}  
-				} catch (IOException e) { 
+					}
+				} catch (IOException e) {
 					log.error(e.getMessage(), e);
-				} 
+				}
 			}
 		}
 	};
-	
+
 	public void onMessage(final MessageHandler handler) {
 		this.consumerHandler = handler;
 	}
-	
-	public void stop(){
-		if(consumerThread != null){
+
+	public void stop() {
+		if (consumerThread != null) {
 			consumerThread.interrupt();
 			consumerThread = null;
 		}
 		try {
 			if (this.client != null) {
 				this.broker.closeClient(this.client);
-			} 
+			}
 			client = null;
 		} catch (IOException e) {
-			log.error(e.getMessage(), e); 
+			log.error(e.getMessage(), e);
 		}
-		
+
 		try {
 			if (this.replyClient != null) {
 				this.broker.closeClient(this.replyClient);
-			} 
+			}
 			replyClient = null;
 		} catch (IOException e) {
-			log.error(e.getMessage(), e); 
+			log.error(e.getMessage(), e);
 		}
 	}
-	
-	public void start(){
-		if(consumerThread == null){
-			consumerThread = new Thread(consumerTask);  
+
+	public void start() {
+		if (consumerThread == null) {
+			consumerThread = new Thread(consumerTask);
 		}
-		
-		if(consumerThread.isAlive()) return;
+
+		if (consumerThread.isAlive())
+			return;
 		consumerThread.start();
 	}
-	
+
 	public void setConsumeTimeout(int consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
-	} 
-	
+	}
+
 }
