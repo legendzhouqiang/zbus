@@ -29,6 +29,16 @@ import java.util.Set;
 
 public class ConfigKit {    
 	
+	public static boolean classExists(String clazz){
+		try { 
+			Class.forName(clazz); 
+		} catch (Exception e) {  
+			return false;
+		}
+		return true;
+	}
+	
+	
 	public static String option(Properties props, String opt, String defaultValue){
 		String value = props.getProperty(opt, defaultValue);
 		return value == null? null : value.trim();

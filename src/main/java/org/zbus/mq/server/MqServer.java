@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -64,7 +65,12 @@ public class MqServer extends Server{
 		serverMainIpOrder = config.serverMainIpOrder;
 		
 		if("persist".equals(config.mqFilter)){
-			mqFilter = new PersistMqFilter(config.storePath);
+			if(ConfigKit.classExists("com.sleepycat.je.Environment")){
+				mqFilter = new PersistMqFilter(config.storePath + File.pathSeparator + "filter");
+			} else {
+				log.warn("mqFilter(perist type) missing BerkeleyDb jar, default to MemoryMqFilter");
+				mqFilter = new MemoryMqFilter(); 
+			}  
 		} else {
 			mqFilter = new MemoryMqFilter(); 
 		}
