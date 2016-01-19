@@ -28,72 +28,37 @@ import org.zbus.broker.Broker;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageInvoker;
 
-public class Producer extends MqAdmin implements MessageInvoker{  
-	
+public class Producer extends MqAdmin {
+
 	public Producer(Broker broker, String mq, MqMode... mode) {
 		super(broker, mq, mode);
-	} 
-	
-	public Producer(MqConfig config){
+	}
+
+	public Producer(MqConfig config) {
 		super(config);
 	}
-	
-	/**
-	 * use invokeAsync instead
-	 * @deprecated 
-	 * @since 6.3.0
-	 */
-	public void sendAsync(Message msg, final ResultCallback<Message> callback)
-			throws IOException {
-		invokeAsync(msg, callback);
+ 
+	public void sendAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
+		msg.setCmd(Protocol.Produce);
+		msg.setMq(this.mq);
+		msg.setAck(true);
+
+		broker.invokeAsync(msg, callback);
 	}
-	
-	/**
-	 * use invokeSync instead
-	 * @deprecated 
-	 * @since 6.3.0
-	 */
+ 
 	public void sendAsync(Message msg) throws IOException {
 		sendAsync(msg, null);
 	}
-	
-	/**
-	 * use invokeSync instead
-	 * @deprecated 
-	 * @since 6.3.0
-	 */
-	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException{
-		return invokeSync(msg, timeout);
-	}
-	
-	/**
-	 * @deprecated 
-	 * @since 6.3.0
-	 */ 
-	public Message sendSync(Message msg) throws IOException, InterruptedException{
-		return sendSync(msg, 10000);
-	} 
-	
-	@Override
-	public Message invokeSync(Message msg, int timeout) throws IOException,
-			InterruptedException { 
+ 
+	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException {
 		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq); 
-		msg.setAck(true);
-		
+		msg.setMq(this.mq);
+		msg.setAck(true); 
 		return broker.invokeSync(msg, timeout);
 	}
-
-	@Override
-	public void invokeAsync(Message msg, ResultCallback<Message> callback)
-			throws IOException { 
-		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq); 
-		msg.setAck(true);
-		
-		broker.invokeAsync(msg, callback);
-	}
-	
+ 
+	public Message sendSync(Message msg) throws IOException, InterruptedException {
+		return sendSync(msg, 10000);
+	} 
 }

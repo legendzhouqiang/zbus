@@ -42,6 +42,10 @@ public class SingleBroker implements Broker {
 	private Dispatcher dispatcher = null;
 	private boolean ownDispatcher = false;
 	 
+	public SingleBroker() throws IOException{
+		this(new BrokerConfig());
+	}
+	
 	public SingleBroker(BrokerConfig config) throws IOException{ 
 		this.config = config;
 		this.serverAddress = config.getServerAddress(); 

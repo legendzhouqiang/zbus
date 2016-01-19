@@ -23,7 +23,7 @@ public class PubAsync {
 		
 		for(int i=0;i<10000;i++){
 			msg.setBody("hello world" + i);
-			producer.invokeAsync(msg, new ResultCallback<Message>() {
+			producer.sendAsync(msg, new ResultCallback<Message>() {
 
 				@Override
 				public void onReturn(Message result) {

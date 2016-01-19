@@ -20,7 +20,7 @@ public class Producer1 {
 			Message msg = new Message();
 			msg.setBody("hello world, from HA broker "+ System.currentTimeMillis());
 			try{
-				Message res = producer.invokeSync(msg, 2500);  
+				Message res = producer.sendSync(msg, 2500);  
 				System.out.println(res);
 			}catch (Exception e){
 				e.printStackTrace();

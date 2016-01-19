@@ -1,4 +1,4 @@
-package org.zbus2.rpc_interface;
+package org.zbus.examples.rpc_biz;
 
 import java.util.ArrayList;
 import java.util.Arrays;

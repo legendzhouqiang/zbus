@@ -34,7 +34,7 @@ public class ProducerPerf {
 //					}
 //				}
 				try {
-					producer.invokeSync(msg, 10000);
+					producer.sendSync(msg, 10000);
 					counter.incrementAndGet();
 				} catch (Exception e) { 
 					e.printStackTrace();

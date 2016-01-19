@@ -1,4 +1,4 @@
-package org.zbus2.rpc_mq;
+package org.zbus.examples.rpc_mq;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,12 +8,12 @@ import java.util.Random;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.examples.rpc_biz.Interface;
+import org.zbus.examples.rpc_biz.MyEnum;
+import org.zbus.examples.rpc_biz.User;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.mq.MqInvoker;
-import org.zbus2.rpc_interface.Interface;
-import org.zbus2.rpc_interface.MyEnum;
-import org.zbus2.rpc_interface.User;
 
 public class RpcClient {
 	public static User getUser(String name) {

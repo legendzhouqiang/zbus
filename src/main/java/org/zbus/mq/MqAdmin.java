@@ -60,8 +60,8 @@ public class MqAdmin{
 	 * @return
 	 * @throws IOException
 	 */
-	public Message invokeSync(Message req) throws IOException, InterruptedException{
-		return broker.invokeSync(req, 2500);
+	protected Message invokeSync(Message req) throws IOException, InterruptedException{
+		return broker.invokeSync(req, 10000);
 	}
 	
 	public Message queryMQ() throws IOException, InterruptedException{

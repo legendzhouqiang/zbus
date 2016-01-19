@@ -24,7 +24,7 @@ package org.zbus.mq.server;
 
 
 public class MqServerConfig{ 
-	public String trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
+	public String trackServerList = null;
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
