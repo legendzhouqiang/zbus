@@ -38,6 +38,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.server.filter.MemoryMqFilter;
 import org.zbus.mq.server.filter.MqFilter;
+import org.zbus.mq.server.filter.PersistMqFilter;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
 import org.zbus.net.core.Dispatcher;
@@ -62,7 +63,11 @@ public class MqServer extends Server{
 		registerToken = config.registerToken;
 		serverMainIpOrder = config.serverMainIpOrder;
 		
-		mqFilter = new MemoryMqFilter();
+		if("persist".equals(config.mqFilter)){
+			mqFilter = new PersistMqFilter(config.storePath);
+		} else {
+			mqFilter = new MemoryMqFilter(); 
+		}
 		
 		dispatcher = new Dispatcher();
 		dispatcher.selectorCount(config.selectorCount);
@@ -103,9 +108,12 @@ public class MqServer extends Server{
 	}
 	
 	@Override
-	public void close() throws IOException { 
+	public void close() throws IOException {
 		if(defaultMqAdaptor != null){
 			defaultMqAdaptor.close();
+		}
+		if(this.mqFilter != null){
+			this.mqFilter.close();
 		}
 		if(trackPub != null){
     		trackPub.close();
@@ -183,6 +191,7 @@ public class MqServer extends Server{
 		config.verbose = ConfigKit.option(args, "-verbose", false);
 		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", null); 
+		config.mqFilter = ConfigKit.option(args, "-mqFilter", null);
 		config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
 		
 		final MqServer server = new MqServer(config);  

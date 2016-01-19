@@ -15,3 +15,5 @@ zbus-6.3.0 changelog
 3. 增加支持不指定随机端口启动Server
 4. 修复Rpc客户端运行中失败引起Sevice响应实例清除的bug
 5. zbus重启，service快速注册返回，InvokingClient增加Sync清除
+
+6. 增加根据Key过滤消息，MqFilter，基于内存与基于BerkeleyDB，默认基于内存
