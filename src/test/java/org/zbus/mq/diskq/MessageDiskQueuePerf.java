@@ -31,7 +31,7 @@ public class MessageDiskQueuePerf {
 		System.out.format("QPS: %.2f\n", N*1000.0/(end-start));
 		System.out.format("MPS: %.2fM/s\n", count*N*1000.0/(end-start)/1024/1024);
 		
-		DiskQueuePool.destory(); 
+		DiskQueuePool.release(); 
 	}
 
 }

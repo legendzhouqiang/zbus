@@ -130,7 +130,7 @@ public class DiskQueuePool {
         }
     }
  
-    public synchronized static void destory() {
+    public synchronized static void release() {
         if (instance != null) {
             instance.dispose();
             instance = null;

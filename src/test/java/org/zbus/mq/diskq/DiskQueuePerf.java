@@ -54,7 +54,7 @@ public class DiskQueuePerf {
 			task.join();
 		}
 		
-		DiskQueuePool.destory();
+		DiskQueuePool.release();
 		System.out.println("===done==="); 
 	}
 }

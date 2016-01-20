@@ -462,6 +462,6 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     }   
     
     public void close() throws IOException {    
-    	DiskQueuePool.destory();  
+    	DiskQueuePool.release();  
     } 
 }
