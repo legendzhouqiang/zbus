@@ -172,12 +172,10 @@ public class Consumer extends MqAdmin implements Closeable {
 				try {
 					final Message msg;
 					try {
-						msg = recv(consumeTimeout);
+						msg = take();
 					} catch (InterruptedException e) {
 						break;
-					}
-					if (msg == null)
-						continue;
+					} 
 					if (consumerHandler == null) {
 						log.warn("Missing consumer MessageHandler, call onMessage first");
 						continue;
@@ -198,7 +196,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumerHandler = handler;
 	}
 
-	public void stop() {
+	public synchronized void stop() {
 		if (consumerThread != null) {
 			consumerThread.interrupt();
 			consumerThread = null;
@@ -221,8 +219,13 @@ public class Consumer extends MqAdmin implements Closeable {
 			log.error(e.getMessage(), e);
 		}
 	}
+	
+	public void start(MessageHandler handler){
+		onMessage(handler);
+		start();
+	}
 
-	public void start() {
+	public synchronized void start() {
 		if (consumerThread == null) {
 			consumerThread = new Thread(consumerTask);
 		}

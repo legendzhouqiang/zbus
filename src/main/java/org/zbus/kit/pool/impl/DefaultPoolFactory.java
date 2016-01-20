@@ -37,7 +37,7 @@ public class DefaultPoolFactory implements PoolFactory {
 	private static final Logger log = Logger.getLogger(Pool.class);
 	@Override
 	public <T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config) { 
-		log.info("Using Zbus DefaultPool");
+		log.debug("Using Zbus DefaultPool");
 		return new DefaultPool<T>(factory, config);
 	}
 	

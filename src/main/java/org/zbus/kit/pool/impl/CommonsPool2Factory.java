@@ -37,7 +37,7 @@ public class CommonsPool2Factory implements PoolFactory {
 	private static final Logger log = Logger.getLogger(Pool.class);
 	@Override
 	public <T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config) { 
-		log.info("Using Apache Commons-pool2");
+		log.debug("Using Apache Commons-pool2");
 		return new CommonsPool2<T>(factory, config);
 	}
 }
