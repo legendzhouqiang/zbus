@@ -19,7 +19,7 @@ public class ProducerAsync {
 
 		//创建消息，消息体可以是任意binary，应用协议交给使用者
 		
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<10;i++){
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
 			producer.sendAsync(msg, new ResultCallback<Message>() { 

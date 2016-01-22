@@ -14,7 +14,7 @@ import org.zbus.rpc.mq.ServiceConfig;
 public class RpcService {
 	public static void main(String[] args) throws IOException{   
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 32); 
+		final int threadCount = ConfigKit.option(args, "-c", 1); 
 		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
 		
 		RpcProcessor processor = new RpcProcessor(); 

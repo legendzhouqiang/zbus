@@ -40,16 +40,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zbus.kit.log.Logger;
  
-
+/**
+ * Dispatcher manages Selector threads <code>SelectorThread</code>, balancing distribute the new
+ * connection <code>Session</code> from clients.
+ * 
+ * @author rushmore
+ *
+ */
 public class Dispatcher implements Closeable {
 	public static final int DEFAULT_EXECUTOR_COUNT = 64;
 	
 	private static final Logger log = Logger.getLogger(Dispatcher.class); 
 	
-	private ExecutorService executor;
-	
-	private int selectorCount = defaultSelectorCount();
-	private int executorCount = DEFAULT_EXECUTOR_COUNT;
+	/* Shared thread pool for asynchronous work of the underlying network */
+	private ExecutorService executor; 
+	private int selectorCount = defaultSelectorCount(); //default to #CPU/2
+	private int executorCount = DEFAULT_EXECUTOR_COUNT; //default to 64
 	private SelectorThread[] selectors;
 	private AtomicInteger selectorIndex = new AtomicInteger(0);
 	private String dispatcherName = "Dispatcher";
@@ -72,6 +78,11 @@ public class Dispatcher implements Closeable {
 		}
 	}
 	
+	/**
+	 * Get selector thread by index
+	 * @param index index of the selector threads array managed by this dispatcher
+	 * @return corresponding SelectorThread
+	 */
 	public SelectorThread getSelector(int index){
 		if(index <0 || index>=this.selectorCount){
 			throw new IllegalArgumentException("Selector index should >=0 and <"+this.selectorCount);
@@ -79,6 +90,10 @@ public class Dispatcher implements Closeable {
 		return this.selectors[index];
 	}
 	
+	/**
+	 * round-robin balancing on all the selectors
+	 * @return next available SelectorThread
+	 */
 	public SelectorThread nextSelector(){
 		int nextIdx = this.selectorIndex.getAndIncrement()%this.selectorCount;
 		if(nextIdx < 0){
@@ -88,10 +103,22 @@ public class Dispatcher implements Closeable {
 		return this.selectors[nextIdx];
 	}
 
+	/**
+	 * Register a channel with interestOps
+	 * @param channel SelectableChannel to register
+	 * @param ops interest operations(READ/WRITE) to register on the underlying channel
+	 * @throws IOException if register fails
+	 */
 	public void registerChannel(SelectableChannel channel, int ops) throws IOException{
 		this.nextSelector().registerChannel(channel, ops);
 	}
 	
+	/**
+	 * Directly register a Session with internal channel register
+	 * @param ops interest operations(READ/WRITE) to register on the underlying channel
+	 * @param sess Session holding the channel
+	 * @throws IOException if register fails
+	 */
 	public void registerSession(int ops, Session sess) throws IOException{
 		if(sess.dispatcher() != this){
 			throw new IOException("Unmatched Dispatcher");
@@ -99,7 +126,11 @@ public class Dispatcher implements Closeable {
 		this.nextSelector().registerSession(ops, sess);
 	}
 	
-	
+	/**
+	 * Get selector thread attaching the key specified
+	 * @param key SelectionKey of a channel
+	 * @return selector thread attaching the key
+	 */
 	public SelectorThread getSelector(SelectionKey key){
 		for(SelectorThread e : this.selectors){
 			if(key.selector() == e.selector){
@@ -108,7 +139,9 @@ public class Dispatcher implements Closeable {
 		}
 		return null;
 	}
-	
+	/**
+	 * Start the dispatcher, which starts the underlying selector threads
+	 */
 	public synchronized void start() {
 		if (this.started) {
 			return;
@@ -126,6 +159,9 @@ public class Dispatcher implements Closeable {
 		log.info("%s(SelectorCount=%d) started", this.dispatcherName, this.selectorCount);
 	}
 	
+	/**
+	 * Stop the dispatcher, interrupting the selector threads managed.
+	 */
 	public synchronized void stop() {
 		if (!this.started)
 			return;
@@ -138,6 +174,9 @@ public class Dispatcher implements Closeable {
 		log.info("%s(SelectorCount=%d) stopped", this.dispatcherName, this.selectorCount);
 	} 
 	 
+	/**
+	 * Close this dispatcher, just call the stop
+	 */
 	public void close() throws IOException {
 		this.stop();
 	}

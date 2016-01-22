@@ -16,10 +16,9 @@ public class ProducerSync {
 		producer.createMQ(); // 如果已经确定存在，不需要创建
  
 		for(int i=0; i<10; i++){ 
-			Message msg = new Message(); 
-			msg.setHead("key", "hong"); //设置消息唯一性约束
+			Message msg = new Message();  
 			msg.setBody("hello world"+i);
-			msg = producer.invokeSync(msg); 
+			msg = producer.sendSync(msg); 
 			System.out.println(msg);
 		}
 		

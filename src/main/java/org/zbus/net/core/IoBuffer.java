@@ -24,6 +24,12 @@ package org.zbus.net.core;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Simple wrapper of ByteBuffer with feature of size auto expanding
+ *  
+ * @author rushmore
+ *
+ */
 public final class IoBuffer {
 	public ByteBuffer buf = null;
 

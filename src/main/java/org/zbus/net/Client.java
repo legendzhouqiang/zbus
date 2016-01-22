@@ -52,7 +52,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 
 	protected Session session; 
 	
-	protected volatile DataHandler<RES> msgHandler; 
+	protected volatile MsgHandler<RES> msgHandler; 
 	protected volatile ErrorHandler errorHandler;
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;
@@ -149,7 +149,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		}
 	}
 	
-	public void onMessage(DataHandler<RES> msgHandler){
+	public void onMessage(MsgHandler<RES> msgHandler){
     	this.msgHandler = msgHandler;
     }
     
@@ -238,7 +238,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		void onError(IOException e, Session sess) throws IOException;   
 	}
 	
-	public static interface DataHandler<T> { 
+	public static interface MsgHandler<T> { 
 		void handle(T msg, Session sess) throws IOException;   
 	}
 

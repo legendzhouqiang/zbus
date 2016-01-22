@@ -24,10 +24,18 @@ package org.zbus.net.core;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
-
+/**
+ * IoAdaptor is the core configurable entry that a networking application should be focus on, 
+ * it personalizes the codec between object on the wire and business domain message object, and all
+ * the other life cycle events of networking such as session accepted, connected, registered, on error
+ * and etc. It is pretty simple compared to netty channel chain design.
+ * 
+ * @author rushmore
+ *
+ */
 public abstract class IoAdaptor implements Codec{ 
 	
-	private Codec codec;
+	private Codec codec; //pluggable codec
 	
 	public IoAdaptor codec(Codec codec){
 		this.codec = codec;
@@ -45,62 +53,73 @@ public abstract class IoAdaptor implements Codec{
 	}
 	
 	/**
-	 * 服务器端侦听到链接接入回调，此时Session尚未注册，默认注册该Session
-	 * @param sess
-	 * @throws IOException
+	 * Server side event when server socket accept an incoming client socket.
+	 * Session is still unregister during this stage, so the default action is to register it,
+	 * typically with OP_READ interested, application can change this behavior for special usage.
+	 * 
+	 * This event is for server only
+	 * 
+	 * @param sess Session generated after accept of server channel
+	 * @throws IOException if fails
 	 */
 	protected void onSessionAccepted(Session sess) throws IOException { 
 		sess.dispatcher().registerSession(SelectionKey.OP_READ, sess); 
 	}
 	/**
-	 * Session注册到Dispatcher成功后回调
-	 * @param sess
-	 * @throws IOException
+	 * Triggered after session registered, omit this event by default
+	 * 
+	 * @param sess session registered
+	 * @throws IOException if fails
 	 */
 	protected void onSessionRegistered(Session sess) throws IOException {  
 	
 	} 
 	/**
-	 * 客户端链接成功后回调
-	 * @param sess
-	 * @throws IOException
+	 * Triggered after initiative client connection(session) is successful
+	 * 
+	 * This event is for client only
+	 * 
+	 * @param sess connected session
+	 * @throws IOException if fails
 	 */
-	protected void onSessionConnected(Session sess) throws IOException{
-		//默认关注读写事件
+	protected void onSessionConnected(Session sess) throws IOException{ 
 		sess.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 	}
 	
 	/**
-	 * Session注销前回调
-	 * @param sess
-	 * @throws IOException
+	 * Triggered before session is going to be destroyed, session is still legal in this stage
+	 * 
+	 * @param sess session to be destroyed
+	 * @throws IOException if fails
 	 */
 	protected void onSessionToDestroy(Session sess) throws IOException{
 		
 	}
 	
 	/**
-	 * Session注销后回调
-	 * @param sess
-	 * @throws IOException
+	 * Triggered after the session is destroyed
+	 * 
+	 * @param sess session destroyed, illegal in this stage
+	 * @throws IOException if fails
 	 */
 	protected void onSessionDestroyed(Session sess) throws IOException{
 		
 	}
 	/**
-	 * Session接受到消息对象
-	 * @param msg
-	 * @param sess
-	 * @throws IOException
+	 * Triggered when application level messaged is fully parsed(well framed).
+	 * 
+	 * @param msg application level message decided by the codec
+	 * @param sess message generating session
+	 * @throws IOException if fails
 	 */
 	protected void onMessage(Object msg, Session sess) throws IOException{
 		
 	}
 	/**
-	 * Session各类错误发生时回调
-	 * @param e
-	 * @param sess
-	 * @throws IOException
+	 * Triggered when session error caught
+	 * @param e error ongoing
+	 * @param sess corresponding session
+	 * @throws IOException if fails
 	 */
 	protected void onException(Throwable e, Session sess) throws IOException{
 		if(e instanceof IOException){

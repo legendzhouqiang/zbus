@@ -37,6 +37,12 @@ import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.core.Session.SessionStatus;
 
+/**
+ * 
+ * 
+ * @author rushmore
+ *
+ */
 public class SelectorThread extends Thread {
 	private static final Logger log = Logger.getLogger(SelectorThread.class);
 	
