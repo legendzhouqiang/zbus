@@ -1,4 +1,4 @@
-package org.zbus.perf.net;
+package org.zbus.performance.net;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.net.Server;

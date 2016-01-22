@@ -1,10 +1,10 @@
-package org.zbus.perf.net;
+package org.zbus.performance.net;
 
 import org.zbus.broker.Broker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.perf.Perf;
+import org.zbus.performance.Perf;
 
 public class NetPerf{
 	
