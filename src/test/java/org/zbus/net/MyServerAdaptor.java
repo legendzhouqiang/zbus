@@ -1,6 +1,6 @@
 package org.zbus.net;
 
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
@@ -21,7 +21,7 @@ public class MyServerAdaptor extends MessageAdaptor{
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
-		final Dispatcher dispatcher = new Dispatcher();   
+		final SelectorGroup dispatcher = new SelectorGroup();   
 		final Server server = new Server(dispatcher);
 		
 		//相同的业务处理逻辑可以便捷的侦听多个地址

@@ -4,14 +4,14 @@ package org.zbus.net.usecase;
 import java.io.IOException;
 
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class AsyncClient {
 
 	public static void main(String[] args) throws Exception { 
-		final Dispatcher dispatcher = new Dispatcher();
+		final SelectorGroup dispatcher = new SelectorGroup();
 
 		final MessageClient client = new MessageClient("127.0.0.1:80", dispatcher);
 	

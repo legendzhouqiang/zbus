@@ -3,7 +3,7 @@ package org.zbus.examples.net.codec;
 import java.io.IOException;
 
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 
@@ -28,10 +28,10 @@ public class StringAdaptor extends IoAdaptor{
     
     @SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
-    	//1) create a dispatcher, just like EventLoopGroup in netty
-		Dispatcher dispatcher = new Dispatcher();  
+    	//1) create a SelectorGroup, just like EventLoopGroup in netty
+		SelectorGroup group = new SelectorGroup();  
 		//2) create a server to run
-		Server server = new Server(dispatcher); 
+		Server server = new Server(group); 
 		//3) register the adaptor defined above with server port, it can be multiple by the way.
 		server.registerAdaptor(8080, new StringAdaptor()); 
 		//4) simple? let's get it started

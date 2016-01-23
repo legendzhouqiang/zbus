@@ -40,26 +40,26 @@ import org.zbus.net.core.Session.SessionStatus;
 /**
  * 
  * 
- * @author rushmore
+ * @author rushmore (洪磊明)
  *
  */
 public class SelectorThread extends Thread {
 	private static final Logger log = Logger.getLogger(SelectorThread.class);
 	
 	protected volatile java.nio.channels.Selector selector = null;
-	protected final Dispatcher dispatcher;
+	protected final SelectorGroup selectorGroup;
 	private final Queue<Object[]> registerSess = new LinkedBlockingQueue<Object[]>();
 	private final Queue<Session> unregisterSess = new LinkedBlockingQueue<Session>(); 
 	
 	private final Queue<Object[]> interestOps = new LinkedBlockingQueue<Object[]>();
 	
-	public SelectorThread(Dispatcher dispatcher, String name) throws IOException{
+	public SelectorThread(SelectorGroup selectorGroup, String name) throws IOException{
 		super(name);
-		this.dispatcher = dispatcher;
+		this.selectorGroup = selectorGroup;
 		this.selector = java.nio.channels.Selector.open();
 	}
 	
-	public SelectorThread(Dispatcher dispatcher) throws IOException{
+	public SelectorThread(SelectorGroup dispatcher) throws IOException{
 		this(dispatcher, "Selector");
 	}
 	
@@ -165,7 +165,7 @@ public class SelectorThread extends Thread {
 				handleUnregister();
 			}
 		} catch(Throwable e) { 
-			if(!dispatcher.isStarted()){
+			if(!selectorGroup.isStarted()){
 				if(log.isDebugEnabled()){
 					log.debug(e.getMessage(), e);
 				}
@@ -188,13 +188,13 @@ public class SelectorThread extends Thread {
 		} 
 		
 		sess.setStatus(SessionStatus.ON_ERROR);
-		dispatcher.asyncRun(new Runnable() { 
+		selectorGroup.asyncRun(new Runnable() { 
 			@Override
 			public void run() {
 				try{   
 					sess.getIoAdaptor().onException(e, sess);
 				} catch (Throwable ex){
-					if(!dispatcher.isStarted()){
+					if(!selectorGroup.isStarted()){
 						log.debug(ex.getMessage(), ex);
 					} else {
 						log.error(ex.getMessage(), ex);
@@ -269,13 +269,13 @@ public class SelectorThread extends Thread {
 			log.debug("ACCEPT: server(%s) %s=>%s", serverAddress, NetKit.remoteAddress(channel), NetKit.localAddress(channel));
 		} 
 		
-		IoAdaptor ioAdaptor = dispatcher.ioAdaptor(serverAddress);
+		IoAdaptor ioAdaptor = selectorGroup.ioAdaptor(serverAddress);
 		if(ioAdaptor == null){
 			log.warn("Missing IoAdaptor for %s", serverAddress);
 			return;
 		}
 		
-		Session sess = new Session(dispatcher, channel, ioAdaptor); 
+		Session sess = new Session(selectorGroup, channel, ioAdaptor); 
 		sess.setStatus(SessionStatus.CONNECTED); //set connected 
 		
 		sess.getIoAdaptor().onSessionAccepted(sess);

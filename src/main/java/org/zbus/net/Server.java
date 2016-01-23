@@ -32,9 +32,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 
+/**
+ * A Server is just the utility functionality of SelectorGroup which manages multiple server side
+ * IoAdaptors, nothing else special
+ * 
+ * Callers could new a Server with a SelectorGroup and start all stuff together to quickly generate
+ * a socket server.
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
 public class Server implements Closeable{
 	private static final Logger log = Logger.getLogger(Server.class);  
 	
@@ -45,8 +55,8 @@ public class Server implements Closeable{
 		public IoAdaptor serverAdaptor;
 	}
 	
-	protected Dispatcher dispatcher;   
-	protected String serverAddr; //第一个Server注册的地址, 当侦听启动后才有效
+	protected SelectorGroup selectorGroup;   
+	protected String serverAddr; //Server address = address of the first registered IoAdaptor
 	protected String serverName = "Server";  
 	protected String serverMainIpOrder = null;
 	
@@ -55,16 +65,16 @@ public class Server implements Closeable{
 	public Server(){	
 	}
 	
-	public Server(Dispatcher dispatcher){
-		this.dispatcher = dispatcher;
+	public Server(SelectorGroup selectorGroup){
+		this.selectorGroup = selectorGroup;
 	}
 	
-	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, int port){
-		this(dispatcher, serverAdaptor, "0.0.0.0:"+port);
+	public Server(SelectorGroup selectorGroup, IoAdaptor serverAdaptor, int port){
+		this(selectorGroup, serverAdaptor, "0.0.0.0:"+port);
 	}
 	
-	public Server(Dispatcher dispatcher, IoAdaptor serverAdaptor, String address){
-		this.dispatcher = dispatcher;
+	public Server(SelectorGroup selectorGroup, IoAdaptor serverAdaptor, String address){
+		this.selectorGroup = selectorGroup;
 		registerAdaptor(address, serverAdaptor);
 	}
 	
@@ -98,10 +108,10 @@ public class Server implements Closeable{
 	}
 	
 	public void start() throws IOException{   
-		if(dispatcher == null){
-			throw new IllegalStateException("Missing Dispatcher");
+		if(selectorGroup == null){
+			throw new IllegalStateException("Missing SelectorGroup");
 		}
-    	this.dispatcher.start();  
+    	this.selectorGroup.start();  
     	
     	for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
     		IoAdaptorInfo adaptor = e.getValue();
@@ -113,7 +123,7 @@ public class Server implements Closeable{
     		String host = bb[0];
     		String port = bb[1];
     		
-    		adaptor.serverChannel = dispatcher.registerServerChannel(adaptor.adaptorAddr, adaptor.serverAdaptor);
+    		adaptor.serverChannel = selectorGroup.registerServerChannel(adaptor.adaptorAddr, adaptor.serverAdaptor);
         	
     		ServerSocket ss = adaptor.serverChannel.socket();
     		if(address.equals(serverAddr)){ 
@@ -143,14 +153,14 @@ public class Server implements Closeable{
     public void close() throws IOException { 
 		for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
     		IoAdaptorInfo adaptor = e.getValue();
-    		dispatcher.unregisterServerChannel(adaptor.serverChannel);
+    		selectorGroup.unregisterServerChannel(adaptor.serverChannel);
     		adaptor.serverChannel = null;
     	}  
 		adaptors.clear();
     }
     
-	public void setDispatcher(Dispatcher dispatcher) {
-		this.dispatcher = dispatcher;
+	public void setSelectorGroup(SelectorGroup selectorGroup) {
+		this.selectorGroup = selectorGroup;
 	}
 	
     public void setServerName(String serverName){

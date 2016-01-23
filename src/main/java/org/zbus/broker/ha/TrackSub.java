@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -50,7 +50,7 @@ public class TrackSub implements Closeable{
 	private boolean verbose = false;
 	
 	
-	public TrackSub(String trackServerList, Dispatcher dispatcher) {
+	public TrackSub(String trackServerList, SelectorGroup dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
     	for(String block : blocks){
     		final String address = block.trim();

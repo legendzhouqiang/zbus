@@ -3,7 +3,7 @@ package org.zbus.proxy;
 import java.io.IOException;
 
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -23,7 +23,7 @@ public class TargetServer extends MessageAdaptor {
 	}  
 	
 	public static void main(String[] args) throws Exception { 
-		Dispatcher dispatcher = new Dispatcher(); 
+		SelectorGroup dispatcher = new SelectorGroup(); 
 		TargetServer ioAdaptor = new TargetServer();
 		
 		@SuppressWarnings("resource")

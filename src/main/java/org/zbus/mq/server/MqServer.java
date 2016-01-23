@@ -42,7 +42,7 @@ import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.mq.server.filter.PersistMqFilter;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 
 public class MqServer extends Server{ 
@@ -75,9 +75,9 @@ public class MqServer extends Server{
 			mqFilter = new MemoryMqFilter(); 
 		}
 		
-		dispatcher = new Dispatcher();
-		dispatcher.selectorCount(config.selectorCount);
-		dispatcher.executorCount(config.executorCount); 
+		selectorGroup = new SelectorGroup();
+		selectorGroup.selectorCount(config.selectorCount);
+		selectorGroup.executorCount(config.executorCount); 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -108,7 +108,7 @@ public class MqServer extends Server{
 		super.start(); 
 		if(config.trackServerList!= null){
 			log.info("Running at HA mode, connect to TrackServers");
-			setupTracker(config.trackServerList, dispatcher);
+			setupTracker(config.trackServerList, selectorGroup);
 		}  
 		log.info("MqServer started successfully");
 	}
@@ -126,13 +126,13 @@ public class MqServer extends Server{
     	}
 		scheduledExecutor.shutdown();
 		super.close();  
-		if(dispatcher != null){
-			dispatcher.close();
+		if(selectorGroup != null){
+			selectorGroup.close();
 		}
 	}
 	
 	private TrackPub trackPub;
-    public void setupTracker(String trackServerList, Dispatcher dispatcher){
+    public void setupTracker(String trackServerList, SelectorGroup dispatcher){
     	trackPub = new TrackPub(trackServerList, dispatcher);
     	trackPub.onConnected(new ConnectedHandler() {
     		@Override

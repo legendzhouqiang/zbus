@@ -44,7 +44,7 @@ import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
 import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -57,8 +57,8 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	private TrackSub trackSub;
 	
-	private Dispatcher dispatcher = null;
-	private boolean ownDispatcher = false;
+	private SelectorGroup selectorGroup = null;
+	private boolean ownSelectorGroup = false;
 	private BrokerConfig config;
 	
 	private CountDownLatch syncFromTracker = new CountDownLatch(1);
@@ -66,15 +66,15 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	public DefaultBrokerSelector(BrokerConfig config){
 		this.config = config;
-		if(config.getDispatcher() == null){
-			this.ownDispatcher = true;
-			this.dispatcher = new Dispatcher();
-			this.config.setDispatcher(dispatcher);
+		if(config.getSelectorGroup() == null){
+			this.ownSelectorGroup = true;
+			this.selectorGroup = new SelectorGroup();
+			this.config.setSelectorGroup(selectorGroup);
 		} else {
-			this.dispatcher = config.getDispatcher();
-			this.ownDispatcher = false;
+			this.selectorGroup = config.getSelectorGroup();
+			this.ownSelectorGroup = false;
 		}
-		this.dispatcher.start(); 
+		this.selectorGroup.start(); 
 		
 		subscribeNotification(); 
 	}
@@ -198,13 +198,13 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.close();
 		serverEntryTable.close();
 		
-		if(ownDispatcher){
-			dispatcher.close();
+		if(ownSelectorGroup){
+			selectorGroup.close();
 		}
 	}
 	
 	private void subscribeNotification(){
-		trackSub = new TrackSub(config.getTrackServerList(), dispatcher);
+		trackSub = new TrackSub(config.getTrackServerList(), selectorGroup);
 		
 		trackSub.onServerJoinHandler(new ServerJoinHandler() {  
 			public void onServerJoin(String serverAddr) throws IOException {

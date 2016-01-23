@@ -31,13 +31,28 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.net.Sync.Id;
 
+/**
+ * Sync maintains all the request and response table, converting asynchronous mechanism into
+ * synchonous one
+ * 
+ * @author rushmore (洪磊明)
+ *
+ * @param <REQ> request type
+ * @param <RES> response type
+ */
 public class Sync<REQ extends Id, RES extends Id> { 
 	private static AtomicLong idGenerator = new AtomicLong(0);
 	private static boolean useUuid = true;
 	public static void enableUuid(boolean useUuid){
 		Sync.useUuid = useUuid;
 	}
-	
+	/**
+	 * Ticket is a matching record of a request and a response message
+	 * @author rushmore (洪磊明)
+	 *
+	 * @param <REQ> request type
+	 * @param <RES> response type
+	 */
 	public static class Ticket<REQ extends Id, RES> {    
 		private CountDownLatch latch = new CountDownLatch(1);
 		
@@ -158,12 +173,22 @@ public class Sync<REQ extends Id, RES extends Id> {
 		tickets.clear();
 	}
 	
-	
+	/**
+	 * Identifiable message required by Sync/Async mechanism
+	 * @author rushmore (洪磊明)
+	 *
+	 */
 	public static interface Id {
 		void setId(String id);
 		String getId();
 	}
 	
+	/**
+	 * Asynchronous message callback
+	 * @author rushmore (洪磊明)
+	 *
+	 * @param <T> returned message type
+	 */
 	public static interface ResultCallback<T> { 
 		public void onReturn(T result);  
 	}

@@ -7,7 +7,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Producer;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 
 public class ProducerPerf { 
@@ -55,7 +55,7 @@ public class ProducerPerf {
 		final int threadCount =  ConfigKit.option(args, "-thread", 16);
 		final String serverAddress = ConfigKit.option(args, "-s", "127.0.0.1:15555");
 		
-		Dispatcher dispatcher = new Dispatcher()
+		SelectorGroup dispatcher = new SelectorGroup()
 				.selectorCount(selectorCount)
 				.executorCount(executorCount);
 		
@@ -63,7 +63,7 @@ public class ProducerPerf {
 	 
 		BrokerConfig config = new BrokerConfig();
 		config.setServerAddress(serverAddress);
-		config.setDispatcher(dispatcher);
+		config.setSelectorGroup(dispatcher);
 		
 		final Broker broker = new SingleBroker(config);
   

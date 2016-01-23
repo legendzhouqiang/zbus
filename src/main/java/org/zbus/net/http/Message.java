@@ -53,7 +53,7 @@ import org.zbus.net.core.IoBuffer;
  * Message may extend HTTP protocol in the header part, for example: mq: MyMQ\r\n
  * means a header extension of Key=mq, Value=MyMQ.
  * 
- * @author HONG LEIMING
+ * @author rushmore (洪磊明)
  *
  */
 public class Message implements Id {  

@@ -28,7 +28,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.pool.ObjectFactory;
 import org.zbus.kit.pool.Pool;
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -39,8 +39,8 @@ public class SingleBroker implements Broker {
 	private String serverAddress; 
 	
 	private BrokerConfig config;
-	private Dispatcher dispatcher = null;
-	private boolean ownDispatcher = false;
+	private SelectorGroup selectorGroup = null;
+	private boolean ownSelectorGroup = false;
 	 
 	public SingleBroker() throws IOException{
 		this(new BrokerConfig());
@@ -50,17 +50,17 @@ public class SingleBroker implements Broker {
 		this.config = config;
 		this.serverAddress = config.getServerAddress(); 
 		
-		if(config.getDispatcher() == null){
-			this.ownDispatcher = true;
-			this.dispatcher = new Dispatcher();
-			this.dispatcher.selectorCount(config.getSelectorCount());
-			this.dispatcher.executorCount(config.getExecutorCount());
-			this.config.setDispatcher(dispatcher);
+		if(config.getSelectorGroup() == null){
+			this.ownSelectorGroup = true;
+			this.selectorGroup = new SelectorGroup();
+			this.selectorGroup.selectorCount(config.getSelectorCount());
+			this.selectorGroup.executorCount(config.getExecutorCount());
+			this.config.setSelectorGroup(selectorGroup);
 		} else {
-			this.dispatcher = config.getDispatcher();
-			this.ownDispatcher = false;
+			this.selectorGroup = config.getSelectorGroup();
+			this.ownSelectorGroup = false;
 		}
-		this.dispatcher.start(); 
+		this.selectorGroup.start(); 
 		
 		this.pool = Pool.getPool(new MessageClientFactory(), this.config); 
 	}  
@@ -68,9 +68,9 @@ public class SingleBroker implements Broker {
 	@Override
 	public void close() throws IOException { 
 		this.pool.close(); 
-		if(ownDispatcher && this.dispatcher != null){
+		if(ownSelectorGroup && this.selectorGroup != null){
 			try {
-				this.dispatcher.close();
+				this.selectorGroup.close();
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			}
@@ -112,7 +112,7 @@ public class SingleBroker implements Broker {
 	}
 	
 	public MessageClient getClient(BrokerHint hint) throws IOException{ 
-		MessageClient client = new MessageClient(this.serverAddress, this.dispatcher);
+		MessageClient client = new MessageClient(this.serverAddress, this.selectorGroup);
 		client.attr("server", serverAddress);
 		return client;
 	}
@@ -140,7 +140,7 @@ public class SingleBroker implements Broker {
 		
 		@Override
 		public MessageClient createObject() { 
-			return new MessageClient(serverAddress, dispatcher); 
+			return new MessageClient(serverAddress, selectorGroup); 
 		}
 	}
 }

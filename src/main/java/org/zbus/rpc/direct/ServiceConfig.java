@@ -22,7 +22,7 @@
  */
 package org.zbus.rpc.direct;
 
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig {  
@@ -30,7 +30,7 @@ public class ServiceConfig {
 	public int serverPort = 0;  
 	public int selectorCount = 0;
 	public int executorCount = 0; 
-	public Dispatcher dispatcher;
+	public SelectorGroup dispatcher;
 	public MessageProcessor messageProcessor;
 	
 	//如果加入高可用HA才需要填写
@@ -61,10 +61,10 @@ public class ServiceConfig {
 	public void setExecutorCount(int executorCount) {
 		this.executorCount = executorCount;
 	}
-	public Dispatcher getDispatcher() {
+	public SelectorGroup getDispatcher() {
 		return dispatcher;
 	}
-	public void setDispatcher(Dispatcher dispatcher) {
+	public void setDispatcher(SelectorGroup dispatcher) {
 		this.dispatcher = dispatcher;
 	}
 	public MessageProcessor getMessageProcessor() {

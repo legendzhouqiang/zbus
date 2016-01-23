@@ -2,7 +2,7 @@ package org.zbus.net;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.core.Session;
@@ -38,7 +38,7 @@ public class TcpProxyAdaptor extends IoAdaptor {
 	@Override
 	protected void onSessionAccepted(Session sess) throws IOException {
 		Session target = null;
-		Dispatcher dispatcher = sess.getDispatcher();
+		SelectorGroup dispatcher = sess.getDispatcher();
 		try {
 			target = dispatcher.createClientSession(targetAddress, this);
 		} catch (Exception e) {
@@ -90,7 +90,7 @@ public class TcpProxyAdaptor extends IoAdaptor {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
-		Dispatcher dispatcher = new Dispatcher(); 
+		SelectorGroup dispatcher = new SelectorGroup(); 
 		IoAdaptor ioAdaptor = new TcpProxyAdaptor("10.17.2.30:3306"); 
 		final Server server = new Server(dispatcher, ioAdaptor, 3306);
 		server.setServerName("TcpProxyServer");

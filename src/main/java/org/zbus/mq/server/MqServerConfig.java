@@ -29,8 +29,8 @@ public class MqServerConfig{
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
 	
-	public int selectorCount = 1;
-	public int executorCount = 64;
+	public int selectorCount = 0; //use default value #CPU/2
+	public int executorCount = 0; //use default value 64
 	public boolean verbose = true;
 	public String storePath = "store";
 	public String registerToken = "";  

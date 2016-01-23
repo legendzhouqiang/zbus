@@ -1,7 +1,7 @@
 package org.zbus.net;
 
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -9,7 +9,7 @@ public class MyClient {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		final Dispatcher dispatcher = new Dispatcher();
+		final SelectorGroup dispatcher = new SelectorGroup();
 
 		final MessageClient client = new MessageClient("127.0.0.1:8080", dispatcher);
 

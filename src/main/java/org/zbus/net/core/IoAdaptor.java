@@ -30,7 +30,7 @@ import java.nio.channels.SelectionKey;
  * the other life cycle events of networking such as session accepted, connected, registered, on error
  * and etc. It is pretty simple compared to netty channel chain design.
  * 
- * @author rushmore
+ * @author rushmore (洪磊明)
  *
  */
 public abstract class IoAdaptor implements Codec{ 
@@ -63,7 +63,7 @@ public abstract class IoAdaptor implements Codec{
 	 * @throws IOException if fails
 	 */
 	protected void onSessionAccepted(Session sess) throws IOException { 
-		sess.dispatcher().registerSession(SelectionKey.OP_READ, sess); 
+		sess.selectorGroup().registerSession(SelectionKey.OP_READ, sess); 
 	}
 	/**
 	 * Triggered after session registered, omit this event by default

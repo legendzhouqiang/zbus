@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 /**
  * Simple wrapper of ByteBuffer with feature of size auto expanding
  *  
- * @author rushmore
+ * @author rushmore (洪磊明)
  *
  */
 public final class IoBuffer {

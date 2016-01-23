@@ -30,7 +30,7 @@ import java.util.Set;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
@@ -42,7 +42,7 @@ public class TrackPub implements Closeable{
 	private int reconnectTimeout = 3000; //ms
 	private ConnectedHandler connectedHandler;
 	
-	public TrackPub(String trackServerList, Dispatcher dispatcher) {
+	public TrackPub(String trackServerList, SelectorGroup dispatcher) {
 		String[] blocks = trackServerList.split("[;]");
     	for(String block : blocks){
     		final String address = block.trim();

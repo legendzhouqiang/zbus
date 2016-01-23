@@ -1,13 +1,13 @@
 package org.zbus.proxy;
 
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class ClientPerf {
 
 	public static void main(String[] args) throws Exception { 
-		Dispatcher dispatcher = new Dispatcher();
+		SelectorGroup dispatcher = new SelectorGroup();
 		
 		
 		Message req = new Message();

@@ -34,7 +34,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -46,7 +46,7 @@ public class TrackServer extends Server{
 	private TrackAdaptor trackAdaptor;  
 	public TrackServer(String address) {
 		serverName = "TrackServer";
-		dispatcher = new Dispatcher(); 
+		selectorGroup = new SelectorGroup(); 
 		trackAdaptor = new TrackAdaptor();	
 		
 		registerAdaptor(address, trackAdaptor);
@@ -63,7 +63,7 @@ public class TrackServer extends Server{
 	public void close() throws IOException { 
 		super.close();
 		trackAdaptor.close();
-		dispatcher.close();
+		selectorGroup.close();
 	}
 	
 	public void setVerbose(boolean verbose){
@@ -220,7 +220,7 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			 
 			log.info(">>New Server: "+ serverAddr); 
 			
-			final MessageClient client = new MessageClient(serverAddr, sess.dispatcher()); 
+			final MessageClient client = new MessageClient(serverAddr, sess.selectorGroup()); 
 			joinedServers.put(serverAddr, client); 
 			
 			client.onConnected(new ConnectedHandler() { 

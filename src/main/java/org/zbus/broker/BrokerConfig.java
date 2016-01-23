@@ -24,7 +24,7 @@ package org.zbus.broker;
 
 /**
  * The MIT License (MIT)
- * Copyright (c) 2009-2015 HONG LEIMING
+ * Copyright (c) 2009-2016 HONG LEIMING
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ package org.zbus.broker;
  * THE SOFTWARE.
  */
 import org.zbus.kit.pool.PoolConfig;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 
 public class BrokerConfig extends PoolConfig{
 	private String trackServerList = "127.0.0.1:16666"; //只在HA模式下才有效
@@ -54,10 +54,10 @@ public class BrokerConfig extends PoolConfig{
 	private int executorCount = 0; //0代表使用默认值
 	/**
 	 * 可选项
-	 * 如果配置不给出，Dispatcher内部生成，并自己管理关闭
+	 * 如果配置不给出，SelectorGroup内部生成，并自己管理关闭
 	 * 如果配置给出，内部仅仅共享使用，不关闭
 	 */
-	private Dispatcher dispatcher;
+	private SelectorGroup selectorGroup;
 	
 	public String getServerAddress() {
 		return serverAddress;
@@ -65,11 +65,11 @@ public class BrokerConfig extends PoolConfig{
 	public void setServerAddress(String serverAddress) {
 		this.serverAddress = serverAddress;
 	}
-	public Dispatcher getDispatcher() {
-		return dispatcher;
+	public SelectorGroup getSelectorGroup() {
+		return selectorGroup;
 	}
-	public void setDispatcher(Dispatcher dispatcher) {
-		this.dispatcher = dispatcher;
+	public void setSelectorGroup(SelectorGroup selectorGroup) {
+		this.selectorGroup = selectorGroup;
 	}
 	public int getSelectorCount() {
 		return selectorCount;

@@ -25,17 +25,17 @@ package org.zbus.net.http;
 import java.io.IOException;
 
 import org.zbus.net.InvokingClient;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message.MessageInvoker;
 
 
 public class MessageClient extends InvokingClient<Message, Message> implements MessageInvoker{   
-	public MessageClient(String host, int port, Dispatcher dispatcher){
+	public MessageClient(String host, int port, SelectorGroup dispatcher){
 		super(host, port, dispatcher);
 		codec(new MessageCodec());
 	} 
 	
-	public MessageClient(String address, Dispatcher dispatcher) {
+	public MessageClient(String address, SelectorGroup dispatcher) {
 		super(address, dispatcher);
 		codec(new MessageCodec());
 	}

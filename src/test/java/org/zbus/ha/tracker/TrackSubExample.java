@@ -8,12 +8,12 @@ import org.zbus.broker.ha.TrackSub;
 import org.zbus.broker.ha.TrackSub.PubServerEntryListHandler;
 import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
 import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 
 public class TrackSubExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		Dispatcher dispatcher = new Dispatcher(); 
+		SelectorGroup dispatcher = new SelectorGroup(); 
 		String trackList = "127.0.0.1:16666;127.0.0.1:16667"; 
 		
 		TrackSub trackSub = new TrackSub(trackList, dispatcher);

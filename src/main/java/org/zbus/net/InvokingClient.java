@@ -28,20 +28,30 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.net.Sync.Id;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.Sync.Ticket;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 
+/**
+ * A client with functionality of <code>Invoker</code>
+ * Internally, the InvokingClient mark every request with an Id, and match the response message
+ * with the request matching table to perform the asynchronous invoking mechanism.
+ * 
+ * @author rushmore (洪磊明)
+ *
+ * @param <REQ> request message type that is Identifiable
+ * @param <RES> response message type that is Identifiable
+ */
 public class InvokingClient<REQ extends Id, RES extends Id> 
 		extends Client<REQ, RES> implements Invoker<REQ, RES> {	
 	
 	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();
 	
-	public InvokingClient(String host, int port, Dispatcher dispatcher) {
-		super(host, port, dispatcher); 
+	public InvokingClient(String host, int port, SelectorGroup selectorGroup) {
+		super(host, port, selectorGroup); 
 	} 
 	
-	public InvokingClient(String address, Dispatcher dispatcher) {
-		super(address, dispatcher); 
+	public InvokingClient(String address, SelectorGroup selectorGroup) {
+		super(address, selectorGroup); 
 	} 
 	 
 	public void send(REQ req) throws IOException{

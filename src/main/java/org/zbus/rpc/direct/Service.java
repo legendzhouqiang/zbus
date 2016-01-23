@@ -29,7 +29,7 @@ import org.zbus.broker.ha.TrackPub;
 import org.zbus.mq.server.UrlInfo;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
@@ -47,9 +47,9 @@ public class Service extends Server {
 		entryId = config.entryId;
 		
 		if(config.dispatcher != null){
-			dispatcher = config.dispatcher;
+			selectorGroup = config.dispatcher;
 		} else {
-			dispatcher = new Dispatcher()
+			selectorGroup = new SelectorGroup()
 				.selectorCount(config.selectorCount)
 				.executorCount(config.executorCount);
 			ownDispatcher = true;
@@ -64,7 +64,7 @@ public class Service extends Server {
 	public void close() throws IOException {
 		super.close(); 
 		if(ownDispatcher){
-			dispatcher.close();
+			selectorGroup.close();
 		}
 	}
 	
@@ -83,7 +83,7 @@ public class Service extends Server {
 		if(entryId == null){
 			throw new IllegalStateException("Missing entryId for HA discovery");
 		}
-		trackPub = new TrackPub(trackServerList, dispatcher);
+		trackPub = new TrackPub(trackServerList, selectorGroup);
 		trackPub.onConnected(new ConnectedHandler() {
 			@Override
 			public void onConnected(Session sess) throws IOException {

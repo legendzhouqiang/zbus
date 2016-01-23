@@ -55,10 +55,10 @@ public class Session implements Closeable{
 	
 	private CountDownLatch connectLatch = new CountDownLatch(1);
 	
-	private final Dispatcher dispatcher;
-	private final SocketChannel channel;
-	private SelectionKey registeredKey = null;
+	private final SelectorGroup selectorGroup;
 	private SelectorThread selectorThread;
+	private final SocketChannel channel;
+	private SelectionKey registeredKey = null; 
 	
 	private ConcurrentMap<String, Object> attributes = null;
 
@@ -66,8 +66,8 @@ public class Session implements Closeable{
 	private volatile IoAdaptor ioAdaptor;
 	public Session chain; //for chain
 	
-	public Session(Dispatcher dispatcher, SocketChannel channel, IoAdaptor ioAdaptor){
-		this.dispatcher = dispatcher;
+	public Session(SelectorGroup selectorGroup, SocketChannel channel, IoAdaptor ioAdaptor){
+		this.selectorGroup = selectorGroup;
 		this.id = UUID.randomUUID().toString();
 		this.channel = channel;  
 		this.ioAdaptor = ioAdaptor;
@@ -77,8 +77,8 @@ public class Session implements Closeable{
 		return this.id;
 	} 
 	
-	public Dispatcher getDispatcher(){
-		return this.dispatcher;
+	public SelectorGroup getDispatcher(){
+		return this.selectorGroup;
 	}
 	
 	public void close() throws IOException {
@@ -97,13 +97,13 @@ public class Session implements Closeable{
 			this.channel.close();  
 		}  
 		
-		dispatcher.asyncRun(new Runnable() { 
+		selectorGroup.asyncRun(new Runnable() { 
 			@Override
 			public void run() {
 				try{   
 					getIoAdaptor().onSessionDestroyed(Session.this); 
 				} catch (Throwable ex){
-					if(!dispatcher.isStarted()){
+					if(!selectorGroup.isStarted()){
 						log.debug(ex.getMessage(), ex);
 					} else {
 						log.error(ex.getMessage(), ex);
@@ -117,7 +117,7 @@ public class Session implements Closeable{
 		if(this.registeredKey == null){
 			return;
 		} 
-		SelectorThread selector = dispatcher.getSelector(this.registeredKey);
+		SelectorThread selector = selectorGroup.getSelector(this.registeredKey);
 		if(selector == null){
 			throw new IOException("failed to find dispatcher for session: "+this);
 		}
@@ -185,7 +185,7 @@ public class Session implements Closeable{
 			}
 			
 			final Object theMsg = msg;  
-			dispatcher.asyncRun(new Runnable() { 
+			selectorGroup.asyncRun(new Runnable() { 
 
 				public void run() { 
 					try{
@@ -299,7 +299,7 @@ public class Session implements Closeable{
 	}
 	
 	public void register(int interestOps) throws IOException{
-		dispatcher.registerSession(interestOps, this);
+		selectorGroup.registerSession(interestOps, this);
 	}
 	
 	public void setSelectorThread(SelectorThread selectorThread) {
@@ -345,8 +345,8 @@ public class Session implements Closeable{
 		return channel;
 	} 
 	
-	public Dispatcher dispatcher() {
-		return dispatcher;
+	public SelectorGroup selectorGroup() {
+		return selectorGroup;
 	}
 
 	public void finishConnect(){

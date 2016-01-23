@@ -25,7 +25,7 @@ package org.zbus.net.core;
 /**
  * Codec handles the encoding/decoding of application object and IoBuffer on the wire.
  * 
- * @author rushmore
+ * @author rushmore (洪磊明)
  *
  */
 public interface Codec{ 

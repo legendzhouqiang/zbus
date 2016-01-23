@@ -2,7 +2,7 @@ package org.zbus.performance.net;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.net.Server;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
@@ -27,7 +27,7 @@ public class NetServer extends MessageAdaptor{
 		final int selectCount = ConfigKit.option(args, "-selector", 0);  
 		final int port = ConfigKit.option(args, "-p", 8080);
 		
-		final Dispatcher dispatcher = new Dispatcher(); 
+		final SelectorGroup dispatcher = new SelectorGroup(); 
 		dispatcher.selectorCount(selectCount); 
 		final Server server = new Server(dispatcher);
 		 

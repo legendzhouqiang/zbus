@@ -32,14 +32,27 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
-import org.zbus.net.core.Dispatcher;
+import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
 
+/**
+ * Client is a special type of IoAdaptor, it stands for a connection from client to server and
+ * you can configure the way it response to the read/write/connected/disconnected/data etc. events.
+ * 
+ * Client requires a SeletorGroup to manage the underlying event loop messaging.
+ * You have to close the client once it is desired to be released, since the client resides a
+ * session and a heartbeator routine.
+ * 
+ * @author rushmore (洪磊明)
+ *
+ * @param <REQ> request message type
+ * @param <RES> response message type
+ */
 public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	private static final Logger log = Logger.getLogger(Client.class); 
 	
-	protected final Dispatcher dispatcher;  
+	protected final SelectorGroup selectorGroup;  
 	protected String host = "127.0.0.1";
 	protected int port = 15555;
 
@@ -57,16 +70,16 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;
 	
-	public Client(String address, Dispatcher dispatcher) { 
+	public Client(String address, SelectorGroup selectorGroup) { 
 		String[] blocks = address.split("[:]");
 		if(blocks.length != 2){
 			throw new IllegalArgumentException(address + " is invalid address");
 		}
 		this.host = blocks[0];
 		this.port = Integer.valueOf(blocks[1]);
-		this.dispatcher = dispatcher; 
+		this.selectorGroup = selectorGroup; 
 		
-		dispatcher.start(); 
+		selectorGroup.start(); 
 		
 		this.heartbeator.scheduleAtFixedRate(new Runnable() {
 			public void run() {
@@ -75,8 +88,8 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		}, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
 	}
 
-	public Client(String host, int port, Dispatcher dispatcher) { 
-		this(String.format("%s:%d", host, port), dispatcher);
+	public Client(String host, int port, SelectorGroup selectorGroup) { 
+		this(String.format("%s:%d", host, port), selectorGroup);
 	}
 
 	
@@ -102,7 +115,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 				return;
 			}
 		}
-		this.session = dispatcher.registerClientChannel(host, port, this);
+		this.session = selectorGroup.registerClientChannel(host, port, this);
 	}
 	
 	@Override
@@ -195,7 +208,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	}
 	
 	public ExecutorService getExecutorService(){
-		return this.dispatcher.getExecutorService();
+		return this.selectorGroup.getExecutorService();
 	}
 
 	public int getHeartbeatInterval() {

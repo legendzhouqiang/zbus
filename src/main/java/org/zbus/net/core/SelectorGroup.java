@@ -41,16 +41,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.zbus.kit.log.Logger;
  
 /**
- * Dispatcher manages Selector threads <code>SelectorThread</code>, balancing distribute the new
+ * SelectorGroup manages Selector threads <code>SelectorThread</code>, balancing distribute the new
  * connection <code>Session</code> from clients.
  * 
- * @author rushmore
+ * @author rushmore (洪磊明)
  *
  */
-public class Dispatcher implements Closeable {
+public class SelectorGroup implements Closeable {
 	public static final int DEFAULT_EXECUTOR_COUNT = 64;
 	
-	private static final Logger log = Logger.getLogger(Dispatcher.class); 
+	private static final Logger log = Logger.getLogger(SelectorGroup.class); 
 	
 	/* Shared thread pool for asynchronous work of the underlying network */
 	private ExecutorService executor; 
@@ -58,7 +58,7 @@ public class Dispatcher implements Closeable {
 	private int executorCount = DEFAULT_EXECUTOR_COUNT; //default to 64
 	private SelectorThread[] selectors;
 	private AtomicInteger selectorIndex = new AtomicInteger(0);
-	private String dispatcherName = "Dispatcher";
+	private String name = "SelectorGroup";
 	private String selectorNamePrefix = "Selector";
 	
 	
@@ -73,8 +73,8 @@ public class Dispatcher implements Closeable {
 		this.executor = threadPoolExecutor;
 		this.selectors = new SelectorThread[this.selectorCount];
 		for(int i=0;i<this.selectorCount;i++){
-			String name = String.format("%s-%s-%d", dispatcherName, selectorNamePrefix, i);
-			this.selectors[i] = new SelectorThread(this, name);
+			String selectorName = String.format("%s-%s-%d", name, selectorNamePrefix, i);
+			this.selectors[i] = new SelectorThread(this, selectorName);
 		}
 	}
 	
@@ -120,7 +120,7 @@ public class Dispatcher implements Closeable {
 	 * @throws IOException if register fails
 	 */
 	public void registerSession(int ops, Session sess) throws IOException{
-		if(sess.dispatcher() != this){
+		if(sess.selectorGroup() != this){
 			throw new IOException("Unmatched Dispatcher");
 		}
 		this.nextSelector().registerSession(ops, sess);
@@ -156,7 +156,7 @@ public class Dispatcher implements Closeable {
 		for (SelectorThread dispatcher : this.selectors) {
 			dispatcher.start();
 		} 
-		log.info("%s(SelectorCount=%d) started", this.dispatcherName, this.selectorCount);
+		log.info("%s(SelectorCount=%d) started", this.name, this.selectorCount);
 	}
 	
 	/**
@@ -171,7 +171,7 @@ public class Dispatcher implements Closeable {
 			dispatcher.interrupt();
 		} 
 		executor.shutdown();
-		log.info("%s(SelectorCount=%d) stopped", this.dispatcherName, this.selectorCount);
+		log.info("%s(SelectorCount=%d) stopped", this.name, this.selectorCount);
 	} 
 	 
 	/**
@@ -206,7 +206,7 @@ public class Dispatcher implements Closeable {
 		return this.selectorCount;
 	}
 	
-	public Dispatcher selectorCount(int count){ 
+	public SelectorGroup selectorCount(int count){ 
 		if(count <= 0){
 			this.selectorCount = defaultSelectorCount();
 		} else {
@@ -221,7 +221,7 @@ public class Dispatcher implements Closeable {
 		return c;
 	}
 	
-	public Dispatcher executorCount(int count){ 
+	public SelectorGroup executorCount(int count){ 
 		if(count <= 0){
 			this.executorCount = DEFAULT_EXECUTOR_COUNT;
 		} else {
@@ -235,8 +235,8 @@ public class Dispatcher implements Closeable {
 	}
 	
 	
-	public Dispatcher name(String name){ 
-		this.dispatcherName = name;
+	public SelectorGroup name(String name){ 
+		this.name = name;
 		return this;
 	}
 	
