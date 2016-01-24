@@ -37,6 +37,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private final MqServer mqServer;
 	private String registerToken = "";
 	private MqFilter mqFilter;
+	private DiskQueuePool diskQueuePool;
 
  
 	public MqAdaptor(MqServer mqServer){
@@ -281,7 +282,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 						MqMode.isEnabled(mode, MqMode.RPC)){
 					support = new MessageMemoryQueue();
 				} else {
-					support = new MessageDiskQueue(mqName, mode);
+					DiskQueue diskQueue = diskQueuePool.getDiskQueue(mqName);
+					support = new MessageDiskQueue(mqName, mode, diskQueue);
 				}
 				
     			if(MqMode.isEnabled(mode, MqMode.PubSub)){ 
@@ -437,9 +439,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     public void loadMQ(String storePath){ 
     	log.info("Loading DiskQueues...");
     	mqTable.clear();
-		DiskQueuePool.init(storePath); 
+    	if(diskQueuePool == null){
+    		diskQueuePool = new DiskQueuePool(storePath); 
+    	}
 		
-		Map<String, DiskQueue> dqs = DiskQueuePool.getQueryMap();
+		Map<String, DiskQueue> dqs = diskQueuePool.getQueryMap();
 		for(Entry<String, DiskQueue> e : dqs.entrySet()){
 			AbstractMQ mq;
 			String name = e.getKey();
@@ -462,6 +466,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     }   
     
     public void close() throws IOException {    
-    	DiskQueuePool.release();  
+    	if(this.diskQueuePool != null){
+    		diskQueuePool.close();
+    	} 
     } 
 }

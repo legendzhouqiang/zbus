@@ -22,8 +22,10 @@
  */
 package org.zbus.mq.disk;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -41,16 +43,15 @@ import org.zbus.kit.log.Logger;
  *  
  *  http://my.oschina.net/xnkl/blog/477690
  */
-public class DiskQueuePool { 
+public class DiskQueuePool implements Closeable{ 
     static final Logger log = Logger.getLogger(DiskQueuePool.class);
-    private static final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
     
-    private static DiskQueuePool instance = null;
     private String fileBackupPath;
     private Map<String, DiskQueue> queueMap;
     private ScheduledExecutorService syncService;
  
-    private DiskQueuePool(String fileBackupPath) {
+    public DiskQueuePool(String fileBackupPath) {
         this.fileBackupPath = fileBackupPath;
         File fileBackupDir = new File(fileBackupPath);
         if (!fileBackupDir.exists() && !fileBackupDir.mkdir()) {
@@ -69,8 +70,8 @@ public class DiskQueuePool {
         }, 1000, 10000, TimeUnit.MILLISECONDS);
     }
     
-    public static Map<String, DiskQueue> getQueryMap(){
-    	return instance.queueMap;
+    public Map<String, DiskQueue> getQueryMap(){
+    	return queueMap;
     }
  
     private void deleteBlockFile() {
@@ -90,7 +91,7 @@ public class DiskQueuePool {
         }
     }
  
-    static void toClear(String filePath) {
+    public void toClear(String filePath) {
         deletingQueue.add(filePath);
     }
  
@@ -108,19 +109,14 @@ public class DiskQueuePool {
         if (indexFiles != null && indexFiles.length> 0) {
             for (File indexFile : indexFiles) {
                 String queueName = DiskQueueIndex.parseQueueName(indexFile.getName());
-                queues.put(queueName, new DiskQueue(queueName, fileBackupPath));
+                queues.put(queueName, new DiskQueue(queueName, this));
             }
         }
         return queues;
     }
  
-    public synchronized static void init(String deployPath) {
-        if (instance == null) {
-            instance = new DiskQueuePool(deployPath);
-        }
-    }
- 
-    private void dispose() {
+    
+    public void close() throws IOException {
         this.syncService.shutdown();
         for (DiskQueue q : queueMap.values()) {
             q.close();
@@ -129,31 +125,22 @@ public class DiskQueuePool {
             deleteBlockFile();
         }
     }
- 
-    public synchronized static void release() {
-        if (instance != null) {
-            instance.dispose();
-            instance = null;
-        }
-    }
- 
-    private DiskQueue getQueueFromPool(String queueName) {
-        if (queueMap.containsKey(queueName)) {
-            return queueMap.get(queueName);
-        }
-        DiskQueue q = new DiskQueue(queueName, fileBackupPath);
-        queueMap.put(queueName, q);
-        return q;
-    }
- 
-    public synchronized static DiskQueue getDiskQueue(String queueName) {
-    	if(instance == null){
-    		throw new IllegalStateException("call DiskQueuePool.init(dir) first");
-    	}
+
+    public synchronized DiskQueue getDiskQueue(String queueName) {
         if (queueName==null || queueName.trim().equals("")) {
             throw new IllegalArgumentException("empty queue name");
         }
-        return instance.getQueueFromPool(queueName);
+        if (queueMap.containsKey(queueName)) {
+            return queueMap.get(queueName);
+        }
+        DiskQueue q = new DiskQueue(queueName, this);
+        queueMap.put(queueName, q);
+        return q;
     }
+    
+    public String getFileBackupPath(){
+    	return this.fileBackupPath;
+    }
+    
  
 }

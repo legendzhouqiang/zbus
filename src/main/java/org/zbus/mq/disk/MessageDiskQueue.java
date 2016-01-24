@@ -35,23 +35,15 @@ public class MessageDiskQueue extends AbstractQueue<Message>{
 	private final DiskQueue diskQueue;
 	private final String name;
 	
-	public MessageDiskQueue(String name, DiskQueue diskQueue){
+	public MessageDiskQueue(String name, int flag, DiskQueue diskQueue){
 		this.name = name;
 		this.diskQueue = diskQueue;
-	}
-	
-	public MessageDiskQueue(String name, int flag){
-		this.name = name; 
-		this.diskQueue = DiskQueuePool.getDiskQueue(name);
 		this.diskQueue.setFlag(flag);
 	}
-	public MessageDiskQueue(String name){
-		this(name, 0);
-	}
 	
-	public static void init(String deployPath) {
-		DiskQueuePool.init(deployPath);
-    }
+	public MessageDiskQueue(String name, DiskQueue diskQueue){
+		this(name, 0, diskQueue);
+	} 
 	
 	public String getName() {
 		return name;

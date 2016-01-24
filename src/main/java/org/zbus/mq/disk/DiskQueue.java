@@ -6,9 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class DiskQueue extends AbstractQueue<byte[]> {
-
     private String queueName;
-    private String fileBackupDir;
+    private String fileBackupPath;
     private DiskQueueIndex index;
     private DiskQueueBlock readBlock;
     private DiskQueueBlock writeBlock;
@@ -16,20 +15,22 @@ public class DiskQueue extends AbstractQueue<byte[]> {
     private ReentrantLock writeLock;
     private AtomicInteger size;
 
-    public DiskQueue(String queueName, String fileBackupDir) {
+    private final DiskQueuePool pool;
+    protected DiskQueue(String queueName, DiskQueuePool pool) {
         this.queueName = queueName;
-        this.fileBackupDir = fileBackupDir;
+        this.pool = pool;
+        this.fileBackupPath = this.pool.getFileBackupPath();
         this.readLock = new ReentrantLock();
         this.writeLock = new ReentrantLock();
-        this.index = new DiskQueueIndex(DiskQueueIndex.formatIndexFilePath(queueName, fileBackupDir));
+        this.index = new DiskQueueIndex(DiskQueueIndex.formatIndexFilePath(queueName, fileBackupPath));
         this.size = new AtomicInteger(index.getWriteCounter() - index.getReadCounter());
         this.writeBlock = new DiskQueueBlock(index, DiskQueueBlock.formatBlockFilePath(queueName,
-                index.getWriteNum(), fileBackupDir));
+                index.getWriteNum(), fileBackupPath));
         if (index.getReadNum() == index.getWriteNum()) {
             this.readBlock = this.writeBlock.duplicate();
         } else {
             this.readBlock = new DiskQueueBlock(index, DiskQueueBlock.formatBlockFilePath(queueName,
-                    index.getReadNum(), fileBackupDir));
+                    index.getReadNum(), fileBackupPath));
         }
     }
     
@@ -61,7 +62,7 @@ public class DiskQueue extends AbstractQueue<byte[]> {
             writeBlock.close();
         }
         writeBlock = new DiskQueueBlock(index, DiskQueueBlock.formatBlockFilePath(queueName,
-                nextWriteBlockNum, fileBackupDir));
+                nextWriteBlockNum, fileBackupPath));
         index.putWriteNum(nextWriteBlockNum);
         index.putWritePosition(0);
     }
@@ -97,11 +98,11 @@ public class DiskQueue extends AbstractQueue<byte[]> {
             readBlock = writeBlock.duplicate();
         } else {
             readBlock = new DiskQueueBlock(index, DiskQueueBlock.formatBlockFilePath(queueName,
-                    nextReadBlockNum, fileBackupDir));
+                    nextReadBlockNum, fileBackupPath));
         }
         index.putReadNum(nextReadBlockNum);
         index.putReadPosition(0);
-        DiskQueuePool.toClear(blockPath);
+        this.pool.toClear(blockPath);
     }
 
     @Override
@@ -140,4 +141,10 @@ public class DiskQueue extends AbstractQueue<byte[]> {
         index.reset();
         index.close();
     }
+
+	public String getQueueName() {
+		return queueName;
+	}
+    
+    
 }

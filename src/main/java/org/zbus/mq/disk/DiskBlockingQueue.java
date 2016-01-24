@@ -1,6 +1,5 @@
-package org.zbus.mq;
+package org.zbus.mq.disk;
 
-import java.io.IOException;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,10 +8,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.zbus.mq.disk.DiskQueuePool;
-
-public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<byte[]> {
-	private final org.zbus.mq.disk.DiskQueue support;
+public class DiskBlockingQueue extends AbstractQueue<byte[]> implements BlockingQueue<byte[]> {
+	private final DiskQueue support;
 	private final String name;
 	/** Main lock guarding all access */
 	final ReentrantLock lock;
@@ -21,20 +18,12 @@ public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<by
 	/** Condition for waiting puts */
 	private final Condition notFull;
 
-	public DiskQueue(String name) {
-		this.name = name;
-		this.support = DiskQueuePool.getDiskQueue(name);
+	public DiskBlockingQueue(DiskQueue support) {
+		this.name = support.getQueueName();
+		this.support = support;
 		lock = new ReentrantLock();
 		notEmpty = lock.newCondition();
 		notFull = lock.newCondition();
-	}
-
-	public static void init(String deployPath) {
-		DiskQueuePool.init(deployPath);
-	}
-
-	public static void release() throws IOException {
-		DiskQueuePool.release();
 	}
 
 	@Override
@@ -67,16 +56,15 @@ public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<by
 		final ReentrantLock lock = this.lock;
 		lock.lockInterruptibly();
 		try {
-			while (support.size() == 0){
-				support.sync();
+			while (support.size() == 0) {
 				notEmpty.await();
 			}
 			return poll();
 		} finally {
 			lock.unlock();
 		}
-	} 
-	
+	}
+
 	@Override
 	public int size() {
 		final ReentrantLock lock = this.lock;
@@ -114,7 +102,7 @@ public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<by
 	}
 
 	@Override
-	public int drainTo(Collection<? super byte[]> c) { 
+	public int drainTo(Collection<? super byte[]> c) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -122,7 +110,7 @@ public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<by
 	public int drainTo(Collection<? super byte[]> c, int maxElements) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	public byte[] peek() {
 		throw new UnsupportedOperationException();
@@ -131,6 +119,6 @@ public class DiskQueue extends AbstractQueue<byte[]> implements BlockingQueue<by
 	@Override
 	public Iterator<byte[]> iterator() {
 		throw new UnsupportedOperationException();
-	} 
- 
+	}
+
 }
