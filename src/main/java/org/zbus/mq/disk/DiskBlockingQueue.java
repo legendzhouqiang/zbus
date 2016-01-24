@@ -8,18 +8,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * DiskBlockingQueue is a decorator of DiskQueue with capability of blocking operations
+ * 
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
 public class DiskBlockingQueue extends AbstractQueue<byte[]> implements BlockingQueue<byte[]> {
-	private final DiskQueue support;
-	private final String name;
-	/** Main lock guarding all access */
-	final ReentrantLock lock;
-	/** Condition for waiting takes */
-	private final Condition notEmpty;
-	/** Condition for waiting puts */
+	private final DiskQueue support; 
+	final ReentrantLock lock; 
+	private final Condition notEmpty; 
 	private final Condition notFull;
 
-	public DiskBlockingQueue(DiskQueue support) {
-		this.name = support.getQueueName();
+	public DiskBlockingQueue(DiskQueue support) { 
 		this.support = support;
 		lock = new ReentrantLock();
 		notEmpty = lock.newCondition();
@@ -77,7 +79,7 @@ public class DiskBlockingQueue extends AbstractQueue<byte[]> implements Blocking
 	}
 
 	public String getName() {
-		return name;
+		return support.getQueueName();
 	}
 
 	@Override

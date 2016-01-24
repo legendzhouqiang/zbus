@@ -3,6 +3,13 @@ package org.zbus.examples.diskq;
 import org.zbus.mq.disk.DiskQueue;
 import org.zbus.mq.disk.DiskQueuePool;
 
+/**
+ * Run this example for as many times as you can, the queue data is persisted in the 
+ * corresponding disk queue, check it in the file directory you provided.
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
 public class DiskQueueExample {
 
 	public static void main(String[] args) throws Exception {  
