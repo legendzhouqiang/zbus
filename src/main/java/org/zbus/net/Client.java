@@ -180,11 +180,11 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 
 	@Override
 	public void close() throws IOException {
+		this.heartbeator.shutdown();
 		this.onDisconnected(null); //clear disconnection handler
 		if (this.session != null) {
 			this.session.close();
-		}
-		this.heartbeator.shutdown();
+		} 
 	}
 
 	public int getReadTimeout() {

@@ -80,7 +80,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 
 		Message res = null;
-		try {
+		try { 
 			res = client.invokeSync(req, timeout);
 			if (res == null)
 				return res;
@@ -117,14 +117,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				continue;
 			return message; 
 		}
-	}
-
-	public void close() throws IOException {
-		stop();
-		if (this.client != null) {
-			this.broker.closeClient(this.client);
-		}
-	}
+	} 
 
 	@Override
 	public Message invokeSync(Message req) throws IOException, InterruptedException {
@@ -174,6 +167,7 @@ public class Consumer extends MqAdmin implements Closeable {
 					try {
 						msg = take();
 					} catch (InterruptedException e) {
+						Consumer.this.close();
 						break;
 					} 
 					if (consumerHandler == null) {
@@ -196,6 +190,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumerHandler = handler;
 	}
 
+	public void close() throws IOException {
+		stop(); 
+	}
+	
 	public synchronized void stop() {
 		if (consumerThread != null) {
 			consumerThread.interrupt();
@@ -204,8 +202,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		try {
 			if (this.client != null) {
 				this.broker.closeClient(this.client);
-			}
-			client = null;
+			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
@@ -213,14 +210,13 @@ public class Consumer extends MqAdmin implements Closeable {
 		try {
 			if (this.replyClient != null) {
 				this.broker.closeClient(this.replyClient);
-			}
-			replyClient = null;
+			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 	
-	public void start(MessageHandler handler){
+	public synchronized void start(MessageHandler handler){
 		onMessage(handler);
 		start();
 	}
@@ -228,6 +224,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	public synchronized void start() {
 		if (consumerThread == null) {
 			consumerThread = new Thread(consumerTask);
+			consumerThread.setName("ConsumerThread");
 		}
 
 		if (consumerThread.isAlive())

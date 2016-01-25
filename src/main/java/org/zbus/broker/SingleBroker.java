@@ -118,6 +118,7 @@ public class SingleBroker implements Broker {
 	}
 
 	public void closeClient(MessageClient client) throws IOException {
+		if(client == null) return; //ignore
 		client.close();
 	}
 

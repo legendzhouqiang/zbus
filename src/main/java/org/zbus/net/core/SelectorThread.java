@@ -164,14 +164,10 @@ public class SelectorThread extends Thread {
 				} 
 				handleUnregister();
 			}
-		} catch(Throwable e) { 
-			if(!selectorGroup.isStarted()){
-				if(log.isDebugEnabled()){
-					log.debug(e.getMessage(), e);
-				}
-			} else {
-				log.error("SelectorThread exit for fatal error:%s", e);
-			}
+		} catch(Exception e) { 
+			if(log.isDebugEnabled()){
+				log.debug("Ignore: " + e.getMessage());
+			} 
 		}
 	}
 	

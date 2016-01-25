@@ -9,8 +9,7 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 
-public class ConsumerExample { 
-	@SuppressWarnings("resource")
+public class ConsumerSafeQuitExample { 
 	public static void main(String[] args) throws Exception {
 		Broker broker = new SingleBroker(); // default to 127.0.0.1:15555
  
@@ -20,6 +19,8 @@ public class ConsumerExample {
 			public void handle(Message msg, Session sess) throws IOException {
 				System.out.println(msg);
 			}
-		});    
+		});   
+		consumer.close();
+		broker.close();
 	}
 }

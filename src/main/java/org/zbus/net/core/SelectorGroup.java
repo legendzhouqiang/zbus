@@ -56,7 +56,7 @@ public class SelectorGroup implements Closeable {
 	private ExecutorService executor; 
 	private int selectorCount = defaultSelectorCount(); //default to #CPU/2
 	private int executorCount = DEFAULT_EXECUTOR_COUNT; //default to 64
-	private SelectorThread[] selectors;
+	private SelectorThread[] selectorThreads;
 	private AtomicInteger selectorIndex = new AtomicInteger(0);
 	private String name = "SelectorGroup";
 	private String selectorNamePrefix = "Selector";
@@ -68,13 +68,12 @@ public class SelectorGroup implements Closeable {
 	
 	private void init() throws IOException{
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(executorCount,
-				executorCount, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-		
+				executorCount, 120, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()); 
 		this.executor = threadPoolExecutor;
-		this.selectors = new SelectorThread[this.selectorCount];
+		this.selectorThreads = new SelectorThread[this.selectorCount];
 		for(int i=0;i<this.selectorCount;i++){
 			String selectorName = String.format("%s-%s-%d", name, selectorNamePrefix, i);
-			this.selectors[i] = new SelectorThread(this, selectorName);
+			this.selectorThreads[i] = new SelectorThread(this, selectorName);
 		}
 	}
 	
@@ -87,7 +86,7 @@ public class SelectorGroup implements Closeable {
 		if(index <0 || index>=this.selectorCount){
 			throw new IllegalArgumentException("Selector index should >=0 and <"+this.selectorCount);
 		}
-		return this.selectors[index];
+		return this.selectorThreads[index];
 	}
 	
 	/**
@@ -100,7 +99,7 @@ public class SelectorGroup implements Closeable {
 			this.selectorIndex.set(0);
 			nextIdx = 0;
 		} 
-		return this.selectors[nextIdx];
+		return this.selectorThreads[nextIdx];
 	}
 
 	/**
@@ -132,7 +131,7 @@ public class SelectorGroup implements Closeable {
 	 * @return selector thread attaching the key
 	 */
 	public SelectorThread getSelector(SelectionKey key){
-		for(SelectorThread e : this.selectors){
+		for(SelectorThread e : this.selectorThreads){
 			if(key.selector() == e.selector){
 				return e;
 			}
@@ -153,7 +152,7 @@ public class SelectorGroup implements Closeable {
 			throw new RuntimeException(e); 
 		}
 		this.started = true;
-		for (SelectorThread dispatcher : this.selectors) {
+		for (SelectorThread dispatcher : this.selectorThreads) {
 			dispatcher.start();
 		} 
 		log.info("%s(SelectorCount=%d) started", this.name, this.selectorCount);
@@ -164,14 +163,15 @@ public class SelectorGroup implements Closeable {
 	 */
 	public synchronized void stop() {
 		if (!this.started)
-			return;
-
-		this.started = false;
-		for (SelectorThread dispatcher : this.selectors) {
-			dispatcher.interrupt();
+			return; 
+		
+		for (SelectorThread selectorThread : this.selectorThreads) {
+			selectorThread.interrupt();
 		} 
 		executor.shutdown();
+		//this.started = false;
 		log.info("%s(SelectorCount=%d) stopped", this.name, this.selectorCount);
+		
 	} 
 	 
 	/**
@@ -301,5 +301,4 @@ public class SelectorGroup implements Closeable {
     	Session session = new Session(this, channel, ioAdaptor);
     	return session;
 	}
-	
 }
