@@ -53,7 +53,7 @@ public class Session implements Closeable{
 	private IoBuffer readBuffer = null;
 	private Queue<ByteBuffer> writeBufferQ = new LinkedBlockingQueue<ByteBuffer>();
 	
-	private CountDownLatch connectLatch = new CountDownLatch(1);
+	private CountDownLatch connectLatch = new CountDownLatch(1); 
 	
 	private final SelectorGroup selectorGroup;
 	private SelectorThread selectorThread;
@@ -354,9 +354,10 @@ public class Session implements Closeable{
 	}
 	
 	
-	public boolean waitToConnect(long millis){
+	public boolean waitToConnect(long millis) throws IOException{
 		try { 
-			return this.connectLatch.await(millis, TimeUnit.MILLISECONDS); 
+			boolean status = this.connectLatch.await(millis, TimeUnit.MILLISECONDS); 
+			return status;
 		} catch (InterruptedException e) {
 			log.error(e.getMessage(), e);
 		}

@@ -76,7 +76,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 	}
 	
 	public void invokeAsync(REQ req, ResultCallback<RES> callback) throws IOException { 
-    	connectSyncIfNeed();
+    	connectSync();
     	
 		Ticket<REQ, RES> ticket = null;
 		if(callback != null){
@@ -109,7 +109,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 	public RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException {
 		Ticket<REQ, RES> ticket = null;
 		try {
-			connectSyncIfNeed();
+			connectSync();
 			ticket = sync.createTicket(req, timeout);
 			session.write(req);
 

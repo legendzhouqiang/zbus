@@ -30,13 +30,13 @@ import org.zbus.net.http.Message.MessageInvoker;
 
 
 public class MessageClient extends InvokingClient<Message, Message> implements MessageInvoker{   
-	public MessageClient(String host, int port, SelectorGroup dispatcher){
-		super(host, port, dispatcher);
+	public MessageClient(String host, int port, SelectorGroup selectorGroup){
+		super(host, port, selectorGroup);
 		codec(new MessageCodec());
 	} 
 	
-	public MessageClient(String address, SelectorGroup dispatcher) {
-		super(address, dispatcher);
+	public MessageClient(String address, SelectorGroup selectorGroup) {
+		super(address, selectorGroup);
 		codec(new MessageCodec());
 	}
 	

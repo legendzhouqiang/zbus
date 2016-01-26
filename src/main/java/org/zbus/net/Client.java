@@ -101,7 +101,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		return session != null && session.isActive();
 	}
 
-	public void connectSyncIfNeed() throws IOException {
+	public void connectSync() throws IOException {
 		if (!this.hasConnected()) {
 			// 同步进行连接操作
 			connectAsync();
@@ -129,7 +129,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	}
 	
 	public void send(REQ req) throws IOException{
-    	connectSyncIfNeed(); 
+    	connectSync(); 
     	this.session.write(req);
     } 
 	

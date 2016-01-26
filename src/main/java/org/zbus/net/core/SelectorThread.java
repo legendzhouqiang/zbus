@@ -285,13 +285,12 @@ public class SelectorThread extends Thread {
 		if(sess == null){
 			throw new IOException("Session not attached yet to SelectionKey");
 		}  
-		
-		if(channel.finishConnect()){
-			sess.finishConnect(); 
+		if(channel.finishConnect()){ 
+			sess.finishConnect();
 			if(log.isDebugEnabled()){
 				log.debug("CONNECT: %s=>%s", NetKit.localAddress(channel), NetKit.remoteAddress(channel));
 			}
-		}
+		} 
 		sess.setStatus(SessionStatus.CONNECTED);  
 		key.interestOps(0); //!!!clear interest of OP_CONNECT to avoid looping CPU !!!
 		sess.getIoAdaptor().onSessionConnected(sess);

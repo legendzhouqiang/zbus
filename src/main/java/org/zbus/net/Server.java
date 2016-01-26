@@ -107,6 +107,11 @@ public class Server implements Closeable{
 		adaptors.put(address, adaptor);
 	}
 	
+	public void start(int port, IoAdaptor ioAdaptor) throws IOException{
+		registerAdaptor(port, ioAdaptor);
+		start();
+	}
+	
 	public void start() throws IOException{   
 		if(selectorGroup == null){
 			throw new IllegalStateException("Missing SelectorGroup");

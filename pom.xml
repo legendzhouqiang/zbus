@@ -49,37 +49,45 @@
 			<artifactId>commons-pool2</artifactId>
 			<version>2.2</version>
 			<scope>provided</scope>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>com.sleepycat</groupId>
 			<artifactId>je</artifactId>
 			<version>5.0.73</version>
 			<scope>provided</scope>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 			<version>1.2.3</version>
 			<scope>provided</scope>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.5</version>
 			<scope>provided</scope>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.5</version>
 			<scope>provided</scope>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 			<scope>provided</scope>
-		</dependency>  
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring</artifactId>
@@ -96,7 +104,7 @@
 	</dependencies>
 
 
-	<build> 
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
