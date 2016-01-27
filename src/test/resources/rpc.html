@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>下拉菜单</title>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+</head>
+<body>
+  <button id="test" type="button" class="btn btn-default">测试</button>
+
+  <script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> 
+  <script type="text/javascript">
+    $("#test").click(function() {
+      $.ajax({
+        type: "POST",
+        url: "http://localhost:15555/",
+        beforeSend: function(request) {                         
+          request.setRequestHeader("cmd", "produce"); 
+          request.setRequestHeader("mq", "MyRpc");
+          request.setRequestHeader("ack", "false");                     
+        },
+        data:{ 
+          method:"plus",
+          params:[1,2]
+        },
+        dataType:"json",
+        success: function(result) {                         
+          alert(result);                     
+        }
+      });
+    });
+  </script>
+</body>
+</html>
