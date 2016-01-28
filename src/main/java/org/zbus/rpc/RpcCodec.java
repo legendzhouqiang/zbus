@@ -121,7 +121,8 @@ public interface RpcCodec {
 	
 	public static class Response { 
 		public static final String KEY_RESULT = "result";
-		public static final String KEY_STACK_TRACE = "stackTrace"; 
+		public static final String KEY_STACK_TRACE = "stackTrace";
+		public static final String KEY_ERROR = "error";
 		
 		private Object result;  
 		private Throwable error;
