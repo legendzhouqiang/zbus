@@ -2,29 +2,25 @@ package org.zbus.examples.gateway;
 
 import java.io.IOException;
 
-import org.zbus.net.Server;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.Session;
-import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageAdaptor;
+import org.zbus.examples.rpc_biz.InterfaceImpl;
+import org.zbus.rpc.RpcProcessor;
+import org.zbus.rpc.direct.Service;
+import org.zbus.rpc.direct.ServiceConfig;
 
 public class TargetServer {
 	
 	
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws IOException { 
-		SelectorGroup group = new SelectorGroup(); 
-		Server server = new Server(group); 
-		server.start(8080, new MessageAdaptor(){ 
-			@Override
-			public void onMessage(Object obj, Session sess) throws IOException {
-				Message msg = (Message)obj;
-				
-				msg.setResponseStatus(200);
-				msg.setBody(""+System.currentTimeMillis());
-				
-				sess.write(msg);
-			}
-		});  
+	public static void main(String[] args) throws IOException {
+		RpcProcessor processor = new RpcProcessor();
+		// 增加模块，模块名在调用时需要指定
+		processor.addModule(new InterfaceImpl()); 
+		
+		ServiceConfig config = new ServiceConfig(); 
+		config.serverPort = 8080;  
+		config.messageProcessor = processor; 
+		
+		Service svc = new Service(config);
+		svc.start(); 
 	} 
 }

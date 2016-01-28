@@ -5,65 +5,54 @@ import java.io.IOException;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.mq.Consumer;
-import org.zbus.mq.MqConfig;
-import org.zbus.mq.Protocol;
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageClient;
 import org.zbus.net.http.Message.MessageHandler;
+import org.zbus.rpc.RpcCodec.Request;
+import org.zbus.rpc.RpcCodec.Response;
+import org.zbus.rpc.RpcInvoker;
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
 
-public class GatewayServer { 
-	
-	public static class GatewayMessageHandler implements MessageHandler{
-		//TargetServer messaging 
-		SelectorGroup group = new SelectorGroup();
-		MessageClient targetClient;
-		public GatewayMessageHandler() throws IOException{ 
-			targetClient = new MessageClient("127.0.0.1:8080", group);
-		}
+class MyGatewayRpcHandler extends AsyncRpcHandler {
+
+	private Broker broker;
+	private RpcInvoker rpcInvoker;
+	public MyGatewayRpcHandler() throws IOException{
+		BrokerConfig config = new BrokerConfig();
+		config.setServerAddress("127.0.0.1:8080");
 		
-		@Override
-		public void handle(Message msg, Session sess) throws IOException {
-			//msgId should be maintained
-			final Session zbusSess = sess;
-			final String msgId = msg.getId();
-			final String sender = msg.getSender(); 
-			targetClient.invokeAsync(msg, new ResultCallback<Message>() {
-
-				@Override
-				public void onReturn(Message result) { 
-					result.setCmd(Protocol.Route);
-					result.setRecver(sender);
-					result.setId(msgId);
-					result.setAck(false); //make sure no reply message required
-					try {
-						zbusSess.write(result);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			
-		}
+		broker = new SingleBroker();
+		rpcInvoker = new RpcInvoker(broker);
 	}
 	
+	@Override
+	protected void onRequest(Request req, final Message rawMsg, final Session reqSession) {
+		 rpcInvoker.invokeAsync(req, new ResultCallback<Response>() { 
+			@Override
+			public void onReturn(Response result) { 
+				onResponse(result.getResult(), result.getError(), rawMsg, reqSession);
+			}
+		}); 
+	} 
+}
+
+public class GatewayServer {
+
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception { 
-		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
+	public static void main(String[] args) throws Exception {
 		Broker broker = new SingleBroker();
-		
-		MqConfig mqConfig = new MqConfig();
-		mqConfig.setBroker(broker);
-		mqConfig.setMq("Gateway");
-		
-		Consumer consumer = new Consumer(mqConfig);
-		MessageHandler handler = new GatewayMessageHandler();
-		consumer.start(handler);
-		
+		ServiceConfig config = new ServiceConfig();
+		config.setBroker(broker);
+		config.setMq("MyGateway");
+		config.setConsumerCount(4);
+
+		MessageHandler handler = new MyGatewayRpcHandler();
+		config.setMessageHandler(handler);
+
+		Service service = new Service(config);
+		service.start();
 	}
 
 }

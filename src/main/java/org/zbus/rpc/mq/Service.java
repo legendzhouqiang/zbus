@@ -42,8 +42,8 @@ public class Service implements Closeable {
 		if(config.getMq() == null || "".equals(config.getMq())){
 			throw new IllegalArgumentException("MQ required");
 		}
-		if(config.getMessageProcessor() == null){
-			throw new IllegalArgumentException("ServiceHandler required");
+		if(config.getMessageProcessor() == null && config.getMessageHandler() == null){
+			throw new IllegalArgumentException("ServiceHandler or MessageProcessor required");
 		}  
 	}
 	 
@@ -77,26 +77,29 @@ public class Service implements Closeable {
 			mqConfig.setTopic(config.getTopic());
 			mqConfig.setVerbose(config.isVerbose());
 			
+			MessageHandler handler = config.getMessageHandler(); 
 			for(int j=0; j<consumerGroup.length; j++){  
-				
-				final Consumer c = consumerGroup[j] = new Consumer(mqConfig);
-				c.onMessage(new MessageHandler() { 
-					@Override
-					public void handle(Message msg, Session sess) throws IOException { 
-						final String mq = msg.getMq();
-						final String msgId  = msg.getId();
-						final String sender = msg.getSender();
-						Message res = processor.process(msg);
-						
-						if(res != null){
-							res.setId(msgId);
-							res.setMq(mq);  
-							res.setRecver(sender); 
-							//route back message
-							c.routeMessage(res);
+				final Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
+				if(handler == null){
+					handler = new MessageHandler() { 
+						@Override
+						public void handle(Message msg, Session sess) throws IOException { 
+							final String mq = msg.getMq();
+							final String msgId  = msg.getId();
+							final String sender = msg.getSender();
+							Message res = processor.process(msg);
+							
+							if(res != null){
+								res.setId(msgId);
+								res.setMq(mq);  
+								res.setRecver(sender); 
+								//route back message
+								c.routeMessage(res);
+							}
 						}
-					}
-				});
+					};
+				}
+				c.onMessage(handler);
 			}
 		}
 		
