@@ -142,6 +142,14 @@ public class Message implements Id {
 		return setResponseStatus(status+"");
 	}
 	
+	public String getStatus(){
+		return getResponseStatus();
+	}
+	
+	public void setStatus(int status){
+		setResponseStatus(status);
+	}
+	
 	public String getMethod(){
 		return meta.getMethod();
 	}

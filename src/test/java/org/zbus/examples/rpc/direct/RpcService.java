@@ -1,16 +1,16 @@
-package org.zbus.rpc.direct;
+package org.zbus.examples.rpc.direct;
 
 import java.io.IOException;
 
+import org.zbus.examples.rpc.appdomain.InterfaceImpl;
 import org.zbus.rpc.RpcProcessor;
-import org.zbus.rpc.biz.InterfaceImpl;
+import org.zbus.rpc.direct.Service;
+import org.zbus.rpc.direct.ServiceConfig;
 
-public class DirectRpcService {
-	
+public class RpcService {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
-		RpcProcessor processor = new RpcProcessor();
-		// 增加模块，模块名在调用时需要指定
+		RpcProcessor processor = new RpcProcessor(); 
 		processor.addModule(new InterfaceImpl()); 
 		
 		ServiceConfig config = new ServiceConfig(); 

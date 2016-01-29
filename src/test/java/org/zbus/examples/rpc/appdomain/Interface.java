@@ -1,4 +1,4 @@
-package org.zbus.rpc.biz;
+package org.zbus.examples.rpc.appdomain;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,7 @@ import java.util.Map;
  * 1) 接口类无任何ZBUS相关侵入
  * 2）覆盖各种复杂的入参与出参，异常, 目标是跟本地方法一样无任何限制
  * 
- * @author 洪磊明
+ * @author 洪磊明 rushmore
  *
  */
 public interface Interface{
@@ -17,11 +17,13 @@ public interface Interface{
 	
 	String echo(String string);
 	
-	String getString(String name);
-	
+	String getString(String name); 
+	//test of method overloading（方法重载）
 	String getString(String name, int c);
 	
 	String[] stringArray();
+	
+	byte[] getBin();
 	
 	int plus(int a, int b);
 	

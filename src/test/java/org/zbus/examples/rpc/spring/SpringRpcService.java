@@ -1,4 +1,4 @@
-package org.zbus.spring;
+package org.zbus.examples.rpc.spring;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

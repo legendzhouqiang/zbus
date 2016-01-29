@@ -2,7 +2,7 @@ package org.zbus.examples.gateway;
 
 import java.io.IOException;
 
-import org.zbus.examples.rpc_biz.InterfaceImpl;
+import org.zbus.examples.rpc.appdomain.InterfaceImpl;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.direct.Service;
 import org.zbus.rpc.direct.ServiceConfig;

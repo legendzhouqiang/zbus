@@ -5,6 +5,7 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class MyClient {
+	
 
 	public static void main(String[] args) throws Exception {
 		final SelectorGroup selectorGroup = new SelectorGroup();
@@ -14,8 +15,8 @@ public class MyClient {
 		Message msg = new Message();
 		msg.setCmd("/hello"); 
 
-		msg.setBody("hello world");
-		msg = client.invokeSync(msg, 5000);
+		msg.setBody(new byte[10]);
+		msg = client.invokeSync(msg, 100000);
 		System.out.println(msg);
 		
 		client.close();

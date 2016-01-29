@@ -19,7 +19,7 @@ public class MyServer {
 			@Override
 			public Message process(Message request) {
 				Message resp = new Message();
-				resp.setResponseStatus(200);
+				resp.setStatus(200);
 				resp.setBody("hello");
 				return resp;
 			}

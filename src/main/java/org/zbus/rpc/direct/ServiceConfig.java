@@ -30,7 +30,7 @@ public class ServiceConfig {
 	public int serverPort = 0;  
 	public int selectorCount = 0;
 	public int executorCount = 0; 
-	public SelectorGroup dispatcher;
+	public SelectorGroup selectorGroup;
 	public MessageProcessor messageProcessor;
 	
 	//如果加入高可用HA才需要填写
@@ -60,13 +60,16 @@ public class ServiceConfig {
 	}
 	public void setExecutorCount(int executorCount) {
 		this.executorCount = executorCount;
+	} 
+	
+	public SelectorGroup getSelectorGroup() {
+		return selectorGroup;
 	}
-	public SelectorGroup getDispatcher() {
-		return dispatcher;
+
+	public void setSelectorGroup(SelectorGroup selectorGroup) {
+		this.selectorGroup = selectorGroup;
 	}
-	public void setDispatcher(SelectorGroup dispatcher) {
-		this.dispatcher = dispatcher;
-	}
+
 	public MessageProcessor getMessageProcessor() {
 		return messageProcessor;
 	}

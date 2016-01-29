@@ -1,4 +1,4 @@
-package org.zbus.rpc.biz;
+package org.zbus.examples.rpc.appdomain;
 
 public enum MyEnum {
 	Monday,

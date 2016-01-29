@@ -46,8 +46,8 @@ public class Service extends Server {
 		trackServerList = config.trackServerList;
 		entryId = config.entryId;
 		
-		if(config.dispatcher != null){
-			selectorGroup = config.dispatcher;
+		if(config.selectorGroup != null){
+			selectorGroup = config.selectorGroup;
 		} else {
 			selectorGroup = new SelectorGroup()
 				.selectorCount(config.selectorCount)
