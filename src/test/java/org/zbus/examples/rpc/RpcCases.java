@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.zbus.examples.rpc.appdomain.Interface;
+import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.examples.rpc.appdomain.MyEnum;
 import org.zbus.examples.rpc.appdomain.Order;
 import org.zbus.examples.rpc.appdomain.User;
@@ -47,7 +47,7 @@ public class RpcCases {
 	}
 	
 	 
-	public static void testDynamicProxy(Interface biz) throws Exception{ 
+	public static void testDynamicProxy(InterfaceExample biz) throws Exception{ 
 		
 		List<Map<String, Object>> list = biz.listMap();
 		System.out.println(list);

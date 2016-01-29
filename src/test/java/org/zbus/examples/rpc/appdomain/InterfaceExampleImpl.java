@@ -34,7 +34,7 @@ class PrivateRuntimeException extends RuntimeException{
 	}
 	
 }
-public class InterfaceImpl implements Interface{
+public class InterfaceExampleImpl implements InterfaceExample{
  
 	@Override 
 	public String echo(String string) { 
@@ -168,7 +168,7 @@ public class InterfaceImpl implements Interface{
 		}
 	}
 	
-	private static final Logger log = Logger.getLogger(InterfaceImpl.class);
+	private static final Logger log = Logger.getLogger(InterfaceExampleImpl.class);
 	int timeBiggerThan100ms = 0;
 	@Override
 	public int getUserScore() { 

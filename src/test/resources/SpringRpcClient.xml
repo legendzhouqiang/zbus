@@ -34,7 +34,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
  
  
 	<bean id="interface" factory-bean="myrpc" factory-method="getService">
-		<constructor-arg type="java.lang.Class" value="org.zbus.examples.rpc.appdomain.Interface"/> 
+		<constructor-arg type="java.lang.Class" value="org.zbus.examples.rpc.appdomain.InterfaceExample"/> 
 		<!-- 当需要个性化调用的时候指定
 		<constructor-arg>
 			<bean class="org.zbus.rpc.RpcConfig">

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.examples.rpc.appdomain.Interface;
+import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message.MessageInvoker;
@@ -16,7 +16,7 @@ import org.zbus.rpc.mq.MqInvoker;
 public class RpcPerf {
 	static class Task extends Thread{
 		final Logger log = Logger.getLogger(Task.class);
-		Interface biz;
+		InterfaceExample biz;
 		int loopCount = 10000; 
 		long startTime;
 		AtomicLong counter;
@@ -65,7 +65,7 @@ public class RpcPerf {
 		
 		RpcFactory proxy = new RpcFactory(invoker);  
 		 
-		Interface biz = proxy.getService(Interface.class);
+		InterfaceExample biz = proxy.getService(InterfaceExample.class);
 		
 		AtomicLong counter = new AtomicLong(0);
 		AtomicLong faileCounter = new AtomicLong(0);

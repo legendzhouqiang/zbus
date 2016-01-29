@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.SingleBroker;
-import org.zbus.examples.rpc.appdomain.InterfaceImpl;
+import org.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.mq.Service;
 import org.zbus.rpc.mq.ServiceConfig;
@@ -13,7 +13,7 @@ public class RpcService {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException{     
 		RpcProcessor processor = new RpcProcessor();  
-		processor.addModule(new InterfaceImpl());  
+		processor.addModule(new InterfaceExampleImpl());  
 		
 		Broker broker = new SingleBroker(); //use BrokerConfig with non-defaults
 		

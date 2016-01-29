@@ -4,7 +4,7 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.examples.rpc.RpcCases;
-import org.zbus.examples.rpc.appdomain.Interface;
+import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.rpc.RpcFactory;
 
 public class RpcClient {
@@ -15,7 +15,7 @@ public class RpcClient {
 		Broker broker = new SingleBroker(brokerConfig); 
 		
 		RpcFactory factory = new RpcFactory(broker); //directly using broker as invoker 
-		Interface hello = factory.getService(Interface.class);
+		InterfaceExample hello = factory.getService(InterfaceExample.class);
 		
 		RpcCases.testDynamicProxy(hello); //test cases
 		

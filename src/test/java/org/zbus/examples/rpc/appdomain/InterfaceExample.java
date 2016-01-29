@@ -11,7 +11,7 @@ import java.util.Map;
  * @author 洪磊明 rushmore
  *
  */
-public interface Interface{
+public interface InterfaceExample{
   
 	int getUserScore();
 	

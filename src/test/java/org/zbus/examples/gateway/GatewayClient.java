@@ -3,7 +3,7 @@ package org.zbus.examples.gateway;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.examples.rpc.appdomain.Interface;
+import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.mq.MqInvoker;
@@ -21,7 +21,7 @@ public class GatewayClient {
 		RpcFactory factory = new RpcFactory(invoker);
 
 		// 3) 动态代理出实现类
-		Interface hello = factory.getService(Interface.class);
+		InterfaceExample hello = factory.getService(InterfaceExample.class);
  
 		Object res = hello.echo("test");
 		System.out.println(res);
