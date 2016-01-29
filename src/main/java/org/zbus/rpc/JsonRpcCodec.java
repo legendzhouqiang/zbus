@@ -22,13 +22,9 @@
  */
 package org.zbus.rpc;
 
-import java.util.List;
-import java.util.Map;
-
 import org.zbus.net.http.Message;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
@@ -56,53 +52,16 @@ public class JsonRpcCodec implements RpcCodec {
 		}
 		String jsonString = msg.getBodyString(encoding);
 		Request req = JSON.parseObject(jsonString, Request.class);
+		Request.normalize(req); 
 		return req;
 	}
-	
-	@SuppressWarnings("unchecked")
-	private static void removeTypeInfo(Object param){
-		if(param instanceof List){
-			List<Object> list  = (List<Object>)param;
-			for(Object obj : list){
-				removeTypeInfo(obj);
-			}
-		}
-		if(param instanceof Map){ 
-			Object typeKey = JSON.DEFAULT_TYPE_KEY; 
-			Map<Object, Object> map = (Map<Object, Object>)param;
-			if(map.containsKey(typeKey)){
-				map.remove(typeKey);
-			}
-			for(Object value : map.values()){
-				removeTypeInfo(value);
-			}
-		}
-	}
-	
+
 	public Object convert(Object param, Class<?> targetType) throws ClassNotFoundException {
-		
-		if(targetType.isEnum()){ 
-			return TypeUtils.castToJavaBean(param, targetType);
-		}
-		
 		if(targetType.getName().equals("java.lang.Class")){
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			return classLoader.loadClass(param.toString());
 		}
-		
-		if(param instanceof JSON){
-			try{
-				return JSON.toJavaObject((JSON)param, targetType);
-			} catch(JSONException ex1){
-				removeTypeInfo(param); //没法准确转换的，剔除类型信息再次尝试
-				try{
-					return JSON.toJavaObject((JSON)param, targetType);
-				} catch(JSONException ex2){
-					return param;
-				} 
-			} 
-		}
-		return param;
+		return TypeUtils.castToJavaBean(param, targetType);
 	}
 	
 	public Message encodeResponse(Response response) {

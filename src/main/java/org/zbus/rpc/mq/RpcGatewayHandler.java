@@ -1,4 +1,4 @@
-package org.zbus.examples.gateway;
+package org.zbus.rpc.mq;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -13,8 +13,8 @@ import org.zbus.rpc.RpcCodec;
 import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
 
-public abstract class AsyncRpcHandler implements MessageHandler {
-	private static final Logger log = Logger.getLogger(AsyncRpcHandler.class);
+public abstract class RpcGatewayHandler implements MessageHandler {
+	private static final Logger log = Logger.getLogger(RpcGatewayHandler.class);
 	
 	protected RpcCodec codec = new JsonRpcCodec(); 
 	
@@ -53,8 +53,7 @@ public abstract class AsyncRpcHandler implements MessageHandler {
 	public void handle(Message msg, Session sess) throws IOException {
 		Request req = null;
 		try {
-			req = codec.decodeRequest(msg);
-			Request.normalize(req); 
+			req = codec.decodeRequest(msg); 
 		} catch (Exception e) { 
 			onResponse(null, e, msg, sess);
 			return;

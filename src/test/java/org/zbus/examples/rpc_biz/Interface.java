@@ -23,6 +23,8 @@ public interface Interface{
 	
 	String[] stringArray();
 	
+	byte[] getBin();
+	
 	int plus(int a, int b);
 	
 	MyEnum myEnum(MyEnum e);

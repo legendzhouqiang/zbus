@@ -10,6 +10,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.examples.rpc_biz.Interface;
 import org.zbus.examples.rpc_biz.MyEnum;
+import org.zbus.examples.rpc_biz.Order;
 import org.zbus.examples.rpc_biz.User;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcFactory;
@@ -27,7 +28,7 @@ public class RpcClient {
 	}
 	 
 	public static void test(Interface hello) throws Exception{ 
-
+		
 		List<Map<String, Object>> list = hello.listMap();
 		System.out.println(list);
 		
@@ -58,6 +59,12 @@ public class RpcClient {
 		
 		MyEnum e = hello.myEnum(MyEnum.Monday);
 		System.out.println(e);
+		
+		Order order = hello.getOrder();
+		System.out.println(order);
+		
+		byte[] bin = hello.getBin();
+		System.out.println(bin);
 	}
 	
 	public static void main(String[] args) throws Exception { 

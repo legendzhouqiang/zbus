@@ -61,6 +61,11 @@ public class InterfaceImpl implements Interface{
 		return new String[]{"hong", "leiming"};
 	}
 	
+	@Override
+	public byte[] getBin() {
+		return new byte[10];
+	}
+	
 	public Object[] objectArray(String id){  
 		return new Object[]{id, getUser("rushmore"), "hong", true, 1, String.class};
 	}
@@ -90,6 +95,7 @@ public class InterfaceImpl implements Interface{
 	public Order getOrder() {
 		Order order = new Order();
 		order.setItem(Arrays.asList("item1","item2","item3"));
+		order.setData("bin".getBytes());
 		return order;
 	}
 	

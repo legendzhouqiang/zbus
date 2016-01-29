@@ -12,10 +12,11 @@ import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
 import org.zbus.rpc.RpcInvoker;
+import org.zbus.rpc.mq.RpcGatewayHandler;
 import org.zbus.rpc.mq.Service;
 import org.zbus.rpc.mq.ServiceConfig;
 
-class MyGatewayRpcHandler extends AsyncRpcHandler {
+class MyGatewayRpcHandler extends RpcGatewayHandler {
 
 	private Broker broker;
 	private RpcInvoker rpcInvoker;
