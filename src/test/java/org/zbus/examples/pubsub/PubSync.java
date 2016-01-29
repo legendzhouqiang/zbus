@@ -1,4 +1,4 @@
-package org.zbus.pubsub;
+package org.zbus.examples.pubsub;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -15,13 +15,13 @@ public class PubSync {
 		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
 		producer.createMQ();  
-		for(int i=0;i<10000;i++){
-			Message msg = new Message();
-			msg.setTopic("sse"); 
-			msg.setBody("hello world");
+
+		Message msg = new Message();
+		msg.setTopic("sse"); 
+		msg.setBody("hello world");
 			
-			producer.sendSync(msg);
-		} 
+		producer.sendSync(msg); 
+		
 		
 		broker.close();
 	} 

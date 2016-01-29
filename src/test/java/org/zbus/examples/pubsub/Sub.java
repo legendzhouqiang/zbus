@@ -1,7 +1,6 @@
-package org.zbus.pubsub;
+package org.zbus.examples.pubsub;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -24,12 +23,10 @@ public class Sub {
 		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
 		c.setTopic("sse,google,ms"); 
 		
-		final AtomicLong counter = new AtomicLong(0);
 		c.onMessage(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg);
-				System.out.println(counter.incrementAndGet());
+				System.out.println(msg); 
 			}
 		});
 		

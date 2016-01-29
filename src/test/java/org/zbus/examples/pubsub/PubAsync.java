@@ -1,4 +1,4 @@
-package org.zbus.pubsub;
+package org.zbus.examples.pubsub;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -20,20 +20,17 @@ public class PubAsync {
 		
 		Message msg = new Message();
 		msg.setTopic("sse"); 
-		
-		for(int i=0;i<10000;i++){
-			msg.setBody("hello world" + i);
-			producer.sendAsync(msg, new ResultCallback<Message>() {
 
-				@Override
-				public void onReturn(Message result) {
-					//System.out.println(result);
-					//ignore
-				}
-			});
-		}
+
+		msg.setBody("hello world " + System.currentTimeMillis());
+		producer.sendAsync(msg, new ResultCallback<Message>() { 
+			@Override
+			public void onReturn(Message result) {
+				System.out.println(result);
+			}
+		}); 
 		
-		Thread.sleep(5000); //safe message sending out
+		Thread.sleep(500); //safe message sending out
 		broker.close();
 	} 
 }
