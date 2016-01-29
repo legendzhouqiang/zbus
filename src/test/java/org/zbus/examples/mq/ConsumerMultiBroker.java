@@ -1,12 +1,13 @@
-package org.zbus.mq;
+package org.zbus.examples.mq;
 
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
+import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageProcessor;
+import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.rpc.mq.Service;
 import org.zbus.rpc.mq.ServiceConfig;
 
@@ -28,13 +29,12 @@ public class ConsumerMultiBroker {
 		//同时注册到多条zbus总线上
 		config.setBrokers(new Broker[]{broker1, broker2});
 		
-		config.setMessageProcessor(new MessageProcessor() { 
+		config.setMessageHandler(new MessageHandler() { 
 			@Override
-			public Message process(Message request) { 
+			public void handle(Message msg, Session sess) throws IOException {
 				
-				return null;
 			}
-		});
+		}); 
 		
 		Service svc = new Service(config);
 		svc.start();  

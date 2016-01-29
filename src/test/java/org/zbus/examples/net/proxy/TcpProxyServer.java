@@ -1,20 +1,18 @@
-package org.zbus.net;
+package org.zbus.examples.net.proxy;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import org.zbus.net.core.SelectorGroup;
+import org.zbus.net.Server;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.core.Session;
 
-public class TcpProxyAdaptor extends IoAdaptor {
+class TcpProxyAdaptor extends IoAdaptor{
 	private String targetAddress;
-
 	public TcpProxyAdaptor(String targetAddress) {
 		this.targetAddress = targetAddress;
 	}
-
-	// 透传不需要编解码，简单返回ByteBuffer数据
 	public IoBuffer encode(Object msg) {
 		if (msg instanceof IoBuffer) {
 			IoBuffer buff = (IoBuffer) msg;
@@ -23,8 +21,6 @@ public class TcpProxyAdaptor extends IoAdaptor {
 			throw new RuntimeException("Message Not Support");
 		}
 	}
-
-	// 透传不需要编解码，简单返回ByteBuffer数据
 	public Object decode(IoBuffer buff) {
 		if (buff.remaining() > 0) {
 			byte[] data = new byte[buff.remaining()];
@@ -86,14 +82,14 @@ public class TcpProxyAdaptor extends IoAdaptor {
 			sess.chain = null;
 		} catch (IOException e) { 
 		}
-	}
-	
+	}	
+}
+
+public class TcpProxyServer { 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
-		SelectorGroup dispatcher = new SelectorGroup(); 
-		IoAdaptor ioAdaptor = new TcpProxyAdaptor("10.17.2.30:3306"); 
-		final Server server = new Server(dispatcher, ioAdaptor, 3306);
-		server.setServerName("TcpProxyServer");
-		server.start();
+		SelectorGroup selectorGroup = new SelectorGroup(); 
+		final Server server = new Server(selectorGroup); 
+		server.start(3306, new TcpProxyAdaptor("10.17.2.30:3306"));
 	}
 }
