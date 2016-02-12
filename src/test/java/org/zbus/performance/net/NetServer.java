@@ -31,9 +31,7 @@ public class NetServer extends MessageAdaptor{
 		dispatcher.selectorCount(selectCount); 
 		final Server server = new Server(dispatcher);
 		 
-		IoAdaptor ioAdaptor = new NetServer(); 
-		server.registerAdaptor(port, ioAdaptor);
-		
-    	server.start(); 
+		IoAdaptor ioAdaptor = new NetServer();  
+    	server.start(port, ioAdaptor); 
 	}
 }
