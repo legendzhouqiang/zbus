@@ -1,5 +1,7 @@
 package org.zbus.performance;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
@@ -7,74 +9,61 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
-import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageInvoker;
 
-public class Perf {
-	private static final Logger log = Logger.getLogger(Perf.class);
-	public String serverAddress = "127.0.0.1:15555";
-	public int selectorCount = 0; //0意味着适用默认值，CPU/4
-	public int executorCount = 0; //0意味着适用默认值，64
+
+public abstract class Perf implements Closeable{
+	public static abstract class Task implements Closeable{
+		public abstract void doTask() throws Exception;
+		public void close() throws IOException{  } 
+	}
+	private static final Logger log = Logger.getLogger(Perf.class); 
 	public int threadCount = 16;
 	public int loopCount = 1000000;
-	public int logInterval = 1000;
+	public int logInterval = 0;
 	public long startTime;
 	public AtomicLong counter = new AtomicLong(0);
-	public AtomicLong failCounter = new AtomicLong(0);
+	public AtomicLong failCounter = new AtomicLong(0); 
+	 
+	public abstract Task buildTask(); 
 	
-	private Broker broker;
-	
-	public MessageInvoker setupInvoker(Broker broker) throws Exception{
-		return broker;
-	}
-	
-	public void doInvoking(MessageInvoker invoker) throws Exception{
-		Message msg = new Message();
-		msg.setBody("hello world");
-		invoker.invokeSync(msg, 10000);
-	}
-	
-	
-	
-	public void run() throws Exception{
-		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress(serverAddress);
-		brokerConfig.setMaxTotal(threadCount);
-		brokerConfig.setMaxIdle(threadCount);  
-		brokerConfig.setSelectorCount(selectorCount);
-		brokerConfig.setExecutorCount(executorCount);
-		
-		this.broker = new SingleBroker(brokerConfig); 
-		 
+	public void run() throws Exception{ 
 		this.startTime = System.currentTimeMillis();
-		Task[] tasks = new Task[threadCount]; 
+		TaskThread[] tasks = new TaskThread[threadCount]; 
 		for(int i=0;i<tasks.length;i++){ 
-			tasks[i] = new Task();
+			tasks[i] = new TaskThread(buildTask());
 		}
 		
-		for(Task task : tasks){
+		for(TaskThread task : tasks){
 			task.start();
 		} 
-		for(Task task : tasks){
+		for(TaskThread task : tasks){
 			task.join();
+			task.task.close();
 		}
 		
-		log.info("===done===");
-		broker.close(); 
+		log.info("===done==="); 
 	}
 	
+	@Override
+	public void close() throws IOException {
+		
+	}
 
-	class Task extends Thread{ 
-		MessageInvoker invoker;   
-		public Task() throws Exception{
-			invoker = setupInvoker(broker);
-		} 
+	class TaskThread extends Thread{  
+		private Task task;
+		public TaskThread(Task task){
+			this.task = task;
+		}
 		@Override
 		public void run() {  
+			long logInterval = Perf.this.logInterval;
+			if(logInterval <= 0){
+				logInterval = threadCount*loopCount/10;
+			} 
 			for(int i=0;i<loopCount;i++){ 
 				try { 
 					long count = counter.incrementAndGet(); 
-					doInvoking(invoker);  
+					task.doTask();  
 					if(count%logInterval == 0){
 						long end = System.currentTimeMillis();
 						String qps = String.format("%.4f", count*1000.0/(end-startTime));
@@ -90,6 +79,7 @@ public class Perf {
 			}
 		}
 	}
+	 
 	
 	public static Broker buildBroker(String[] args) throws Exception{
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");

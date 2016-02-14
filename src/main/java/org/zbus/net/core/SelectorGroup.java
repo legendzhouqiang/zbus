@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.zbus.kit.log.Logger;
  
 /**
- * SelectorGroup manages Selector threads <code>SelectorThread</code>, round-robin distribute 
+ * SelectorGroup manages Selector threads <code>SelectorThread</code>, round-robin distributing 
  * the socket channel encapsulated in <code>Session</code> to SelectorThread(NIO event engine)
  * 
  * @author rushmore (洪磊明)
