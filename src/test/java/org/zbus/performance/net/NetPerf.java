@@ -11,10 +11,10 @@ import org.zbus.performance.Perf;
 public class NetPerf{
 	
 	public static void main(String[] args) throws Exception { 
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:8080");
+		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 16);  
 		final int selectorCount = ConfigKit.option(args, "-selector", 0);  
-		final int loopCount = ConfigKit.option(args, "-loop", 10000);    
+		final int loopCount = ConfigKit.option(args, "-loop", 1000000);    
 		
 		final SelectorGroup group = new SelectorGroup();
 		group.selectorCount(selectorCount);
@@ -47,6 +47,7 @@ public class NetPerf{
 		};
 		perf.threadCount = threadCount;
 		perf.loopCount = loopCount;
+		perf.logInterval = 10000;
 		
 		perf.run();
 		
