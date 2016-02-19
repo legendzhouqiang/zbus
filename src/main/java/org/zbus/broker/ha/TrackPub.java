@@ -88,7 +88,7 @@ public class TrackPub implements Closeable{
 		for(MessageClient client : healthyTrackers){ 
 			try{
 				msg.removeHead(Message.ID);
-				client.send(msg);
+				client.sendAsync(msg);
 			}catch(IOException e){
 				log.error(e.getMessage(), e);
 			}

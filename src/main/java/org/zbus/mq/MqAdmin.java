@@ -31,7 +31,7 @@ import org.zbus.net.http.Message;
 
 public class MqAdmin{     
 	protected final Broker broker;      
-	protected String mq;            //队列唯一性标识 
+	protected String mq;   
 	protected final int mode;  
 	protected String accessToken = "";
 	protected String registerToken = "";
@@ -53,13 +53,7 @@ public class MqAdmin{
 		this.accessToken = config.getAccessToken();
 		this.registerToken = config.getRegisterToken();
 	} 
-	
-	/**
-	 * 默认使用broker代理创建，可以覆盖为Client直接创建，比如Consumer
-	 * @param req
-	 * @return
-	 * @throws IOException
-	 */
+	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
 		return broker.invokeSync(req, 10000);
 	}

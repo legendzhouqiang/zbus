@@ -5,9 +5,9 @@ import java.io.IOException;
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.net.core.Session;
+import org.zbus.mq.Consumer;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.rpc.mq.Service;
 import org.zbus.rpc.mq.ServiceConfig;
 
@@ -29,12 +29,12 @@ public class ConsumerMultiBroker {
 		//同时注册到多条zbus总线上
 		config.setBrokers(new Broker[]{broker1, broker2});
 		
-		config.setMessageHandler(new MessageHandler() { 
+		config.setConsumerHandler(new ConsumerHandler() { 
 			@Override
-			public void handle(Message msg, Session sess) throws IOException {
+			public void handle(Message msg, Consumer consumer) throws IOException { 
 				
 			}
-		}); 
+		});
 		
 		Service svc = new Service(config);
 		svc.start();  

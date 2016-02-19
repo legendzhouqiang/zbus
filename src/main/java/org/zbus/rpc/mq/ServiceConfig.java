@@ -23,15 +23,15 @@
 package org.zbus.rpc.mq;
 
 import org.zbus.broker.Broker;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
-import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.http.Message.MessageHandler;
+import org.zbus.mq.Protocol.MqMode; 
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig extends MqConfig { 
 	//capable of control underlying Session, priority over processor
-	//if messageHandler is set, messageProcessor will be disabled
-	private MessageHandler messageHandler; 
+	//if consumerHandler is set, messageProcessor will be disabled
+	private ConsumerHandler consumerHandler; 
 	private MessageProcessor messageProcessor; 
 	private int consumerCount = 1; 
 	private Broker[] brokers;
@@ -79,15 +79,15 @@ public class ServiceConfig extends MqConfig {
 
 	public void setMessageProcessor(MessageProcessor messageProcessor) {
 		this.messageProcessor = messageProcessor;
-	}
+	} 
 	
 	
-	public MessageHandler getMessageHandler() {
-		return messageHandler;
+	public ConsumerHandler getConsumerHandler() {
+		return consumerHandler;
 	}
 
-	public void setMessageHandler(MessageHandler messageHandler) {
-		this.messageHandler = messageHandler;
+	public void setConsumerHandler(ConsumerHandler consumerHandler) {
+		this.consumerHandler = consumerHandler;
 	}
 
 	@Override

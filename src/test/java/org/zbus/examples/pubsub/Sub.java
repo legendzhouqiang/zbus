@@ -6,10 +6,9 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 
 public class Sub {
 	@SuppressWarnings("resource")
@@ -23,10 +22,10 @@ public class Sub {
 		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
 		c.setTopic("sse,google,ms"); 
 		
-		c.onMessage(new MessageHandler() { 
+		c.onMessage(new ConsumerHandler() { 
 			@Override
-			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg); 
+			public void handle(Message msg, Consumer consumer) throws IOException {  
+				System.out.println(msg);
 			}
 		});
 		

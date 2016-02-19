@@ -27,24 +27,11 @@ import java.io.IOException;
 
 import org.zbus.kit.NetKit;
 import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.net.http.MessageClient;
 
 
-public interface Broker extends MessageInvoker, Closeable{
-	/**
-	 * 向Broker索取一个链接对象
-	 * @param hint
-	 * @return
-	 * @throws IOException
-	 */
-	MessageClient getClient(BrokerHint hint) throws IOException;
-	/**
-	 * 通知Broker可以关闭当前链接（具体是否关闭视实现而定，带有连接池功能，一般不执行物理关闭）
-	 * @param client
-	 * @throws IOException
-	 */
-	void closeClient(MessageClient client) throws IOException;
-	
+public interface Broker extends MessageInvoker, Closeable{ 
+	MessageInvoker getClient(BrokerHint hint) throws IOException; 
+	void closeClient(MessageInvoker client) throws IOException; 
 	
 	public static class BrokerHint {   
 		private static final String requestIp = NetKit.getLocalIp();

@@ -27,10 +27,9 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
-import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class Service implements Closeable {   
@@ -42,8 +41,8 @@ public class Service implements Closeable {
 		if(config.getMq() == null || "".equals(config.getMq())){
 			throw new IllegalArgumentException("MQ required");
 		}
-		if(config.getMessageProcessor() == null && config.getMessageHandler() == null){
-			throw new IllegalArgumentException("ServiceHandler or MessageProcessor required");
+		if(config.getMessageProcessor() == null && config.getConsumerHandler() == null){
+			throw new IllegalArgumentException("ConsumerHandler or MessageProcessor required");
 		}  
 	}
 	 
@@ -77,13 +76,13 @@ public class Service implements Closeable {
 			mqConfig.setTopic(config.getTopic());
 			mqConfig.setVerbose(config.isVerbose());
 			
-			MessageHandler handler = config.getMessageHandler(); 
+			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  
-				final Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
+				Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
 				if(handler == null){
-					handler = new MessageHandler() { 
+					handler = new ConsumerHandler() { 
 						@Override
-						public void handle(Message msg, Session sess) throws IOException { 
+						public void handle(Message msg, Consumer consumer) throws IOException { 
 							final String mq = msg.getMq();
 							final String msgId  = msg.getId();
 							final String sender = msg.getSender();
@@ -94,7 +93,7 @@ public class Service implements Closeable {
 								res.setMq(mq);  
 								res.setRecver(sender); 
 								//route back message
-								c.routeMessage(res);
+								consumer.routeMessage(res);
 							}
 						}
 					};

@@ -185,7 +185,7 @@ public class TrackSub implements Closeable{
 		try { 
     		Message msg = new Message(); 
     		msg.setCmd(HaCommand.SubAll);
-    		client.send(msg);
+    		client.sendAsync(msg);
 		} catch (IOException e) { 
 			//log.error(e.getMessage(), e);
 		}

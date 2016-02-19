@@ -31,13 +31,12 @@ import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
-import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.Message.MessageInvoker;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = Logger.getLogger(Consumer.class);
 
-	private MessageClient client; // 消费者拥有一个物理链接
+	private MessageInvoker client; // 消费者拥有一个物理链接
 	private String topic = null; // 为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
 	private int consumeTimeout = 300000; // 5 minutes
 
@@ -120,12 +119,12 @@ public class Consumer extends MqAdmin implements Closeable {
 	} 
 
 	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
+	protected Message invokeSync(Message req) throws IOException, InterruptedException {
 		ensureClient();
-		return client.invokeSync(req);
+		return client.invokeSync(req, 10000);
 	}
 
-	private MessageClient replyClient; // Linux优化，Reply使用分离的Client
+	private MessageInvoker replyClient; // Linux优化，Reply使用分离的Client
 
 	private void ensureReplyClient() throws IOException {
 		if (this.replyClient == null) {
@@ -136,13 +135,13 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 		}
 	}
-
+	 
 	public void routeMessage(Message msg) throws IOException {
 		ensureReplyClient();
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false);
 
-		replyClient.send(msg);
+		replyClient.invokeAsync(msg, null);
 	}
 
 	public String getTopic() {
@@ -157,7 +156,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 
 	private volatile Thread consumerThread = null;
-	private volatile MessageHandler consumerHandler;
+	private volatile ConsumerHandler consumerHandler;
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
@@ -171,11 +170,11 @@ public class Consumer extends MqAdmin implements Closeable {
 						break;
 					} 
 					if (consumerHandler == null) {
-						log.warn("Missing consumer MessageHandler, call onMessage first");
+						log.warn("Missing consumerHandler, call onMessage first");
 						continue;
 					}
 					try {
-						consumerHandler.handle(msg, client.getSession());
+						consumerHandler.handle(msg, Consumer.this);
 					} catch (IOException e) {
 						log.error(e.getMessage(), e);
 					}
@@ -186,7 +185,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	};
 
-	public void onMessage(final MessageHandler handler) {
+	public void onMessage(final ConsumerHandler handler) {
 		this.consumerHandler = handler;
 	}
 
@@ -216,7 +215,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	}
 	
-	public synchronized void start(MessageHandler handler){
+	public synchronized void start(ConsumerHandler handler){
 		onMessage(handler);
 		start();
 	}
@@ -236,4 +235,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeTimeout = consumeTimeout;
 	}
 
+	public static interface ConsumerHandler{
+		void handle(Message msg, Consumer consumer) throws IOException;
+	}
 }

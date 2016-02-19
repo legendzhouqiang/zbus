@@ -23,7 +23,7 @@ public class StringClient{
 		//3) set codec of message
 		client.codec(new StringCodec()); 
 		
-		//Client is an IoAdaptor!!! you change dynamically change the event handling logic
+		//Client is an IoAdaptor!!! you can dynamically change the event handler logic
 		client.onMessage(new MsgHandler<String>() { 
 			@Override
 			public void handle(String msg, Session sess) throws IOException {
@@ -34,7 +34,7 @@ public class StringClient{
 		//just try to ping pong 
 		while(true){ 
 			try{
-				client.send("hello[time]: " + System.currentTimeMillis()); 
+				client.sendAsync("hello[time]: " + System.currentTimeMillis()); 
 			}catch(Exception e){
 				e.printStackTrace();
 			}

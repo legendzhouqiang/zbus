@@ -53,13 +53,7 @@ public class InvokingClient<REQ extends Id, RES extends Id>
 	public InvokingClient(String address, SelectorGroup selectorGroup) {
 		super(address, selectorGroup); 
 	} 
-	 
-	public void send(REQ req) throws IOException{
-		if(req.getId() == null){
-			req.setId(Ticket.nextId());
-		} 
-    	super.send(req);
-    } 
+ 
 	
 	@Override
     protected void onMessage(Object obj, Session sess) throws IOException {  

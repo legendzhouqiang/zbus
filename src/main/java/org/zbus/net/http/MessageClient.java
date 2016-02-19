@@ -46,7 +46,7 @@ public class MessageClient extends InvokingClient<Message, Message> implements M
 			Message hbt = new Message();
 			hbt.setCmd(Message.HEARTBEAT);
 			try {
-				this.send(hbt);
+				this.invokeAsync(hbt, null);
 			} catch (IOException e) {  
 				//ignore
 			}

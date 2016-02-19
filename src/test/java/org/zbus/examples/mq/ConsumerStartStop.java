@@ -6,10 +6,9 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
-import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 
 public class ConsumerStartStop {
 	public static void main(String[] args) throws Exception{  
@@ -25,10 +24,11 @@ public class ConsumerStartStop {
 		//创建消费者
 		@SuppressWarnings("resource")
 		Consumer c = new Consumer(config);  
-		c.onMessage(new MessageHandler() { 
+		c.onMessage(new ConsumerHandler() { 
 			@Override
-			public void handle(Message msg, Session sess) throws IOException {
-				System.out.println(msg); 
+			public void handle(Message msg, Consumer consumer) throws IOException { 
+				
+				System.out.println(msg);
 			}
 		});
 		

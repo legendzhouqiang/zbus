@@ -22,6 +22,7 @@
  */
 package org.zbus.broker;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
@@ -31,6 +32,7 @@ import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.Message.MessageInvoker;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = Logger.getLogger(SingleBroker.class);     
@@ -111,15 +113,18 @@ public class SingleBroker implements Broker {
 		}
 	}
 	
-	public MessageClient getClient(BrokerHint hint) throws IOException{ 
+	public MessageInvoker getClient(BrokerHint hint) throws IOException{ 
 		MessageClient client = new MessageClient(this.serverAddress, this.selectorGroup);
 		client.attr("server", serverAddress);
 		return client;
 	}
 
-	public void closeClient(MessageClient client) throws IOException {
+	public void closeClient(MessageInvoker client) throws IOException {
 		if(client == null) return; //ignore
-		client.close();
+		if(client instanceof Closeable){
+			((Closeable)client).close();
+		}
+		
 	}
 
 	

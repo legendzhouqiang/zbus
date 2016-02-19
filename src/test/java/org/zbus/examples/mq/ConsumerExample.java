@@ -5,9 +5,8 @@ import java.io.IOException;
 import org.zbus.broker.Broker;
 import org.zbus.broker.SingleBroker;
 import org.zbus.mq.Consumer;
-import org.zbus.net.core.Session;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 
 public class ConsumerExample { 
 	@SuppressWarnings("resource")
@@ -15,9 +14,10 @@ public class ConsumerExample {
 		Broker broker = new SingleBroker(); // default to 127.0.0.1:15555
  
 		Consumer consumer = new Consumer(broker, "MyMQ"); 
-		consumer.start(new MessageHandler() { 
+		consumer.start(new ConsumerHandler() { 
 			@Override
-			public void handle(Message msg, Session sess) throws IOException {
+			public void handle(Message msg, Consumer consumer) throws IOException { 
+				
 				System.out.println(msg);
 			}
 		});    

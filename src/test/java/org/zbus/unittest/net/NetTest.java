@@ -15,7 +15,7 @@ public class NetTest {
 		Message req = new Message();
 		req.setBody("test");
 		try{
-			client.send(req);
+			client.sendAsync(req);
 		}catch(IOException e){
 			System.err.println(e);
 		}

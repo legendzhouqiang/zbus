@@ -57,11 +57,11 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	protected int port = 15555;
 
 	protected int readTimeout = 3000;
-	protected int connectTimeout = 3000;
-	protected int heartbeatInterval = 60000; // 60s
+	protected int connectTimeout = 3000; 
 
 	protected ConcurrentMap<String, Object> attributes = null;
-	protected final ScheduledExecutorService heartbeator = Executors.newSingleThreadScheduledExecutor();
+	//heartbeat default to disabled
+	protected volatile ScheduledExecutorService heartbeator = null;
 
 	protected Session session; 
 	
@@ -79,19 +79,27 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		this.port = Integer.valueOf(blocks[1]);
 		this.selectorGroup = selectorGroup; 
 		
-		selectorGroup.start(); 
-		
-		this.heartbeator.scheduleAtFixedRate(new Runnable() {
-			public void run() {
-				heartbeat();
-			}
-		}, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
+		selectorGroup.start();  
 	}
 
 	public Client(String host, int port, SelectorGroup selectorGroup) { 
 		this(String.format("%s:%d", host, port), selectorGroup);
 	}
 
+	public void startHeartbeat(){
+		startHeartbeat(60000); //default to 1 minute
+	}
+	
+	public void startHeartbeat(int heartbeatInterval){
+		if(heartbeator == null){
+			heartbeator = Executors.newSingleThreadScheduledExecutor();
+			this.heartbeator.scheduleAtFixedRate(new Runnable() {
+				public void run() {
+					heartbeat();
+				}
+			}, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
+		}
+	}
 	
 	protected void heartbeat() {
 		
@@ -102,8 +110,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	}
 
 	public void connectSync() throws IOException {
-		if (!this.hasConnected()) {
-			// 同步进行连接操作
+		if (!this.hasConnected()) { 
 			connectAsync();
 			this.session.waitToConnect(this.connectTimeout);
 		}
@@ -128,7 +135,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 		}
 	}
 	
-	public void send(REQ req) throws IOException{
+	public void sendAsync(REQ req) throws IOException{
     	connectSync(); 
     	this.session.write(req);
     } 
@@ -180,7 +187,10 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		this.heartbeator.shutdown();
+		if(this.heartbeator != null){
+			this.heartbeator.shutdown();
+			this.heartbeator = null;
+		} 
 		this.onDisconnected(null); //clear disconnection handler
 		if (this.session != null) {
 			this.session.close();
@@ -209,14 +219,6 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	
 	public ExecutorService getExecutorService(){
 		return this.selectorGroup.getExecutorService();
-	}
-
-	public int getHeartbeatInterval() {
-		return heartbeatInterval;
-	}
-
-	public void setHeartbeatInterval(int heartbeatInterval) {
-		this.heartbeatInterval = heartbeatInterval;
 	}
 
 	@SuppressWarnings("unchecked")

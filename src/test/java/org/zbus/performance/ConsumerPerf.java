@@ -8,10 +8,9 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Consumer;
+import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
-import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageHandler;
 
 public class ConsumerPerf {
 	public static void main(String[] args) throws Exception{   
@@ -33,9 +32,9 @@ public class ConsumerPerf {
 		for(int i=0;i<threadCount;i++){ 
 			@SuppressWarnings("resource")
 			Consumer c = new Consumer(config);  
-			c.onMessage(new MessageHandler() { 
+			c.onMessage(new ConsumerHandler() { 
 				@Override
-				public void handle(Message msg, Session sess) throws IOException {
+				public void handle(Message msg, Consumer consumer) throws IOException { 
 					counter.incrementAndGet();
 					long curr = counter.get();
 					if(curr %interval == 0){

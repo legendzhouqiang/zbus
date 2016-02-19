@@ -32,6 +32,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.Message.MessageInvoker;
 
 public class HaBroker implements Broker {   
 	private static final Logger log = Logger.getLogger(HaBroker.class);
@@ -50,7 +51,7 @@ public class HaBroker implements Broker {
 	}
 	
 	@Override
-	public MessageClient getClient(BrokerHint hint) throws IOException { 
+	public MessageInvoker getClient(BrokerHint hint) throws IOException { 
 		Broker broker = brokerSelector.selectByBrokerHint(hint);
 		if(broker == null){
 			throw new BrokerException("Missing broker for " + hint);
@@ -59,13 +60,18 @@ public class HaBroker implements Broker {
 	}
 
 	@Override
-	public void closeClient(MessageClient client) throws IOException { 
-		Broker broker = brokerSelector.selectByClient(client);
+	public void closeClient(MessageInvoker client) throws IOException { 
+		if(!(client instanceof MessageClient)){
+			throw new IllegalArgumentException("client should be instance of MessageClient");
+		}
+		
+		MessageClient messageClient = (MessageClient)client;
+		Broker broker = brokerSelector.selectByClient(messageClient);
 		if(broker == null){
-			log.warn("Missing broker for " + client);
-			client.close();
+			log.warn("Missing broker for " + messageClient);
+			messageClient.close();
 		} else {
-			broker.closeClient(client); 
+			broker.closeClient(messageClient); 
 		}
 	}
 	
