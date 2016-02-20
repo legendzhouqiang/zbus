@@ -31,7 +31,7 @@ public class MqServerConfig{
 	
 	public int selectorCount = 0; //use default value #CPU/2
 	public int executorCount = 0; //use default value 64
-	public boolean verbose = true;
+	public boolean verbose = false;
 	public String storePath = "store";
 	public String registerToken = "";  
 	public String serverMainIpOrder = null;

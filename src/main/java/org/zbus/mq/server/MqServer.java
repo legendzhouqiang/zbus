@@ -104,6 +104,8 @@ public class MqServer extends Server{
 	
 	@Override
 	public void start() throws IOException { 
+		if(started) return;
+		
 		log.info("MqServer starting ...");
 		super.start(); 
 		if(config.trackServerList!= null){
@@ -186,6 +188,10 @@ public class MqServer extends Server{
 
 	public MqFilter getMqFilter() {
 		return mqFilter;
+	} 
+
+	public MqAdaptor getDefaultMqAdaptor() {
+		return defaultMqAdaptor;
 	}
 
 	public static void main(String[] args) throws Exception {

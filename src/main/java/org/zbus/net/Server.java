@@ -59,6 +59,7 @@ public class Server implements Closeable{
 	protected String serverAddr; //Server address = address of the first registered IoAdaptor
 	protected String serverName = "Server";  
 	protected String serverMainIpOrder = null;
+	protected volatile boolean started = false;
 	
 	protected Map<String, IoAdaptorInfo> adaptors = new ConcurrentHashMap<String, IoAdaptorInfo>();
 	
@@ -113,6 +114,9 @@ public class Server implements Closeable{
 	}
 	
 	public void start() throws IOException{   
+		if(started) return;
+		started = true;
+		
 		if(selectorGroup == null){
 			throw new IllegalStateException("Missing SelectorGroup");
 		}
@@ -162,6 +166,7 @@ public class Server implements Closeable{
     		adaptor.serverChannel = null;
     	}  
 		adaptors.clear();
+		started = false;
     }
     
 	public void setSelectorGroup(SelectorGroup selectorGroup) {
@@ -174,6 +179,10 @@ public class Server implements Closeable{
     
 	public String getServerAddr() {
 		return serverAddr;
+	}
+
+	public boolean isStarted() {
+		return started;
 	} 
 	
 }
