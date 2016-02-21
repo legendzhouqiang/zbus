@@ -1,7 +1,7 @@
 # ZBUS--轻量级MQ、RPC、服务总线
 
 
-##ZBUS = MQ + RPC + PROXY
+##ZBUS = MQ + RPC
 
 
 * **支持消息队列, 发布订阅, RPC, 代理（TCP/DMZ）**
