@@ -26,19 +26,20 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
-import org.zbus.kit.pool.ObjectFactory;
 import org.zbus.kit.pool.Pool;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageClient;
 import org.zbus.net.http.Message.MessageInvoker;
+import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.MessageClientFactory;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = Logger.getLogger(SingleBroker.class);     
 	
 	private final Pool<MessageClient> pool; 
-	private String serverAddress; 
+	private final MessageClientFactory factory;
+	private final String serverAddress; 
 	
 	private BrokerConfig config;
 	private SelectorGroup selectorGroup = null;
@@ -63,13 +64,14 @@ public class SingleBroker implements Broker {
 			this.ownSelectorGroup = false;
 		}
 		this.selectorGroup.start(); 
-		
-		this.pool = Pool.getPool(new MessageClientFactory(), this.config); 
+		this.factory = new MessageClientFactory(this.serverAddress, this.selectorGroup);
+		this.pool = Pool.getPool(factory, this.config); 
 	}  
 
 	@Override
 	public void close() throws IOException { 
-		this.pool.close(); 
+		this.pool.close();
+		this.factory.close();
 		if(ownSelectorGroup && this.selectorGroup != null){
 			try {
 				this.selectorGroup.close();
@@ -126,29 +128,7 @@ public class SingleBroker implements Broker {
 		}
 		
 	}
-
-	
-	private class MessageClientFactory implements ObjectFactory<MessageClient> {		
-		@Override
-		public boolean validateObject(MessageClient client) { 
-			if(client == null) return false;
-			return client.hasConnected();
-		}
-		
-		@Override
-		public void destroyObject(MessageClient client){ 
-			try {
-				client.close();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e); 
-			}
-		}
-		
-		@Override
-		public MessageClient createObject() { 
-			return new MessageClient(serverAddress, selectorGroup); 
-		}
-	}
+ 
 }
 
 
