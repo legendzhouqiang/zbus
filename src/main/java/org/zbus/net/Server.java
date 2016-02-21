@@ -162,6 +162,7 @@ public class Server implements Closeable{
     public void close() throws IOException { 
 		for(Entry<String, IoAdaptorInfo> e : adaptors.entrySet()){ 
     		IoAdaptorInfo adaptor = e.getValue();
+    		if(selectorGroup == null) continue; //
     		selectorGroup.unregisterServerChannel(adaptor.serverChannel);
     		adaptor.serverChannel = null;
     	}  

@@ -1,0 +1,50 @@
+package org.zbus.examples.local;
+
+import org.zbus.broker.Broker;
+import org.zbus.examples.rpc.RpcCases;
+import org.zbus.examples.rpc.appdomain.InterfaceExample;
+import org.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
+import org.zbus.mq.local.LocalBroker;
+import org.zbus.net.http.Message.MessageInvoker;
+import org.zbus.rpc.RpcFactory;
+import org.zbus.rpc.RpcProcessor;
+import org.zbus.rpc.mq.MqInvoker;
+import org.zbus.rpc.mq.Service;
+import org.zbus.rpc.mq.ServiceConfig;
+
+public class LocalRpcExample {
+
+	public static void main(String[] args) throws Exception {  
+		Broker broker = new LocalBroker(); 
+ 
+		
+		RpcProcessor processor = new RpcProcessor();  
+		processor.addModule(new InterfaceExampleImpl());  
+		 
+		
+		ServiceConfig config = new ServiceConfig();
+		config.setConsumerCount(2); 
+		config.setMq("MyRpc"); 
+		config.setBroker(broker);    
+		config.setMessageProcessor(processor);   
+		
+		Service svc = new Service(config);
+		svc.start();  
+		
+		
+		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");  
+		
+		//use RpcFactory to generate dynamic implementation via zbus
+		RpcFactory factory = new RpcFactory(invoker);   
+		InterfaceExample hello = factory.getService(InterfaceExample.class);
+		
+		RpcCases.testDynamicProxy(hello); //test cases
+		
+		
+		svc.close();
+		broker.close(); 
+		
+		System.out.println("==done== waiting fastjson to be destroyed....(improve fastjson)");
+	}
+
+}

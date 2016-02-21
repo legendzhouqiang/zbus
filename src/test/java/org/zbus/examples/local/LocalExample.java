@@ -4,21 +4,16 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
-import org.zbus.mq.Producer;
 import org.zbus.mq.Consumer.ConsumerHandler;
+import org.zbus.mq.Producer;
 import org.zbus.mq.local.LocalBroker;
-import org.zbus.mq.server.MqServer;
-import org.zbus.mq.server.MqServerConfig;
 import org.zbus.net.http.Message;
 
 public class LocalExample {
 
-	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		MqServerConfig config = new MqServerConfig();  
-		MqServer server = new MqServer(config);  
-		
-		Broker broker = new LocalBroker(server); 
+		//this broker is shared among same JVM process
+		Broker broker = new LocalBroker(); 
  
 		Consumer consumer = new Consumer(broker, "MyMQ"); 
 		consumer.start(new ConsumerHandler() { 
@@ -35,11 +30,11 @@ public class LocalExample {
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
 			msg = producer.sendSync(msg); 
-			//Thread.sleep(1000);
+			Thread.sleep(100);
 		} 
 		
-		//consumer.close();
-		//server.close();
+		consumer.close();
+		broker.close();
 	}
 
 }

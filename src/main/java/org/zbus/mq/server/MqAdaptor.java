@@ -396,19 +396,19 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		mqServer.pubEntryUpdate(mq); 
 	}
 	
-	protected void onSessionAccepted(Session sess) throws IOException {
+	public void onSessionAccepted(Session sess) throws IOException {
 		sessionTable.put(sess.id(), sess);
 		super.onSessionAccepted(sess); 
 	}
 
 	@Override
-	protected void onException(Throwable e, Session sess) throws IOException { 
+	public void onException(Throwable e, Session sess) throws IOException { 
 		cleanSession(sess);
 		super.onException(e, sess);
 	}
 	
 	@Override
-	protected void onSessionToDestroy(Session sess) throws IOException { 
+	public void onSessionToDestroy(Session sess) throws IOException { 
 		cleanSession(sess);
 		super.onSessionToDestroy(sess);
 	} 

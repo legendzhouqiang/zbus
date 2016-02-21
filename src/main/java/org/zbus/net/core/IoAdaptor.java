@@ -63,7 +63,9 @@ public abstract class IoAdaptor implements Codec{
 	 * @throws IOException if fails
 	 */
 	protected void onSessionAccepted(Session sess) throws IOException { 
-		sess.selectorGroup().registerSession(SelectionKey.OP_READ, sess); 
+		if(sess.selectorGroup() != null){
+			sess.selectorGroup().registerSession(SelectionKey.OP_READ, sess); 
+		}
 	}
 	/**
 	 * Triggered after session registered, omit this event by default

@@ -58,6 +58,10 @@ public class MqServer extends Server{
 	private String registerToken = "";
 	private MqFilter mqFilter;
 	
+	public MqServer(){
+		this(new MqServerConfig()); //using all defaults
+	}
+	
 	public MqServer(MqServerConfig config){ 
 		this.config = config;   
 		serverName = "MqServer";   
@@ -73,11 +77,7 @@ public class MqServer extends Server{
 			}  
 		} else {
 			mqFilter = new MemoryMqFilter(); 
-		}
-		
-		selectorGroup = new SelectorGroup();
-		selectorGroup.selectorCount(config.selectorCount);
-		selectorGroup.executorCount(config.executorCount); 
+		} 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -105,6 +105,12 @@ public class MqServer extends Server{
 	@Override
 	public void start() throws IOException { 
 		if(started) return;
+		
+		if(selectorGroup == null){
+			selectorGroup = new SelectorGroup();
+			selectorGroup.selectorCount(config.selectorCount);
+			selectorGroup.executorCount(config.executorCount); 
+		}
 		
 		log.info("MqServer starting ...");
 		super.start(); 

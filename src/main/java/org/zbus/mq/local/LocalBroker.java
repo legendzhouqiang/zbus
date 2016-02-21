@@ -7,6 +7,7 @@ import org.zbus.broker.Broker;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.server.MqAdaptor;
 import org.zbus.mq.server.MqServer;
+import org.zbus.mq.server.MqServerConfig;
 import org.zbus.net.Sync;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.Sync.Ticket;
@@ -15,6 +16,15 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 
+/**
+ * LocalBroker is a type of Broker acting as invocation to a local MqServer instance, which do 
+ * not need to be started in networking mode. MQ clients(both Producer and Consumer) can still work
+ * with LocalBroker. The advantage of employing LocalBroker is the performance gain especially when
+ * working scenario is in-jvm process mode.
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
 public class LocalBroker extends Session implements Broker {
 	private static final Logger log = Logger.getLogger(LocalBroker.class);
 
@@ -23,15 +33,40 @@ public class LocalBroker extends Session implements Broker {
 	protected final Sync<Message, Message> sync = new Sync<Message, Message>();
 	protected int readTimeout = 3000;
 
+	protected boolean ownMqServer = false;
+
+	/**
+	 * The underlying MqServer is configured with defaults
+	 * If you want to do personalization, use constructor with MqServerConfig
+	 * @throws IOException
+	 */
+	public LocalBroker() throws IOException{
+		this(new MqServerConfig()); 
+	}
+	
+	/**
+	 * Configure the underlying MqServer with configuration 
+	 * 
+	 * @param config MqServer configuration
+	 * @throws IOException
+	 */
+	public LocalBroker(MqServerConfig config) throws IOException{
+		this(new MqServer(config));
+		this.ownMqServer = true;
+	}
+	
+	/**
+	 * Configure with a MqServer instance (it can be non-started)
+	 * @param mqServer MqServer instance
+	 * @throws IOException
+	 */
 	public LocalBroker(MqServer mqServer) throws IOException {
 		super(null, null, null);
-		this.mqServer = mqServer;
-		if(!this.mqServer.isStarted()){
-			this.mqServer.start();
-		}
-		
+		this.mqServer = mqServer;  
 		this.adaptor = this.mqServer.getDefaultMqAdaptor();
 		this.setStatus(SessionStatus.CONNECTED);  
+		
+		adaptor.onSessionAccepted(this);
 	}
 
 	@Override
@@ -106,6 +141,11 @@ public class LocalBroker extends Session implements Broker {
 	@Override
 	public void close() throws IOException {
 		this.setStatus(SessionStatus.CLOSED);
+		
+		adaptor.onSessionToDestroy(this);
+		if(ownMqServer){
+			this.mqServer.close();
+		}
 	}
 
 	@Override
