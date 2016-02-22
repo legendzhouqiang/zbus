@@ -81,6 +81,9 @@ public class Message implements Id {
 	public static final String WINDOW   = "window";  
 	public static final String ENCODING = "encoding";
 	
+	public static final String KEY       = "key";  
+	public static final String KEY_GROUP = "key_group";
+	
 	 
 	//HTTP协议第一行（请求串或者返回状态码）
 	private Meta meta = new Meta(); 
@@ -438,6 +441,20 @@ public class Message implements Id {
 		return this;
 	} 
 	
+	public String getKey() {
+		return getHead(KEY);
+	} 
+	public Message setKey(String value) {
+		this.setHead(KEY, value);
+		return this;
+	} 
+	public String getKeyGroup() {
+		return getHead(KEY_GROUP);
+	} 
+	public Message setKeyGroup(String value) {
+		this.setHead(KEY_GROUP, value);
+		return this;
+	} 
 	
 	public boolean isStatus200() {
 		return "200".equals(this.getResponseStatus());

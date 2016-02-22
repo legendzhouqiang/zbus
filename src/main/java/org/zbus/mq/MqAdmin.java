@@ -60,14 +60,14 @@ public class MqAdmin{
 	
 	public Message queryMQ() throws IOException, InterruptedException{
 		Message req = new Message();
-    	req.setCmd(Protocol.Query); 
+    	req.setCmd(Protocol.QueryMQ); 
     	req.setMq(this.mq); 
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken);
     	
     	return invokeSync(req); 
 	}
-   
+    
     public boolean createMQ() throws IOException, InterruptedException{
     	Message req = new Message();
     	req.setCmd(Protocol.CreateMQ); 
@@ -80,6 +80,74 @@ public class MqAdmin{
     	if(res == null) return false;
     	return res.isStatus200();
     } 
+    
+    public boolean removeMQ() throws IOException, InterruptedException{
+    	Message req = new Message();
+    	req.setCmd(Protocol.RemoveMQ); 
+    	req.setHead("mq_name", mq); 
+    	req.setHead("register_token", registerToken);  
+    	
+    	Message res = invokeSync(req);
+    	if(res == null) return false;
+    	return res.isStatus200();
+    } 
+    
+    public int addKey(String key) throws IOException, InterruptedException{
+    	return addKey(null, key);
+    }
+    
+    public int addKey(String keyGroup, String key) throws IOException, InterruptedException{
+    	return addKey(this.mq, keyGroup, key);
+    }
+    
+    public int addKey(String mq, String keyGroup, String key) throws IOException, InterruptedException{
+    	Message req = new Message();
+    	req.setCmd(Protocol.AddKey); 
+    	req.setMq(mq);
+    	req.setKeyGroup(keyGroup);
+    	req.setKey(key);
+    	req.setHead("register_token", registerToken); 
+    	
+    	Message res = invokeSync(req);
+    	if(res == null) return 0;
+    	if(!res.isStatus200()){
+    		return 0;
+    	}
+    	return Integer.valueOf(res.getBodyString());
+    }
+    
+    public int removeKey(String key) throws IOException, InterruptedException{
+    	return removeKey(null, key);
+    }
+    
+    public int removeKey(String keyGroup, String key) throws IOException, InterruptedException{
+    	return removeKey(this.mq, keyGroup, key);
+    }
+    
+    public int removeKey(String mq, String keyGroup, String key) throws IOException, InterruptedException{
+    	Message req = new Message();
+    	req.setCmd(Protocol.RemoveKey);
+    	req.setMq(mq);
+    	req.setKeyGroup(keyGroup);
+    	req.setKey(key);
+    	req.setHead("register_token", registerToken); 
+    	
+    	Message res = invokeSync(req);
+    	if(res == null) return 0;
+    	if(!res.isStatus200()){
+    		return 0;
+    	}
+    	return Integer.valueOf(res.getBodyString());
+    } 
+    
+    
+    public int removeGroup(String mq, String keyGroup) throws IOException, InterruptedException{
+    	return removeKey(mq, keyGroup);
+    }
+    
+    public int removeGroup(String keyGroup) throws IOException, InterruptedException{
+    	return removeKey(this.mq, keyGroup);
+    }
     
 	public String getMq() {
 		return mq;

@@ -61,14 +61,15 @@ public class PersistMqFilter implements MqFilter {
 		return true;
 	}
 
+	 
+
 	@Override
-	public void removeKey(String mq, String key) {
-		key = mq + "#" + key;
-		try { 
-			DatabaseEntry theKey = new DatabaseEntry(key.getBytes()); 
-			database.delete(null, theKey);  
-		} catch (Exception ex) {
-			//ignore
-		}
+	public int addKey(String mq, String group, String key) {
+		return 0;
+	}
+
+	@Override
+	public int removeKey(String mq, String group, String key) {
+		return 0;
 	} 
 }

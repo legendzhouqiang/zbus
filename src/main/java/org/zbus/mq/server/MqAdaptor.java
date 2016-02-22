@@ -50,14 +50,19 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  
-		registerHandler(Protocol.Route, routeHandler);  
-		registerHandler(Protocol.CreateMQ, createMqHandler); 
-		registerHandler(Protocol.Test, testHandler);
-		registerHandler(Protocol.Query, queryHandler);
+		registerHandler(Protocol.Route, routeHandler); 
 		
+		registerHandler(Protocol.CreateMQ, createMqHandler);
+		registerHandler(Protocol.QueryMQ, queryMqHandler);
+		registerHandler(Protocol.RemoveMQ, removeMqHandler);
+		
+		registerHandler(Protocol.AddKey, addKeyHandler); 
+		registerHandler(Protocol.RemoveKey, removeKeyHandler); 
+		 
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.Data, dataHandler); 
 		registerHandler(Protocol.Jquery, jqueryHandler);
+		registerHandler(Protocol.Test, testHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -235,6 +240,35 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		}
 	}; 
 	
+	private MessageHandler removeMqHandler = new MessageHandler() {  
+		@Override
+		public void handle(Message msg, Session sess) throws IOException { 
+			String registerToken = msg.getHead("register_token", "");
+			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+				msg.setBody("registerToken unmatched");
+				ReplyKit.reply403(msg, sess);
+				return; 
+			}
+			String mqName = msg.getHead("mq_name", "");
+			mqName = mqName.trim();
+			if("".equals(mqName)){
+				msg.setBody("Missing mq_name");
+				ReplyKit.reply400(msg, sess);
+				return;
+			}
+			synchronized (mqTable) {
+    			AbstractMQ mq = mqTable.get(mqName);
+    			if(mq == null){ 
+    				ReplyKit.reply404(msg, sess);
+    				return;
+    			}  
+    			mqTable.remove(mqName);
+    			mq.close();
+    			ReplyKit.reply200(msg, sess);
+			}
+		}
+	};
+	
 	private MessageHandler createMqHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
@@ -352,7 +386,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler queryHandler = new MessageHandler() {
+	private MessageHandler queryMqHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String json = "";
 			if(msg.getMq() == null){
@@ -373,6 +407,49 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			data.setHead("content-type", "application/json");
 			data.setBody(json);
 			sess.write(data);
+		}
+	};
+	
+	private MessageHandler addKeyHandler = new MessageHandler() {  
+		@Override
+		public void handle(Message msg, Session sess) throws IOException { 
+			String registerToken = msg.getHead("register_token", "");
+			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+				msg.setBody("registerToken unmatched");
+				ReplyKit.reply403(msg, sess);
+				return; 
+			}
+			String mq = msg.getMq();
+			String group = msg.getKeyGroup();
+			String key = msg.getKey(); 
+			
+			int count = mqFilter.addKey(mq, group, key);
+		    if(msg.isAck()){
+		    	msg.setBody(count+"");
+		    	ReplyKit.reply200WithBody(msg, sess);
+		    }
+		}
+	};
+	
+	private MessageHandler removeKeyHandler = new MessageHandler() {  
+		@Override
+		public void handle(Message msg, Session sess) throws IOException { 
+			String registerToken = msg.getHead("register_token", "");
+			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+				msg.setBody("registerToken unmatched");
+				ReplyKit.reply403(msg, sess);
+				return; 
+			}
+			
+			String mq = msg.getMq();
+			String group = msg.getKeyGroup();
+			String key = msg.getKey(); 
+			
+			int count = mqFilter.removeKey(mq, group, key);
+		    if(msg.isAck()){
+		    	msg.setBody(count+"");
+		    	ReplyKit.reply200WithBody(msg, sess);
+		    }
 		}
 	};
 	

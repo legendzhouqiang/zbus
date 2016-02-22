@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server;
  
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.AbstractQueue;
 
@@ -31,7 +32,7 @@ import org.zbus.mq.server.auth.DefaultAuth;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
-public abstract class AbstractMQ{	
+public abstract class AbstractMQ implements Closeable{	
 	protected final String name;
 	protected String creator;
 	protected int mode;

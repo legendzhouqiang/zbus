@@ -151,4 +151,16 @@ public class MQ extends AbstractMQ{
 		return pullSessions.size();
 	}
 	
+	@Override
+	public void close() throws IOException { 
+		PullSession pull = null;
+		while( (pull = pullQ.poll()) != null){
+			try{
+				pull.session.asyncClose();
+			}catch(IOException e){
+				log.warn(e.getMessage(), e);
+			}
+		}
+	}
+	
 }

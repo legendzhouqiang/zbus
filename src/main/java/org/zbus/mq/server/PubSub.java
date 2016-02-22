@@ -146,4 +146,18 @@ public class PubSub extends AbstractMQ{
 		info.consumerCount = info.consumerInfoList.size();
 		return info;
 	}
+	
+	@Override
+	public void close() throws IOException { 
+		PullSession pull = null;
+		Iterator<PullSession> iter = pullMap.values().iterator();
+		while( iter.hasNext()){
+			try{
+				pull = iter.next();
+				pull.session.asyncClose();
+			}catch(IOException e){
+				log.warn(e.getMessage(), e);
+			}
+		}
+	}
 }

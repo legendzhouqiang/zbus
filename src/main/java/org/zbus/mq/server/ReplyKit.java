@@ -29,6 +29,16 @@ import org.zbus.net.http.Message;
 
 public class ReplyKit {
 
+	public static void reply200WithBody(Message msg, Session sess) throws IOException {
+		Message res = new Message();
+		res.setId(msg.getId());
+		res.setMq(msg.getMq());
+		res.setResponseStatus(200);
+		res.setBody(msg.getBody());
+
+		sess.write(res);
+	}
+	
 	public static void reply200(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());

@@ -30,15 +30,20 @@ import java.util.Set;
 
 
 public class Protocol {  
-	public static final String Produce   = "produce";  //生产消息
-	public static final String Consume   = "consume";  //消费消息  
-	public static final String Route   	 = "route";  //请求等待应答消息  
-	public static final String CreateMQ  = "create_mq"; //创建队列
-	public static final String Auth      = "auth"; 
-	public static final String Query     = "query"; 
+	public static final String Produce   = "produce";   //produce message
+	public static final String Consume   = "consume";   //consume message
+	public static final String Route   	 = "route";     //route back message to sender
+
+	public static final String QueryMQ   = "query_mq"; 
+	public static final String CreateMQ  = "create_mq"; //create MQ
+	public static final String RemoveMQ  = "remove_mq"; //remove MQ
+	
+	public static final String AddKey    = "add_key";  
+	public static final String RemoveKey = "remove_key";  
+	
+	
+	public static final String Auth      = "auth";  
 	public static final String Test      = "test"; 
-	
-	
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery"; 
 	
