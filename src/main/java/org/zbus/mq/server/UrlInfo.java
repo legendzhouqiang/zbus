@@ -121,11 +121,5 @@ public class UrlInfo{
 		return "UrlInfo [cmd=" + cmd + ", mq=" + mq + ", module=" + module
 				+ ", method=" + method + ", params=" + params + ", extra="
 				+ extra + "]";
-	} 
-	
-	public static void main(String[] args){
-		UrlInfo url = new UrlInfo("/t2/xxx?ok", true);
-		System.out.println(url);
-	}
-
+	}   
 }

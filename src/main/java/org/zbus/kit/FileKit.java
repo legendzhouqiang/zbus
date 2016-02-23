@@ -34,8 +34,8 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-public class FileKit {   
-	
+public class FileKit {
+
 	public static InputStream loadFile(String resource, Class<?> clazz) {
 		ClassLoader classLoader = null;
 		try {
@@ -55,9 +55,9 @@ public class FileKit {
 					System.out.println("Can not find resource:" + resource);
 					return null;
 				}
-				if (url.toString().startsWith("jar:file:")) { 
+				if (url.toString().startsWith("jar:file:")) {
 					return clazz.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
-				} else { 
+				} else {
 					return new FileInputStream(new File(url.toURI()));
 				}
 			}
@@ -66,8 +66,8 @@ public class FileKit {
 			e.printStackTrace();
 		}
 		return null;
-	}  
-	
+	}
+
 	public static InputStream loadFile(String resource) {
 		ClassLoader classLoader = null;
 		try {
@@ -87,9 +87,9 @@ public class FileKit {
 					System.out.println("Can not find resource:" + resource);
 					return null;
 				}
-				if (url.toString().startsWith("jar:file:")) { 
+				if (url.toString().startsWith("jar:file:")) {
 					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
-				} else { 
+				} else {
 					return new FileInputStream(new File(url.toURI()));
 				}
 			}
@@ -98,35 +98,45 @@ public class FileKit {
 			e.printStackTrace();
 		}
 		return null;
-	}  
-	
-	
-	public static String loadFileContent(String resource) { 
-		InputStream in = FileKit.class.getClassLoader().
-				getResourceAsStream(resource);
-		if(in == null) return "";
-		
-		 Writer writer = new StringWriter(); 
-         char[] buffer = new char[1024];
-         try {
-        	 BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(in, "UTF-8"));
-             int n;
-             while ((n = reader.read(buffer)) != -1) {
-                 writer.write(buffer, 0, n);
-             }
-         } catch (UnsupportedEncodingException e) { 
+	}
+
+	public static String loadFileContent(String resource) {
+		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);
+		if (in == null)
+			return "";
+
+		Writer writer = new StringWriter();
+		char[] buffer = new char[1024];
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			int n;
+			while ((n = reader.read(buffer)) != -1) {
+				writer.write(buffer, 0, n);
+			}
+		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-		} catch (IOException e) { 
+		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-             try {
+			try {
 				in.close();
-			} catch (IOException e) { 
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
-         }
-         return writer.toString();
-	}  
-	
+		}
+		return writer.toString();
+	}
+
+	public static void deleteFile(File file) {
+		if (file.exists()) {
+			if (file.isDirectory()) {
+				File[] files = file.listFiles();
+				if(files == null) return; 
+				for (int i = 0; i < files.length; i++) {
+					deleteFile(files[i]);
+				} 
+			} 
+			file.delete(); 
+		}  
+	}
 }
