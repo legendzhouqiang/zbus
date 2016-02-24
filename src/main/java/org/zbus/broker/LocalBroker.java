@@ -1,9 +1,8 @@
-package org.zbus.mq.local;
+package org.zbus.broker;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.broker.Broker;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.server.MqAdaptor;
 import org.zbus.mq.server.MqServer;

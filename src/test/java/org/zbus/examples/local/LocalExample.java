@@ -3,10 +3,10 @@ package org.zbus.examples.local;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.LocalBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Producer;
-import org.zbus.mq.local.LocalBroker;
 import org.zbus.net.http.Message;
 
 public class LocalExample {

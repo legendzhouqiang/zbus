@@ -1,10 +1,10 @@
 package org.zbus.examples.local;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.LocalBroker;
 import org.zbus.examples.rpc.RpcCases;
 import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
-import org.zbus.mq.local.LocalBroker;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.RpcProcessor;

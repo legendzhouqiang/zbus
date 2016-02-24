@@ -1,8 +1,8 @@
 package org.zbus.examples.keys;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.LocalBroker;
 import org.zbus.mq.MqAdmin;
-import org.zbus.mq.local.LocalBroker;
 
 public class KeyExample {
 
