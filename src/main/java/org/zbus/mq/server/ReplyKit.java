@@ -91,5 +91,15 @@ public class ReplyKit {
 		res.setBody(String.format("Bad format: %s", msg.getBodyString()));
 		sess.write(res);
 	}
+	
+	public static void reply406(Message msg, Session sess) throws IOException {
+		Message res = new Message();
+		res.setId(msg.getId());
+		res.setMq(msg.getMq());
+		res.setResponseStatus(406);
+		res.setBody("" + System.currentTimeMillis());
+
+		sess.write(res);
+	}
 
 }

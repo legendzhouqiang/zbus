@@ -33,7 +33,7 @@ public class LocalExample {
 		for(int i=0;i<10;i++){
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
-			producer.sendAsync(msg);
+			producer.sendSync(msg);
 			Thread.sleep(100);
 		} 
 		

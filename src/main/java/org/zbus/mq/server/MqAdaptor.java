@@ -180,7 +180,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			
 			if(!mqFilter.permit(msg) ){
 				if(ack){
-					ReplyKit.reply200(msg, sess);
+					ReplyKit.reply406(msg, sess);
 				}
 				return;
 			}
