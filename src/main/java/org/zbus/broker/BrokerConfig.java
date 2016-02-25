@@ -46,6 +46,7 @@ package org.zbus.broker;
  */
 import org.zbus.kit.pool.PoolConfig;
 import org.zbus.mq.server.MqServer;
+import org.zbus.mq.server.MqServerConfig;
 import org.zbus.net.core.SelectorGroup;
 
 public class BrokerConfig extends PoolConfig{ 
@@ -60,7 +61,11 @@ public class BrokerConfig extends PoolConfig{
 	private int selectorCount = 0; //0代表使用默认值
 	private int executorCount = 0; //0代表使用默认值 
 	private SelectorGroup selectorGroup; //optional 
+	
+	//the following two items are designed to create JvmBroker
+	//priority: mqServer > mqServerConfig
 	private MqServer mqServer; //optional, used only for JvmBroker if supplied
+	private MqServerConfig mqServerConfig; // config to create MqServer, optional if mqServer not supplied
 	
 	public String getBrokerAddress() {
 		return brokerAddress;
@@ -124,6 +129,13 @@ public class BrokerConfig extends PoolConfig{
 	}
 	public void setMqServer(MqServer mqServer) {
 		this.mqServer = mqServer;
+	} 
+	
+	public MqServerConfig getMqServerConfig() {
+		return mqServerConfig;
+	}
+	public void setMqServerConfig(MqServerConfig mqServerConfig) {
+		this.mqServerConfig = mqServerConfig;
 	}
 	@Override
 	public BrokerConfig clone() { 

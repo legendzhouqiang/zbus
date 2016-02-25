@@ -41,7 +41,11 @@ public class ZbusBroker implements Broker{
 			if(config.getMqServer() != null){
 				support = new JvmBroker(config.getMqServer());
 			} else {
-				support = new JvmBroker();
+				if(config.getMqServerConfig() != null){
+					support = new JvmBroker(config.getMqServerConfig());
+				} else {
+					support = new JvmBroker();
+				}
 			}
 			return;
 		}
