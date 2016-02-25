@@ -51,7 +51,7 @@ public class SingleBroker implements Broker {
 	
 	public SingleBroker(BrokerConfig config) throws IOException{ 
 		this.config = config;
-		this.serverAddress = config.getServerAddress(); 
+		this.serverAddress = config.getBrokerAddress(); 
 		
 		if(config.getSelectorGroup() == null){
 			this.ownSelectorGroup = true;

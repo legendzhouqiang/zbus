@@ -51,7 +51,7 @@ public class TrackSub implements Closeable{
 	
 	
 	public TrackSub(String trackServerList, SelectorGroup dispatcher) {
-		String[] blocks = trackServerList.split("[;]");
+		String[] blocks = trackServerList.split("[;, ]");
     	for(String block : blocks){
     		final String address = block.trim();
     		if(address.equals("")) continue;

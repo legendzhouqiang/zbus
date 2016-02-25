@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Protocol.MqMode;
@@ -14,9 +14,9 @@ public class Sub2 {
 	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代表
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15556");
+		config.setBrokerAddress("127.0.0.1:15556");
 		
-		final Broker broker = new SingleBroker(config);
+		final Broker broker = new ZbusBroker(config);
 		
 		//2) 创建消费者
 		@SuppressWarnings("resource")

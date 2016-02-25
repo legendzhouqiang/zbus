@@ -3,7 +3,8 @@ package org.zbus.examples.local;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.LocalBroker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Producer;
@@ -13,7 +14,10 @@ public class LocalExample {
 
 	public static void main(String[] args) throws Exception {
 		//this broker is shared among same JVM process
-		Broker broker = new LocalBroker(); 
+		BrokerConfig config = new BrokerConfig();
+		config.setBrokerAddress("jvm");
+		Broker broker = new ZbusBroker(config);  //equal to new JvmBroker
+		
  
 		Consumer consumer = new Consumer(broker, "MyMQ"); 
 		consumer.start(new ConsumerHandler() { 

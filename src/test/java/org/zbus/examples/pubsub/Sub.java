@@ -15,7 +15,7 @@ public class Sub {
 	public static void main(String[] args) throws Exception{  
 		//1）创建Broker代表
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555"); 
+		config.setBrokerAddress("127.0.0.1:15555"); 
 		final Broker broker = new SingleBroker(config);
 		
 		//2) 创建消费者 

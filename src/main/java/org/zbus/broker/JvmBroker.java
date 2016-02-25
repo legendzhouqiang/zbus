@@ -24,8 +24,8 @@ import org.zbus.net.http.Message.MessageInvoker;
  * @author rushmore (洪磊明)
  *
  */
-public class LocalBroker extends Session implements Broker {
-	private static final Logger log = Logger.getLogger(LocalBroker.class);
+public class JvmBroker extends Session implements Broker {
+	private static final Logger log = Logger.getLogger(JvmBroker.class);
 
 	protected MqServer mqServer;
 	protected MqAdaptor adaptor;
@@ -39,7 +39,7 @@ public class LocalBroker extends Session implements Broker {
 	 * If you want to do personalization, use constructor with MqServerConfig
 	 * @throws IOException
 	 */
-	public LocalBroker() throws IOException{
+	public JvmBroker() throws IOException{
 		this(new MqServerConfig()); 
 	}
 	
@@ -49,7 +49,7 @@ public class LocalBroker extends Session implements Broker {
 	 * @param config MqServer configuration
 	 * @throws IOException
 	 */
-	public LocalBroker(MqServerConfig config) throws IOException{
+	public JvmBroker(MqServerConfig config) throws IOException{
 		this(new MqServer(config));
 		this.ownMqServer = true;
 	}
@@ -59,7 +59,7 @@ public class LocalBroker extends Session implements Broker {
 	 * @param mqServer MqServer instance
 	 * @throws IOException
 	 */
-	public LocalBroker(MqServer mqServer) throws IOException {
+	public JvmBroker(MqServer mqServer) throws IOException {
 		super(null, null, null);
 		this.mqServer = mqServer;  
 		this.adaptor = this.mqServer.getDefaultMqAdaptor();

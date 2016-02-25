@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
@@ -20,8 +20,8 @@ public class ConsumerPerf {
 		final int interval = ConfigKit.option(args, "-int", 10000); 
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setServerAddress(serverAddress);
-		Broker broker = new SingleBroker(brokerConfig);
+		brokerConfig.setBrokerAddress(serverAddress);
+		Broker broker = new ZbusBroker(brokerConfig);
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);

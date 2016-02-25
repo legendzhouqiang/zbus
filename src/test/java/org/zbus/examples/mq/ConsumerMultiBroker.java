@@ -16,11 +16,11 @@ public class ConsumerMultiBroker {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException { 
 		BrokerConfig brokerConfig1 = new BrokerConfig();
-		brokerConfig1.setServerAddress("127.0.0.1:15555");
+		brokerConfig1.setBrokerAddress("127.0.0.1:15555");
 		Broker broker1 = new SingleBroker(brokerConfig1);
 		
 		BrokerConfig brokerConfig2 = new BrokerConfig();
-		brokerConfig2.setServerAddress("127.0.0.1:15556");
+		brokerConfig2.setBrokerAddress("127.0.0.1:15556");
 		Broker broker2 = new SingleBroker(brokerConfig2);
 		
 		ServiceConfig config = new ServiceConfig();

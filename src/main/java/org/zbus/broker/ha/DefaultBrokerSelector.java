@@ -204,7 +204,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	}
 	
 	private void subscribeNotification(){
-		trackSub = new TrackSub(config.getTrackServerList(), selectorGroup);
+		trackSub = new TrackSub(config.getBrokerAddress(), selectorGroup);
 		
 		trackSub.onServerJoinHandler(new ServerJoinHandler() {  
 			public void onServerJoin(String serverAddr) throws IOException {
@@ -272,7 +272,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		synchronized (allBrokers) {
 			if(allBrokers.containsKey(serverAddr)) return;
 			BrokerConfig brokerConfig = this.config.clone();
-			brokerConfig.setServerAddress(serverAddr);
+			brokerConfig.setBrokerAddress(serverAddr);
 			Broker broker = new SingleBroker(brokerConfig);
 			allBrokers.put(serverAddr, broker); 
 		} 

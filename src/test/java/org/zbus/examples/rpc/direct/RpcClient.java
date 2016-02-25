@@ -11,7 +11,7 @@ public class RpcClient {
 
 	public static void main(String[] args) throws Exception {
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress("127.0.0.1:8080");
+		brokerConfig.setBrokerAddress("127.0.0.1:8080");
 		Broker broker = new SingleBroker(brokerConfig); 
 		
 		RpcFactory factory = new RpcFactory(broker); //directly using broker as invoker 

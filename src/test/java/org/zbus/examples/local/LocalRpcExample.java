@@ -1,7 +1,7 @@
 package org.zbus.examples.local;
 
 import org.zbus.broker.Broker;
-import org.zbus.broker.LocalBroker;
+import org.zbus.broker.JvmBroker;
 import org.zbus.examples.rpc.RpcCases;
 import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
@@ -15,7 +15,7 @@ import org.zbus.rpc.mq.ServiceConfig;
 public class LocalRpcExample {
 
 	public static void main(String[] args) throws Exception {  
-		Broker broker = new LocalBroker(); 
+		Broker broker = new JvmBroker(); 
  
 		
 		RpcProcessor processor = new RpcProcessor();  

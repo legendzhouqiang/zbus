@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 
@@ -85,9 +85,9 @@ public abstract class Perf implements Closeable{
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 64);	 
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress(serverAddress);
+		config.setBrokerAddress(serverAddress);
 		config.setMaxTotal(threadCount);
 		config.setMaxIdle(threadCount); 
-		return new SingleBroker(config); 
+		return new ZbusBroker(config); 
 	}
 }

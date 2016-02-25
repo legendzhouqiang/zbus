@@ -45,25 +45,44 @@ package org.zbus.broker;
  * THE SOFTWARE.
  */
 import org.zbus.kit.pool.PoolConfig;
+import org.zbus.mq.server.MqServer;
 import org.zbus.net.core.SelectorGroup;
 
-public class BrokerConfig extends PoolConfig{
-	private String trackServerList = "127.0.0.1:16666"; //只在HA模式下才有效
-	private String serverAddress   = "127.0.0.1:15555"; 
-	private int selectorCount = 0; //0代表使用默认值
-	private int executorCount = 0; //0代表使用默认值
+public class BrokerConfig extends PoolConfig{ 
 	/**
-	 * 可选项
-	 * 如果配置不给出，SelectorGroup内部生成，并自己管理关闭
-	 * 如果配置给出，内部仅仅共享使用，不关闭
+	 * broker address abstraction: 
+	 * 1) single broker use zbus address
+	 * 2) ha broker, use ha trackserver list, ; split
+	 * 3) jvm broker 
 	 */
-	private SelectorGroup selectorGroup;
+	private String brokerAddress = "127.0.0.1:15555"; //set to null or jvm if use JvmBroker
 	
-	public String getServerAddress() {
-		return serverAddress;
+	private int selectorCount = 0; //0代表使用默认值
+	private int executorCount = 0; //0代表使用默认值 
+	private SelectorGroup selectorGroup; //optional 
+	private MqServer mqServer; //optional, used only for JvmBroker if supplied
+	
+	public String getBrokerAddress() {
+		return brokerAddress;
 	}
+	public void setBrokerAddress(String brokerAddress) {
+		this.brokerAddress = brokerAddress;
+	}
+	
+	/**
+	 * @deprecated use getBrokerAddres instead
+	 * @return
+	 */ 
+	@Deprecated 
+	public String getServerAddress() {
+		return brokerAddress;
+	}
+	/**
+	 * @deprecated use setBrokerAddres instead
+	 * @return
+	 */ 
 	public void setServerAddress(String serverAddress) {
-		this.serverAddress = serverAddress;
+		this.brokerAddress = serverAddress;
 	}
 	public SelectorGroup getSelectorGroup() {
 		return selectorGroup;
@@ -84,13 +103,28 @@ public class BrokerConfig extends PoolConfig{
 		this.executorCount = executorCount;
 	}
 	
+	
+	/**
+	 * @deprecated use getBrokerAddres instead
+	 * @return
+	 */ 
 	public String getTrackServerList() {
-		return trackServerList;
+		return brokerAddress;
 	}
+	/**
+	 * @deprecated use setBrokerAddres instead
+	 * @return
+	 */ 
 	public void setTrackServerList(String trackServerList) {
-		this.trackServerList = trackServerList;
+		this.brokerAddress = trackServerList;
 	} 
 	
+	public MqServer getMqServer() {
+		return mqServer;
+	}
+	public void setMqServer(MqServer mqServer) {
+		this.mqServer = mqServer;
+	}
 	@Override
 	public BrokerConfig clone() { 
 		try {

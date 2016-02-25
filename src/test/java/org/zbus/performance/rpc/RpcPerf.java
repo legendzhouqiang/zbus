@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
@@ -52,13 +52,13 @@ public class RpcPerf {
 		final int executorCount = ConfigKit.option(args, "-executor", 0);
 		 
 		BrokerConfig brokerConfig = new BrokerConfig(); 
-		brokerConfig.setServerAddress(serverAddress);
+		brokerConfig.setBrokerAddress(serverAddress);
 		brokerConfig.setMaxTotal(threadCount);
 		brokerConfig.setMaxIdle(threadCount);  
 		brokerConfig.setSelectorCount(selectorCount);
 		brokerConfig.setExecutorCount(executorCount);
 		
-		final Broker broker = new SingleBroker(brokerConfig);
+		final Broker broker = new ZbusBroker(brokerConfig);
 		 
 		MessageInvoker invoker = new MqInvoker(broker, mq);
 		//MessageInvoker invoker = broker; //DirectRpc时，直接用broker

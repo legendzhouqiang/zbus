@@ -11,7 +11,7 @@ import org.zbus.net.http.Message;
 public class PubAsync {
 	public static void main(String[] args) throws Exception{   
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("127.0.0.1:15555");
 		final Broker broker = new SingleBroker(config);
 		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);

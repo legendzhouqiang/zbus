@@ -2,7 +2,7 @@ package org.zbus.performance.latency;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
+import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.http.Message;
@@ -17,8 +17,8 @@ public class ReqRepLatency {
 		final String mq = ConfigKit.option(args, "-mq", "ReqRep");
 		 
 		BrokerConfig config = new BrokerConfig();
-		config.setServerAddress(serverAddress);
-		final Broker broker = new SingleBroker(config);
+		config.setBrokerAddress(serverAddress);
+		final Broker broker = new ZbusBroker(config);
 		
 		//基于MQ的调用
 		MessageInvoker invoker = new MqInvoker(broker, mq);
