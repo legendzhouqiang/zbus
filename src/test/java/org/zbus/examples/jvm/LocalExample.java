@@ -15,7 +15,7 @@ public class LocalExample {
 	public static void main(String[] args) throws Exception {
 		//this broker is shared among same JVM process
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress("jvm");
+		config.setBrokerAddress("jvm"); 
 		Broker broker = new ZbusBroker(config);  //equal to new JvmBroker
 		
  
@@ -33,7 +33,7 @@ public class LocalExample {
 		for(int i=0;i<10;i++){
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
-			msg = producer.sendSync(msg); 
+			producer.sendAsync(msg);
 			Thread.sleep(100);
 		} 
 		

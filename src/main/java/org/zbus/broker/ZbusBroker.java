@@ -71,7 +71,7 @@ public class ZbusBroker implements Broker{
 
 	@Override
 	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
-		invokeAsync(req, callback);
+		support.invokeAsync(req, callback);
 	}
 
 	@Override
