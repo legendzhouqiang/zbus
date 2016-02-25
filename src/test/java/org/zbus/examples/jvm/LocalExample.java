@@ -1,4 +1,4 @@
-package org.zbus.examples.local;
+package org.zbus.examples.jvm;
 
 import java.io.IOException;
 

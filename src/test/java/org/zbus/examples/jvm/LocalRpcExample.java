@@ -1,4 +1,4 @@
-package org.zbus.examples.local;
+package org.zbus.examples.jvm;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.JvmBroker;

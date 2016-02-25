@@ -17,4 +17,6 @@ zbus-6.3.0 changelog
 5. zbus重启，service快速注册返回，InvokingClient增加Sync清除
 
 6. 增加根据Key过滤消息，MqFilter，基于内存与基于BerkeleyDB，默认基于内存
-7. 增加LocalBroker，支持不经过网络的本地MQ性能优化
+7. 增加JvmBroker，支持不经过网络的本地MQ性能优化
+
+8. 增加ZbusBroker对JvmBroker，SingleBroker，HaBroker的抽象工厂
