@@ -24,9 +24,12 @@ package org.zbus.mq.server;
  
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.AbstractQueue;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.disk.MessageQueue;
 import org.zbus.mq.server.auth.Auth;
 import org.zbus.mq.server.auth.DefaultAuth;
 import org.zbus.net.core.Session;
@@ -38,12 +41,15 @@ public abstract class AbstractMQ implements Closeable{
 	protected int mode;
 	protected long lastUpdateTime = System.currentTimeMillis();
 	
-	protected final AbstractQueue<Message> msgQ;
+	protected final MessageQueue msgQ;
 	protected String accessToken = "";
 	
 	protected Auth auth;
 	
-	public AbstractMQ(String name, AbstractQueue<Message> msgQ) {
+	protected List<AbstractMQ> slaveMqs = new ArrayList<AbstractMQ>();
+	protected AbstractMQ masterMq;
+	
+	public AbstractMQ(String name, MessageQueue msgQ) {
 		this.msgQ = msgQ;
 		this.name = name;
 	}
@@ -55,6 +61,21 @@ public abstract class AbstractMQ implements Closeable{
 	public void produce(Message msg, Session sess) throws IOException { 
 		msgQ.offer(msg); 
 		dispatch();
+		
+		
+		if(slaveMqs.size() == 0){
+			return;
+		}
+		Iterator<AbstractMQ> iter = slaveMqs.iterator();
+		while(iter.hasNext()){
+			AbstractMQ mq = iter.next();
+			try{
+				mq.produce(msg, sess);
+			} catch(IOException e){
+				//ignore slave
+				iter.remove();
+			}
+		} 
 	} 
  
 	public abstract void consume(Message msg, Session sess) throws IOException;
@@ -87,5 +108,42 @@ public abstract class AbstractMQ implements Closeable{
 
 	public void setMode(int mode) {
 		this.mode = mode;
-	}  
+	}   
+	 
+	
+	
+	public void setMasterMq(AbstractMQ mq){
+		mq.addSlaveMq(this);
+	}
+	
+	public String getMasterMqName(){
+		if(this.masterMq == null){
+			return msgQ.getMasterMq();
+		}
+		return masterMq.getName();
+	}
+	
+	public AbstractMQ getMasterMq(){
+		return this.masterMq;
+	}
+	
+	
+	public void addSlaveMq(AbstractMQ mq){
+		if(this.slaveMqs.contains(mq)){
+			return;
+		}
+		mq.masterMq = this;
+		mq.msgQ.setMasterMq(this.name);
+		
+		this.slaveMqs.add(mq);
+	}
+	
+	public void removeSlaveMq(AbstractMQ mq){
+		if(this.slaveMqs.contains(mq)){
+			return;
+		}
+		mq.masterMq = null;
+		mq.msgQ.setMasterMq(null);
+		this.slaveMqs.remove(mq);
+	}
 }

@@ -22,14 +22,13 @@
  */
 package org.zbus.mq.disk;
 
-import java.util.AbstractQueue;
 import java.util.Iterator;
 
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageCodec;
 
-public class MessageDiskQueue extends AbstractQueue<Message>{
+public class MessageDiskQueue extends MessageQueue{
 	private static final MessageCodec codec = new MessageCodec();
 	
 	private final DiskQueue diskQueue;
@@ -74,5 +73,16 @@ public class MessageDiskQueue extends AbstractQueue<Message>{
 	@Override
 	public int size() { 
 		return diskQueue.size();
+	} 
+	
+	@Override
+	public String getMasterMq() { 
+		return diskQueue.getExt(0);
 	}
+
+	@Override
+	public void setMasterMq(String value) {
+		diskQueue.setExt(0, value);
+	} 
+	
 }

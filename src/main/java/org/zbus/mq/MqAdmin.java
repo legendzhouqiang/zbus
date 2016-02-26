@@ -35,6 +35,8 @@ public class MqAdmin{
 	protected final int mode;  
 	protected String accessToken = "";
 	protected String registerToken = "";
+	protected String masterMq = null;
+	protected String masterToken = null;
 	
 	public MqAdmin(Broker broker, String mq, MqMode... mode){  
 		this.broker = broker;
@@ -52,6 +54,8 @@ public class MqAdmin{
 		this.mode = config.getMode();
 		this.accessToken = config.getAccessToken();
 		this.registerToken = config.getRegisterToken();
+		this.masterMq = config.getMasterMq();
+		this.masterToken = config.getMasterToken();
 	} 
 	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
@@ -75,6 +79,8 @@ public class MqAdmin{
     	req.setHead("mq_mode", "" + mode);  
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken);
+    	req.setMasterMq(masterMq);
+    	req.setMasterToken(masterToken);
     	
     	Message res = invokeSync(req);
     	if(res == null) return false;
@@ -160,4 +166,37 @@ public class MqAdmin{
 	public int getMode() {
 		return mode;
 	}
+
+	public String getAccessToken() {
+		return accessToken;
+	}
+
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+	public String getRegisterToken() {
+		return registerToken;
+	}
+
+	public void setRegisterToken(String registerToken) {
+		this.registerToken = registerToken;
+	}
+
+	public String getMasterMq() {
+		return masterMq;
+	}
+
+	public void setMasterMq(String masterMq) {
+		this.masterMq = masterMq;
+	}
+
+	public String getMasterToken() {
+		return masterToken;
+	}
+
+	public void setMasterToken(String masterToken) {
+		this.masterToken = masterToken;
+	} 
+	
 }

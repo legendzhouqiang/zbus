@@ -15,7 +15,9 @@ public class DiskQueueIndex {
 	static final Logger log = Logger.getLogger(DiskQueueIndex.class);
     private static final String MAGIC = "v100";
     private static final String INDEX_FILE_SUFFIX = ".idx";
-    private static final int INDEX_SIZE = 32;
+    private static final int EXT_ITEM_SIZE = 256;
+    private static final int EXT_ITEM_CNT = 4;
+    private static final int INDEX_SIZE = 32 + EXT_ITEM_SIZE*EXT_ITEM_CNT;
     
     private static final int FLAG_OFFSET = 4;
     private static final int READ_NUM_OFFSET = 8;
@@ -24,23 +26,20 @@ public class DiskQueueIndex {
     private static final int WRITE_NUM_OFFSET = 20;
     private static final int WRITE_POS_OFFSET = 24;
     private static final int WRITE_CNT_OFFSET = 28;
-
-    private int flag;
     
-    @SuppressWarnings("unused")
-	private int p11, p12, p13, p14, p15, p16, p17, p18; // 缓存行填充 32B
-    private volatile int readPosition;   // 12   读索引位置
-    private volatile int readNum;        // 8   读索引文件号
-    private volatile int readCounter;    // 16   总读取数量
+    private static final int EXT_OFFSET = 32;
+    private String[] extentions = new String[EXT_ITEM_CNT];
     
-    @SuppressWarnings("unused")
-	private int p21, p22, p23, p24, p25, p26, p27, p28; // 缓存行填充 32B
-    private volatile int writePosition;  // 24  写索引位置
-    private volatile int writeNum;       // 20  写索引文件号
-    private volatile int writeCounter;   // 28 总写入数量
 
-    @SuppressWarnings("unused")
-	private int p31, p32, p33, p34, p35, p36, p37, p38; // 缓存行填充 32B
+    private int flag;                    // 4
+    private volatile int readNum;        // 8  
+    private volatile int readPosition;   // 12   
+    private volatile int readCounter;    // 16    
+    private volatile int writeNum;       // 20  
+    private volatile int writePosition;  // 24    
+    private volatile int writeCounter;   // 28  
+ 
+    
 
     private RandomAccessFile indexFile;
     private FileChannel fileChannel;
@@ -58,6 +57,14 @@ public class DiskQueueIndex {
                 if (!MAGIC.equals(new String(bytes))) {
                     throw new IllegalArgumentException("version mismatch");
                 }
+                long size = indexFile.length();
+                if(size < INDEX_SIZE){ 
+                	indexFile.setLength(INDEX_SIZE); 
+                	indexFile.seek(size);
+                	indexFile.write(new byte[(int)(INDEX_SIZE-size)]); 
+                }
+                
+                indexFile.seek(0);
                 this.flag = indexFile.readInt();
                 this.readNum = indexFile.readInt();
                 this.readPosition = indexFile.readInt();
@@ -65,6 +72,8 @@ public class DiskQueueIndex {
                 this.writeNum = indexFile.readInt();
                 this.writePosition = indexFile.readInt();
                 this.writeCounter = indexFile.readInt();
+                
+                this.readExt();
                 
                 this.fileChannel = indexFile.getChannel();
                 this.writeIndex = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, INDEX_SIZE);
@@ -83,6 +92,8 @@ public class DiskQueueIndex {
                 putWriteNum(0);
                 putWritePosition(0);
                 putWriteCounter(0);
+                
+                this.initExt();
             }
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
@@ -175,6 +186,61 @@ public class DiskQueueIndex {
         this.readIndex.position(READ_CNT_OFFSET);
         this.readIndex.putInt(readCounter);
         this.readCounter = readCounter;
+    }
+    
+    private void initExt(){
+    	for(int i=0; i<EXT_ITEM_CNT; i++){
+    		putExt(i, null);
+    	}
+    }
+    private void readExt() throws IOException{
+    	for(int i=0; i<EXT_ITEM_CNT; i++){
+    		readExtByIndex(i);
+    	}
+    }
+    
+    private void readExtByIndex(int idx) throws IOException{
+    	if(idx < 0 || idx >= EXT_ITEM_CNT){
+    		throw new IllegalArgumentException("idx invalid");
+    	}
+    	this.indexFile.seek(EXT_OFFSET + EXT_ITEM_SIZE*idx);
+    	int len = indexFile.readByte();
+    	if(len <= 0){
+    		this.extentions[idx] = null;
+    		return;
+    	}
+    	if(len > EXT_ITEM_SIZE -1){
+    		throw new IOException("lenght of ext1 invalid, too long");
+    	}
+    	byte[] bb = new byte[len];
+    	this.indexFile.read(bb, 0, len); 
+    	this.extentions[idx] = new String(bb);
+    }
+    
+    
+    public void putExt(int idx, String value){
+    	if(idx < 0 || idx >= EXT_ITEM_CNT){
+    		throw new IllegalArgumentException("idx invalid");
+    	}
+    	this.extentions[idx] = value;
+    	this.readIndex.position(EXT_OFFSET + EXT_ITEM_SIZE*idx);
+    	if(value == null){
+    		this.readIndex.put((byte)0);
+    		return;
+    	}
+    	if(value.length() > EXT_ITEM_SIZE - 1){
+    		throw new IllegalArgumentException(value + " too long");
+    	} 
+    	this.readIndex.put((byte)value.length());
+    	this.readIndex.put(value.getBytes());
+    	
+    }
+    
+    public String getExt(int idx){
+    	if(idx < 0 || idx >= EXT_ITEM_CNT){
+    		throw new IllegalArgumentException("idx invalid");
+    	}
+    	return this.extentions[idx];
     }
 
     public void reset() {

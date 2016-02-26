@@ -23,7 +23,6 @@
 package org.zbus.mq.server;
 
 import java.io.IOException;
-import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.disk.MessageQueue;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
@@ -44,7 +44,7 @@ public class MQ extends AbstractMQ{
 	
 	protected final BlockingQueue<PullSession> pullQ = new LinkedBlockingQueue<PullSession>();
 	
-	public MQ(String name, AbstractQueue<Message> msgQ) {
+	public MQ(String name, MessageQueue msgQ) {
 		super(name, msgQ);
 	}
 	

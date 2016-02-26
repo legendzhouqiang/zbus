@@ -84,7 +84,8 @@ public class Message implements Id {
 	public static final String KEY       = "key";  
 	public static final String KEY_GROUP = "key_group";
 	//MQ copy, Master-Slave
-	public static final String SLAVE_TO  = "slave_to";
+	public static final String MASTER_MQ  = "master_mq";
+	public static final String MASTER_TOKEN  = "master_token"; 
 	
 	 
 	//HTTP协议第一行（请求串或者返回状态码）
@@ -458,11 +459,19 @@ public class Message implements Id {
 		return this;
 	} 
 	
-	public String getMqCopy() {
-		return getHead(SLAVE_TO);
+	public String getMasterMq() {
+		return getHead(MASTER_MQ);
 	} 
-	public Message setSlaveTo(String value) {
-		this.setHead(KEY_GROUP, value);
+	public Message setMasterMq(String value) {
+		this.setHead(MASTER_MQ, value);
+		return this;
+	} 
+	
+	public String getMasterToken() {
+		return getHead(MASTER_TOKEN);
+	} 
+	public Message setMasterToken(String value) {
+		this.setHead(MASTER_TOKEN, value);
 		return this;
 	} 
 	

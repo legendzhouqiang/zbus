@@ -22,46 +22,11 @@
  */
 package org.zbus.mq.disk;
 
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.AbstractQueue;
 
 import org.zbus.net.http.Message;
 
-public class MessageMemoryQueue extends MessageQueue { 
-	private LinkedBlockingQueue<Message> support = new LinkedBlockingQueue<Message>();
-	private String slaveToMq;
-	@Override
-	public boolean offer(Message e) {
-		return support.offer(e);
-	}
-
-	@Override
-	public Message poll() {
-		return support.poll();
-	}
-
-	@Override
-	public Message peek() { 
-		return support.peek();
-	}
-
-	@Override
-	public String getMasterMq() {
-		return this.slaveToMq;
-	}
-
-	@Override
-	public void setMasterMq(String mq) {
-		this.slaveToMq = mq;
-	}
-
-	@Override
-	public Iterator<Message> iterator() {
-		return support.iterator();
-	}
-
-	@Override
-	public int size() {
-		return support.size();
-	}
+public abstract class MessageQueue extends AbstractQueue<Message>{
+	 public abstract String getMasterMq();
+	 public abstract void setMasterMq(String mq);
 }

@@ -2,7 +2,6 @@ package org.zbus.mq.server;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.AbstractQueue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +18,7 @@ import org.zbus.mq.disk.DiskQueue;
 import org.zbus.mq.disk.DiskQueuePool;
 import org.zbus.mq.disk.MessageDiskQueue;
 import org.zbus.mq.disk.MessageMemoryQueue;
+import org.zbus.mq.disk.MessageQueue;
 import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.Session;
@@ -262,6 +262,9 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     				ReplyKit.reply404(msg, sess);
     				return;
     			}  
+    			if(mq.masterMq != null){
+    				mq.masterMq.removeSlaveMq(mq);
+    			}
     			mqTable.remove(mqName);
     			mq.close();
     			ReplyKit.reply200(msg, sess);
@@ -302,7 +305,10 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
         		return;  
     		}
     		
-    		String accessToken = msg.getHead("access_token", ""); 
+    		String accessToken = msg.getHead("access_token", "");
+    		String master = msg.getMasterMq();
+    		String masterToken = msg.getMasterToken();
+    		
     		AbstractMQ mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(mqName);
@@ -311,7 +317,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     				return;
     			}
     			
-    			AbstractQueue<Message> support = null;
+    			MessageQueue support = null;
 				if(MqMode.isEnabled(mode, MqMode.Memory) ||
 						MqMode.isEnabled(mode, MqMode.RPC)){
 					support = new MessageMemoryQueue();
@@ -328,6 +334,15 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     			mq.setMode(mode);
     			mq.creator = sess.getRemoteAddress();
     			mq.setAccessToken(accessToken);
+    			if(master != null){
+    				AbstractMQ masterMq = mqTable.get(master);
+    				if(masterToken == null){
+    					masterToken = "";
+    				}
+    				if(masterMq != null && masterMq.accessToken.equals(masterToken)){
+    					masterMq.addSlaveMq(mq);
+    				}
+    			}
     			
     			log.info("MQ Created: %s", mq);
     			mqTable.put(mqName, mq);
@@ -526,7 +541,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			String name = e.getKey();
 			DiskQueue diskq = e.getValue();
 			int flag = diskq.getFlag(); 
-			AbstractQueue<Message> queue = new MessageDiskQueue(name, diskq);
+			MessageDiskQueue queue = new MessageDiskQueue(name, diskq);
 			if( MqMode.isEnabled(flag, MqMode.PubSub)){ 
 				mq = new PubSub(name, queue); 
 			}  else {
@@ -539,6 +554,14 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			
 			//notify
 			mqServer.pubEntryUpdate(mq);
+		}
+		
+		for(AbstractMQ mq : mqTable.values()){
+			String masterName = mq.getMasterMqName();
+			if(masterName == null) continue;
+			AbstractMQ masterMq = mqTable.get(masterName);
+			if(masterMq == null) continue;
+			mq.setMasterMq(masterMq);
 		}
     }   
     

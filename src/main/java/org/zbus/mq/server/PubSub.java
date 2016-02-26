@@ -23,7 +23,6 @@
 package org.zbus.mq.server;
 
 import java.io.IOException;
-import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -33,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.disk.MessageQueue;
 import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
@@ -41,7 +41,7 @@ public class PubSub extends AbstractMQ{
 	
 	protected final ConcurrentMap<String, PullSession> pullMap = new ConcurrentHashMap<String, PullSession>(); 
 	
-	public PubSub(String name, AbstractQueue<Message> msgQ){
+	public PubSub(String name, MessageQueue msgQ){
 		super(name, msgQ);
 	}
 	 

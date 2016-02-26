@@ -146,5 +146,12 @@ public class DiskQueue extends AbstractQueue<byte[]> {
 		return queueName;
 	}
     
+	public String getExt(int idx){
+		return this.index.getExt(idx);
+	}
+	
+	public void setExt(int idx, String value){
+		this.index.putExt(idx, value);
+	}
     
 }
