@@ -12,11 +12,11 @@ public class KeyExample {
   
 		MqAdmin p = new MqAdmin(broker, "MyMQ");
 		
-		int res = p.addKey("group", "test");
+		int res = p.addKey("group", "test"); 
 		System.out.println(res);
-		res = p.removeKey("test");
+		res = p.removeGroup("group");
 		System.out.println(res);
-		res = p.addKey("test");
+		res = p.addKey("group", "test");
 		System.out.println(res);
 		
 		

@@ -117,7 +117,7 @@ public class MqAdmin{
     }
     
     public int removeKey(String key) throws IOException, InterruptedException{
-    	return removeKey(null, key);
+    	return removeKey(this.mq, null, key);
     }
     
     public int removeKey(String keyGroup, String key) throws IOException, InterruptedException{
@@ -142,11 +142,11 @@ public class MqAdmin{
     
     
     public int removeGroup(String mq, String keyGroup) throws IOException, InterruptedException{
-    	return removeKey(mq, keyGroup);
+    	return removeKey(mq, keyGroup, null);
     }
     
     public int removeGroup(String keyGroup) throws IOException, InterruptedException{
-    	return removeKey(this.mq, keyGroup);
+    	return removeKey(this.mq, keyGroup, null);
     }
     
 	public String getMq() {

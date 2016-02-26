@@ -69,30 +69,35 @@ public class PersistMqFilter implements MqFilter {
 		if(group == null){
 			group = "";
 		} 
-		Map<String, Database> keySets = null; 
+		Map<String, Database> keySets = null;  
 		synchronized (mappedKeySet) {
 			keySets = mappedKeySet.get(mq);
 			if(keySets == null){
 				keySets = new ConcurrentHashMap<String, Database>();
 				mappedKeySet.put(mq, keySets);
 			} 
-			Database keys = keySets.get(group);
+			
+		} 
+		Database keys = null;
+		synchronized (keySets) {
+			keys = keySets.get(group);
 			if(keys == null){
 				String dbName = mq+"_"+group+"_"+key;
 				keys = environment.openDatabase(null, dbName, dbConfig);
 				keySets.put(group, keys);
 			}
-			
-			DatabaseEntry theKey = new DatabaseEntry(key.getBytes());
-			DatabaseEntry theData = new DatabaseEntry();
-			keys.get(null, theKey, theData, LockMode.DEFAULT);
-			if (theData.getData() != null) {
-				return 0;
-			}
-			theData = new DatabaseEntry(key.getBytes());
-			keys.put(null, theKey, theData); 
-			return 1;
 		} 
+		
+		DatabaseEntry theKey = new DatabaseEntry(key.getBytes());
+		DatabaseEntry theData = new DatabaseEntry();
+		keys.get(null, theKey, theData, LockMode.DEFAULT);
+		if (theData.getData() != null) {
+			return 0;
+		}
+		theData = new DatabaseEntry(key.getBytes());
+		keys.put(null, theKey, theData); 
+		return 1;
+		
 	}
 
 	@Override
@@ -118,32 +123,32 @@ public class PersistMqFilter implements MqFilter {
 				mappedKeySet.remove(mq); //delete whole mq's keys
 				return count;
 			}
+		}
 			
-			if(group == null){
-				group = "";
-			} 
-			
-			Database keys = keySets.get(group); 
+		if(group == null){
+			group = "";
+		} 
+		
+		Database keys = keySets.get(group); 
+		if(keys == null) return 0;
+		
+		if(key == null){
+			keys =  keySets.remove(group); 
 			if(keys == null) return 0;
+			int count = (int)keys.count(); 
 			
-			if(key == null){
-				keys =  keySets.remove(group); 
-				if(keys == null) return 0;
-				int count = (int)keys.count(); 
-				
-				String dbName = keys.getDatabaseName();
-				keys.close();
-				environment.removeDatabase(null, dbName); 
-				return count;
-			}
-			DatabaseEntry theKey = new DatabaseEntry(key.getBytes());
-			DatabaseEntry theData = new DatabaseEntry(); 
-			keys.get(null, theKey, theData, LockMode.DEFAULT);
-			if (theData.getData() == null) {
-				return 0;
-			}
-			keys.removeSequence(null, theKey);
-			return 1;
-		}  
+			String dbName = keys.getDatabaseName();
+			keys.close();
+			environment.removeDatabase(null, dbName); 
+			return count;
+		}
+		DatabaseEntry theKey = new DatabaseEntry(key.getBytes());
+		DatabaseEntry theData = new DatabaseEntry(); 
+		keys.get(null, theKey, theData, LockMode.DEFAULT);
+		if (theData.getData() == null) {
+			return 0;
+		}
+		keys.removeSequence(null, theKey);
+		return 1; 
 	}
 }

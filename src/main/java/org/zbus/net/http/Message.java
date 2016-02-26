@@ -83,6 +83,8 @@ public class Message implements Id {
 	
 	public static final String KEY       = "key";  
 	public static final String KEY_GROUP = "key_group";
+	//MQ copy, Master-Slave
+	public static final String SLAVE_TO  = "slave_to";
 	
 	 
 	//HTTP协议第一行（请求串或者返回状态码）
@@ -456,6 +458,14 @@ public class Message implements Id {
 		return this;
 	} 
 	
+	public String getMqCopy() {
+		return getHead(SLAVE_TO);
+	} 
+	public Message setSlaveTo(String value) {
+		this.setHead(KEY_GROUP, value);
+		return this;
+	} 
+	
 	public boolean isStatus200() {
 		return "200".equals(this.getResponseStatus());
 	} 
@@ -464,6 +474,9 @@ public class Message implements Id {
 	} 
 	public boolean isStatus500() {
 		return "500".equals(this.getResponseStatus());
+	}  
+	public boolean isStatus406() {
+		return "406".equals(this.getResponseStatus());
 	}  
 	
 	protected String getBodyPrintString() {
