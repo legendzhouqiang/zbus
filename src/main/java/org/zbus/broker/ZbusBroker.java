@@ -50,18 +50,24 @@ public class ZbusBroker implements Broker{
 			return;
 		}
 		brokerAddress = brokerAddress.trim();
-		
-		if(brokerAddress.matches("[\\[\\], ;]")){ 
-			if(brokerAddress.startsWith("[") && brokerAddress.endsWith("]")){
+		boolean ha = false;
+		if(brokerAddress.startsWith("[")){
+			if(brokerAddress.endsWith("]")){
 				brokerAddress = brokerAddress.substring(1, brokerAddress.length()-1);
+				ha = true;
+			} else {
+				throw new IllegalArgumentException(brokerAddress + " broker address invalid");
 			}
-			config.setBrokerAddress(brokerAddress);
-			support = new HaBroker(config); 
-			return;
-		}
-		
+		}  
+		if(brokerAddress.contains(",") || brokerAddress.contains(" ") || brokerAddress.contains(";")){
+			ha = true;
+		} 
 		config.setBrokerAddress(brokerAddress);
-		support = new SingleBroker(config);
+		if(ha){
+			support = new HaBroker(config);  
+		} else {
+			support = new SingleBroker(config);
+		}
 	}
 	
 	@Override
