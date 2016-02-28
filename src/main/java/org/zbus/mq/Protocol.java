@@ -34,7 +34,7 @@ public class Protocol {
 	public static final String Consume   = "consume";   //consume message
 	public static final String Route   	 = "route";     //route back message to sender
 
-	public static final String QueryMQ   = "query"; 
+	public static final String QueryMQ   = "query_mq"; 
 	public static final String CreateMQ  = "create_mq"; //create MQ
 	public static final String RemoveMQ  = "remove_mq"; //remove MQ
 	
