@@ -64,7 +64,7 @@ public class DiskQueueIndex {
                 	indexFile.write(new byte[(int)(INDEX_SIZE-size)]); 
                 }
                 
-                indexFile.seek(0);
+                indexFile.seek(4);
                 this.flag = indexFile.readInt();
                 this.readNum = indexFile.readInt();
                 this.readPosition = indexFile.readInt();

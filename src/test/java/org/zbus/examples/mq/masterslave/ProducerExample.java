@@ -12,7 +12,7 @@ public class ProducerExample {
 		Producer producer = new Producer(broker, "MasterMQ");
 		producer.createMQ();
 
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<10000000;i++){
 			Message msg = new Message();
 			msg.setBody("from master mq" + i); 
 			msg = producer.sendSync(msg);
