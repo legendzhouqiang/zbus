@@ -12,7 +12,7 @@ import org.zbus.rpc.mq.MqInvoker;
 import org.zbus.rpc.mq.Service;
 import org.zbus.rpc.mq.ServiceConfig;
 
-public class LocalRpcExample {
+public class JvmRpcExample {
 
 	public static void main(String[] args) throws Exception {  
 		Broker broker = new JvmBroker(); 

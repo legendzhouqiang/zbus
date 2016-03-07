@@ -10,7 +10,7 @@ import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
 
-public class LocalExample {
+public class JvmPBCExample {
 
 	public static void main(String[] args) throws Exception {
 		//this broker is shared among same JVM process
@@ -34,7 +34,7 @@ public class LocalExample {
 			Message msg = new Message();
 			msg.setBody("hello world"+i); 
 			producer.sendSync(msg);
-			Thread.sleep(100);
+			Thread.sleep(1);
 		} 
 		
 		consumer.close();
