@@ -67,6 +67,14 @@ public class BrokerConfig extends PoolConfig{
 	private MqServer mqServer; //optional, used only for JvmBroker if supplied
 	private MqServerConfig mqServerConfig; // config to create MqServer, optional if mqServer not supplied
 	
+	public BrokerConfig(){
+		
+	}
+	
+	public BrokerConfig(String brokerAddress){
+		this.brokerAddress = brokerAddress;
+	}
+	
 	public String getBrokerAddress() {
 		return brokerAddress;
 	}

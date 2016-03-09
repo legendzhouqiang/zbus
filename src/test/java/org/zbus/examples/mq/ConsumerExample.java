@@ -13,9 +13,9 @@ public class ConsumerExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		BrokerConfig config = new BrokerConfig();
-		config.setBrokerAddress("127.0.0.1:15555");
+		config.setBrokerAddress("10.8.30.4:15555");
 		Broker broker = new ZbusBroker(config); 
- 
+  
 		Consumer consumer = new Consumer(broker, "MyMQ-Copy2"); 
 		consumer.setMasterMq("MyMQ");
 		consumer.start(new ConsumerHandler() { 
@@ -24,6 +24,6 @@ public class ConsumerExample {
 				
 				System.out.println(msg);
 			}
-		});    
+		}); 
 	}
 }

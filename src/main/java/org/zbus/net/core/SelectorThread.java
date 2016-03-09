@@ -23,6 +23,7 @@
 package org.zbus.net.core;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -284,13 +285,18 @@ public class SelectorThread extends Thread {
 		Session sess = (Session) key.attachment();
 		if(sess == null){
 			throw new IOException("Session not attached yet to SelectionKey");
-		}  
-		if(channel.finishConnect()){ 
-			sess.finishConnect();
-			if(log.isDebugEnabled()){
-				log.debug("CONNECT: %s=>%s", NetKit.localAddress(channel), NetKit.remoteAddress(channel));
-			}
 		} 
+		try{
+			if(channel.finishConnect()){ 
+				sess.finishConnect();
+				if(log.isDebugEnabled()){
+					log.debug("CONNECT: %s=>%s", NetKit.localAddress(channel), NetKit.remoteAddress(channel));
+				}
+			} 
+		} catch(ConnectException ex){ 
+			String msg = String.format("Connection failed: %s", sess.getRemoteAddress());
+			throw new IOException(msg, ex);
+		}
 		sess.setStatus(SessionStatus.CONNECTED);  
 		key.interestOps(0); //!!!clear interest of OP_CONNECT to avoid looping CPU !!!
 		sess.getIoAdaptor().onSessionConnected(sess);

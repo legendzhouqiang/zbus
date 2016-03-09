@@ -30,6 +30,10 @@ public class ZbusBroker implements Broker{
 		this(new BrokerConfig());
 	}
 	
+	public ZbusBroker(String brokerAddress) throws IOException {
+		this(new BrokerConfig(brokerAddress));
+	}
+	
 	/**
 	 * Build underlying Broker by borkerAddress
 	 * @param config

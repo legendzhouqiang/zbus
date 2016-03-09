@@ -136,11 +136,5 @@ public class NetKit {
 		SocketAddress addr = channel.socket().getLocalSocketAddress();
 		String res = String.format("%s", addr);
 		return addr==null? res: res.substring(1);
-	}
-	
-	public static void main(String[] args){
-		String ip = getLocalIp("*>192>10");
-		System.out.println(ip);
-		System.out.println(getLocalIp());
-	}
+	} 
 }

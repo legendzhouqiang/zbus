@@ -274,14 +274,11 @@ public class Session implements Closeable{
 		this.lastOperationTime = System.currentTimeMillis();
 	}  
 	
-	public String getRemoteAddress() {
-		if (this.status != SessionStatus.CLOSED) { 
-			InetAddress addr = this.channel.socket().getInetAddress();
-			if(addr == null) return null;
-			if(channel.socket() == null) return null;
-			return String.format("%s:%d", addr.getHostAddress(),channel.socket().getPort());
-		} 
-		return null;
+	public String getRemoteAddress() { 
+		InetAddress addr = this.channel.socket().getInetAddress();
+		if(addr == null) return null;
+		if(channel.socket() == null) return null;
+		return String.format("%s:%d", addr.getHostAddress(),channel.socket().getPort()); 
 	}
 	
 	public String getLocalAddress() {
@@ -392,8 +389,7 @@ public class Session implements Closeable{
 	public String toString() {
 		return "Session ["
 				+ "remote=" + getRemoteAddress()
-				+ ", status=" + status  
-	            + ", id=" + id   
+				+ ", status=" + status   
 				+ "]";
 	}
 
