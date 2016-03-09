@@ -15,7 +15,7 @@ import org.zbus.net.http.Message;
 public class ConsumerPerf {
 	public static void main(String[] args) throws Exception{   
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 4); 
+		final int threadCount = ConfigKit.option(args, "-c", 16); 
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ");
 		final int interval = ConfigKit.option(args, "-int", 10000); 
 		

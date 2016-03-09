@@ -12,7 +12,8 @@ import org.zbus.kit.log.Logger;
 
 
 public abstract class Perf implements Closeable{
-	public static abstract class Task implements Closeable{
+	public static abstract class TaskInThread implements Closeable{
+		public void initTask()throws Exception{ }
 		public abstract void doTask() throws Exception;
 		public void close() throws IOException{  } 
 	}
@@ -24,13 +25,15 @@ public abstract class Perf implements Closeable{
 	public AtomicLong counter = new AtomicLong(0);
 	public AtomicLong failCounter = new AtomicLong(0); 
 	 
-	public abstract Task buildTask(); 
+	public abstract TaskInThread buildTaskInThread(); 
 	
 	public void run() throws Exception{ 
 		this.startTime = System.currentTimeMillis();
 		TaskThread[] tasks = new TaskThread[threadCount]; 
 		for(int i=0;i<tasks.length;i++){ 
-			tasks[i] = new TaskThread(buildTask());
+			TaskInThread t = buildTaskInThread();
+			t.initTask();
+			tasks[i] = new TaskThread(t);
 		}
 		
 		for(TaskThread task : tasks){
@@ -50,8 +53,8 @@ public abstract class Perf implements Closeable{
 	}
 
 	class TaskThread extends Thread{  
-		private Task task;
-		public TaskThread(Task task){
+		private TaskInThread task;
+		public TaskThread(TaskInThread task){
 			this.task = task;
 		}
 		@Override

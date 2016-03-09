@@ -21,9 +21,9 @@ public class NetPerf{
 		
 		Perf perf = new Perf() { 
 			@Override
-			public Task buildTask() { 
+			public TaskInThread buildTaskInThread() { 
 				final MessageClient client = new MessageClient(serverAddress, group);
-				Task task = new Task() { 
+				TaskInThread task = new TaskInThread() { 
 					@Override
 					public void doTask() throws Exception {
 						Message msg = new Message();

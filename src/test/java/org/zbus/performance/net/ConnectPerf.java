@@ -20,8 +20,8 @@ public class ConnectPerf {
 
 		Perf perf = new Perf() {
 			@Override
-			public Task buildTask() {
-				Task task = new Task() {
+			public TaskInThread buildTaskInThread() {
+				TaskInThread task = new TaskInThread() {
 					@Override
 					public void doTask() throws Exception { 
 						MessageClient client = new MessageClient(serverAddress, group);
