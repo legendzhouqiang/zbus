@@ -18,7 +18,7 @@ public class ConsumerLatency {
 		long total = 0;
 		for(int i=0;i<loopCount;i++){
 			long start = System.currentTimeMillis();
-			c.recv(10000);
+			c.take(10000);
 			long end = System.currentTimeMillis();
 			total += (end-start);
 			if(i%1000 == 0){

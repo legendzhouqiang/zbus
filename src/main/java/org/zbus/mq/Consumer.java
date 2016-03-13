@@ -34,10 +34,10 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 
 public class Consumer extends MqAdmin implements Closeable {
-	private static final Logger log = Logger.getLogger(Consumer.class);
-
-	private MessageInvoker client; // 消费者拥有一个物理链接
-	private String topic = null; // 为发布订阅者的主题，当Consumer的模式为发布订阅时候起作用
+	private static final Logger log = Logger.getLogger(Consumer.class); 
+	
+	private MessageInvoker client;  
+	private String topic = null;  
 	private int consumeTimeout = 300000; // 5 minutes
 
 	public Consumer(Broker broker, String mq, MqMode... mode) {
@@ -64,8 +64,20 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 		}
 	}
-
+	
+	/**
+	 * @deprecated use take instead
+	 * 
+	 * @param timeout
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public Message recv(int timeout) throws IOException, InterruptedException {
+		return take(timeout);
+	}
+
+	public Message take(int timeout) throws IOException, InterruptedException {
 		ensureClient();
 
 		Message req = new Message();
@@ -92,7 +104,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				if (!this.createMQ()) {
 					throw new MqException(res.getBodyString());
 				}
-				return recv(timeout);
+				return take(timeout);
 			}
 			throw new MqException(res.getBodyString());
 		} catch (ClosedByInterruptException e) {
@@ -111,7 +123,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Message take() throws InterruptedException, IOException {
 		while (true) {
-			Message message = recv(consumeTimeout);
+			Message message = take(consumeTimeout);
 			if (message == null)
 				continue;
 			return message; 
