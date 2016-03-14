@@ -71,14 +71,140 @@ Broker内部核心实现了：
 2. 同步异步API
 
 所以Broker在JAVA中可以理解为类似JDBC连接池一样的重对象，应该共享使用，大部分场景应该是Application生命周期。
-而依赖Broker对象而存在的Producer与Consumer一般可以看成是轻量级对象（Consumer也因为拥有链接需要关闭）
+而依赖Broker对象而存在的Producer与Consumer一般可以看成是轻量级对象（Consumer因为拥有链接需要关闭）
+
+
+** 生产消息 **
+		
+	//Producer是轻量级对象可以随意创建不用释放 
+	Producer producer = new Producer(broker, "MyMQ");
+	producer.createMQ();//确定为创建消息队列需要显示调用
+
+	Message msg = new Message();
+	msg.setBody("hello world");  //消息体底层是byte[]
+	msg = producer.sendSync(msg);
+
+** 消费消息 **
+
+	Consumer consumer = new Consumer(broker, "MyMQ");  
+	consumer.start(new ConsumerHandler() { 
+		@Override
+		public void handle(Message msg, Consumer consumer) throws IOException { 
+			//消息回调处理
+			System.out.println(msg);
+		}
+	}); 
+	//可控的范围内需要关闭consumer（内部拥有了物理连接）
+
+生产者可以异步发送消息，直接调用producer.sendAsync()，具体请参考examples中相关示例
+
+消费者可以使用更底层的API控制怎么取消息，直接调用consumer.take()从zbus上取回消息
+    
+从上面的API来看，使用非常简单，连接池管理，同步异步处理、高可用等相关主题全部留给了Broker抽象本身
 
 
 
 ##zbus实现RPC服务
 
+MQ消息队列用于解耦应用之间的依赖关系，一般认为MQ是从更广泛的分布式RPC中演变而来的：在RPC场景下，如果某个远程方法调用耗时过长，调用方不希望blocking等待，除了异步处理之外，更加常见的改造方式是采用消息队列解耦调用方与服务方。
+
+RPC的场景更加常见，RPC需要解决异构环境跨语言的调用问题，有非常多的解决方案，综合看都是折中方案，zbus也属其一。
+
+
+RPC从数据通讯角度来看可以简单理解为：
+
+
+	分布式调用方A --->命令打包(method+params) ---> 网络传输 --->  分布式式服务方B 命令解包（method+params）
+	       ^                                                                            | 
+    	   |                                                                            v
+    	   |<---结果解包(result/ error)<------- 网络传输 <----  结果打包(result/ error) <---调用本地方法
+
+
+
+异构环境下RPC方案需要解决的问题包括以下核心问题
+
+	1. 跨语言，多语言平台下的消息通讯格式选择问题
+	2. 服务端伺服问题，高性能处理模型
+	3. 分布式负载均衡问题
+
+WebService采用HTTP协议负载，SOAP跨语言描述对象解决问题1
+
+Windows WCF采用抽象统一WebService和私有序列化高效传输解决问题1
+
+在服务端处理模型与分布式负载均衡方面并不多体现，这里不讨论WebService，WCF或者某些私有的RPC方案的优劣之分，工程优化过程中出现了诸如Thrift，dubbo等等RPC框架，折射出来是的对已有的RPC方案中折中的不满。
+
+
+针对问题1，zbus的RPC采用的是JSON数据根式封装跨语言平台协议，特点是简单明了，协议应用广泛（zbus设计上可以替换JSON）
+
+针对问题2、问题3，zbus默认采用两套模式，MQ-RPC与DirectRPC， MQ-RPC基于MQ消息队列中间，DirectRPC则不通过MQ直连模式
+
+zbus的RPC方案除了解决上面三个问题之外，还有两个重要的工程目标：
+
+	4.极其轻量简单方便二次开发
+	5.RPC业务本身与zbus解耦（方便直接替换掉zbus）
+
+
+zbus的RPC设计非常简单，模型上对请求和应答做了基本的抽象
+
+	public static class Request{ 
+		private String module = ""; //模块标识
+		private String method;      //远程方法
+		private Object[] params;    //参数列表
+		private String[] paramTypes;
+		private String encoding = "UTF-8";
+	}
+	
+	public static class Response {  
+		private Object result;  
+		private Throwable error;
+		private String stackTrace; //异常时候一定保证stackTrace设定，判断的逻辑以此为依据
+		private String encoding = "UTF-8";
+	}
+
+非常直观的抽象设计，就是对method+params 与 结果result/error 的JAVA表达而已。
+
+RpcCodec的一个JSON实现JsonRpcCodec完成将上述对象序列化成JSON格式放入到HTTP消息体中在网络上传输
+
+** RPC调用方 **
+
+RpcInvoker API核心
+	
+	public class RpcInvoker{ 
+		public Response invokeSync(Request request){
+			.....
+		} 
+	}
+完成将上述请求序列化并发送至网络，等待结果返回，序列化回result/error。
+
+RpcInvoker同时适配MQ-RPC与DirectRPC，只需要给RpcInvoker指定不同的底层消息MessageInvoker，比如
+1. MqInvoker通过MQ做RPC
+2. HaInvoker高可用直连RPC
+3. MessageClient简单点对点
+
+
+
+
+
+为了解决问题5，使得zbus在RPC业务解耦，zbus增加了动态代理类
+
+RpcFactory API完成业务interface经过zbus的RPC动态代理类实现
+
+	public class RpcFactory { 	
+		public <T> T getService(Class<T> api) throws Exception{
+			....
+		}
+	}
+
+通过RpcFactory则完成了业务代码与zbus的解耦（通过spring等IOC容器更加彻底的把zbus完全隔离掉）
+
+
+
+
+** RPC服务方 **
+
 
 ##zbus实现异构服务代理
+
 
 
 ##zbus高可用模式
