@@ -393,6 +393,7 @@ zbus接收到消息Message做何种动作，由cmd KV扩展决定，支持的赋
 
 * 每个命令可能用到参数Key说明（Message.java）
 	 
+	
 	public static final String MQ       = "mq";      //消息队列标识
 	public static final String SENDER   = "sender";  //消息发送者标识
 	public static final String RECVER   = "recver";  //消息接收者标识
@@ -450,6 +451,7 @@ zbus的NIO通信模型的封装非常简单：
 	3. 事件处理公开机制靠IoAdaptor完成
 	4. 最外面由SelectorGroup完成多个SelectorThread的负载均衡与简单管理，提高整体性能
 
+上面的描述也是解读代码的先后顺序
 
 zbus在net.core包设计的基础之上，为了方便使用方构建客户端与服务器端程序，提供了Client、Server的基本封装，同步异步处理Sync方便消息的同步异步转换。
 
@@ -463,7 +465,6 @@ Server端示例（简洁性的体现）
 		//1） SelectorGroup管理 
 		final SelectorGroup group = new SelectorGroup();
 		final Server server = new Server(group);
-
 		//2)构建一个MessageAdaptor
 		MessageAdaptor ioAdaptor = new MessageAdaptor();
 		ioAdaptor.uri("/hello", new MessageProcessor() { 
@@ -474,10 +475,14 @@ Server端示例（简洁性的体现）
 				return resp;
 			}
 		});
-
 		//3)在8080端口上启动这个IoAdaptor服务
 		server.start(8080, ioAdaptor);
 	}
+
+运行则直接可以统统浏览器访问 http://localhost:8080/hello
+
+这个示例并不是简单的hello world，SelectorGroup使之具备高性能服务框架，在i7 CPU的box上能上10w+的QPS性能
+
 具体请详细参考examples下面的net示例
 
 
