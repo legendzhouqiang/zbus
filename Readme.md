@@ -217,7 +217,8 @@ RpcInvoker同时适配MQ-RPC与DirectRPC，只需要给RpcInvoker指定不同的
 	
 	//1） 接入到Trackserver的ZbusBroker，具备高可用选择能力
 	MessageInvoker messageInvoker = new ZbusBroker("127.0.0.1:16666;127.0.0.1:16667");
-	HaInvoker haInvoker = new HaInvoker(messageInvoker, "HaDirectRpc"); //指定高可用服务器上的选择标识，注册为相同标识的服务提供方之间高可用
+	//指定高可用服务器上的选择标识，注册为相同标识的服务提供方之间高可用
+	HaInvoker haInvoker = new HaInvoker(messageInvoker, "HaDirectRpc"); 
 	RpcInvoker rpc = new RpcInvoker(haInvoker); //构造出RpcInvoker 
 	
 
