@@ -14,7 +14,9 @@
 3. 丰富的API--JAVA/C/C++/C#/Python/Node.JS多语言接入 
 4. 兼容扩展HTTP协议接入（方便新增客户端SDK）
 
-##QQ讨论组：467741880
+##QQ讨论组：467741880  
+* [启动zbus的几种方法](http://git.oschina.net/rushmore/zbus#启动zbus的几种方法 "启动zbus的几种方法") 
+
 
 ##启动zbus的几种方法
 zbus的角色是中间消息服务（Broker），默认分布式运行（当然也可以嵌入式单进程运作）
