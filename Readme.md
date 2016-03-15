@@ -4,7 +4,7 @@
 
 * [zbus解决的问题域](http://git.oschina.net/rushmore/zbus#zbus解决的问题域 "") 
 * [zbus特点](http://git.oschina.net/rushmore/zbus#zbus特点 "")  
-* [启动zbus的几种方法](http://git.oschina.net/rushmore/zbus#启动zbus的几种方法 "") 
+* [zbus启动](http://git.oschina.net/rushmore/zbus#zbus启动 "") 
 * [zbus实现消息队列](http://git.oschina.net/rushmore/zbus#zbus实现消息队列 "") 
 * [zbus实现RPC](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
 * [zbus实现异构服务代理--服务总线](http://git.oschina.net/rushmore/zbus#zbus实现异构服务代理--服务总线 "") 
@@ -27,7 +27,7 @@
 ##QQ讨论组：467741880  
 
 
-##启动zbus的几种方法
+##zbus启动
 zbus的角色是中间消息服务（Broker），默认分布式运行（当然也可以嵌入式单进程运作）
 
 1. 通过脚本直接运行 zbus-dist发行目录下windows下对应zbus.bat, linux/mac 对应zbus.sh
