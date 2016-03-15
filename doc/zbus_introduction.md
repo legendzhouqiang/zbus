@@ -74,7 +74,7 @@ Broker内部核心实现了：
 而依赖Broker对象而存在的Producer与Consumer一般可以看成是轻量级对象（Consumer因为拥有链接需要关闭）
 
 
-**生产消息**
+###生产消息
 		
 	//Producer是轻量级对象可以随意创建不用释放 
 	Producer producer = new Producer(broker, "MyMQ");
@@ -84,7 +84,7 @@ Broker内部核心实现了：
 	msg.setBody("hello world");  //消息体底层是byte[]
 	msg = producer.sendSync(msg);
 
-**消费消息**
+###消费消息
 
 	Consumer consumer = new Consumer(broker, "MyMQ");  
 	consumer.start(new ConsumerHandler() { 
