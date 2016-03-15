@@ -74,7 +74,7 @@ Broker内部核心实现了：
 而依赖Broker对象而存在的Producer与Consumer一般可以看成是轻量级对象（Consumer因为拥有链接需要关闭）
 
 
-** 生产消息 **
+**生产消息**
 		
 	//Producer是轻量级对象可以随意创建不用释放 
 	Producer producer = new Producer(broker, "MyMQ");
@@ -84,7 +84,7 @@ Broker内部核心实现了：
 	msg.setBody("hello world");  //消息体底层是byte[]
 	msg = producer.sendSync(msg);
 
-** 消费消息 **
+**消费消息**
 
 	Consumer consumer = new Consumer(broker, "MyMQ");  
 	consumer.start(new ConsumerHandler() { 
@@ -165,7 +165,7 @@ zbus的RPC设计非常简单，模型上对请求和应答做了基本的抽象
 
 RpcCodec的一个JSON实现JsonRpcCodec完成将上述对象序列化成JSON格式放入到HTTP消息体中在网络上传输
 
-** RPC调用方 **
+**RPC调用方**
 
 RpcInvoker API核心
 	
@@ -200,7 +200,7 @@ RpcFactory API完成业务interface经过zbus的RPC动态代理类实现
 
 
 
-** RPC服务方 **
+**RPC服务方**
 
 
 ##zbus实现异构服务代理
