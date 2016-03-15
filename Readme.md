@@ -1,5 +1,15 @@
 # ZBUS = MQ + RPC
 
+文档目录结构
+
+* [zbus解决的问题域](http://git.oschina.net/rushmore/zbus#zbus解决的问题域 "") 
+* [zbus特点](http://git.oschina.net/rushmore/zbus#zbus特点 "")  
+* [启动zbus的几种方法](http://git.oschina.net/rushmore/zbus#启动zbus的几种方法 "") 
+* [zbus实现消息队列](http://git.oschina.net/rushmore/zbus#zbus实现消息队列 "") 
+* [zbus实现RPC](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
+* [zbus实现异构服务代理--服务总线](http://git.oschina.net/rushmore/zbus#zbus实现异构服务代理--服务总线 "") 
+* [zbus底层编程扩展](http://git.oschina.net/rushmore/zbus#zbus底层编程扩展 "") 
+
 ##zbus解决的问题域
 1. 消息队列 -- 应用解耦
 2. 分布式RPC -- 远程方法调用
@@ -15,13 +25,6 @@
 4. 兼容扩展HTTP协议接入（方便新增客户端SDK）
 
 ##QQ讨论组：467741880  
-
-* [启动zbus的几种方法](http://git.oschina.net/rushmore/zbus#启动zbus的几种方法 "") 
-* [zbus实现消息队列](http://git.oschina.net/rushmore/zbus#zbus实现消息队列 "") 
-* [zbus实现RPC](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
-* [zbus实现异构服务代理--服务总线](http://git.oschina.net/rushmore/zbus#zbus实现异构服务代理--服务总线 "") 
-* [zbus底层编程扩展](http://git.oschina.net/rushmore/zbus#zbus底层编程扩展 "") 
-
 
 
 ##启动zbus的几种方法
