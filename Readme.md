@@ -7,6 +7,9 @@
 * [zbus实现RPC](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
 * [zbus实现异构服务代理--服务总线](http://git.oschina.net/rushmore/zbus#zbus实现异构服务代理--服务总线 "") 
 * [zbus底层编程扩展](http://git.oschina.net/rushmore/zbus#zbus底层编程扩展 "") 
+* [zbus高可用模式](http://git.oschina.net/rushmore/zbus#zzbus高可用模式 "") 
+* [zbus性能测试数据](http://git.oschina.net/rushmore/zbus#zbus性能测试数据 "") 
+
 
 ##zbus解决的问题域
 1. 消息队列 -- 应用解耦
@@ -499,11 +502,77 @@ Server端示例（简洁性的体现）
 
 
 
+##zbus高可用模式
+
+zbus高可用采用类似zookeeper的跟踪机制，但并没有使用zookeeper。
+
+zbus高可用由两大节点群组成：
+1. ZbusServer节点群
+2. TrackServer节点群
+
+ZbusServer节点群由单机版本的zbus组成，各个节点之间无状态关联，TrackServer节点群中各个节点也无任何状态关联，ZbusServer把节点状态（诸如MQ信息）上报给所有的TrackServer。
+
+这里面信息的一致性zbus是做了妥协的，可以理解为zookeeper一种简化，典型配置是TrackServer全网配置两台，所有的ZbusServer都向这两台TrackServer上报各自的节点变化信息，包括某个节点MQ信息即时变化推送，定时（默认2s）重复更新。实用角度简化设计的一种折中。
+
+客户端（生产者与消费者）仍然是直接链接到某个ZbusServer，但是选择节点由订阅TrackServer而给出的整体ZbusServer的节点拓扑信息决定，客户端同时做了容错处理，运行中所有的TrackServer失败不影响已有拓扑信息的实用（本地缓存）
+
+上述客户端的复杂性由HaBroker封装（最终由ZbusBroker统一类型选择），API层面不受高可用选择影响与单点zbus场景保持一致，同时高可用节点选择算法也将陆续开放，方便二次开发个性化。
+
+高可用HA环境的搭建
+因为zbus HA方案中的节点无任何状态联系，因此HA环境搭建非常简单，各个节点启动无顺序依赖，一般顺序为：
+
+1. 启动若干个（一般两个）TrackServer群。
+2. 配置预先知道的TrackServer列表到ZbusServer（MqServer）的启动项中，启动若干个ZbusServer节点群。
+
+整个HA的Broker环境就建立好了，例子可以参考zbus-dist/ha 目录下的配置启动，注意如果不按照先TrackServer启动的顺序，先启动ZbusServer会临时报无法找到某个TrackServer错误，直到TrackServer启动正常，错误不影响使用。
 
 
-##zbus高可用模式 （TBD）
+HA最佳实践指导：
+
+1. 生产者端（包括RPC客户端）配置HaBroker，完全实现Failover与负载均衡
+2. 消费者端（包括RPC服务端）配置SingleBroker，不使用HaBroker的容错，而是多机部署，这样能运行确定节点分布。
+
+上述HaBroker与SingleBroker都统一使用ZbusBroker，只是BrokerAddress的地址配置差异。
 
 
-##zbus性能测试数据（TBD）
+##zbus性能测试数据
+
+性能测试程序在test/performance目录下，根据实际的机器测试给出。
+
+一个参考数据，测试环境
+
+	MacBook Pro (Retina, 15-inch, Mid 2015)
+	Processor 2.5 GHz Intel Core i7
+	Memory 16 GB 1600 MHz DDR3
+
+消息大小 "hello world"
+
+* 生产消息速度 （~4万笔每秒）
+
+测试代码： org.zbus.performance.ProducerPerf.java
+	
+	2016-03-16 14:50:08 INFO  Perf:73 - QPS: 42844.4874, Failed/Total=0/2660020(0.0000)
+	2016-03-16 14:50:09 INFO  Perf:73 - QPS: 42845.4515, Failed/Total=0/2670011(0.0000)
+	2016-03-16 14:50:09 INFO  Perf:73 - QPS: 42842.2988, Failed/Total=0/2680012(0.0000)
+	2016-03-16 14:50:09 INFO  Perf:73 - QPS: 42841.8991, Failed/Total=0/2690011(0.0000)
+	2016-03-16 14:50:09 INFO  Perf:73 - QPS: 42838.7834, Failed/Total=0/2700020(0.0000)
+	2016-03-16 14:50:10 INFO  Perf:73 - QPS: 42840.4312, Failed/Total=0/2710016(0.0000)
+	2016-03-16 14:50:10 INFO  Perf:73 - QPS: 42840.0428, Failed/Total=0/2720007(0.0000)
+
+
+* 消费消息速度（~4万笔每秒）
+
+测试代码： org.zbus.performance.ConsumerPerf.java
+
+	2016-03-16 14:57:13 INFO  ConsumerPerf:47 - Consumed:150000, QPS: 43290.0433
+	2016-03-16 14:57:13 INFO  ConsumerPerf:47 - Consumed:160000, QPS: 43859.6491
+	2016-03-16 14:57:14 INFO  ConsumerPerf:47 - Consumed:170000, QPS: 43859.6491
+	2016-03-16 14:57:14 INFO  ConsumerPerf:47 - Consumed:180000, QPS: 43290.0433
+	2016-03-16 14:57:14 INFO  ConsumerPerf:47 - Consumed:190000, QPS: 43859.6491
+	2016-03-16 14:57:14 INFO  ConsumerPerf:47 - Consumed:200000, QPS: 44247.7876
+	2016-03-16 14:57:15 INFO  ConsumerPerf:47 - Consumed:210000, QPS: 43668.1223
+	2016-03-16 14:57:15 INFO  ConsumerPerf:47 - Consumed:220000, QPS: 44843.0493
+	2016-03-16 14:57:15 INFO  ConsumerPerf:47 - Consumed:230000, QPS: 44843.0493
+
 
 	

@@ -7,13 +7,16 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
+import org.zbus.kit.log.Logger;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.http.Message;
 
 public class ConsumerPerf {
-	public static void main(String[] args) throws Exception{   
+	private static final Logger log = Logger.getLogger(ConsumerPerf.class); 
+	public static void main(String[] args) throws Exception{  
+		
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 16); 
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ");
@@ -41,7 +44,7 @@ public class ConsumerPerf {
 						long start = lastMark.get();
 						lastMark.set(System.currentTimeMillis());
 						long end = System.currentTimeMillis();
-						System.out.format("Consumed:%d, QPS: %.4f\n", curr, interval*1000.0/(end-start) );
+						log.info("Consumed:%d, QPS: %.4f", curr, interval*1000.0/(end-start) );
 					}
 				}
 			}); 
