@@ -43,6 +43,7 @@ zbus的角色是中间消息服务（Broker），默认分布式运行（当然�
 	
 启动后zbus可以通过浏览器直接访问zbus启动服务器15555端口的监控服务
 
+![zbus监控](http://git.oschina.net/uploads/images/2016/0316/161713_c15c6031_7458.png "zbus监控")	
 
 ##zbus实现消息队列
 
