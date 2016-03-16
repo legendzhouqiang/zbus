@@ -406,30 +406,19 @@ zbus接收到消息Message做何种动作，由cmd KV扩展决定，支持的赋
 
 * 每个命令可能用到参数Key说明（Message.java）
 
-public static final String MQ       = "mq";      //消息队列标识
-
-public static final String SENDER   = "sender";  //消息发送者标识
-
-public static final String RECVER   = "recver";  //消息接收者标识
-
-public static final String ID       = "id";	 //消息ID
-
-public static final String RAWID    = "rawid";   //原始消息ID（消费消息时交换中用到）
-
-public static final String SERVER   = "server";  //消息经过的broker地址
-
-public static final String TOPIC    = "topic";   //消息发布订阅主题， 使用,分隔 
-
-public static final String ACK      = "ack";	  //消息ACK
-
-public static final String ENCODING = "encoding"; //消息body二进制编码
-
-public static final String KEY       = "key";      //消息的KEY
-
-public static final String KEY_GROUP = "key_group"; //消息的KEY分组
-
-public static final String MASTER_MQ  = "master_mq";   //消息队列主从复制的主队列标识
-public static final String MASTER_TOKEN  = "master_token";  //主队列访问控制码
+	public static final String MQ       = "mq";      //消息队列标识
+	public static final String SENDER   = "sender";  //消息发送者标识
+	public static final String RECVER   = "recver";  //消息接收者标识
+	public static final String ID       = "id";	 //消息ID
+	public static final String RAWID    = "rawid";   //原始消息ID（消费消息时交换中用到）
+	public static final String SERVER   = "server";  //消息经过的broker地址
+	public static final String TOPIC    = "topic";   //消息发布订阅主题， 使用,分隔 
+	public static final String ACK      = "ack";	  //消息ACK
+	public static final String ENCODING = "encoding"; //消息body二进制编码
+	public static final String KEY       = "key";      //消息的KEY
+	public static final String KEY_GROUP = "key_group"; //消息的KEY分组
+	public static final String MASTER_MQ  = "master_mq";   //消息队列主从复制的主队列标识
+	public static final String MASTER_TOKEN  = "master_token";  //主队列访问控制码
 
 
 具体每个命令对应使用到的参数，请参考MqAdaptor中对应每个命令的Handler
