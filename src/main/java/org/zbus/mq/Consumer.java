@@ -169,6 +169,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
+	private volatile ConsumerExceptionHandler consumerExceptionHandler;
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
@@ -181,9 +182,11 @@ public class Consumer extends MqAdmin implements Closeable {
 						Consumer.this.close();
 						break;
 					} catch (MqException e) {
-						log.error(e.getMessage(), e);
-						Consumer.this.close();
-						break;
+						if(consumerExceptionHandler != null){
+							consumerExceptionHandler.onException(e, Consumer.this);
+							break;
+						} 
+						throw e; 
 					} 
 					if (consumerHandler == null) {
 						log.warn("Missing consumerHandler, call onMessage first");
@@ -194,8 +197,12 @@ public class Consumer extends MqAdmin implements Closeable {
 					} catch (IOException e) {
 						log.error(e.getMessage(), e);
 					}
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
+				} catch (IOException e) { 
+					if(consumerExceptionHandler != null){
+						consumerExceptionHandler.onException(e, Consumer.this);
+					} else {
+						log.error(e.getMessage(), e);
+					}
 				}
 			}
 		}
@@ -203,6 +210,10 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void onMessage(final ConsumerHandler handler) {
 		this.consumerHandler = handler;
+	}
+	
+	public void onException(final ConsumerExceptionHandler handler) {
+		this.consumerExceptionHandler = handler;
 	}
 
 	public void close() throws IOException {
@@ -253,5 +264,9 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;
+	}
+	
+	public static interface ConsumerExceptionHandler { 
+		void onException(Exception e, Consumer consumer);   
 	}
 }
