@@ -1,6 +1,6 @@
 # ZBUS = MQ + RPC
 
-文档目录结构
+目录结构
 
 * [zbus解决的问题域](http://git.oschina.net/rushmore/zbus#zbus解决的问题域 "") 
 * [zbus特点](http://git.oschina.net/rushmore/zbus#zbus特点 "")  
