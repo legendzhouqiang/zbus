@@ -28,5 +28,9 @@ import org.zbus.net.http.Message;
 
 public abstract class MessageQueue extends AbstractQueue<Message>{
 	 public abstract String getMasterMq();
-	 public abstract void setMasterMq(String mq);
+	 public abstract void setMasterMq(String value);
+	 public abstract String getAccessToken();
+	 public abstract void setAccessToken(String value);
+	 public abstract String getCreator();
+	 public abstract void setCreator(String value);
 }

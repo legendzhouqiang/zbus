@@ -38,12 +38,20 @@ public class Producer extends MqAdmin {
 	public Producer(MqConfig config) {
 		super(config);
 	}
- 
-	public void sendAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
+	
+	private void fillCommonHeaders(Message msg){
 		msg.setCmd(Protocol.Produce);
 		msg.setMq(this.mq);
 		msg.setAck(true);
-
+		if(accessToken != null && !accessToken.equals("")){
+			if(msg.getHead("token") == null){
+				msg.setHead("token", accessToken);
+			}
+		} 
+	}
+ 
+	public void sendAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
+		fillCommonHeaders(msg);
 		broker.invokeAsync(msg, callback);
 	}
  
@@ -52,9 +60,7 @@ public class Producer extends MqAdmin {
 	}
  
 	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException {
-		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq);
-		msg.setAck(true); 
+		fillCommonHeaders(msg);
 		return broker.invokeSync(msg, timeout);
 	}
  

@@ -36,13 +36,11 @@ import org.zbus.net.core.Session;
 import org.zbus.net.http.Message;
 
 public abstract class AbstractMQ implements Closeable{	
-	protected final String name;
-	protected String creator;
+	protected final String name; 
 	protected int mode;
 	protected long lastUpdateTime = System.currentTimeMillis();
 	
-	protected final MessageQueue msgQ;
-	protected String accessToken = "";
+	protected final MessageQueue msgQ; 
 	
 	protected Auth auth;
 	
@@ -52,6 +50,7 @@ public abstract class AbstractMQ implements Closeable{
 	public AbstractMQ(String name, MessageQueue msgQ) {
 		this.msgQ = msgQ;
 		this.name = name;
+		this.auth = new DefaultAuth(msgQ.getAccessToken());
 	}
 	 
 	public String getName() { 
@@ -88,11 +87,15 @@ public abstract class AbstractMQ implements Closeable{
 	
 	public abstract MqInfo getMqInfo();
 	
-	public void setAccessToken(String accessToken){
-		this.accessToken = accessToken;
-		this.auth = new DefaultAuth(this.accessToken);
-	}
+	public void setAccessToken(String accessToken){ 
+		this.msgQ.setAccessToken(accessToken);
+		this.auth.setAccessToken(accessToken);
+	} 
 	
+	public String getAccessToken() {
+		return msgQ.getAccessToken();
+	}
+
 	public void setAuth(Auth auth){
 		this.auth = auth;
 	}
@@ -110,6 +113,7 @@ public abstract class AbstractMQ implements Closeable{
 		this.mode = mode;
 	}   
 	 
+	
 	
 	
 	public void setMasterMq(AbstractMQ mq){
@@ -146,4 +150,21 @@ public abstract class AbstractMQ implements Closeable{
 		mq.msgQ.setMasterMq(null);
 		this.slaveMqs.remove(mq);
 	}
+
+	public String getCreator() {
+		return msgQ.getCreator();
+	}
+
+	public void setCreator(String creator) {
+		this.msgQ.setCreator(creator);
+	}
+
+	public long getLastUpdateTime() {
+		return lastUpdateTime;
+	}
+
+	public void setLastUpdateTime(long lastUpdateTime) {
+		this.lastUpdateTime = lastUpdateTime;
+	}
+	
 }

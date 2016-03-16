@@ -30,6 +30,9 @@ import org.zbus.net.http.Message;
 public class MessageMemoryQueue extends MessageQueue { 
 	private LinkedBlockingQueue<Message> support = new LinkedBlockingQueue<Message>();
 	private String slaveToMq;
+	private String accessToken;
+	private String creator;
+	
 	@Override
 	public boolean offer(Message e) {
 		return support.offer(e);
@@ -51,8 +54,8 @@ public class MessageMemoryQueue extends MessageQueue {
 	}
 
 	@Override
-	public void setMasterMq(String mq) {
-		this.slaveToMq = mq;
+	public void setMasterMq(String value) {
+		this.slaveToMq = value;
 	}
 
 	@Override
@@ -63,5 +66,25 @@ public class MessageMemoryQueue extends MessageQueue {
 	@Override
 	public int size() {
 		return support.size();
+	}
+
+	@Override
+	public String getAccessToken() { 
+		return this.accessToken;
+	}
+
+	@Override
+	public void setAccessToken(String value) {
+		this.accessToken = value;
+	}
+
+	@Override
+	public String getCreator() {
+		return this.creator;
+	}
+
+	@Override
+	public void setCreator(String value) {
+		this.creator = value;
 	}
 }

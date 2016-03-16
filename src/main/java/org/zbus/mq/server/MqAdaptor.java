@@ -332,14 +332,14 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     				mq = new MQ(mqName, support);
     			}
     			mq.setMode(mode);
-    			mq.creator = sess.getRemoteAddress();
+    			mq.setCreator(sess.getRemoteAddress());
     			mq.setAccessToken(accessToken);
     			if(master != null){
     				AbstractMQ masterMq = mqTable.get(master);
     				if(masterToken == null){
     					masterToken = "";
     				}
-    				if(masterMq != null && masterMq.accessToken.equals(masterToken)){
+    				if(masterMq != null && masterMq.getAccessToken().equals(masterToken)){
     					masterMq.addSlaveMq(mq);
     				}
     			}
@@ -549,7 +549,6 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			}
 			mq.setMode(flag);
 			mq.lastUpdateTime = System.currentTimeMillis(); 
-			mq.creator = "System";
 			mqTable.put(name, mq);
 			
 			//notify

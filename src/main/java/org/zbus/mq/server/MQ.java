@@ -131,7 +131,7 @@ public class MQ extends AbstractMQ{
 		MqInfo info = new MqInfo(); 
 		info.name = name;
 		info.lastUpdateTime = lastUpdateTime;
-		info.creator = creator;
+		info.creator = getCreator();
 		info.mode = this.mode;
 		info.unconsumedMsgCount = msgQ.size();
 		info.consumerCount = pullSessions.size();
@@ -144,7 +144,7 @@ public class MQ extends AbstractMQ{
 
 	@Override
 	public String toString() {
-		return "MQ [name=" + name + ", creator=" + creator + "]";
+		return "MQ [name=" + name + ", creator=" + getCreator() + "]";
 	}
 	
 	public int consumerOnlineCount(){

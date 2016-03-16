@@ -9,7 +9,7 @@ public class ProducerExample {
 	public static void main(String[] args) throws Exception {
 		Broker broker = new SingleBroker(); // default to 127.0.0.1:15555
 
-		Producer producer = new Producer(broker, "MyMQ");
+		Producer producer = new Producer(broker, "MyMQ"); 
 		producer.createMQ();
 
 		Message msg = new Message();

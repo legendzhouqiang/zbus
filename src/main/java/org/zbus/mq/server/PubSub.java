@@ -135,7 +135,7 @@ public class PubSub extends AbstractMQ{
 		MqInfo info = new MqInfo(); 
 		info.name = name;
 		info.lastUpdateTime = lastUpdateTime;
-		info.creator = creator;
+		info.creator = getCreator();
 		info.mode = this.mode;
 		
 		info.unconsumedMsgCount = msgQ.size();
