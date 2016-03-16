@@ -404,7 +404,7 @@ zbus接收到消息Message做何种动作，由cmd KV扩展决定，支持的赋
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery"; 
 
-* 每个命令可能用到参数Key说明（Message.java）
+每个命令可能用到参数Key说明（Message.java）
 
 	//消息队列标识
 	public static final String MQ       = "mq";      
