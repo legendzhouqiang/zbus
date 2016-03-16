@@ -386,7 +386,8 @@ zbus协议可以简单描述为扩展HTTP协议，协议整体格式是HTTP格�
 
 因此zbus协议描述就是HTTP扩展的KeyValue描述
 
-* 命令控制 cmd
+
+命令控制 cmd
 
 zbus接收到消息Message做何种动作，由cmd KV扩展决定，支持的赋值（Protocol.java 中定义）
 	
@@ -406,10 +407,9 @@ zbus接收到消息Message做何种动作，由cmd KV扩展决定，支持的赋
 
 每个命令可能用到参数Key说明（Message.java）
 
-	//消息队列标识
-	public static final String MQ       = "mq";      
-	//消息发送者标识
-	public static final String SENDER   = "sender";  
+	
+	public static final String MQ       = "mq";      //消息队列标识 
+	public static final String SENDER   = "sender";  //消息发送者标识
 	public static final String RECVER   = "recver";  //消息接收者标识
 	public static final String ID       = "id";	 //消息ID
 	public static final String RAWID    = "rawid";   //原始消息ID（消费消息时交换中用到）
