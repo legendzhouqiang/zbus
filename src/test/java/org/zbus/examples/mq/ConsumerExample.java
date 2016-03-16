@@ -14,13 +14,13 @@ public class ConsumerExample {
 		
 		Broker broker = new ZbusBroker("127.0.0.1:15555");  
 		Consumer consumer = new Consumer(broker, "MyMQ");  
-		consumer.setAccessToken("123456");
+		//consumer.setAccessToken("123456");
 		consumer.start(new ConsumerHandler() { 
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException { 
 				
 				System.out.println(msg);
 			}
-		}); 
+		});  
 	}
 }

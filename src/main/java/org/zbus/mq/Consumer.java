@@ -180,6 +180,10 @@ public class Consumer extends MqAdmin implements Closeable {
 					} catch (InterruptedException e) {
 						Consumer.this.close();
 						break;
+					} catch (MqException e) {
+						log.error(e.getMessage(), e);
+						Consumer.this.close();
+						break;
 					} 
 					if (consumerHandler == null) {
 						log.warn("Missing consumerHandler, call onMessage first");
