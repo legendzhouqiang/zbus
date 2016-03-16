@@ -333,6 +333,8 @@ Spring的配置完全是上述代码的XML翻译，在此不做例子，具体�
 
 ZBUS = MQ+RPC
 
+![zbus总线](http://git.oschina.net/uploads/images/2016/0316/155108_2ec99c3f_7458.png "zbus总线")
+
 跨平台多语言+集中式节点控制，使得zbus适合完成服务总线适配工作。
 
 为什么要采用总线架构适配已有服务？
