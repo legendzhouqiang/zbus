@@ -587,4 +587,29 @@ HA最佳实践指导：
 	2016-03-16 14:57:15 INFO  ConsumerPerf:47 - Consumed:230000, QPS: 44843.0493
 
 
+
+* HTTP响应速度（~6.6万笔每秒）
+
+测试代码，服务器: org.zbus.examples.net.server.MyServer
+
+压力程序: ab -k -c 20 -n 1000000 http://localhost:8080/hello
+
+	
+	Server Hostname:        localhost
+	Server Port:            8080
+	
+	Document Path:          /hello
+	Document Length:        5 bytes
+	
+	Concurrency Level:      20
+	Time taken for tests:   15.073 seconds
+	Complete requests:      1000000
+	Failed requests:        0
+	Keep-Alive requests:    1000000
+	Total transferred:      67000000 bytes
+	HTML transferred:       5000000 bytes
+	Requests per second:    66344.44 [#/sec] (mean)
+	Time per request:       0.301 [ms] (mean)
+	Time per request:       0.015 [ms] (mean, across all concurrent requests)
+	Transfer rate:          4340.90 [Kbytes/sec] received
 	
