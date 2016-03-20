@@ -20,8 +20,8 @@ public class ConsumerTakeMessageFailure {
 					try {
 						msg = consumer.take();
 						System.out.println(msg);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+					} catch (InterruptedException e) { 
+						//break;
 					} catch (IOException e) {
 						break;
 					}
@@ -43,10 +43,14 @@ public class ConsumerTakeMessageFailure {
 		for(int i=0; i<100; i++){
 			Thread thread = createConsumerThread(broker);
 			thread.start();
-			threads[i] = thread;
-			Thread.sleep(1000); 
+			threads[i] = thread; 
+		}
+		
+		for(int i=0; i<100; i++){ 
+			
 			if(i>10){
 				threads[i-10].interrupt();
+				Thread.sleep(1000); 
 			}
 		}
 		
