@@ -11,24 +11,25 @@
 * [Performance](http://git.oschina.net/rushmore/zbus#zbus性能测试数据 "") 
 
 
-##zbus解决的问题域
-1. 消息队列 -- 应用解耦
-2. 分布式RPC -- 远程方法调用
-3. 异构服务代理 -- 跨平台语言RPC改造，实现DMZ服务总线架构
+##Problem Domain
+1. Messaging Queue(MQ) -- Decouple of application dependency
+2. Remote Procedure Call(RPC) 
+3. Service Bus -- RPC/protocol adaptor to different platforms
 
-##zbus目前不解决
-1. 分布式事务
+##NOT Support
+1. Distributed Transaction
 
-##zbus特点
-1. 极其轻量级--单个Jar包无依赖 ~300K （可个性化适配各类log包，commons-pool包）
-2. 亿级消息堆积能力、支持HA高可用
-3. 丰富的API--JAVA/C/C++/C#/Python/Node.JS多语言接入 
-4. 兼容扩展HTTP协议接入（方便新增客户端SDK）
+##Features
+1. Extremely light-weighted, distributed around 300k size
+2. Message Persistence, billions of message write instance
+3. High Availability(HA) support.
+4. Multiple languages/platforms--JAVA/C/C++/C#/Python/Node.JS 
+5. Raw HTTP header-extended protocol support to write new SDK
 
-##QQ讨论组：467741880  
+##Discussion QQ Group：467741880  
 
 
-##zbus启动
+##Startup
 zbus的角色是中间消息服务（Broker），默认分布式运行（当然也可以嵌入式单进程运作）
 
 1. 通过脚本直接运行 zbus-dist发行目录下windows下对应zbus.bat, linux/mac 对应zbus.sh
