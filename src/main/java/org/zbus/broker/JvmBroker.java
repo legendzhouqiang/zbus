@@ -37,9 +37,8 @@ public class JvmBroker extends Session implements Broker {
 	/**
 	 * The underlying MqServer is configured with defaults
 	 * If you want to do personalization, use constructor with MqServerConfig
-	 * @throws IOException
 	 */
-	public JvmBroker() throws IOException{
+	public JvmBroker(){
 		this(new MqServerConfig()); 
 	}
 	
@@ -47,9 +46,8 @@ public class JvmBroker extends Session implements Broker {
 	 * Configure the underlying MqServer with configuration 
 	 * 
 	 * @param config MqServer configuration
-	 * @throws IOException
 	 */
-	public JvmBroker(MqServerConfig config) throws IOException{
+	public JvmBroker(MqServerConfig config){
 		this(new MqServer(config));
 		this.ownMqServer = true;
 	}
@@ -57,15 +55,19 @@ public class JvmBroker extends Session implements Broker {
 	/**
 	 * Configure with a MqServer instance (it can be non-started)
 	 * @param mqServer MqServer instance
-	 * @throws IOException
 	 */
-	public JvmBroker(MqServer mqServer) throws IOException {
+	public JvmBroker(MqServer mqServer) {
 		super(null, null, null);
 		this.mqServer = mqServer;  
 		this.adaptor = this.mqServer.getDefaultMqAdaptor();
 		this.setStatus(SessionStatus.CONNECTED);  
 		
-		adaptor.onSessionAccepted(this);
+		try {
+			adaptor.onSessionAccepted(this);
+		} catch (IOException e) {
+			//should not run up here
+			log.error(e.getMessage(), e); 
+		}
 	}
 
 	@Override

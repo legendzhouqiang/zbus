@@ -81,22 +81,7 @@ public class BrokerConfig extends PoolConfig{
 	public void setBrokerAddress(String brokerAddress) {
 		this.brokerAddress = brokerAddress;
 	}
-	
-	/**
-	 * @deprecated use getBrokerAddres instead
-	 * @return
-	 */ 
-	@Deprecated 
-	public String getServerAddress() {
-		return brokerAddress;
-	}
-	/**
-	 * @deprecated use setBrokerAddres instead
-	 * @return
-	 */ 
-	public void setServerAddress(String serverAddress) {
-		this.brokerAddress = serverAddress;
-	}
+
 	public SelectorGroup getSelectorGroup() {
 		return selectorGroup;
 	}
@@ -114,24 +99,7 @@ public class BrokerConfig extends PoolConfig{
 	}
 	public void setExecutorCount(int executorCount) {
 		this.executorCount = executorCount;
-	}
-	
-	
-	/**
-	 * @deprecated use getBrokerAddres instead
-	 * @return
-	 */ 
-	public String getTrackServerList() {
-		return brokerAddress;
-	}
-	/**
-	 * @deprecated use setBrokerAddres instead
-	 * @return
-	 */ 
-	public void setTrackServerList(String trackServerList) {
-		this.brokerAddress = trackServerList;
-	} 
-	
+	}  
 	public MqServer getMqServer() {
 		return mqServer;
 	}

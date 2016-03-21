@@ -1,17 +1,17 @@
 # ZBUS = MQ + RPC
 
-* [Problem Domain](http://git.oschina.net/rushmore/zbus#zbus解决的问题域 "") 
+* [Project Target](http://git.oschina.net/rushmore/zbus#zbus解决的问题域 "") 
 * [Features](http://git.oschina.net/rushmore/zbus#zbus特点 "")  
 * [Startup](http://git.oschina.net/rushmore/zbus#zbus启动 "") 
-* [MQ](http://git.oschina.net/rushmore/zbus#zbus实现消息队列 "") 
-* [RPC](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
+* [Message Queue (MQ)](http://git.oschina.net/rushmore/zbus#zbus实现消息队列 "") 
+* [Remote Procedure Call (RPC)](http://git.oschina.net/rushmore/zbus#zbus实现RPC "") 
 * [Service Bus](http://git.oschina.net/rushmore/zbus#zbus实现异构服务代理--服务总线 "") 
-* [API](http://git.oschina.net/rushmore/zbus#zbus底层编程扩展 "") 
-* [High Availability](http://git.oschina.net/rushmore/zbus#zzbus高可用模式 "") 
+* [Client API](http://git.oschina.net/rushmore/zbus#zbus底层编程扩展 "") 
+* [High Availability (HA)](http://git.oschina.net/rushmore/zbus#zzbus高可用模式 "") 
 * [Performance](http://git.oschina.net/rushmore/zbus#zbus性能测试数据 "") 
 
 
-##Problem Domain
+##Project Target
 1. Messaging Queue(MQ) -- Decouple of application dependency
 2. Remote Procedure Call(RPC) 
 3. Service Bus -- RPC/protocol adaptor to different platforms
@@ -30,31 +30,36 @@
 
 
 ##Startup
-zbus的角色是中间消息服务（Broker），默认分布式运行（当然也可以嵌入式单进程运作）
 
-1. 通过脚本直接运行 zbus-dist发行目录下windows下对应zbus.bat, linux/mac 对应zbus.sh
-   运行脚本可以JVM参数优化，MQ存储路径等配置，如果运行发生错误，重点检查 （1）是否正确配置JVM （2）端口是否占用
-2. 嵌入式直接 new MqServer 启动
+zbus is a broker for message queuing, it runs in distributed mode by default, and of course it  could also run in embedded mode along with the main process.
+
+** 1.Distributed mode **
+
+  zbus startup is very simple, choose the shell files in zbus-dist directory of the project, zbus.bat for windows and zbus.sh for linux/mac. If configuration is required, edit the shell file to adjust JVM parameters or MQ related configuration such as store path for message persistence. If startup does go wrong, check out (1) whether JVM is properly configured, (2) whether the server port is in use, and in most cases the problem should be solved.
+	
+** 2.Embedded mode **
 
 	MqServerConfig config = new MqServerConfig();   
 	config.serverPort = 15555;  
 	config.storePath = "./store";  
 	final MqServer server = new MqServer(config);  
 	server.start();  
-	
-启动后zbus可以通过浏览器直接访问zbus启动服务器15555端口的监控服务
+
+zbus monitor could be accessed from the web browser via http://localhost:15555 by default
 
 ![zbus监控](http://git.oschina.net/uploads/images/2016/0316/161713_c15c6031_7458.png "zbus监控")	
 
-##zbus实现消息队列
+##Message Queue(MQ)
 
-消息队列是zbus的最基础服务，MQ参与角色分为三大类
+Messaging Queue(MQ) is the core function of zbus, MQ application consists of three roles:
 
-1. Broker中间消息服务器
-2. Producer生产者
-3. Consumer消费者
+1. Broker -- intermediate server dealing message for producer and consumer
+2. Producer -- the client producing message
+3. Consumer -- the client consuming message
 
-Producer ==> Broker ==> Consumer
+	Producer ==> Broker ==> Consumer
+
+MQ usually plays the role of decoupling application dependency
 
 逻辑上解耦分离
 1. 生产者只需要知道Broker的存在，负责生产消息到Broker，不需要关心消费者的行为

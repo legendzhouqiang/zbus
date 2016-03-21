@@ -9,10 +9,10 @@ import org.zbus.net.http.Message.MessageInvoker;
 
 /**
  * Broker factory class, abstraction of all broker types
- * 1) JvmBroker, brokerAddess=null/jvm
- * 2) SingleBroker, brokerAddress=<ip>:<port>, eg. 127.0.0.1:15555
- * 3) HaBroker, brokerAddress=[<ip>:<port>;<ip>:<port>], 
- * 	 '[' and ']' could be omitted, ';' ',' and ' ' are supported to split trackServer <ip>:<port> list
+ * 1) JvmBroker, brokerAddess=null/jvm 
+ * 2) SingleBroker, brokerAddress=ip:port, eg. 127.0.0.1:15555
+ * 3) HaBroker, brokerAddress=[ip:port;ip:port], 
+ * 	 '[' and ']' could be omitted, ';' ',' and ' ' are supported to split trackServer ip:port list
  *   eg. [127.0.0.1:16666;127.0.0.1:166667], [127.0.0.1:16666]
  *   127.0.0.1:16666;127.0.0.1:16667
  *   
@@ -24,7 +24,7 @@ public class ZbusBroker implements Broker{
 	
 	/**
 	 * Default to SingleBroker to localhost:15555
-	 * @throws IOException
+	 * @throws IOException if underlying IO exception occurs
 	 */
 	public ZbusBroker() throws IOException { 
 		this(new BrokerConfig());
@@ -37,7 +37,7 @@ public class ZbusBroker implements Broker{
 	/**
 	 * Build underlying Broker by borkerAddress
 	 * @param config
-	 * @throws IOException
+	 * @throws IOException  if underlying IO exception occurs
 	 */
 	public ZbusBroker(BrokerConfig config) throws IOException { 
 		String brokerAddress = config.getBrokerAddress();
