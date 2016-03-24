@@ -80,6 +80,9 @@ public class Message implements Id {
 	public static final String ACK      = "ack";	 	 
 	public static final String WINDOW   = "window";  
 	public static final String ENCODING = "encoding";
+	public static final String DELAY    = "delay";
+	public static final String TTL      = "ttl";
+	
 	
 	public static final String KEY       = "key";  
 	public static final String KEY_GROUP = "key_group";
@@ -209,6 +212,11 @@ public class Message implements Id {
 	public void setHead(String key, String value){
 		if(value == null) return;
 		this.head.put(key, value);
+	} 
+	
+	public void setHead(String key, Object value){
+		if(value == null) return;
+		this.head.put(key, value.toString());
 	} 
 	
 	public String removeHead(String key){
@@ -385,6 +393,22 @@ public class Message implements Id {
 		this.setHead(ENCODING, encoding);
 		return this;
 	}
+	
+	public String getDelay() {
+		return this.getHead(DELAY);
+	} 
+	public Message setDelay(String value) {
+		this.setHead(DELAY, value);
+		return this;
+	} 
+	
+	public String getTtl() {
+		return this.getHead(TTL);
+	} 
+	public Message setTtl(String value) {
+		this.setHead(TTL, value);
+		return this;
+	} 
 	
 	public String getId() {
 		return this.getHead(ID);

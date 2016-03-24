@@ -80,6 +80,17 @@ public class MQ extends AbstractMQ{
 			if(msg == null){
 				continue;
 			} 
+			String expire = msg.getHead("expire");
+			if(expire != null){
+				try{
+					long value = Long.valueOf(expire);
+					if(value < System.currentTimeMillis()){
+						continue; //expired message
+					}
+				} catch(Exception e){
+					//continue;
+				}
+			}
 			this.lastUpdateTime = System.currentTimeMillis();
 			
 			try {  

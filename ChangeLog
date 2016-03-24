@@ -7,16 +7,13 @@ zbus-6.2.0 发布，整个项目模块化重构，改进内容：
 6. 添加支持普通TCP代理，DMZ网络安全结构的的TCP代理
 7. 提供大量示例，包括MQ，PubSub，RPC，Proxy，Thrift，Simple HTTP等。
 
+zbus-6.3.0 更新
+1. 增加主从队列支持
+2. 增加消息过滤机制，根据消息键值决定是否写入消息队列磁盘。
+3. 增加不经过网络传输的JVM内部通讯优化的JvmBroker
+4. 增加ZbusBroker统一Broker实现，工厂代理模式由统一的地址决定Broker的底层类型：Single、HA，JVM。
+5. 常见QQ群、issue反馈的bug修复。
+6. Readme中增加了代码设计说明
+7. 依然保持了zbus~300k的单jar轻量级特性
 
-zbus-6.3.0 changelog
-1. fix net.Client close, disable disconnected handler when close actively.
-2. "content-encoding" in HTTP changed to "encoding" (extend HTTP) for 
-	compatibility to standard HTTP when using browser.
-3. 增加支持不指定随机端口启动Server
-4. 修复Rpc客户端运行中失败引起Sevice响应实例清除的bug
-5. zbus重启，service快速注册返回，InvokingClient增加Sync清除
 
-6. 增加根据Key过滤消息，MqFilter，基于内存与基于BerkeleyDB，默认基于内存
-7. 增加JvmBroker，支持不经过网络的本地MQ性能优化
-
-8. 增加ZbusBroker对JvmBroker，SingleBroker，HaBroker的抽象工厂

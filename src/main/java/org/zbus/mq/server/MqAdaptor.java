@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
+import org.zbus.kit.TimeKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
@@ -38,6 +41,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private String registerToken = "";
 	private MqFilter mqFilter;
 	private DiskQueuePool diskQueuePool;
+	
+	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
  
 	public MqAdaptor(MqServer mqServer){
@@ -159,8 +164,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     
 	private MessageHandler produceHandler = new MessageHandler() { 
 		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			AbstractMQ mq = findMQ(msg, sess);
+		public void handle(final Message msg, final Session sess) throws IOException { 
+			final AbstractMQ mq = findMQ(msg, sess);
 			if(mq == null) return;
 			if(!auth(mq, msg)){ 
 				ReplyKit.reply403(msg, sess);
@@ -176,7 +181,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			}
 			
 
-			boolean ack = msg.isAck();
+			final boolean ack = msg.isAck();
 			
 			if(!mqFilter.permit(msg) ){
 				if(ack){
@@ -187,6 +192,39 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK); 
+			String ttl = msg.getTtl();
+			if(ttl != null){
+				try{
+					long value = TimeKit.parseTimeWithUnit(ttl);
+					msg.setHead("expire", System.currentTimeMillis()+value);
+				} catch(IllegalArgumentException e){
+					//ignore
+				}
+			}
+			
+			String delay = msg.getHead("delay");
+			if(delay != null){
+				long value = TimeKit.parseDelayTime(delay);
+				if(value > 0){
+					timer.schedule(new Runnable() { 
+						@Override
+						public void run() {
+							try {
+								mq.produce(msg, sess);
+								mq.lastUpdateTime = System.currentTimeMillis();
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}  
+						}
+					}, value, TimeUnit.MILLISECONDS);
+					
+					if(ack){
+						ReplyKit.reply200(msg, sess);
+					}
+					return;
+				} 
+			} 
+			
 			mq.produce(msg, sess); 
 			mq.lastUpdateTime = System.currentTimeMillis();
 			
@@ -568,5 +606,8 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     	if(this.diskQueuePool != null){
     		diskQueuePool.close();
     	} 
+    	if(this.timer != null){
+    		this.timer.shutdown();
+    	}
     } 
 }
