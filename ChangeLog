@@ -17,3 +17,6 @@ zbus-6.3.0 更新
 7. 依然保持了zbus~300k的单jar轻量级特性
 
 
+6.3.1 Change Log
+1. MessageClient default to startup heartbeat
+2. Add messaging Delay and TTL support

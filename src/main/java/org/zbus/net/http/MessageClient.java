@@ -32,12 +32,16 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class MessageClient extends InvokingClient<Message, Message> implements MessageInvoker{   
 	public MessageClient(String host, int port, SelectorGroup selectorGroup){
 		super(host, port, selectorGroup);
-		codec(new MessageCodec());
+		codec(new MessageCodec()); 
+		
+		startHeartbeat();
 	} 
 	
 	public MessageClient(String address, SelectorGroup selectorGroup) {
 		super(address, selectorGroup);
-		codec(new MessageCodec());
+		codec(new MessageCodec()); 
+		
+		startHeartbeat();
 	}
 	
 	@Override
