@@ -54,16 +54,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		hint.setEntry(this.mq);
 		return hint;
 	}
-
-	private void ensureClient() throws IOException {
-		if (this.client == null) {
-			synchronized (this) {
-				if (this.client == null) {
-					this.client = broker.getClient(brokerHint());
-				}
-			}
-		}
-	}
 	
 	/**
 	 * @deprecated use take instead
@@ -78,8 +68,6 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 
 	public Message take(int timeout) throws IOException, InterruptedException {
-		ensureClient();
-
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
@@ -91,8 +79,14 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 
 		Message res = null;
-		try { 
-			res = client.invokeSync(req, timeout);
+		try {  
+			synchronized (this) {
+				if (this.client == null) {
+					this.client = broker.getClient(brokerHint());
+				}
+				res = client.invokeSync(req, timeout);
+			}
+			
 			if (res == null)
 				return res;
 			res.setId(res.getRawId());
@@ -112,10 +106,13 @@ public class Consumer extends MqAdmin implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 			try {
-				broker.closeClient(client);
-				client = broker.getClient(brokerHint());
+				broker.closeClient(client); 
 			} catch (IOException ex) {
 				log.error(ex.getMessage(), ex);
+			} finally{
+				synchronized (this) {
+					this.client = null;
+				}
 			}
 		}
 		return res;
@@ -131,9 +128,13 @@ public class Consumer extends MqAdmin implements Closeable {
 	} 
 
 	@Override
-	protected Message invokeSync(Message req) throws IOException, InterruptedException {
-		ensureClient();
-		return client.invokeSync(req, 10000);
+	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
+		synchronized (this) {
+			if (this.client == null) {
+				this.client = broker.getClient(brokerHint());
+			}
+			return client.invokeSync(req, 10000);
+		} 
 	}
 
 	private MessageInvoker replyClient; // Linux优化，Reply使用分离的Client
