@@ -25,8 +25,11 @@ package org.zbus.net.http;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,7 +84,7 @@ public class Message implements Id {
 	public static final String WINDOW   = "window";  
 	public static final String ENCODING = "encoding";
 	public static final String DELAY    = "delay";
-	public static final String TTL      = "ttl";
+	public static final String TTL      = "ttl"; 
 	
 	
 	public static final String KEY       = "key";  
@@ -132,6 +135,7 @@ public class Message implements Id {
 	} 
 	public void setRequestString(String requestString){
 		this.meta.requestString = requestString;
+		this.meta.status = null; //once requestString is set, it becomes a request message
 	}
 	
 	/**
@@ -383,8 +387,7 @@ public class Message implements Id {
 	public Message setRemoteAddr(String value) {
 		this.setHead(REMOTE_ADDR, value);
 		return this;
-	} 
-	
+	}  
 	
 	public String getEncoding() {
 		return this.getHead(ENCODING);
@@ -769,5 +772,77 @@ public class Message implements Id {
 	public static interface MessageInvoker extends Invoker<Message, Message> { }	
 	public static interface MessageProcessor { 
 		Message process(Message request);
+	}
+	
+	
+	public Message invokeSimpleHttp() throws IOException {
+		String server = this.getServer();
+		if(server == null){
+			throw new IllegalArgumentException("request missing target server");
+		}
+		String format = "http://%s%s";
+		if(server.startsWith("http://")){
+			format = "%s%s";
+		}
+		String urlString = String.format(format, server, this.getRequestString());
+		URL url = new URL(urlString);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		for(Entry<String, String> e : this.getHead().entrySet()){
+			conn.setRequestProperty(e.getKey(), e.getValue());
+		}
+		conn.setRequestMethod(this.getMethod());
+		
+		if(this.getBody() != null && this.getBody().length > 0){
+			conn.setDoOutput(true);
+			conn.getOutputStream().write(this.getBody());
+		}
+		
+		int code = conn.getResponseCode();
+		Message res = new Message();
+		res.setResponseStatus(code);
+		
+		for (Entry<String, List<String>> header : conn.getHeaderFields().entrySet()){
+			if(header.getKey() == null) continue;
+			List<String> values = header.getValue();
+			String value = null;
+			if(values.size() == 1){
+				value = values.get(0);
+			} else if(values.size() > 1){
+				value = "[";
+				for(int i=0; i<values.size(); i++){
+					if(i == value.length()-1){
+						value += values.get(i);
+					} else {
+						value += values.get(i) + ",";
+					}
+				}
+			} 
+			res.setHead(header.getKey(), value);
+		}
+		InputStream bodyStream = conn.getInputStream();
+		if(bodyStream != null){
+			int bodyLen = bodyStream.available();
+			if(bodyLen > 0){
+				byte[] body = new byte[bodyLen];
+				int size = bodyStream.read(body);
+				if(size == bodyLen){
+					res.setBody(body);
+				} else {
+					throw new IllegalStateException("body reading size error");
+				}
+			}
+		} 
+		conn.disconnect(); 
+		return res;
+	}
+
+	public static void main(String[] args) throws Exception {
+		Message req = new Message();
+		req.setServer("127.0.0.1:8080");
+		req.setRequestString("/hello"); 
+		
+		System.err.println(req);
+		Message res = req.invokeSimpleHttp();
+		System.out.println(res);
 	}
 }

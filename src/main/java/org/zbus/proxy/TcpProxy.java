@@ -1,16 +1,24 @@
-package org.zbus.examples.net.proxy;
+package org.zbus.proxy;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import org.zbus.net.core.SelectorGroup;
+import org.zbus.kit.ConfigKit;
 import org.zbus.net.Server;
 import org.zbus.net.core.IoAdaptor;
 import org.zbus.net.core.IoBuffer;
 import org.zbus.net.core.Session;
-
-class TcpProxyAdaptor extends IoAdaptor{
+ 
+/**
+ * Transparently proxy TCP package from local server to target server
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
+public class TcpProxy extends IoAdaptor{
 	private String targetAddress;
-	public TcpProxyAdaptor(String targetAddress) {
+	
+	public TcpProxy(String targetAddress) {
 		this.targetAddress = targetAddress;
 	}
 	public IoBuffer encode(Object msg) {
@@ -83,13 +91,14 @@ class TcpProxyAdaptor extends IoAdaptor{
 		} catch (IOException e) { 
 		}
 	}	
-}
-
-public class TcpProxyServer { 
+	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
 		SelectorGroup selectorGroup = new SelectorGroup(); 
 		final Server server = new Server(selectorGroup); 
-		server.start(3306, new TcpProxyAdaptor("10.17.2.30:3306"));
+		String target = ConfigKit.option(args, "-target", "127.0.0.1:3306");
+		int port = ConfigKit.option(args, "-port", 33060);
+		
+		server.start(port, new TcpProxy(target));
 	}
 }

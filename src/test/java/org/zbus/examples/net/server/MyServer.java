@@ -20,7 +20,7 @@ public class MyServer {
 			public Message process(Message request) {
 				Message resp = new Message();
 				resp.setStatus(200);
-				resp.setBody("hello");
+				resp.setBody("hello" + System.currentTimeMillis());
 				return resp;
 			}
 		});

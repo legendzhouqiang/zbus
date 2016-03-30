@@ -88,21 +88,29 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			if(method == null){
 				method = "";
 			}
-			if(url.method != null || url.cmd == null){ 
-				AbstractMQ mq = mqTable.get(url.mq);
-				if(mq != null && MqMode.isEnabled(mq.getMode(), MqMode.RPC)){
-					msg.setMq(url.mq);
-					msg.setAck(false); 
-					msg.setCmd(Protocol.Produce);
-					String module = url.module == null? "" : url.module;   
-					String json = "{";
-					json += "\"module\": " + "\"" + module + "\"";
-					json += ", \"method\": " + "\"" + method + "\"";
-					if(url.params != null){
-						json += ", \"params\": " + "[" + url.params + "]";  
+			AbstractMQ mq = mqTable.get(url.mq);
+			if(mq != null){ 
+				if(MqMode.isEnabled(mq.getMode(), MqMode.RPC)){
+					if(url.method != null || url.cmd == null){  
+						msg.setMq(url.mq);
+						msg.setAck(false); 
+						msg.setCmd(Protocol.Produce);
+						String module = url.module == null? "" : url.module;   
+						String json = "{";
+						json += "\"module\": " + "\"" + module + "\"";
+						json += ", \"method\": " + "\"" + method + "\"";
+						if(url.params != null){
+							json += ", \"params\": " + "[" + url.params + "]";  
+						}
+						json += "}";
+						msg.setJsonBody(json);
 					}
-					json += "}";
-					msg.setJsonBody(json);	
+				} else {
+					if(url.cmd == null){ 
+						msg.setMq(url.mq);
+						msg.setAck(false); 
+						msg.setCmd(Protocol.Produce);
+					}
 				}
 			} 
 		} 
