@@ -1,6 +1,6 @@
 # HttpDmzProxy for ZBUS
 
-* [HttpDmzProxy]( "http://git.oschina.net/rushmore/zbus/tree/master/src/main/java/org/zbus/proxy")
+* [HttpDmzProxy]( "http://git.oschina.net/rushmore/zbus/tree/master/src/main/java/org/zbus/proxy" "")
 
 When talking about network restrains, there are some cases that we may not able to expose the service to the public, for example the service deployed in the server with only local IP address can not be access from public. 
 
