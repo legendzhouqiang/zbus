@@ -1,5 +1,7 @@
 # HttpDmzProxy for ZBUS
 
+* [HttpDmzProxy]( "http://git.oschina.net/rushmore/zbus/tree/master/src/main/java/org/zbus/proxy")
+
 When talking about network restrains, there are some cases that we may not able to expose the service to the public, for example the service deployed in the server with only local IP address can not be access from public. 
 
 Solutions always come to the proxy server, such as Nginx/Apache, If Nginx/Apache which deployed on a public server(with a public IP) is able to actively connect to the target server with only local IP, the target server can still be exposed to the public. However, when the target server can not be accessed, for instance service deployed on you server at home with only local IP via ADSL, what is the solution?
