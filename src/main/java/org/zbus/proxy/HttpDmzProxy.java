@@ -144,8 +144,8 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
-		String target = ConfigKit.option(args, "-t", "www.baidu.com");
-		String entry = ConfigKit.option(args, "-mq", "proxy");
+		String target = ConfigKit.option(args, "-t", "127.0.0.1:8080");
+		String entry = ConfigKit.option(args, "-mq", "test");
 		String brokerAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		int consumerCount = ConfigKit.option(args, "-c", 2);
 		

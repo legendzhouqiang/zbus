@@ -96,8 +96,8 @@ public class TcpProxy extends IoAdaptor{
 	public static void main(String[] args) throws Exception {   
 		SelectorGroup selectorGroup = new SelectorGroup(); 
 		final Server server = new Server(selectorGroup); 
-		String target = ConfigKit.option(args, "-target", "127.0.0.1:3306");
-		int port = ConfigKit.option(args, "-port", 33060);
+		String target = ConfigKit.option(args, "-target", "127.0.0.1:15555");
+		int port = ConfigKit.option(args, "-port", 5555);
 		
 		server.start(port, new TcpProxy(target));
 	}

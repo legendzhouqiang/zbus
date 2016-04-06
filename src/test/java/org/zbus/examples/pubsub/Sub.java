@@ -20,7 +20,7 @@ public class Sub {
 		
 		//2) 创建消费者 
 		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
-		c.setTopic("sse,google,ms"); 
+		c.setTopic("sse"); 
 		
 		c.onMessage(new ConsumerHandler() { 
 			@Override

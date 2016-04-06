@@ -111,10 +111,7 @@ public abstract class AbstractMQ implements Closeable{
 
 	public void setMode(int mode) {
 		this.mode = mode;
-	}   
-	 
-	
-	
+	}    
 	
 	public void setMasterMq(AbstractMQ mq){
 		mq.addSlaveMq(this);
@@ -132,7 +129,7 @@ public abstract class AbstractMQ implements Closeable{
 	}
 	
 	
-	public void addSlaveMq(AbstractMQ mq){
+	public synchronized void addSlaveMq(AbstractMQ mq){
 		if(this.slaveMqs.contains(mq)){
 			return;
 		}
@@ -142,7 +139,7 @@ public abstract class AbstractMQ implements Closeable{
 		this.slaveMqs.add(mq);
 	}
 	
-	public void removeSlaveMq(AbstractMQ mq){
+	public synchronized void removeSlaveMq(AbstractMQ mq){
 		if(this.slaveMqs.contains(mq)){
 			return;
 		}
