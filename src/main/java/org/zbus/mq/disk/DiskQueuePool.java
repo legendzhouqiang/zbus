@@ -26,9 +26,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,16 +48,21 @@ public class DiskQueuePool implements Closeable{
     private final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
     
     private String fileBackupPath;
-    private Map<String, DiskQueue> queueMap;
-    private ScheduledExecutorService syncService;
+    private Map<String, DiskQueue> queueMap = new ConcurrentHashMap<String, DiskQueue>();
+    private ScheduledExecutorService syncService; 
  
     public DiskQueuePool(String fileBackupPath) {
+    	this(fileBackupPath, true);
+    }
+    public DiskQueuePool(String fileBackupPath, boolean scanDirOnStart) {
         this.fileBackupPath = fileBackupPath;
         File fileBackupDir = new File(fileBackupPath);
         if (!fileBackupDir.exists() && !fileBackupDir.mkdir()) {
             throw new IllegalArgumentException("can not create directory");
         }
-        this.queueMap = scanDir(fileBackupDir);
+        if(scanDirOnStart){
+        	scanDir(fileBackupDir);
+        }
         this.syncService = Executors.newSingleThreadScheduledExecutor();
         this.syncService.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -95,11 +100,10 @@ public class DiskQueuePool implements Closeable{
         deletingQueue.add(filePath);
     }
  
-    private Map<String, DiskQueue> scanDir(File fileBackupDir) {
+    private void scanDir(File fileBackupDir) {
         if (!fileBackupDir.isDirectory()) {
             throw new IllegalArgumentException("it is not a directory");
-        }
-        Map<String, DiskQueue> queues = new HashMap<String, DiskQueue>();
+        }  
         File[] indexFiles = fileBackupDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -109,10 +113,12 @@ public class DiskQueuePool implements Closeable{
         if (indexFiles != null && indexFiles.length> 0) {
             for (File indexFile : indexFiles) {
                 String queueName = DiskQueueIndex.parseQueueName(indexFile.getName());
-                queues.put(queueName, new DiskQueue(queueName, this));
+                synchronized(queueMap){
+                	if(queueMap.containsKey(queueName)) continue;
+                	queueMap.put(queueName, new DiskQueue(queueName, this));
+                }
             }
-        }
-        return queues;
+        } 
     }
  
     
@@ -136,6 +142,11 @@ public class DiskQueuePool implements Closeable{
         DiskQueue q = new DiskQueue(queueName, this);
         queueMap.put(queueName, q);
         return q;
+    }
+    
+    public synchronized void releaseDiskQueue(DiskQueue queue) { 
+    	queueMap.remove(queue.getQueueName());
+    	queue.close();
     }
     
     public String getFileBackupPath(){
