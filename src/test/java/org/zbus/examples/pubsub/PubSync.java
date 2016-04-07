@@ -15,12 +15,16 @@ public class PubSync {
 		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
 		producer.createMQ();  
-
-		Message msg = new Message();
-		msg.setTopic("sse"); 
-		msg.setBody("hello world");
-			
-		producer.sendSync(msg); 
+		
+		String[] topics = {"sse", "google", "qhee"};
+		
+		for(int i=0;i<10000;i++){
+			Message msg = new Message();
+			msg.setTopic(topics[i%3]); 
+			msg.setBody("hello world");
+				
+			producer.sendSync(msg); 
+		}
 		
 		
 		broker.close();

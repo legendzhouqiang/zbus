@@ -20,12 +20,19 @@ public class Sub {
 		
 		//2) 创建消费者 
 		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
-		c.setTopic("sse"); 
+		final String topic = "sse";
+		c.setTopic(topic); 
 		
 		c.onMessage(new ConsumerHandler() { 
+			int count = 0;
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException {  
-				System.out.println(msg);
+				if(topic.equals(msg.getTopic())){
+					count++;
+					System.out.println(topic+":" + count);
+				} else {
+					System.out.println(msg);
+				}
 			}
 		});
 		

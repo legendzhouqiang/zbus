@@ -20,6 +20,7 @@ public class RpcClientRaw {
 		rpc.invokeSync(String.class, "echo", "test");
 		
 		Request request = new Request();
+		request.setModule("org.zbus.examples.rpc.appdomain.InterfaceExample");
 		request.setMethod("echo");
 		request.setParams(new Object[]{"test"});
 		
