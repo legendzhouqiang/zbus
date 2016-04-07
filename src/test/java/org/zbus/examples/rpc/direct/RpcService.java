@@ -14,10 +14,8 @@ public class RpcService {
 		processor.addModule(new InterfaceExampleImpl()); 
 		
 		ServiceConfig config = new ServiceConfig(); 
-		//config.serverPort = 8080;  
-		config.messageProcessor = processor; 
-		config.trackServerList = "127.0.0.1:16666";
-		config.entryId = "MyRpc";
+		config.serverPort = 8080;  
+		config.messageProcessor = processor;  
 		
 		Service svc = new Service(config);
 		svc.start(); 
