@@ -30,6 +30,8 @@ public class MqServerConfig{
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
 	public EventDriver eventDriver;
+	public String sslCertificateFile;
+	public String sslPrivateKeyFile;
 	
 	public boolean verbose = false;
 	public String storePath = "store";
@@ -139,6 +141,22 @@ public class MqServerConfig{
 
 	public void setTrackReportInterval(long trackReportInterval) {
 		this.trackReportInterval = trackReportInterval;
+	}
+
+	public String getSslCertificateFile() {
+		return sslCertificateFile;
+	}
+
+	public void setSslCertificateFile(String sslCertificateFile) {
+		this.sslCertificateFile = sslCertificateFile;
+	}
+
+	public String getSslPrivateKeyFile() {
+		return sslPrivateKeyFile;
+	}
+
+	public void setSslPrivateKeyFile(String sslPrivateKeyFile) {
+		this.sslPrivateKeyFile = sslPrivateKeyFile;
 	} 
 	
 }

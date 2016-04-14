@@ -79,6 +79,23 @@ public class MqServer implements Closeable{
 			eventDriver = new EventDriver();
 			ownEventDriver = true;
 		} 
+		
+		if(eventDriver.getSslContext() == null){
+			if(config.sslCertificateFile != null && config.sslPrivateKeyFile != null){
+				File sslCert = new File(config.sslCertificateFile);
+				File sslPriv = new File(config.sslPrivateKeyFile);
+				if(!sslCert.exists()){
+					log.warn("Certificate File: " + config.sslCertificateFile + " not exists");
+				}
+				if(!sslPriv.exists()){
+					log.warn("PrivateKey File: " + config.sslCertificateFile + " not exists");
+				}
+				if(sslCert.exists() && sslPriv.exists()){
+					eventDriver.setSslContext(sslCert, sslPriv);
+				}
+			}
+		}
+		
 		String host = config.serverHost;
 		if("0.0.0.0".equals(host)){
 			host = NetKit.getLocalIp(config.serverMainIpOrder);
