@@ -29,7 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.zbus.mq.Protocol.ConsumerInfo;
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public class PullSession { 
@@ -93,7 +93,7 @@ public class PullSession {
 	public ConsumerInfo getConsumerInfo(){
 		ConsumerInfo info = new ConsumerInfo();
 		info.remoteAddr = session.getRemoteAddress();
-		info.status = ""+session.getStatus();
+		//info.status = ""+session.getStatus(); FIXME
 		info.topics = topicSet;
 		return info;
 	}

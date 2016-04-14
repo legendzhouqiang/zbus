@@ -22,20 +22,24 @@
  */
 package org.zbus.mq.server;
 
+import org.zbus.net.EventDriver;
 
 public class MqServerConfig{ 
 	public String trackServerList = null;
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
+	public EventDriver eventDriver;
 	
-	public int selectorCount = 0; //use default value #CPU/2
-	public int executorCount = 0; //use default value 64
 	public boolean verbose = false;
 	public String storePath = "store";
 	public String registerToken = "";  
-	public String serverMainIpOrder = null;
-	public String mqFilter = "memory"; // or "perist"
+	public String serverMainIpOrder;
+	public boolean mqFilterPersist = false;
+	public String serverName = "ZbusServer";
+	public long cleanMqInterval = 3000; 
+	public long trackReportInterval = 5000;
+	
 	
 	public String getServerAddress(){
 		return serverHost + ":" + serverPort;
@@ -64,21 +68,13 @@ public class MqServerConfig{
 	public void setServerPort(int serverPort) {
 		this.serverPort = serverPort;
 	}
-
-	public int getSelectorCount() {
-		return selectorCount;
+	
+	public EventDriver getEventDriver() {
+		return eventDriver;
 	}
 
-	public void setSelectorCount(int selectorCount) {
-		this.selectorCount = selectorCount;
-	}
-
-	public int getExecutorCount() {
-		return executorCount;
-	}
-
-	public void setExecutorCount(int executorCount) {
-		this.executorCount = executorCount;
+	public void setEventDriver(EventDriver eventDriver) {
+		this.eventDriver = eventDriver;
 	}
 
 	public boolean isVerbose() {
@@ -113,11 +109,36 @@ public class MqServerConfig{
 		this.serverMainIpOrder = serverMainIpOrder;
 	}
 
-	public String getMqFilter() {
-		return mqFilter;
+	public boolean isMqFilterPersist() {
+		return mqFilterPersist;
 	}
 
-	public void setMqFilter(String mqFilter) {
-		this.mqFilter = mqFilter;
-	}  
+	public void setMqFilterPersist(boolean mqFilterPersist) {
+		this.mqFilterPersist = mqFilterPersist;
+	}
+
+	public String getServerName() {
+		return serverName;
+	}
+
+	public void setServerName(String serverName) {
+		this.serverName = serverName;
+	}
+
+	public long getCleanMqInterval() {
+		return cleanMqInterval;
+	}
+
+	public void setCleanMqInterval(long cleanMqInterval) {
+		this.cleanMqInterval = cleanMqInterval;
+	}
+
+	public long getTrackReportInterval() {
+		return trackReportInterval;
+	}
+
+	public void setTrackReportInterval(long trackReportInterval) {
+		this.trackReportInterval = trackReportInterval;
+	} 
+	
 }

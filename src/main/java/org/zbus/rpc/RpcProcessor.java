@@ -313,7 +313,7 @@ public class RpcProcessor implements MessageProcessor{
 		try{
 			Message res = codec.encodeResponse(resp);
 			res.setId(msgId); 
-			res.setResponseStatus(status);
+			res.setStatus(status);
 			return res;
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

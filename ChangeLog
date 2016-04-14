@@ -20,3 +20,8 @@ zbus-6.3.0 更新
 6.3.1 Change Log
 1. MessageClient default to startup heartbeat
 2. Add messaging Delay and TTL support
+
+zbus-7.0.0 Changelog 
+1. Net module refined entirely to support Netty(4.x)
+2. Support SSL(HTTPS)
+3. High Availability API (BrokerSelector) opened 

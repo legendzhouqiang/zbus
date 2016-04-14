@@ -26,22 +26,17 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.net.core.IoAdaptor;
-import org.zbus.net.core.Session;
+import org.zbus.net.IoAdaptor;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.Message.MessageProcessor;
 
-public class MessageAdaptor extends IoAdaptor{   
-	//全局处理器，优先级最高
-	protected MessageHandler filterHandler;  
-	//根据cmd处理，优先级次之
+public class MessageAdaptor implements IoAdaptor{    
+	protected MessageHandler filterHandler;   
 	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
-	//根据Uri处理，优先级最低
 	protected Map<String, MessageProcessor> uriHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
 
-
-	public MessageAdaptor(){
-		codec(new MessageCodec()); //个性化消息编解码
+	public MessageAdaptor(){ 
 		this.cmd(Message.HEARTBEAT, new MessageHandler() { 
 			public void handle(Message msg, Session sess) throws IOException { 
 				//ignore
@@ -55,7 +50,11 @@ public class MessageAdaptor extends IoAdaptor{
 	
 	public void uri(String path, final MessageProcessor processor){
 		this.uriHandlerMap.put(path, processor);
-		cmd(path, new MessageHandler() { 
+		String cmd = path;
+		if(cmd.startsWith("/")){
+			cmd = cmd.substring(1);
+		}
+		cmd(cmd, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
 				final String msgId = msg.getId();
@@ -93,7 +92,7 @@ public class MessageAdaptor extends IoAdaptor{
     	if(path == null){ 
     		Message res = new Message();
     		res.setId(msgId); 
-        	res.setResponseStatus(400);
+        	res.setStatus(400);
         	res.setBody("Bad Format(400): Missing Command and RequestPath"); 
         	sess.write(res);
     		return;
@@ -106,16 +105,14 @@ public class MessageAdaptor extends IoAdaptor{
     			res = uriHandler.process(msg); 
 	    		if(res != null){
 	    			res.setId(msgId);
-	    			if(res.getResponseStatus() == null){
-	    				res.setResponseStatus(200);// default to 200
+	    			if(res.getStatus() == null){
+	    				res.setStatus(200);// default to 200
 	    			}
 	    			sess.write(res);
 	    		}
-    		} catch (IOException e){ 
-    			throw e;
     		} catch (Exception e) { 
     			res = new Message();
-    			res.setResponseStatus(500);
+    			res.setStatus(500);
     			res.setBody("Internal Error(500): " + e);
     			sess.write(res);
 			}
@@ -125,11 +122,31 @@ public class MessageAdaptor extends IoAdaptor{
     	
     	Message res = new Message();
     	res.setId(msgId); 
-    	res.setResponseStatus(404);
+    	res.setStatus(404);
     	String text = String.format("Not Found(404): %s", path);
     	res.setBody(text); 
     	sess.write(res); 
-    } 
+    }
+
+	@Override
+	public void onSessionAccepted(Session sess) throws IOException {
+	}
+
+	@Override
+	public void onSessionRegistered(Session sess) throws IOException {
+	}
+
+	@Override
+	public void onSessionConnected(Session sess) throws IOException {
+	}
+
+	@Override
+	public void onSessionToDestroy(Session sess) throws IOException {
+	}
+ 
+	@Override
+	public void onException(Throwable e, Session sess) throws Exception {
+	} 
 
 }
 

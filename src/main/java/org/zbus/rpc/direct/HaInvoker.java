@@ -31,5 +31,11 @@ public class HaInvoker implements MessageInvoker{
 			throws IOException { 
 		prepare(req);
 		this.messageInvoker.invokeAsync(req, callback);
+	}
+
+	@Override
+	public Message invokeSync(Message req) throws IOException, InterruptedException {
+		prepare(req);
+		return this.messageInvoker.invokeSync(req);
 	} 
 }

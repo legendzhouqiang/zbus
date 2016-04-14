@@ -27,8 +27,8 @@ import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.pool.Pool;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.core.SelectorGroup;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.http.MessageClient;
@@ -37,47 +37,34 @@ import org.zbus.net.http.MessageClientFactory;
 public class SingleBroker implements Broker {
 	private static final Logger log = Logger.getLogger(SingleBroker.class);     
 	
-	private final Pool<MessageClient> pool; 
-	private final MessageClientFactory factory;
-	private final String serverAddress; 
+	private BrokerConfig config; 
+	private EventDriver eventDriver;
+	private boolean ownEventDriver = false;
 	
-	private BrokerConfig config;
-	private SelectorGroup selectorGroup = null;
-	private boolean ownSelectorGroup = false;
-	 
+	private final Pool<MessageClient> pool; 
+	private final MessageClientFactory factory;  
+	
 	public SingleBroker() throws IOException{
 		this(new BrokerConfig());
 	}
 	
 	public SingleBroker(BrokerConfig config) throws IOException{ 
 		this.config = config;
-		this.serverAddress = config.getBrokerAddress(); 
-		
-		if(config.getSelectorGroup() == null){
-			this.ownSelectorGroup = true;
-			this.selectorGroup = new SelectorGroup();
-			this.selectorGroup.selectorCount(config.getSelectorCount());
-			this.selectorGroup.executorCount(config.getExecutorCount());
-			this.config.setSelectorGroup(selectorGroup);
-		} else {
-			this.selectorGroup = config.getSelectorGroup();
-			this.ownSelectorGroup = false;
+		this.eventDriver = config.getEventDriver();
+		if(this.eventDriver == null){
+			this.eventDriver = new EventDriver();
+			this.ownEventDriver = true;
 		}
-		this.selectorGroup.start(); 
-		this.factory = new MessageClientFactory(this.serverAddress, this.selectorGroup);
+		this.factory = new MessageClientFactory(this.config.getBrokerAddress(),eventDriver);
 		this.pool = Pool.getPool(factory, this.config); 
 	}  
 
 	@Override
 	public void close() throws IOException { 
-		this.pool.close();
-		this.factory.close();
-		if(ownSelectorGroup && this.selectorGroup != null){
-			try {
-				this.selectorGroup.close();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-			}
+		this.pool.close(); 
+		if(ownEventDriver && eventDriver != null){
+			eventDriver.close();
+			eventDriver = null;
 		}
 	}  
 	
@@ -97,6 +84,11 @@ public class SingleBroker implements Broker {
 			}
 		}
 	} 
+	
+	@Override
+	public Message invokeSync(Message req) throws IOException, InterruptedException {
+		return invokeSync(req, 10000);//default 10s
+	}
 
 	public Message invokeSync(Message req, int timeout) throws IOException {
 		MessageClient client = null;
@@ -115,18 +107,22 @@ public class SingleBroker implements Broker {
 		}
 	}
 	
-	public MessageInvoker getClient(BrokerHint hint) throws IOException{ 
-		MessageClient client = new MessageClient(this.serverAddress, this.selectorGroup);
-		client.attr("server", serverAddress);
-		return client;
+	public MessageInvoker getInvoker(BrokerHint hint) throws IOException{ 
+		try {
+			MessageClient client = factory.createObject();
+			client.attr("server", factory.getServerAddress());
+			return client;
+		} catch (Exception e) {
+			throw new BrokerException(e.getMessage(), e);
+		}
+		
 	}
 
-	public void closeClient(MessageInvoker client) throws IOException {
+	public void closeInvoker(MessageInvoker client) throws IOException {
 		if(client == null) return; //ignore
 		if(client instanceof Closeable){
 			((Closeable)client).close();
-		}
-		
+		} 
 	}
  
 }

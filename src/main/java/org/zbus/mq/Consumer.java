@@ -54,18 +54,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		hint.setEntry(this.mq);
 		return hint;
 	}
-	
-	/**
-	 * @deprecated use take instead
-	 * 
-	 * @param timeout
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	public Message recv(int timeout) throws IOException, InterruptedException {
-		return take(timeout);
-	}
 
 	public Message take(int timeout) throws IOException, InterruptedException {
 		Message req = new Message();
@@ -82,11 +70,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		try {  
 			synchronized (this) {
 				if (this.client == null) {
-					this.client = broker.getClient(brokerHint());
+					this.client = broker.getInvoker(brokerHint());
 				}
 				res = client.invokeSync(req, timeout);
-			}
-			
+			} 
 			if (res == null)
 				return res;
 			res.setId(res.getRawId());
@@ -106,7 +93,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 			try {
-				broker.closeClient(client); 
+				broker.closeInvoker(client); 
 			} catch (IOException ex) {
 				log.error(ex.getMessage(), ex);
 			} finally{
@@ -131,19 +118,19 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
 		synchronized (this) {
 			if (this.client == null) {
-				this.client = broker.getClient(brokerHint());
+				this.client = broker.getInvoker(brokerHint());
 			}
 			return client.invokeSync(req, 10000);
 		} 
 	}
 
-	private MessageInvoker replyClient; // Linux优化，Reply使用分离的Client
-
+	//FIXME remove replyClient, reuse client
+	private MessageInvoker replyClient; // Linux优化，Reply使用分离的Client(applied only for zbus.net)
 	private void ensureReplyClient() throws IOException {
 		if (this.replyClient == null) {
 			synchronized (this) {
 				if (this.replyClient == null) {
-					this.replyClient = broker.getClient(brokerHint());
+					this.replyClient = broker.getInvoker(brokerHint());
 				}
 			}
 		}
@@ -152,9 +139,13 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void routeMessage(Message msg) throws IOException {
 		ensureReplyClient();
 		msg.setCmd(Protocol.Route);
-		msg.setAck(false);
+		msg.setAck(false); 
 
-		replyClient.invokeAsync(msg, null);
+		if(msg.getStatus() != null){//change to Request type
+			msg.setReplyCode(msg.getStatus());
+			msg.setStatus(null);
+		} 
+		replyClient.invokeAsync(msg, null); 
 	}
 
 	public String getTopic() {
@@ -221,14 +212,14 @@ public class Consumer extends MqAdmin implements Closeable {
 		stop(); 
 	}
 	
-	public synchronized void stop() {
+	public void stop() {
 		if (consumerThread != null) {
 			consumerThread.interrupt();
 			consumerThread = null;
 		}
 		try {
 			if (this.client != null) {
-				this.broker.closeClient(this.client);
+				this.broker.closeInvoker(this.client);
 			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
@@ -236,7 +227,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 		try {
 			if (this.replyClient != null) {
-				this.broker.closeClient(this.replyClient);
+				this.broker.closeInvoker(this.replyClient);
 			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);

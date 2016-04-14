@@ -51,6 +51,7 @@ public class ServerEntryTable implements Closeable{
 	private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private boolean verbose = false;
+	private int dumpInterval = 3000;
 	
 	public ServerEntryTable(){
 		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
@@ -58,8 +59,12 @@ public class ServerEntryTable implements Closeable{
 			public void run() { 
 				if(verbose) dump();
 			}
-		}, 1000, 1000, TimeUnit.MILLISECONDS);
+		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
 	} 
+	
+	public void setDumpInterval(int dumpInterval) {
+		this.dumpInterval = dumpInterval;
+	}
 	
 	public void dump(){
 		System.out.format("===============ServerEntryTable(%s)===============\n", new Date());

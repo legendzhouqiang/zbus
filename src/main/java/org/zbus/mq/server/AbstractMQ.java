@@ -32,7 +32,7 @@ import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.MessageQueue;
 import org.zbus.mq.server.auth.Auth;
 import org.zbus.mq.server.auth.DefaultAuth;
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public abstract class AbstractMQ implements Closeable{	

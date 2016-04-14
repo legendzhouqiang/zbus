@@ -1,11 +1,7 @@
 package org.zbus.net.http;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-import org.zbus.kit.log.Logger;
-import org.zbus.kit.pool.ObjectFactory;
-import org.zbus.net.core.SelectorGroup;
+import org.zbus.net.ClientFactory;
+import org.zbus.net.EventDriver;
 
 /**
  * This factory is mainly used by Pool in kit package, a dynamic MessageClient pool can be 
@@ -15,51 +11,20 @@ import org.zbus.net.core.SelectorGroup;
  * @author rushmore (洪磊明)
  *
  */
-public class MessageClientFactory  implements ObjectFactory<MessageClient>, Closeable {
-	private static final Logger log = Logger.getLogger(MessageClientFactory.class); 
-	private String serverAddress;
-	private SelectorGroup selectorGroup;  
-	private boolean ownSelectorGroup = false;
-	
+public class MessageClientFactory extends ClientFactory<Message, Message, MessageClient> { 
 	public MessageClientFactory(String serverAddress){
-		this.serverAddress = serverAddress;
-		this.selectorGroup = new SelectorGroup();
-		this.ownSelectorGroup = true;
+		super(serverAddress);
 	}
 	
-	public MessageClientFactory(String serverAddress, SelectorGroup selectorGroup){
-		this.serverAddress = serverAddress;
-		this.selectorGroup = selectorGroup;
+	public MessageClientFactory(String serverAddress, boolean enableDefaultNio){
+		super(serverAddress, enableDefaultNio);
 	}
 	
-	@Override
-	public boolean validateObject(MessageClient client) { 
-		if(client == null) return false;
-		return client.hasConnected();
-	}
-	
-	@Override
-	public void destroyObject(MessageClient client){ 
-		try {
-			client.close();
-		} catch (IOException e) {
-			log.error(e.getMessage(), e); 
-		}
-	}
-	
-	@Override
-	public MessageClient createObject() { 
-		return new MessageClient(serverAddress, selectorGroup); 
-	}
+	public MessageClientFactory(String serverAddress, EventDriver driver){
+		super(serverAddress, driver); 
+	} 
 
-	@Override
-	public void close() throws IOException {
-		if(this.ownSelectorGroup){
-			if(this.selectorGroup != null){
-				this.selectorGroup.close();
-				this.selectorGroup = null;
-			}
-		}
-		
-	}
+	public MessageClient createObject() { 
+		return new MessageClient(serverAddress, eventDriver);
+	}  
 }

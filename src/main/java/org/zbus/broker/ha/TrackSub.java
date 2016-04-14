@@ -33,8 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.Session;
+import org.zbus.net.EventDriver;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
@@ -44,36 +44,39 @@ public class TrackSub implements Closeable{
 	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
-	private int reconnectTimeout = 3000; //ms
 	
 	private Map<String, MessageHandler> cmdHandlers = new ConcurrentHashMap<String, MessageHandler>();
-	private boolean verbose = false;
 	
+	private EventDriver eventDriver;
 	
-	public TrackSub(String trackServerList, SelectorGroup dispatcher) {
+	public TrackSub(String trackServerList, EventDriver driver) {
+		if(driver == null){
+			throw new IllegalArgumentException("EventDriver can not be null");
+		}
+		if(trackServerList == null){
+			throw new IllegalArgumentException("trackServerList can not be null");
+		}
+		
+		this.eventDriver = driver;
 		String[] blocks = trackServerList.split("[;, ]");
     	for(String block : blocks){
     		final String address = block.trim();
     		if(address.equals("")) continue;
     		
-    		final MessageClient client = new MessageClient(address, dispatcher); 
+    		final MessageClient client = new MessageClient(address, eventDriver); 
     		allTrackers.add(client);
     		
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException {
     				healthyTrackers.remove(client);
-    				if(verbose){
-    					log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
-    				}
-    				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
-    				client.connectAsync();
+    				client.ensureConnectedAsync();
     			}  
 			});
     		
     		client.onConnected(new ConnectedHandler() {
     			@Override
-    			public void onConnected(Session sess) throws IOException {  
+    			public void onConnected() throws IOException {  
     				log.info("TrackServer(%s) connected", address);
     				healthyTrackers.add(client); 
     				
@@ -102,7 +105,7 @@ public class TrackSub implements Closeable{
     	initDefaultHandlers();
     }
 	
-	public void initDefaultHandlers(){
+	private void initDefaultHandlers(){
 		cmd(HaCommand.ServerJoin, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
@@ -153,6 +156,7 @@ public class TrackSub implements Closeable{
 		cmd(HaCommand.PubAll, new MessageHandler() { 
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
+				if(msg.getBody() == null) return;
 				List<ServerEntry> serverEntries = ServerEntryTable.unpack(msg.getBodyString());
 				if(pubServerEntryListHandler != null){
 					pubServerEntryListHandler.onPubServerEntryList(serverEntries);
@@ -167,11 +171,7 @@ public class TrackSub implements Closeable{
 	
 	public void start(){
 		for(MessageClient client : this.allTrackers){
-			try {
-				client.connectAsync();
-			} catch (IOException e) { 
-				log.error(e.getMessage(), e);
-			}
+			client.ensureConnectedAsync(); 
 		}
 	}
 	
@@ -184,10 +184,12 @@ public class TrackSub implements Closeable{
 	private void clientSubAll(MessageClient client){
 		try { 
     		Message msg = new Message(); 
-    		msg.setCmd(HaCommand.SubAll);
-    		client.sendAsync(msg);
+    		msg.setCmd(HaCommand.SubAll); 
+    		client.sendMessage(msg);
 		} catch (IOException e) { 
-			//log.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
+		} catch (InterruptedException e) {
+			//ignore
 		}
 	}  
 	
@@ -199,11 +201,7 @@ public class TrackSub implements Closeable{
     	allTrackers.clear();
     	healthyTrackers.clear();
     }
-
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-	} 
-	
+ 
 	public void onPubServerEntryList(PubServerEntryListHandler pubServerEntryListHandler){
 		this.pubServerEntryListHandler = pubServerEntryListHandler;
 	}

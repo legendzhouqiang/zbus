@@ -24,7 +24,7 @@ package org.zbus.mq.server;
 
 import java.io.IOException;
 
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public class ReplyKit {
@@ -33,7 +33,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setMq(msg.getMq());
-		res.setResponseStatus(200);
+		res.setStatus(200);
 		res.setBody(msg.getBody());
 
 		sess.write(res);
@@ -43,7 +43,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setMq(msg.getMq());
-		res.setResponseStatus(200);
+		res.setStatus(200);
 		res.setBody("" + System.currentTimeMillis());
 
 		sess.write(res);
@@ -53,7 +53,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setResponseStatus(404);
+		res.setStatus(404);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) Not Found", mqName));
 
@@ -64,7 +64,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setResponseStatus(404);
+		res.setStatus(404);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) Service Down", mqName));
 
@@ -76,7 +76,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setResponseStatus(403);
+		res.setStatus(403);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) forbbiden", mqName));
 
@@ -86,7 +86,7 @@ public class ReplyKit {
 	public static void reply400(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
-		res.setResponseStatus(400);
+		res.setStatus(400);
 		res.setMq(msg.getMq());
 		res.setBody(String.format("Bad format: %s", msg.getBodyString()));
 		sess.write(res);
@@ -96,7 +96,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setMq(msg.getMq());
-		res.setResponseStatus(406);
+		res.setStatus(406);
 		res.setBody("" + System.currentTimeMillis());
 
 		sess.write(res);

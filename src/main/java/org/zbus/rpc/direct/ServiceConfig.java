@@ -22,15 +22,13 @@
  */
 package org.zbus.rpc.direct;
 
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.http.Message.MessageProcessor;
+import org.zbus.net.EventDriver;
+import org.zbus.net.http.Message.MessageProcessor; 
 
 public class ServiceConfig {  
 	public String serverHost = "0.0.0.0";
-	public int serverPort = 0;  
-	public int selectorCount = 0;
-	public int executorCount = 0; 
-	public SelectorGroup selectorGroup;
+	public int serverPort = 0;   
+	public EventDriver eventDriver;
 	public MessageProcessor messageProcessor;
 	
 	//如果加入高可用HA才需要填写
@@ -49,26 +47,7 @@ public class ServiceConfig {
 	public void setServerPort(int serverPort) {
 		this.serverPort = serverPort;
 	}
-	public int getSelectorCount() {
-		return selectorCount;
-	}
-	public void setSelectorCount(int selectorCount) {
-		this.selectorCount = selectorCount;
-	}
-	public int getExecutorCount() {
-		return executorCount;
-	}
-	public void setExecutorCount(int executorCount) {
-		this.executorCount = executorCount;
-	} 
-	
-	public SelectorGroup getSelectorGroup() {
-		return selectorGroup;
-	}
-
-	public void setSelectorGroup(SelectorGroup selectorGroup) {
-		this.selectorGroup = selectorGroup;
-	}
+	 
 
 	public MessageProcessor getMessageProcessor() {
 		return messageProcessor;
@@ -88,5 +67,13 @@ public class ServiceConfig {
 	}
 	public void setEntryId(String entryId) {
 		this.entryId = entryId;
+	}
+
+	public EventDriver getEventDriver() {
+		return eventDriver;
+	}
+
+	public void setEventDriver(EventDriver eventDriver) {
+		this.eventDriver = eventDriver;
 	} 
 }

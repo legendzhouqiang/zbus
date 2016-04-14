@@ -26,13 +26,15 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
+import org.zbus.kit.log.Logger;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
 
-public class Service implements Closeable {   
+public class Service implements Closeable {
+	private static final Logger log = Logger.getLogger(Service.class); 
 	private final ServiceConfig config; 
 	private Consumer[][] consumerGroups; 
 	private boolean isStarted = false;
@@ -83,6 +85,9 @@ public class Service implements Closeable {
 					handler = new ConsumerHandler() { 
 						@Override
 						public void handle(Message msg, Consumer consumer) throws IOException { 
+							if(config.isVerbose()){
+								log.info("Request:\n"+msg);
+							}
 							final String mq = msg.getMq();
 							final String msgId  = msg.getId();
 							final String sender = msg.getSender();
@@ -92,6 +97,9 @@ public class Service implements Closeable {
 								res.setId(msgId);
 								res.setMq(mq);  
 								res.setRecver(sender); 
+								if(config.isVerbose()){
+									log.info("Response:\n"+res);
+								}
 								//route back message
 								consumer.routeMessage(res);
 							}

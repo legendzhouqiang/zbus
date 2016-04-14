@@ -47,16 +47,12 @@ public class RpcPerf {
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigKit.option(args, "-c", 32); 
 		final int loopCount = ConfigKit.option(args, "-loop", 10000000);  
-		final String mq = ConfigKit.option(args, "-mq", "MyRpc");
-		final int selectorCount = ConfigKit.option(args, "-selector", 1);
-		final int executorCount = ConfigKit.option(args, "-executor", 0);
+		final String mq = ConfigKit.option(args, "-mq", "MyRpc"); 
 		 
 		BrokerConfig brokerConfig = new BrokerConfig(); 
 		brokerConfig.setBrokerAddress(serverAddress);
 		brokerConfig.setMaxTotal(threadCount);
-		brokerConfig.setMaxIdle(threadCount);  
-		brokerConfig.setSelectorCount(selectorCount);
-		brokerConfig.setExecutorCount(executorCount);
+		brokerConfig.setMaxIdle(threadCount);   
 		
 		final Broker broker = new ZbusBroker(brokerConfig);
 		 

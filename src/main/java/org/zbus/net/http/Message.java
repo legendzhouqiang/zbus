@@ -47,7 +47,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.Invoker;
 import org.zbus.net.Sync.Id;
-import org.zbus.net.core.IoBuffer;
+import org.zbus.net.simple.IoBuffer; 
 
 /**
  * HTTP Protocol Message, stands for both request and response formats.
@@ -85,6 +85,7 @@ public class Message implements Id {
 	public static final String ENCODING = "encoding";
 	public static final String DELAY    = "delay";
 	public static final String TTL      = "ttl"; 
+	public static final String ReplyCode= "reply_code"; 
 	
 	
 	public static final String KEY       = "key";  
@@ -127,40 +128,28 @@ public class Message implements Id {
 	/**
 	 * HTTP请求串
 	 * eg. http://localhost/hello?xx=yy
-	 * requestString=/hello?xx=yy
+	 * url=/hello?xx=yy
 	 * @return
 	 */
-	public String getRequestString(){
-		return this.meta.requestString;
+	public String getUrl(){
+		return this.meta.url;
 	} 
-	public void setRequestString(String requestString){
-		this.meta.requestString = requestString;
+	public void setUrl(String url){
+		this.meta.setUrl(url);
 		this.meta.status = null; //once requestString is set, it becomes a request message
 	}
 	
-	/**
-	 * HTTP响应状态码 
-	 * e.g. 200 OK
-	 * status=200
-	 * @return
-	 */
-	public String getResponseStatus() {  
-		return meta.status;
-	} 
-	public Message setResponseStatus(String status) { 
+	public Message setStatus(String status) { 
 		meta.status = status;
 		return this; 
 	} 
-	public Message setResponseStatus(int status){
-		return setResponseStatus(status+"");
-	}
 	
 	public String getStatus(){
-		return getResponseStatus();
+		return meta.status;
 	}
 	
 	public void setStatus(int status){
-		setResponseStatus(status);
+		setStatus(""+status);
 	}
 	
 	public String getMethod(){
@@ -389,6 +378,15 @@ public class Message implements Id {
 		return this;
 	}  
 	
+	
+	public String getReplyCode() {
+		return this.getHead(ReplyCode);
+	} 
+	public Message setReplyCode(String value) {
+		this.setHead(ReplyCode, value);
+		return this;
+	}  
+	
 	public String getEncoding() {
 		return this.getHead(ENCODING);
 	} 
@@ -503,16 +501,16 @@ public class Message implements Id {
 	} 
 	
 	public boolean isStatus200() {
-		return "200".equals(this.getResponseStatus());
+		return "200".equals(this.getStatus());
 	} 
 	public boolean isStatus404() {
-		return "404".equals(this.getResponseStatus());
+		return "404".equals(this.getStatus());
 	} 
 	public boolean isStatus500() {
-		return "500".equals(this.getResponseStatus());
+		return "500".equals(this.getStatus());
 	}  
 	public boolean isStatus406() {
-		return "406".equals(this.getResponseStatus());
+		return "406".equals(this.getStatus());
 	}  
 	
 	protected String getBodyPrintString() {
@@ -579,8 +577,8 @@ public class Message implements Id {
 		//HTTP请求头部: 方法(GET/POST)-RequestString-KV参数
 		String method = "GET"; 
 		
-		String requestString = "/";         //请求串 （最终决定，下面两个辅助动态更新）
-		String requestPath = requestString; //请求路径
+		String url = "/";         //请求串 （最终决定，下面两个辅助动态更新）
+		String requestPath = url; //请求路径
 		Map<String,String> requestParams;   //请求参数KV
 		
 		
@@ -637,7 +635,7 @@ public class Message implements Id {
 				if(method == null) method = ""; 
 				bb.writeString(method);
 				bb.writeBytes(BLANK); 
-				String requestString = this.requestString;
+				String requestString = this.url;
 				if(requestString == null) requestString = "";
 				bb.writeString(requestString);
 				bb.writeBytes(SUFFIX); 
@@ -648,7 +646,7 @@ public class Message implements Id {
 		public Meta(){ }
 		
 		public Meta(Meta m){
-			this.requestString = m.requestString;
+			this.url = m.url;
 			this.requestPath = m.requestPath;
 			this.method = m.method;
 			this.status = m.status;
@@ -669,8 +667,8 @@ public class Message implements Id {
 			}
 			//理解为请求
 			this.method = firstWord;  
-			this.requestString = st.nextToken();
-			decodeRequestString(this.requestString);
+			this.url = st.nextToken();
+			decodeUrl(this.url);
 		} 
 		
 		public String getMethod(){
@@ -681,12 +679,12 @@ public class Message implements Id {
 			this.method = method;
 		}
 		
-		public void setRequestString(String requestString){
-			this.requestString = requestString;
-			decodeRequestString(requestString);
+		public void setUrl(String url){
+			this.url = url;
+			decodeUrl(url);
 		} 
 		
-		private void calcRequestString(){
+		private void calcUrl(){
 			StringBuilder sb = new StringBuilder();
 			if(this.requestPath != null){ 
 				sb.append(this.requestPath);
@@ -702,14 +700,14 @@ public class Message implements Id {
 					}
 				}
 			}
-			this.requestString = sb.toString(); 
+			this.url = sb.toString(); 
 		}
-		private void decodeRequestString(String commandString){
-			int idx = commandString.indexOf('?');
+		private void decodeUrl(String url){
+			int idx = url.indexOf('?');
 			if(idx < 0){
-				this.requestPath = urlDecode(commandString);
+				this.requestPath = urlDecode(url);
 			} else {
-				this.requestPath = commandString.substring(0, idx);
+				this.requestPath = url.substring(0, idx);
 			}  
 			if(this.requestPath.endsWith("/")){
 				this.requestPath = this.requestPath.substring(0, this.requestPath.length()-1);
@@ -718,7 +716,7 @@ public class Message implements Id {
 			if(this.requestParams == null){
 				this.requestParams = new ConcurrentHashMap<String, String>(); 
 			}
-			String paramString = commandString.substring(idx+1); 
+			String paramString = url.substring(idx+1); 
 			StringTokenizer st = new StringTokenizer(paramString, "&");
 	        while (st.hasMoreTokens()) {
 	            String e = st.nextToken();
@@ -756,7 +754,7 @@ public class Message implements Id {
 		
 		public void setRequestPath(String path){
 			this.requestPath = path;
-			calcRequestString();
+			calcUrl();
 		}
 		
 		public void setRequestParam(String key, String value){
@@ -764,7 +762,7 @@ public class Message implements Id {
 				requestParams = new HashMap<String, String>();
 			}
 			requestParams.put(key, value);
-			calcRequestString();
+			calcUrl();
 		}
 	}
 
@@ -784,7 +782,7 @@ public class Message implements Id {
 		if(server.startsWith("http://")){
 			format = "%s%s";
 		}
-		String urlString = String.format(format, server, this.getRequestString());
+		String urlString = String.format(format, server, this.getUrl());
 		URL url = new URL(urlString);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		for(Entry<String, String> e : this.getHead().entrySet()){
@@ -799,7 +797,7 @@ public class Message implements Id {
 		
 		int code = conn.getResponseCode();
 		Message res = new Message();
-		res.setResponseStatus(code);
+		res.setStatus(code);
 		
 		for (Entry<String, List<String>> header : conn.getHeaderFields().entrySet()){
 			if(header.getKey() == null) continue;
@@ -834,15 +832,5 @@ public class Message implements Id {
 		} 
 		conn.disconnect(); 
 		return res;
-	}
-
-	public static void main(String[] args) throws Exception {
-		Message req = new Message();
-		req.setServer("127.0.0.1:8080");
-		req.setRequestString("/hello"); 
-		
-		System.err.println(req);
-		Message res = req.invokeSimpleHttp();
-		System.out.println(res);
 	}
 }

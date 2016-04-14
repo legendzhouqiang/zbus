@@ -23,13 +23,12 @@ import org.zbus.mq.disk.MessageDiskQueue;
 import org.zbus.mq.disk.MessageMemoryQueue;
 import org.zbus.mq.disk.MessageQueue;
 import org.zbus.mq.server.filter.MqFilter;
-import org.zbus.net.core.IoAdaptor;
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
-import org.zbus.net.http.MessageCodec;
+import org.zbus.net.http.MessageAdaptor;
 
-public class MqAdaptor extends IoAdaptor implements Closeable {
+public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = Logger.getLogger(MqAdaptor.class);
 
 	private final Map<String, AbstractMQ> mqTable;
@@ -38,7 +37,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	
 	private boolean verbose = false;    
 	private final MqServer mqServer;
-	private String registerToken = "";
+	private final MqServerConfig config; 
 	private MqFilter mqFilter;
 	private DiskQueuePool diskQueuePool;
 	
@@ -46,11 +45,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 
  
 	public MqAdaptor(MqServer mqServer){
-		codec(new MessageCodec());   
-		this.mqServer = mqServer;
+		this.config = mqServer.getConfig();
+		
+		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();
-		this.sessionTable = mqServer.getSessionTable(); 
-		this.registerToken = mqServer.getRegisterToken();
+		this.sessionTable = mqServer.getSessionTable();  
 		this.mqFilter = mqServer.getMqFilter();
 		
 		registerHandler(Protocol.Produce, produceHandler); 
@@ -74,7 +73,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	} 
 	
 	private Message handleUrlMessage(Message msg){
-		UrlInfo url = new UrlInfo(msg.getRequestString()); 
+		UrlInfo url = new UrlInfo(msg.getUrl()); 
 		if(url.empty){
 			msg.setCmd(""); //default to home monitor
 			return msg;
@@ -150,7 +149,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
     	
     	Message res = new Message();
     	res.setId(msg.getId()); 
-    	res.setResponseStatus(400);
+    	res.setStatus(400);
     	String text = String.format("Bad format: command(%s) not support", cmd);
     	res.setBody(text); 
     	sess.write(res); 
@@ -277,6 +276,9 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			msg.removeHead(Message.ACK);
 			msg.removeHead(Message.RECVER);
 			msg.removeHead(Message.CMD);
+			if(msg.getReplyCode() != null){
+				msg.setStatus(msg.getReplyCode()); //Change to Response
+			}
 			try{
 				target.write(msg);
 			} catch(Exception ex){
@@ -290,7 +292,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String registerToken = msg.getHead("register_token", "");
-			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+			if(!registerToken.equals(config.getRegisterToken())){
 				msg.setBody("registerToken unmatched");
 				ReplyKit.reply403(msg, sess);
 				return; 
@@ -322,7 +324,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String registerToken = msg.getHead("register_token", "");
-			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+			if(!registerToken.equals(config.getRegisterToken())){
 				msg.setBody("registerToken unmatched");
 				ReplyKit.reply403(msg, sess);
 				return; 
@@ -402,7 +404,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private MessageHandler testHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
-			res.setResponseStatus(200); 
+			res.setStatus(200); 
 			res.setId(msg.getId()); 
 			res.setBody("OK");
 			sess.write(res);
@@ -412,7 +414,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private MessageHandler homeHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			msg = new Message();
-			msg.setResponseStatus("200");
+			msg.setStatus("200");
 			msg.setHead("content-type", "text/html");
 			String body = FileKit.loadFileContent("zbus.htm");
 			if ("".equals(body)) {
@@ -426,7 +428,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	private MessageHandler jqueryHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			msg = new Message();
-			msg.setResponseStatus("200");
+			msg.setStatus("200");
 			msg.setHead("content-type", "application/javascript");
 			String body = FileKit.loadFileContent("jquery.js");
 			msg.setBody(body);
@@ -439,7 +441,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			BrokerInfo info = getStatInfo();
 
 			Message data = new Message();
-			data.setResponseStatus("200");
+			data.setStatus("200");
 			data.setId(msg.getId());
 			data.setHead("content-type", "application/json");
 			data.setBody(JsonKit.toJson(info));
@@ -463,7 +465,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 			}
 
 			Message data = new Message();
-			data.setResponseStatus("200");
+			data.setStatus("200");
 			data.setId(msg.getId());
 			data.setHead("content-type", "application/json");
 			data.setBody(json);
@@ -475,7 +477,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String registerToken = msg.getHead("register_token", "");
-			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+			if(!registerToken.equals(config.getRegisterToken())){
 				msg.setBody("registerToken unmatched");
 				ReplyKit.reply403(msg, sess);
 				return; 
@@ -496,7 +498,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String registerToken = msg.getHead("register_token", "");
-			if(!MqAdaptor.this.registerToken.equals(registerToken)){
+			if(!registerToken.equals(config.getRegisterToken())){
 				msg.setBody("registerToken unmatched");
 				ReplyKit.reply403(msg, sess);
 				return; 
@@ -540,7 +542,7 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 	}
 
 	@Override
-	public void onException(Throwable e, Session sess) throws IOException { 
+	public void onException(Throwable e, Session sess) throws Exception { 
 		cleanSession(sess);
 		super.onException(e, sess);
 	}
@@ -574,11 +576,11 @@ public class MqAdaptor extends IoAdaptor implements Closeable {
 		return info;
     }
     
-    public void loadMQ(String storePath){ 
+    public void loadMQ(){ 
     	log.info("Loading DiskQueues...");
     	mqTable.clear();
     	if(diskQueuePool == null){
-    		diskQueuePool = new DiskQueuePool(storePath); 
+    		diskQueuePool = new DiskQueuePool(config.storePath); 
     	}
 		
 		Map<String, DiskQueue> dqs = diskQueuePool.getQueryMap();

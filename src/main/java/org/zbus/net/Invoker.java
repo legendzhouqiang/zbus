@@ -3,6 +3,7 @@ package org.zbus.net;
 import java.io.IOException;
 
 import org.zbus.net.Sync.ResultCallback;
+ 
 
 /**
  * The abstraction of remote invocation:
@@ -25,6 +26,16 @@ public interface Invoker<REQ, RES> {
 	 * @throws InterruptedException if invocation is interrupted
 	 */
 	RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException;
+	
+	/**
+	 * invoke synchronously 
+	 * 
+	 * @param req request message/object 
+	 * @return response message/object
+	 * @throws IOException if network failure happens
+	 * @throws InterruptedException if invocation is interrupted
+	 */
+	RES invokeSync(REQ req) throws IOException, InterruptedException;
 
 	/**
 	 * invoke asynchronously 

@@ -34,7 +34,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.MessageQueue;
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public class MQ extends AbstractMQ{
@@ -99,15 +99,15 @@ public class MQ extends AbstractMQ{
 				
 				writeMsg.setRawId(msg.getId());  //保留原始消息ID
 				writeMsg.setId(pullMsg.getId()); //配对订阅消息！
-				if(writeMsg.getResponseStatus() == null){
-					if(!"/".equals(writeMsg.getRequestString())){
-						writeMsg.setHead("origin-url", writeMsg.getRequestString());
+				if(writeMsg.getStatus() == null){
+					if(!"/".equals(writeMsg.getUrl())){
+						writeMsg.setHead("origin-url", writeMsg.getUrl());
 					}
-					writeMsg.setResponseStatus(200); //default to 200
+					writeMsg.setStatus(200); //default to 200
 				}
 				pull.getSession().write(writeMsg); 
 			
-			} catch (IOException ex) {   
+			} catch (Exception ex) {   
 				log.error(ex.getMessage(), ex); 
 				msgQ.offer(msg);
 			} 

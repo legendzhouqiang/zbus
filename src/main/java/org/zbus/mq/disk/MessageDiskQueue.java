@@ -24,9 +24,9 @@ package org.zbus.mq.disk;
 
 import java.util.Iterator;
 
-import org.zbus.net.core.IoBuffer;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageCodec;
+import org.zbus.net.simple.IoBuffer;
+import org.zbus.net.simple.http.MessageCodec;
 
 public class MessageDiskQueue extends MessageQueue{
 	private static final MessageCodec codec = new MessageCodec();

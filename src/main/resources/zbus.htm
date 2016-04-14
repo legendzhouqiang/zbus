@@ -101,7 +101,7 @@ $.getJSON('?cmd=data',function(data){
      
     $.each(data.mqTable, function(key, mq){  
     	if(key=='@type') return; 
-    	var link = "/" + mq.name + "/?cmd=query_mq";
+    	var link = "/" + mq.name + "/?cmd=query";
     	var op = "Methods";
     	if((mq.mode & MODE_RPC) == 0){ 
     		op = ""

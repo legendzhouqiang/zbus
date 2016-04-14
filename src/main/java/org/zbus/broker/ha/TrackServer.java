@@ -33,72 +33,40 @@ import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.Server;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.Session;
+import org.zbus.net.EventDriver;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.MessageServer;
 
-public class TrackServer extends Server{ 
+public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
-	private TrackAdaptor trackAdaptor;  
-	public TrackServer(String address) {
-		serverName = "TrackServer";
-		selectorGroup = new SelectorGroup(); 
-		trackAdaptor = new TrackAdaptor();	
-		
-		registerAdaptor(address, trackAdaptor);
-	}
 	
-	@Override
-	public void start() throws IOException {  
-		log.info("TrackServer starting ...");
-		super.start();
-		log.info("TrackServer started successfully");
-	}
-	
-	@Override
-	public void close() throws IOException { 
-		super.close();
-		trackAdaptor.close();
-		selectorGroup.close();
-	}
-	
-	public void setVerbose(boolean verbose){
-		trackAdaptor.setVerbose(verbose);
-	}
-
-	public static void main(String[] args) throws Exception { 
-		String host = ConfigKit.option(args, "-h", "0.0.0.0");
-		int port = ConfigKit.option(args, "-p", 16666);
-		boolean verbose = ConfigKit.option(args, "-verbose", true);
-		final TrackServer server = new TrackServer(host+":"+port);
-		server.setVerbose(verbose);
-		server.start();
-		Runtime.getRuntime().addShutdownHook(new Thread(){ 
-			public void run() { 
-				try {
-					server.close();
-					log.info("TrackServer shutdown completed");
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		});   
-	}  
-}
-
-
-class TrackAdaptor extends MessageAdaptor implements Closeable{
-	private static final Logger log = Logger.getLogger(TrackAdaptor.class); 
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
 	private boolean verbose = false;
-	public TrackAdaptor(){   
+	
+	private EventDriver eventDriver;
+	private MessageServer server;
+	private String serverHost = "0.0.0.0";
+	private int serverPort = 16666;
+	
+	public TrackServer(int port){
+		this("0.0.0.0", port, null);
+	}
+	public TrackServer(String host, int port){
+		this(host, port, null);
+	}
+	
+	public TrackServer(String host, int port, EventDriver driver){  
+		this.serverHost = host;
+		this.serverPort = port;
+		this.eventDriver = driver;
+		
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
@@ -108,6 +76,12 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 		cmd(HaCommand.PubAll, pubAllHandler);
 		cmd(HaCommand.SubAll, subAllHandler);
 	}   
+	
+	public void start() throws Exception{
+		server = new MessageServer(eventDriver);
+		server.start(serverHost, serverPort, this);
+		eventDriver = server.getEventDriver(); //if eventDriver is null, set the internal created one
+	}
 	
 	private void pubMessage(Message msg){
 		Iterator<Entry<String, Session>> iter = trackSubs.entrySet().iterator();
@@ -199,17 +173,13 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			if(verbose){
 				log.info("%s", msg);
 			}
-			trackSubs.put(sess.id(), sess);  
-			for(String serverAddr : serverEntryTable.serverSet()){
-				Message m = new Message();
-				m.setCmd(HaCommand.ServerJoin);
-				m.setServer(serverAddr);
-				sess.write(m);
-			}
+			trackSubs.put(sess.id(), sess);   
 			
-			msg.setCmd(HaCommand.PubAll);
-			msg.setBody(serverEntryTable.pack());
-			sess.write(msg);
+			Message m = new Message(); 
+			m.setStatus(200);
+			m.setCmd(HaCommand.PubAll);
+			m.setBody(serverEntryTable.pack());
+			sess.write(m);
 		}
 	};
 	
@@ -220,12 +190,13 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 			 
 			log.info(">>New Server: "+ serverAddr); 
 			
-			final MessageClient client = new MessageClient(serverAddr, sess.selectorGroup()); 
+			final MessageClient client = new MessageClient(serverAddr, eventDriver);
 			joinedServers.put(serverAddr, client); 
 			
 			client.onConnected(new ConnectedHandler() { 
 				@Override
-				public void onConnected(Session sess) throws IOException { 
+				public void onConnected() throws IOException { 
+					log.info("Connection to (%s) OK", serverAddr);
 					joinedServers.put(serverAddr, client); 
 					
 					serverEntryTable.addServer(serverAddr);
@@ -253,16 +224,17 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 				} 
 			}); 
 			
-			client.connectAsync(); 
+			client.ensureConnectedAsync();
 		}
 	}
 	
-	protected void onSessionToDestroy(Session sess) throws IOException {
+	public void onSessionToDestroy(Session sess) throws IOException {
+		log.info("Remove " + sess);
 		trackSubs.remove(sess.id()); 
 	}
 	
 	@Override
-	protected void onException(Throwable e, Session sess) throws IOException {
+	public void onException(Throwable e, Session sess) throws Exception {
 		trackSubs.remove(sess.id());
 		super.onException(e, sess);
 	}
@@ -270,6 +242,10 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 	@Override
 	public void close() throws IOException { 
 		serverEntryTable.close(); 
+		if(server != null){
+			server.close();
+			server = null;
+		}
 	}
 
 	public void setVerbose(boolean verbose) {
@@ -277,4 +253,24 @@ class TrackAdaptor extends MessageAdaptor implements Closeable{
 		serverEntryTable.setVerbose(verbose);
 	} 
 	
+	
+	public static void main(String[] args) throws Exception { 
+		String host = ConfigKit.option(args, "-h", "0.0.0.0");
+		int port = ConfigKit.option(args, "-p", 16666);
+		boolean verbose = ConfigKit.option(args, "-verbose", true);
+		
+		final TrackServer server = new TrackServer(host, port);
+		server.setVerbose(verbose); 
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){ 
+			public void run() { 
+				try {
+					server.close();
+					log.info("TrackServer shutdown completed");
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});   
+	}  
 }

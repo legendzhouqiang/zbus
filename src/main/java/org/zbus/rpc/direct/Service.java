@@ -22,74 +22,68 @@
  */
 package org.zbus.rpc.direct;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
+import org.zbus.kit.NetKit;
 import org.zbus.mq.server.UrlInfo;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.Server;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.IoAdaptor;
-import org.zbus.net.core.Session;
+import org.zbus.net.IoAdaptor;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
-import org.zbus.net.http.MessageCodec;
+import org.zbus.net.http.MessageAdaptor;
+import org.zbus.net.http.MessageServer;
 
-public class Service extends Server {  
-	private boolean ownDispatcher = false;
-	private final String trackServerList;
-	private final String entryId;
+public class Service implements Closeable {  
+	private MessageServer server;  
+	private final String serverAddr;
+	private final ServiceConfig config;
+	private final IoAdaptor serverAdaptor;
 	
 	public Service(ServiceConfig config){ 
-		serverName = "RpcServer";  
-		trackServerList = config.trackServerList;
-		entryId = config.entryId;
-		
-		if(config.selectorGroup != null){
-			selectorGroup = config.selectorGroup;
-		} else {
-			selectorGroup = new SelectorGroup()
-				.selectorCount(config.selectorCount)
-				.executorCount(config.executorCount);
-			ownDispatcher = true;
+		this.config = config;   
+		serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
+		String host = config.serverHost;
+		if("0.0.0.0".equals(host)){
+			host = NetKit.getLocalIp();
 		}
-		
-		IoAdaptor serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
-		String address = config.serverHost+":"+config.serverPort;
-		registerAdaptor(address, serverAdaptor);
+		serverAddr = host+":"+config.serverPort;
 	}
+	
 	
 	@Override
 	public void close() throws IOException {
-		super.close(); 
-		if(ownDispatcher){
-			selectorGroup.close();
-		}
+		 if(server != null){
+			 server.close();
+			 server = null;
+		 }
 	}
-	
-	@Override
-	public void start() throws IOException { 
-		super.start(); 
-		
-		if(trackServerList != null){
+	 
+	public void start() throws Exception {    
+		server = new MessageServer(config.getEventDriver()); 
+		if(config.trackServerList != null){
 			setupTracker();
-		}
+		} 
+		
+		server.start(config.serverHost, config.serverPort, serverAdaptor);
 	}
 	
 	
 	private TrackPub trackPub; 
 	private void setupTracker() {
-		if(entryId == null){
+		if(config.entryId == null){
 			throw new IllegalStateException("Missing entryId for HA discovery");
 		}
-		trackPub = new TrackPub(trackServerList, selectorGroup);
+		trackPub = new TrackPub(config.trackServerList, server.getEventDriver());
 		trackPub.onConnected(new ConnectedHandler() {
 			@Override
-			public void onConnected(Session sess) throws IOException {
+			public void onConnected() throws IOException {
 				trackPub.pubServerJoin(serverAddr); 
 				ServerEntry se = new ServerEntry();
-				se.entryId = entryId;
+				se.entryId = config.entryId;
 				se.serverAddr = serverAddr;
 				se.lastUpdateTime = System.currentTimeMillis();
 				se.mode = ServerEntry.RPC;
@@ -100,17 +94,15 @@ public class Service extends Server {
 		trackPub.start(); 
 	}
 	
-	static class DirectMessageAdaptor extends IoAdaptor {
-		private final MessageProcessor processor;
-
+	static class DirectMessageAdaptor extends MessageAdaptor {
+		private final MessageProcessor processor; 
 		public DirectMessageAdaptor(final MessageProcessor processor) {
-			codec(new MessageCodec());
 			this.processor = processor;
 		}
 		
 		private Message handleUrlMessage(Message msg, Session sess) throws IOException{
 			if(msg.getBody() == null || msg.getBody().length == 0){ 
-				UrlInfo url = new UrlInfo(msg.getRequestString(), true); 
+				UrlInfo url = new UrlInfo(msg.getUrl(), true); 
 				
 				String module = url.module == null? "" : url.module; 
 				String method = url.method == null? "" : url.method;
@@ -126,7 +118,7 @@ public class Service extends Server {
 			return msg;
 		}
 		
-		protected void onMessage(Object obj, Session sess) throws IOException {
+		public void onMessage(Object obj, Session sess) throws IOException {
 			Message msg = (Message) obj;
 			if(Message.HEARTBEAT.equals(msg.getCmd())){
 				return;
@@ -139,8 +131,8 @@ public class Service extends Server {
 			Message res = processor.process(msg);
 			if (res != null) {
 				res.setId(msgId);
-				if (res.getResponseStatus() == null) {
-					res.setResponseStatus(200); // default to 200
+				if (res.getStatus() == null) {
+					res.setStatus(200); // default to 200
 				}
 				sess.write(res);
 			}

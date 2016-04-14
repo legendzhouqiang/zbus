@@ -2,7 +2,6 @@ package org.zbus.broker;
 
 import java.io.IOException;
 
-import org.zbus.broker.ha.HaBroker;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
@@ -40,12 +39,16 @@ public class ZbusBroker implements Broker{
 	 * @throws IOException  if underlying IO exception occurs
 	 */
 	public ZbusBroker(BrokerConfig config) throws IOException { 
-		String brokerAddress = config.getBrokerAddress();
+		String brokerAddress = config.getBrokerAddress(); 
+		brokerAddress = brokerAddress.trim();
 		if(brokerAddress == null || "jvm".equalsIgnoreCase(brokerAddress)){
 			if(config.getMqServer() != null){
 				support = new JvmBroker(config.getMqServer());
 			} else {
 				if(config.getMqServerConfig() != null){
+					if(config.getMqServerConfig().getEventDriver() == null){
+						config.getMqServerConfig().setEventDriver(config.getEventDriver());
+					} 
 					support = new JvmBroker(config.getMqServerConfig());
 				} else {
 					support = new JvmBroker();
@@ -53,7 +56,7 @@ public class ZbusBroker implements Broker{
 			}
 			return;
 		}
-		brokerAddress = brokerAddress.trim();
+		
 		boolean ha = false;
 		if(brokerAddress.startsWith("[")){
 			if(brokerAddress.endsWith("]")){
@@ -90,13 +93,18 @@ public class ZbusBroker implements Broker{
 	}
 
 	@Override
-	public MessageInvoker getClient(BrokerHint hint) throws IOException {
-		return support.getClient(hint);
+	public MessageInvoker getInvoker(BrokerHint hint) throws IOException {
+		return support.getInvoker(hint);
 	}
 
 	@Override
-	public void closeClient(MessageInvoker client) throws IOException {
-		support.closeClient(client);
+	public void closeInvoker(MessageInvoker client) throws IOException {
+		support.closeInvoker(client);
+	}
+
+	@Override
+	public Message invokeSync(Message req) throws IOException, InterruptedException {
+		return support.invokeSync(req);
 	}
 
 }

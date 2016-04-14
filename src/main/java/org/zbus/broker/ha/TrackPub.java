@@ -30,44 +30,50 @@ import java.util.Set;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.Session;
+import org.zbus.net.EventDriver;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class TrackPub implements Closeable{  
 	private static final Logger log = Logger.getLogger(TrackPub.class);
+	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
-	private int reconnectTimeout = 3000; //ms
 	private ConnectedHandler connectedHandler;
+	private EventDriver eventDriver;
 	
-	public TrackPub(String trackServerList, SelectorGroup dispatcher) {
+	public TrackPub(String trackServerList, EventDriver driver) {
+		
+		if(driver == null){
+			throw new IllegalArgumentException("EventDriver can not be null");
+		}
+		if(trackServerList == null){
+			throw new IllegalArgumentException("trackServerList can not be null");
+		}
+		this.eventDriver = driver;
 		String[] blocks = trackServerList.split("[;]");
     	for(String block : blocks){
     		final String address = block.trim();
     		if(address.equals("")) continue;
-    		
-    		final MessageClient client = new MessageClient(address, dispatcher); 
+    		 
+    		final MessageClient client = new MessageClient(address, eventDriver);
     		allTrackers.add(client);
-    		
+    		 
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
-    				healthyTrackers.remove(client);
-    				log.info("TrackServer(%s) down, try to reconnect in %d seconds", address, reconnectTimeout/1000);
-    				try { Thread.sleep(reconnectTimeout); } catch (InterruptedException ex) { }
-    				client.connectAsync();
+    				healthyTrackers.remove(client); 
+    				client.ensureConnectedAsync(); 
     			}  
 			});
     		
     		client.onConnected(new ConnectedHandler() {
     			@Override
-    			public void onConnected(Session sess) throws IOException {  
+    			public void onConnected() throws IOException {  
     				log.info("TrackServer(%s) connected", address);
     				healthyTrackers.add(client); 
     				if(connectedHandler != null){
-    					connectedHandler.onConnected(sess);
+    					connectedHandler.onConnected();
     				}
     			}
 			}); 
@@ -75,22 +81,22 @@ public class TrackPub implements Closeable{
     }
 	
 	public void start(){
-		for(MessageClient client : allTrackers){
-			try {
-				client.connectAsync();
-			} catch (IOException e) { 
-				log.error(e.getMessage(), e);
-			}
+		for(final MessageClient client : allTrackers){
+			client.ensureConnectedAsync();
 		}
 	}
 	
 	public void sendToAllTrackers(Message msg){
+		msg.removeHead(Message.ID);
 		for(MessageClient client : healthyTrackers){ 
-			try{
-				msg.removeHead(Message.ID);
-				client.sendAsync(msg);
-			}catch(IOException e){
+			try{ 
+				if(client.hasConnected()){
+					client.sendMessage(msg);
+				}
+			} catch (IOException e){
 				log.error(e.getMessage(), e);
+			} catch (InterruptedException e) {
+				break;
 			}
     	}
 	}
@@ -133,6 +139,6 @@ public class TrackPub implements Closeable{
     		client.close();
     	}
     	allTrackers.clear();
-    	healthyTrackers.clear();
+    	healthyTrackers.clear(); 
     }
 }

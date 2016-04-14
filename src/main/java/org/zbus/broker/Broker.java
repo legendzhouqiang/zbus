@@ -30,8 +30,8 @@ import org.zbus.net.http.Message.MessageInvoker;
 
 
 public interface Broker extends MessageInvoker, Closeable{ 
-	MessageInvoker getClient(BrokerHint hint) throws IOException; 
-	void closeClient(MessageInvoker client) throws IOException; 
+	MessageInvoker getInvoker(BrokerHint hint) throws IOException; 
+	void closeInvoker(MessageInvoker invoker) throws IOException; 
 	
 	public static class BrokerHint {   
 		private static final String requestIp = NetKit.getLocalIp();

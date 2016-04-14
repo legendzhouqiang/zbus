@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -34,50 +35,65 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
+import org.zbus.kit.ClassKit;
 import org.zbus.kit.ConfigKit;
+import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.server.filter.MemoryMqFilter;
 import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.mq.server.filter.PersistMqFilter;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.Server;
-import org.zbus.net.core.SelectorGroup;
-import org.zbus.net.core.Session;
+import org.zbus.net.EventDriver;
+import org.zbus.net.Session;
+import org.zbus.net.http.MessageServer;
 
-public class MqServer extends Server{ 
+public class MqServer implements Closeable{ 
 	private static final Logger log = Logger.getLogger(MqServer.class); 
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
 	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-	private long cleanInterval = 3000; 
-	private long trackInterval = 5000;
 	
-	private MqServerConfig config;
-	private String registerToken = "";
-	private MqFilter mqFilter;
+	private MqServerConfig config; 
+	
+	private MqFilter mqFilter; 
+	private String serverAddr = "";  
+	
+	private TrackPub trackPub; 
+	
+	private EventDriver eventDriver;
+	private boolean ownEventDriver = false;
+	
+	private MessageServer httpServer;// you may add WebSocket Server
+	private MqAdaptor mqAdaptor;
 	
 	public MqServer(){
 		this(new MqServerConfig()); //using all defaults
 	}
 	
-	public MqServer(MqServerConfig config){ 
-		this.config = config;   
-		serverName = "MqServer";   
-		registerToken = config.registerToken;
-		serverMainIpOrder = config.serverMainIpOrder;
+	public MqServer(MqServerConfig config){  
+		this.config = config;  
+		eventDriver = config.getEventDriver();
+		if(eventDriver == null){
+			eventDriver = new EventDriver();
+			ownEventDriver = true;
+		} 
+		String host = config.serverHost;
+		if("0.0.0.0".equals(host)){
+			host = NetKit.getLocalIp(config.serverMainIpOrder);
+		}
+		serverAddr = host+":"+config.serverPort;
 		
-		if("persist".equals(config.mqFilter)){
-			if(ConfigKit.classExists("com.sleepycat.je.Environment")){
+		if(config.mqFilterPersist){
+			if(ClassKit.bdbAvailable){
 				mqFilter = new PersistMqFilter(config.storePath + File.separator + "filter");
 			} else {
-				log.warn("mqFilter(perist type) missing BerkeleyDb jar, default to MemoryMqFilter");
-				mqFilter = new MemoryMqFilter(); 
+				log.warn("MqFilter persist mode enabled, but missing je-5.0.xx jar, default to MemoryMqFilter");	 
 			}  
-		} else {
-			mqFilter = new MemoryMqFilter(); 
-		} 
+		}  else {
+			mqFilter = new MemoryMqFilter();
+		}
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -88,63 +104,54 @@ public class MqServer extends Server{
 		    		mq.cleanSession();
 		    	}
 			}
-		}, 1000, cleanInterval, TimeUnit.MILLISECONDS); 
-		registerDefaultMqAdaptor();
-	}
-	
-	private MqAdaptor defaultMqAdaptor;
-	private void registerDefaultMqAdaptor(){
-		if(defaultMqAdaptor != null) return;
-		//将MqAdaptor与MqServer分离是为了做其他编码支持
-		defaultMqAdaptor = new MqAdaptor(this); 
-		defaultMqAdaptor.setVerbose(config.verbose);
-		defaultMqAdaptor.loadMQ(config.storePath);  
-		registerAdaptor(config.getServerAddress(), defaultMqAdaptor, "HttpExt");
-	}
-	
-	@Override
-	public void start() throws IOException { 
-		if(started) return;
+		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		
-		if(selectorGroup == null){
-			selectorGroup = new SelectorGroup();
-			selectorGroup.selectorCount(config.selectorCount);
-			selectorGroup.executorCount(config.executorCount); 
-		}
-		
-		log.info("MqServer starting ...");
-		super.start(); 
-		if(config.trackServerList!= null){
-			log.info("Running at HA mode, connect to TrackServers");
-			setupTracker(config.trackServerList, selectorGroup);
-		}  
-		log.info("MqServer started successfully");
-	}
+		mqAdaptor = new MqAdaptor(this); 
+		mqAdaptor.setVerbose(config.verbose);
+		mqAdaptor.loadMQ(); 
+	} 
 	
-	@Override
-	public void close() throws IOException {
-		if(defaultMqAdaptor != null){
-			defaultMqAdaptor.close();
+	public void start() throws Exception{  
+		httpServer = new MessageServer(eventDriver); 
+		eventDriver = httpServer.getEventDriver();
+		
+		httpServer.start(config.serverHost, config.serverPort, mqAdaptor); 
+		
+		if(config.trackServerList != null){
+			setupTracker(config.trackServerList);
 		}
+	}
+	 
+	@Override
+	public void close() throws IOException { 
 		if(this.mqFilter != null){
 			this.mqFilter.close();
 		}
 		if(trackPub != null){
     		trackPub.close();
     	}
-		scheduledExecutor.shutdown();
-		super.close();  
-		if(selectorGroup != null){
-			selectorGroup.close();
+		scheduledExecutor.shutdown();  
+		
+		mqAdaptor.close();
+		if(httpServer != null){
+			httpServer.close();
+		} 
+		if(ownEventDriver && eventDriver != null){
+			eventDriver.close();
+			eventDriver = null;
 		}
 	}
 	
-	private TrackPub trackPub;
-    public void setupTracker(String trackServerList, SelectorGroup dispatcher){
-    	trackPub = new TrackPub(trackServerList, dispatcher);
+	
+    
+	public void setupTracker(String trackServerList){
+		if(eventDriver == null){
+			throw new IllegalStateException("Missing eventDriver");
+		}
+    	trackPub = new TrackPub(trackServerList, eventDriver);
     	trackPub.onConnected(new ConnectedHandler() {
     		@Override
-    		public void onConnected(Session sess) throws IOException { 
+    		public void onConnected() throws IOException { 
     			trackPub.pubServerJoin(serverAddr);
     			for(AbstractMQ mq : mqTable.values()){
     				pubEntryUpdate(mq);
@@ -160,7 +167,7 @@ public class MqServer extends Server{
     				pubEntryUpdate(mq);
     			}
 			}
-		}, 2000, trackInterval, TimeUnit.MILLISECONDS);
+		}, 2000, config.trackReportInterval, TimeUnit.MILLISECONDS);
     }  
      
     public void pubEntryUpdate(AbstractMQ mq){
@@ -177,11 +184,7 @@ public class MqServer extends Server{
     	se.lastUpdateTime = mq.lastUpdateTime;
 
     	trackPub.pubEntryUpdate(se);
-    } 
-	
-    public String getRegisterToken(){
-    	return registerToken;
-    }
+    }  
     
 	public Map<String, AbstractMQ> getMqTable() {
 		return mqTable;
@@ -189,42 +192,48 @@ public class MqServer extends Server{
 
 	public Map<String, Session> getSessionTable() {
 		return sessionTable;
+	}  
+
+	public String getServerAddr() {
+		return serverAddr;
 	} 
-	
 
 	public MqFilter getMqFilter() {
 		return mqFilter;
-	} 
+	}  
 
-	public MqAdaptor getDefaultMqAdaptor() {
-		return defaultMqAdaptor;
+	public MqServerConfig getConfig() {
+		return config;
+	}   
+	
+	public MqAdaptor getMqAdaptor() {
+		return mqAdaptor;
 	}
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig();
 		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
-		config.serverPort = ConfigKit.option(args, "-p", 15555);
-		config.selectorCount = ConfigKit.option(args, "-selector", 0); //0 means default to CPU/4
-		config.executorCount = ConfigKit.option(args, "-executor", 64);
-		config.verbose = ConfigKit.option(args, "-verbose", false);
+		config.serverPort = ConfigKit.option(args, "-p", 15555); 
+		config.verbose = ConfigKit.option(args, "-verbose", true);
 		config.storePath = ConfigKit.option(args, "-store", "store");
 		config.trackServerList = ConfigKit.option(args, "-track", null); 
-		config.mqFilter = ConfigKit.option(args, "-mqFilter", null);
+		config.mqFilterPersist = ConfigKit.option(args, "-mqFilter", false);
 		config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
+		config.registerToken = ConfigKit.option(args, "-regToken", ""); 
 		
-		final MqServer server = new MqServer(config);  
+		
+		final MqServer server = new MqServer(config);
 		server.start(); 
-		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
 				try { 
 					server.close();
 					log.info("MqServer shutdown completed");
-				} catch (IOException e) {
+				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
 			}
-		});   
+		});    
 	} 
 }
 

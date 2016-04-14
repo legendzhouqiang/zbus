@@ -34,6 +34,7 @@ public class ServiceConfig extends MqConfig {
 	private ConsumerHandler consumerHandler; 
 	private MessageProcessor messageProcessor; 
 	private int consumerCount = 1; 
+	private boolean verbose = false;
 	private Broker[] brokers;
 
 	public ServiceConfig() { 
@@ -88,6 +89,14 @@ public class ServiceConfig extends MqConfig {
 
 	public void setConsumerHandler(ConsumerHandler consumerHandler) {
 		this.consumerHandler = consumerHandler;
+	} 
+	
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 
 	@Override

@@ -66,13 +66,13 @@ public class JsonRpcCodec implements RpcCodec {
 	
 	public Message encodeResponse(Response response) {
 		Message msg = new Message(); 
-		msg.setResponseStatus("200"); 
+		msg.setStatus("200"); 
 		if(response.getError() != null){
 			Throwable error = response.getError(); 
 			if(error instanceof IllegalArgumentException){
-				msg.setResponseStatus("400");
+				msg.setStatus("400");
 			} else {
-				msg.setResponseStatus("500");
+				msg.setStatus("500");
 			} 
 		}  
 		String encoding = response.getEncoding();

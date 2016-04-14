@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.BrokerSelector;
 import org.zbus.broker.SingleBroker;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
 import org.zbus.broker.ha.TrackSub.EntryRemoveHandler;
@@ -44,7 +45,7 @@ import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
 import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
-import org.zbus.net.core.SelectorGroup;
+import org.zbus.net.EventDriver;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -56,30 +57,23 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private final Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
-	
-	private SelectorGroup selectorGroup = null;
-	private boolean ownSelectorGroup = false;
+	 
 	private BrokerConfig config;
+	private EventDriver eventDriver;
+	private boolean ownEventDriver = false;
 	
 	private CountDownLatch syncFromTracker = new CountDownLatch(1);
 	private int syncFromTrackerTimeout = 3000;
 	
 	public DefaultBrokerSelector(BrokerConfig config){
-		this.config = config;
-		if(config.getSelectorGroup() == null){
-			this.ownSelectorGroup = true;
-			this.selectorGroup = new SelectorGroup();
-			this.config.setSelectorGroup(selectorGroup);
-		} else {
-			this.selectorGroup = config.getSelectorGroup();
-			this.ownSelectorGroup = false;
+		this.config = config; 
+		this.eventDriver = config.getEventDriver();
+		if(this.eventDriver == null){
+			this.eventDriver = new EventDriver();
+			this.ownEventDriver = true;
 		}
-		this.selectorGroup.start(); 
-		
 		subscribeNotification(); 
-	}
-	
-	
+	} 
 	
 	private Broker getBroker(String serverAddr){
 		if(serverAddr == null) return null;
@@ -196,15 +190,16 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		}
 		allBrokers.clear();
 		trackSub.close();
-		serverEntryTable.close();
+		serverEntryTable.close(); 
 		
-		if(ownSelectorGroup){
-			selectorGroup.close();
+		if(ownEventDriver && eventDriver != null){
+			eventDriver.close();
+			eventDriver = null;
 		}
 	}
 	
 	private void subscribeNotification(){
-		trackSub = new TrackSub(config.getBrokerAddress(), selectorGroup);
+		trackSub = new TrackSub(config.getBrokerAddress(), eventDriver);
 		
 		trackSub.onServerJoinHandler(new ServerJoinHandler() {  
 			public void onServerJoin(String serverAddr) throws IOException {
@@ -250,13 +245,14 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.start();
 		
 		try {
-			syncFromTracker.await(syncFromTrackerTimeout, TimeUnit.MILLISECONDS);
-			log.debug("Synchronized from Tracker");
+			syncFromTracker.await(syncFromTrackerTimeout, TimeUnit.MILLISECONDS); 
 		} catch (InterruptedException e) { 
 			//ignore
 		}
 		if(syncFromTracker.getCount() > 0){
-			log.debug("Timeout synchronizing from Tracker");
+			log.warn("Synchronize from TrackServer timeout");
+		} else {
+			log.info("Synchronize from TrackServer OK");
 		}
 	}
 	

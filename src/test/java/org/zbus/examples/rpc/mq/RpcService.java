@@ -15,13 +15,14 @@ public class RpcService {
 		RpcProcessor processor = new RpcProcessor();  
 		processor.addModule(new InterfaceExampleImpl());  
 		
-		Broker broker = new ZbusBroker(); //use BrokerConfig with non-defaults
-		
+		Broker broker = new ZbusBroker("127.0.0.1:15555");
+
 		ServiceConfig config = new ServiceConfig();
 		config.setConsumerCount(2); 
 		config.setMq("MyRpc"); 
 		config.setBroker(broker);    
-		config.setMessageProcessor(processor);   
+		config.setMessageProcessor(processor); 
+		config.setVerbose(true);
 		
 		Service svc = new Service(config);
 		svc.start();  

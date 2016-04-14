@@ -34,5 +34,11 @@ public class MqInvoker implements MessageInvoker{
 			throws IOException { 
 		fillBrokerMessage(req);
 		this.messageInvoker.invokeAsync(req, callback);
+	}
+
+	@Override
+	public Message invokeSync(Message req) throws IOException, InterruptedException {
+		fillBrokerMessage(req);
+		return this.messageInvoker.invokeSync(req);
 	} 
 }

@@ -33,7 +33,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.MessageQueue;
-import org.zbus.net.core.Session;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public class PubSub extends AbstractMQ{
@@ -72,7 +72,7 @@ public class PubSub extends AbstractMQ{
 				} 
 				if(sess.isTopicMatched(topic)){ 
 					Message copy = Message.copyWithoutBody(msg);
-					copy.setResponseStatus(200);
+					copy.setStatus(200);
 					sess.getMsgQ().offer(copy);
 				}
 			}
@@ -93,13 +93,13 @@ public class PubSub extends AbstractMQ{
 				msg = pull.getMsgQ().poll();
 				if(msg == null) continue;
 				
-				msg.setResponseStatus(200); //支持浏览器
+				msg.setStatus(200); //支持浏览器
 				msg.setRawId(msg.getId());
 				msg.setId(pullMessage.getId()); 
 				
 				pull.pullMessage = null;
 				pull.getSession().write(msg);
-			} catch(IOException ex){
+			} catch(Exception ex){
 				log.error(ex.getMessage(), ex);
 			} finally{
 				pull.lock.unlock();

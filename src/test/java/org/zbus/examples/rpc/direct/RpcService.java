@@ -1,7 +1,5 @@
 package org.zbus.examples.rpc.direct;
 
-import java.io.IOException;
-
 import org.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
 import org.zbus.rpc.RpcProcessor;
 import org.zbus.rpc.direct.Service;
@@ -9,7 +7,7 @@ import org.zbus.rpc.direct.ServiceConfig;
 
 public class RpcService {
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		RpcProcessor processor = new RpcProcessor(); 
 		processor.addModule(new InterfaceExampleImpl()); 
 		
