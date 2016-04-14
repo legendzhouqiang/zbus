@@ -5,7 +5,7 @@
 	<packaging>jar</packaging>
 	<groupId>org.zbus</groupId>
 	<artifactId>zbus</artifactId>
-	<version>6.3.1-SNAPSHOT</version>
+	<version>6.3.1</version>
 	<name>zbus</name>
 	<description>lightweight MQ, RPC, ServiceBus</description>
 	<url>https://zbus.org</url>

@@ -11,7 +11,7 @@ import org.zbus.rpc.mq.MqInvoker;
 public class RpcClient { 
 	
 	public static void main(String[] args) throws Exception {  
-		Broker broker = new ZbusBroker("218.18.115.54:15555"); 
+		Broker broker = new ZbusBroker(); 
 		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");  
 		
 		//use RpcFactory to generate dynamic implementation via zbus

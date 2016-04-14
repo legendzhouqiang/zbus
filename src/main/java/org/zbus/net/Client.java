@@ -87,7 +87,7 @@ public class Client<REQ, RES> extends IoAdaptor implements Closeable {
 	}
 
 	public void startHeartbeat(){
-		startHeartbeat(60000); //default to 1 minute
+		startHeartbeat(300000); //default to 1 minute
 	}
 	
 	public void startHeartbeat(int heartbeatInterval){
