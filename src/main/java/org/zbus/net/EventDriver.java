@@ -150,7 +150,11 @@ public class EventDriver implements Closeable {
 	
 	public boolean isNettyEnabled(){
 		return nettyEnabled;
-	}  
+	}
+	
+	public boolean isSslEnabled(){
+		return sslContext != null;
+	}
 
 	private static void checkNettyGroup(String name, Object group){
 		if(group != null){

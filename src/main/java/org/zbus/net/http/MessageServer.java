@@ -8,7 +8,7 @@ import org.zbus.net.EventDriver;
 import org.zbus.net.IoAdaptor;
 import org.zbus.net.Server;
 import org.zbus.net.netty.NettyServer;
-import org.zbus.net.netty.http.MessageToHttpCodec;
+import org.zbus.net.netty.http.MessageToHttpWsCodec;
 import org.zbus.net.simple.DefaultServer;
 import org.zbus.net.simple.http.MessageCodec;
 
@@ -39,7 +39,7 @@ public class MessageServer implements Server {
 				public void initPipeline(List<Object> p) { 
 					p.add(new HttpServerCodec());
 					p.add(new HttpObjectAggregator(1024*1024*10));
-					p.add(new MessageToHttpCodec());
+					p.add(new MessageToHttpWsCodec());
 				}
 			}); 
 			

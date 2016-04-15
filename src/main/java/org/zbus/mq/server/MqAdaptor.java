@@ -413,8 +413,10 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	
 	private MessageHandler homeHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
+			String msgId = msg.getId();
 			msg = new Message();
 			msg.setStatus("200");
+			msg.setId(msgId);
 			msg.setHead("content-type", "text/html");
 			String body = FileKit.loadFileContent("zbus.htm");
 			if ("".equals(body)) {

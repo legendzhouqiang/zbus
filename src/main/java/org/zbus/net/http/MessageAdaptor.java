@@ -48,7 +48,11 @@ public class MessageAdaptor implements IoAdaptor{
     	this.cmdHandlerMap.put(command, handler);
     }
 	
-	public void uri(String path, final MessageProcessor processor){
+	public void url(String path, final MessageProcessor processor){
+		if(!path.startsWith("/")){
+			path = "/"+path;
+		}
+		
 		this.uriHandlerMap.put(path, processor);
 		String cmd = path;
 		if(cmd.startsWith("/")){
@@ -65,6 +69,15 @@ public class MessageAdaptor implements IoAdaptor{
 				}
 			}
 		});
+	}
+	
+	/**
+	 * @deprecated use url instead
+	 * @param path
+	 * @param processor
+	 */
+	public void uri(String path, final MessageProcessor processor){
+		url(path, processor);
 	}
     
     public void registerFilterHandler(MessageHandler filterHandler) {

@@ -34,8 +34,8 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-public class FileKit {
-
+public class FileKit { 
+	
 	public static InputStream loadFile(String resource, Class<?> clazz) {
 		ClassLoader classLoader = null;
 		try {
