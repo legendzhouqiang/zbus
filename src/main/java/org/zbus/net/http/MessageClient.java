@@ -19,40 +19,67 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 
 public class MessageClient implements Client<Message, Message>, MessageInvoker{
 	private Client<Message, Message> support;
+	
 	public MessageClient(String address, EventDriver driver){
 		if(driver.isNettyEnabled()){
-			support = new NettyClient<Message, Message>(address, driver);
-			codec(new CodecInitializer() {
-				@Override
-				public void initPipeline(List<Object> p) {
-					p.add(new HttpClientCodec());
-					p.add(new HttpObjectAggregator(1024*1024*10)); //maximum of 10M
-					p.add(new MessageToHttpCodec());
-				}
-			});
+			initNettyHttpClient(address, driver);
 		} else {
-			support = new DefaultClient<Message, Message>(address, driver);
-			codec(new CodecInitializer() { 
-				@Override
-				public void initPipeline(List<Object> p) {
-					p.add(new MessageCodec());
-				}
-			});
+			initDefaultHttpClient(address, driver);
 		}
 		startHeartbeat(30000);//sending heartbeat every 5 minute
 	}
 	
-	@Override
-	public void heartbeat() {
-		if(this.hasConnected()){
-			Message hbt = new Message();
-			hbt.setCmd(Message.HEARTBEAT);
-			try {
-				this.invokeAsync(hbt, null);
-			} catch (IOException e) {  
-				//ignore
+	private void initNettyHttpClient(String address, EventDriver driver){
+		support = new NettyClient<Message, Message>(address, driver){
+			public void heartbeat() {
+				if(this.hasConnected()){
+					Message hbt = new Message();
+					hbt.setCmd(Message.HEARTBEAT);
+					try {
+						this.invokeAsync(hbt, null);
+					} catch (IOException e) {  
+						//ignore
+					}
+				}
+			};
+		};
+		
+		codec(new CodecInitializer() {
+			@Override
+			public void initPipeline(List<Object> p) {
+				p.add(new HttpClientCodec());
+				p.add(new HttpObjectAggregator(1024*1024*10)); //maximum of 10M
+				p.add(new MessageToHttpCodec());
 			}
-		}
+		});
+	}
+	
+	private void initDefaultHttpClient(String address, EventDriver driver){
+		support = new DefaultClient<Message, Message>(address, driver){
+			@Override
+			public void heartbeat() {
+				if(this.hasConnected()){
+					Message hbt = new Message();
+					hbt.setCmd(Message.HEARTBEAT);
+					try {
+						this.invokeAsync(hbt, null);
+					} catch (IOException e) {  
+						//ignore
+					}
+				}
+			}
+		};
+		codec(new CodecInitializer() { 
+			@Override
+			public void initPipeline(List<Object> p) {
+				p.add(new MessageCodec());
+			}
+		});
+	}
+	
+	@Override
+	public void heartbeat() { 
+		support.heartbeat();
 	}
 	
 	@Override
