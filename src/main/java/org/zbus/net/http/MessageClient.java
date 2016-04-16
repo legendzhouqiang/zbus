@@ -26,7 +26,7 @@ public class MessageClient implements Client<Message, Message>, MessageInvoker{
 		} else {
 			initDefaultHttpClient(address, driver);
 		}
-		startHeartbeat(30000);//sending heartbeat every 5 minute
+		startHeartbeat(300000);//sending heartbeat every 5 minute
 	}
 	
 	private void initNettyHttpClient(String address, EventDriver driver){
