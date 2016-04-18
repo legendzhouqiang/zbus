@@ -10,7 +10,7 @@ import org.zbus.net.http.MessageServer;
 public class MessageServerExample {
 	
 	public static void main(String[] args) throws Exception {  
-		int port = ConfigKit.option(args, "-p", 15555);  
+		int port = ConfigKit.option(args, "-p", 8080);  
 		 
 		Server server = new MessageServer();
 		
