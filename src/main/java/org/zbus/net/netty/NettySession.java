@@ -71,6 +71,12 @@ public class NettySession implements Session {
 	}
 
 	public <V> void attr(String key, V value) {
+		if(value == null){
+			if(this.attributes != null){
+				this.attributes.remove(key);
+			}
+			return;
+		}
 		if (this.attributes == null) {
 			synchronized (this) {
 				if (this.attributes == null) {

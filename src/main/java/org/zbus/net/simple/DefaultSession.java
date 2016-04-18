@@ -372,6 +372,12 @@ public class DefaultSession implements Session, Closeable{
 	}
 	
 	public <T> void attr(String key, T value){
+		if(value == null){
+			if(this.attributes != null){
+				this.attributes.remove(key);
+			}
+			return;
+		}
 		if(this.attributes == null){
 			synchronized (this) {
 				if(this.attributes == null){

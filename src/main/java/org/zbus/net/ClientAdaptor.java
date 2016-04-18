@@ -188,13 +188,19 @@ public abstract class ClientAdaptor<REQ extends Id, RES extends Id> implements C
 	}
 
 	public <V> void attr(String key, V value) {
+		if(value == null){
+			if(this.attributes != null){
+				this.attributes.remove(key);
+			}
+			return;
+		}
 		if (this.attributes == null) {
 			synchronized (this) {
 				if (this.attributes == null) {
 					this.attributes = new ConcurrentHashMap<String, Object>();
 				}
 			}
-		}
+		} 
 		this.attributes.put(key, value);
 	}
 	
