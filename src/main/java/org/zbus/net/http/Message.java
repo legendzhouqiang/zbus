@@ -24,9 +24,13 @@ package org.zbus.net.http;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -259,6 +263,35 @@ public class Message implements Id {
 		this.setBody(String.format(format, args));
 		return this;
 	} 
+	
+	public Message setBody(File file) throws IOException{
+		InputStream in = null;
+		try{
+			in = new FileInputStream(file);
+			if(in.available() > 0){
+				this.body = new byte[in.available()];
+				in.read(this.body);
+			} 
+		}finally{
+			if(in != null){
+				in.close();
+			}
+		}
+		return this;
+	}
+	
+	public void getBodyAsFile(File file) throws IOException{
+		if(this.body == null) return;
+		OutputStream out = null;
+		try{
+			out = new FileOutputStream(file);
+			out.write(this.body);
+		} finally{
+			if(out != null){
+				out.close();
+			}
+		} 
+	}
 	
 	public Message setJsonBody(String body){
 		return this.setJsonBody(body.getBytes());

@@ -17,12 +17,13 @@ public class RpcService {
 		
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
-		ServiceConfig config = new ServiceConfig();
-		config.setConsumerCount(2); 
+		ServiceConfig config = new ServiceConfig(); 
 		config.setMq("MyRpc"); 
 		config.setBroker(broker);    
-		config.setMessageProcessor(processor); 
-		config.setVerbose(true);
+		config.setMessageProcessor(processor);
+		//config.setConsumerCount(4); //in most cases, default 4 connections is enough
+		//config.setConsumerHandlerThreadCount(1000); //executor thread count
+		
 		
 		Service svc = new Service(config);
 		svc.start();  

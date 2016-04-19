@@ -41,8 +41,7 @@ public class Producer extends MqAdmin {
 	
 	private void fillCommonHeaders(Message msg){
 		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq);
-		msg.setAck(true);
+		msg.setMq(this.mq); 
 		if(accessToken != null && !accessToken.equals("")){
 			if(msg.getHead("token") == null){
 				msg.setHead("token", accessToken);

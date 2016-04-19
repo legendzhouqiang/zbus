@@ -24,6 +24,9 @@ package org.zbus.rpc.mq;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
 import org.zbus.kit.log.Logger;
@@ -37,7 +40,9 @@ public class Service implements Closeable {
 	private static final Logger log = Logger.getLogger(Service.class); 
 	private final ServiceConfig config; 
 	private Consumer[][] consumerGroups; 
-	private boolean isStarted = false;
+	private boolean isStarted = false; 
+	private ThreadPoolExecutor executor; 
+	
 	public Service(ServiceConfig config){
 		this.config = config;
 		if(config.getMq() == null || "".equals(config.getMq())){
@@ -57,10 +62,20 @@ public class Service implements Closeable {
 				}
 			}
 		} 
+		if(executor != null){
+			executor.shutdown();
+		}
 	}
 	
 	public void start() throws IOException{ 
 		if(isStarted) return;
+		
+		if(config.isConsumerHandlerInThread()){
+			int n = config.getConsumerHandlerThreadCount();
+			executor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
+					new LinkedBlockingQueue<Runnable>(config.getInFlightMessageCount()),
+					new ThreadPoolExecutor.CallerRunsPolicy());
+		}
 		
 		final MessageProcessor processor = config.getMessageProcessor();
 		Broker[] brokers = config.getBrokers();
@@ -81,6 +96,11 @@ public class Service implements Closeable {
 			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  
 				Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
+				if(config.isConsumerHandlerInThread()){
+					c.setConsumeExecutor(executor);
+					c.enableConsumeInThread();
+				}
+				
 				if(handler == null){
 					handler = new ConsumerHandler() { 
 						@Override

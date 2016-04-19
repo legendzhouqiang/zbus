@@ -25,9 +25,13 @@ package org.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
+import org.zbus.kit.ClassKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
@@ -124,9 +128,11 @@ public class Consumer extends MqAdmin implements Closeable {
 		} 
 	}
 
-	//FIXME remove replyClient, reuse client
-	private MessageInvoker replyClient; // Linux优化，Reply使用分离的Client(applied only for zbus.net)
-	private void ensureReplyClient() throws IOException {
+	//FIXME Linux优化，Reply使用分离的Client(applied only for zbus.net), remove replyClient
+	private MessageInvoker replyClient; 
+	private MessageInvoker ensureReplyClient() throws IOException {
+		if(ClassKit.nettyAvailable) return this.client; //TODO
+		
 		if (this.replyClient == null) {
 			synchronized (this) {
 				if (this.replyClient == null) {
@@ -134,10 +140,11 @@ public class Consumer extends MqAdmin implements Closeable {
 				}
 			}
 		}
+		return this.replyClient;
 	}
 	 
 	public void routeMessage(Message msg) throws IOException {
-		ensureReplyClient();
+		MessageInvoker invoker = ensureReplyClient();
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false); 
 
@@ -145,7 +152,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			msg.setReplyCode(msg.getStatus());
 			msg.setStatus(null);
 		} 
-		replyClient.invokeAsync(msg, null); 
+		invoker.invokeAsync(msg, null); 
 	}
 
 	public String getTopic() {
@@ -159,12 +166,27 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.topic = topic;
 	}
 
+	
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
 	private volatile ConsumerExceptionHandler consumerExceptionHandler;
+	private int consumeTaskThreadCount = 64;
+	private int inFlightMessageCount = 64;
+	private boolean consumeInThread = false;
+	private ThreadPoolExecutor consumeExecutor;  
+	private boolean ownConsumeExecutor = false;
+	
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
+			if(consumeInThread && consumeExecutor == null){
+				consumeExecutor = new ThreadPoolExecutor(consumeTaskThreadCount, 
+						consumeTaskThreadCount, 120, TimeUnit.SECONDS, 
+						new LinkedBlockingQueue<Runnable>(inFlightMessageCount),
+						new ThreadPoolExecutor.CallerRunsPolicy());
+				ownConsumeExecutor = true;
+			}
+			
 			while (true) {
 				try {
 					final Message msg;
@@ -184,11 +206,26 @@ public class Consumer extends MqAdmin implements Closeable {
 						log.warn("Missing consumerHandler, call onMessage first");
 						continue;
 					}
-					try {
-						consumerHandler.handle(msg, Consumer.this);
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
+					
+					if (consumeInThread && consumeExecutor != null) { 
+						consumeExecutor.submit(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									consumerHandler.handle(msg, Consumer.this);
+								} catch (IOException e) {
+									log.error(e.getMessage(), e);
+								}
+							}
+						});
+					} else {
+						try {
+							consumerHandler.handle(msg, Consumer.this);
+						} catch (IOException e) {
+							log.error(e.getMessage(), e);
+						}
 					}
+					
 				} catch (IOException e) { 
 					if(consumerExceptionHandler != null){
 						consumerExceptionHandler.onException(e, Consumer.this);
@@ -216,6 +253,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		if (consumerThread != null) {
 			consumerThread.interrupt();
 			consumerThread = null;
+		}
+		if(ownConsumeExecutor && consumeExecutor != null){
+			consumeExecutor.shutdown();
+			consumeExecutor = null;
 		}
 		try {
 			if (this.client != null) {
@@ -249,10 +290,53 @@ public class Consumer extends MqAdmin implements Closeable {
 			return;
 		consumerThread.start();
 	}
+	public void enableConsumeInThread(){
+		setConsumeInThread(true);
+	}
 
 	public void setConsumeTimeout(int consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
+	} 
+	
+	public int getConsumeTaskThreadCount() {
+		return consumeTaskThreadCount;
 	}
+
+	public void setConsumeTaskThreadCount(int consumeTaskThreadCount) {
+		this.consumeTaskThreadCount = consumeTaskThreadCount; 
+	}
+	
+	
+
+	public int getInFlightMessageCount() {
+		return inFlightMessageCount;
+	}
+
+	public void setInFlightMessageCount(int inFlightMessageCount) {
+		this.inFlightMessageCount = inFlightMessageCount;
+	}
+ 
+	public boolean isConsumeInThread() {
+		return consumeInThread;
+	}
+
+	public void setConsumeInThread(boolean consumeInThread) {
+		this.consumeInThread = consumeInThread;
+	} 
+
+	public ThreadPoolExecutor getConsumeExecutor() {
+		return consumeExecutor;
+	}
+
+	public void setConsumeExecutor(ThreadPoolExecutor consumeExecutor) {
+		if(this.consumeExecutor != null && ownConsumeExecutor){
+			this.consumeExecutor.shutdown();
+		}
+		this.consumeExecutor = consumeExecutor;
+	}
+
+
+
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;

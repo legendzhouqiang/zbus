@@ -33,7 +33,10 @@ public class ServiceConfig extends MqConfig {
 	//if consumerHandler is set, messageProcessor will be disabled
 	private ConsumerHandler consumerHandler; 
 	private MessageProcessor messageProcessor; 
-	private int consumerCount = 1; 
+	private int consumerCount = 4; 
+	private boolean consumerHandlerInThread = true;
+	private int consumerHandlerThreadCount = 1000; 
+	private int inFlightMessageCount = 100;
 	private boolean verbose = false;
 	private Broker[] brokers;
 
@@ -97,6 +100,33 @@ public class ServiceConfig extends MqConfig {
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
+	}  
+	
+	
+	public int getConsumerHandlerThreadCount() {
+		return consumerHandlerThreadCount;
+	}
+
+	public void setConsumerHandlerThreadCount(int consumerHandlerThreadCount) {
+		this.consumerHandlerThreadCount = consumerHandlerThreadCount;
+	} 
+
+	public boolean isConsumerHandlerInThread() {
+		return consumerHandlerInThread;
+	}
+
+	public void setConsumerHandlerInThread(boolean consumerHandlerInThread) {
+		this.consumerHandlerInThread = consumerHandlerInThread;
+	}
+	
+	
+
+	public int getInFlightMessageCount() {
+		return inFlightMessageCount;
+	}
+
+	public void setInFlightMessageCount(int inFlightMessageCount) {
+		this.inFlightMessageCount = inFlightMessageCount;
 	}
 
 	@Override
