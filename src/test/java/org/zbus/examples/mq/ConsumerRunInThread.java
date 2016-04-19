@@ -26,7 +26,7 @@ public class ConsumerRunInThread {
 			public void handle(Message msg, Consumer consumer) throws IOException { 
 				
 				try {
-					Thread.sleep(r.nextInt(100));
+					Thread.sleep(r.nextInt(100)); //emulates work costs around 100ms
 				} catch (InterruptedException e) {
 					//
 				}

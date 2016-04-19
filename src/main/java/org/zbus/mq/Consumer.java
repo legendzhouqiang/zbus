@@ -39,7 +39,6 @@ import org.zbus.net.http.Message.MessageInvoker;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = Logger.getLogger(Consumer.class); 
-	
 	private MessageInvoker client;  
 	private String topic = null;  
 	private int consumeTimeout = 300000; // 5 minutes
@@ -164,9 +163,9 @@ public class Consumer extends MqAdmin implements Closeable {
 			throw new IllegalStateException("topic require PubSub mode");
 		}
 		this.topic = topic;
-	}
-
+	} 
 	
+	//The followings are all related to start consumer cycle in another thread
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
 	private volatile ConsumerExceptionHandler consumerExceptionHandler;
@@ -175,7 +174,6 @@ public class Consumer extends MqAdmin implements Closeable {
 	private boolean consumeInThread = false;
 	private ThreadPoolExecutor consumeExecutor;  
 	private boolean ownConsumeExecutor = false;
-	
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
@@ -333,10 +331,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumeExecutor.shutdown();
 		}
 		this.consumeExecutor = consumeExecutor;
-	}
-
-
-
+	} 
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;
