@@ -34,7 +34,7 @@ import org.zbus.net.http.Message.MessageProcessor;
 public class MessageAdaptor implements IoAdaptor{    
 	protected MessageHandler filterHandler;   
 	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
-	protected Map<String, MessageProcessor> uriHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
+	protected Map<String, MessageProcessor> urlHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
 
 	public MessageAdaptor(){ 
 		this.cmd(Message.HEARTBEAT, new MessageHandler() { 
@@ -53,7 +53,7 @@ public class MessageAdaptor implements IoAdaptor{
 			path = "/"+path;
 		}
 		
-		this.uriHandlerMap.put(path, processor);
+		this.urlHandlerMap.put(path, processor);
 		String cmd = path;
 		if(cmd.startsWith("/")){
 			cmd = cmd.substring(1);
@@ -111,11 +111,11 @@ public class MessageAdaptor implements IoAdaptor{
     		return;
     	}
     	
-    	MessageProcessor uriHandler = uriHandlerMap.get(path);
-    	if(uriHandler != null){
+    	MessageProcessor urlHandler = urlHandlerMap.get(path);
+    	if(urlHandler != null){
     		Message res = null; 
     		try{
-    			res = uriHandler.process(msg); 
+    			res = urlHandler.process(msg); 
 	    		if(res != null){
 	    			res.setId(msgId);
 	    			if(res.getStatus() == null){

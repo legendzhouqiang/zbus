@@ -38,19 +38,16 @@ import org.zbus.net.http.Message.MessageProcessor;
 
 public class Service implements Closeable {
 	private static final Logger log = Logger.getLogger(Service.class); 
-	private final ServiceConfig config; 
+	protected ServiceConfig config; 
 	private Consumer[][] consumerGroups; 
 	private boolean isStarted = false; 
 	private ThreadPoolExecutor executor; 
 	
+	public Service(){
+		
+	}
 	public Service(ServiceConfig config){
-		this.config = config;
-		if(config.getMq() == null || "".equals(config.getMq())){
-			throw new IllegalArgumentException("MQ required");
-		}
-		if(config.getMessageProcessor() == null && config.getConsumerHandler() == null){
-			throw new IllegalArgumentException("ConsumerHandler or MessageProcessor required");
-		}  
+		this.config = config; 
 	}
 	 
 	@Override
@@ -69,6 +66,16 @@ public class Service implements Closeable {
 	
 	public void start() throws IOException{ 
 		if(isStarted) return;
+		if(config == null){
+			throw new IllegalArgumentException("Missing ServiceConfig");
+		}
+		if(config.getMq() == null || "".equals(config.getMq())){
+			throw new IllegalArgumentException("MQ required");
+		}
+		if(config.getMessageProcessor() == null && config.getConsumerHandler() == null){
+			throw new IllegalArgumentException("ConsumerHandler or MessageProcessor required");
+		}  
+		
 		
 		if(config.isConsumerHandlerInThread()){
 			int n = config.getConsumerHandlerThreadCount();
