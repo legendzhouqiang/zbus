@@ -57,7 +57,7 @@ public class DiskQueuePool implements Closeable{
     public DiskQueuePool(String fileBackupPath, boolean scanDirOnStart) {
         this.fileBackupPath = fileBackupPath;
         File fileBackupDir = new File(fileBackupPath);
-        if (!fileBackupDir.exists() && !fileBackupDir.mkdir()) {
+        if (!fileBackupDir.exists() && !fileBackupDir.mkdirs()) {
             throw new IllegalArgumentException("can not create directory");
         }
         if(scanDirOnStart){
