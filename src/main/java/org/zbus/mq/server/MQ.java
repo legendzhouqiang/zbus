@@ -68,31 +68,39 @@ public class MQ extends AbstractMQ{
 	
 	void dispatch() throws IOException{  
 		while(pullQ.peek() != null && msgQ.size() > 0){
-			PullSession pull = pullQ.poll(); 
-			if(pull == null){
-				continue;
-			}
-			if( !pull.getSession().isActive() ){ 
-				continue;
-			} 
-			
-			Message msg = msgQ.poll();
-			if(msg == null){
-				continue;
-			} 
-			String expire = msg.getHead("expire");
-			if(expire != null){
-				try{
-					long value = Long.valueOf(expire);
-					if(value < System.currentTimeMillis()){
-						continue; //expired message
-					}
-				} catch(Exception e){
-					//continue;
+			Message msg = null;
+			PullSession pull = null;
+			synchronized (this) { 
+				pull = pullQ.peek();
+				if(pull == null){
+					continue;
 				}
-			}
-			this.lastUpdateTime = System.currentTimeMillis();
+				if( !pull.getSession().isActive() ){ 
+					pullQ.poll();
+					continue;
+				}  
+				
+				msg = msgQ.poll();
+				if(msg == null){
+					break;
+				} 
+				String expire = msg.getHead("expire");
+				if(expire != null){
+					try{
+						long value = Long.valueOf(expire);
+						if(value < System.currentTimeMillis()){ 
+							log.info("Remove expired message: \n" + msg); //remove message
+							continue; //expired message
+						}
+					} catch(Exception e){
+						//expired
+					}
+				} 
+				
+				pull = pullQ.poll();  
+			} 
 			
+			this.lastUpdateTime = System.currentTimeMillis(); 
 			try {  
 				Message pullMsg = pull.getPullMessage(); 
 				Message writeMsg = Message.copyWithoutBody(msg); 
