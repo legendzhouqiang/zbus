@@ -742,8 +742,10 @@ public class Message implements Id {
 			} else {
 				this.requestPath = url.substring(0, idx);
 			}  
-			if(this.requestPath.endsWith("/")){
-				this.requestPath = this.requestPath.substring(0, this.requestPath.length()-1);
+			if(!this.requestPath.equals("/")){
+				if(this.requestPath.endsWith("/")){
+					this.requestPath = this.requestPath.substring(0, this.requestPath.length()-1);
+				}
 			}
 			if(idx < 0) return;
 			if(this.requestParams == null){

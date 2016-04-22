@@ -16,7 +16,7 @@ public class MessageServerExample {
 		
 		try {
 			MessageAdaptor ioAdaptor = new MessageAdaptor(); 
-			ioAdaptor.url("/hello", new MessageProcessor() { 
+			ioAdaptor.url("/", new MessageProcessor() { 
 				@Override
 				public Message process(Message request) { 
 					Message res = new Message();
