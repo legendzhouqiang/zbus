@@ -149,6 +149,11 @@ public class DiskQueuePool implements Closeable{
     	queue.close();
     }
     
+    public synchronized void deleteDiskQueue(DiskQueue queue) { 
+    	queueMap.remove(queue.getQueueName());
+    	queue.destroyFromDisk();
+    }
+    
     public String getFileBackupPath(){
     	return this.fileBackupPath;
     }

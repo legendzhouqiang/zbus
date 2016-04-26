@@ -103,6 +103,11 @@ public class MessageDiskQueue extends MessageQueue{
 	@Override
 	public void setCreator(String value) {
 		diskQueue.setExt(2, value);
+	}
+
+	public DiskQueue getDiskQueue() {
+		return diskQueue;
 	} 
+	
 	
 }

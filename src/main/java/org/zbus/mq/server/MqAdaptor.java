@@ -278,6 +278,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.removeHead(Message.CMD);
 			if(msg.getReplyCode() != null){
 				msg.setStatus(msg.getReplyCode()); //Change to Response
+				msg.removeHead(Message.ReplyCode);
 			}
 			try{
 				target.write(msg);
@@ -313,7 +314,13 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			if(mq.masterMq != null){
     				mq.masterMq.removeSlaveMq(mq);
     			}
-    			mqTable.remove(mqName);
+    			//Clear mapped mq
+    			if(mq.msgQ instanceof MessageDiskQueue){
+    				MessageDiskQueue dq = (MessageDiskQueue)mq.msgQ;
+    				diskQueuePool.deleteDiskQueue(dq.getDiskQueue());
+    			}
+    			
+    			mqTable.remove(mqName); 
     			mq.close();
     			ReplyKit.reply200(msg, sess);
 			}

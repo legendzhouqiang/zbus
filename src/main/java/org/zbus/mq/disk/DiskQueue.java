@@ -1,5 +1,6 @@
 package org.zbus.mq.disk;
 
+import java.io.File;
 import java.util.AbstractQueue;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -140,6 +141,18 @@ public class DiskQueue extends AbstractQueue<byte[]> {
         }
         index.reset();
         index.close();
+    }
+    
+    public synchronized void destroyFromDisk(){
+    	close();
+    	File[] files = new File(this.fileBackupPath).listFiles();
+    	String indexFileName = DiskQueueIndex.indexFileName(queueName);
+    	for(File file : files){
+    		String fileName = file.getName(); 
+    		if(fileName.equals(indexFileName) || fileName.startsWith(queueName+"_")){
+    			file.delete();
+    		}
+    	}
     }
 
 	public String getQueueName() {

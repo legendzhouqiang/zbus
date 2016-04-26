@@ -113,6 +113,10 @@ public class DiskQueueIndex {
         return fileBackupDir + File.separator + String.format("%s%s", queueName, INDEX_FILE_SUFFIX);
     }
     
+    public static String indexFileName(String queueName){
+    	return String.format("%s%s", queueName, INDEX_FILE_SUFFIX);
+    }
+    
     public int getFlag(){
     	return this.flag;
     }
