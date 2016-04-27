@@ -29,12 +29,12 @@ import org.zbus.rpc.mq.ServiceConfig;
  *
  */
 public class HttpDmzProxy implements ConsumerHandler, Closeable {
-	private static final Logger log = Logger.getLogger(HttpDmzProxy.class);
-
+	private static final Logger log = Logger.getLogger(HttpDmzProxy.class); 
+	
 	private final String entry;
 	private final String prefix;
 	private final String target;
-	private int consumerCount = 2;
+	private int consumerCount = 4;
 	private Broker broker;
 	private boolean ownBroker = false;
 	public HttpDmzProxy(String brokerAddress, String entry, String target) throws IOException {
@@ -147,14 +147,10 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 		String target = ConfigKit.option(args, "-t", "127.0.0.1:8080");
-		String entry = ConfigKit.option(args, "-mq", "test");
+		String entry = ConfigKit.option(args, "-mq", "http-ws");
 		String brokerAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		int consumerCount = ConfigKit.option(args, "-c", 2);
 		
-		HttpDmzProxy proxy = new HttpDmzProxy(brokerAddress, entry, target); 
-		proxy.setConsumerCount(consumerCount);
-		
-		proxy.start();
-	}
-
+		HttpDmzProxy proxy = new HttpDmzProxy(brokerAddress, entry, target); 		
+		proxy.start(); 
+	} 
 }

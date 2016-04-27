@@ -24,6 +24,7 @@ package org.zbus.net.http;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -854,18 +855,16 @@ public class Message implements Id {
 		}
 		InputStream bodyStream = conn.getInputStream();
 		if(bodyStream != null){
-			int bodyLen = bodyStream.available();
-			if(bodyLen > 0){
-				byte[] body = new byte[bodyLen];
-				int size = bodyStream.read(body);
-				if(size == bodyLen){
-					res.setBody(body);
-				} else {
-					throw new IllegalStateException("body reading size error");
-				}
+			ByteArrayOutputStream sink = new ByteArrayOutputStream();
+			byte[] buf = new byte[1024];
+			int len = 0;
+			while((len=bodyStream.read(buf))>=0){
+				sink.write(buf, 0, len);
 			}
+			res.setBody(sink.toByteArray()); 
 		} 
 		conn.disconnect(); 
 		return res;
 	}
+	
 }
