@@ -5,7 +5,7 @@
 	<ip>0.0.0.0</ip>
 	<port>15555</port>
 	<verbose>true</verbose>
-	<mq-store>./store2</mq-store> 
+	<mq-store>./store</mq-store> 
 	<register-token></register-token>
 	<mq-fitler>false</mq-fitler>
 	<main-ip-order></main-ip-order>
