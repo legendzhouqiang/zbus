@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus> 
+
+<server>
+	<ip>0.0.0.0</ip>
+	<port>15555</port>
+	<verbose>true</verbose>
+	<mq-store>./store</mq-store> 
+	<register-token></register-token>
+	<mq-fitler>false</mq-fitler>
+	<main-ip-order></main-ip-order>
+</server> 
+
+
+<http-proxy>
+	<proxy>
+		<name>my-webservice</name>
+		<target>localhost:8080</target>
+	</proxy>
+</http-proxy>
+
+
+</zbus>
+

@@ -22,7 +22,23 @@
  */
 package org.zbus.mq.server;
 
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.zbus.net.EventDriver;
+import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServerConfig{ 
 	public String trackServerList = null;
@@ -41,6 +57,7 @@ public class MqServerConfig{
 	public String serverName = "ZbusServer";
 	public long cleanMqInterval = 3000; 
 	public long trackReportInterval = 5000;
+	public List<ProxyConfig> httpProxyConfigList;
 	
 	
 	public String getServerAddress(){
@@ -157,6 +174,56 @@ public class MqServerConfig{
 
 	public void setSslPrivateKeyFile(String sslPrivateKeyFile) {
 		this.sslPrivateKeyFile = sslPrivateKeyFile;
-	} 
+	}
+
+	public List<ProxyConfig> getHttpProxyConfigList() {
+		return httpProxyConfigList;
+	}
+
+	public void setHttpProxyConfigList(List<ProxyConfig> httpProxyConfigList) {
+		this.httpProxyConfigList = httpProxyConfigList;
+	}
+ 
 	
+	private static String valueOf(String value, String defaultValue){
+		if(value == null) return defaultValue;
+		return value;
+	}
+	private static int valueOf(String value, int defaultValue){
+		if(value == null) return defaultValue;
+		return Integer.valueOf(value);
+	}
+	private static boolean valueOf(String value, boolean defaultValue){
+		if(value == null) return defaultValue;
+		return Boolean.valueOf(value);
+	}
+	 
+	public void loadFromXml(String xmlConfigSourceFile) throws Exception{
+		XPath xpath = XPathFactory.newInstance().newXPath();   
+		InputSource source = new InputSource(xmlConfigSourceFile);  
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document document = db.parse(source);  
+		
+		this.serverHost = valueOf(xpath.evaluate("//server/ip",document), "0.0.0.0");  
+		this.serverPort = valueOf(xpath.evaluate("//server/port",document), 15555);
+		this.storePath = valueOf(xpath.evaluate("//server/mq-store",document), "./store");
+		this.verbose = valueOf(xpath.evaluate("//server/verbose",document), false);
+		this.registerToken = valueOf(xpath.evaluate("//server/register-token",document), "");
+		this.mqFilterPersist = valueOf(xpath.evaluate("//server/mq-fitler",document), false);
+		this.serverMainIpOrder = valueOf(xpath.evaluate("//server/register-token", document), null);
+		
+		XPathExpression expr = xpath.compile("//http-proxy/*");
+		NodeList list = (NodeList) expr.evaluate(document, XPathConstants.NODESET);
+		if(list != null && list.getLength()> 0){
+			this.httpProxyConfigList = new ArrayList<ProxyConfig>();
+			for (int i = 0; i < list.getLength(); i++) {
+			    Node node = list.item(i); 
+			    ProxyConfig config = new ProxyConfig();
+			    config.entry = (String) xpath.evaluate("name", node, XPathConstants.STRING);
+			    config.target = (String) xpath.evaluate("target", node, XPathConstants.STRING);
+			    this.httpProxyConfigList.add(config);
+			}
+		} 
+	} 
 }

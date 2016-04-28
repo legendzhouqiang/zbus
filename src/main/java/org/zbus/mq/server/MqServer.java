@@ -25,7 +25,9 @@ package org.zbus.mq.server;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ClassKit;
@@ -47,6 +50,8 @@ import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.MessageServer;
+import org.zbus.proxy.HttpDmzProxy;
+import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServer implements Closeable{ 
 	private static final Logger log = Logger.getLogger(MqServer.class); 
@@ -67,6 +72,7 @@ public class MqServer implements Closeable{
 	
 	private MessageServer httpServer;// you may add WebSocket Server
 	private MqAdaptor mqAdaptor;
+	private List<HttpDmzProxy> httpDmzProxies = new ArrayList<HttpDmzProxy>();
 	
 	public MqServer(){
 		this(new MqServerConfig()); //using all defaults
@@ -137,6 +143,19 @@ public class MqServer implements Closeable{
 		if(config.trackServerList != null){
 			setupTracker(config.trackServerList);
 		}
+		
+		if(config.getHttpProxyConfigList() != null){
+			for(ProxyConfig proxyConfig: config.getHttpProxyConfigList()){
+				BrokerConfig brokerConfig = new BrokerConfig();
+				brokerConfig.brokerAddress = null;//indicates JVM broker
+				brokerConfig.mqServer = this;
+				proxyConfig.brokerConfig = brokerConfig;
+				
+				HttpDmzProxy proxy = new HttpDmzProxy(proxyConfig);
+				httpDmzProxies.add(proxy);
+				proxy.start();
+			}
+		}
 	}
 	 
 	@Override
@@ -148,7 +167,9 @@ public class MqServer implements Closeable{
     		trackPub.close();
     	}
 		scheduledExecutor.shutdown();  
-		
+		for(HttpDmzProxy proxy : httpDmzProxies){
+			proxy.close();
+		}
 		mqAdaptor.close();
 		if(httpServer != null){
 			httpServer.close();
@@ -229,14 +250,26 @@ public class MqServer implements Closeable{
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig();
-		config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
-		config.serverPort = ConfigKit.option(args, "-p", 15555); 
-		config.verbose = ConfigKit.option(args, "-verbose", true);
-		config.storePath = ConfigKit.option(args, "-store", "store");
-		config.trackServerList = ConfigKit.option(args, "-track", null); 
-		config.mqFilterPersist = ConfigKit.option(args, "-mqFilter", false);
-		config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
-		config.registerToken = ConfigKit.option(args, "-regToken", ""); 
+		String xmlConfigFile = ConfigKit.option(args, "-conf", "zbus.xml");
+		boolean useCommandLine = true;
+		if(xmlConfigFile != null){
+			try{
+				config.loadFromXml(xmlConfigFile);
+				useCommandLine = false;
+			} catch(Exception ex){ 
+				log.warn(xmlConfigFile + " config error encountered, using command line config instead\n" + ex.getMessage()); 
+			}  
+		}
+		if(useCommandLine){
+			config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
+			config.serverPort = ConfigKit.option(args, "-p", 15555); 
+			config.verbose = ConfigKit.option(args, "-verbose", true);
+			config.storePath = ConfigKit.option(args, "-store", "store");
+			config.trackServerList = ConfigKit.option(args, "-track", null); 
+			config.mqFilterPersist = ConfigKit.option(args, "-mqFilter", false);
+			config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
+			config.registerToken = ConfigKit.option(args, "-regToken", ""); 
+		}
 		
 		
 		final MqServer server = new MqServer(config);

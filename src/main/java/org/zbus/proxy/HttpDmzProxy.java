@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
@@ -31,23 +32,36 @@ import org.zbus.rpc.mq.ServiceConfig;
 public class HttpDmzProxy implements ConsumerHandler, Closeable {
 	private static final Logger log = Logger.getLogger(HttpDmzProxy.class); 
 	
+	public static class ProxyConfig{
+		public BrokerConfig brokerConfig;
+		public String entry;
+		public String target;
+		public Broker broker; //priority > brokerAddress
+		public int consumerCount = 4;
+	}
+	
 	private final String entry;
 	private final String prefix;
 	private final String target;
 	private int consumerCount = 4;
 	private Broker broker;
 	private boolean ownBroker = false;
-	public HttpDmzProxy(String brokerAddress, String entry, String target) throws IOException {
-		this(new ZbusBroker(brokerAddress), entry, target);
-		ownBroker = true;
-	}
 	
-	public HttpDmzProxy(Broker broker, String entry, String target) throws IOException {
-		this.broker = broker;
-		this.entry = entry;
-		this.target = target;
+	public HttpDmzProxy(ProxyConfig config) throws IOException{
+		this.consumerCount = config.consumerCount;
+		this.entry = config.entry;
 		this.prefix = "/" + entry;
-	}
+		this.target = config.target;
+		if(config.broker != null){
+			this.broker = config.broker;
+		} else {
+			if(config.brokerConfig == null){
+				throw new IllegalArgumentException("Missing broker and brokerAddress config"); 
+			}
+			this.broker = new ZbusBroker(config.brokerConfig);
+			this.ownBroker = true;
+		}
+	} 
 	
 	@Override
 	public void handle(Message msg, final Consumer consumer) throws IOException {
@@ -85,7 +99,8 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 				res.setBody(e.getMessage() + " Not Found");
 			} else {
 				res.setStatus(500);
-				res.setBody(e.toString());
+				String error = String.format("Target(%s) invoke error, reason: %s", target, e.toString());
+				res.setBody(error);
 			}
 		}
 		
@@ -146,11 +161,12 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
-		String target = ConfigKit.option(args, "-t", "127.0.0.1:8080");
-		String entry = ConfigKit.option(args, "-mq", "http-ws");
-		String brokerAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
+		ProxyConfig config = new ProxyConfig();  
+		config.entry = ConfigKit.option(args, "-mq", "http-ws");
+		config.target = ConfigKit.option(args, "-t", "127.0.0.1:8080");
+		config.brokerConfig = new BrokerConfig(ConfigKit.option(args, "-b", "127.0.0.1:15555")); 
 		
-		HttpDmzProxy proxy = new HttpDmzProxy(brokerAddress, entry, target); 		
+		HttpDmzProxy proxy = new HttpDmzProxy(config); 		
 		proxy.start(); 
 	} 
 }
