@@ -836,7 +836,13 @@ public class Message implements Id {
 		res.setStatus(code);
 		
 		for (Entry<String, List<String>> header : conn.getHeaderFields().entrySet()){
-			if(header.getKey() == null) continue;
+			String key = header.getKey();
+			if(key == null) continue;
+			key = key.toLowerCase();
+			if(key.equals("transfer-encoding")){ //ignore transfer-encoding
+				continue;
+			}
+			
 			List<String> values = header.getValue();
 			String value = null;
 			if(values.size() == 1){
@@ -851,7 +857,7 @@ public class Message implements Id {
 					}
 				}
 			} 
-			res.setHead(header.getKey(), value);
+			res.setHead(key, value);
 		}
 		InputStream bodyStream = conn.getInputStream();
 		if(bodyStream != null){

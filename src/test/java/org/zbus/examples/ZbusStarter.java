@@ -28,5 +28,19 @@ public class ZbusStarter {
 		final MqServer server = new MqServer(config);  
 		server.start();  
 	}
+	
+	
+	@SuppressWarnings("resource")
+	public static void main_load_from_xml(String[] args) throws Exception { 
+		MqServerConfig config = new MqServerConfig();   
+		config.loadFromXml("zbus.xml");
+		
+		EventDriver eventDriver = new EventDriver(true);
+		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL on zbus
+		
+		config.setEventDriver(eventDriver); 
+		final MqServer server = new MqServer(config);  
+		server.start();  
+	}
 
 }

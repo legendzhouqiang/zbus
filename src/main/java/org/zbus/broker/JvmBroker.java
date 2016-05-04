@@ -75,12 +75,12 @@ public class JvmBroker implements Session, Broker {
 
 	@Override
 	public String getLocalAddress() {
-		return "LocalBroker-Local-" + id();
+		return "JvmBroker-Local-" + id();
 	}
 
 	@Override
 	public String getRemoteAddress() {
-		return "LocalBroker-Remote-" + id();
+		return "JvmBroker-Remote-" + id();
 	} 
 	
 	@Override
