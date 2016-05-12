@@ -9,56 +9,44 @@ import org.zbus.net.IoAdaptor;
 import org.zbus.net.Server;
 import org.zbus.net.netty.NettyServer;
 import org.zbus.net.netty.http.MessageToHttpWsCodec;
-import org.zbus.net.simple.DefaultServer;
-import org.zbus.net.simple.http.MessageCodec;
 
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 
 public class MessageServer implements Server {
-	private Server support;  
+	private Server support;
 	private EventDriver eventDriver;
 	private boolean ownEventDriver = false;
-	public MessageServer(){ 
-		 this(null);
+
+	public MessageServer() {
+		this(null);
 	}
-	
-	public MessageServer(EventDriver driver){  
-		this.eventDriver = driver; 
-		if(this.eventDriver == null){
+
+	public MessageServer(EventDriver driver) {
+		this.eventDriver = driver;
+		if (this.eventDriver == null) {
 			this.eventDriver = new EventDriver();
 			this.ownEventDriver = true;
 		} else {
 			this.ownEventDriver = false;
 		}
-		
-		if(eventDriver.isNettyEnabled()){
-			support = new NettyServer(eventDriver);  
-			support.codec(new CodecInitializer() { 
-				@Override
-				public void initPipeline(List<Object> p) { 
-					p.add(new HttpServerCodec());
-					p.add(new HttpObjectAggregator(1024*1024*10));
-					p.add(new MessageToHttpWsCodec());
-				}
-			}); 
-			
-		} else { 
-			support = new DefaultServer(eventDriver);
-			support.codec(new CodecInitializer() { 
-				@Override
-				public void initPipeline(List<Object> p) { 
-					p.add(new MessageCodec()); 
-				}
-			}); 
-		} 
+
+		support = new NettyServer(eventDriver);
+		support.codec(new CodecInitializer() {
+			@Override
+			public void initPipeline(List<Object> p) {
+				p.add(new HttpServerCodec());
+				p.add(new HttpObjectAggregator(1024 * 1024 * 10));
+				p.add(new MessageToHttpWsCodec());
+			}
+		});
+
 	}
-	 
 
 	@Override
-	public void close() throws IOException { 
+	public void close() throws IOException {
 		support.close();
-		if(ownEventDriver && eventDriver != null){
+		if (ownEventDriver && eventDriver != null) {
 			eventDriver.close();
 			eventDriver = null;
 		}
@@ -82,8 +70,8 @@ public class MessageServer implements Server {
 	@Override
 	public void join() throws InterruptedException {
 		support.join();
-	} 
-	
+	}
+
 	@Override
 	public EventDriver getEventDriver() {
 		return this.eventDriver;

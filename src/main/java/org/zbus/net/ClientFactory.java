@@ -7,7 +7,6 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.pool.ObjectFactory;
 import org.zbus.net.Sync.Id;
 import org.zbus.net.netty.NettyClient;
-import org.zbus.net.simple.DefaultClient;
 
 public class ClientFactory<REQ extends Id, RES extends Id, T extends Client<REQ, RES>> 
 	implements ObjectFactory<T>, Closeable {
@@ -20,12 +19,7 @@ public class ClientFactory<REQ extends Id, RES extends Id, T extends Client<REQ,
 	public ClientFactory(String serverAddress){
 		this(serverAddress, new EventDriver());
 		this.ownEventDriver = true;
-	}
-	
-	public ClientFactory(String serverAddress, boolean enableDefaultNio){
-		this(serverAddress, new EventDriver(enableDefaultNio));
-		this.ownEventDriver = true;
-	}
+	} 
 	
 	public ClientFactory(String serverAddress, EventDriver driver){
 		this.serverAddress = serverAddress;
@@ -53,10 +47,7 @@ public class ClientFactory<REQ extends Id, RES extends Id, T extends Client<REQ,
 	
 	@SuppressWarnings("unchecked")
 	public T createObject() { 
-		if(eventDriver.isNettyEnabled()){
-			return (T) new NettyClient<REQ,RES>(serverAddress, eventDriver); 
-		} 
-		return (T) new DefaultClient<REQ, RES>(serverAddress, eventDriver);
+		return (T) new NettyClient<REQ,RES>(serverAddress, eventDriver);  
 	} 
 	
 	@Override

@@ -1,3 +1,5 @@
+package org.zbus.net.http;
+
 /**
  * The MIT License (MIT)
  * Copyright (c) 2009-2015 HONG LEIMING
@@ -20,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.net.simple;
+
 
 /**
  * Codec handles the encoding/decoding of application object and IoBuffer on the wire.

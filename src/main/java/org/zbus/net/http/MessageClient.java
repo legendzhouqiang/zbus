@@ -10,9 +10,7 @@ import org.zbus.net.Session;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.netty.NettyClient;
-import org.zbus.net.netty.http.MessageToHttpCodec;
-import org.zbus.net.simple.DefaultClient;
-import org.zbus.net.simple.http.MessageCodec;
+import org.zbus.net.netty.http.MessageToHttpWsCodec;
 
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -21,11 +19,7 @@ public class MessageClient implements Client<Message, Message>, MessageInvoker{
 	private Client<Message, Message> support;
 	
 	public MessageClient(String address, EventDriver driver){
-		if(driver.isNettyEnabled()){
-			initNettyHttpClient(address, driver);
-		} else {
-			initDefaultHttpClient(address, driver);
-		}
+		initNettyHttpClient(address, driver); 
 		startHeartbeat(300000);//sending heartbeat every 5 minute
 	}
 	
@@ -49,33 +43,11 @@ public class MessageClient implements Client<Message, Message>, MessageInvoker{
 			public void initPipeline(List<Object> p) {
 				p.add(new HttpClientCodec());
 				p.add(new HttpObjectAggregator(1024*1024*10)); //maximum of 10M
-				p.add(new MessageToHttpCodec());
+				p.add(new MessageToHttpWsCodec());
 			}
 		});
 	}
-	
-	private void initDefaultHttpClient(String address, EventDriver driver){
-		support = new DefaultClient<Message, Message>(address, driver){
-			@Override
-			public void heartbeat() {
-				if(this.hasConnected()){
-					Message hbt = new Message();
-					hbt.setCmd(Message.HEARTBEAT);
-					try {
-						this.invokeAsync(hbt, null);
-					} catch (IOException e) {  
-						//ignore
-					}
-				}
-			}
-		};
-		codec(new CodecInitializer() { 
-			@Override
-			public void initPipeline(List<Object> p) {
-				p.add(new MessageCodec());
-			}
-		});
-	}
+	 
 	
 	@Override
 	public void heartbeat() { 

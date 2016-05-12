@@ -51,8 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.Invoker;
-import org.zbus.net.Sync.Id;
-import org.zbus.net.simple.IoBuffer; 
+import org.zbus.net.Sync.Id; 
 
 /**
  * HTTP Protocol Message, stands for both request and response formats.

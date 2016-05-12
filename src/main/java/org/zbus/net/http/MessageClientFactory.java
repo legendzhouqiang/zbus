@@ -16,10 +16,6 @@ public class MessageClientFactory extends ClientFactory<Message, Message, Messag
 		super(serverAddress);
 	}
 	
-	public MessageClientFactory(String serverAddress, boolean enableDefaultNio){
-		super(serverAddress, enableDefaultNio);
-	}
-	
 	public MessageClientFactory(String serverAddress, EventDriver driver){
 		super(serverAddress, driver); 
 	} 
