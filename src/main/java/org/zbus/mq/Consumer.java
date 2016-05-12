@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
-import org.zbus.kit.ClassKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
@@ -127,23 +126,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		} 
 	}
 
-	//FIXME Linux优化，Reply使用分离的Client(applied only for zbus.net), remove replyClient
-	private MessageInvoker replyClient; 
-	private MessageInvoker ensureReplyClient() throws IOException {
-		if(ClassKit.nettyAvailable) return this.client; //TODO
-		
-		if (this.replyClient == null) {
-			synchronized (this) {
-				if (this.replyClient == null) {
-					this.replyClient = broker.getInvoker(brokerHint());
-				}
-			}
-		}
-		return this.replyClient;
-	}
 	 
 	public void routeMessage(Message msg) throws IOException {
-		MessageInvoker invoker = ensureReplyClient();
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false); 
 
@@ -151,7 +135,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			msg.setReplyCode(msg.getStatus());
 			msg.setStatus(null);
 		} 
-		invoker.invokeAsync(msg, null); 
+		client.invokeAsync(msg, null); 
 	}
 
 	public String getTopic() {
@@ -262,15 +246,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
-		}
-
-		try {
-			if (this.replyClient != null) {
-				this.broker.closeInvoker(this.replyClient);
-			} 
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
-		}
+		} 
 	}
 	
 	public synchronized void start(ConsumerHandler handler){
