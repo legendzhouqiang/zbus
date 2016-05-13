@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker.ha;
+package org.zbus.ha;
 
 
 public class ServerEntry implements Comparable<ServerEntry>{ 

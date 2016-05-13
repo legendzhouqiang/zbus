@@ -36,8 +36,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.ha.ServerEntry;
-import org.zbus.broker.ha.TrackPub;
+import org.zbus.ha.ServerEntry;
+import org.zbus.ha.TrackPub;
 import org.zbus.kit.ClassKit;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.NetKit;

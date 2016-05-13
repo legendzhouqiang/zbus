@@ -20,11 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.broker;
+package org.zbus.ha;
 
 import java.io.Closeable;
 import java.util.List;
 
+import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;

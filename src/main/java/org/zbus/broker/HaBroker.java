@@ -25,7 +25,8 @@ package org.zbus.broker;
 import java.io.IOException;
 import java.util.List;
 
-import org.zbus.broker.ha.DefaultBrokerSelector;
+import org.zbus.ha.DefaultBrokerSelector;
+import org.zbus.ha.BrokerSelector;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
