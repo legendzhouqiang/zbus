@@ -33,8 +33,8 @@ import org.zbus.net.Sync.Id;
  
 
 /**
- * Sync maintains all the request and response table, converting asynchronous mechanism into
- * synchonous one
+ * Sync maintains all the request and response table, converting asynchronous into
+ * synchronous
  * 
  * @author rushmore (洪磊明)
  *

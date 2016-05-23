@@ -12,7 +12,7 @@ public class RpcClient {
 	
 	public static void main(String[] args) throws Exception {   
 		
-		Broker broker = new ZbusBroker("[127.0.0.1:16666;127.0.0.1:16667]"); 
+		Broker broker = new ZbusBroker("127.0.0.1:16666;127.0.0.1:16667"); 
 		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");  
 		
 

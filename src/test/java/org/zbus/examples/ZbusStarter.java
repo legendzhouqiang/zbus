@@ -14,7 +14,7 @@ public class ZbusStarter {
 	 * -Dnio=znet/netty 
 	 */
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception { 
+	public static void main_simple(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
 		config.serverPort = 15555; 
 		config.verbose = true; //print out message
@@ -30,7 +30,7 @@ public class ZbusStarter {
 	
 	
 	@SuppressWarnings("resource")
-	public static void main_load_from_xml(String[] args) throws Exception { 
+	public static void main(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
 		config.loadFromXml("zbus.xml");
 		

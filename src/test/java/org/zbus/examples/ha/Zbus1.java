@@ -11,7 +11,7 @@ public class Zbus1 {
 		config.verbose = true; //print out message
 		config.storePath = "./store1";  
 		config.verbose = true; 
-		config.trackServerList = "127.0.0.1:16666";
+		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
 		  
 		
 		final MqServer server = new MqServer(config);  

@@ -17,7 +17,7 @@ public class HelloWorldClient {
 	}
 	
 	public static void main(String[] args) throws Exception { 
-		String addressRaw = "http://localhost:8080/my-webservice/?wsdl";
+		String addressRaw = "http://localhost:8080/?wsdl";
 		String addressZbus = "http://localhost:15555/my-webservice/?wsdl";
 		test(addressRaw);
 		test(addressZbus);
