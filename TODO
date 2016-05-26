@@ -8,3 +8,5 @@
 	加入其它视图 
   
 4. DirectRPC中去除EntryID的侵入
+
+5. PubSub 做持久化支持
