@@ -1,4 +1,4 @@
-package org.zbus.net.netty;
+package org.zbus.net.tcp;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +53,7 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	} 
 	
 	private Session attachSession(ChannelHandlerContext ctx){
-		Session sess = new NettySession(ctx); 
+		Session sess = new TcpSession(ctx); 
 		Attribute<String> attr = ctx.attr(sessionKey); 
 		attr.set(sess.id()); 
 		sessionMap.put(sess.id(), sess);

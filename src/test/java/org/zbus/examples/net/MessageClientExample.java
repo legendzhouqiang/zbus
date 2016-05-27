@@ -16,7 +16,7 @@ public class MessageClientExample {
 		
 		try { 
 			Message msg = new Message();
-			msg.setUrl("/hello");
+			msg.setUrl("/");
 			
 			Message res = client.invokeSync(msg);
 			System.out.println(res);

@@ -1,4 +1,4 @@
-package org.zbus.net.netty.http;
+package org.zbus.net.http;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.zbus.kit.log.Logger;
-import org.zbus.net.http.IoBuffer;
-import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageCodec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

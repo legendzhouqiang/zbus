@@ -1,4 +1,4 @@
-package org.zbus.net.netty;
+package org.zbus.net.tcp;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,8 +27,8 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 
-public class NettyServer implements Server {
-	private static final Logger log = Logger.getLogger(NettyServer.class);
+public class TcpServer implements Server {
+	private static final Logger log = Logger.getLogger(TcpServer.class);
 	  
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
@@ -37,9 +37,9 @@ public class NettyServer implements Server {
 	private EventDriver eventDriver;
 	private boolean ownEventDriver;
 	
-	protected Map<Integer, ServiceInfo> serviceMap = new ConcurrentHashMap<Integer, ServiceInfo>();
+	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
  
-	static class ServiceInfo{
+	static class ServerInfo{
 		ServerBootstrap bootstrap;
 		ChannelFuture serverChanneFuture;
 	} 
@@ -64,7 +64,7 @@ public class NettyServer implements Server {
 		
 		private CodecInitializer getCodecInitializer(){
 			if(this.codecInitializer != null) return this.codecInitializer;
-			return NettyServer.this.codecInitializer;
+			return TcpServer.this.codecInitializer;
 		}
 		
 		@Override
@@ -88,21 +88,27 @@ public class NettyServer implements Server {
 		} 
 	}
 	 
-	public NettyServer(){
-		this(new EventDriver());
-		this.ownEventDriver = true;
+	public TcpServer(){
+		this(null); 
 	}
 	
-	public NettyServer(EventDriver driver){ 
-		this.eventDriver = driver;
-		driver.validateNetty();
+	public TcpServer(EventDriver driver){ 
+		this.eventDriver = driver; 
+		if (this.eventDriver == null) {
+			this.eventDriver = new EventDriver();
+			this.ownEventDriver = true;
+		} else {
+			this.ownEventDriver = false;
+		}
 		
-		this.bossGroup = (EventLoopGroup)driver.getGroup();
-		this.workerGroup = (EventLoopGroup)driver.getWorkerGroup(); 
+		eventDriver.validate();
+		
+		this.bossGroup = (EventLoopGroup)eventDriver.getGroup();
+		this.workerGroup = (EventLoopGroup)eventDriver.getWorkerGroup(); 
 		if(this.workerGroup == null){
 			this.workerGroup = this.bossGroup;
 		}
-		this.sslCtx = (SslContext)driver.getSslContext();
+		this.sslCtx = (SslContext)eventDriver.getSslContext();
 	}
 	
 	
@@ -116,7 +122,7 @@ public class NettyServer implements Server {
 	
 	 
 	public void join() throws InterruptedException {
-		for(Entry<Integer, ServiceInfo> e : serviceMap.entrySet()){
+		for(Entry<Integer, ServerInfo> e : serverMap.entrySet()){
 			ChannelFuture cf = e.getValue().serverChanneFuture;
 			cf.sync().channel().closeFuture().sync();
 		}
@@ -136,7 +142,7 @@ public class NettyServer implements Server {
 		 .handler(new LoggingHandler(LogLevel.INFO))
 		 .childHandler(new MyChannelInitializer(ioAdaptor));
 		
-		ServiceInfo info = new ServiceInfo(); 
+		ServerInfo info = new ServerInfo(); 
 		info.bootstrap = b;
 		info.serverChanneFuture = b.bind(host, port).addListener(new ChannelFutureListener() {
 			@Override
@@ -149,7 +155,7 @@ public class NettyServer implements Server {
 				}
 			}
 		}); 
-		serviceMap.put(port, info);
+		serverMap.put(port, info);
 	}  
 	public EventDriver getEventDriver() {
 		return this.eventDriver;

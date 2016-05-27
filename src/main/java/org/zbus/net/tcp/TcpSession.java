@@ -1,4 +1,4 @@
-package org.zbus.net.netty;
+package org.zbus.net.tcp;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -9,12 +9,12 @@ import org.zbus.net.Session;
 
 import io.netty.channel.ChannelHandlerContext;
 
-public class NettySession implements Session {
+public class TcpSession implements Session {
 	private ChannelHandlerContext ctx;
 	private final String id;
 	private ConcurrentMap<String, Object> attributes = null;
 	
-	public NettySession(ChannelHandlerContext ctx) {
+	public TcpSession(ChannelHandlerContext ctx) {
 		this.ctx = ctx;
 		this.id = UUID.randomUUID().toString();
 	}
@@ -89,7 +89,7 @@ public class NettySession implements Session {
 	
 	@Override
 	public String toString() { 
-		return "NettySession ["
+		return "TcpSession ["
 				+ "remote=" + getRemoteAddress()
 				+ ", active=" + isActive()   
 				+ "]"; 

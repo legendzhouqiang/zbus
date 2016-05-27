@@ -147,7 +147,7 @@ public class EventDriver implements Closeable {
 		}
 	}
 
-	public void validateNetty() {
+	public void validate() {
 		checkNettyGroup("bossGroup", bossGroup);
 		checkNettyGroup("workerGroup", workerGroup);
 	}  

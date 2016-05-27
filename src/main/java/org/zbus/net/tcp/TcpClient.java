@@ -1,6 +1,8 @@
-package org.zbus.net;
+package org.zbus.net.tcp;
  
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -9,36 +11,60 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.net.Client;
+import org.zbus.net.CodecInitializer;
+import org.zbus.net.EventDriver;
+import org.zbus.net.Session;
+import org.zbus.net.Sync;
 import org.zbus.net.Sync.Id;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.Sync.Ticket;
- 
-public abstract class ClientAdaptor<REQ extends Id, RES extends Id> implements Client<REQ, RES> { 
-	private static final Logger log = Logger.getLogger(ClientAdaptor.class); 
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.SslContext;
+
+
+public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RES> {
+	private static final Logger log = Logger.getLogger(TcpClient.class); 
 	
-	protected Session session;
+	protected Bootstrap bootstrap;
+	protected final EventLoopGroup group;  
+	protected SslContext sslCtx;
+	protected ChannelFuture channelFuture; 
 	
+	protected Session session; 
 	protected final String host;
 	protected final int port; 
 	protected int readTimeout = 3000;
 	protected int connectTimeout = 3000; 
-	protected CountDownLatch activeLatch = new CountDownLatch(1); 
+	protected CountDownLatch activeLatch = new CountDownLatch(1);
+	
+	protected ConcurrentMap<String, Object> attributes = null; 
 	
 	protected volatile MsgHandler<RES> msgHandler; 
 	protected volatile ErrorHandler errorHandler;
 	protected volatile ConnectedHandler connectedHandler;
-	protected volatile DisconnectedHandler disconnectedHandler;
+	protected volatile DisconnectedHandler disconnectedHandler; 
 	
-	protected volatile ScheduledExecutorService heartbeator = null;
-	
-	protected ConcurrentMap<String, Object> attributes = null;
-	
-	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();
+	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>(); 
 	
 	protected CodecInitializer codecInitializer; 
 	protected Thread asyncConnectThread; 
-	 
-	public ClientAdaptor(String address){
+	protected volatile ScheduledExecutorService heartbeator = null;
+	
+	
+	public TcpClient(String address, EventDriver driver){ 
+		driver.validate(); 
+		group = (EventLoopGroup)driver.getGroup();
+		sslCtx = (SslContext)driver.getSslContext();
+		
 		String[] bb = address.split(":");
 		if(bb.length > 2) {
 			throw new IllegalArgumentException("Address invalid: "+ address);
@@ -66,6 +92,45 @@ public abstract class ClientAdaptor<REQ extends Id, RES extends Id> implements C
 			}
 		});
 	}
+	
+	public synchronized void connectAsync(){  
+		init(); 
+		
+		channelFuture = bootstrap.connect(host, port);
+	}   
+	
+	private void init(){
+		if(bootstrap != null) return;
+		
+		bootstrap = new Bootstrap();
+		bootstrap.group(this.group) 
+		 .channel(NioSocketChannel.class)  
+		 .handler(new ChannelInitializer<SocketChannel>() { 
+			NettyToIoAdaptor nettyToIoAdaptor = new NettyToIoAdaptor(TcpClient.this);
+			@Override
+			protected void initChannel(SocketChannel ch) throws Exception { 
+				if(codecInitializer == null){
+					throw new IllegalStateException("Missing codecInitializer");
+				}
+				
+				ChannelPipeline p = ch.pipeline();
+				if(sslCtx != null){
+					p.addLast(sslCtx.newHandler(ch.alloc()));
+				}
+				if(codecInitializer != null){
+					List<Object> handlers = new ArrayList<Object>();
+					codecInitializer.initPipeline(handlers);
+					for(Object handler : handlers){
+						if(!(handler instanceof ChannelHandler)){
+							throw new IllegalArgumentException("Invalid ChannelHandler: " + handler);
+						} 
+						p.addLast((ChannelHandler)handler);
+					}
+				}
+				p.addLast(nettyToIoAdaptor);
+			}
+		});  
+	}  
 	
 	private synchronized void cleanSession() throws IOException{
 		if(session != null){
@@ -130,16 +195,12 @@ public abstract class ClientAdaptor<REQ extends Id, RES extends Id> implements C
 		if(hasConnected()) return; 
 		
 		synchronized (this) {
-			while(!hasConnected()){
-				try {
-		    		connectAsync();
-					activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
-					
-					if(hasConnected()){ 
-						break;
-					}
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
+			while(!hasConnected()){ 
+	    		connectAsync();
+				activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
+				
+				if(hasConnected()){ 
+					break;
 				} 
 				
 				String msg = String.format("Connection(%s:%d) timeout, trying again in %.1f seconds",
@@ -323,4 +384,5 @@ public abstract class ClientAdaptor<REQ extends Id, RES extends Id> implements C
 	public String toString() { 
 		return String.format("(connected=%s, remote=%s:%d)", hasConnected(), host, port);
 	}
+	 
 }
