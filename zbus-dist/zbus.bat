@@ -5,7 +5,7 @@ SET JAVA_OPTS=-server -Xms64m -Xmx1024m -XX:+UseParallelGC
 SET MAIN_CLASS=org.zbus.mq.server.MqServer 
 REM -ipOrder *>172>192
 SET MAIN_OPTS=-conf zbus.xml -h 0.0.0.0 -p 15555 -verbose false -store store -track
-SET LIB_OPTS=%ZBUS_HOME%/enhancement/*;%ZBUS_HOME%/lib/*;%ZBUS_HOME%/classes;%ZBUS_HOME%/*;
+SET LIB_OPTS=%ZBUS_HOME%/lib/*;%ZBUS_HOME%/classes;%ZBUS_HOME%/*;
 
 IF NOT EXIST "%JAVA_HOME%" (
     SET JAVA=java
