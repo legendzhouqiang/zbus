@@ -142,8 +142,7 @@ public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message>
 		
 		super.channelRead(ctx, msg);
 	}
-
-	MessageCodec messageCodec = new MessageCodec();
+ 
 	private Message decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 		// Check for closing frame
 		if (frame instanceof CloseWebSocketFrame) {
@@ -173,9 +172,8 @@ public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message>
 	private Message parseMessage(ByteBuf buf){
 		int size = buf.readableBytes();
 		byte[] data = new byte[size];
-		buf.readBytes(data);
-		IoBuffer ioBuffer = IoBuffer.wrap(data);
-		Message msg = (Message)messageCodec.decode(ioBuffer);  
+		buf.readBytes(data); 
+		Message msg = Message.parse(data); 
 		if(msg == null){
 			log.warn("Message format error: " + new String(data));
 		}

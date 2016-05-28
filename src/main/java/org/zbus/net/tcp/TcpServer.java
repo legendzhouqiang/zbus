@@ -28,66 +28,14 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 
 public class TcpServer implements Server {
-	private static final Logger log = Logger.getLogger(TcpServer.class);
-	  
-	private EventLoopGroup bossGroup;
-	private EventLoopGroup workerGroup;
-	private final SslContext sslCtx; 
-	
-	private EventDriver eventDriver;
-	private boolean ownEventDriver;
-	
-	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
- 
-	static class ServerInfo{
-		ServerBootstrap bootstrap;
-		ChannelFuture serverChanneFuture;
-	} 
+	private static final Logger log = Logger.getLogger(TcpServer.class); 
 	
 	protected CodecInitializer codecInitializer; 
-	public void codec(CodecInitializer codecInitializer) {
-		this.codecInitializer = codecInitializer;
-	} 
-	
-	
-	class MyChannelInitializer extends ChannelInitializer<SocketChannel>{ 
-		private NettyToIoAdaptor nettyToIoAdaptor;
-		private CodecInitializer codecInitializer;
-		
-		public MyChannelInitializer(IoAdaptor ioAdaptor){
-			this(ioAdaptor, null);
-		}
-		public MyChannelInitializer(IoAdaptor ioAdaptor, CodecInitializer codecInitializer){ 
-			this.nettyToIoAdaptor = new NettyToIoAdaptor(ioAdaptor);
-			this.codecInitializer = codecInitializer;
-		}
-		
-		private CodecInitializer getCodecInitializer(){
-			if(this.codecInitializer != null) return this.codecInitializer;
-			return TcpServer.this.codecInitializer;
-		}
-		
-		@Override
-		protected void initChannel(SocketChannel ch) throws Exception { 
-			ChannelPipeline p = ch.pipeline();
-			if(sslCtx != null){
-				p.addLast(sslCtx.newHandler(ch.alloc()));
-			}
-			CodecInitializer initializer = getCodecInitializer();
-			if(initializer != null){
-				List<Object> handlers = new ArrayList<Object>();
-				initializer.initPipeline(handlers);
-				for(Object handler : handlers){
-					if(handler instanceof ChannelHandler){
-						p.addLast((ChannelHandler)handler);
-					} 
-				}
-			}	
-			
-			p.addLast(this.nettyToIoAdaptor);
-		} 
-	}
-	 
+	protected EventDriver eventDriver;
+	protected boolean ownEventDriver; 
+	//Port ==> Server IoAdaptor
+	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
+  
 	public TcpServer(){
 		this(null); 
 	}
@@ -101,16 +49,8 @@ public class TcpServer implements Server {
 			this.ownEventDriver = false;
 		}
 		
-		eventDriver.validate();
-		
-		this.bossGroup = (EventLoopGroup)eventDriver.getGroup();
-		this.workerGroup = (EventLoopGroup)eventDriver.getWorkerGroup(); 
-		if(this.workerGroup == null){
-			this.workerGroup = this.bossGroup;
-		}
-		this.sslCtx = (SslContext)eventDriver.getSslContext();
-	}
-	
+		eventDriver.validate(); 
+	} 
 	
 	@Override
 	public void close() throws IOException {
@@ -118,8 +58,7 @@ public class TcpServer implements Server {
 			eventDriver.close();
 			eventDriver = null;
 		}
-	}
-	
+	} 
 	 
 	public void join() throws InterruptedException {
 		for(Entry<Integer, ServerInfo> e : serverMap.entrySet()){
@@ -135,6 +74,12 @@ public class TcpServer implements Server {
 
 	@Override
 	public void start(final String host, final int port, IoAdaptor ioAdaptor) {
+		EventLoopGroup bossGroup = (EventLoopGroup)eventDriver.getGroup();
+		EventLoopGroup workerGroup = (EventLoopGroup)eventDriver.getWorkerGroup(); 
+		if(workerGroup == null){
+			workerGroup = bossGroup;
+		} 
+		
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(bossGroup, workerGroup)
 		 .option(ChannelOption.SO_BACKLOG, 10240)
@@ -156,8 +101,57 @@ public class TcpServer implements Server {
 			}
 		}); 
 		serverMap.put(port, info);
-	}  
+	} 
+	
 	public EventDriver getEventDriver() {
 		return this.eventDriver;
 	}
+	
+	public void codec(CodecInitializer codecInitializer) {
+		this.codecInitializer = codecInitializer;
+	} 
+	
+	static class ServerInfo{
+		ServerBootstrap bootstrap;
+		ChannelFuture serverChanneFuture;
+	}  
+	
+	class MyChannelInitializer extends ChannelInitializer<SocketChannel>{ 
+		private NettyToIoAdaptor nettyToIoAdaptor;
+		private CodecInitializer codecInitializer;
+		
+		public MyChannelInitializer(IoAdaptor ioAdaptor){
+			this(ioAdaptor, null);
+		}
+		public MyChannelInitializer(IoAdaptor ioAdaptor, CodecInitializer codecInitializer){ 
+			this.nettyToIoAdaptor = new NettyToIoAdaptor(ioAdaptor);
+			this.codecInitializer = codecInitializer;
+		}
+		
+		private CodecInitializer getCodecInitializer(){
+			if(this.codecInitializer != null) return this.codecInitializer;
+			return TcpServer.this.codecInitializer;
+		}
+		
+		@Override
+		protected void initChannel(SocketChannel ch) throws Exception { 
+			ChannelPipeline p = ch.pipeline();
+			SslContext sslCtx = (SslContext)eventDriver.getSslContext();
+			if(sslCtx != null){
+				p.addLast(sslCtx.newHandler(ch.alloc()));
+			}
+			CodecInitializer initializer = getCodecInitializer();
+			if(initializer != null){
+				List<Object> handlers = new ArrayList<Object>();
+				initializer.initPipeline(handlers);
+				for(Object handler : handlers){
+					if(handler instanceof ChannelHandler){
+						p.addLast((ChannelHandler)handler);
+					} 
+				}
+			}	 
+			p.addLast(this.nettyToIoAdaptor);
+		} 
+	}
+	 
 }

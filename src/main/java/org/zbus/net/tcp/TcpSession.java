@@ -89,7 +89,7 @@ public class TcpSession implements Session {
 	
 	@Override
 	public String toString() { 
-		return "TcpSession ["
+		return "Session ["
 				+ "remote=" + getRemoteAddress()
 				+ ", active=" + isActive()   
 				+ "]"; 

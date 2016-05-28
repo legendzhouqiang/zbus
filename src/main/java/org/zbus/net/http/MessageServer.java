@@ -20,7 +20,7 @@ public class MessageServer extends TcpServer {
 			@Override
 			public void initPipeline(List<Object> p) {
 				p.add(new HttpServerCodec());
-				p.add(new HttpObjectAggregator(1024 * 1024 * 10));
+				p.add(new HttpObjectAggregator(1024 * 1024 * 32));
 				p.add(new MessageToHttpWsCodec());
 			}
 		}); 

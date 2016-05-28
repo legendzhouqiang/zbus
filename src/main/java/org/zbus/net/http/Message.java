@@ -322,41 +322,43 @@ public class Message implements Id {
 	}
 	
 	//////////////////////////////////////////////////////////////
-	
-	public void decodeHeaders(byte[] data, int offset, int size){
-		ByteArrayInputStream inputStream = null;
+	public void decodeHeaders(InputStream in){ 
 		InputStreamReader inputStreamReader = null;
-		BufferedReader in = null;
-		try{ 
-			inputStream = new ByteArrayInputStream(data, offset, size);
-			inputStreamReader = new InputStreamReader(inputStream);
-			in = new BufferedReader(inputStreamReader);
-			String meta = in.readLine();
+		BufferedReader bufferedReader = null;
+		try{  
+			inputStreamReader = new InputStreamReader(in);
+			bufferedReader = new BufferedReader(inputStreamReader);
+			String meta = bufferedReader.readLine();
 			if(meta == null) return;
 			this.meta = new Meta(meta);
 			
-			String line = in.readLine();
+			String line = bufferedReader.readLine();
 	        while (line != null && line.trim().length() > 0) {
 	            int p = line.indexOf(':');
 	            if (p >= 0){ 
 	                head.put(line.substring(0, p).trim().toLowerCase(), line.substring(p + 1).trim());
 	            } 
-	            line = in.readLine();
+	            line = bufferedReader.readLine();
 	        }
 	       
 		} catch(IOException e){ 
 			log.error(e.getMessage(), e);
 		} finally {
-			if(in != null){
-				try { in.close(); } catch (IOException e) {}
+			if(bufferedReader != null){
+				try { bufferedReader.close(); } catch (IOException e) {}
 			}
 			if(inputStreamReader != null){
 				try { inputStreamReader.close(); } catch (IOException e) {}
-			}
-			if(inputStream != null){
-				try { inputStream.close(); } catch (IOException e) {}
-			}
+			} 
 		}
+	}
+	
+	public void decodeHeaders(byte[] data, int offset, int size){
+		ByteArrayInputStream in = new ByteArrayInputStream(data, offset, size);
+		decodeHeaders(in);
+		if(in != null){
+			try { in.close(); } catch (IOException e) {}
+		} 
 	}
 	
 	public String getCmd() { 
@@ -558,6 +560,7 @@ public class Message implements Id {
 	
 	static final byte[] CLCR = "\r\n".getBytes();
 	static final byte[] KV_SPLIT = ": ".getBytes();
+	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -579,29 +582,82 @@ public class Message implements Id {
 	} 
 	
 	public byte[] toBytes(){
-		IoBuffer bb = toIoBuffer(); 
-		byte[] b = new byte[bb.remaining()];
-		bb.readBytes(b);
-		return b;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			writeTo(out);
+		} catch (IOException e) {
+			return null;
+		}
+		return out.toByteArray(); 
+	} 
+	
+	private static int findHeaderEnd(byte[] data){ 
+		int i = 0;
+		int limit = data.length;
+		while(i+3<limit){
+			if(data[i] != '\r') {
+				i += 1;
+				continue;
+			}
+			if(data[i+1] != '\n'){
+				i += 1;
+				continue;
+			}
+			
+			if(data[i+2] != '\r'){
+				i += 3;
+				continue;
+			}
+			
+			if(data[i+3] != '\n'){
+				i += 3;
+				continue;
+			}
+			
+			return i+3; 
+		}
+		return -1;
 	}
 	
-	public IoBuffer toIoBuffer(){
-		IoBuffer bb = meta.toIoBuffer();
-		bb.writeBytes(CLCR);
+	public static Message parse(byte[] data){
+		int idx = findHeaderEnd(data);
+		if(idx == -1){
+			throw new IllegalArgumentException("Invalid input byte array");
+		}
+		int headLen = idx + 1;
+		Message msg = new Message();
+		msg.decodeHeaders(data, 0, headLen);
+		String contentLength = msg.getHead(Message.CONTENT_LENGTH);
+		if(contentLength == null){ //just head 
+			return msg;
+		}
+		
+		int bodyLen = Integer.valueOf(contentLength);   
+		if(data.length != headLen + bodyLen) {
+			throw new IllegalArgumentException("Invalid input byte array");
+		}
+		byte[] body = new byte[bodyLen];
+		System.arraycopy(data, headLen, body, 0, bodyLen);
+		msg.setBody(body); 
+		
+		return msg; 
+	}
+	
+	private void writeTo(OutputStream out) throws IOException{
+		meta.writeTo(out);
+		out.write(CLCR);
 		Iterator<Entry<String, String>> it = head.entrySet().iterator();
 		while(it.hasNext()){
 			Entry<String, String> kv = it.next();
-			bb.writeBytes(kv.getKey().getBytes());
-			bb.writeBytes(KV_SPLIT);
-			bb.writeBytes(kv.getValue().getBytes());
-			bb.writeBytes(CLCR);
+			out.write(kv.getKey().getBytes());
+			out.write(KV_SPLIT);
+			out.write(kv.getValue().getBytes());
+			out.write(CLCR);
 		}
-		bb.writeBytes(CLCR);
+		out.write(CLCR);
 		if(body != null){
-			bb.writeBytes(body);
+			out.write(body);
 		}
-		bb.flip();
-		return bb;
 	} 
 
 	static class Meta{  
@@ -645,37 +701,41 @@ public class Message implements Id {
 		
 		@Override
 		public String toString() { 
-			IoBuffer buf = toIoBuffer().flip(); 
-			return new String(buf.array(), 0, buf.remaining());
-		}
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			try {
+				writeTo(out);
+				return new String(out.toByteArray());
+			} catch (IOException e) {
+				//ignore
+				return null;
+			} 
+		} 
 		
-		final static byte[] BLANK = " ".getBytes();
-		final static byte[] PREFIX = "HTTP/1.1 ".getBytes();
-		final static byte[] SUFFIX = " HTTP/1.1".getBytes(); 
-		public IoBuffer toIoBuffer(){
-			IoBuffer bb = IoBuffer.allocate(1024); 
+		public void writeTo(OutputStream out) throws IOException{
 			if(this.status != null){
 				String desc = httpStatus.get(this.status);
 				if(desc == null){
 					desc = "Unknown Status";
 				}
-				bb.writeBytes(PREFIX);
-				bb.writeString(status);
-				bb.writeBytes(BLANK);
-				bb.writeString(desc);  
+				out.write(PREFIX);
+				out.write(status.getBytes());
+				out.write(BLANK);
+				out.write(desc.getBytes());  
 			} else {
 				String method = this.method; 
 				if(method == null) method = ""; 
-				bb.writeString(method);
-				bb.writeBytes(BLANK); 
+				out.write(method.getBytes());
+				out.write(BLANK); 
 				String requestString = this.url;
 				if(requestString == null) requestString = "";
-				bb.writeString(requestString);
-				bb.writeBytes(SUFFIX); 
+				out.write(requestString.getBytes());
+				out.write(SUFFIX); 
 			}
-			return bb;
-		}
-		
+		} 
+		final static byte[] BLANK = " ".getBytes();
+		final static byte[] PREFIX = "HTTP/1.1 ".getBytes();
+		final static byte[] SUFFIX = " HTTP/1.1".getBytes(); 
+		 
 		public Meta(){ }
 		
 		public Meta(Meta m){

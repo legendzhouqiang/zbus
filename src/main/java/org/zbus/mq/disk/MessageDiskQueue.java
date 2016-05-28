@@ -24,13 +24,9 @@ package org.zbus.mq.disk;
 
 import java.util.Iterator;
 
-import org.zbus.net.http.IoBuffer;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.MessageCodec;
 
 public class MessageDiskQueue extends MessageQueue{
-	private static final MessageCodec codec = new MessageCodec();
-	
 	private final DiskQueue diskQueue;
 	private final String name;
 	
@@ -57,7 +53,7 @@ public class MessageDiskQueue extends MessageQueue{
 	public Message poll() {
 		byte[] bytes = diskQueue.poll();
 		if(bytes == null) return null;
-		return (Message)codec.decode(IoBuffer.wrap(bytes));
+		return Message.parse(bytes);
 	}
 
 	@Override

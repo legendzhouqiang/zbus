@@ -38,27 +38,24 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected final EventLoopGroup group;  
 	protected SslContext sslCtx;
 	protected ChannelFuture channelFuture; 
+	protected CodecInitializer codecInitializer; 
 	
 	protected Session session; 
 	protected final String host;
 	protected final int port; 
 	protected int readTimeout = 3000;
 	protected int connectTimeout = 3000; 
-	protected CountDownLatch activeLatch = new CountDownLatch(1);
+	protected CountDownLatch activeLatch = new CountDownLatch(1);  
 	
-	protected ConcurrentMap<String, Object> attributes = null; 
+	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>(); 
+	protected ConcurrentMap<String, Object> attributes = null;
+	
+	protected volatile ScheduledExecutorService heartbeator = null;
 	
 	protected volatile MsgHandler<RES> msgHandler; 
 	protected volatile ErrorHandler errorHandler;
 	protected volatile ConnectedHandler connectedHandler;
-	protected volatile DisconnectedHandler disconnectedHandler; 
-	
-	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>(); 
-	
-	protected CodecInitializer codecInitializer; 
-	protected Thread asyncConnectThread; 
-	protected volatile ScheduledExecutorService heartbeator = null;
-	
+	protected volatile DisconnectedHandler disconnectedHandler;  
 	
 	public TcpClient(String address, EventDriver driver){ 
 		driver.validate(); 
@@ -169,6 +166,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		return session != null && session.isActive();
 	}
 	
+	private Thread asyncConnectThread; 
 	public void ensureConnectedAsync(){
 		if(hasConnected()) return;
 		if(asyncConnectThread != null) return;
