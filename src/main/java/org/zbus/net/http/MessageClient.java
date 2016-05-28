@@ -20,7 +20,7 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 			@Override
 			public void initPipeline(List<Object> p) {
 				p.add(new HttpClientCodec());
-				p.add(new HttpObjectAggregator(1024*1024*32)); //maximum of 10M
+				p.add(new HttpObjectAggregator(1024*1024*32)); //maximum of 32M
 				p.add(new MessageToHttpWsCodec());
 			}
 		});
