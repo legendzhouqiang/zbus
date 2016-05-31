@@ -22,8 +22,6 @@
  */
 package org.zbus.ha;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,36 +33,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
 
-public class ServerEntryTable implements Closeable{
+public class ServerEntryTable{
 	private static final Logger log = Logger.getLogger(ServerEntryTable.class);
 	//entry_id ==> list of same entries from different target_servers
-	private Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
+	public Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
 	//server_addr ==> list of entries from same target server
-	private Map<String, Set<ServerEntry>> server2EntryList = new ConcurrentHashMap<String, Set<ServerEntry>>(); 
-
-	private final ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
-	
-	private boolean verbose = false;
-	private int dumpInterval = 3000;
-	
-	public ServerEntryTable(){
-		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
-			@Override
-			public void run() { 
-				if(verbose) dump();
-			}
-		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
-	} 
-	
-	public void setDumpInterval(int dumpInterval) {
-		this.dumpInterval = dumpInterval;
-	}
+	public Map<String, Set<ServerEntry>> server2EntryList = new ConcurrentHashMap<String, Set<ServerEntry>>(); 
 	
 	public void dump(){
 		System.out.format("===============ServerEntryTable(%s)===============\n", new Date());
@@ -182,6 +159,10 @@ public class ServerEntryTable implements Closeable{
 	
 	public String pack(){ 
 		StringBuilder sb = new StringBuilder(); 
+		for(String server : server2EntryList.keySet()){
+			sb.append(server + "\n");
+		}
+		sb.append("\r\n");
 		for(Set<ServerEntry> entryList : server2EntryList.values()){
 			for(ServerEntry se : entryList){
 				sb.append(se.pack() + "\n");
@@ -193,38 +174,31 @@ public class ServerEntryTable implements Closeable{
 		return sb.toString();
 	}
 	
-	public static List<ServerEntry> unpack(String packedString){
-		List<ServerEntry> res = new ArrayList<ServerEntry>();
-		String[] ss = packedString.split("[\n]");
+	public static ServerEntryTable unpack(String packedString){
+		ServerEntryTable table = new ServerEntryTable(); 
+		String[] bb = packedString.split("\r\n");
+		if(bb.length != 2){
+			log.error("PubAll message invalid" + packedString);
+			return table;
+		}
+		String[] ss = bb[0].split("[\n]");
 		for(String s : ss){
+			s = s.trim();
+			if(s.length() == 0) continue;
+			table.addServer(s);
+		}
+		ss = bb[1].split("[\n]"); 
+		for(String s : ss){
+			s = s.trim();
+			if(s.length() == 0) continue;
 			ServerEntry se = ServerEntry.unpack(s);
 			if(se != null){
-				res.add(se);
+				table.updateServerEntry(se);
 			}
 		}
-		return res;
+		return table;
 	}
-	
-	@Override
-	public void close() throws IOException {  
-		dumpExecutor.shutdown(); 
-	}  
-	
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-	} 
-
-	public Map<String, ServerList> getEntry2ServerList() {
-		return entry2ServerList;
-	}
-
-	public Map<String, Set<ServerEntry>> getServer2EntryList() {
-		return server2EntryList;
-	}
-
-
-
-
+	 
 
 	public static class ServerList implements Iterable<ServerEntry>{
 		public final String entryId;

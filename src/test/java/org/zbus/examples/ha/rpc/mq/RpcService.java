@@ -15,8 +15,8 @@ public class RpcService {
 		RpcProcessor processor = new RpcProcessor();  
 		processor.addModule(new InterfaceExampleImpl());  
 		
-		//Broker broker = new ZbusBroker("127.0.0.1:16666;127.0.0.1:16667");
-		Broker broker = new ZbusBroker("127.0.0.1:15555");
+		Broker broker = new ZbusBroker("127.0.0.1:16666;127.0.0.1:16667");
+		//Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		ServiceConfig config = new ServiceConfig();
 		config.setConsumerCount(2); 

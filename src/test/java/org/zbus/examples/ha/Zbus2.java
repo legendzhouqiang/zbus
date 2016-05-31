@@ -10,7 +10,6 @@ public class Zbus2 {
 		config.serverPort = 15556; 
 		config.verbose = true; //print out message
 		config.storePath = "./store2";  
-		config.verbose = true; 
 		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
 		  
 		

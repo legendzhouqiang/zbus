@@ -28,6 +28,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
@@ -45,10 +48,12 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = Logger.getLogger(TrackServer.class); 
 	
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
+	private ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
+	private boolean verbose = false;
+	private int dumpInterval = 3000;
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
-	private boolean verbose = false;
 	
 	private EventDriver eventDriver;
 	private MessageServer server;
@@ -72,8 +77,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 
 		cmd(HaCommand.ServerJoin, serverJoinHandler);
 		cmd(HaCommand.ServerLeave, serverLeaveHandler);
-		
-		cmd(HaCommand.PubAll, pubAllHandler);
+
 		cmd(HaCommand.SubAll, subAllHandler);
 	}   
 	
@@ -81,6 +85,17 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		server = new MessageServer(eventDriver);
 		server.start(serverHost, serverPort, this);
 		eventDriver = server.getEventDriver(); //if eventDriver is null, set the internal created one
+	
+		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
+			@Override
+			public void run() { 
+				if(verbose) serverEntryTable.dump();
+			}
+		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
+	}
+	
+	public void setDumpInterval(int dumpInterval) {
+		this.dumpInterval = dumpInterval;
 	}
 	
 	private void pubMessage(Message msg){
@@ -153,19 +168,12 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			String serverAddr = msg.getServer();
-			String entryId = msg.getMq(); //use mq for entryId
+			String entryId = msg.getMq(); //TODO use mq for entryId
 			serverEntryTable.removeServerEntry(serverAddr, entryId);
 			
 			pubMessage(msg);
 		}
-	};
-	
-	private MessageHandler pubAllHandler = new MessageHandler() {
-		@Override
-		public void handle(Message msg, Session sess) throws IOException {
-			
-		}
-	};
+	}; 
 	
 	private MessageHandler subAllHandler = new MessageHandler() {
 		@Override
@@ -241,7 +249,10 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	
 	@Override
 	public void close() throws IOException { 
-		serverEntryTable.close(); 
+		if(dumpExecutor != null){
+			dumpExecutor.shutdown(); 
+			dumpExecutor = null;
+		}
 		if(server != null){
 			server.close();
 			server = null;
@@ -249,8 +260,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	}
 
 	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-		serverEntryTable.setVerbose(verbose);
+		this.verbose = verbose; 
 	} 
 	
 	

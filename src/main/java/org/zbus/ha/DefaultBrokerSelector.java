@@ -37,7 +37,7 @@ import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.ha.ServerEntryTable.ServerList;
 import org.zbus.ha.TrackSub.EntryRemoveHandler;
 import org.zbus.ha.TrackSub.EntryUpdateHandler;
-import org.zbus.ha.TrackSub.PubServerEntryListHandler;
+import org.zbus.ha.TrackSub.PubAllHandler;
 import org.zbus.ha.TrackSub.ServerJoinHandler;
 import org.zbus.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.broker.BrokerConfig;
@@ -52,7 +52,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
 	private static final int localIpHashCode = Math.abs(NetKit.getLocalIp().hashCode());
 	
-	private final ServerEntryTable serverEntryTable = new ServerEntryTable();
+	private ServerEntryTable serverEntryTable = new ServerEntryTable();
 	private final Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();
 	
 	private TrackSub trackSub;
@@ -188,8 +188,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			broker.close();
 		}
 		allBrokers.clear();
-		trackSub.close();
-		serverEntryTable.close(); 
+		trackSub.close(); 
 		
 		if(ownEventDriver && eventDriver != null){
 			eventDriver.close();
@@ -232,10 +231,11 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			}
 		});
 		
-		trackSub.onPubServerEntryList(new PubServerEntryListHandler() {  
-			public void onPubServerEntryList(List<ServerEntry> serverEntries) throws IOException { 
-				for(ServerEntry entry : serverEntries){ 
-					updateServerEntry(entry); 
+		trackSub.onPubServerEntryList(new PubAllHandler() {  
+			public void onPubAll(ServerEntryTable table) throws IOException { 
+				serverEntryTable = table;
+				for(String serverAddr : serverEntryTable.server2EntryList.keySet()){
+					onNewServer(serverAddr);
 				}
 				syncFromTracker.countDown();
 			}

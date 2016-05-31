@@ -25,7 +25,6 @@ package org.zbus.ha;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -157,9 +156,9 @@ public class TrackSub implements Closeable{
 			@Override
 			public void handle(Message msg, Session sess) throws IOException {
 				if(msg.getBody() == null) return;
-				List<ServerEntry> serverEntries = ServerEntryTable.unpack(msg.getBodyString());
-				if(pubServerEntryListHandler != null){
-					pubServerEntryListHandler.onPubServerEntryList(serverEntries);
+				ServerEntryTable table = ServerEntryTable.unpack(msg.getBodyString());
+				if(pubAllHandler != null){
+					pubAllHandler.onPubAll(table);
 				}
 			}
 		});
@@ -202,8 +201,8 @@ public class TrackSub implements Closeable{
     	healthyTrackers.clear();
     }
  
-	public void onPubServerEntryList(PubServerEntryListHandler pubServerEntryListHandler){
-		this.pubServerEntryListHandler = pubServerEntryListHandler;
+	public void onPubServerEntryList(PubAllHandler pubServerEntryListHandler){
+		this.pubAllHandler = pubServerEntryListHandler;
 	}
 
 	public void onServerJoinHandler(ServerJoinHandler serverJoinHandler){
@@ -222,14 +221,14 @@ public class TrackSub implements Closeable{
 		this.entryRemoveHandler = entryRemoveHandler;
 	}
 	
-	private PubServerEntryListHandler pubServerEntryListHandler;
+	private PubAllHandler pubAllHandler;
 	private ServerJoinHandler serverJoinHandler;
 	private ServerLeaveHandler serverLeaveHandler;
 	private EntryUpdateHandler entryUpdateHandler;
 	private EntryRemoveHandler entryRemoveHandler;
     
-	public static interface PubServerEntryListHandler{
-		void onPubServerEntryList(List<ServerEntry> serverEntries) throws IOException;
+	public static interface PubAllHandler{
+		void onPubAll(ServerEntryTable table) throws IOException;
 	}
 	public static interface ServerJoinHandler{
 		void onServerJoin(String serverAddr) throws IOException;
