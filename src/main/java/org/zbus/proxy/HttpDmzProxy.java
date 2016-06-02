@@ -38,6 +38,49 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 		public String target;
 		public Broker broker; //priority > brokerAddress
 		public int consumerCount = 4;
+		
+        public BrokerConfig getBrokerConfig()
+        {
+            return brokerConfig;
+        }
+        public String getEntry()
+        {
+            return entry;
+        }
+        public String getTarget()
+        {
+            return target;
+        }
+        public Broker getBroker()
+        {
+            return broker;
+        }
+        public int getConsumerCount()
+        {
+            return consumerCount;
+        }
+        public void setBrokerConfig(BrokerConfig brokerConfig)
+        {
+            this.brokerConfig = brokerConfig;
+        }
+        public void setEntry(String entry)
+        {
+            this.entry = entry;
+        }
+        public void setTarget(String target)
+        {
+            this.target = target;
+        }
+        public void setBroker(Broker broker)
+        {
+            this.broker = broker;
+        }
+        public void setConsumerCount(int consumerCount)
+        {
+            this.consumerCount = consumerCount;
+        }
+		
+		
 	}
 	
 	private final String entry;
