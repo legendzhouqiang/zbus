@@ -6,13 +6,6 @@ import org.zbus.net.EventDriver;
 
 public class ZbusStarter {
 
-	/**
-	 * Start zbus in embedded mode, simple?
-	 * @param args
-	 * @throws Exception
-	 * 
-	 * -Dnio=znet/netty 
-	 */
 	@SuppressWarnings("resource")
 	public static void main_simple(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
