@@ -90,6 +90,7 @@ public class Message implements Id {
 	public static final String DELAY    = "delay";
 	public static final String TTL      = "ttl"; 
 	public static final String ReplyCode= "reply_code"; 
+	public static final String OriginUrl= "origin_url"; 
 	
 	
 	public static final String KEY       = "key";  
@@ -419,6 +420,14 @@ public class Message implements Id {
 	} 
 	public Message setReplyCode(String value) {
 		this.setHead(ReplyCode, value);
+		return this;
+	}  
+	
+	public String getOriginUrl() {
+		return this.getHead(OriginUrl);
+	} 
+	public Message setOriginUrl(String value) {
+		this.setHead(OriginUrl, value);
 		return this;
 	}  
 	

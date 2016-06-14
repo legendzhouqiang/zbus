@@ -37,7 +37,7 @@ So, the the core function implemented in the HttpDmzProxy is just doing right in
 	
 	public void handle(Message msg, final Consumer consumer) throws IOException {
 		....
-		String url = msg.getHead("origin-url"); //zbus added this key-value, the target url in zbus way!!!
+		String url = msg.getOriginUrl(); //zbus added this key-value, the target url in zbus way!!!
 		...
 		if (url.startsWith(prefix)) { //peel of the prefix to become the real one
 			url = url.substring(prefix.length());

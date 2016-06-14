@@ -55,12 +55,12 @@ public class UrlService extends Service {
 		@Override
 		public Message process(Message msg) {
 			final String msgId = msg.getId();
-			String url = msg.removeHead("origin-url");
+			String url = msg.removeHead(Message.OriginUrl);
 			if(url == null){
 		    	Message res = new Message();
 		    	res.setId(msgId); 
 		    	res.setStatus(400);
-		    	String text = String.format("Missing origin-url from zbus broker");
+		    	String text = String.format("Missing origin_url from zbus broker");
 		    	res.setBody(text);  
 				return res;
 			}

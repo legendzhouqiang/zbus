@@ -80,8 +80,16 @@ public class Consumer extends MqAdmin implements Closeable {
 				return res;
 			res.setId(res.getRawId());
 			res.removeHead(Message.RAWID);
-			if (res.isStatus200())
+			if (res.isStatus200()){
+				String originUrl = res.getOriginUrl();
+				if(originUrl == null){
+					originUrl = "/";
+				} else {
+					res.removeHead(Message.OriginUrl);
+				}
+				res.setUrl(originUrl);
 				return res;
+			}
 
 			if (res.isStatus404()) {
 				if (!this.createMQ()) {

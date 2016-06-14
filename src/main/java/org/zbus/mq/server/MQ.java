@@ -109,7 +109,7 @@ public class MQ extends AbstractMQ{
 				writeMsg.setId(pullMsg.getId()); //配对订阅消息！
 				if(writeMsg.getStatus() == null){
 					if(!"/".equals(writeMsg.getUrl())){
-						writeMsg.setHead("origin-url", writeMsg.getUrl());
+						writeMsg.setOriginUrl(writeMsg.getUrl()); 
 					}
 					writeMsg.setStatus(200); //default to 200
 				}
