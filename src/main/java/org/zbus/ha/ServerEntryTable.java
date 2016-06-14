@@ -177,25 +177,25 @@ public class ServerEntryTable{
 	public static ServerEntryTable unpack(String packedString){
 		ServerEntryTable table = new ServerEntryTable(); 
 		String[] bb = packedString.split("\r\n");
-		if(bb.length != 2){
-			log.error("PubAll message invalid" + packedString);
-			return table;
-		}
-		String[] ss = bb[0].split("[\n]");
-		for(String s : ss){
-			s = s.trim();
-			if(s.length() == 0) continue;
-			table.addServer(s);
-		}
-		ss = bb[1].split("[\n]"); 
-		for(String s : ss){
-			s = s.trim();
-			if(s.length() == 0) continue;
-			ServerEntry se = ServerEntry.unpack(s);
-			if(se != null){
-				table.updateServerEntry(se);
+		if(bb.length > 0){ 
+			String[] ss = bb[0].split("[\n]");
+			for(String s : ss){
+				s = s.trim();
+				if(s.length() == 0) continue;
+				table.addServer(s);
+			} 
+			if(bb.length > 1){
+				ss = bb[1].split("[\n]"); 
+				for(String s : ss){
+					s = s.trim();
+					if(s.length() == 0) continue;
+					ServerEntry se = ServerEntry.unpack(s);
+					if(se != null){
+						table.updateServerEntry(se);
+					}
+				}
 			}
-		}
+		} 
 		return table;
 	}
 	 
