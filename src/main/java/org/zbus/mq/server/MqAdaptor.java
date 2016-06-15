@@ -276,10 +276,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.removeHead(Message.ACK);
 			msg.removeHead(Message.RECVER);
 			msg.removeHead(Message.CMD);
-			if(msg.getReplyCode() != null){
-				msg.setStatus(msg.getReplyCode()); //Change to Response
-				msg.removeHead(Message.ReplyCode);
-			}
+			
+			String status = "200";
+			if(msg.getOriginStatus() != null){
+				status = msg.getOriginStatus(); 
+				msg.removeHead(Message.ORIGIN_STATUS);
+			} 
+			msg.asResponse(status);
+			
 			try{
 				target.write(msg);
 			} catch(Exception ex){

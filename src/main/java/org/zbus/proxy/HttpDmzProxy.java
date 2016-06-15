@@ -83,7 +83,7 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 		msg.removeHead(Message.MQ);
 		msg.removeHead(Message.ID);
 		msg.removeHead(Message.SENDER);
-		msg.removeHead(Message.OriginUrl);
+		msg.removeHead(Message.ORIGIN_URL);
 		msg.removeHead(Message.SERVER);
 
 		msg.setUrl(url);

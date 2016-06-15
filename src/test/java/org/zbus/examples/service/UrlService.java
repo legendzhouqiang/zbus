@@ -55,7 +55,7 @@ public class UrlService extends Service {
 		@Override
 		public Message process(Message msg) {
 			final String msgId = msg.getId();
-			String url = msg.removeHead(Message.OriginUrl);
+			String url = msg.removeHead(Message.ORIGIN_URL);
 			if(url == null){
 		    	Message res = new Message();
 		    	res.setId(msgId); 

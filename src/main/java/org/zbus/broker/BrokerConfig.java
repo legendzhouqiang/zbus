@@ -22,7 +22,7 @@
  */
 package org.zbus.broker;
 
-import org.zbus.ha.BrokerSelector;
+import org.zbus.broker.HaBroker.BrokerSelector;
 /**
  * The MIT License (MIT)
  * Copyright (c) 2009-2016 HONG LEIMING

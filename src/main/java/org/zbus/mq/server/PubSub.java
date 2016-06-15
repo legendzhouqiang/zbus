@@ -94,7 +94,7 @@ public class PubSub extends AbstractMQ{
 				if(msg == null) continue;
 				
 				msg.setStatus(200); //支持浏览器
-				msg.setRawId(msg.getId());
+				msg.setOriginId(msg.getId());
 				msg.setId(pullMessage.getId()); 
 				
 				pull.pullMessage = null;

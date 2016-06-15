@@ -22,11 +22,11 @@
  */
 package org.zbus.broker;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
 import org.zbus.ha.DefaultBrokerSelector;
-import org.zbus.ha.BrokerSelector;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
@@ -116,5 +116,42 @@ public class HaBroker implements Broker {
 	public Message invokeSync(Message req) throws IOException, InterruptedException {
 		return invokeSync(req, 10000);
 	} 
+	
+	
+	/**
+	 * Broker selector interface for HA broker, default implementation is DefaultBrokerSelector
+	 * 
+	 * @author HONG LEIMING 
+	 *
+	 */
+	public static interface BrokerSelector extends Closeable{
+		/**
+		 * Select single broker based the hint, which includes Server,EntryID,SourceIP etc
+		 * @param hint
+		 * @return best broker matched for the hint
+		 */
+		Broker selectByBrokerHint(BrokerHint hint);
+		/**
+		 * Select best broker(s) based on the request message content
+		 * Criteria could be Server/EntryId(MQ) etc.
+		 * @param msg
+		 * @return List of brokers for PubSub, list of single broker otherwise
+		 */
+		List<Broker> selectByRequestMsg(Message msg);
+		/**
+		 * Provide a mechanism to resolve the entry abstraction in a Message
+		 * @param msg
+		 * @return
+		 */
+		String getEntry(Message msg);
+		/**
+		 * Select a broker based on the MessageClient.
+		 * This is usually implemented by tagging a client when being generated.
+		 * 
+		 * @param client
+		 * @return
+		 */
+		Broker selectByClient(MessageClient client);
+	}
 }
 

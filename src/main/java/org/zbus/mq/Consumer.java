@@ -78,14 +78,14 @@ public class Consumer extends MqAdmin implements Closeable {
 			} 
 			if (res == null)
 				return res;
-			res.setId(res.getRawId());
-			res.removeHead(Message.RAWID);
+			res.setId(res.getOriginId());
+			res.removeHead(Message.ORIGIN_ID);
 			if (res.isStatus200()){
 				String originUrl = res.getOriginUrl();
 				if(originUrl == null){
 					originUrl = "/";
 				} else {
-					res.removeHead(Message.OriginUrl);
+					res.removeHead(Message.ORIGIN_URL);
 				}
 				res.setUrl(originUrl);
 				return res;
@@ -138,11 +138,12 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void routeMessage(Message msg) throws IOException {
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false); 
-
-		if(msg.getStatus() != null){//change to Request type
-			msg.setReplyCode(msg.getStatus());
-			msg.setStatus(null);
-		} 
+		
+		if(msg.isResponse()){
+			msg.setOriginStatus(msg.getStatus());
+			msg.asRequest(); //must send back request message type
+		}   
+		
 		client.invokeAsync(msg, null); 
 	}
 

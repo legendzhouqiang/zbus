@@ -73,30 +73,29 @@ public class Message implements Id {
 	public static final String REMOTE_ADDR      = "remote-addr";
 	public static final String CONTENT_LENGTH   = "content-length";
 	public static final String CONTENT_TYPE     = "content-type";
-	
-	//常见扩展HTTP协议头部
-	public static final String CMD    	= "cmd"; 
-	public static final String SUB_CMD  = "sub_cmd";    
+	 
+	public static final String CMD    	= "cmd";     
 	public static final String MQ       = "mq";
 	public static final String SENDER   = "sender"; 
 	public static final String RECVER   = "recver";
 	public static final String ID      	= "id";	    //消息ID
-	public static final String RAWID    = "rawid";  //原始消息ID 
+	
 	public static final String SERVER   = "server"; 
 	public static final String TOPIC    = "topic";  //使用,分隔 
-	public static final String ACK      = "ack";	 	 
-	public static final String WINDOW   = "window";  
+	public static final String ACK      = "ack";	  
 	public static final String ENCODING = "encoding";
 	public static final String DELAY    = "delay";
-	public static final String TTL      = "ttl"; 
-	public static final String ReplyCode= "reply_code"; 
-	public static final String OriginUrl= "origin_url"; 
+	public static final String TTL      = "ttl";  
 	
+	public static final String ORIGIN_ID    = "rawid";  //原始消息ID 
+	public static final String ORIGIN_URL   = "origin_url";//原始消息URL  
+	public static final String ORIGIN_STATUS= "reply_code"; //原始HTTP Status 
 	
 	public static final String KEY       = "key";  
 	public static final String KEY_GROUP = "key_group";
+	
 	//MQ copy, Master-Slave
-	public static final String MASTER_MQ  = "master_mq";
+	public static final String MASTER_MQ     = "master_mq";
 	public static final String MASTER_TOKEN  = "master_token"; 
 	
 	 
@@ -139,9 +138,10 @@ public class Message implements Id {
 	public String getUrl(){
 		return this.meta.url;
 	} 
-	public void setUrl(String url){
+	public Message setUrl(String url){
 		this.meta.setUrl(url);
 		this.meta.status = null; //once requestString is set, it becomes a request message
+		return this;
 	}
 	
 	public Message setStatus(String status) { 
@@ -153,8 +153,36 @@ public class Message implements Id {
 		return meta.status;
 	}
 	
-	public void setStatus(int status){
-		setStatus(""+status);
+	public Message setStatus(int status){
+		return setStatus(""+status);
+	}
+	
+	public boolean isRequest(){
+		return this.getStatus() != null;
+	}
+	
+	public boolean isResponse(){
+		return !isRequest();
+	}
+	
+	public Message asResponse(){
+		return setStatus(200);
+	}
+	
+	public Message asResponse(String status){
+		return setStatus(status);
+	}
+	
+	public Message asResponse(int status){
+		return setStatus(status);
+	}
+	
+	public Message asRequest(String url){
+		return setUrl(url);
+	}
+	
+	public Message asRequest(){
+		return setUrl("/");
 	}
 	
 	public String getMethod(){
@@ -368,25 +396,14 @@ public class Message implements Id {
 	public Message setCmd(String value) {
 		this.setHead(CMD, value); 
 		return this;
-	}  
-	
-	
-	public String getSubCmd() { 
-		return this.getHead(SUB_CMD);
-	}  
-	public Message setSubCmd(String value) {
-		this.setHead(SUB_CMD, value); 
-		return this;
 	}   
-	
 	
 	public String getServer(){
 		return this.getHead(SERVER);
 	}  
 	public void setServer(String value){
 		this.setHead(SERVER, value);
-	}
-	
+	} 
 	
 	public String getSender() {
 		return this.getHead(SENDER);
@@ -415,21 +432,31 @@ public class Message implements Id {
 	}  
 	
 	
-	public String getReplyCode() {
-		return this.getHead(ReplyCode);
+	public String getOriginStatus() {
+		return this.getHead(ORIGIN_STATUS);
 	} 
-	public Message setReplyCode(String value) {
-		this.setHead(ReplyCode, value);
+	public Message setOriginStatus(String value) {
+		this.setHead(ORIGIN_STATUS, value);
 		return this;
 	}  
 	
 	public String getOriginUrl() {
-		return this.getHead(OriginUrl);
+		return this.getHead(ORIGIN_URL);
 	} 
 	public Message setOriginUrl(String value) {
-		this.setHead(OriginUrl, value);
+		this.setHead(ORIGIN_URL, value);
 		return this;
-	}  
+	}   
+	
+	public String getOriginId() {
+		return this.getHead(ORIGIN_ID);
+	} 
+	public Message setOriginId(String value) {
+		if(value == null) return this;
+		this.setHead(ORIGIN_ID, value);
+		return this;
+	}
+	 
 	
 	public String getEncoding() {
 		return this.getHead(ENCODING);
@@ -464,16 +491,7 @@ public class Message implements Id {
 	}	
 	public void setId(long id){
 		setId(""+id);
-	}
-	
-	public String getRawId() {
-		return this.getHead(RAWID);
 	} 
-	public Message setRawId(String value) {
-		if(value == null) return this;
-		this.setHead(RAWID, value);
-		return this;
-	}
 	
 	public boolean isAck() {
 		String ack = this.getHead(ACK);
@@ -503,15 +521,7 @@ public class Message implements Id {
 	public Message setTopic(String topic) {
 		this.setHead(TOPIC, topic);
 		return this;
-	} 
-	
-	public String getWindow() {
-		return getHead(WINDOW);
-	} 
-	public Message setWindow(int window) {
-		this.setHead(WINDOW, ""+window);
-		return this;
-	} 
+	}  
 	
 	public String getKey() {
 		return getHead(KEY);

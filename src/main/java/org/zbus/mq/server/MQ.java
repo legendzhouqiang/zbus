@@ -105,7 +105,7 @@ public class MQ extends AbstractMQ{
 				Message pullMsg = pull.getPullMessage(); 
 				Message writeMsg = Message.copyWithoutBody(msg); 
 				
-				writeMsg.setRawId(msg.getId());  //保留原始消息ID
+				writeMsg.setOriginId(msg.getId());  //保留原始消息ID
 				writeMsg.setId(pullMsg.getId()); //配对订阅消息！
 				if(writeMsg.getStatus() == null){
 					if(!"/".equals(writeMsg.getUrl())){

@@ -10,12 +10,9 @@ public class MessageTest {
 		msg.setBody("hello"); 
 		
 		System.out.println(msg);
-		
-		
-		
-		System.out.println(new String(msg.toBytes()));
 		 
-		System.err.println(Message.parse(msg.toBytes()));
+		System.out.println(msg.asResponse(200));
+		
 	}
 
 }
