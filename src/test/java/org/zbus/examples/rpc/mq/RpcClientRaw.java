@@ -15,7 +15,7 @@ public class RpcClientRaw {
 		Broker broker = new ZbusBroker(); 
 		MessageInvoker mqInvoker = new MqInvoker(broker, "MyRpc");  
 		 
-		RpcInvoker rpc = new RpcInvoker(mqInvoker);
+		RpcInvoker rpc = new RpcInvoker(mqInvoker); 
 		
 		rpc.invokeSync(String.class, "echo", "test");
 		

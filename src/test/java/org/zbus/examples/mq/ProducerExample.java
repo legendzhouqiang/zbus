@@ -13,11 +13,8 @@ public class ProducerExample {
 		producer.createMQ();
 
 		Message msg = new Message();
-		//msg.setUrl("/test/xxx?key=value");
+		msg.setUrl("/test/xxx?key=value");
 		msg.setBody("hello world " + System.currentTimeMillis());
-		
-		System.out.println(msg);
-		
 		msg = producer.sendSync(msg);
 		System.out.println(msg);
 

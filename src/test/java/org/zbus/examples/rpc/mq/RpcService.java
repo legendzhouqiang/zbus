@@ -20,9 +20,8 @@ public class RpcService {
 		ServiceConfig config = new ServiceConfig(); 
 		config.setMq("MyRpc"); 
 		config.setBroker(broker);    
-		config.setMessageProcessor(processor);
-		//config.setConsumerCount(4); //in most cases, default 4 connections is enough
-		//config.setConsumerHandlerThreadCount(1000); //executor thread count
+		config.setMessageProcessor(processor); 
+		config.setVerbose(true);
 		
 		
 		Service svc = new Service(config);

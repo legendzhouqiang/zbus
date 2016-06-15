@@ -158,11 +158,11 @@ public class Message implements Id {
 	}
 	
 	public boolean isRequest(){
-		return this.getStatus() != null;
+		return this.getStatus() == null;
 	}
 	
 	public boolean isResponse(){
-		return !isRequest();
+		return this.getStatus() != null;
 	}
 	
 	public Message asResponse(){
