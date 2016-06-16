@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.server.quorum;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class LearnerInfo implements Record {
   private long serverid;
   private int protocolVersion;

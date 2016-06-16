@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class GetMaxChildrenRequest implements Record {
   private String path;
   public GetMaxChildrenRequest() {

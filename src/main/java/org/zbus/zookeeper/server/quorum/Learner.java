@@ -34,13 +34,13 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.Request;
 import org.zbus.zookeeper.server.ServerCnxn;
 import org.zbus.zookeeper.server.ZooTrace;

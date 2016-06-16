@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.zookeeper.data.Stat;
 import org.zbus.zookeeper.data.StatPersisted;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 
 import java.util.Collections;
 

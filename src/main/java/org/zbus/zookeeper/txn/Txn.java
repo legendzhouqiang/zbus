@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.txn;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class Txn implements Record {
   private int type;
   private byte[] data;
@@ -90,7 +90,7 @@ public class Txn implements Record {
     {
       byte[] my = data;
       byte[] ur = peer.data;
-      ret = org.zbus.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
+      ret = org.zbus.zookeeper.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
     }
     if (ret != 0) return ret;
      return ret;
@@ -106,7 +106,7 @@ public class Txn implements Record {
     boolean ret = false;
     ret = (type==peer.type);
     if (!ret) return ret;
-    ret = org.zbus.jute.Utils.bufEquals(data,peer.data);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(data,peer.data);
     if (!ret) return ret;
      return ret;
   }

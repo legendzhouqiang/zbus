@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.txn;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SetACLTxn implements Record {
   private String path;
   private java.util.List<org.zbus.zookeeper.data.ACL> acl;

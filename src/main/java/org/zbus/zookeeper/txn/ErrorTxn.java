@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.txn;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class ErrorTxn implements Record {
   private int err;
   public ErrorTxn() {

@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.server.quorum;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class QuorumPacket implements Record {
   private int type;
   private long zxid;
@@ -148,7 +148,7 @@ public class QuorumPacket implements Record {
     if (!ret) return ret;
     ret = (zxid==peer.zxid);
     if (!ret) return ret;
-    ret = org.zbus.jute.Utils.bufEquals(data,peer.data);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(data,peer.data);
     if (!ret) return ret;
     ret = authinfo.equals(peer.authinfo);
     if (!ret) return ret;

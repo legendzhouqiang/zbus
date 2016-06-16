@@ -35,9 +35,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.sasl.SaslException;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.Environment;
@@ -49,6 +46,9 @@ import org.zbus.zookeeper.data.ACL;
 import org.zbus.zookeeper.data.Id;
 import org.zbus.zookeeper.data.StatPersisted;
 import org.zbus.zookeeper.jmx.MBeanRegistry;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.AuthPacket;
 import org.zbus.zookeeper.proto.ConnectRequest;
 import org.zbus.zookeeper.proto.ConnectResponse;

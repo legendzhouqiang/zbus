@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SetACLRequest implements Record {
   private String path;
   private java.util.List<org.zbus.zookeeper.data.ACL> acl;

@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.data;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class Stat implements Record {
   private long czxid;
   private long mzxid;

@@ -34,12 +34,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.txn.TxnHeader;
 
 /**

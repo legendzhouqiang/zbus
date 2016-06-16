@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SyncResponse implements Record {
   private String path;
   public SyncResponse() {

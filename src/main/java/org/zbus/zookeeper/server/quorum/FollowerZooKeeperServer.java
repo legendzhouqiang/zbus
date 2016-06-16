@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.FinalRequestProcessor;
 import org.zbus.zookeeper.server.Request;
 import org.zbus.zookeeper.server.RequestProcessor;

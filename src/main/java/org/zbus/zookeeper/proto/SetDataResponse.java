@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SetDataResponse implements Record {
   private org.zbus.zookeeper.data.Stat stat;
   public SetDataResponse() {

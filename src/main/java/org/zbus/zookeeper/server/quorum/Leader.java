@@ -37,9 +37,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.zbus.jute.BinaryOutputArchive;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
 import org.zbus.zookeeper.server.FinalRequestProcessor;
 import org.zbus.zookeeper.server.Request;
 import org.zbus.zookeeper.server.RequestProcessor;

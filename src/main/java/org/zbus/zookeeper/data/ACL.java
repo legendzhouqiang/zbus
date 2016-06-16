@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.data;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class ACL implements Record {
   private int perms;
   private org.zbus.zookeeper.data.Id id;

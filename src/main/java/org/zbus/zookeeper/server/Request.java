@@ -21,12 +21,12 @@ package org.zbus.zookeeper.server;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.KeeperException;
 import org.zbus.zookeeper.ZooDefs.OpCode;
 import org.zbus.zookeeper.data.Id;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.txn.TxnHeader;
 
 /**

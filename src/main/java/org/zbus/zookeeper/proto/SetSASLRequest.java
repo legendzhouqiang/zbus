@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SetSASLRequest implements Record {
   private byte[] token;
   public SetSASLRequest() {
@@ -76,7 +76,7 @@ public class SetSASLRequest implements Record {
     {
       byte[] my = token;
       byte[] ur = peer.token;
-      ret = org.zbus.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
+      ret = org.zbus.zookeeper.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
     }
     if (ret != 0) return ret;
      return ret;
@@ -90,7 +90,7 @@ public class SetSASLRequest implements Record {
     }
     SetSASLRequest peer = (SetSASLRequest) peer_;
     boolean ret = false;
-    ret = org.zbus.jute.Utils.bufEquals(token,peer.token);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(token,peer.token);
     if (!ret) return ret;
      return ret;
   }

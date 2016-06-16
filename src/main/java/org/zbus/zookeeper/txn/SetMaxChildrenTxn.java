@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.txn;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class SetMaxChildrenTxn implements Record {
   private String path;
   private int max;

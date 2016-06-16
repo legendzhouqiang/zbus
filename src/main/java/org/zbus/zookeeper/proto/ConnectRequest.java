@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class ConnectRequest implements Record {
   private int protocolVersion;
   private long lastZxidSeen;
@@ -132,7 +132,7 @@ public class ConnectRequest implements Record {
     {
       byte[] my = passwd;
       byte[] ur = peer.passwd;
-      ret = org.zbus.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
+      ret = org.zbus.zookeeper.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
     }
     if (ret != 0) return ret;
      return ret;
@@ -154,7 +154,7 @@ public class ConnectRequest implements Record {
     if (!ret) return ret;
     ret = (sessionId==peer.sessionId);
     if (!ret) return ret;
-    ret = org.zbus.jute.Utils.bufEquals(passwd,peer.passwd);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(passwd,peer.passwd);
     if (!ret) return ret;
      return ret;
   }

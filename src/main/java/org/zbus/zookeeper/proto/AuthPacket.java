@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class AuthPacket implements Record {
   private int type;
   private String scheme;
@@ -104,7 +104,7 @@ public class AuthPacket implements Record {
     {
       byte[] my = auth;
       byte[] ur = peer.auth;
-      ret = org.zbus.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
+      ret = org.zbus.zookeeper.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
     }
     if (ret != 0) return ret;
      return ret;
@@ -122,7 +122,7 @@ public class AuthPacket implements Record {
     if (!ret) return ret;
     ret = scheme.equals(peer.scheme);
     if (!ret) return ret;
-    ret = org.zbus.jute.Utils.bufEquals(auth,peer.auth);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(auth,peer.auth);
     if (!ret) return ret;
      return ret;
   }

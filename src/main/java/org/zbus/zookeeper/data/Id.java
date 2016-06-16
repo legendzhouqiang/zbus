@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.data;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class Id implements Record {
   private String scheme;
   private String id;

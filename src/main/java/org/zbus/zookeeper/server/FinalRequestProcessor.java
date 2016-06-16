@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.KeeperException;
@@ -39,6 +38,7 @@ import org.zbus.zookeeper.ZooDefs;
 import org.zbus.zookeeper.ZooDefs.OpCode;
 import org.zbus.zookeeper.data.ACL;
 import org.zbus.zookeeper.data.Stat;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.CreateResponse;
 import org.zbus.zookeeper.proto.ExistsRequest;
 import org.zbus.zookeeper.proto.ExistsResponse;

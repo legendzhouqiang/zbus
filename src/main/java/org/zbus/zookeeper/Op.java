@@ -21,9 +21,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.zbus.jute.Record;
 import org.zbus.zookeeper.common.PathUtils;
 import org.zbus.zookeeper.data.ACL;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.CheckVersionRequest;
 import org.zbus.zookeeper.proto.CreateRequest;
 import org.zbus.zookeeper.proto.DeleteRequest;

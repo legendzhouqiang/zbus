@@ -71,7 +71,7 @@ public class QuorumPeerMain {
      */
     public static void main(String[] args) {
     	if(args.length == 0){
-    		args = new String[]{"zoo.cfg"}; //TODO
+    		args = new String[]{"conf/zbus-zk.cfg"};
     	}
     	
         QuorumPeerMain main = new QuorumPeerMain();

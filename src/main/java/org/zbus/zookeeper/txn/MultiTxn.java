@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.txn;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class MultiTxn implements Record {
   private java.util.List<org.zbus.zookeeper.txn.Txn> txns;
   public MultiTxn() {

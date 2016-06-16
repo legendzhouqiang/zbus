@@ -34,15 +34,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.Environment;
 import org.zbus.zookeeper.Version;
 import org.zbus.zookeeper.WatchedEvent;
 import org.zbus.zookeeper.data.Id;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.ReplyHeader;
 import org.zbus.zookeeper.proto.RequestHeader;
 import org.zbus.zookeeper.proto.WatcherEvent;

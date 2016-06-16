@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.server.persistence;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class FileHeader implements Record {
   private int magic;
   private int version;

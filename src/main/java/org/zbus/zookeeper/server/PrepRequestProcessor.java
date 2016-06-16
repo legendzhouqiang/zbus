@@ -32,8 +32,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.CreateMode;
@@ -48,6 +46,8 @@ import org.zbus.zookeeper.common.PathUtils;
 import org.zbus.zookeeper.data.ACL;
 import org.zbus.zookeeper.data.Id;
 import org.zbus.zookeeper.data.StatPersisted;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.CheckVersionRequest;
 import org.zbus.zookeeper.proto.CreateRequest;
 import org.zbus.zookeeper.proto.DeleteRequest;

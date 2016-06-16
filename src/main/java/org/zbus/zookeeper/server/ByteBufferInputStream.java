@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.Record;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.Record;
 
 public class ByteBufferInputStream extends InputStream {
     ByteBuffer bb;

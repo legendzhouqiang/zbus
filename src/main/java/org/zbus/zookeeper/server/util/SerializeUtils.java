@@ -25,13 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.ZooDefs.OpCode;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.DataTree;
 import org.zbus.zookeeper.server.ZooTrace;
 import org.zbus.zookeeper.txn.CreateSessionTxn;

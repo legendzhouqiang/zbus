@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class GetDataResponse implements Record {
   private byte[] data;
   private org.zbus.zookeeper.data.Stat stat;
@@ -89,7 +89,7 @@ public class GetDataResponse implements Record {
     {
       byte[] my = data;
       byte[] ur = peer.data;
-      ret = org.zbus.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
+      ret = org.zbus.zookeeper.jute.Utils.compareBytes(my,0,my.length,ur,0,ur.length);
     }
     if (ret != 0) return ret;
     ret = stat.compareTo(peer.stat);
@@ -105,7 +105,7 @@ public class GetDataResponse implements Record {
     }
     GetDataResponse peer = (GetDataResponse) peer_;
     boolean ret = false;
-    ret = org.zbus.jute.Utils.bufEquals(data,peer.data);
+    ret = org.zbus.zookeeper.jute.Utils.bufEquals(data,peer.data);
     if (!ret) return ret;
     ret = stat.equals(peer.stat);
     if (!ret) return ret;

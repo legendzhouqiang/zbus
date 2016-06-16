@@ -19,7 +19,7 @@
 
 package org.zbus.zookeeper.proto;
 
-import org.zbus.jute.*;
+import org.zbus.zookeeper.jute.*;
 public class GetChildren2Response implements Record {
   private java.util.List<String> children;
   private org.zbus.zookeeper.data.Stat stat;

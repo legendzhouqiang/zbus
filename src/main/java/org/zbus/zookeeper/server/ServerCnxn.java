@@ -30,10 +30,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.zbus.jute.Record;
 import org.zbus.zookeeper.WatchedEvent;
 import org.zbus.zookeeper.Watcher;
 import org.zbus.zookeeper.data.Id;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.ReplyHeader;
 import org.zbus.zookeeper.proto.RequestHeader;
 

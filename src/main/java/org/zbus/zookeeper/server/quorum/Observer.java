@@ -22,8 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.Record;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.ObserverBean;
 import org.zbus.zookeeper.server.Request;
 import org.zbus.zookeeper.server.util.SerializeUtils;

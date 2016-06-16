@@ -20,7 +20,7 @@ package org.zbus.zookeeper.server.persistence;
 
 import java.io.IOException;
 
-import org.zbus.jute.Record;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.txn.TxnHeader;
 
 /**

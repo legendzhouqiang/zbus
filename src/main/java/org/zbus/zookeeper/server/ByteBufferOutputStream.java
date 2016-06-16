@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.Record;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.Record;
 
 public class ByteBufferOutputStream extends OutputStream {
     ByteBuffer bb;

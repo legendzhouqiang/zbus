@@ -32,13 +32,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.KeeperException.SessionExpiredException;
 import org.zbus.zookeeper.ZooDefs.OpCode;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.ByteBufferInputStream;
 import org.zbus.zookeeper.server.Request;
 import org.zbus.zookeeper.server.ZooKeeperThread;

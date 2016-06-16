@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.zbus.jute.BinaryInputArchive;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.ClientCnxn.Packet;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
 import org.zbus.zookeeper.proto.ConnectResponse;
 import org.zbus.zookeeper.server.ByteBufferInputStream;
 

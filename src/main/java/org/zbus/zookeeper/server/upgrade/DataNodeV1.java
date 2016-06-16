@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.zbus.jute.Index;
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.zookeeper.data.ACL;
 import org.zbus.zookeeper.data.Stat;
 import org.zbus.zookeeper.data.StatPersistedV1;
+import org.zbus.zookeeper.jute.Index;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 
 /**
  * This class contains the data for a node in the data tree.

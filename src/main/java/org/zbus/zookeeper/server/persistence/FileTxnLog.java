@@ -35,13 +35,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.BinaryOutputArchive;
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.BinaryOutputArchive;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.server.util.SerializeUtils;
 import org.zbus.zookeeper.txn.TxnHeader;
 

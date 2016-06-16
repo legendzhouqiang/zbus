@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.zbus.jute.InputArchive;
-import org.zbus.jute.OutputArchive;
-import org.zbus.jute.Record;
+import org.zbus.zookeeper.jute.InputArchive;
+import org.zbus.zookeeper.jute.OutputArchive;
+import org.zbus.zookeeper.jute.Record;
 import org.zbus.zookeeper.proto.CreateResponse;
 import org.zbus.zookeeper.proto.ErrorResponse;
 import org.zbus.zookeeper.proto.MultiHeader;

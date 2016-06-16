@@ -29,9 +29,9 @@ import java.util.Set;
 import java.util.zip.Adler32;
 import java.util.zip.CheckedInputStream;
 
-import org.zbus.jute.BinaryInputArchive;
-import org.zbus.jute.InputArchive;
 import org.zbus.zookeeper.data.StatPersisted;
+import org.zbus.zookeeper.jute.BinaryInputArchive;
+import org.zbus.zookeeper.jute.InputArchive;
 import org.zbus.zookeeper.server.persistence.FileSnap;
 
 /**
