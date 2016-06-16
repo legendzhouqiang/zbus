@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageProcessor;
 import org.zbus.rpc.RpcCodec.Request;
@@ -38,7 +39,7 @@ import org.zbus.rpc.RpcCodec.Response;
 
 
 public class RpcProcessor implements MessageProcessor{
-	private static final Logger log = Logger.getLogger(RpcProcessor.class); 
+	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class); 
 	
 	private RpcCodec codec = new JsonRpcCodec();
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();

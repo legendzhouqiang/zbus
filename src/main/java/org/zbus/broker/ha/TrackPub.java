@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.EventDriver;
@@ -35,7 +36,7 @@ import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class TrackPub implements Closeable{  
-	private static final Logger log = Logger.getLogger(TrackPub.class);
+	private static final Logger log = LoggerFactory.getLogger(TrackPub.class);
 	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();

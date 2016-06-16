@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.EventDriver;
@@ -39,7 +40,7 @@ import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageClient;
 
 public class TrackSub implements Closeable{  
-	private static final Logger log = Logger.getLogger(TrackSub.class);
+	private static final Logger log = LoggerFactory.getLogger(TrackSub.class);
 	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();

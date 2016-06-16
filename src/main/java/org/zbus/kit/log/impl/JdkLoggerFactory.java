@@ -25,9 +25,9 @@ package org.zbus.kit.log.impl;
 import java.util.logging.Level;
 
 import org.zbus.kit.log.Logger;
-import org.zbus.kit.log.LoggerFactory;
+import org.zbus.kit.log.LoggerFactory.InternalLoggerFactory;
 
-public class JdkLoggerFactory implements LoggerFactory {
+public class JdkLoggerFactory implements InternalLoggerFactory {
 	
 	public Logger getLogger(Class<?> clazz) {
 		return new JdkLogger(clazz);
@@ -37,6 +37,8 @@ public class JdkLoggerFactory implements LoggerFactory {
 		return new JdkLogger(name);
 	}
 }
+
+
 class JdkLogger extends Logger { 
 	
 	private java.util.logging.Logger log;
@@ -110,5 +112,20 @@ class JdkLogger extends Logger {
 	
 	public boolean isFatalEnabled() {
 		return log.isLoggable(Level.SEVERE);
+	}
+	
+	@Override
+	public boolean isTraceEnabled() {
+		return log.isLoggable(Level.FINEST); //TODO
+	}
+
+	@Override
+	public void trace(String message) { 
+		log.logp(Level.FINEST, clazzName, Thread.currentThread().getStackTrace()[1].getMethodName(), message);
+	}
+
+	@Override
+	public void trace(String message, Throwable t) { 
+		log.logp(Level.FINEST, clazzName, Thread.currentThread().getStackTrace()[1].getMethodName(), message, t);
 	}
 }

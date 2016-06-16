@@ -30,11 +30,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.http.Message.MessageInvoker;
 
 
 public class RpcFactory { 
-	private static final Logger log = Logger.getLogger(RpcFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(RpcFactory.class);
 	private static Constructor<RpcInvocationHandler> rpcInvokerCtor;
 	private Map<String,RpcInvocationHandler> rpcInvokerCache = new ConcurrentHashMap<String, RpcInvocationHandler>();
 	private final MessageInvoker messageInvoker; 

@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.MessageQueue;
@@ -37,7 +38,7 @@ import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
 public class PubSub extends AbstractMQ{
-	private static final Logger log = Logger.getLogger(PubSub.class);  
+	private static final Logger log = LoggerFactory.getLogger(PubSub.class);  
 	
 	protected final ConcurrentMap<String, PullSession> pullMap = new ConcurrentHashMap<String, PullSession>(); 
 	

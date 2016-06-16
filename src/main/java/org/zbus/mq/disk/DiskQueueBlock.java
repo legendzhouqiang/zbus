@@ -11,9 +11,10 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 public class DiskQueueBlock {
-	static final Logger log = Logger.getLogger(DiskQueueBlock.class);
+	static final Logger log = LoggerFactory.getLogger(DiskQueueBlock.class);
     private static final String BLOCK_FILE_SUFFIX = ".blk"; // 数据文件
     private static final int BLOCK_SIZE = 32 * 1024 * 1024; // 32MB
 

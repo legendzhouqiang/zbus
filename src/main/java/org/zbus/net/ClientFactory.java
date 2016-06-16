@@ -4,11 +4,12 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.kit.pool.ObjectFactory;
 
 public abstract class ClientFactory<REQ, RES, T extends Client<REQ, RES>> 
 	implements ObjectFactory<T>, Closeable { 
-	private static final Logger log = Logger.getLogger(ClientFactory.class); 
+	private static final Logger log = LoggerFactory.getLogger(ClientFactory.class); 
 	
 	protected final String serverAddress;
 	protected EventDriver eventDriver;

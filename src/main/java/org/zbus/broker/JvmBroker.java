@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.server.MqAdaptor;
 import org.zbus.mq.server.MqServer;
 import org.zbus.mq.server.MqServerConfig;
@@ -27,7 +28,7 @@ import org.zbus.net.http.Message.MessageInvoker;
  *
  */
 public class JvmBroker implements Session, Broker {
-	private static final Logger log = Logger.getLogger(JvmBroker.class);
+	private static final Logger log = LoggerFactory.getLogger(JvmBroker.class);
 
 	private MqServer mqServer;
 	private MqAdaptor adaptor;

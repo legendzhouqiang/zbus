@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client;
 import org.zbus.net.CodecInitializer;
 import org.zbus.net.EventDriver;
@@ -32,7 +33,7 @@ import io.netty.handler.ssl.SslContext;
 
 
 public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RES> {
-	private static final Logger log = Logger.getLogger(TcpClient.class); 
+	private static final Logger log = LoggerFactory.getLogger(TcpClient.class); 
 	
 	protected Bootstrap bootstrap;
 	protected final EventLoopGroup group;  

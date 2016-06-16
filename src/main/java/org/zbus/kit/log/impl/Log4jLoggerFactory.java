@@ -24,9 +24,9 @@ package org.zbus.kit.log.impl;
 
 import org.apache.log4j.Level;
 import org.zbus.kit.log.Logger;
-import org.zbus.kit.log.LoggerFactory;
+import org.zbus.kit.log.LoggerFactory.InternalLoggerFactory;
 
-public class Log4jLoggerFactory implements LoggerFactory {
+public class Log4jLoggerFactory implements InternalLoggerFactory {
 	
 	public Logger getLogger(Class<?> clazz) {
 		return new Log4jLogger(clazz);
@@ -129,5 +129,20 @@ class Log4jLogger extends Logger {
 	
 	public boolean isFatalEnabled() {
 		return log.isEnabledFor(Level.FATAL);
+	}
+
+	@Override
+	public void trace(String message) {
+		log.log(callerFQCN, Level.TRACE, message, null);
+	}
+
+	@Override
+	public void trace(String message, Throwable t) {
+		log.log(callerFQCN, Level.TRACE, message, t);
+	}
+
+	@Override
+	public boolean isTraceEnabled() { 
+		return log.isTraceEnabled();
 	}
 }

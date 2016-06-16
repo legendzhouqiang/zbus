@@ -35,6 +35,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 /**
  *  Many thanks to @huamingweiwen in OSChina who presented us a light weight solution
@@ -44,7 +45,7 @@ import org.zbus.kit.log.Logger;
  *  http://my.oschina.net/xnkl/blog/477690
  */
 public class DiskQueuePool implements Closeable{ 
-    static final Logger log = Logger.getLogger(DiskQueuePool.class);
+    static final Logger log = LoggerFactory.getLogger(DiskQueuePool.class);
     private final BlockingQueue<String> deletingQueue = new LinkedBlockingQueue<String>();
     
     private String fileBackupPath;

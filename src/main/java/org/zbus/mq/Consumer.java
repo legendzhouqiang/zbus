@@ -32,12 +32,13 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 
 public class Consumer extends MqAdmin implements Closeable {
-	private static final Logger log = Logger.getLogger(Consumer.class); 
+	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	private MessageInvoker client;  
 	private String topic = null;  
 	private int consumeTimeout = 300000; // 5 minutes

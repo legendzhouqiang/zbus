@@ -42,6 +42,7 @@ import org.zbus.kit.ClassKit;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.server.filter.MemoryMqFilter;
 import org.zbus.mq.server.filter.MqFilter;
@@ -54,7 +55,7 @@ import org.zbus.proxy.HttpDmzProxy;
 import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServer implements Closeable{ 
-	private static final Logger log = Logger.getLogger(MqServer.class); 
+	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
 	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();

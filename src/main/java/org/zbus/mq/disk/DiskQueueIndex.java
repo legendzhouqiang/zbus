@@ -10,9 +10,10 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 public class DiskQueueIndex {
-	static final Logger log = Logger.getLogger(DiskQueueIndex.class);
+	static final Logger log = LoggerFactory.getLogger(DiskQueueIndex.class);
     private static final String MAGIC = "v100";
     private static final String INDEX_FILE_SUFFIX = ".idx";
     private static final int EXT_ITEM_SIZE = 256;

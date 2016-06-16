@@ -8,6 +8,7 @@ import org.zbus.broker.ZbusBroker;
 import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcFactory;
 import org.zbus.rpc.mq.MqInvoker;
@@ -15,7 +16,7 @@ import org.zbus.rpc.mq.MqInvoker;
 
 public class RpcPerf {
 	static class Task extends Thread{
-		final Logger log = Logger.getLogger(Task.class);
+		final Logger log = LoggerFactory.getLogger(Task.class);
 		InterfaceExample biz;
 		int loopCount = 10000; 
 		long startTime;

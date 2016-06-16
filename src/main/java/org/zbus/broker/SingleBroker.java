@@ -26,6 +26,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.kit.pool.Pool;
 import org.zbus.net.EventDriver;
 import org.zbus.net.Sync.ResultCallback;
@@ -35,7 +36,7 @@ import org.zbus.net.http.MessageClient;
 import org.zbus.net.http.MessageClientFactory;
 
 public class SingleBroker implements Broker {
-	private static final Logger log = Logger.getLogger(SingleBroker.class);     
+	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
 	
 	private BrokerConfig config; 
 	private EventDriver eventDriver;

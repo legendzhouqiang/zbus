@@ -20,12 +20,64 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.kit.log; 
+package org.zbus.kit.log;
 
-public interface LoggerFactory {
+import org.zbus.kit.log.impl.JdkLoggerFactory;
+
+public class LoggerFactory {
+	public static interface InternalLoggerFactory {
+		Logger getLogger(Class<?> clazz);
+		Logger getLogger(String name);
+	}
 	
-	Logger getLogger(Class<?> clazz);
+	private static InternalLoggerFactory factory;
+	static {
+		initDefaultFactory();
+	}
 	
-	Logger getLogger(String name);
+	public static void setLoggerFactory(InternalLoggerFactory factory) {
+		if (factory != null) {
+			LoggerFactory.factory = factory;
+		}
+	}
+	
+	public static Logger getLogger(Class<?> clazz) {
+		return factory.getLogger(clazz);
+	}
+	
+	public static Logger getLogger(String name) {
+		return factory.getLogger(name);
+	}
+	
+	
+	public static void initDefaultFactory() {
+		if (factory != null){
+			return ;
+		}
+		
+		try {
+			//default to Log4j
+			Class.forName("org.apache.log4j.Logger");
+			String defaultFactory = String.format("%s.impl.Log4jLoggerFactory", Logger.class.getPackage().getName());
+			Class<?> factoryClass = Class.forName(defaultFactory);
+			factory = (InternalLoggerFactory)factoryClass.newInstance();
+			return;
+		} catch (Exception e) {  
+		}
+		
+		try {
+			//try slf4j
+			Class.forName("org.slf4j.Logger");
+			String defaultFactory = String.format("%s.impl.Sl4jLoggerFactory", Logger.class.getPackage().getName());
+			Class<?> factoryClass = Class.forName(defaultFactory);
+			factory = (InternalLoggerFactory)factoryClass.newInstance();
+			return;
+		} catch (Exception e) { 
+		} 
+		
+		if(factory == null){
+			factory = new JdkLoggerFactory();
+		}
+	} 
 
 }

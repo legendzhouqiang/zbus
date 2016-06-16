@@ -35,9 +35,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 public class ServerEntryTable{
-	private static final Logger log = Logger.getLogger(ServerEntryTable.class);
+	private static final Logger log = LoggerFactory.getLogger(ServerEntryTable.class);
 	//entry_id ==> list of same entries from different target_servers
 	public Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
 	//server_addr ==> list of entries from same target server

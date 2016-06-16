@@ -13,6 +13,7 @@ import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
 import org.zbus.kit.TimeKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
 import org.zbus.mq.Protocol.MqInfo;
@@ -29,7 +30,7 @@ import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.MessageAdaptor;
 
 public class MqAdaptor extends MessageAdaptor implements Closeable {
-	private static final Logger log = Logger.getLogger(MqAdaptor.class);
+	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
 
 	private final Map<String, AbstractMQ> mqTable;
 	private final Map<String, Session> sessionTable;

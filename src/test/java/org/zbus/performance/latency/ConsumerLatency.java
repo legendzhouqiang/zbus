@@ -3,11 +3,12 @@ package org.zbus.performance.latency;
 import org.zbus.broker.Broker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Consumer;
 import org.zbus.performance.Perf;
 
 public class ConsumerLatency {
-	private static final Logger log = Logger.getLogger(ConsumerLatency.class);
+	private static final Logger log = LoggerFactory.getLogger(ConsumerLatency.class);
 	public static void main(String[] args) throws Exception {  
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ");

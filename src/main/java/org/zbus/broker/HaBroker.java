@@ -28,13 +28,14 @@ import java.util.List;
 
 import org.zbus.broker.ha.DefaultBrokerSelector;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.http.MessageClient;
 
 public class HaBroker implements Broker {   
-	private static final Logger log = Logger.getLogger(HaBroker.class);
+	private static final Logger log = LoggerFactory.getLogger(HaBroker.class);
 	
 	BrokerSelector brokerSelector; 
 	final boolean ownBrokerSelector;

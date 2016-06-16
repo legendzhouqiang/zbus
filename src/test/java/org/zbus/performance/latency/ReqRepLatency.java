@@ -5,12 +5,13 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.mq.MqInvoker;
 
 public class ReqRepLatency {
-	private static final Logger log = Logger.getLogger(ProducerLatency.class);
+	private static final Logger log = LoggerFactory.getLogger(ProducerLatency.class);
 	public static void main(String[] args) throws Exception{   
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  

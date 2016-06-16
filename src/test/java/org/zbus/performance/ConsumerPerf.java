@@ -8,13 +8,14 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
 import org.zbus.net.http.Message;
 
 public class ConsumerPerf {
-	private static final Logger log = Logger.getLogger(ConsumerPerf.class); 
+	private static final Logger log = LoggerFactory.getLogger(ConsumerPerf.class); 
 	public static void main(String[] args) throws Exception{  
 		
 		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");

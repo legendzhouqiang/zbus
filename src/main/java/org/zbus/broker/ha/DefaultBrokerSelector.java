@@ -36,21 +36,22 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.HaBroker.BrokerSelector;
+import org.zbus.broker.SingleBroker;
 import org.zbus.broker.ha.ServerEntryTable.ServerList;
 import org.zbus.broker.ha.TrackSub.EntryRemoveHandler;
 import org.zbus.broker.ha.TrackSub.EntryUpdateHandler;
 import org.zbus.broker.ha.TrackSub.PubAllHandler;
 import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
 import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
-import org.zbus.broker.SingleBroker;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.EventDriver;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
 public class DefaultBrokerSelector implements BrokerSelector{
-	private static final Logger log = Logger.getLogger(DefaultBrokerSelector.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultBrokerSelector.class);
 	private static final int localIpHashCode = Math.abs(NetKit.getLocalIp().hashCode());
 	
 	private ServerEntryTable serverEntryTable = new ServerEntryTable();

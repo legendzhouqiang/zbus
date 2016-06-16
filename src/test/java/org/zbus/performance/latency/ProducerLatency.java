@@ -3,12 +3,13 @@ package org.zbus.performance.latency;
 import org.zbus.broker.Broker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Producer;
 import org.zbus.net.http.Message;
 import org.zbus.performance.Perf;
 
 public class ProducerLatency {
-	private static final Logger log = Logger.getLogger(ProducerLatency.class);
+	private static final Logger log = LoggerFactory.getLogger(ProducerLatency.class);
 	public static void main(String[] args) throws Exception { 
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);  
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ");

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
  
 /**
  * 私有异常，测试前端未知场景
@@ -168,7 +169,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		}
 	}
 	
-	private static final Logger log = Logger.getLogger(InterfaceExampleImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(InterfaceExampleImpl.class);
 	int timeBiggerThan100ms = 0;
 	@Override
 	public int getUserScore() { 

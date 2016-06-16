@@ -25,9 +25,9 @@ package org.zbus.kit.log.impl;
 
 import org.slf4j.spi.LocationAwareLogger;
 import org.zbus.kit.log.Logger;
-import org.zbus.kit.log.LoggerFactory;
+import org.zbus.kit.log.LoggerFactory.InternalLoggerFactory;
 
-public class Sl4jLoggerFactory implements LoggerFactory {
+public class Sl4jLoggerFactory implements InternalLoggerFactory {
 	
 	public Logger getLogger(Class<?> clazz) {
 		return new Sl4jLogger(clazz);
@@ -133,5 +133,24 @@ class Sl4jLogger extends Logger {
 	
 	public boolean isFatalEnabled() {
 		return log.isErrorEnabled();
+	}
+
+	@Override
+	public void trace(String message) {
+		trace(message, (Throwable)null);	}
+
+	@Override
+	public void trace(String message, Throwable t) {
+		if (log instanceof LocationAwareLogger) {
+	        ((LocationAwareLogger) log).log(null, FQCN, 
+	        		LocationAwareLogger.TRACE_INT, message, null, t);
+	    } else {
+	        log.error(message);
+	    } 
+	}
+
+	@Override
+	public boolean isTraceEnabled() { 
+		return log.isTraceEnabled();
 	}
 }

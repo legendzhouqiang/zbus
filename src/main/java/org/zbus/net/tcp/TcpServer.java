@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.CodecInitializer;
 import org.zbus.net.EventDriver;
 import org.zbus.net.IoAdaptor;
@@ -28,7 +29,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 
 public class TcpServer implements Server {
-	private static final Logger log = Logger.getLogger(TcpServer.class); 
+	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 
 	
 	protected CodecInitializer codecInitializer; 
 	protected EventDriver eventDriver;

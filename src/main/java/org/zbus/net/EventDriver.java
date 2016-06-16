@@ -7,9 +7,10 @@ import java.lang.reflect.Method;
 
 import org.zbus.kit.ClassKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 public class EventDriver implements Closeable {
-	private static final Logger log = Logger.getLogger(EventDriver.class);
+	private static final Logger log = LoggerFactory.getLogger(EventDriver.class);
 
 	private Object bossGroup;  
 	private Object workerGroup;  

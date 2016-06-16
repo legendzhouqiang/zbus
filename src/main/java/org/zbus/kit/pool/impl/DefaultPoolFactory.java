@@ -28,13 +28,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.kit.pool.ObjectFactory;
 import org.zbus.kit.pool.Pool;
 import org.zbus.kit.pool.PoolConfig;
 import org.zbus.kit.pool.PoolFactory;
 
 public class DefaultPoolFactory implements PoolFactory {
-	private static final Logger log = Logger.getLogger(Pool.class);
+	private static final Logger log = LoggerFactory.getLogger(Pool.class);
 	@Override
 	public <T> Pool<T> getPool(ObjectFactory<T> factory, PoolConfig config) { 
 		log.debug("Using Zbus DefaultPool");

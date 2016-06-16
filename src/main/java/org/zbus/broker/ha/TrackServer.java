@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.EventDriver;
@@ -45,7 +46,7 @@ import org.zbus.net.http.MessageClient;
 import org.zbus.net.http.MessageServer;
 
 public class TrackServer extends MessageAdaptor implements Closeable{
-	private static final Logger log = Logger.getLogger(TrackServer.class); 
+	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
 	
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
 	private ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();

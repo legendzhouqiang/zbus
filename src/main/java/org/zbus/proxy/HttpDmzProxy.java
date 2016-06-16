@@ -9,6 +9,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.Protocol.MqMode;
@@ -30,7 +31,7 @@ import org.zbus.rpc.mq.ServiceConfig;
  *
  */
 public class HttpDmzProxy implements ConsumerHandler, Closeable {
-	private static final Logger log = Logger.getLogger(HttpDmzProxy.class); 
+	private static final Logger log = LoggerFactory.getLogger(HttpDmzProxy.class); 
 	
 	public static class ProxyConfig{
 		public BrokerConfig brokerConfig;

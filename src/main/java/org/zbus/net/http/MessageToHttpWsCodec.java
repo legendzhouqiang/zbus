@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -39,7 +40,7 @@ import io.netty.handler.ssl.SslHandler;
  *
  */
 public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message> {
-	private static final Logger log = Logger.getLogger(MessageToHttpWsCodec.class);
+	private static final Logger log = LoggerFactory.getLogger(MessageToHttpWsCodec.class);
 
 	private static final String WEBSOCKET_PATH = "/";
 	private WebSocketServerHandshaker handshaker;

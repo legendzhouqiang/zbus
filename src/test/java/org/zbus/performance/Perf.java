@@ -9,6 +9,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 
 
 public abstract class Perf implements Closeable{
@@ -17,7 +18,7 @@ public abstract class Perf implements Closeable{
 		public abstract void doTask() throws Exception;
 		public void close() throws IOException{  } 
 	}
-	private static final Logger log = Logger.getLogger(Perf.class); 
+	private static final Logger log = LoggerFactory.getLogger(Perf.class); 
 	public int threadCount = 16;
 	public int loopCount = 1000000;
 	public int logInterval = 0;

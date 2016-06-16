@@ -49,6 +49,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.Invoker;
 import org.zbus.net.Sync.Id; 
@@ -64,7 +65,7 @@ import org.zbus.net.Sync.Id;
  *
  */
 public class Message implements Id {  
-	private static final Logger log = Logger.getLogger(Message.class); 
+	private static final Logger log = LoggerFactory.getLogger(Message.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
 	public static final String HEARTBEAT        = "heartbeat"; //心跳消息
