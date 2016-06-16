@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.ha;
+package org.zbus.broker.ha;
 
 import java.io.Closeable;
 import java.io.IOException;

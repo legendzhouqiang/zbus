@@ -25,8 +25,8 @@ package org.zbus.rpc.direct;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.zbus.ha.ServerEntry;
-import org.zbus.ha.TrackPub;
+import org.zbus.broker.ha.ServerEntry;
+import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.NetKit;
 import org.zbus.mq.server.UrlInfo;
 import org.zbus.net.Client.ConnectedHandler;

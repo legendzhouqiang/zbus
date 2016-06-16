@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.zbus.ha;
+package org.zbus.broker.ha;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,13 +36,13 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.HaBroker.BrokerSelector;
+import org.zbus.broker.ha.ServerEntryTable.ServerList;
+import org.zbus.broker.ha.TrackSub.EntryRemoveHandler;
+import org.zbus.broker.ha.TrackSub.EntryUpdateHandler;
+import org.zbus.broker.ha.TrackSub.PubAllHandler;
+import org.zbus.broker.ha.TrackSub.ServerJoinHandler;
+import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.broker.SingleBroker;
-import org.zbus.ha.ServerEntryTable.ServerList;
-import org.zbus.ha.TrackSub.EntryRemoveHandler;
-import org.zbus.ha.TrackSub.EntryUpdateHandler;
-import org.zbus.ha.TrackSub.PubAllHandler;
-import org.zbus.ha.TrackSub.ServerJoinHandler;
-import org.zbus.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.net.EventDriver;
