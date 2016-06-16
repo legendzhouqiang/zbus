@@ -68,7 +68,7 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 		final String mq = msg.getMq();
 		final String msgId = msg.getId();
 		final String sender = msg.getSender();
-		String url = msg.getOriginUrl(); //zbus added this key-value
+		String url = msg.getUrl();
 		
 		if (url == null) {
 			log.error("missing url");
@@ -82,11 +82,9 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 		}
 		msg.removeHead(Message.MQ);
 		msg.removeHead(Message.ID);
-		msg.removeHead(Message.SENDER);
-		msg.removeHead(Message.ORIGIN_URL);
+		msg.removeHead(Message.SENDER); 
 		msg.removeHead(Message.SERVER);
-
-		msg.setUrl(url);
+ 
 		msg.setServer(target);
 
 		Message res = null;
