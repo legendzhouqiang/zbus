@@ -218,6 +218,7 @@ public class MqServerConfig{
 		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), "");
 		this.mqFilterPersist = valueOf(xeval(xpath, doc, prefix, "mqFilter"), false);
 		this.serverMainIpOrder = valueOf(xeval(xpath, doc, prefix, "mainIpOrder"),null);
+		this.trackServerList = valueOf(xeval(xpath, doc, prefix, "trackServerList"),null);
 		
 		XPathExpression expr = xpath.compile("//http-proxy/*");
 		NodeList list = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);

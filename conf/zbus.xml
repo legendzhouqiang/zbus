@@ -13,6 +13,8 @@
 	<mqFitler>false</mqFitler>
 	<!-- If ip is set to 0.0.0.0, the MqServer server identity IP preference -->
 	<mainIpOrder></mainIpOrder>
+	<!-- HA mode, specify TrackServer list, e.g. 127.0.0.1:16666;127.0.0.1:16667 -->
+	<trackServerList></trackServerList>
 </server> 
 
 <zookeeper>

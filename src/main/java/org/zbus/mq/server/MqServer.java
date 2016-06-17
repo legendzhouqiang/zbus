@@ -142,7 +142,8 @@ public class MqServer implements Closeable{
 		
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor); 
 		
-		if(config.trackServerList != null){
+		if(config.trackServerList != null && !"".equals(config.trackServerList)){
+			log.info("Zbus run in HA mode");
 			setupTracker(config.trackServerList);
 		}
 		
