@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.server.ZooKeeperServer;
@@ -410,5 +411,19 @@ public class QuorumPeerConfig {
 
     public Boolean getQuorumListenOnAllIPs() {
         return quorumListenOnAllIPs;
+    }
+    
+    
+    ////////////////////////ADDED////////////////////////
+    public static QuorumPeerConfig loadFromXmlNode(String xmlFile, String prefix) throws ConfigException, IOException{
+    	QuorumPeerConfig qpc = new QuorumPeerConfig();
+		Properties zkProp;
+		try {
+			zkProp = ConfigKit.loadFromXmlNode(xmlFile, prefix);
+		} catch (Exception e) { 
+			throw new ConfigException(e.getMessage(), e);
+		}
+		qpc.parseProperties(zkProp); 
+		return qpc;
     }
 }

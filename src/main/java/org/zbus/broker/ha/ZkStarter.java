@@ -1,4 +1,4 @@
-package org.zbus.examples;
+package org.zbus.broker.ha;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.zookeeper.server.quorum.QuorumPeerMain;

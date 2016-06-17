@@ -24,6 +24,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.zookeeper.server.DatadirCleanupManager;
 import org.zbus.zookeeper.server.ServerCnxnFactory;
+import org.zbus.zookeeper.server.ServerConfig;
 import org.zbus.zookeeper.server.ZKDatabase;
 import org.zbus.zookeeper.server.ZooKeeperServerMain;
 import org.zbus.zookeeper.server.persistence.FileTxnSnapLog;
@@ -157,5 +158,28 @@ public class QuorumPeerMain {
           // warn, but generally this is ok
           LOG.warn("Quorum Peer interrupted", e);
       }
-    }
+    } 
+    
+	////////////////// ADDED/////////////////////// 
+	public static void runFromXmlNode(String xmlFile, String prefix) {
+		try {
+			QuorumPeerConfig config = QuorumPeerConfig.loadFromXmlNode(xmlFile, prefix); 
+			if(config.servers.size() > 0){
+				QuorumPeerMain main = new QuorumPeerMain();
+				DatadirCleanupManager purgeMgr = new DatadirCleanupManager(config.getDataDir(), config.getDataLogDir(),
+						config.getSnapRetainCount(), config.getPurgeInterval());
+				purgeMgr.start();
+				main.runFromConfig(config);
+				
+			} else { 
+				ZooKeeperServerMain main = new ZooKeeperServerMain();
+				ServerConfig serverConfig = new ServerConfig();
+				serverConfig.readFrom(config);
+				main.runFromConfig(serverConfig);
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+
 }
