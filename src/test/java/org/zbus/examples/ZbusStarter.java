@@ -11,7 +11,7 @@ public class ZbusStarter {
 		MqServerConfig config = new MqServerConfig();   
 		config.serverPort = 15555; 
 		config.verbose = true; //print out message
-		config.storePath = "./store";   
+		config.storePath = "/tmp/zbus/mq";   
 		
 		EventDriver eventDriver = new EventDriver();
 		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL =on zbus
@@ -25,7 +25,7 @@ public class ZbusStarter {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
-		config.loadFromXml("zbus.xml");
+		config.loadFromXml("conf/zbus.xml");
 		
 		EventDriver eventDriver = new EventDriver();
 		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL on zbus

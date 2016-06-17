@@ -7,12 +7,12 @@
 	<!-- MqServer port -->
 	<port>15555</port>
 	<verbose>false</verbose>
-	<mq-store>/tmp/zbus/mq</mq-store> 
-	<register-token></register-token>
+	<mqStore>/tmp/zbus/mq</mqStore> 
+	<registerToken></registerToken>
 	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->
-	<mq-fitler>false</mq-fitler>
+	<mqFitler>false</mqFitler>
 	<!-- If ip is set to 0.0.0.0, the MqServer server identity IP preference -->
-	<main-ip-order></main-ip-order>
+	<mainIpOrder></mainIpOrder>
 </server> 
 
 <zookeeper>

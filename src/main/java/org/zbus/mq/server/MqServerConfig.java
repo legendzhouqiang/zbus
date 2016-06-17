@@ -31,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
@@ -197,24 +198,29 @@ public class MqServerConfig{
 		if(value == null) return defaultValue;
 		return Boolean.valueOf(value);
 	}
+	
+	private static String xeval(XPath xpath, Object item, String prefix, String key) throws XPathExpressionException{
+		return xpath.evaluate(prefix + "/" + key,  item);
+	}
 	 
 	public void loadFromXml(String xmlConfigSourceFile) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();   
 		InputSource source = new InputSource(xmlConfigSourceFile);  
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document document = db.parse(source);  
+		Document doc = db.parse(source); 
 		
-		this.serverHost = valueOf(xpath.evaluate("//server/ip",document), "0.0.0.0");  
-		this.serverPort = valueOf(xpath.evaluate("//server/port",document), 15555);
-		this.storePath = valueOf(xpath.evaluate("//server/mq-store",document), "./store");
-		this.verbose = valueOf(xpath.evaluate("//server/verbose",document), false);
-		this.registerToken = valueOf(xpath.evaluate("//server/register-token",document), "");
-		this.mqFilterPersist = valueOf(xpath.evaluate("//server/mq-fitler",document), false);
-		this.serverMainIpOrder = valueOf(xpath.evaluate("//server/register-token", document), null);
+		String prefix = "//server"; 
+		this.serverHost = valueOf(xeval(xpath, doc, prefix, "ip"), "0.0.0.0");  
+		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
+		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "/tmp/zbus/mq");
+		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false);
+		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), "");
+		this.mqFilterPersist = valueOf(xeval(xpath, doc, prefix, "mqFilter"), false);
+		this.serverMainIpOrder = valueOf(xeval(xpath, doc, prefix, "mainIpOrder"),null);
 		
 		XPathExpression expr = xpath.compile("//http-proxy/*");
-		NodeList list = (NodeList) expr.evaluate(document, XPathConstants.NODESET);
+		NodeList list = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 		if(list != null && list.getLength()> 0){
 			this.httpProxyConfigList = new ArrayList<ProxyConfig>();
 			for (int i = 0; i < list.getLength(); i++) {
