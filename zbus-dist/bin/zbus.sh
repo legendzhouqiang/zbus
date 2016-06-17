@@ -6,7 +6,13 @@ fi
 ZBUS_HOME=../
 JAVA_OPTS="-Dfile.encoding=UTF-8 -server -Xms64m -Xmx1024m -XX:+UseParallelGC"
 MAIN_CLASS=org.zbus.mq.server.MqServer
-MAIN_OPTS="-conf conf/zbus.xml"
+if [ -z "$1" ]
+  then
+    MAIN_OPTS="-conf ../conf/zbus.xml"
+else
+	MAIN_OPTS="-conf $1"
+fi
+
 LIB_OPTS="$ZBUS_HOME/lib/*:$ZBUS_HOME/classes:$ZBUS_HOME/*"
 nohup $JAVA_HOME/bin/java $JAVA_OPTS -cp $LIB_OPTS $MAIN_CLASS $MAIN_OPTS &
 
