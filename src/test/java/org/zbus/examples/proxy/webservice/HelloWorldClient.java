@@ -1,4 +1,4 @@
-package org.zbus.examples.webservice;
+package org.zbus.examples.proxy.webservice;
 
 import java.net.URL;
 
@@ -18,7 +18,7 @@ public class HelloWorldClient {
 	
 	public static void main(String[] args) throws Exception { 
 		String addressRaw = "http://localhost:8080/?wsdl";
-		String addressZbus = "http://localhost:15555/my-webservice/?wsdl";
+		String addressZbus = "http://localhost:15555/HttpProxyExample/?wsdl";
 		test(addressRaw);
 		test(addressZbus);
 	} 

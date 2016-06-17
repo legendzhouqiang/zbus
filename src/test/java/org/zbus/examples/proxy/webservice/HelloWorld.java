@@ -1,4 +1,4 @@
-package org.zbus.examples.webservice;
+package org.zbus.examples.proxy.webservice;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
