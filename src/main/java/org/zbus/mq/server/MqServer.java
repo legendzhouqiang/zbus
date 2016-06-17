@@ -136,6 +136,7 @@ public class MqServer implements Closeable{
 	} 
 	
 	public void start() throws Exception{  
+		long start = System.currentTimeMillis();
 		httpServer = new MessageServer(eventDriver); 
 		eventDriver = httpServer.getEventDriver();
 		
@@ -157,6 +158,9 @@ public class MqServer implements Closeable{
 				proxy.start();
 			}
 		}
+		long end = System.currentTimeMillis();
+		log.info("Zbus started sucessfully in %d ms", (end-start));
+		
 	}
 	 
 	@Override
@@ -250,28 +254,16 @@ public class MqServer implements Closeable{
 	}
 
 	public static void main(String[] args) throws Exception {
-		MqServerConfig config = new MqServerConfig();
-		String xmlConfigFile = ConfigKit.option(args, "-conf", "zbus.xml");
-		boolean useCommandLine = true;
-		if(xmlConfigFile != null){
-			try{
-				config.loadFromXml(xmlConfigFile);
-				useCommandLine = false;
-			} catch(Exception ex){ 
-				log.warn(xmlConfigFile + " config error encountered, using command line config instead\n" + ex.getMessage()); 
-			}  
-		}
-		if(useCommandLine){
-			config.serverHost = ConfigKit.option(args, "-h", "0.0.0.0");
-			config.serverPort = ConfigKit.option(args, "-p", 15555); 
-			config.verbose = ConfigKit.option(args, "-verbose", true);
-			config.storePath = ConfigKit.option(args, "-store", "store");
-			config.trackServerList = ConfigKit.option(args, "-track", null); 
-			config.mqFilterPersist = ConfigKit.option(args, "-mqFilter", false);
-			config.serverMainIpOrder = ConfigKit.option(args, "-ipOrder", null);
-			config.registerToken = ConfigKit.option(args, "-regToken", ""); 
-		}
-		
+		MqServerConfig config = new MqServerConfig(); 
+		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/zbus.xml");
+		try{
+			config.loadFromXml(xmlConfigFile); 
+		} catch(Exception ex){ 
+			String message = xmlConfigFile + " config error encountered\n" + ex.getMessage();
+			System.err.println(message);
+			log.warn(message); 
+			return;
+		} 
 		
 		final MqServer server = new MqServer(config);
 		server.start(); 

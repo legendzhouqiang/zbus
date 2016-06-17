@@ -50,7 +50,7 @@ public class MqServerConfig{
 	public String sslPrivateKeyFile;
 	
 	public boolean verbose = false;
-	public String storePath = "./store";
+	public String storePath = "/tmp/zbus/mq";
 	public String registerToken = "";  
 	public String serverMainIpOrder;
 	public boolean mqFilterPersist = false;

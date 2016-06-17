@@ -9,7 +9,7 @@ public class Zbus1 {
 		MqServerConfig config = new MqServerConfig();   
 		config.serverPort = 15555; 
 		config.verbose = true; 
-		config.storePath = "./store1";  
+		config.storePath = "/tmp/zbus/mq1";  
 		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
 		  
 		
