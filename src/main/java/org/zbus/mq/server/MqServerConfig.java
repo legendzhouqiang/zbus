@@ -23,6 +23,9 @@
 package org.zbus.mq.server;
 
 
+import static org.zbus.kit.ConfigKit.valueOf;
+import static org.zbus.kit.ConfigKit.xeval;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +34,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
@@ -186,22 +188,6 @@ public class MqServerConfig{
 	}
  
 	
-	private static String valueOf(String value, String defaultValue){
-		if(value == null) return defaultValue;
-		return value;
-	}
-	private static int valueOf(String value, int defaultValue){
-		if(value == null) return defaultValue;
-		return Integer.valueOf(value);
-	}
-	private static boolean valueOf(String value, boolean defaultValue){
-		if(value == null) return defaultValue;
-		return Boolean.valueOf(value);
-	}
-	
-	private static String xeval(XPath xpath, Object item, String prefix, String key) throws XPathExpressionException{
-		return xpath.evaluate(prefix + "/" + key,  item);
-	}
 	 
 	public void loadFromXml(String xmlConfigSourceFile) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();   
@@ -211,14 +197,17 @@ public class MqServerConfig{
 		Document doc = db.parse(source); 
 		
 		String prefix = "//server"; 
-		this.serverHost = valueOf(xeval(xpath, doc, prefix, "ip"), "0.0.0.0");  
+		this.serverHost = valueOf(xeval(xpath, doc, prefix, "host"), "0.0.0.0");  
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
-		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "/tmp/zbus/mq");
+		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "./store");
 		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false);
 		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), "");
 		this.mqFilterPersist = valueOf(xeval(xpath, doc, prefix, "mqFilter"), false);
 		this.serverMainIpOrder = valueOf(xeval(xpath, doc, prefix, "mainIpOrder"),null);
 		this.trackServerList = valueOf(xeval(xpath, doc, prefix, "trackServerList"),null);
+		
+		this.sslCertificateFile = valueOf(xeval(xpath, doc, prefix, "sslCertificateFile"),null);
+		this.sslPrivateKeyFile = valueOf(xeval(xpath, doc, prefix, "sslPrivateKeyFile"),null);
 		
 		XPathExpression expr = xpath.compile("//http-proxy/*");
 		NodeList list = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);

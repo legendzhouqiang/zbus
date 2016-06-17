@@ -10,8 +10,7 @@ public class ZbusStarter {
 	public static void main_simple(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
 		config.serverPort = 15555; 
-		config.verbose = true; //print out message
-		config.storePath = "/tmp/zbus/mq";   
+		config.verbose = true; //print out message 
 		
 		EventDriver eventDriver = new EventDriver();
 		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL =on zbus

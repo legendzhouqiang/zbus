@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracker>
+
+<server>
+	<!-- Change to public IP if you are using Aliyun -->
+	<host>0.0.0.0</host> 
+	<port>16667</port>  
+	<verbose>true</verbose> 
+</server> 
+
+</tracker>
+

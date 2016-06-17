@@ -22,6 +22,8 @@
  */
 package org.zbus.mq.server;
 
+import static org.zbus.kit.ConfigKit.isBlank;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +90,7 @@ public class MqServer implements Closeable{
 		} 
 		
 		if(eventDriver.getSslContext() == null){
-			if(config.sslCertificateFile != null && config.sslPrivateKeyFile != null){
+			if (!isBlank(config.sslCertificateFile) && !isBlank(config.sslPrivateKeyFile)){ 
 				File sslCert = new File(config.sslCertificateFile);
 				File sslPriv = new File(config.sslPrivateKeyFile);
 				if(!sslCert.exists()){

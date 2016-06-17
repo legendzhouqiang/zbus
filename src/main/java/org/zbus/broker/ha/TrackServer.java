@@ -60,19 +60,22 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageServer server;
 	private String serverHost = "0.0.0.0";
 	private int serverPort = 16666;
-	
-	public TrackServer(int port){
-		this("0.0.0.0", port, null);
-	}
-	public TrackServer(String host, int port){
-		this(host, port, null);
-	}
-	
-	public TrackServer(String host, int port, EventDriver driver){  
-		this.serverHost = host;
+	 
+	public TrackServer(int port){ 
 		this.serverPort = port;
-		this.eventDriver = driver;
+		initCommand();
+	}
+	
+	public TrackServer(TrackServerConfig config){
+		this.serverHost = config.getServerHost();
+		this.serverPort = config.getServerPort();
+		this.eventDriver = config.getEventDriver(); 
+		this.verbose = config.isVerbose();
 		
+		initCommand();
+	}
+	
+	private void initCommand(){
 		cmd(HaCommand.EntryUpdate, entryUpdateHandler); 
 		cmd(HaCommand.EntryRemove, entryRemoveHandler); 
 
@@ -80,7 +83,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		cmd(HaCommand.ServerLeave, serverLeaveHandler);
 
 		cmd(HaCommand.SubAll, subAllHandler);
-	}   
+	}
 	
 	public void start() throws Exception{
 		server = new MessageServer(eventDriver);
@@ -266,13 +269,18 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	
 	
 	public static void main(String[] args) throws Exception { 
-		String host = ConfigKit.option(args, "-h", "0.0.0.0");
-		int port = ConfigKit.option(args, "-p", 16666);
-		boolean verbose = ConfigKit.option(args, "-verbose", true);
+		TrackServerConfig config = new TrackServerConfig(); 
+		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/ha/tracker1.xml");
+		try{
+			config.loadFromXml(xmlConfigFile); 
+		} catch(Exception ex){ 
+			String message = xmlConfigFile + " config error encountered\n" + ex.getMessage();
+			System.err.println(message);
+			log.warn(message); 
+			return;
+		} 
 		
-		final TrackServer server = new TrackServer(host, port);
-		server.setVerbose(verbose); 
-		server.start();
+		final TrackServer server = new TrackServer(config); 
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 

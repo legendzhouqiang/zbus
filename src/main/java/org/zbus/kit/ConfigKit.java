@@ -120,6 +120,23 @@ public class ConfigKit {
 		return props;
 	}
 	
+	public static String valueOf(String value, String defaultValue){
+		if(value == null) return defaultValue;
+		return value;
+	}
+	public static int valueOf(String value, int defaultValue){
+		if(value == null) return defaultValue;
+		return Integer.valueOf(value);
+	}
+	public static boolean valueOf(String value, boolean defaultValue){
+		if(value == null) return defaultValue;
+		return Boolean.valueOf(value);
+	} 
+	
+	public static boolean isBlank(String value){
+		return value == null || value.trim().equals("");
+	}
+	
 	public static String xeval(XPath xpath, Object item, String prefix, String key) throws XPathExpressionException{
 		return xpath.evaluate(prefix + "/" + key,  item);
 	}

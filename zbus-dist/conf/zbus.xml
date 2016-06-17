@@ -2,34 +2,32 @@
 <zbus>  
 
 <server>
-	<!-- MqServer ip, change to open IP if you are using Aliyun -->
-	<ip>0.0.0.0</ip>
+	<!-- MqServer host, change to public IP if you are using Aliyun -->
+	<host>0.0.0.0</host>
 	<!-- MqServer port -->
 	<port>15555</port>
+	
+	<!-- HA mode, specify TrackServer list, e.g. 127.0.0.1:16666;127.0.0.1:16667 
+	Just leave it blank in single mode.
+	-->
+	<trackServerList></trackServerList>  
+	
 	<verbose>false</verbose>
-	<mqStore>/tmp/zbus/mq</mqStore> 
+	<mqStore>./store</mqStore> 
 	<registerToken></registerToken>
+	
 	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->
 	<mqFitler>false</mqFitler>
-	<!-- If ip is set to 0.0.0.0, the MqServer server identity IP preference -->
+	
+	<!-- If ip is set to 0.0.0.0, the MqServer server identity(IP) can choose preference
+	default: *>10>172>192>127
+	-->
 	<mainIpOrder></mainIpOrder>
+	
+	<!-- SSL support configure, add SSL cert and private file full path name -->
+	<sslCertificateFile></sslCertificateFile>
+	<sslPrivateKeyFile></sslPrivateKeyFile>
 </server> 
-
-<zookeeper>
-	<!-- The number of milliseconds of each tick -->
-	<tickTime>2000</tickTime>
-	<!--The number of ticks that the initial synchronization phase can take -->
-	<initLimit>10</initLimit>
-	<!-- The number of ticks that can pass between sending a request and getting an acknowledgement -->	 
-	<syncLimit>5</syncLimit>
-	<!--the directory where the snapshot is stored. do not use /tmp for storage, /tmp here is just example sakes. -->
-	<dataDir>/tmp/zbus/zookeeper</dataDir>
-	<!--the port at which the clients will connect -->
-	<clientPort>2181</clientPort>  
-	<!--the maximum number of client connections. increase this if you need to handle more clients 
-	<maxClientCnxns>60</maxClientCnxns>
-	--> 
-</zookeeper>
 
 <http-proxy>
 	<proxy>

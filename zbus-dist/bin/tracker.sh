@@ -6,7 +6,12 @@ fi
 ZBUS_HOME=../
 JAVA_OPTS="-Dfile.encoding=UTF-8 -server -Xms64m -Xmx1024m -XX:+UseParallelGC"
 MAIN_CLASS=org.zbus.broker.ha.TrackServer
-MAIN_OPTS="-h 0.0.0.0 -p 16666 -verbose true"
+if [ -z "$1" ]
+  then
+    MAIN_OPTS="-conf ../conf/ha/tracker1.xml"
+else
+	MAIN_OPTS="-conf $1"
+fi
 LIB_OPTS="$ZBUS_HOME/lib/*:$ZBUS_HOME/classes:$ZBUS_HOME/*"
 nohup $JAVA_HOME/bin/java $JAVA_OPTS -cp $LIB_OPTS $MAIN_CLASS $MAIN_OPTS &
 
