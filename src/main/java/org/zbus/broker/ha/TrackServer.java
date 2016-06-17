@@ -281,6 +281,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		} 
 		
 		final TrackServer server = new TrackServer(config); 
+		server.start();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
