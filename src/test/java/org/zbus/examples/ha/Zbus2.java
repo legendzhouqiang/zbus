@@ -7,7 +7,7 @@ import org.zbus.mq.server.MqServerConfig;
 public class Zbus2 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/ha/zbus1.xml");
+		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/ha/zbus2.xml");
 
 		MqServerConfig config = new MqServerConfig();
 		config.loadFromXml(xmlConfigFile);
