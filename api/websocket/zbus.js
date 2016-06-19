@@ -161,16 +161,18 @@ Message.HEARTBEAT   = "heartbeat";
 Message.REMOTE_ADDR = "remote-addr";
 Message.ENCODING    = "encoding"; 
 
-Message.CMD     	= "cmd";
-Message.SUB_CMD 	= "sub_cmd";
-Message.BROKER  	= "broker";
-Message.TOPIC   	= "topic"; 
-Message.MQ      	= "mq"; 
-Message.ID      	= "id";	
-Message.RAWID   	= "rawid";
-Message.ACK     	= "ack";	 
-Message.SENDER  	= "sender";
-Message.RECVER  	= "recver";
+Message.CMD     	  = "cmd"; 
+Message.BROKER  	  = "broker";
+Message.TOPIC   	  = "topic"; 
+Message.MQ      	  = "mq"; 
+Message.ID      	  = "id";	
+Message.RAWID   	  = "rawid";
+Message.ACK     	  = "ack";	 
+Message.SENDER  	  = "sender";
+Message.RECVER  	  = "recver";
+Message.ORIGIN_URL    = "origin_url";
+Message.ORIGIN_ID     = "rawid";
+Message.ORIGIN_STATUS = "reply_code"
 
 	
 Message.prototype.getHead = function(key){
@@ -238,13 +240,7 @@ Message.prototype.getCmd = function(){
 };
 Message.prototype.setCmd = function(val){
 	this.setHead(Message.CMD, val);
-};
-Message.prototype.getSubCmd = function(){
-    return this.getHead(Message.SUB_CMD);
-};
-Message.prototype.setSubCmd = function(val){
-	this.setHead(Message.SUB_CMD, val);
-};
+}; 
 
 Message.prototype.getSender = function(){
     return this.getHead(Message.SENDER);
@@ -260,6 +256,28 @@ Message.prototype.setRecver = function(val){
 	this.setHead(Message.RECVER, val);
 };
 
+Message.prototype.getOriginUrl = function(){
+    return this.getHead(Message.ORIGIN_URL);
+};
+Message.prototype.setOriginUrl = function(val){
+	this.setHead(Message.ORIGIN_URL, val);
+};
+
+Message.prototype.getOriginStatus = function(){
+    return this.getHead(Message.ORIGIN_STATUS);
+};
+Message.prototype.setOriginStatus = function(val){
+	this.setHead(Message.ORIGIN_STATUS, val);
+}; 
+
+Message.prototype.getOriginId = function(){
+    return this.getHead(Message.ORIGIN_ID);
+};
+Message.prototype.setOriginId = function(val){
+	this.setHead(Message.ORIGIN_ID, val);
+};
+
+
 Message.prototype.getPath = function(){
     return this.meta.path;
 };
@@ -267,6 +285,7 @@ Message.prototype.getUrl = function(){
     return this.meta.url;
 };
 Message.prototype.setUrl = function(url){
+	this.meta.status = null;
     return this.meta.setUrl(url);
 };
 Message.prototype.getStatus = function(){
@@ -419,7 +438,7 @@ MessageClient.prototype.connect = function(connectedHandler){
     this.socket.onclose = function(event){
     	clearInterval(client.heartbeatInterval);
     	setTimeout(function(){
-    		try{ client.connect(); } catch(e){}//ignore
+    		try{ client.connect(connectedHandler); } catch(e){}//ignore
     	}, client.reconnectInterval);
     }; 
     
@@ -530,13 +549,25 @@ Consumer.prototype.take = function(callback){
             });
             return;
         } 
-        try{
-        	res.setId(res.getRawId()); 
-        	res.removeHead(Message.RAWID);
-            callback(res);
-        } catch (error){
-            console.log(error);
+        if(res.isStatus200()){
+        	var originUrl = res.getOriginUrl();
+        	var id = res.getOriginId();
+        	res.removeHead(Message.ORIGIN_ID);
+        	if(originUrl == null){
+        		originUrl = "/";
+        	} else {
+        		res.removeHead(Message.ORIGIN_URL);
+        	}
+        	
+        	res.setId(id);  
+        	res.setUrl(originUrl);
+        	try{  
+                callback(res);
+            } catch (error){
+                console.log(error);
+            }
         }
+        
         return consumer.take(callback);
     });
 };

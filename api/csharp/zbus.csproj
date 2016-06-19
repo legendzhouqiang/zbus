@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9328E021-F9D4-4590-864E-F9D98F3326F2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zbus</RootNamespace>
+    <AssemblyName>zbus_clr</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Broker\BrokerConfig.cs" />
+    <Compile Include="Broker\IBroker.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Broker\BrokerException.cs" />
+    <Compile Include="Broker\SingleBroker.cs" />
+    <Compile Include="Kit\Json\Formatter.cs" />
+    <Compile Include="Kit\Json\Getters.cs" />
+    <Compile Include="Kit\Json\JSON.cs" />
+    <Compile Include="Kit\Json\JsonParser.cs" />
+    <Compile Include="Kit\Json\JsonSerializer.cs" />
+    <Compile Include="Kit\Json\SafeDictionary.cs" />
+    <Compile Include="Kit\Log\ConsoleLogger.cs" />
+    <Compile Include="Kit\Log\ILogger.cs" />
+    <Compile Include="Kit\Log\LoggerFactory.cs" />
+    <Compile Include="Mq\MqConfig.cs" />
+    <Compile Include="Mq\MqException.cs" />
+    <Compile Include="Net\Pool.cs" />
+    <Compile Include="Net\IoBuffer.cs" />
+    <Compile Include="Net\Message.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Net\MessageClient.cs" />
+    <Compile Include="Mq\Consumer.cs" />
+    <Compile Include="RPC\RpcException.cs" />
+    <Compile Include="RPC\Remote.cs" />
+    <Compile Include="RPC\Rpc.cs" />
+    <Compile Include="Mq\MqAdmin.cs" />
+    <Compile Include="Mq\Producer.cs" />
+    <Compile Include="Mq\Proto.cs" />
+    <Compile Include="RPC\RpcConfig.cs" />
+    <Compile Include="RPC\RpcProcessor.cs" />
+    <Compile Include="RPC\Service.cs" />
+    <Compile Include="RPC\ServiceConfig.cs" />
+    <Compile Include="RPC\IMessageProcessor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Broker\Ha\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
