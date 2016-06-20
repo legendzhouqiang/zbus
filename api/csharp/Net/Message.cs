@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Zbus.Net
 {
-    
+
     public class Message
     {
-        public static readonly string REMOTE_ADDR= "remote-addr";
-        
+        public static readonly string REMOTE_ADDR = "remote-addr";
 
-        public static readonly string CMD        = "cmd";
-        public static readonly string SUB_CMD    = "sub_cmd";
-        public static readonly string BROKER     = "broker";
-        public static readonly string TOPIC      = "topic";
-        public static readonly string SENDER     = "sender";
-        public static readonly string RECVER     = "recver";
-        public static readonly string MQ         = "mq"; 
-        public static readonly string ID         = "id";
-        public static readonly string RAWID      = "rawid";
-        public static readonly string ACK        = "ack";
-        public static readonly string ENCODING   = "encoding";
-        public static readonly string REPLY_CODE = "reply_code";
+
+        public static readonly string CMD = "cmd";
+        public static readonly string BROKER = "broker";
+        public static readonly string TOPIC = "topic";
+        public static readonly string SENDER = "sender";
+        public static readonly string RECVER = "recver";
+        public static readonly string MQ = "mq";
+        public static readonly string ID = "id";
+        public static readonly string ACK = "ack";
+        public static readonly string ENCODING = "encoding";
+        public static readonly string ORIGIN_URL = "origin_url";
+        public static readonly string ORIGIN_STATUS = "reply_code";
+        public static readonly string ORIGIN_ID = "rawid";
 
         private Meta meta = new Meta("");
-        private IDictionary<string, string> head = new Dictionary<string,string>();
+        private IDictionary<string, string> head = new Dictionary<string, string>();
         private byte[] body;
 
         public string GetHead(string key)
@@ -75,7 +76,7 @@ namespace Zbus.Net
             SetJsonBody(body, System.Text.Encoding.Default);
         }
 
-        public void SetBody(string body,  System.Text.Encoding encoding)
+        public void SetBody(string body, System.Text.Encoding encoding)
         {
             SetBody(encoding.GetBytes(body));
         }
@@ -91,7 +92,7 @@ namespace Zbus.Net
         }
 
 
-#region AUX_GET_SET
+        #region AUX_GET_SET
 
         public String Mq
         {
@@ -119,18 +120,6 @@ namespace Zbus.Net
             }
         }
 
-        public String SubCmd
-        {
-            get
-            {
-                return GetHead(SUB_CMD);
-            }
-            set
-            {
-                SetHead(SUB_CMD, value);
-
-            }
-        }
 
         public String Id
         {
@@ -145,18 +134,6 @@ namespace Zbus.Net
             }
         }
 
-        public String RawId
-        {
-            get
-            {
-                return GetHead(RAWID);
-            }
-            set
-            {
-                SetHead(RAWID, value);
-
-            }
-        }
         public String Sender
         {
             get
@@ -207,15 +184,41 @@ namespace Zbus.Net
             }
         }
 
-        public String ReplyCode
+        public String OriginUrl
         {
             get
             {
-                return GetHead(REPLY_CODE);
+                return GetHead(ORIGIN_URL);
             }
             set
             {
-                SetHead(REPLY_CODE, value);
+                SetHead(ORIGIN_URL, value);
+
+            }
+        }
+
+        public String OriginStatus
+        {
+            get
+            {
+                return GetHead(ORIGIN_STATUS);
+            }
+            set
+            {
+                SetHead(ORIGIN_STATUS, value);
+
+            }
+        }
+
+        public String OriginId
+        {
+            get
+            {
+                return GetHead(ORIGIN_ID);
+            }
+            set
+            {
+                SetHead(ORIGIN_ID, value);
 
             }
         }
@@ -235,19 +238,39 @@ namespace Zbus.Net
             }
         }
 
-        public string Uri
+        public string Url
         {
             get
             {
-                return this.meta.Uri;
+                return this.meta.Url;
+            }
+            set
+            {
+                this.meta.Url = value;
             }
         }
 
-        public string Path
+        public string RequestPath
         {
             get
             {
-                return this.meta.Path;
+                return this.meta.RequestPath;
+            }
+            set
+            {
+                this.meta.RequestPath = value;
+            }
+        }
+
+        public IDictionary<string, string> RequestParams
+        {
+            get
+            {
+                return this.meta.RequestParams;
+            }
+            set
+            {
+                this.meta.RequestParams = value;
             }
         }
 
@@ -409,10 +432,47 @@ namespace Zbus.Net
 
         public string Method { get; set; }
         public string Status { get; set; }
-        public string Uri { get; set; }
-        public string Path { get; set; }
-        public IDictionary<string, string> Params;
+        public string Url
+        {
+            get
+            {
+                return _url;
+            }
+            set
+            {
+                _url = value;
+                Status = null;
+            }
+        }
+        public string RequestPath
+        {
+            get
+            {
+                return _path;
+            }
+            set
+            {
+                this._path = value;
+                CalcUrl();
+            }
+        }
 
+        public IDictionary<string, string> RequestParams
+        {
+            get
+            {
+                return _requestParams;
+            }
+            set
+            {
+                this._requestParams = value;
+                CalcUrl();
+            }
+        }
+
+        private string _url;
+        private string _path; 
+        private IDictionary<string, string> _requestParams; 
         public string GetParam(string key)
         {
             return GetParam(key, null);
@@ -420,10 +480,10 @@ namespace Zbus.Net
 
         public string GetParam(string key, string defaultValue)
         {
-            if (this.Params == null)
+            if (this._requestParams == null)
                 return defaultValue;
             string value;
-            this.Params.TryGetValue(key, out value);
+            this._requestParams.TryGetValue(key, out value);
             if (value == null)
                 value = defaultValue;
             return value;
@@ -431,18 +491,19 @@ namespace Zbus.Net
 
         public void SetParam(string key, string val)
         {
-            if (this.Params == null)
+            if (this._requestParams == null)
             {
-                this.Params = new Dictionary<string, string>();
+                this._requestParams = new Dictionary<string, string>();
             }
-            this.Params[key] = val;
+            this._requestParams[key] = val;
+            CalcUrl();
         }
 
 
 
         public Meta(string meta)
         {
-            this.Uri = "/";
+            this._url = "/";
             this.Method = "GET";
             if (meta == null || meta.Trim().Equals("")) return;
             string[] blocks = meta.Split(' ');
@@ -452,9 +513,8 @@ namespace Zbus.Net
                 this.Status = blocks[1];
                 return;
             }
-            this.Method = method;
-            this.Uri = blocks[1];
-            this.DecodeUri(this.Uri);
+            this.Method = method; 
+            this.DecodeUrl(blocks[1]);
         }
 
         public override string ToString()
@@ -471,34 +531,66 @@ namespace Zbus.Net
             }
             else 
             {
-                return string.Format("{0} {1} HTTP/1.1", this.Method, this.Uri);
+                return string.Format("{0} {1} HTTP/1.1", this.Method, this.Url);
             } 
         }
 
-
-        public void DecodeUri(string uri)
+        private void CalcUrl()
         {
-            int idx = uri.IndexOf('?');
+            StringBuilder sb = new StringBuilder();
+            if (_path != null)
+            {
+                sb.Append(_path);
+            }
+            if(_requestParams != null)
+            {
+                sb.Append("?"); 
+                var iter = _requestParams.GetEnumerator();
+                bool first = true;
+                while (iter.MoveNext())
+                {  
+                    if (!first)
+                    {
+                        sb.Append("&&");
+                    }
+                    else
+                    {
+                        first = false;
+                    }
+
+                    sb.Append(iter.Current.Key + "=" + iter.Current.Value); 
+                }
+            }
+            this.Url = sb.ToString();
+
+        }
+
+        public void DecodeUrl(string url)
+        {
+            this._url = url;
+
+            int idx = url.IndexOf('?');
             if (idx < 0)
             {
-                this.Path = uri;
+                this._path = url;
             }
             else
             {
-                this.Path = uri.Substring(0, idx);
+                this._path = url.Substring(0, idx);
             }
-            if (this.Path[0] == '/')
+            if (this._path[0] == '/')
             {
-                this.Path = this.Path.Substring(1);
-            }
+                this._path = this._path.Substring(1);
+            } 
+
             if (idx < 0) return;
-            string args = uri.Substring(idx + 1);
-            this.Params = new Dictionary<string, string>();
+            string args = url.Substring(idx + 1);
+            this._requestParams = new Dictionary<string, string>();
             string[] blocks = args.Split('&');
             foreach (string kv in blocks)
             {
                 string[] kvb = kv.Split("=".ToCharArray(), 2);
-                this.Params[kvb[0].Trim()] = kvb[1].Trim();
+                this._requestParams[kvb[0].Trim()] = kvb[1].Trim();
             }
         }
 

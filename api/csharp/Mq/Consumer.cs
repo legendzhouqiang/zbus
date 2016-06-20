@@ -86,8 +86,14 @@ namespace Zbus.Mq
                 }
                 if (res != null)
                 {
-                    res.Id = res.RawId;
-                    res.RemoveHead(Message.RAWID);
+                    string originUrl = res.OriginUrl;
+                    if(originUrl != null)
+                    {
+                        res.RemoveHead(Message.ORIGIN_URL);
+                        res.Url = originUrl;
+                    }
+                    res.Id = res.OriginId;
+                    res.RemoveHead(Message.ORIGIN_ID);
                 }
                 return res;
             }
@@ -125,7 +131,7 @@ namespace Zbus.Mq
             msg.Cmd = Proto.Route;
             msg.Ack = false;
             if(msg.Status != null){
-                msg.ReplyCode = msg.Status;
+                msg.OriginStatus = msg.Status;
                 msg.Status = null;
             }
 
