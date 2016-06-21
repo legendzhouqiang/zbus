@@ -165,8 +165,7 @@ Message.CMD     	  = "cmd";
 Message.BROKER  	  = "broker";
 Message.TOPIC   	  = "topic"; 
 Message.MQ      	  = "mq"; 
-Message.ID      	  = "id";	
-Message.RAWID   	  = "rawid";
+Message.ID      	  = "id";	 
 Message.ACK     	  = "ack";	 
 Message.SENDER  	  = "sender";
 Message.RECVER  	  = "recver";
@@ -188,7 +187,6 @@ Message.prototype.removeHead = function(key){
 };
 
 
-
 Message.prototype.getMq = function(){
     return this.getHead(Message.MQ);
 };
@@ -203,15 +201,7 @@ Message.prototype.getId = function(){
 
 Message.prototype.setId = function(val){
 	this.setHead(Message.ID, val);
-};
-
-Message.prototype.getRawId = function(){
-    return this.getHead(Message.RAWID);
-};
-
-Message.prototype.setRawId = function(val){
-	this.setHead(Message.RAWID, val);
-};
+}; 
 
 Message.prototype.getTopic = function(){
     return this.getHead(Message.TOPIC);
