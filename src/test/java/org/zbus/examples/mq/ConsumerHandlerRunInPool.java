@@ -10,13 +10,13 @@ import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.net.http.Message;
 
-public class ConsumerRunInThread { 
+public class ConsumerHandlerRunInPool { 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
 		Broker broker = new ZbusBroker("127.0.0.1:15555");   
 		Consumer consumer = new Consumer(broker, "MyMQ");  
-		consumer.setConsumeTaskThreadCount(1000); 
-		consumer.enableConsumeInThread(); //enable consumer handler run in thread
+		consumer.setConsumerHandlerPoolSize(1000); 
+		consumer.setConsumerHandlerRunInPool(true); //enable consumer handler run in thread
 		
 		final AtomicLong msgCounter = new AtomicLong(0);
 		final long start = System.currentTimeMillis();

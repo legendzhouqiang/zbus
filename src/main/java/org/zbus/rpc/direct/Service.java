@@ -39,18 +39,13 @@ import org.zbus.net.http.MessageServer;
 
 public class Service implements Closeable {  
 	private MessageServer server;  
-	private final String serverAddr;
+	private String serverAddr;
 	private final ServiceConfig config;
 	private final IoAdaptor serverAdaptor;
 	
 	public Service(ServiceConfig config){ 
 		this.config = config;   
-		serverAdaptor = new DirectMessageAdaptor(config.messageProcessor);
-		String host = config.serverHost;
-		if("0.0.0.0".equals(host)){
-			host = NetKit.getLocalIp();
-		}
-		serverAddr = host+":"+config.serverPort;
+		serverAdaptor = new DirectMessageAdaptor(config.messageProcessor); 
 	}
 	
 	
@@ -64,11 +59,18 @@ public class Service implements Closeable {
 	 
 	public void start() throws Exception {    
 		server = new MessageServer(config.getEventDriver()); 
+		server.start(config.serverHost, config.serverPort, serverAdaptor);
+		
+		String host = config.serverHost;
+		if("0.0.0.0".equals(host)){
+			host = NetKit.getLocalIp();
+		}
+		int port = server.getRealPort(config.serverPort);
+		serverAddr = host+":"+port; 
+		
 		if(config.trackServerList != null){
 			setupTracker();
-		} 
-		
-		server.start(config.serverHost, config.serverPort, serverAdaptor);
+		}  
 	}
 	
 	

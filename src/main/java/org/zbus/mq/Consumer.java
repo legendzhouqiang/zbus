@@ -163,20 +163,20 @@ public class Consumer extends MqAdmin implements Closeable {
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
 	private volatile ConsumerExceptionHandler consumerExceptionHandler;
-	private int consumeTaskThreadCount = 64;
+	private int consumerHandlerPoolSize = 64;
 	private int inFlightMessageCount = 64;
-	private boolean consumeInThread = false;
-	private ThreadPoolExecutor consumeExecutor;  
-	private boolean ownConsumeExecutor = false;
+	private boolean consumerHandlerRunInPool = false;
+	private ThreadPoolExecutor consumerHandlerExecutor;  
+	private boolean ownConsumerHandlerExecutor = false;
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
-			if(consumeInThread && consumeExecutor == null){
-				consumeExecutor = new ThreadPoolExecutor(consumeTaskThreadCount, 
-						consumeTaskThreadCount, 120, TimeUnit.SECONDS, 
+			if(consumerHandlerRunInPool && consumerHandlerExecutor == null){
+				consumerHandlerExecutor = new ThreadPoolExecutor(consumerHandlerPoolSize, 
+						consumerHandlerPoolSize, 120, TimeUnit.SECONDS, 
 						new LinkedBlockingQueue<Runnable>(inFlightMessageCount),
 						new ThreadPoolExecutor.CallerRunsPolicy());
-				ownConsumeExecutor = true;
+				ownConsumerHandlerExecutor = true;
 			}
 			
 			while (true) {
@@ -199,8 +199,8 @@ public class Consumer extends MqAdmin implements Closeable {
 						continue;
 					}
 					
-					if (consumeInThread && consumeExecutor != null) { 
-						consumeExecutor.submit(new Runnable() {
+					if (consumerHandlerRunInPool && consumerHandlerExecutor != null) { 
+						consumerHandlerExecutor.submit(new Runnable() {
 							@Override
 							public void run() {
 								try {
@@ -246,9 +246,9 @@ public class Consumer extends MqAdmin implements Closeable {
 			consumerThread.interrupt();
 			consumerThread = null;
 		}
-		if(ownConsumeExecutor && consumeExecutor != null){
-			consumeExecutor.shutdown();
-			consumeExecutor = null;
+		if(ownConsumerHandlerExecutor && consumerHandlerExecutor != null){
+			consumerHandlerExecutor.shutdown();
+			consumerHandlerExecutor = null;
 		}
 		try {
 			if (this.client != null) {
@@ -273,21 +273,18 @@ public class Consumer extends MqAdmin implements Closeable {
 		if (consumerThread.isAlive())
 			return;
 		consumerThread.start();
-	}
-	public void enableConsumeInThread(){
-		setConsumeInThread(true);
-	}
+	} 
 
 	public void setConsumeTimeout(int consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
 	} 
 	
-	public int getConsumeTaskThreadCount() {
-		return consumeTaskThreadCount;
+	public int getConsumerHandlerPoolSize() {
+		return consumerHandlerPoolSize;
 	}
 
-	public void setConsumeTaskThreadCount(int consumeTaskThreadCount) {
-		this.consumeTaskThreadCount = consumeTaskThreadCount; 
+	public void setConsumerHandlerPoolSize(int consumerHandlerPoolSize) {
+		this.consumerHandlerPoolSize = consumerHandlerPoolSize; 
 	}
 	
 	
@@ -300,23 +297,23 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.inFlightMessageCount = inFlightMessageCount;
 	}
  
-	public boolean isConsumeInThread() {
-		return consumeInThread;
+	public boolean isConsumeHandlerRunInPool() {
+		return consumerHandlerRunInPool;
 	}
 
-	public void setConsumeInThread(boolean consumeInThread) {
-		this.consumeInThread = consumeInThread;
+	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
+		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
 	} 
 
 	public ThreadPoolExecutor getConsumeExecutor() {
-		return consumeExecutor;
+		return consumerHandlerExecutor;
 	}
 
-	public void setConsumeExecutor(ThreadPoolExecutor consumeExecutor) {
-		if(this.consumeExecutor != null && ownConsumeExecutor){
-			this.consumeExecutor.shutdown();
+	public void setConsumerHandlerExecutor(ThreadPoolExecutor consumerHandlerExecutor) {
+		if(this.consumerHandlerExecutor != null && ownConsumerHandlerExecutor){
+			this.consumerHandlerExecutor.shutdown();
 		}
-		this.consumeExecutor = consumeExecutor;
+		this.consumerHandlerExecutor = consumerHandlerExecutor;
 	} 
 
 	public static interface ConsumerHandler{

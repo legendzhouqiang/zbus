@@ -78,8 +78,8 @@ public class Service implements Closeable {
 		}  
 		
 		
-		if(config.isConsumerHandlerInThread()){
-			int n = config.getConsumerHandlerThreadCount();
+		if(config.isConsumerHandlerRunInPool()){
+			int n = config.getConsumerHandlerPoolSize();
 			executor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
 					new LinkedBlockingQueue<Runnable>(config.getInFlightMessageCount()),
 					new ThreadPoolExecutor.CallerRunsPolicy());
@@ -104,9 +104,9 @@ public class Service implements Closeable {
 			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  
 				Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
-				if(config.isConsumerHandlerInThread()){
-					c.setConsumeExecutor(executor);
-					c.enableConsumeInThread();
+				if(config.isConsumerHandlerRunInPool()){
+					c.setConsumerHandlerExecutor(executor);
+					c.setConsumerHandlerRunInPool(true);
 				}
 				
 				if(handler == null){
