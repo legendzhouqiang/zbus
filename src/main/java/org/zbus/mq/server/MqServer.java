@@ -65,7 +65,12 @@ public class MqServer implements Closeable{
 	
 	private MqServerConfig config; 
 	
-	private MqFilter mqFilter; 
+	public void setConfig(MqServerConfig config)
+    {
+        this.config = config;
+    }
+
+    private MqFilter mqFilter; 
 	private String serverAddr = "";  
 	
 	private TrackPub trackPub; 

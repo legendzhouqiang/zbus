@@ -34,8 +34,8 @@ public class ServiceConfig extends MqConfig {
 	private ConsumerHandler consumerHandler; 
 	private MessageProcessor messageProcessor; 
 	private int consumerCount = 4; 
-	private boolean consumerHandlerInThread = true;
-	private int consumerHandlerThreadCount = 1000; 
+	private boolean consumerHandlerRunInPool = true;
+	private int consumerHandlerPoolSize = 1000; 
 	private int inFlightMessageCount = 100;
 	private boolean verbose = false;
 	private Broker[] brokers;
@@ -103,20 +103,20 @@ public class ServiceConfig extends MqConfig {
 	}  
 	
 	
-	public int getConsumerHandlerThreadCount() {
-		return consumerHandlerThreadCount;
+	public int getConsumerHandlerPoolSize() {
+		return consumerHandlerPoolSize;
 	}
 
-	public void setConsumerHandlerThreadCount(int consumerHandlerThreadCount) {
-		this.consumerHandlerThreadCount = consumerHandlerThreadCount;
+	public void setConsumerHandlerPoolSize(int consumerHandlerPoolSize) {
+		this.consumerHandlerPoolSize = consumerHandlerPoolSize;
 	} 
 
-	public boolean isConsumerHandlerInThread() {
-		return consumerHandlerInThread;
+	public boolean isConsumerHandlerRunInPool() {
+		return consumerHandlerRunInPool;
 	}
 
-	public void setConsumerHandlerInThread(boolean consumerHandlerInThread) {
-		this.consumerHandlerInThread = consumerHandlerInThread;
+	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
+		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
 	}
 	
 	

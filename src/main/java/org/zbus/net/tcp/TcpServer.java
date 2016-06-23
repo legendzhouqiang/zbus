@@ -1,6 +1,8 @@
 package org.zbus.net.tcp;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +105,15 @@ public class TcpServer implements Server {
 		}); 
 		serverMap.put(port, info);
 	} 
+	
+	public int getRealPort(int bindPort) throws InterruptedException{
+		if(!serverMap.containsKey(bindPort)){
+			return -1; //indicates not found;
+		}
+		ServerInfo e = serverMap.get(bindPort);
+		SocketAddress addr = e.serverChanneFuture.await().channel().localAddress();
+		return ((InetSocketAddress)addr).getPort();
+	}
 	
 	public EventDriver getEventDriver() {
 		return this.eventDriver;
