@@ -16,6 +16,6 @@ SET LIB_OPTS=%ZBUS_HOME%/lib/*;%ZBUS_HOME%/classes;%ZBUS_HOME%/*;
 IF NOT EXIST "%JAVA_HOME%" (
     SET JAVA=java
 ) ELSE (
-    SET JAVA=%JAVA_HOME%\bin\java
+    SET JAVA="%JAVA_HOME%\bin\java"
 )
-"%JAVA%" %JAVA_OPTS% -cp %LIB_OPTS% %MAIN_CLASS% %MAIN_OPTS% 
+%JAVA% %JAVA_OPTS% -cp %LIB_OPTS% %MAIN_CLASS% %MAIN_OPTS% 
