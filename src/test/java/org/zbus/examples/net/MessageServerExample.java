@@ -19,7 +19,7 @@ public class MessageServerExample {
 			ioAdaptor.url("/", new MessageProcessor() { 
 				@Override
 				public Message process(Message request) { 
-					System.out.println(request);
+					///System.out.println(request);
 					Message res = new Message();
 					res.setStatus(200);
 					res.setBody("hello: " + System.currentTimeMillis());
