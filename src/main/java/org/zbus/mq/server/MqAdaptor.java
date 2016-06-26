@@ -379,7 +379,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			
     			MessageQueue support = null;
 				if(MqMode.isEnabled(mode, MqMode.Memory) ||
-						MqMode.isEnabled(mode, MqMode.RPC)){
+						MqMode.isEnabled(mode, MqMode.RPC) ||
+						MqMode.isEnabled(mode, MqMode.PubSub)){
 					support = new MessageMemoryQueue();
 				} else {
 					DiskQueue diskQueue = diskQueuePool.getDiskQueue(mqName);
