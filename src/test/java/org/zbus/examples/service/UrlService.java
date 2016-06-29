@@ -54,18 +54,7 @@ public class UrlService extends Service {
 		
 		@Override
 		public Message process(Message msg) {
-			final String msgId = msg.getId();
-			String url = msg.removeHead(Message.ORIGIN_URL);
-			if(url == null){
-		    	Message res = new Message();
-		    	res.setId(msgId); 
-		    	res.setStatus(400);
-		    	String text = String.format("Missing origin_url from zbus broker");
-		    	res.setBody(text);  
-				return res;
-			}
-			
-			msg.setUrl(url);
+			final String msgId = msg.getId(); 
 			String path = msg.getRequestPath();
 			MessageProcessor urlHandler = urlHandlerMap.get(path);
 	    	if(urlHandler != null){
