@@ -12,6 +12,7 @@ public class RpcClient {
 	
 	public static void main(String[] args) throws Exception {   
 		
+		//If single track server is in use, !!!DO keep the last ';' in the address!!!
 		Broker broker = new ZbusBroker("127.0.0.1:16666;127.0.0.1:16667"); 
 		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");  
 		

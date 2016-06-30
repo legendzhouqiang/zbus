@@ -20,8 +20,9 @@ public class ConsumerCloseClear {
 			}
 		});    
 		
-		Thread.sleep(1000);
+		Thread.sleep(1000); 
 		consumer.close();
+		
 		broker.close();
 		System.out.println("closed");
 	}
