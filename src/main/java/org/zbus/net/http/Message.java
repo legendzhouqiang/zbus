@@ -36,6 +36,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -139,7 +140,7 @@ public class Message implements Id {
 	public String getUrl(){
 		return this.meta.url;
 	} 
-	public Message setUrl(String url){
+	public Message setUrl(String url){ 
 		this.meta.setUrl(url);
 		this.meta.status = null; //once requestString is set, it becomes a request message
 		return this;
@@ -211,10 +212,13 @@ public class Message implements Id {
 	public Map<String, String> getRequestParams(){
 		return meta.requestParams;
 	}
-	public String getRequestParam(String key){
-		return meta.getRequestParam(key); 
+	public String getRequestParam(String key){  
+		String value = meta.getRequestParam(key); 
+		if(value == null) return null;
+		return urlDecode(value);
 	}  
-	public void setRequestParam(String key, String value){
+	public void setRequestParam(String key, String value){ 
+		value = urlEncode(value);
 		meta.setRequestParam(key, value);
 	}
 	
@@ -679,6 +683,24 @@ public class Message implements Id {
 			out.write(body);
 		}
 	} 
+	
+	static private String urlDecode(String str) {
+        String decoded = null;
+        try {
+            decoded = URLDecoder.decode(str, "UTF8");
+        } catch (UnsupportedEncodingException ignored) {
+        }
+        return decoded;
+    }
+	
+	static private String urlEncode(String str) {
+        String encoded = null;
+        try {
+        	encoded = URLEncoder.encode(str, "UTF8");
+        } catch (UnsupportedEncodingException ignored) {
+        }
+        return encoded;
+    }
 
 	static class Meta{   
 		String status; //null if request type, HTTP status code if response	
@@ -842,16 +864,7 @@ public class Message implements Id {
 	                this.requestParams.put(urlDecode(e).trim(), "");
 	            }
 	        } 
-		}
-		
-		private String urlDecode(String str) {
-	        String decoded = null;
-	        try {
-	            decoded = URLDecoder.decode(str, "UTF8");
-	        } catch (UnsupportedEncodingException ignored) {
-	        }
-	        return decoded;
-	    }
+		}  
 		
 		public String getRequestParam(String key){
 			if(requestParams == null) return null;
