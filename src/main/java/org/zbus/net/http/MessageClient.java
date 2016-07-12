@@ -9,8 +9,9 @@ import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.net.tcp.TcpClient;
 
 import io.netty.channel.ChannelHandler;
-import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.http.HttpResponseDecoder;
 
 public class MessageClient extends TcpClient<Message, Message> implements MessageInvoker{
 	
@@ -20,7 +21,8 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 		codec(new CodecInitializer() {
 			@Override
 			public void initPipeline(List<ChannelHandler> p) {
-				p.add(new HttpClientCodec());
+				p.add(new HttpRequestEncoder()); 
+				p.add(new HttpResponseDecoder());  
 				p.add(new HttpObjectAggregator(1024*1024*32)); //maximum of 32M
 				p.add(new MessageToHttpWsCodec());
 			}

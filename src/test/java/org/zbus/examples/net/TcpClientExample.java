@@ -30,8 +30,7 @@ public class TcpClientExample {
 		client.codec(new CodecInitializer() {
 			@Override
 			public void initPipeline(List<ChannelHandler> p) { 
-				p.add(new HttpRequestEncoder());
-				
+				p.add(new HttpRequestEncoder()); 
 				p.add(new HttpResponseDecoder());  
 				
 				p.add(new HttpObjectAggregator(1024 * 1024 * 32)); 
