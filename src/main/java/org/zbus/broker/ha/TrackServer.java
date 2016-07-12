@@ -94,7 +94,8 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			Session sub = entry.getValue();
 			try{ 
 				msg.removeHead(Message.ID);
-				sub.write(msg);
+				msg.setStatus(200); //!!! must be response message type
+				sub.writeAndFlush(msg);
 			}catch(Exception e){
 				iter.remove();
 				log.error(e.getMessage(), e);
@@ -202,8 +203,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					serverEntryTable.addServer(serverAddr);
 					Message msg = new Message();
 					msg.setCmd(HaCommand.ServerJoin);
-					msg.setServer(serverAddr);
-					msg.setStatus(200);
+					msg.setServer(serverAddr); 
 					pubMessage(msg);
 				}
 			});
@@ -219,8 +219,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					log.info("Sending ServerLeave message");
 					Message msg = new Message();
 					msg.setCmd(HaCommand.ServerLeave);
-					msg.setServer(serverAddr);
-					msg.setStatus(200);
+					msg.setServer(serverAddr); 
 					
 					pubMessage(msg);
 				} 
