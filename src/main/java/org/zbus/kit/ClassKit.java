@@ -26,14 +26,7 @@ import java.lang.reflect.Method;
 
 public class ClassKit {
 	public final static boolean bdbAvailable = available("com.sleepycat.je.Environment");
-	public final static boolean nettyAvailable = available("io.netty.bootstrap.Bootstrap");
-	
-	public final static Class<?> nettyEventLoopGroupClass = load("io.netty.channel.EventLoopGroup");
-	public final static Class<?> nettyNioEventLoopGroupClass = load("io.netty.channel.nio.NioEventLoopGroup");
-	public final static Class<?> nettySslContextClass = load("io.netty.handler.ssl.SslContext");
-	public final static Class<?> nettySslContextBuilderClass = load("io.netty.handler.ssl.SslContextBuilder");
-	public final static Class<?> nettySelfSignedCertificateClass = load("io.netty.handler.ssl.util.SelfSignedCertificate");
-
+ 
 	public static boolean available(String clazz){ 
 		try {
 			Class.forName(clazz); 

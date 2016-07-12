@@ -179,7 +179,7 @@ public class MQ extends AbstractMQ{
 		PullSession pull = null;
 		while( (pull = pullQ.poll()) != null){
 			try{
-				pull.session.asyncClose();
+				pull.session.close();
 			}catch(IOException e){
 				log.warn(e.getMessage(), e);
 			}

@@ -12,7 +12,7 @@
 	-->
 	<trackServerList></trackServerList>  
 	
-	<verbose>false</verbose>
+	<verbose>true</verbose>
 	<mqStore>./store</mqStore> 
 	<registerToken></registerToken>
 	
@@ -30,12 +30,12 @@
 </server> 
 
 <http-proxy>
-<!-- 
+<!--  -->
 	<proxy>
 		<name>HttpProxyExample</name>
 		<target>localhost:8080</target>
 	</proxy>
- -->
+
 </http-proxy> 
 
 </zbus>

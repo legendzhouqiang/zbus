@@ -50,9 +50,7 @@ public class TcpServer implements Server {
 			this.ownEventDriver = true;
 		} else {
 			this.ownEventDriver = false;
-		}
-		
-		eventDriver.validate(); 
+		} 
 	} 
 	
 	@Override
@@ -154,12 +152,10 @@ public class TcpServer implements Server {
 			}
 			CodecInitializer initializer = getCodecInitializer();
 			if(initializer != null){
-				List<Object> handlers = new ArrayList<Object>();
+				List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
 				initializer.initPipeline(handlers);
-				for(Object handler : handlers){
-					if(handler instanceof ChannelHandler){
-						p.addLast((ChannelHandler)handler);
-					} 
+				for(ChannelHandler handler : handlers){
+					 p.addLast((ChannelHandler)handler); 
 				}
 			}	 
 			p.addLast(this.nettyToIoAdaptor);

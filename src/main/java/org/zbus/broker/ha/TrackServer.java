@@ -28,9 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
@@ -48,10 +45,8 @@ import org.zbus.net.http.MessageServer;
 public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
 	
-	private final ServerEntryTable serverEntryTable = new ServerEntryTable(); 
-	private ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
-	private boolean verbose = false;
-	private int dumpInterval = 3000;
+	private final ServerEntryTable serverEntryTable = new ServerEntryTable();  
+	private boolean verbose = false; 
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
@@ -82,32 +77,22 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		cmd(HaCommand.ServerJoin, serverJoinHandler);
 		cmd(HaCommand.ServerLeave, serverLeaveHandler);
 
-		cmd(HaCommand.SubAll, subAllHandler);
+		cmd(HaCommand.SubAll, subAllHandler); 
 	}
 	
 	public void start() throws Exception{
 		server = new MessageServer(eventDriver);
 		server.start(serverHost, serverPort, this);
 		eventDriver = server.getEventDriver(); //if eventDriver is null, set the internal created one
-	
-		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
-			@Override
-			public void run() { 
-				if(verbose) serverEntryTable.dump();
-			}
-		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
-	}
-	
-	public void setDumpInterval(int dumpInterval) {
-		this.dumpInterval = dumpInterval;
-	}
+	} 
+	 
 	
 	private void pubMessage(Message msg){
 		Iterator<Entry<String, Session>> iter = trackSubs.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<String, Session> entry = iter.next();
 			Session sub = entry.getValue();
-			try{
+			try{ 
 				msg.removeHead(Message.ID);
 				sub.write(msg);
 			}catch(Exception e){
@@ -140,6 +125,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			if(serverAddr == null) return; 
 			serverEntryTable.removeServer(serverAddr);
 			
+			msg.setCmd(HaCommand.ServerLeave); 
 			pubMessage(msg);
 		}
 	};
@@ -164,6 +150,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 				onNewServer(se.serverAddr, sess);
 			}
 			
+			msg.setCmd(HaCommand.EntryUpdate);
 			pubMessage(msg);
 		}
 	}; 
@@ -175,6 +162,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			String entryId = msg.getMq(); //TODO use mq for entryId
 			serverEntryTable.removeServerEntry(serverAddr, entryId);
 			
+			msg.setCmd(HaCommand.EntryRemove);
 			pubMessage(msg);
 		}
 	}; 
@@ -215,6 +203,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					Message msg = new Message();
 					msg.setCmd(HaCommand.ServerJoin);
 					msg.setServer(serverAddr);
+					msg.setStatus(200);
 					pubMessage(msg);
 				}
 			});
@@ -231,6 +220,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					Message msg = new Message();
 					msg.setCmd(HaCommand.ServerLeave);
 					msg.setServer(serverAddr);
+					msg.setStatus(200);
 					
 					pubMessage(msg);
 				} 
@@ -246,16 +236,15 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	}
 	
 	@Override
-	public void onException(Throwable e, Session sess) throws Exception {
+	public void onSessionError(Throwable e, Session sess) throws Exception {
 		trackSubs.remove(sess.id());
-		super.onException(e, sess);
+		super.onSessionError(e, sess);
 	}
 	
 	@Override
 	public void close() throws IOException { 
-		if(dumpExecutor != null){
-			dumpExecutor.shutdown(); 
-			dumpExecutor = null;
+		if(this.serverEntryTable != null){
+			this.serverEntryTable.close(); 
 		}
 		if(server != null){
 			server.close();

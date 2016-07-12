@@ -68,7 +68,7 @@ public class Message implements Id {
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
-	public static final String HEARTBEAT        = "heartbeat"; //心跳消息
+	public static final String HEARTBEAT        = "heartbeat"; 
 	
 	//使用到的标准HTTP头部
 	public static final String REMOTE_ADDR      = "remote-addr";
@@ -79,18 +79,18 @@ public class Message implements Id {
 	public static final String MQ       = "mq";
 	public static final String SENDER   = "sender"; 
 	public static final String RECVER   = "recver";
-	public static final String ID      	= "id";	    //消息ID
+	public static final String ID      	= "id";	     
 	
 	public static final String SERVER   = "server"; 
-	public static final String TOPIC    = "topic";  //使用,分隔 
+	public static final String TOPIC    = "topic";  //use ',' to seperate different topics
 	public static final String ACK      = "ack";	  
 	public static final String ENCODING = "encoding";
 	public static final String DELAY    = "delay";
 	public static final String TTL      = "ttl";  
 	
-	public static final String ORIGIN_ID    = "rawid";  //原始消息ID 
-	public static final String ORIGIN_URL   = "origin_url";//原始消息URL  
-	public static final String ORIGIN_STATUS= "reply_code"; //原始HTTP Status 
+	public static final String ORIGIN_ID    = "rawid";      //original id
+	public static final String ORIGIN_URL   = "origin_url"; //original URL  
+	public static final String ORIGIN_STATUS= "reply_code"; //original Status 
 	
 	public static final String KEY       = "key";  
 	public static final String KEY_GROUP = "key_group";
@@ -100,16 +100,16 @@ public class Message implements Id {
 	public static final String MASTER_TOKEN  = "master_token"; 
 	
 	 
-	//HTTP协议第一行（请求串或者返回状态码）
+	//1) First line of HTTP protocol
 	private Meta meta = new Meta(); 
-	//HTTP协议Key-Value头部
+	//2) HTTP Key-Value headers
 	private Map<String, String> head = new ConcurrentHashMap<String, String>();
-	//HTTP消息体
+	//HTTP body
 	private byte[] body; 
 	
 	public Message(){
 		setBody((byte[])null);
-		setHead("connection", "Keep-Alive"); //since 6.3.0/6.2.8
+		setHead("connection", "Keep-Alive");  
 	} 
 	
 	public Message(String body){
@@ -131,7 +131,7 @@ public class Message implements Id {
 	}
 	
 	/**
-	 * HTTP请求串
+	 * HTTP request string
 	 * eg. http://localhost/hello?xx=yy
 	 * url=/hello?xx=yy
 	 * @return
@@ -680,16 +680,15 @@ public class Message implements Id {
 		}
 	} 
 
-	static class Meta{  
-		//HTTP响应头部: 状态(200)
-		String status; //根据status是否设置来决定Meta是请求还是应答	
-		//HTTP请求头部: 方法(GET/POST)-RequestString-KV参数
+	static class Meta{   
+		String status; //null if request type, HTTP status code if response	
+		//HTTP request method
 		String method = "GET"; 
 		
-		String url = "/";         //请求串 （最终决定，下面两个辅助动态更新）
-		String requestPath = url; //请求路径
-		Map<String,String> requestParams;   //请求参数KV
+		String url = "/";         //request string(updated by requestPath and requestParams)
 		
+		String requestPath = url; //request path
+		Map<String,String> requestParams;   //request key-value pairs 
 		
 		static Set<String> httpMethod = new HashSet<String>();
 		static Map<String,String> httpStatus = new HashMap<String, String>();
@@ -774,11 +773,11 @@ public class Message implements Id {
 			}
 			StringTokenizer st = new StringTokenizer(meta);
 			String firstWord = st.nextToken();
-			if(firstWord.toUpperCase().startsWith("HTTP")){ //理解为响应
+			if(firstWord.toUpperCase().startsWith("HTTP")){ //As response
 				this.status = st.nextToken();
 				return;
 			}
-			//理解为请求
+			//As request
 			this.method = firstWord;  
 			this.url = st.nextToken();
 			decodeUrl(this.url);

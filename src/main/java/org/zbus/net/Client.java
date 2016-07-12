@@ -4,14 +4,19 @@ import java.io.Closeable;
 import java.io.IOException;
   
 public interface Client<REQ, RES> extends Invoker<REQ, RES>, IoAdaptor, Closeable { 
-	void startHeartbeat(int heartbeatInterval);
+	
 	void codec(CodecInitializer codecInitializer);
 	
+	void startHeartbeat(int heartbeatInterval);
+	void stopHeartbeat();
 	void heartbeat();
+	
 	boolean hasConnected();
 	void connectAsync() throws IOException; 
+	void connectSync(long timeout) throws IOException, InterruptedException;
 	void ensureConnectedAsync();
 	void ensureConnected() throws IOException, InterruptedException;
+	
 	void sendMessage(REQ req) throws IOException, InterruptedException;; 
 	void onMessage(MsgHandler<RES> msgHandler);
 	void onError(ErrorHandler errorHandler);

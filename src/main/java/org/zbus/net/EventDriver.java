@@ -3,98 +3,106 @@ package org.zbus.net;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 
-import org.zbus.kit.ClassKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 public class EventDriver implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(EventDriver.class);
 
-	private Object bossGroup;  
-	private Object workerGroup;  
-	private Object sslContext;
+	private EventLoopGroup bossGroup;  
+	private EventLoopGroup workerGroup;  
+	private SslContext sslContext;
 
 	private boolean ownBossGroup = true;
 	private boolean ownWorkerGroup = true; 
 
 	public EventDriver() {
 		try {
-			bossGroup = ClassKit.nettyNioEventLoopGroupClass.newInstance();
-			workerGroup = ClassKit.nettyNioEventLoopGroupClass.newInstance();
+			bossGroup = new NioEventLoopGroup();
+			workerGroup = new NioEventLoopGroup();
 		} catch (Exception e) {
 			throw new IllegalStateException(e.getMessage(), e);
 		}
 	}
+	
+	public EventDriver(EventLoopGroup group){
+		this.bossGroup = group;
+		this.workerGroup = group;
+		this.ownBossGroup = false;
+		this.ownWorkerGroup = false;
+	}
 
-	public EventDriver(Object bossGroup, Object workerGroup) {
+	public EventDriver(EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
 		this.bossGroup = bossGroup;
 		this.workerGroup = workerGroup;
 		this.ownBossGroup = false;
 		this.ownWorkerGroup = false;
 	}
 
-	public Object getBossGroup() {
+	public EventLoopGroup getBossGroup() {
 		return bossGroup;
 	}
 
-	public void setBossGroup(Object bossGroup) {
+	public void setBossGroup(EventLoopGroup bossGroup) {
 		if (this.bossGroup != null && ownBossGroup) {
-			closeGroup(this.bossGroup);
+			this.bossGroup.shutdownGracefully();
 		}
 		this.bossGroup = bossGroup;
 	}
 
-	public Object getWorkerGroup() {
+	public EventLoopGroup getWorkerGroup() {
 		return workerGroup;
 	}
 
-	public void setWorkerGroup(Object workerGroup) {
+	public void setWorkerGroup(EventLoopGroup workerGroup) {
 		if (this.workerGroup != null && ownWorkerGroup) {
-			closeGroup(this.workerGroup);
+			this.workerGroup.shutdownGracefully();
 		}
 		this.workerGroup = workerGroup;
 	}
 
-	public Object getGroup() {// try bossGroup first, then workerGroup, if only
-								// one set
+	public EventLoopGroup getGroup() {
+		// try bossGroup first
 		if (bossGroup != null)
 			return bossGroup;
+		//then workerGroup
 		return workerGroup;
 	}
 
-	public Object getSslContext() {
+	public SslContext getSslContext() {
 		return sslContext;
 	}
+	
+	public boolean isSslEnabled() {
+		return sslContext != null;
+	} 
 
-	public void setSslContext(Object sslContext) {
+	public void setSslContext(SslContext sslContext) {
 		log.info("SSL: Enabled");
 		this.sslContext = sslContext;
 	}
 
-	public void setSslContext(File certFile, File privateKeyFile) {
-		if (!ClassKit.nettyAvailable) {
-			throw new IllegalStateException("SSL requires Netty support");
-		}
+	public void setSslContext(File certFile, File privateKeyFile) { 
 		try {
-			Method method = ClassKit.nettySslContextBuilderClass.getMethod("forServer", File.class, File.class);
-			Object builder = method.invoke(null, certFile, privateKeyFile);
-			this.setSslContext(ClassKit.invokeSimple(builder, "build"));
+			SslContextBuilder builder = SslContextBuilder.forServer(certFile, privateKeyFile);
+			this.sslContext = builder.build();
 		} catch (Exception e) {
 			throw new IllegalStateException(e.getMessage(), e);
 		}
 	}
 
-	public void setSslContextOfSelfSigned() {
-		if (!ClassKit.nettyAvailable) {
-			throw new IllegalStateException("SSL requires Netty support");
-		}
-
+	public void setSslContextOfSelfSigned() { 
 		try {
-			Object certObj = ClassKit.nettySelfSignedCertificateClass.newInstance();
-			File certFile = (File) ClassKit.invokeSimple(certObj, "certificate");
-			File privateKeyFile = (File) ClassKit.invokeSimple(certObj, "privateKey");
+			SelfSignedCertificate cert = new SelfSignedCertificate(); 
+			File certFile = cert.certificate();
+			File privateKeyFile = cert.privateKey();
 			setSslContext(certFile, privateKeyFile);
 		} catch (Exception e) {
 			log.warn(e.getMessage(), e);
@@ -103,53 +111,13 @@ public class EventDriver implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (ownBossGroup) {
-			closeGroup(bossGroup);
+		if (ownBossGroup && bossGroup != null) {
+			bossGroup.shutdownGracefully(); 
+			bossGroup = null;
 		}
-		if (ownWorkerGroup) {
-			closeGroup(ownWorkerGroup);
-		}
-	}
-
-	private static void closeGroup(Object group) {
-		if (group == null)
-			return;
-		Class<?> nettyClass = ClassKit.nettyEventLoopGroupClass;
-		if (nettyClass != null && nettyClass.isAssignableFrom(group.getClass())) {
-			try {
-				ClassKit.invokeSimple(group, "shutdownGracefully");
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-			return;
-		}
-		if (group instanceof Closeable) {
-			Closeable r = (Closeable) group;
-			try {
-				r.close();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-			}
+		if (ownWorkerGroup && workerGroup != null) {
+			workerGroup.shutdownGracefully();
+			workerGroup = null;
 		}
 	} 
-	public boolean isSslEnabled() {
-		return sslContext != null;
-	}
-
-	private static void checkNettyGroup(String name, Object group) {
-		if (group != null) {
-			Class<?> groupClass = ClassKit.nettyEventLoopGroupClass;
-			if (groupClass == null) {
-				throw new IllegalStateException("Netty unavailable");
-			}
-			if (!groupClass.isAssignableFrom(group.getClass())) {
-				throw new IllegalStateException(name + " should instance of " + groupClass.getName());
-			}
-		}
-	}
-
-	public void validate() {
-		checkNettyGroup("bossGroup", bossGroup);
-		checkNettyGroup("workerGroup", workerGroup);
-	}  
 }

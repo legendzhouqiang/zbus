@@ -120,7 +120,7 @@ public class Service implements Closeable {
 			return msg;
 		}
 		
-		public void onMessage(Object obj, Session sess) throws IOException {
+		public void onSessionMessage(Object obj, Session sess) throws IOException {
 			Message msg = (Message) obj;
 			if(Message.HEARTBEAT.equals(msg.getCmd())){
 				return;

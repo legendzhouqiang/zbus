@@ -30,20 +30,19 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		Session sess = getSession(ctx);
-		ioAdaptor.onMessage(msg, sess);
+		ioAdaptor.onSessionMessage(msg, sess);
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		Session sess = getSession(ctx);
-		ioAdaptor.onException(cause, sess);
+		ioAdaptor.onSessionError(cause, sess);
 	}
 	 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		Session sess = attachSession(ctx);
-		ioAdaptor.onSessionAccepted(sess);
-		ioAdaptor.onSessionConnected(sess);
+		Session sess = attachSession(ctx); 
+		ioAdaptor.onSessionCreated(sess);
 	}  
 	
 	@Override

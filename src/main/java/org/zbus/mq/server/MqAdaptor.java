@@ -124,7 +124,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		return msg;
 	}
     
-    public void onMessage(Object obj, Session sess) throws IOException {  
+    public void onSessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
 		msg.setServer(mqServer.getServerAddr()); 
@@ -551,15 +551,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		mqServer.pubEntryUpdate(mq); 
 	}
 	
-	public void onSessionAccepted(Session sess) throws IOException {
+	public void onSessionCreated(Session sess) throws IOException {
 		sessionTable.put(sess.id(), sess);
-		super.onSessionAccepted(sess); 
+		super.onSessionCreated(sess); 
 	}
 
 	@Override
-	public void onException(Throwable e, Session sess) throws Exception { 
+	public void onSessionError(Throwable e, Session sess) throws Exception { 
 		cleanSession(sess);
-		super.onException(e, sess);
+		super.onSessionError(e, sess);
 	}
 	
 	@Override

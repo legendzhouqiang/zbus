@@ -4,7 +4,7 @@ import javax.jws.WebService;
 import javax.xml.ws.Endpoint;
 
 //Service Implementation
-@WebService(endpointInterface = "org.zbus.examples.webservice.HelloWorld")
+@WebService(endpointInterface = "org.zbus.examples.proxy.webservice.HelloWorld")
 public class HelloWorldWS implements HelloWorld {
 
 	@Override

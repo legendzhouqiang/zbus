@@ -55,12 +55,7 @@ public class TcpSession implements Session {
 	public boolean isActive() {
 		return ctx.channel().isActive();
 	}
-	
-	@Override
-	public void asyncClose() throws IOException {
-		close();
-	}
-	
+	 
 	@SuppressWarnings("unchecked")
 	public <V> V attr(String key) {
 		if (this.attributes == null) {

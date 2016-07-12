@@ -9,9 +9,9 @@ import org.zbus.examples.rpc.appdomain.InterfaceExample;
 import org.zbus.examples.rpc.appdomain.MyEnum;
 import org.zbus.examples.rpc.appdomain.Order;
 import org.zbus.examples.rpc.appdomain.User;
-import org.zbus.rpc.RpcInvoker;
 import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
+import org.zbus.rpc.RpcInvoker;
 
 public class RpcCases {
 	public static User getUser(String name) {

@@ -1,9 +1,9 @@
 package org.zbus.net;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 public interface Session extends Closeable {
+	
 	String id(); 
 	
 	String getRemoteAddress();
@@ -16,9 +16,7 @@ public interface Session extends Closeable {
 	
 	void flush();
 	
-	boolean isActive();
-	
-	void asyncClose() throws IOException;
+	boolean isActive(); 
 	
 	<V> V attr(String key);
 	

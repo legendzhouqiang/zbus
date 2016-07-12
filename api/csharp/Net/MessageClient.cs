@@ -135,7 +135,7 @@ namespace Zbus.Net
 
             IoBuffer buf = new IoBuffer();
             msg.Encode(buf);
-            this.stream.WriteTimeout = timeout;
+            this.stream.WriteTimeout = timeout; 
             this.stream.Write(buf.Data, 0, buf.Position);
         }
 

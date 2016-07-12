@@ -3,8 +3,6 @@ package org.zbus.net.tcp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,8 +46,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected int connectTimeout = 3000; 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);  
 	
-	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>(); 
-	protected ConcurrentMap<String, Object> attributes = null;
+	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();  
 	
 	protected volatile ScheduledExecutorService heartbeator = null;
 	
@@ -58,9 +55,8 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
 	
-	public TcpClient(String address, EventDriver driver){ 
-		driver.validate(); 
-		group = (EventLoopGroup)driver.getGroup();
+	public TcpClient(String address, EventDriver driver){  
+		group = driver.getGroup();
 		sslCtx = (SslContext)driver.getSslContext();
 		
 		String[] bb = address.split(":");
@@ -89,14 +85,8 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 				ensureConnectedAsync();//automatically reconnect by default
 			}
 		});
-	}
-	
-	public synchronized void connectAsync(){  
-		init(); 
-		
-		channelFuture = bootstrap.connect(host, port);
-	}   
-	
+	} 
+
 	private void init(){
 		if(bootstrap != null) return;
 		
@@ -108,20 +98,16 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception { 
 				if(codecInitializer == null){
-					throw new IllegalStateException("Missing codecInitializer");
-				}
-				
+					log.warn("Missing codecInitializer"); 
+				} 
 				ChannelPipeline p = ch.pipeline();
 				if(sslCtx != null){
 					p.addLast(sslCtx.newHandler(ch.alloc()));
 				}
 				if(codecInitializer != null){
-					List<Object> handlers = new ArrayList<Object>();
+					List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
 					codecInitializer.initPipeline(handlers);
-					for(Object handler : handlers){
-						if(!(handler instanceof ChannelHandler)){
-							throw new IllegalArgumentException("Invalid ChannelHandler: " + handler);
-						} 
+					for(ChannelHandler handler : handlers){ 
 						p.addLast((ChannelHandler)handler);
 					}
 				}
@@ -158,6 +144,13 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	}
 	
 	@Override
+	public void stopHeartbeat() { 
+		if(heartbeator != null){
+			heartbeator.shutdown();
+		}
+	}
+	
+	@Override
 	public void heartbeat() {
 		
 	}
@@ -189,31 +182,53 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		asyncConnectThread.start(); 
 	}
 	
-	 
-	public void ensureConnected() throws IOException, InterruptedException{
+	
+	public synchronized void connectAsync(){  
+		init(); 
+		
+		channelFuture = bootstrap.connect(host, port);
+	}   
+
+	@Override
+	public void connectSync(long timeout) throws IOException, InterruptedException {
 		if(hasConnected()) return; 
 		
 		synchronized (this) {
-			while(!hasConnected()){ 
+			if(!hasConnected()){ 
 	    		connectAsync();
 				activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
 				
 				if(hasConnected()){ 
-					break;
-				} 
-				
-				String msg = String.format("Connection(%s:%d) timeout, trying again in %.1f seconds",
-						host, port, connectTimeout/1000.0); 
+					return;
+				}  
+				String msg = String.format("Connection(%s:%d) timeout", host, port); 
 				log.warn(msg);
-				cleanSession();
-				Thread.sleep(connectTimeout);
+				cleanSession(); 
 			}
+		} 
+	}
+	
+	public void ensureConnected() throws IOException, InterruptedException{
+		while(!hasConnected()){
+			connectSync(connectTimeout); 
+			if(hasConnected()) break;
+			
+			String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
+			log.warn(msg); 
+			Thread.sleep(connectTimeout);
 		} 
 	} 
 	
 	public void sendMessage(REQ req) throws IOException, InterruptedException{
-		ensureConnected();  
-    	session.writeAndFlush(req);
+		if(!hasConnected()){
+			connectSync(10000);  
+			if(!hasConnected()){
+				String msg = String.format("Connection(%s:%d) timeout", host, port); 
+				throw new IOException(msg);
+			}
+		}  
+		session.writeAndFlush(req); 
+    	
     } 
 	
 	 
@@ -237,31 +252,18 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		} 
 	}
 	
-	
-	@SuppressWarnings("unchecked")
+	 
 	public <V> V attr(String key) {
-		if (this.attributes == null) {
-			return null;
-		}
-
-		return (V) this.attributes.get(key);
+		if(session == null) return null;
+		return session.attr(key);
 	}
 
 	public <V> void attr(String key, V value) {
-		if(value == null){
-			if(this.attributes != null){
-				this.attributes.remove(key);
-			}
-			return;
-		}
-		if (this.attributes == null) {
-			synchronized (this) {
-				if (this.attributes == null) {
-					this.attributes = new ConcurrentHashMap<String, Object>();
-				}
-			}
-		} 
-		this.attributes.put(key, value);
+		 if(session == null){
+			 log.warn("Session not created, attr can not be set");
+			 return;
+		 }
+		 session.attr(key, value);
 	}
 	
 	public void onMessage(MsgHandler<RES> msgHandler){
@@ -279,19 +281,10 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
     public void onDisconnected(DisconnectedHandler disconnectedHandler){
     	this.disconnectedHandler = disconnectedHandler;
     }
+  
 
 	@Override
-	public void onSessionAccepted(Session sess) throws IOException { 
-		//server side
-	}
- 
-	@Override
-	public void onSessionRegistered(Session sess) throws IOException {
-		//ignore
-	}
-
-	@Override
-	public void onSessionConnected(Session sess) throws IOException { 
+	public void onSessionCreated(Session sess) throws IOException { 
 		this.session = sess;
 		activeLatch.countDown();
 		if(connectedHandler != null){
@@ -312,7 +305,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	} 
 
 	@Override
-	public void onException(Throwable e, Session sess) throws IOException { 
+	public void onSessionError(Throwable e, Session sess) throws IOException { 
 		if(errorHandler != null){
 			errorHandler.onError(e, session);
 		} else {
@@ -362,7 +355,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	} 
 	
 	@Override
-	public void onMessage(Object msg, Session sess) throws IOException {
+	public void onSessionMessage(Object msg, Session sess) throws IOException {
 		@SuppressWarnings("unchecked")
 		RES res = (RES)msg;  
     	Ticket<REQ, RES> ticket = sync.removeTicket(res.getId());

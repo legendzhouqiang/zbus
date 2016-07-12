@@ -15,14 +15,14 @@ public class MessageClientExample {
 		MessageClient client = new MessageClient(address, driver); 
 		
 		try { 
-			Message msg = new Message();
-			msg.setUrl("/");
-			
+			Message msg = new Message();  
+			msg.setBody("hello");
 			Message res = client.invokeSync(msg);
 			System.out.println(res);
 			
-			client.close();  
+			
 		} finally {
+			client.close();  
 			driver.close(); 
 		}
 

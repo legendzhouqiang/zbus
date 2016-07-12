@@ -22,6 +22,8 @@
  */
 package org.zbus.broker.ha;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,16 +35,37 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 
-public class ServerEntryTable{
+public class ServerEntryTable implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(ServerEntryTable.class);
 	//entry_id ==> list of same entries from different target_servers
 	public Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
 	//server_addr ==> list of entries from same target server
 	public Map<String, Set<ServerEntry>> server2EntryList = new ConcurrentHashMap<String, Set<ServerEntry>>(); 
+	
+	
+	private ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
+	private boolean verbose = true;
+	private int dumpInterval = 3000;
+	
+	public ServerEntryTable(){
+		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
+			@Override
+			public void run() { 
+				if(verbose) dump();
+			}
+		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
+	}
+	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
 	
 	public void dump(){
 		System.out.format("===============ServerEntryTable(%s)===============\n", new Date());
@@ -62,6 +85,11 @@ public class ServerEntryTable{
 			} 
 		}
 		System.out.println();
+	}
+	
+	@Override
+	public void close() throws IOException {
+		dumpExecutor.shutdown();
 	}
 	
 	public ServerList getServerList(String entryId){

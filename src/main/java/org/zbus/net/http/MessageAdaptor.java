@@ -70,21 +70,12 @@ public class MessageAdaptor implements IoAdaptor{
 			}
 		});
 	}
-	
-	/**
-	 * @deprecated use url instead
-	 * @param path
-	 * @param processor
-	 */
-	public void uri(String path, final MessageProcessor processor){
-		url(path, processor);
-	}
-    
+	 
     public void registerFilterHandler(MessageHandler filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
-    public void onMessage(Object obj, Session sess) throws IOException {  
+    public void onSessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	final String msgId = msg.getId();
     	
@@ -139,18 +130,10 @@ public class MessageAdaptor implements IoAdaptor{
     	String text = String.format("Not Found(404): %s", path);
     	res.setBody(text); 
     	sess.write(res); 
-    }
-
+    } 
+     
 	@Override
-	public void onSessionAccepted(Session sess) throws IOException {
-	}
-
-	@Override
-	public void onSessionRegistered(Session sess) throws IOException {
-	}
-
-	@Override
-	public void onSessionConnected(Session sess) throws IOException {
+	public void onSessionCreated(Session sess) throws IOException {
 	}
 
 	@Override
@@ -158,7 +141,7 @@ public class MessageAdaptor implements IoAdaptor{
 	}
  
 	@Override
-	public void onException(Throwable e, Session sess) throws Exception {
+	public void onSessionError(Throwable e, Session sess) throws Exception {
 	} 
 
 }

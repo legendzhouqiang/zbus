@@ -155,7 +155,7 @@ public class PubSub extends AbstractMQ{
 		while( iter.hasNext()){
 			try{
 				pull = iter.next();
-				pull.session.asyncClose();
+				pull.session.close();
 			}catch(IOException e){
 				log.warn(e.getMessage(), e);
 			}

@@ -204,7 +204,7 @@ public class HttpDmzProxy implements ConsumerHandler, Closeable {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 		ProxyConfig config = new ProxyConfig();  
-		config.entry = ConfigKit.option(args, "-mq", "http-ws");
+		config.entry = ConfigKit.option(args, "-mq", "HttpProxyExample");
 		config.target = ConfigKit.option(args, "-t", "127.0.0.1:8080");
 		config.brokerConfig = new BrokerConfig(ConfigKit.option(args, "-b", "127.0.0.1:15555")); 
 		

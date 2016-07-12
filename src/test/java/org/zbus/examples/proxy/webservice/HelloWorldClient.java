@@ -9,7 +9,7 @@ public class HelloWorldClient {
 	
 	public static void test(String address) throws Exception{
 		URL url = new URL(address); 
-		QName qname = new QName("http://webservice.examples.zbus.org/", "HelloWorldWSService"); 
+		QName qname = new QName("http://webservice.proxy.examples.zbus.org/", "HelloWorldWSService"); 
 		Service service = Service.create(url, qname); 
 		
 		HelloWorld hello = service.getPort(HelloWorld.class); 
