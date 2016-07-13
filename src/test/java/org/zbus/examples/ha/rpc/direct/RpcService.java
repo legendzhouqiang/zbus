@@ -23,7 +23,7 @@ public class RpcService {
 		
 		config.messageProcessor = processor; 
 		//TrackServer address list
-		config.trackServerList = "127.0.0.1:16666";//"127.0.0.1:16666;127.0.0.1:16667";
+		config.trackServerList = "127.0.0.1:16666;127.0.0.1:16667";
 		
 		Service svc = new Service(config);
 		svc.start();

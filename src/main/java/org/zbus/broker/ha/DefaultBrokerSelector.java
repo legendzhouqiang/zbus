@@ -72,7 +72,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(this.eventDriver == null){
 			this.eventDriver = new EventDriver();
 			this.ownEventDriver = true;
-		}
+		} 
 		subscribeNotification(); 
 	} 
 	

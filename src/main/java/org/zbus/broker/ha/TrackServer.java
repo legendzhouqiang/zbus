@@ -28,6 +28,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
@@ -46,7 +49,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
 	
 	private final ServerEntryTable serverEntryTable = new ServerEntryTable();  
-	private boolean verbose = false; 
+	
 	
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
@@ -55,6 +58,10 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private MessageServer server;
 	private String serverHost = "0.0.0.0";
 	private int serverPort = 16666;
+	
+	private ScheduledExecutorService dumpExecutor = Executors.newSingleThreadScheduledExecutor();
+	private int dumpInterval = 3000;
+	private boolean verbose = true; 
 	 
 	public TrackServer(int port){ 
 		this.serverPort = port;
@@ -84,6 +91,14 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		server = new MessageServer(eventDriver);
 		server.start(serverHost, serverPort, this);
 		eventDriver = server.getEventDriver(); //if eventDriver is null, set the internal created one
+		
+		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
+			@Override
+			public void run() { 
+				if(verbose) serverEntryTable.dump();
+			}
+		}, 1000, dumpInterval, TimeUnit.MILLISECONDS);
+	
 	} 
 	 
 	
@@ -242,9 +257,6 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	
 	@Override
 	public void close() throws IOException { 
-		if(this.serverEntryTable != null){
-			this.serverEntryTable.close(); 
-		}
 		if(server != null){
 			server.close();
 			server = null;
