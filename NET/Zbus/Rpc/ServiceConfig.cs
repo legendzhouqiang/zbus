@@ -5,9 +5,9 @@ namespace Zbus.RPC
 {
    public class ServiceConfig : MqConfig
    {
-      private IMessageProcessor messageProcessor;
-      private int consumerCount = 1;
-      private int readTimeout = 3000; //30ms
+      public IMessageProcessor MessageProcessor { get; set; }
+      public int ConsumerCount { get; set; } = 1;
+      public int ReadTimeout { get; set; } = 3000; //30ms
       private IBroker[] brokers;
 
       public ServiceConfig(params IBroker[] brokers)
@@ -18,25 +18,7 @@ namespace Zbus.RPC
          {
             this.Broker = this.brokers[0];
          }
-      }
-
-      public IMessageProcessor MessageProcessor
-      {
-         get { return messageProcessor; }
-         set { messageProcessor = value; }
-      }
-
-      public int ConsumerCount
-      {
-         get { return consumerCount; }
-         set { consumerCount = value; }
-      }
-
-      public int ReadTimeout
-      {
-         get { return readTimeout; }
-         set { readTimeout = value; }
-      }
+      } 
 
       public IBroker[] Brokers
       {

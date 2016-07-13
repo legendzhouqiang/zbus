@@ -14,7 +14,7 @@ namespace Zbus.Examples
          req.Mq = "MyRpc";
          req.Module = "MyService";
          req.Method = "getString";
-         req.Args = new object[] { "test" };
+         req.Params = new object[] { "test" };
 
 
          object res = rpc.Invoke(req);

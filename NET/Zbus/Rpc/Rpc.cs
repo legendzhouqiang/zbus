@@ -12,48 +12,17 @@ namespace Zbus.RPC
 {
    public class Request
    {
-      private string mq; //
-      private string module;
-      private string method;
-      private object[] args;
-      private object[] argTypes;
-      private string encoding = "UTF-8";
+      public string Mq { get; set; }
+      public string Module { get; set; }
+      public string Method { get; set; }
+      public object[] Params { get; set; }
+      public object[] ParamTypes { get; set; }
+      public string Encoding { get; set; } = "UTF-8";
+   }
 
+   public class Response
+   {
 
-      public string Mq
-      {
-         get { return mq; }
-         set { mq = value; }
-      }
-
-      public string Module
-      {
-         get { return module; }
-         set { module = value; }
-      }
-      public string Method
-      {
-         get { return method; }
-         set { method = value; }
-      }
-
-      public object[] Args
-      {
-         get { return args; }
-         set { args = value; }
-      }
-
-      public object[] ArgTypes
-      {
-         get { return argTypes; }
-         set { argTypes = value; }
-      }
-
-      public string Encoding
-      {
-         get { return encoding; }
-         set { encoding = value; }
-      }
    }
 
    public class Rpc
@@ -110,8 +79,8 @@ namespace Zbus.RPC
          IDictionary<string, object> req = new Dictionary<string, object>();
          req["module"] = request.Module;
          req["method"] = request.Method;
-         req["params"] = request.Args;
-         req["paramTypes"] = request.ArgTypes;
+         req["params"] = request.Params;
+         req["paramTypes"] = request.ParamTypes;
          req["encoding"] = request.Encoding;
 
          Message msgReq = new Message();
@@ -152,7 +121,7 @@ namespace Zbus.RPC
          Request req = new Request();
          req.Module = this.module;
          req.Method = method;
-         req.Args = args;
+         req.Params = args;
          req.Encoding = this.encoding;
 
          return Invoke(req);

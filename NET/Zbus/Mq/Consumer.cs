@@ -17,8 +17,8 @@ namespace Zbus.Mq
    {
       private static readonly ILog log = LogManager.GetLogger(typeof(Consumer));
       private IMessageInvoker client = null;
-      private string topic = null;
-      private int consumeTimeout = 300000; //5 minutes
+      public string Topic { get; set; }
+      public int ConsumeTimeout { get; set; } = 300000; //5 minutes
 
       public Consumer(IBroker broker, String mq, params MqMode[] modes)
           : base(broker, mq, modes)
@@ -28,18 +28,7 @@ namespace Zbus.Mq
       public Consumer(MqConfig config)
           : base(config)
       {
-         this.topic = config.Topic;
-      }
-
-      public string Topic
-      {
-         set { topic = value; }
-      }
-
-      public int ConsumeTimeout
-      {
-         get { return consumeTimeout; }
-         set { consumeTimeout = value; }
+         this.Topic = config.Topic;
       }
 
       public Message Take()
@@ -47,7 +36,7 @@ namespace Zbus.Mq
          Message msg = null;
          while (msg == null)
          {
-            msg = Recv(this.consumeTimeout);
+            msg = Recv(ConsumeTimeout);
          }
          return msg;
       }
@@ -68,9 +57,9 @@ namespace Zbus.Mq
          req.Mq = this.mq;
          if ((this.mode & (int)MqMode.PubSub) != 0)
          {
-            if (this.topic != null)
+            if (this.Topic != null)
             {
-               req.Topic = this.topic;
+               req.Topic = this.Topic;
             }
          }
          try
@@ -171,7 +160,7 @@ namespace Zbus.Mq
          {
             try
             {
-               Message req = this.Recv(consumeTimeout);
+               Message req = this.Recv(this.ConsumeTimeout);
                if (req == null) continue;
 
                if (consumerHandler == null)

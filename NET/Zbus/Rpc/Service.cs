@@ -107,26 +107,13 @@ namespace Zbus.RPC
 
    class MethodInstance
    {
-      private MethodInfo method;
-      private object instance;
+      public MethodInfo Method { get; set; }
+      public object Instance { get; set; }
 
       public MethodInstance(MethodInfo method, object instance)
       {
-         this.method = method;
-         this.instance = instance;
-      }
-
-      public MethodInfo Method
-      {
-         get { return this.method; }
-         set { this.method = value; }
-      }
-
-      public object Instance
-      {
-         get { return this.instance; }
-         set { this.instance = value; }
-      }
-   }
-
+         this.Method = method;
+         this.Instance = instance;
+      } 
+   } 
 }

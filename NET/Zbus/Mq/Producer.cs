@@ -3,6 +3,7 @@
 using Zbus.Net;
 using Zbus.Broker;
 using Zbus.Net.Http;
+using System.Threading.Tasks;
 
 namespace Zbus.Mq
 {
@@ -24,6 +25,14 @@ namespace Zbus.Mq
          msg.Mq = this.mq; 
 
          return this.broker.InvokeSync(msg, timeout);
+      }
+
+      public Task<Message> SendAsync(Message msg)
+      {
+         msg.Cmd = Proto.Produce;
+         msg.Mq = this.mq;
+
+         return this.broker.InvokeAsync(msg);
       }
    }
 }

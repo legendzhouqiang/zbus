@@ -4,51 +4,20 @@ namespace Zbus.Mq
 {
    public class MqConfig : ICloneable
    {
-      private IBroker broker;
-      private string mq;
+      public IBroker Broker { get; set; }
+      public string Mq { get; set; } 
+      public string RegisterToken { get; set; } = "";
+      public string AccessToken { get; set; } = ""; 
+      public string Topic { get; set; }
+
+
+
       private int mode = (int)MqMode.MQ;
-      private string registerToken = "";
-      private string accessToken = "";
-
-      private string topic = null;
-
-
-      public IBroker Broker
-      {
-         get { return broker; }
-         set { broker = value; }
-      }
-
-      public string Mq
-      {
-         get { return mq; }
-         set { mq = value; }
-      }
-
-
       public int Mode
       {
          get { return mode; }
-         set { mode = value; }
       }
 
-      public string Topic
-      {
-         get { return topic; }
-         set { topic = value; }
-      }
-
-      public string RegisterToken
-      {
-         get { return registerToken; }
-         set { registerToken = value; }
-      }
-
-      public string AccessToken
-      {
-         get { return accessToken; }
-         set { accessToken = value; }
-      }
 
       public void SetMode(params MqMode[] modes)
       {
