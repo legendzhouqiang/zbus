@@ -12,10 +12,9 @@ namespace Zbus.Net.Tcp
       where REQ: IId 
       where RES: IId
    {   
-      private Session session;
-      private DateTime createdTime = DateTime.Now; 
-
+      private Session session;  
       private IDictionary<string, RES> resultTable = new ConcurrentDictionary<string, RES>();  
+
       public Client(ICodec codecRead, ICodec codecWrite)
       {
          this.session = new Session(new TcpClient(), codecRead, codecWrite);
@@ -47,11 +46,7 @@ namespace Zbus.Net.Tcp
          {
             return session.Active;
          }
-      } 
-      public DateTime CreatedTime
-      {
-         get { return createdTime; }
-      }
+      }  
 
       public V Attr<V>(string key)
       {

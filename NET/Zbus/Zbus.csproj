@@ -46,6 +46,14 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -59,15 +67,6 @@
     <Compile Include="Broker\BrokerException.cs" />
     <Compile Include="Broker\SingleBroker.cs" />
     <Compile Include="Broker\ZbusBroker.cs" />
-    <Compile Include="Kit\Json\Formatter.cs" />
-    <Compile Include="Kit\Json\Getters.cs" />
-    <Compile Include="Kit\Json\JSON.cs" />
-    <Compile Include="Kit\Json\JsonParser.cs" />
-    <Compile Include="Kit\Json\JsonSerializer.cs" />
-    <Compile Include="Kit\Json\SafeDictionary.cs" />
-    <Compile Include="Kit\Log\ConsoleLogger.cs" />
-    <Compile Include="Kit\Log\ILogger.cs" />
-    <Compile Include="Kit\Log\LoggerFactory.cs" />
     <Compile Include="Mq\MqConfig.cs" />
     <Compile Include="Mq\MqException.cs" />
     <Compile Include="Net\Http\Message.cs" />

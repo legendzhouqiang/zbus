@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
-using Zbus.Kit.Json;
+ 
 using Zbus.Mq;
 using Zbus.Broker;
 using Zbus.Net.Http;
+
+using Newtonsoft.Json;
 
 namespace Zbus.RPC
 {
@@ -114,7 +115,7 @@ namespace Zbus.RPC
          req["encoding"] = request.Encoding;
 
          Message msgReq = new Message();
-         string json = JSON.Instance.ToJSON(req);
+         string json = JsonConvert.SerializeObject(req);
          msgReq.SetJsonBody(json);
          if (request.Mq != null)
          {
@@ -130,7 +131,7 @@ namespace Zbus.RPC
             encoding = Encoding.GetEncoding(encodingName);
          }
          string jsonString = msgRes.GetBody(encoding);
-         Dictionary<string, object> jsonRes = (Dictionary<string, object>)JSON.Instance.Parse(jsonString);
+         Dictionary<string, object> jsonRes = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
          if (jsonRes.ContainsKey("error"))
          {
             if (jsonRes["error"] != null)

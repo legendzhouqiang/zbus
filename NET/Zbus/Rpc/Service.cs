@@ -3,17 +3,16 @@ using System.Threading;
 using System.Reflection;
 using System.Net.Sockets;
 
-using Zbus.Kit.Log;
 using Zbus.Mq;
 using Zbus.Broker;
 using Zbus.Net.Http;
+using log4net;
 
 namespace Zbus.RPC
 {
    class ServiceMessageHandler : IMessageHandler
    {
-      private IMessageProcessor processor;
-      private int routeTimeout = 10000;
+      private IMessageProcessor processor; 
       public ServiceMessageHandler(IMessageProcessor processor)
       {
          this.processor = processor;
@@ -40,7 +39,7 @@ namespace Zbus.RPC
 
    public class Service : IDisposable
    {
-      private static readonly ILogger log = LoggerFactory.GetLogger(typeof(Service));
+      private static readonly ILog log = LogManager.GetLogger(typeof(Service));
       private ServiceConfig config;
       private Consumer[][] brokerConsumers;
       private bool started = false;

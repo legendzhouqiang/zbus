@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 namespace Zbus.Net
 {
    public interface IClient<REQ, RES> : IInvoker<REQ, RES>, IPoolable
-   {
-      DateTime CreatedTime { get; } 
+   { 
       Task SendAsync(REQ req);
       Task<RES> RecvAsync();
 

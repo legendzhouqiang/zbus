@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic; 
+using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.Collections;
- 
-using Zbus.Kit.Json;
+
 using Zbus.Net.Http;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Zbus.RPC
 {
@@ -96,6 +97,18 @@ namespace Zbus.RPC
 
       }
 
+      private static T ConvertByJson<T>(object raw)
+      {
+         string jsonRaw = JsonConvert.SerializeObject(raw);
+         return (T)JsonConvert.DeserializeObject(jsonRaw, typeof(T));
+      }
+
+      private static object ConvertByJson(object raw, Type type)
+      {
+         string jsonRaw = JsonConvert.SerializeObject(raw);
+         return JsonConvert.DeserializeObject(jsonRaw, type);
+      }
+
       public Message Process(Message request)
       {
          string json = request.GetBody();
@@ -112,7 +125,7 @@ namespace Zbus.RPC
          Dictionary<string, object> parsed = null;
          try
          {
-            parsed = (Dictionary<string, object>)JSON.Instance.Parse(json);
+            parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
          }
          catch (System.Exception ex)
          {
@@ -126,8 +139,8 @@ namespace Zbus.RPC
                {
                   module = (string)parsed["module"];
                }
-               method = (string)parsed["method"];
-               args = (ArrayList)parsed["params"];
+               method = (string)parsed["method"];  
+               args = ConvertByJson<ArrayList>(parsed["params"]);
                if (args == null)
                {
                   args = new ArrayList();
@@ -180,7 +193,7 @@ namespace Zbus.RPC
                   object[] paras = new object[args.Count];
                   for (int i = 0; i < pinfo.Length; i++)
                   {
-                     paras[i] = System.Convert.ChangeType(args[i], pinfo[i].ParameterType);
+                     paras[i] = ConvertByJson(args[i], pinfo[i].ParameterType);
                   }
                   result = target.Method.Invoke(target.Instance, paras);
                }
@@ -207,7 +220,7 @@ namespace Zbus.RPC
             data["result"] = null;
          }
 
-         string resJson = JSON.Instance.ToJSON(data);
+         string resJson = JsonConvert.SerializeObject(data);
          Message res = new Message();
          res.SetBody(resJson);
 

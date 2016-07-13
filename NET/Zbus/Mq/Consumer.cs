@@ -1,10 +1,10 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
-using Zbus.Kit.Log;
-using Zbus.Broker; 
+using Zbus.Broker;
 using Zbus.Net.Http;
 
 namespace Zbus.Mq
@@ -15,7 +15,7 @@ namespace Zbus.Mq
    }
    public class Consumer : MqAdmin, IDisposable
    {
-      private static readonly ILogger log = LoggerFactory.GetLogger(typeof(Consumer));
+      private static readonly ILog log = LogManager.GetLogger(typeof(Consumer));
       private IMessageInvoker client = null;
       private string topic = null;
       private int consumeTimeout = 300000; //5 minutes

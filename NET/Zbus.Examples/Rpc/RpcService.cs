@@ -13,7 +13,7 @@ namespace Zbus.Examples
 
    class MyService
    {
-      public string getString(string msg)
+      public string echo(string msg)
       {
          return msg;
       }
