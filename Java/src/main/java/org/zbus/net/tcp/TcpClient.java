@@ -3,6 +3,8 @@ package org.zbus.net.tcp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,6 +47,8 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected int readTimeout = 3000;
 	protected int connectTimeout = 3000; 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);  
+	
+	private ConcurrentMap<String, Object> attributes = null;
 	
 	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();  
 	
@@ -253,17 +257,30 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	}
 	
 	 
+	@SuppressWarnings("unchecked")
 	public <V> V attr(String key) {
-		if(session == null) return null;
-		return session.attr(key);
+		if (this.attributes == null) {
+			return null;
+		}
+
+		return (V) this.attributes.get(key);
 	}
 
 	public <V> void attr(String key, V value) {
-		 if(session == null){
-			 log.warn("Session not created, attr can not be set");
-			 return;
-		 }
-		 session.attr(key, value);
+		if(value == null){
+			if(this.attributes != null){
+				this.attributes.remove(key);
+			}
+			return;
+		}
+		if (this.attributes == null) {
+			synchronized (this) {
+				if (this.attributes == null) {
+					this.attributes = new ConcurrentHashMap<String, Object>();
+				}
+			}
+		}
+		this.attributes.put(key, value);
 	}
 	
 	public void onMessage(MsgHandler<RES> msgHandler){

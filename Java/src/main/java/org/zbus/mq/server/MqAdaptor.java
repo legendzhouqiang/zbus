@@ -100,7 +100,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 						json += "\"module\": " + "\"" + module + "\"";
 						json += ", \"method\": " + "\"" + method + "\"";
 						if(url.params != null){
-							json += ", \"params\": " + "[" + url.params + "]";  
+							if(url.params.startsWith("[") && url.params.endsWith("]")){
+								json += ", \"params\": " + url.params;  
+							} else {
+								json += ", \"params\": " + "[" + url.params + "]"; 
+							}
 						}
 						json += "}";
 						msg.setJsonBody(json);
@@ -349,13 +353,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				ReplyKit.reply400(msg, sess);
 				return;
 			}
-			String mqMode = msg.getHead("mq_mode", "");
-			mqMode = mqMode.trim();
-			if("".equals(mqMode)){
-				msg.setBody("Missing mq_mode");
-				ReplyKit.reply400(msg, sess);
-				return;
-			}
+			String mqMode = msg.getHead("mq_mode", MqMode.MQ.intValue() + ""); //default
+			mqMode = mqMode.trim(); 
 			int mode = 0;
     		try{
     			mode = Integer.valueOf(mqMode); 
