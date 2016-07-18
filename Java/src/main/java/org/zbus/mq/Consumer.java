@@ -34,8 +34,12 @@ import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqMode;
+import org.zbus.net.Client.ConnectedHandler;
+import org.zbus.net.Client.MsgHandler;
+import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
+import org.zbus.net.http.MessageClient;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
@@ -59,15 +63,13 @@ public class Consumer extends MqAdmin implements Closeable {
 	}
 
 	public Message take(int timeout) throws IOException, InterruptedException {
+		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
+			throw new IllegalStateException("PubSub not support take");
+		}
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
-		req.setHead("token", accessToken);
-		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			if (this.topic != null) {
-				req.setTopic(this.topic);
-			}
-		}
+		req.setHead("token", accessToken); 
 
 		Message res = null;
 		try {  
@@ -159,6 +161,32 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.topic = topic;
 	} 
 	
+	public void subscribe(String topic) throws IOException{ 
+		if (!MqMode.isEnabled(this.mode, MqMode.PubSub)) {
+			throw new IllegalStateException("subscribe require PubSub mode");
+		}
+		
+		synchronized (this) {
+			if (this.client == null) {
+				this.client = broker.getInvoker(brokerHint());
+			} 
+		} 
+		
+		MessageClient messageClient = (MessageClient)this.client;
+		Message req = new Message();
+		req.setCmd(Protocol.Consume);
+		req.setMq(mq);
+		req.setHead("token", accessToken); 
+		req.setTopic(topic);
+		
+		try {
+			messageClient.invokeSync(req);
+		} catch (InterruptedException e) {
+			//ignore
+		}
+	}
+	
+	
 	//The followings are all related to start consumer cycle in another thread
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
@@ -168,17 +196,20 @@ public class Consumer extends MqAdmin implements Closeable {
 	private boolean consumerHandlerRunInPool = false;
 	private ThreadPoolExecutor consumerHandlerExecutor;  
 	private boolean ownConsumerHandlerExecutor = false;
+	
+	private void initConsumerHandlerPoolIfNeeded(){
+		if(consumerHandlerRunInPool && consumerHandlerExecutor == null){
+			consumerHandlerExecutor = new ThreadPoolExecutor(consumerHandlerPoolSize, 
+					consumerHandlerPoolSize, 120, TimeUnit.SECONDS, 
+					new LinkedBlockingQueue<Runnable>(inFlightMessageCount),
+					new ThreadPoolExecutor.CallerRunsPolicy());
+			ownConsumerHandlerExecutor = true;
+		}
+	}
 	private final Runnable consumerTask = new Runnable() {
 		@Override
 		public void run() {
-			if(consumerHandlerRunInPool && consumerHandlerExecutor == null){
-				consumerHandlerExecutor = new ThreadPoolExecutor(consumerHandlerPoolSize, 
-						consumerHandlerPoolSize, 120, TimeUnit.SECONDS, 
-						new LinkedBlockingQueue<Runnable>(inFlightMessageCount),
-						new ThreadPoolExecutor.CallerRunsPolicy());
-				ownConsumerHandlerExecutor = true;
-			}
-			
+			initConsumerHandlerPoolIfNeeded(); 
 			while (true) {
 				try {
 					final Message msg;
@@ -229,8 +260,57 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	};
 
-	public void onMessage(final ConsumerHandler handler) {
+	public void onMessage(final ConsumerHandler handler) throws IOException { 
 		this.consumerHandler = handler;
+		if(this.consumerHandler == null){
+			return; //just ignore it
+		}
+		if (!MqMode.isEnabled(this.mode, MqMode.PubSub)) {
+			return;
+		}
+		
+		
+		synchronized (this) {
+			if (this.client == null) {
+				this.client = broker.getInvoker(brokerHint());
+			} 
+		}  
+		MessageClient messageClient = (MessageClient)this.client;
+		initConsumerHandlerPoolIfNeeded(); 
+		messageClient.onMessage(new MsgHandler<Message>() { 
+			@Override
+			public void handle(final Message msg, Session session) throws IOException {
+				if(consumerHandlerRunInPool && consumerHandlerExecutor != null){
+					consumerHandlerExecutor.submit(new Runnable() { 
+						@Override
+						public void run() { 
+							try {
+								consumerHandler.handle(msg, Consumer.this);
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					});
+				} else {
+					consumerHandler.handle(msg, Consumer.this);
+				}
+			}
+		}); 
+		
+		messageClient.onConnected(new ConnectedHandler() { 
+			@Override
+			public void onConnected() throws IOException { 
+				log.info("Connected, try to create mq and subscribe on topic: " + topic);
+				try {
+					createMQ();
+				} catch (InterruptedException e) {
+					//ignore
+				}
+				subscribe(topic);
+			}
+		});
+		
+		messageClient.ensureConnectedAsync();
 	}
 	
 	public void onException(final ConsumerExceptionHandler handler) {
@@ -259,12 +339,16 @@ public class Consumer extends MqAdmin implements Closeable {
 		} 
 	}
 	
-	public synchronized void start(ConsumerHandler handler){
+	public synchronized void start(ConsumerHandler handler) throws IOException{
 		onMessage(handler);
 		start();
 	}
 
-	public synchronized void start() {
+	public synchronized void start() throws IOException {
+		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
+			return;
+		}
+		
 		if (consumerThread == null) {
 			consumerThread = new Thread(consumerTask);
 			consumerThread.setName("ConsumerThread");

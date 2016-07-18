@@ -11,14 +11,13 @@ import org.zbus.net.http.Message;
 
 public class Sub {
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception{  
-		//1）创建Broker代表 
+	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
+		 
+		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub);  
 		
-		//2) 创建消费者 
-		Consumer c = new Consumer(broker, "MyPubSub", MqMode.PubSub); 
-		final String topic = "sse";
-		c.setTopic(topic);  
+		final String topic = "zbus"; 
+		c.setTopic(topic);
 		
 		c.start(new ConsumerHandler() { 
 			int count = 0;
@@ -31,6 +30,6 @@ public class Sub {
 					System.out.println(msg);
 				}
 			}
-		}); 
+		});    
 	} 
 }

@@ -11,13 +11,11 @@ public class PubSync {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
-		producer.createMQ();  
+		producer.createMQ();   
 		
-		String[] topics = {"sse", "google", "qhee"};
-		
-		for(int i=0;i<10;i++){
+		for(int i=0;i<1000000;i++){
 			Message msg = new Message();
-			msg.setTopic(topics[i%3]); 
+			msg.setTopic("zbus"); 
 			msg.setBody("hello world");
 				
 			producer.sendSync(msg); 

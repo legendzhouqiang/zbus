@@ -64,6 +64,7 @@ public class PubSub extends AbstractMQ{
 			this.lastUpdateTime = System.currentTimeMillis();
 			
 			String topic = msg.getTopic();
+			msg.setStatus(200);
 			Iterator<Entry<String, PullSession>> iter = pullMap.entrySet().iterator();
 			while(iter.hasNext()){
 				PullSession sess = iter.next().getValue();
@@ -71,41 +72,17 @@ public class PubSub extends AbstractMQ{
 					iter.remove();
 					continue;
 				} 
-				if(sess.isTopicMatched(topic)){ 
-					Message copy = Message.copyWithoutBody(msg);
-					copy.setStatus(200);
-					sess.getMsgQ().offer(copy);
+				if(sess.isTopicMatched(topic)){  
+					try{
+						sess.session.write(msg);
+					} catch(Exception e) {
+						log.warn("PubSub remove failure session： " + sess.session);
+						iter.remove();  
+					}
 				}
 			}
 		} 
-	 
-		Iterator<Entry<String, PullSession>> iter = pullMap.entrySet().iterator();
-		while(iter.hasNext()){
-			PullSession pull = iter.next().getValue();
-			if(pull == null || !pull.getSession().isActive()){
-				iter.remove();
-				continue;
-			}  
-			try{ 
-				pull.lock.lock();
-				Message pullMessage = pull.pullMessage;
-				if(pullMessage == null) continue;
-				
-				msg = pull.getMsgQ().poll();
-				if(msg == null) continue;
-				
-				msg.setStatus(200); //支持浏览器
-				msg.setOriginId(msg.getId());
-				msg.setId(pullMessage.getId()); 
-				
-				pull.pullMessage = null;
-				pull.getSession().write(msg);
-			} catch(Exception ex){
-				log.error(ex.getMessage(), ex);
-			} finally{
-				pull.lock.unlock();
-			}
-		}  
+	  
 	}
 	
 	@Override
