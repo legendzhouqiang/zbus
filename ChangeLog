@@ -1,28 +1,10 @@
-zbus-6.2.0 发布，整个项目模块化重构，改进内容：
-1. MQ默认直接采用持久化。MQ速度在SSD磁盘上可达200M+/s,数十亿级消息堆积测试（100G+磁盘）
-2. RPC支持分为直接RPC与基于MQ的RPC，直接RPC性能优于基于MQ的RPC。 
-3. Broker独立模型重构，支持HA高可用，不只面向MQ工作，可以方便支持直接RPC的负载均衡。
-4. 添加Thrfit协议接入（RPC）,整体上支持HTTP短链接，Extend HTTP的TCP长连接，Thrift客户端接入。
-5. 消息通讯基础zbus.NET保持小、模块化（~50K），方便个性化协议扩展
-6. 添加支持普通TCP代理，DMZ网络安全结构的的TCP代理
-7. 提供大量示例，包括MQ，PubSub，RPC，Proxy，Thrift，Simple HTTP等。
-
-zbus-6.3.0 更新
-1. 增加主从队列支持
-2. 增加消息过滤机制，根据消息键值决定是否写入消息队列磁盘。
-3. 增加不经过网络传输的JVM内部通讯优化的JvmBroker
-4. 增加ZbusBroker统一Broker实现，工厂代理模式由统一的地址决定Broker的底层类型：Single、HA，JVM。
-5. 常见QQ群、issue反馈的bug修复。
-6. Readme中增加了代码设计说明
-7. 依然保持了zbus~300k的单jar轻量级特性
-
-
-6.3.1 Change Log
-1. MessageClient default to startup heartbeat
-2. Add messaging Delay and TTL support
-
-zbus-7.0.0 Changelog 
+ zbus-7.0.0 Changelog 
 1. Net module refined entirely to support Netty(4.x)
 2. Support SSL(HTTPS)
 3. High Availability API (BrokerSelector) opened 
 4. Consumer count reduced for highly-loaded RPC/handler case.
+5. PubSub work only in memory, and no need request-reply.
+
+
+zbus-7.0.0 BugToFix
+1. Detect longtime inactive session.
