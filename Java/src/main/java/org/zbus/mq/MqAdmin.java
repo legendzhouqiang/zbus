@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Protocol.MqMode;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 
@@ -62,6 +63,10 @@ public class MqAdmin{
 		return broker.invokeSync(req, 10000);
 	}
 	
+	protected void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+		broker.invokeAsync(req, callback);
+	}
+	
 	public Message queryMQ() throws IOException, InterruptedException{
 		Message req = new Message();
     	req.setCmd(Protocol.QueryMQ); 
@@ -71,9 +76,9 @@ public class MqAdmin{
     	
     	return invokeSync(req); 
 	}
-    
-    public boolean createMQ() throws IOException, InterruptedException{
-    	Message req = new Message();
+	
+	private Message buildCreateMQMessage(){
+		Message req = new Message();
     	req.setCmd(Protocol.CreateMQ); 
     	req.setHead("mq_name", mq);
     	req.setHead("mq_mode", "" + mode);  
@@ -81,11 +86,20 @@ public class MqAdmin{
     	req.setHead("access_token", accessToken);
     	req.setMasterMq(masterMq);
     	req.setMasterToken(masterToken);
-    	
+    	return req;
+	}
+    
+    public boolean createMQ() throws IOException, InterruptedException{
+    	Message req = buildCreateMQMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return res.isStatus200();
     } 
+    
+    public void createMQAsync(ResultCallback<Message> callback) throws IOException{
+    	Message req = buildCreateMQMessage(); 
+    	invokeAsync(req, callback);
+    }
     
     public boolean removeMQ() throws IOException, InterruptedException{
     	Message req = new Message();

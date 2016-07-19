@@ -90,6 +90,10 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 			}
 		});
 	} 
+	
+	public String getConnectedServerAddress(){
+		return host+":"+port;
+	}
 
 	private void init(){
 		if(bootstrap != null) return;

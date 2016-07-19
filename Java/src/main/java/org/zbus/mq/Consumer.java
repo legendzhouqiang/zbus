@@ -36,6 +36,7 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.MsgHandler;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
@@ -136,6 +137,16 @@ public class Consumer extends MqAdmin implements Closeable {
 			return client.invokeSync(req, 10000);
 		} 
 	}
+	
+	@Override
+	protected void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+		synchronized (this) {
+			if (this.client == null) {
+				this.client = broker.getInvoker(brokerHint());
+			}
+			client.invokeAsync(req, callback);
+		} 
+	}
 
 	 
 	public void routeMessage(Message msg) throws IOException {
@@ -179,11 +190,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		req.setHead("token", accessToken); 
 		req.setTopic(topic);
 		
-		try {
-			messageClient.invokeSync(req);
-		} catch (InterruptedException e) {
-			//ignore
-		}
+		messageClient.invokeAsync(req, null); 
 	}
 	
 	
@@ -275,7 +282,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				this.client = broker.getInvoker(brokerHint());
 			} 
 		}  
-		MessageClient messageClient = (MessageClient)this.client;
+		final MessageClient messageClient = (MessageClient)this.client;
 		initConsumerHandlerPoolIfNeeded(); 
 		messageClient.onMessage(new MsgHandler<Message>() { 
 			@Override
@@ -299,14 +306,17 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		messageClient.onConnected(new ConnectedHandler() { 
 			@Override
-			public void onConnected() throws IOException { 
-				log.info("Connected, try to create mq and subscribe on topic: " + topic);
-				try {
-					createMQ();
-				} catch (InterruptedException e) {
-					//ignore
-				}
-				subscribe(topic);
+			public void onConnected() throws IOException {  
+				createMQAsync(new ResultCallback<Message>() { 
+					public void onReturn(Message result) {
+						try {
+							subscribe(topic);
+							log.info("Connected(%s), Subscribe on topic: %s", messageClient.getConnectedServerAddress(), topic);
+						} catch (IOException e) {
+							//ignore
+						}
+					}
+				});  
 			}
 		});
 		
