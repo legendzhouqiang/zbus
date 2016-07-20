@@ -17,7 +17,7 @@ namespace Zbus.Net.Tcp
 
       private readonly string id = Guid.NewGuid().ToString();
       private IDictionary<string, object> attributes = null;
-      private object attrLock = new object();
+      private object attrLock = new object(); 
       public Session(TcpClient client, ICodec codecRead, ICodec codecWrite)
       {
          this.client = client;
@@ -103,6 +103,7 @@ namespace Zbus.Net.Tcp
 
       public async Task<object> ReadAsync()
       {
+
          byte[] buf = new byte[4096];
          while (true)
          {
