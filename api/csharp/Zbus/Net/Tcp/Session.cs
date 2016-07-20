@@ -17,7 +17,10 @@ namespace Zbus.Net.Tcp
 
       private readonly string id = Guid.NewGuid().ToString();
       private IDictionary<string, object> attributes = null;
-      private object attrLock = new object(); 
+      private object attrLock = new object();
+      private object readLock = new object();
+      private object writeLock = new object();
+
       public Session(TcpClient client, ICodec codecRead, ICodec codecWrite)
       {
          this.client = client;
@@ -99,31 +102,44 @@ namespace Zbus.Net.Tcp
                }
             }
          }
-      }  
-
+      }   
+      
+      /// <summary>
+      /// Thread safe read async
+      /// </summary>
+      /// <returns></returns>
       public async Task<object> ReadAsync()
       {
 
          byte[] buf = new byte[4096];
          while (true)
          {
-            IoBuffer tempBuf = this.readBuf.Duplicate();
-            tempBuf.Flip(); //to read mode
-            object msg = codecRead.Decode(tempBuf);
-            if (msg != null)
+            lock (this.readBuf)
             {
-               this.readBuf.Move(tempBuf.Position);
-               return msg;
+               IoBuffer tempBuf = this.readBuf.Duplicate();
+               tempBuf.Flip(); //to read mode
+               object msg = codecRead.Decode(tempBuf);
+               if (msg != null)
+               {
+                  this.readBuf.Move(tempBuf.Position);
+                  return msg;
+               }
             }
-            int n = await Stream.ReadAsync(buf, 0, buf.Length);
-            this.readBuf.Put(buf, 0, n); 
-         } 
-      }
 
-      public Task FlushAsync()
-      {
-         return Stream.FlushAsync(); 
-      }
+            Task<int> readTask;
+            lock (readLock)
+            {
+               readTask = Stream.ReadAsync(buf, 0, buf.Length);
+            } 
+
+            int n = await readTask;
+
+            lock (this.readBuf)
+            {
+               this.readBuf.Put(buf, 0, n);
+            }
+         } 
+      } 
 
       public async Task WriteAndFlushAsync(object msg)
       {
@@ -131,10 +147,21 @@ namespace Zbus.Net.Tcp
          await FlushAsync();
       }
 
+      public Task FlushAsync()
+      {
+         lock (writeLock)
+         {
+            return Stream.FlushAsync();
+         }
+      }
+
       public Task WriteAsync(object msg)
       {
-         IoBuffer buf = this.codecWrite.Encode(msg); 
-         return Stream.WriteAsync(buf.Data, 0, buf.Limit); 
+         IoBuffer buf = this.codecWrite.Encode(msg);
+         lock (writeLock)
+         {
+            return Stream.WriteAsync(buf.Data, 0, buf.Limit);
+         } 
       }
 
       public void Dispose()

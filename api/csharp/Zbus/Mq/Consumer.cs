@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
-
+using System.Threading.Tasks;
 using Zbus.Broker;
 using Zbus.Net.Http;
 
@@ -19,6 +19,7 @@ namespace Zbus.Mq
       private IMessageInvoker client = null;
       public string Topic { get; set; }
       public int ConsumeTimeout { get; set; } = 300000; //5 minutes
+      public bool ConsumerHandlerRunInPool { get; set; } = true;
 
       public Consumer(IBroker broker, String mq, params MqMode[] modes)
           : base(broker, mq, modes)
@@ -168,7 +169,18 @@ namespace Zbus.Mq
                   log.Warn("Missing consumer MessageHandler, call OnMessage first");
                   continue;
                }
-               consumerHandler.Handle(req, this);
+               if (ConsumerHandlerRunInPool)
+               {
+                  Task.Run(() =>
+                  {
+                     consumerHandler.Handle(req, this);
+                  });
+               }
+               else
+               {
+                  consumerHandler.Handle(req, this);
+               }
+               
             }
             catch (SocketException se)
             {
