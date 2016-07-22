@@ -46,7 +46,7 @@ import org.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -60,7 +60,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private TrackSub trackSub;
 	 
 	private BrokerConfig config;
-	private EventDriver eventDriver;
+	private IoDriver eventDriver;
 	private boolean ownEventDriver = false;
 	
 	private CountDownLatch syncFromTracker = new CountDownLatch(1);
@@ -70,7 +70,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		this.config = config; 
 		this.eventDriver = config.getEventDriver();
 		if(this.eventDriver == null){
-			this.eventDriver = new EventDriver();
+			this.eventDriver = new IoDriver();
 			this.ownEventDriver = true;
 		} 
 		subscribeNotification(); 

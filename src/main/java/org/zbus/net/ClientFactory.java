@@ -12,15 +12,15 @@ public abstract class ClientFactory<REQ, RES, T extends Client<REQ, RES>>
 	private static final Logger log = LoggerFactory.getLogger(ClientFactory.class); 
 	
 	protected final String serverAddress;
-	protected EventDriver eventDriver;
+	protected IoDriver eventDriver;
 	protected boolean ownEventDriver = false;
 	
 	public ClientFactory(String serverAddress){
-		this(serverAddress, new EventDriver());
+		this(serverAddress, new IoDriver());
 		this.ownEventDriver = true;
 	} 
 	
-	public ClientFactory(String serverAddress, EventDriver driver){
+	public ClientFactory(String serverAddress, IoDriver driver){
 		this.serverAddress = serverAddress;
 		this.eventDriver = driver;
 	}

@@ -50,7 +50,7 @@ import org.zbus.mq.server.filter.MemoryMqFilter;
 import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.mq.server.filter.PersistMqFilter;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.MessageServer;
 import org.zbus.proxy.HttpDmzProxy;
@@ -75,7 +75,7 @@ public class MqServer implements Closeable{
 	
 	private TrackPub trackPub; 
 	
-	private EventDriver eventDriver;
+	private IoDriver eventDriver;
 	private boolean ownEventDriver = false;
 	
 	private MessageServer httpServer;// you may add WebSocket Server
@@ -90,7 +90,7 @@ public class MqServer implements Closeable{
 		this.config = config;  
 		eventDriver = config.getEventDriver();
 		if(eventDriver == null){
-			eventDriver = new EventDriver();
+			eventDriver = new IoDriver();
 			ownEventDriver = true;
 		} 
 		
@@ -145,7 +145,7 @@ public class MqServer implements Closeable{
 	public void start() throws Exception{  
 		long start = System.currentTimeMillis();
 		httpServer = new MessageServer(eventDriver); 
-		eventDriver = httpServer.getEventDriver();
+		eventDriver = httpServer.getIoDriver();
 		
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor); 
 		

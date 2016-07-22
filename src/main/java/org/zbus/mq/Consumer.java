@@ -46,7 +46,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	private MessageInvoker client;  
 	private String topic = null;  
-	private int consumeTimeout = 300000; // 5 minutes
+	private int consumeTimeout = 120000; // 2 minutes
 
 	public Consumer(Broker broker, String mq, MqMode... mode) {
 		super(broker, mq, mode);

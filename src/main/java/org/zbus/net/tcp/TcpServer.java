@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.CodecInitializer;
-import org.zbus.net.EventDriver;
 import org.zbus.net.IoAdaptor;
+import org.zbus.net.IoDriver;
 import org.zbus.net.Server;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -29,13 +29,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.timeout.IdleStateHandler;
 
 public class TcpServer implements Server {
 	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 
 	
 	protected CodecInitializer codecInitializer; 
-	protected EventDriver eventDriver;
-	protected boolean ownEventDriver; 
+	protected IoDriver ioDriver;
+	protected boolean ownIoDriver; 
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
   
@@ -43,21 +44,21 @@ public class TcpServer implements Server {
 		this(null); 
 	}
 	
-	public TcpServer(EventDriver driver){ 
-		this.eventDriver = driver; 
-		if (this.eventDriver == null) {
-			this.eventDriver = new EventDriver();
-			this.ownEventDriver = true;
+	public TcpServer(IoDriver driver){ 
+		this.ioDriver = driver; 
+		if (this.ioDriver == null) {
+			this.ioDriver = new IoDriver();
+			this.ownIoDriver = true;
 		} else {
-			this.ownEventDriver = false;
+			this.ownIoDriver = false;
 		} 
 	} 
 	
 	@Override
 	public void close() throws IOException {
-		if(ownEventDriver && eventDriver != null){
-			eventDriver.close();
-			eventDriver = null;
+		if(ownIoDriver && ioDriver != null){
+			ioDriver.close();
+			ioDriver = null;
 		}
 	} 
 	 
@@ -75,8 +76,8 @@ public class TcpServer implements Server {
 
 	@Override
 	public void start(final String host, final int port, IoAdaptor ioAdaptor) {
-		EventLoopGroup bossGroup = (EventLoopGroup)eventDriver.getGroup();
-		EventLoopGroup workerGroup = (EventLoopGroup)eventDriver.getWorkerGroup(); 
+		EventLoopGroup bossGroup = (EventLoopGroup)ioDriver.getGroup();
+		EventLoopGroup workerGroup = (EventLoopGroup)ioDriver.getWorkerGroup(); 
 		if(workerGroup == null){
 			workerGroup = bossGroup;
 		} 
@@ -113,8 +114,8 @@ public class TcpServer implements Server {
 		return ((InetSocketAddress)addr).getPort();
 	}
 	
-	public EventDriver getEventDriver() {
-		return this.eventDriver;
+	public IoDriver getIoDriver() {
+		return this.ioDriver;
 	}
 	
 	public void codec(CodecInitializer codecInitializer) {
@@ -144,9 +145,11 @@ public class TcpServer implements Server {
 		}
 		
 		@Override
-		protected void initChannel(SocketChannel ch) throws Exception { 
-			ChannelPipeline p = ch.pipeline();
-			SslContext sslCtx = (SslContext)eventDriver.getSslContext();
+		protected void initChannel(SocketChannel ch) throws Exception {  
+			ChannelPipeline p = ch.pipeline(); 
+			int timeout = ioDriver.getIdleTimeInSeconds();
+			p.addLast(new IdleStateHandler(0, 0, timeout));
+			SslContext sslCtx = ioDriver.getSslContext();
 			if(sslCtx != null){
 				p.addLast(sslCtx.newHandler(ch.alloc()));
 			}

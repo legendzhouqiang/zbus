@@ -34,20 +34,15 @@ public class TcpServerExample {
 
 		server.start(8080, new IoAdaptor() {
 			private AtomicInteger idx = new AtomicInteger(0);
+
 			@Override
 			public void onSessionMessage(Object msg, Session sess) throws IOException {
 				System.out.println(msg);
 
-				for (int i = 0; i < 10; i++) {
-					Message http = new Message();
-					http.setStatus(200);
-					http.setBody("hello " + idx.getAndIncrement());
-					sess.writeAndFlush(http);
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) { 
-					}
-				}
+				Message http = new Message();
+				http.setStatus(200);
+				http.setBody("hello " + idx.getAndIncrement());
+				sess.writeAndFlush(http);
 			}
 
 			@Override
@@ -61,8 +56,11 @@ public class TcpServerExample {
 
 			@Override
 			public void onSessionCreated(Session sess) throws IOException {
-				
 
+			}
+			@Override
+			public void onSessionIdle(Session sess) throws IOException { 
+				System.err.println("Idle： " + sess);
 			}
 		});
 

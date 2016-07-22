@@ -34,4 +34,6 @@ public interface IoAdaptor{
 	void onSessionMessage(Object msg, Session sess) throws IOException; 
 	
 	void onSessionError(Throwable e, Session sess) throws Exception;
+	
+	void onSessionIdle(Session sess) throws IOException; 
 }

@@ -32,12 +32,12 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 
 public class TrackServerConfig{  
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
-	public EventDriver eventDriver;
+	public IoDriver eventDriver;
 	public String sslCertificateFile;
 	public String sslPrivateKeyFile;
 	
@@ -64,11 +64,11 @@ public class TrackServerConfig{
 		this.serverPort = serverPort;
 	}
 	
-	public EventDriver getEventDriver() {
+	public IoDriver getEventDriver() {
 		return eventDriver;
 	}
 
-	public void setEventDriver(EventDriver eventDriver) {
+	public void setEventDriver(IoDriver eventDriver) {
 		this.eventDriver = eventDriver;
 	}
 

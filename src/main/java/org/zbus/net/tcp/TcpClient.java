@@ -14,7 +14,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client;
 import org.zbus.net.CodecInitializer;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.net.Session;
 import org.zbus.net.Sync;
 import org.zbus.net.Sync.Id;
@@ -59,9 +59,9 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
 	
-	public TcpClient(String address, EventDriver driver){  
+	public TcpClient(String address, IoDriver driver){  
 		group = driver.getGroup();
-		sslCtx = (SslContext)driver.getSslContext();
+		sslCtx = driver.getSslContext();
 		
 		String[] bb = address.split(":");
 		if(bb.length > 2) {
@@ -136,7 +136,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		this.codecInitializer = codecInitializer;
 	} 
 	
-	public synchronized void startHeartbeat(int heartbeatInterval){
+	public synchronized void startHeartbeat(int heartbeatInSeconds){
 		if(heartbeator == null){
 			heartbeator = Executors.newSingleThreadScheduledExecutor();
 			this.heartbeator.scheduleAtFixedRate(new Runnable() {
@@ -147,7 +147,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 						log.warn(e.getMessage(), e);
 					}
 				}
-			}, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
+			}, heartbeatInSeconds, heartbeatInSeconds, TimeUnit.SECONDS);
 		}
 	}
 	
@@ -333,6 +333,11 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 			log.error(e.getMessage(), e);
 		}
 	} 
+	
+	@Override
+	public void onSessionIdle(Session sess) throws IOException { 
+		
+	}
 	 
 	public void invokeAsync(REQ req, ResultCallback<RES> callback) throws IOException { 
 		Ticket<REQ, RES> ticket = null;

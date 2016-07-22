@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 import org.zbus.mq.server.MqServer;
 import org.zbus.mq.server.MqServerConfig;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 
 public class ZbusStarter {
 
@@ -14,7 +14,7 @@ public class ZbusStarter {
 		config.serverPort = 15555; 
 		config.verbose = true; //print out message 
 		
-		EventDriver eventDriver = new EventDriver();
+		IoDriver eventDriver = new IoDriver();
 		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL =on zbus
 		
 		config.setEventDriver(eventDriver); 
@@ -30,7 +30,7 @@ public class ZbusStarter {
                 .getResourceAsStream("conf/zbus.xml");
 		config.loadFromXml(stream);
 		
-		EventDriver eventDriver = new EventDriver();
+		IoDriver eventDriver = new IoDriver();
 		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL on zbus
 		
 		config.setEventDriver(eventDriver); 

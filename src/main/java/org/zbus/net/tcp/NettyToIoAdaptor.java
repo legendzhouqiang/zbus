@@ -9,6 +9,7 @@ import org.zbus.net.Session;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
@@ -50,6 +51,14 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 		Session sess = getSession(ctx);
 		ioAdaptor.onSessionToDestroy(sess);
 	} 
+	
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof IdleStateEvent) {
+			Session sess = getSession(ctx);
+			ioAdaptor.onSessionIdle(sess);
+        }
+	}
 	
 	private Session attachSession(ChannelHandlerContext ctx){
 		Session sess = new TcpSession(ctx); 

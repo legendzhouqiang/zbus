@@ -41,7 +41,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServerConfig{ 
@@ -49,7 +49,7 @@ public class MqServerConfig{
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
-	public EventDriver eventDriver;
+	public IoDriver eventDriver;
 	public String sslCertificateFile;
 	public String sslPrivateKeyFile;
 	
@@ -92,11 +92,11 @@ public class MqServerConfig{
 		this.serverPort = serverPort;
 	}
 	
-	public EventDriver getEventDriver() {
+	public IoDriver getEventDriver() {
 		return eventDriver;
 	}
 
-	public void setEventDriver(EventDriver eventDriver) {
+	public void setEventDriver(IoDriver eventDriver) {
 		this.eventDriver = eventDriver;
 	}
 

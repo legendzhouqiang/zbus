@@ -79,7 +79,7 @@ public class Service implements Closeable {
 		if(config.entryId == null){
 			throw new IllegalStateException("Missing entryId for HA discovery");
 		}
-		trackPub = new TrackPub(config.trackServerList, server.getEventDriver());
+		trackPub = new TrackPub(config.trackServerList, server.getIoDriver());
 		trackPub.onConnected(new ConnectedHandler() {
 			@Override
 			public void onConnected() throws IOException {

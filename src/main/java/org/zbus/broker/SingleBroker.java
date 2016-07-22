@@ -28,7 +28,7 @@ import java.io.IOException;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.kit.pool.Pool;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
@@ -39,7 +39,7 @@ public class SingleBroker implements Broker {
 	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
 	
 	private BrokerConfig config; 
-	private EventDriver eventDriver;
+	private IoDriver eventDriver;
 	private boolean ownEventDriver = false;
 	
 	private final Pool<MessageClient> pool; 
@@ -53,7 +53,7 @@ public class SingleBroker implements Broker {
 		this.config = config;
 		this.eventDriver = config.getEventDriver();
 		if(this.eventDriver == null){
-			this.eventDriver = new EventDriver();
+			this.eventDriver = new IoDriver();
 			this.ownEventDriver = true;
 		}
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(),eventDriver);

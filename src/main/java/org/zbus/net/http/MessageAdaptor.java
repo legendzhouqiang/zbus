@@ -144,5 +144,9 @@ public class MessageAdaptor implements IoAdaptor{
 	public void onSessionError(Throwable e, Session sess) throws Exception {
 	} 
 
+	@Override
+	public void onSessionIdle(Session sess) throws IOException { 
+		
+	}
 }
 

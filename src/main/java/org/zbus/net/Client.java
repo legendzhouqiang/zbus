@@ -7,7 +7,7 @@ public interface Client<REQ, RES> extends Invoker<REQ, RES>, IoAdaptor, Closeabl
 	
 	void codec(CodecInitializer codecInitializer);
 	
-	void startHeartbeat(int heartbeatInterval);
+	void startHeartbeat(int heartbeatInSeconds);
 	void stopHeartbeat();
 	void heartbeat();
 	

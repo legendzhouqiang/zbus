@@ -22,13 +22,13 @@
  */
 package org.zbus.rpc.direct;
 
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 import org.zbus.net.http.Message.MessageProcessor; 
 
 public class ServiceConfig {  
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 0;   
-	public EventDriver eventDriver;
+	public IoDriver eventDriver;
 	public MessageProcessor messageProcessor;
 	
 	//如果加入高可用HA才需要填写
@@ -69,11 +69,11 @@ public class ServiceConfig {
 		this.entryId = entryId;
 	}
 
-	public EventDriver getEventDriver() {
+	public IoDriver getEventDriver() {
 		return eventDriver;
 	}
 
-	public void setEventDriver(EventDriver eventDriver) {
+	public void setEventDriver(IoDriver eventDriver) {
 		this.eventDriver = eventDriver;
 	} 
 }

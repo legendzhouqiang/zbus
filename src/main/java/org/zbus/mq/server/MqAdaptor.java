@@ -158,7 +158,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	String text = String.format("Bad format: command(%s) not support", cmd);
     	res.setBody(text); 
     	sess.write(res); 
-    } 
+    }  
 	
     private AbstractMQ findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
@@ -566,6 +566,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		cleanSession(sess);
 		super.onSessionToDestroy(sess);
 	} 
+	
+    @Override
+    public void onSessionIdle(Session sess) throws IOException {
+    	cleanSession(sess);
+    }
 	
 	private boolean auth(AbstractMQ mq, Message msg){
 		String appid = msg.getHead("appid", "");

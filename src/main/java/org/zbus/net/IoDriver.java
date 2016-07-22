@@ -13,17 +13,19 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
-public class EventDriver implements Closeable {
-	private static final Logger log = LoggerFactory.getLogger(EventDriver.class);
+public class IoDriver implements Closeable {
+	private static final Logger log = LoggerFactory.getLogger(IoDriver.class);
 
 	private EventLoopGroup bossGroup;  
 	private EventLoopGroup workerGroup;  
-	private SslContext sslContext;
-
 	private boolean ownBossGroup = true;
 	private boolean ownWorkerGroup = true; 
+	
+	private SslContext sslContext; 
+	private int idleTimeInSeconds = 300; //5 minites
+	private int packageSizeLimit = 1024*1024*32; //maximum of 32M
 
-	public EventDriver() {
+	public IoDriver() {
 		try {
 			bossGroup = new NioEventLoopGroup();
 			workerGroup = new NioEventLoopGroup();
@@ -32,14 +34,14 @@ public class EventDriver implements Closeable {
 		}
 	}
 	
-	public EventDriver(EventLoopGroup group){
+	public IoDriver(EventLoopGroup group){
 		this.bossGroup = group;
 		this.workerGroup = group;
 		this.ownBossGroup = false;
 		this.ownWorkerGroup = false;
 	}
 
-	public EventDriver(EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
+	public IoDriver(EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
 		this.bossGroup = bossGroup;
 		this.workerGroup = workerGroup;
 		this.ownBossGroup = false;
@@ -119,5 +121,24 @@ public class EventDriver implements Closeable {
 			workerGroup.shutdownGracefully();
 			workerGroup = null;
 		}
-	} 
+	}
+
+	public int getIdleTimeInSeconds() {
+		return idleTimeInSeconds;
+	}
+
+	public void setIdleTimeInSeconds(int idleTimeInSeconds) {
+		this.idleTimeInSeconds = idleTimeInSeconds;
+	}
+
+	public int getPackageSizeLimit() {
+		return packageSizeLimit;
+	}
+
+	public void setPackageSizeLimit(int packageSizeLimit) {
+		this.packageSizeLimit = packageSizeLimit;
+	}  
+	
+	
+	
 }

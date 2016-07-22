@@ -48,7 +48,7 @@ import org.zbus.broker.HaBroker.BrokerSelector;
 import org.zbus.kit.pool.PoolConfig;
 import org.zbus.mq.server.MqServer;
 import org.zbus.mq.server.MqServerConfig;
-import org.zbus.net.EventDriver;
+import org.zbus.net.IoDriver;
 
 /**
  * Only brokerAddress is required, other configurations are all optional broker
@@ -70,7 +70,7 @@ public class BrokerConfig extends PoolConfig {
 	public String brokerAddress = "127.0.0.1:15555";
 
 	/** EventDriver support */
-	public EventDriver eventDriver;
+	public IoDriver eventDriver;
 
 	// JvmBroker Configuration, priority: mqServer > mqServerConfig
 	/** Used only for JvmBroker if supplied */
@@ -96,11 +96,11 @@ public class BrokerConfig extends PoolConfig {
 		this.brokerAddress = brokerAddress;
 	}
 
-	public EventDriver getEventDriver() {
+	public IoDriver getEventDriver() {
 		return eventDriver;
 	}
 
-	public void setEventDriver(EventDriver eventDriver) {
+	public void setEventDriver(IoDriver eventDriver) {
 		this.eventDriver = eventDriver;
 	}
 
