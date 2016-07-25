@@ -2,7 +2,6 @@ package org.zbus.examples.rpc.mq;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.ZbusBroker;
-import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message.MessageInvoker;
 import org.zbus.rpc.RpcCodec.Request;
 import org.zbus.rpc.RpcCodec.Response;
@@ -25,14 +24,7 @@ public class RpcClientRaw {
 		request.setParams(new Object[]{"test"});
 		
 		Response response = rpc.invokeSync(request);
-		System.out.println(response.getResult());
-		
-		rpc.invokeAsync(request, new ResultCallback<Response>() { 
-			@Override
-			public void onReturn(Response result) { 
-				System.out.println(result.getResult());
-			}
-		});
+		System.out.println(response.getResult()); 
 		
 		broker.close();
 	}  

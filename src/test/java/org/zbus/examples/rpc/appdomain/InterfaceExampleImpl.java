@@ -88,7 +88,9 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		user.setPassword("password"+System.currentTimeMillis());
 		user.setAge(new Random().nextInt(100));
 		user.setItem("item_1");
-		user.setRoles(Arrays.asList("admin", "common"));		
+		user.setRoles(Arrays.asList("admin", "common"));	
+		user.getAttrs().put("extAttr1", "XAttr1");
+		user.getAttrs().put("extAttr2", "XAttr2");
 		return user;
 	}
 	

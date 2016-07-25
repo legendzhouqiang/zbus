@@ -1,6 +1,8 @@
 package org.zbus.examples.rpc.appdomain;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class User{
@@ -9,6 +11,7 @@ public class User{
 	private int age;
 	private String item; 
 	private List<String> roles;
+	private Map<String, Object> attrs = new HashMap<String, Object>(); 
 	
 	public String getName() {
 		return name;
@@ -40,12 +43,19 @@ public class User{
 	public void setRoles(List<String> roles) {
 		this.roles = roles;
 	}
-	@Override
-	public String toString() {
-		return "User [name=" + name + ", password=" + password + ", age=" + age
-				+ ", item=" + item + ", roles=" + roles + "]";
+	
+	public Map<String, Object> getAttrs() {
+		return attrs;
 	}
 	
+	public void setAttrs(Map<String, Object> attrs) {
+		this.attrs = attrs;
+	}
+	@Override
+	public String toString() {
+		return "User [name=" + name + ", password=" + password + ", age=" + age + ", item=" + item + ", roles=" + roles
+				+ ", attrs=" + attrs + "]";
+	}
 	
 	
 }
