@@ -9,31 +9,27 @@ import org.zbus.rpc.RpcCodec.Response;
 import org.zbus.rpc.RpcInvoker;
 import org.zbus.rpc.mq.MqInvoker;
 
-public class RpcClientRaw { 
+public class RpcClientAsyncExample { 
 	
 	public static void main(String[] args) throws Exception {  
 		
 		Broker broker = new ZbusBroker(); 
-		MessageInvoker mqInvoker = new MqInvoker(broker, "MyRpc");  
-		 
+		MessageInvoker mqInvoker = new MqInvoker(broker, "MyRpc");   
 		RpcInvoker rpc = new RpcInvoker(mqInvoker); 
-		
-		rpc.invokeSync(String.class, "echo", "test");
-		
+		 
 		Request request = new Request(); 
 		request.setMethod("echo");
-		request.setParams(new Object[]{"test"});
-		
-		Response response = rpc.invokeSync(request);
-		System.out.println(response.getResult());
+		request.setParams(new Object[]{"test"}); 
 		
 		rpc.invokeAsync(request, new ResultCallback<Response>() { 
 			@Override
 			public void onReturn(Response result) { 
-				System.out.println(result.getResult());
+				String res = (String)result.getResult(); 
+				System.out.println(res);
 			}
 		});
 		
+		Thread.sleep(1000);
 		broker.close();
 	}  
 }
