@@ -25,6 +25,8 @@ package org.zbus.broker.ha;
 import static org.zbus.kit.ConfigKit.valueOf;
 import static org.zbus.kit.ConfigKit.xeval;
 
+import java.io.InputStream;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -98,9 +100,8 @@ public class TrackServerConfig{
 	}
 
 	  
-	public void loadFromXml(String xmlConfigSourceFile) throws Exception{
-		XPath xpath = XPathFactory.newInstance().newXPath();   
-		InputSource source = new InputSource(xmlConfigSourceFile);  
+	public void loadFromXml(InputSource source) throws Exception{
+		XPath xpath = XPathFactory.newInstance().newXPath();    
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(source); 
@@ -108,6 +109,16 @@ public class TrackServerConfig{
 		String prefix = "//server"; 
 		this.serverHost = valueOf(xeval(xpath, doc, prefix, "host"), "0.0.0.0");  
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 16666); 
-		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), true);  
+		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), true); 
+	}
+	
+	public void loadFromXml(String xmlConfigSourceFile) throws Exception{ 
+		InputSource source = new InputSource(xmlConfigSourceFile);  
+		loadFromXml(source);
 	} 
+	
+	public void loadFromXml(InputStream stream) throws Exception{ 
+		InputSource source = new InputSource(stream);  
+		loadFromXml(source);
+	}  
 }

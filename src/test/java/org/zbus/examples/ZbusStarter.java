@@ -26,14 +26,14 @@ public class ZbusStarter {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig(); 
-		InputStream stream = ZbusStarter.class.getClassLoader()
-                .getResourceAsStream("conf/zbus.xml");
+		InputStream stream = ZbusStarter.class.getClassLoader().getResourceAsStream("conf/zbus.xml");
 		config.loadFromXml(stream);
 		
 		IoDriver eventDriver = new IoDriver();
-		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL on zbus
-		
+		//eventDriver.setSslContextOfSelfSigned(); //Enable SSL on zbus 
 		config.setEventDriver(eventDriver); 
+		
+		
 		final MqServer server = new MqServer(config);  
 		server.start();  
 	}
