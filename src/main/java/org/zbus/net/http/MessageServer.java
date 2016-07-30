@@ -16,12 +16,12 @@ public class MessageServer extends TcpServer {
 	}
 
 	public MessageServer(final IoDriver driver) {
-		super(driver); 
+		super(driver);  
 		codec(new CodecInitializer() {
 			@Override
 			public void initPipeline(List<ChannelHandler> p) {
 				p.add(new HttpServerCodec());
-				p.add(new HttpObjectAggregator(driver.getPackageSizeLimit()));
+				p.add(new HttpObjectAggregator(getIoDriver().getPackageSizeLimit()));
 				p.add(new MessageToHttpWsCodec());
 			}
 		}); 

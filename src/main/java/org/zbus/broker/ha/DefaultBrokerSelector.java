@@ -25,7 +25,6 @@ package org.zbus.broker.ha;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -108,7 +107,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		if(entryId!= null){
 			ServerList p = serverEntryTable.getServerList(entryId); 
 			if(p != null && !p.isEmpty()){ 
-				ServerEntry se = p.msgFirstList.get(0);
+				ServerEntry se = p.getServerEntryWithMostMsgs();
 				if(se.unconsumedMsgCount > 0){ //存在未能消费掉消息的Entry，优先选择
 					broker = getBroker(se.serverAddr);
 					if(broker != null) return broker;
@@ -145,30 +144,24 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		int mode = serverList.getMode();
 		if(ServerEntry.PubSub == mode){
 			List<Broker> res = new ArrayList<Broker>();
-			for(ServerEntry e : serverList){ 
-				broker = getBroker(e.serverAddr);
-				if(broker != null){
-					res.add(broker);
+			synchronized (serverList) { 
+				for(ServerEntry e : serverList){ 
+					broker = getBroker(e.serverAddr);
+					if(broker != null){
+						res.add(broker);
+					}
 				}
 			}
 			return res;
 		} 
 		
-		int activeCount = 0;
-		Iterator<ServerEntry> iter = serverList.consumerFirstList.iterator();
-		while(iter.hasNext()){
-			ServerEntry se = iter.next();
-			if(se.consumerCount > 0) activeCount++; 
-		}
-		if(activeCount == 0){
-			activeCount = serverList.consumerFirstList.size();
-		} 
+		int activeCount = serverList.activeServerCountWithConsumerFirst();
 		if(activeCount == 0){
 			return null;
 		}
 		
 		int idx = localIpHashCode%activeCount; 
-		ServerEntry se = serverList.consumerFirstList.get(idx);
+		ServerEntry se = serverList.getServerEntry(idx);
 		if(se != null){
 			broker = getBroker(se.serverAddr);
 			if(broker != null){
@@ -236,7 +229,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		trackSub.onPubServerEntryList(new PubAllHandler() {  
 			public void onPubAll(ServerEntryTable table) throws IOException { 
 				serverEntryTable = table;
-				for(String serverAddr : serverEntryTable.server2EntryList.keySet()){
+				for(String serverAddr : serverEntryTable.serverSet()){
 					onNewServer(serverAddr);
 				}
 				syncFromTracker.countDown();

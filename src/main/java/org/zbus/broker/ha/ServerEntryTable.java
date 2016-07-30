@@ -40,18 +40,21 @@ import org.zbus.kit.log.LoggerFactory;
 public class ServerEntryTable {
 	private static final Logger log = LoggerFactory.getLogger(ServerEntryTable.class);
 	//entry_id ==> list of same entries from different target_servers
-	public Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
+	private Map<String, ServerList> entry2ServerList = new ConcurrentHashMap<String, ServerList>();
 	//server_addr ==> list of entries from same target server
-	public Map<String, Set<ServerEntry>> server2EntryList = new ConcurrentHashMap<String, Set<ServerEntry>>(); 
+	private Map<String, Set<ServerEntry>> server2EntryList = new ConcurrentHashMap<String, Set<ServerEntry>>(); 
 	 
 	public void dump(){
 		System.out.format("===============ServerEntryTable(%s)===============\n", new Date());
 		Iterator<Entry<String, ServerList>> iter = entry2ServerList.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<String, ServerList> e = iter.next();
-			System.out.format("%s\n", e.getKey());
-			for(ServerEntry se : e.getValue()){
-				System.out.format("  %s\n", se);
+			System.out.format("%s\n", e.getKey()); 
+			ServerList serverList = e.getValue();
+			synchronized (serverList) {
+				for(ServerEntry se : serverList){
+					System.out.format("  %s\n", se);
+				} 
 			} 
 		}
 		System.out.println("----------------------------------------------------------------------------");
@@ -109,23 +112,29 @@ public class ServerEntryTable {
 	}
 	
 	public void removeServer(String serverAddr){ 
-		server2EntryList.remove(serverAddr);
+		synchronized (server2EntryList) {
+			server2EntryList.remove(serverAddr);
+		}
 		
-		Iterator<Entry<String, ServerList>> entryIter = entry2ServerList.entrySet().iterator();
-		while(entryIter.hasNext()){
-			Entry<String, ServerList> e = entryIter.next();
-			ServerList serverList = e.getValue();  
-			Iterator<ServerEntry> seIter = serverList.iterator();
-			while(seIter.hasNext()){
-				ServerEntry se = seIter.next();
-				if(se.serverAddr.equals(serverAddr)){
-					seIter.remove();
+		synchronized (entry2ServerList) {
+			Iterator<Entry<String, ServerList>> entryIter = entry2ServerList.entrySet().iterator();
+			while(entryIter.hasNext()){
+				Entry<String, ServerList> e = entryIter.next();
+				ServerList serverList = e.getValue();  
+				synchronized (serverList) {
+					Iterator<ServerEntry> seIter = serverList.iterator();
+					while(seIter.hasNext()){
+						ServerEntry se = seIter.next();
+						if(se.serverAddr.equals(serverAddr)){
+							seIter.remove();
+						}
+					}
+				} 
+				if(serverList.isEmpty()){
+					entryIter.remove();
 				}
-			}
-			if(serverList.isEmpty()){
-				entryIter.remove();
-			}
-		} 
+			} 
+		}  
 	}
 	
 	public void removeServerEntry(String serverAddr, String entryId){
@@ -134,22 +143,27 @@ public class ServerEntryTable {
 		ServerList serverList = entry2ServerList.get(entryId);
 		if(serverList == null) return;
 		
-		Iterator<ServerEntry> iter = serverList.iterator();
-		while(iter.hasNext()){
-			ServerEntry se = iter.next();
-			if(se.serverAddr.equals(serverAddr)){
-				iter.remove();
+		synchronized (serverList) {
+			Iterator<ServerEntry> iter = serverList.iterator();
+			while(iter.hasNext()){
+				ServerEntry se = iter.next();
+				if(se.serverAddr.equals(serverAddr)){
+					iter.remove();
+				}
 			}
 		}
+		
 		
 		Set<ServerEntry> entryList = server2EntryList.get(serverAddr);
 		if(entryList == null) return;
 		
-		iter = entryList.iterator();
-		while(iter.hasNext()){
-			ServerEntry se = iter.next();
-			if(se.entryId.equals(entryId)){
-				iter.remove();
+		synchronized (server2EntryList) {
+			Iterator<ServerEntry> iter = entryList.iterator();
+			while(iter.hasNext()){
+				ServerEntry se = iter.next();
+				if(se.entryId.equals(entryId)){
+					iter.remove();
+				}
 			}
 		}
 	}  
@@ -203,9 +217,9 @@ public class ServerEntryTable {
 
 	public static class ServerList implements Iterable<ServerEntry>{
 		public final String entryId;
-		public Map<String, ServerEntry> serverTable = new ConcurrentHashMap<String, ServerEntry>();		
-		public List<ServerEntry> consumerFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
-		public List<ServerEntry> msgFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
+		private Map<String, ServerEntry> serverTable = new ConcurrentHashMap<String, ServerEntry>();		
+		private List<ServerEntry> consumerFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
+		private List<ServerEntry> msgFirstList = Collections.synchronizedList(new ArrayList<ServerEntry>());
 		
 		private static final Comparator<ServerEntry> consumerFirst = new ConsumerFirstComparator();
 		private static final Comparator<ServerEntry> msgFirst = new MsgFirstComparator();
@@ -238,24 +252,50 @@ public class ServerEntryTable {
 		public void removeServer(String serverAddr){
 			serverTable.remove(serverAddr);
 			
-			Iterator<ServerEntry> iter = consumerFirstList.iterator();
-			while(iter.hasNext()){
-				ServerEntry se = iter.next();
-				if(se.serverAddr.equals(serverAddr)){
-					iter.remove();
+			synchronized (consumerFirstList) {
+				Iterator<ServerEntry> iter = consumerFirstList.iterator();
+				while(iter.hasNext()){
+					ServerEntry se = iter.next();
+					if(se.serverAddr.equals(serverAddr)){
+						iter.remove();
+					}
 				}
 			}
-			iter = msgFirstList.iterator();
-			while(iter.hasNext()){
-				ServerEntry se = iter.next();
-				if(se.serverAddr.equals(serverAddr)){
-					iter.remove();
+			synchronized (msgFirstList) {
+				Iterator<ServerEntry> iter = msgFirstList.iterator();
+				while(iter.hasNext()){
+					ServerEntry se = iter.next();
+					if(se.serverAddr.equals(serverAddr)){
+						iter.remove();
+					}
 				}
-			}
-			 
+			} 
 		}
 		
-		public Iterator<ServerEntry> iterator(){
+		public ServerEntry getServerEntryWithMostMsgs(){
+			return msgFirstList.get(0);
+		}
+		
+		public ServerEntry getServerEntry(int index){
+			return consumerFirstList.get(index); 
+		} 
+		
+		public int activeServerCountWithConsumerFirst(){
+			synchronized (consumerFirstList) {
+				int activeCount = 0;
+				Iterator<ServerEntry> iter = consumerFirstList.iterator();
+				while(iter.hasNext()){
+					ServerEntry se = iter.next();
+					if(se.consumerCount > 0) activeCount++; 
+				}
+				if(activeCount == 0){ //if no consumer alive for any server, all are available
+					activeCount = consumerFirstList.size();
+				} 
+				return activeCount;
+			} 
+		} 
+		
+		public Iterator<ServerEntry> iterator(){ //synchronized from user for thread safety required!!!
 			return consumerFirstList.iterator();
 		}
 		
