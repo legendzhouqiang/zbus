@@ -6,5 +6,5 @@
 5. PubSub work only in memory, and no need request-reply.
 
 
-zbus-7.0.0 BugToFix
-1. Detect longtime inactive session.
+zbus-7.0.1
+1. Fix Auth, add org.zbus.example.auth examples

@@ -18,7 +18,7 @@ public class RpcService {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		ServiceConfig config = new ServiceConfig(); 
-		config.setMq("MyRpc"); 
+		config.setMq("MyRpc");  
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor); 
 		config.setVerbose(true);

@@ -100,6 +100,8 @@ public class Service implements Closeable {
 			mqConfig.setMode(config.getMode());
 			mqConfig.setTopic(config.getTopic());
 			mqConfig.setVerbose(config.isVerbose());
+			mqConfig.setAccessToken(config.getAccessToken());
+			mqConfig.setRegisterToken(config.getRegisterToken());
 			
 			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  

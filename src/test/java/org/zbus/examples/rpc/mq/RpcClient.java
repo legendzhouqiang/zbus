@@ -18,11 +18,10 @@ public class RpcClient {
 		Broker broker = new ZbusBroker(config); 
 		MessageInvoker invoker = new MqInvoker(broker, "MyRpc");  
 		
-		//use RpcFactory to generate dynamic implementation via zbus
+		//use RpcFactory to generate dynamic implementation via zbus 
 		RpcFactory factory = new RpcFactory(invoker);   
 		InterfaceExample hello = factory.getService(InterfaceExample.class);
-		
-		for(int i=0;i<1000;i++)
+		 
 		RpcCases.testDynamicProxy(hello); //test cases
 		
 		broker.close(); 

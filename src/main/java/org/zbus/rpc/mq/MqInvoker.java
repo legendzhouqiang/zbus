@@ -10,16 +10,23 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class MqInvoker implements MessageInvoker{
 	private final MessageInvoker messageInvoker;
 	private final String mq;
+	private final String accessToken;
+	
+	public MqInvoker(MessageInvoker messageInvoker, String mq, String accessToken){
+		 this.messageInvoker = messageInvoker;
+		 this.mq = mq;
+		 this.accessToken = accessToken;
+	}
 	
 	public MqInvoker(MessageInvoker messageInvoker, String mq){
-		this.messageInvoker = messageInvoker;
-		this.mq = mq;
+		this(messageInvoker, mq, "");
 	}
 	
 	private void fillBrokerMessage(Message req){
 		req.setCmd(Protocol.Produce);
 		req.setAck(false); //ACK 必须设置为false，等待service的结果
 		req.setMq(this.mq);
+		req.setHead("token", this.accessToken);
 	}
 	
 	@Override
