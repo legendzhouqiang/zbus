@@ -12,7 +12,7 @@ public class ProducerPressure {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();
 
-		for(int i=0;i<100;i++){
+		for(int i=0;i<100000000;i++){
 			Message msg = new Message();
 			//msg.setAck(false);
 			msg.setBody("hello world " + i);

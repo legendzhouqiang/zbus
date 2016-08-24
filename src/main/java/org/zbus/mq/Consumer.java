@@ -34,13 +34,9 @@ import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqMode;
-import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.Sync.ResultCallback;
-import org.zbus.net.Session;
 import org.zbus.net.http.Message;
-import org.zbus.net.http.Message.MessageInvoker;
-import org.zbus.net.http.MessageClient;
+import org.zbus.net.http.Message.MessageInvoker; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
@@ -63,14 +59,16 @@ public class Consumer extends MqAdmin implements Closeable {
 		return hint;
 	}
 
-	public Message take(int timeout) throws IOException, InterruptedException {
-		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			throw new IllegalStateException("PubSub not support take");
-		}
+	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
 		req.setHead("token", accessToken); 
+		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
+			if(this.topic != null){
+				req.setTopic(this.topic);
+			}
+		}
 
 		Message res = null;
 		try {  
@@ -182,15 +180,14 @@ public class Consumer extends MqAdmin implements Closeable {
 				this.client = broker.getInvoker(brokerHint());
 			} 
 		} 
-		
-		MessageClient messageClient = (MessageClient)this.client;
+		 
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
 		req.setHead("token", accessToken); 
 		req.setTopic(topic);
-		
-		messageClient.invokeAsync(req, null); 
+		this.client.invokeAsync(req, null);
+		//messageClient.invokeAsync(req, null); 
 	}
 	
 	
@@ -268,59 +265,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	};
 
 	public void onMessage(final ConsumerHandler handler) throws IOException { 
-		this.consumerHandler = handler;
-		if(this.consumerHandler == null){
-			return; //just ignore it
-		}
-		if (!MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			return;
-		}
-		
-		
-		synchronized (this) {
-			if (this.client == null) {
-				this.client = broker.getInvoker(brokerHint());
-			} 
-		}  
-		final MessageClient messageClient = (MessageClient)this.client;
-		initConsumerHandlerPoolIfNeeded(); 
-		messageClient.onMessage(new MsgHandler<Message>() { 
-			@Override
-			public void handle(final Message msg, Session session) throws IOException {
-				if(consumerHandlerRunInPool && consumerHandlerExecutor != null){
-					consumerHandlerExecutor.submit(new Runnable() { 
-						@Override
-						public void run() { 
-							try {
-								consumerHandler.handle(msg, Consumer.this);
-							} catch (IOException e) {
-								log.error(e.getMessage(), e);
-							}
-						}
-					});
-				} else {
-					consumerHandler.handle(msg, Consumer.this);
-				}
-			}
-		}); 
-		
-		messageClient.onConnected(new ConnectedHandler() { 
-			@Override
-			public void onConnected() throws IOException {  
-				createMQAsync(new ResultCallback<Message>() { 
-					public void onReturn(Message result) {
-						try {
-							subscribe(topic);
-							log.info("Connected(%s), Subscribe on topic: %s", messageClient.getConnectedServerAddress(), topic);
-						} catch (IOException e) {
-							//ignore
-						}
-					}
-				});  
-			}
-		});
-		
-		messageClient.ensureConnectedAsync();
+		this.consumerHandler = handler; 
 	}
 	
 	public void onException(final ConsumerExceptionHandler handler) {
@@ -354,11 +299,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		start();
 	}
 
-	public synchronized void start() throws IOException {
-		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			return;
-		}
-		
+	public synchronized void start() throws IOException { 
 		if (consumerThread == null) {
 			consumerThread = new Thread(consumerTask);
 			consumerThread.setName("ConsumerThread");
@@ -379,9 +320,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void setConsumerHandlerPoolSize(int consumerHandlerPoolSize) {
 		this.consumerHandlerPoolSize = consumerHandlerPoolSize; 
-	}
-	
-	
+	} 
 
 	public int getInFlightMessageCount() {
 		return inFlightMessageCount;

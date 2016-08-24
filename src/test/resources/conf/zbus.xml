@@ -12,7 +12,7 @@
 	-->
 	<trackServerList></trackServerList>  
 	
-	<verbose>true</verbose>
+	<verbose>false</verbose>
 	<mqStore>./store</mqStore> 
 	<registerToken></registerToken>
 	

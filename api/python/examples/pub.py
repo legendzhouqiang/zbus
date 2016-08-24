@@ -7,7 +7,7 @@ broker = SingleBroker(host='localhost', port=15555)
 p = Producer(broker=broker, mq='MyPubSub') 
  
 msg = Message()  
-msg.set_topic('sse')  
+msg.set_topic('zbus')  
 msg.set_body('hello world, from python') 
 print p.send(msg)
 

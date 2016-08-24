@@ -10,7 +10,7 @@ var client = new MessageClient("127.0.0.1:15555");
 client.connect(function(){
 	 var c = new Consumer(client, "MyPubSub");
      c.mode = Mode.PubSub; 
-	 c.topic = 'sse';
+	 c.topic = 'zbus';
 	 
      c.recv(function(msg){
     	 console.log(msg.toString());
