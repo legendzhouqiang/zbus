@@ -8,7 +8,7 @@ var client = new MessageClient("127.0.0.1:15555");
 client.connect(function(){
     var pub = new Producer(client, "MyPubSub");
     var msg = new Message();
-	msg.setTopic('sse');
+	msg.setTopic('zbus');
     msg.setBody("hello world from node.js");
     
     pub.send(msg, function(res){

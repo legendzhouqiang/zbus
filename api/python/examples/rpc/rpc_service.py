@@ -26,7 +26,7 @@ class MyService(object):
         return a + b 
  
 handler = RpcServiceHandler()
-handler.add_module('Interface', MyService())
+handler.add_module('', MyService())
 
 
 config = ServiceConfig()
@@ -34,7 +34,7 @@ broker = SingleBroker(host = 'localhost', port = 15555)
 config.broker = broker 
 config.service_name = 'MyRpc'
 config.service_andler = handler
-config.thread_count = 20
+config.thread_count = 4
 
 svc = Service(config)
 svc.start()

@@ -12,8 +12,8 @@
 	-->
 	<trackServerList></trackServerList>  
 	
-	<verbose>true</verbose>
-	<mqStore>./store</mqStore> 
+	<verbose>false</verbose>
+	<mqStore>/tmp/store</mqStore> 
 	<registerToken></registerToken>
 	
 	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->
@@ -30,10 +30,12 @@
 </server> 
 
 <http-proxy>
+	<!-- 
 	<proxy>
 		<name>HttpProxyExample</name>
 		<target>localhost:8080</target>
 	</proxy>
+	-->
 </http-proxy> 
 
 </zbus>
