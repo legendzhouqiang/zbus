@@ -71,9 +71,13 @@ public class PubSub extends AbstractMQ{
 					iter.remove();
 					continue;
 				} 
-				if(sess.isTopicMatched(topic)){ 
+				
+				if(sess.isTopicMatched(topic)){  
 					Message copy = Message.copyWithoutBody(msg); 
 					sess.getMsgQ().offer(copy);
+				} else {
+					System.out.println(msg);
+					System.err.println(sess.topicSet);
 				}
 			}
 		} 

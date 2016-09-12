@@ -45,7 +45,7 @@ public class PullSession {
 		this.setPullMessage(pullMessage);
 	}
 	
-	public void subscribeTopics(String topicString){
+	private void subscribeTopics(String topicString){
 		if(topicString == null) return;  
 		String[] ts = topicString.split("[,]");
 		topicSet.clear();
@@ -56,9 +56,14 @@ public class PullSession {
 	}
 	
 	public boolean isTopicMatched(String topic){
-		if(topic == null) return false;  
-		if(topicSet.contains("*")) return true;
-		return topicSet.contains(topic);
+		try{
+			lock.lock();
+			if(topic == null) return false;  
+			if(topicSet.contains("*")) return true;
+			return topicSet.contains(topic);
+		} finally {
+			lock.unlock();
+		} 
 	} 
 	
 	public Session getSession() {
@@ -74,12 +79,17 @@ public class PullSession {
 	}
 	
 	public void setPullMessage(Message msg) { 
+		this.lock.lock();
 		this.pullMessage = msg;
-		if(msg == null) return; 
+		if(msg == null){
+			this.lock.unlock();
+			return; 
+		}
 		String topic = this.pullMessage.getTopic();
 		if(topic != null){
 			this.subscribeTopics(topic);
 		}
+		this.lock.unlock();
 	} 
 	
 	public Set<String> getTopics(){
@@ -92,8 +102,7 @@ public class PullSession {
 	
 	public ConsumerInfo getConsumerInfo(){
 		ConsumerInfo info = new ConsumerInfo();
-		info.remoteAddr = session.getRemoteAddress();
-		//info.status = ""+session.getStatus(); FIXME
+		info.remoteAddr = session.getRemoteAddress(); 
 		info.topics = topicSet;
 		return info;
 	}

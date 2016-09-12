@@ -13,7 +13,7 @@ public class PubSync {
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
 		producer.createMQ();   
 		
-		for(int i=0;i<100000;i++){
+		for(int i=0;i<10000;i++){
 			Message msg = new Message();
 			msg.setTopic("zbus"); 
 			msg.setBody("hello world" + i);

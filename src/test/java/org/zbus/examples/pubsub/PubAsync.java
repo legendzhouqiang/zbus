@@ -14,19 +14,20 @@ public class PubAsync {
 		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
 		producer.createMQ();  
 		 
-		Message msg = new Message();
-		msg.setTopic("zbus");  
-		msg.setBody("hello world " + System.currentTimeMillis());
+		for(int i=0;i<100000;i++){
+			Message msg = new Message();
+			msg.setTopic("zbus");  
+			msg.setBody("hello world " + System.currentTimeMillis());
+			
+			producer.sendAsync(msg, new ResultCallback<Message>() { 
+				@Override
+				public void onReturn(Message result) {
+					System.out.println(result);
+				}
+			}); 
+		} 
 		
-		producer.sendAsync(msg, new ResultCallback<Message>() { 
-			@Override
-			public void onReturn(Message result) {
-				System.out.println(result);
-			}
-		}); 
-		
-		
-		Thread.sleep(500); //safe message sending out
+		Thread.sleep(5000); //safe message sending out
 		broker.close();
 	} 
 }
