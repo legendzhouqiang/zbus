@@ -50,7 +50,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Zbus.Examples.PubSub.Sub</StartupObject>
+    <StartupObject>Zbus.Examples.MQ.ConsumerTest</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

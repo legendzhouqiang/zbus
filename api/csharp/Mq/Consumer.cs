@@ -94,6 +94,7 @@ namespace Zbus.Mq
             catch (Exception ex)
             {
                 Exception cause = ex.InnerException;
+                if (cause == null) cause = ex;
                 if (cause is SocketException)
                 {
                     SocketException se = (SocketException)cause;
