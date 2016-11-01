@@ -91,7 +91,7 @@ namespace Zbus.Mq
                 }
                 return res;
             }
-            catch (IOException ex)
+            catch (Exception ex)
             {
                 Exception cause = ex.InnerException;
                 if (cause is SocketException)
