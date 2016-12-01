@@ -26,17 +26,26 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.zbus.kit.log.Logger;
+import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.IoAdaptor;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message.MessageHandler;
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class MessageAdaptor implements IoAdaptor{    
+	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);
 	protected MessageHandler filterHandler;   
 	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	protected Map<String, MessageProcessor> urlHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
-
+	protected Map<String, Session> sessionTable;
+	
 	public MessageAdaptor(){ 
+		this(new ConcurrentHashMap<String, Session>());
+	}
+	
+	public MessageAdaptor(Map<String, Session> sessionTable){
+		this.sessionTable = sessionTable;
 		this.cmd(Message.HEARTBEAT, new MessageHandler() { 
 			public void handle(Message msg, Session sess) throws IOException { 
 				//ignore
@@ -134,19 +143,34 @@ public class MessageAdaptor implements IoAdaptor{
      
 	@Override
 	public void onSessionCreated(Session sess) throws IOException {
+		log.info("Session Created: " + sess);
+		sessionTable.put(sess.id(), sess);
 	}
 
 	@Override
 	public void onSessionToDestroy(Session sess) throws IOException {
+		log.info("Session Destroyed: " + sess);
+		cleanSession(sess);
 	}
  
 	@Override
 	public void onSessionError(Throwable e, Session sess) throws Exception {
+		log.info("Session Error: " + sess);
+		cleanSession(sess);
 	} 
 
 	@Override
 	public void onSessionIdle(Session sess) throws IOException { 
-		
+		log.info("Session Idle Remove: " + sess);
+		cleanSession(sess);
+	}
+	
+	protected void cleanSession(Session sess) throws IOException {
+		try{
+			sess.close();
+		} finally {
+			sessionTable.remove(sess.id());
+		} 
 	}
 }
 

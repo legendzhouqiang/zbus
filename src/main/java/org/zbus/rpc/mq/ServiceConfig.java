@@ -35,7 +35,7 @@ public class ServiceConfig extends MqConfig {
 	private MessageProcessor messageProcessor; 
 	private int consumerCount = 4; 
 	private boolean consumerHandlerRunInPool = true;
-	private int consumerHandlerPoolSize = 1000; 
+	private int consumerHandlerPoolSize = 64; 
 	private int inFlightMessageCount = 100;
 	private boolean verbose = false;
 	private Broker[] brokers;

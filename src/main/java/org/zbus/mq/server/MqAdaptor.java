@@ -32,8 +32,7 @@ import org.zbus.net.http.MessageAdaptor;
 public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
 
-	private final Map<String, AbstractMQ> mqTable;
-	private final Map<String, Session> sessionTable;
+	private final Map<String, AbstractMQ> mqTable; 
 	private final Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	
 	private boolean verbose = false;    
@@ -46,11 +45,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 
  
 	public MqAdaptor(MqServer mqServer){
+		super(mqServer.getSessionTable());
+		
 		this.config = mqServer.getConfig();
 		
 		this.mqServer = mqServer; 
-		this.mqTable = mqServer.getMqTable();
-		this.sessionTable = mqServer.getSessionTable();  
+		this.mqTable = mqServer.getMqTable(); 
 		this.mqFilter = mqServer.getMqFilter();
 		
 		registerHandler(Protocol.Produce, produceHandler); 
@@ -537,9 +537,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private void cleanSession(Session sess){
-		log.info("Clean: " + sess);
-		sessionTable.remove(sess.id());
+	protected void cleanSession(Session sess) throws IOException{
+		super.cleanSession(sess);
+		
 		String mqName = sess.attr("mq");
 		if(mqName == null) return;
 		
@@ -548,29 +548,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		mq.cleanSession(sess);
 		
 		mqServer.pubEntryUpdate(mq); 
-	}
-	
-	public void onSessionCreated(Session sess) throws IOException {
-		sessionTable.put(sess.id(), sess);
-		super.onSessionCreated(sess); 
-	}
-
-	@Override
-	public void onSessionError(Throwable e, Session sess) throws Exception { 
-		cleanSession(sess);
-		super.onSessionError(e, sess);
-	}
-	
-	@Override
-	public void onSessionToDestroy(Session sess) throws IOException { 
-		cleanSession(sess);
-		super.onSessionToDestroy(sess);
 	} 
-	
-    @Override
-    public void onSessionIdle(Session sess) throws IOException {
-    	cleanSession(sess);
-    }
 	
 	private boolean auth(AbstractMQ mq, Message msg){
 		String appid = msg.getHead("appid", "");
