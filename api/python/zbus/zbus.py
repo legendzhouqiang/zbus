@@ -376,7 +376,7 @@ class MessageClient(object):
         self.connect_if_need() 
         self.mark_msg(msg)
         self.log.debug('Request: %s'%msg)
-        self.sock.send(str(msg))  
+        self.sock.sendall(str(msg))  
         
     def recv(self, timeout=10):
         if self.msg_id_match in self.result_table:
