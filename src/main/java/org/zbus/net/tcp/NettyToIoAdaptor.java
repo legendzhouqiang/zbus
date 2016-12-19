@@ -50,6 +50,7 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		Session sess = getSession(ctx);
 		ioAdaptor.onSessionToDestroy(sess);
+		sessionMap.remove(sess.id());
 	} 
 	
 	@Override
