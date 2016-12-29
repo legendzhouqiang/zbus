@@ -319,10 +319,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			if(mq == null){ 
     				ReplyKit.reply404(msg, sess);
     				return;
-    			}  
-    			if(mq.masterMq != null){
-    				mq.masterMq.removeSlaveMq(mq);
-    			}
+    			}   
     			//Clear mapped mq
     			if(mq.msgQ instanceof MessageDiskQueue){
     				MessageDiskQueue dq = (MessageDiskQueue)mq.msgQ;
@@ -364,10 +361,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
         		return;  
     		}
     		
-    		String accessToken = msg.getHead("access_token", "");
-    		String master = msg.getMasterMq();
-    		String masterToken = msg.getMasterToken();
-    		
+    		String accessToken = msg.getHead("access_token", "");  
     		AbstractMQ mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(mqName);
@@ -393,16 +387,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			}
     			mq.setMode(mode);
     			mq.setCreator(sess.getRemoteAddress());
-    			mq.setAccessToken(accessToken);
-    			if(master != null){
-    				AbstractMQ masterMq = mqTable.get(master);
-    				if(masterToken == null){
-    					masterToken = "";
-    				}
-    				if(masterMq != null && masterMq.getAccessToken().equals(masterToken)){
-    					masterMq.addSlaveMq(mq);
-    				}
-    			}
+    			mq.setAccessToken(accessToken); 
     			
     			log.info("MQ Created: %s", mq);
     			mqTable.put(mqName, mq);
@@ -598,15 +583,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			
 			//notify
 			mqServer.pubEntryUpdate(mq);
-		}
-		
-		for(AbstractMQ mq : mqTable.values()){
-			String masterName = mq.getMasterMqName();
-			if(masterName == null) continue;
-			AbstractMQ masterMq = mqTable.get(masterName);
-			if(masterMq == null) continue;
-			mq.setMasterMq(masterMq);
-		}
+		} 
     }   
     
     public void close() throws IOException {    

@@ -23,7 +23,7 @@ public class RpcService {
 		config.setMessageProcessor(processor); 
 		config.setVerbose(true);
 		config.setConsumerHandlerRunInPool(true); //enable pooling for service handler
-		config.setConsumerHandlerPoolSize(1024); 
+		config.setConsumerHandlerPoolSize(100); 
 		
 		
 		Service svc = new Service(config);

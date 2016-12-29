@@ -69,18 +69,8 @@ public class MessageDiskQueue extends MessageQueue{
 	@Override
 	public int size() { 
 		return diskQueue.size();
-	} 
+	}  
 	
-	@Override
-	public String getMasterMq() { 
-		return diskQueue.getExt(0);
-	}
-
-	@Override
-	public void setMasterMq(String value) {
-		diskQueue.setExt(0, value);
-	}
-
 	@Override
 	public String getAccessToken() {
 		return diskQueue.getExt(1);

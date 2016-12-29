@@ -28,8 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.zbus.net.http.Message;
 
 public class MessageMemoryQueue extends MessageQueue { 
-	private LinkedBlockingQueue<Message> support = new LinkedBlockingQueue<Message>();
-	private String slaveToMq;
+	private LinkedBlockingQueue<Message> support = new LinkedBlockingQueue<Message>(); 
 	private String accessToken;
 	private String creator;
 	
@@ -46,17 +45,7 @@ public class MessageMemoryQueue extends MessageQueue {
 	@Override
 	public Message peek() { 
 		return support.peek();
-	}
-
-	@Override
-	public String getMasterMq() {
-		return this.slaveToMq;
-	}
-
-	@Override
-	public void setMasterMq(String value) {
-		this.slaveToMq = value;
-	}
+	} 
 
 	@Override
 	public Iterator<Message> iterator() {

@@ -32,9 +32,7 @@ public class MqConfig implements Cloneable {
 	protected String topic = null; //发布订阅模式下使用
 	protected boolean verbose = false;
 	protected String registerToken = "";
-	protected String accessToken = "";
-	protected String masterMq = null;
-	protected String masterToken = null;
+	protected String accessToken = ""; 
 	
 	
 	public Broker getBroker() {
@@ -97,26 +95,8 @@ public class MqConfig implements Cloneable {
 
 	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
-	} 
+	}  
 	
-
-	public String getMasterMq() {
-		return masterMq;
-	}
-
-	public void setMasterMq(String masterMq) {
-		this.masterMq = masterMq;
-	}
- 
-
-	public String getMasterToken() {
-		return masterToken;
-	}
-
-	public void setMasterToken(String masterToken) {
-		this.masterToken = masterToken;
-	}
-
 	@Override
 	public MqConfig clone() { 
 		try {

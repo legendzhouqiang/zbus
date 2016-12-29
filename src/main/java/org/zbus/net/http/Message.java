@@ -94,11 +94,7 @@ public class Message implements Id {
 	public static final String ORIGIN_STATUS= "reply_code"; //original Status 
 	
 	public static final String KEY       = "key";  
-	public static final String KEY_GROUP = "key_group";
-	
-	//MQ copy, Master-Slave
-	public static final String MASTER_MQ     = "master_mq";
-	public static final String MASTER_TOKEN  = "master_token"; 
+	public static final String KEY_GROUP = "key_group"; 
 	
 	 
 	//1) First line of HTTP protocol
@@ -541,23 +537,7 @@ public class Message implements Id {
 	public Message setKeyGroup(String value) {
 		this.setHead(KEY_GROUP, value);
 		return this;
-	} 
-	
-	public String getMasterMq() {
-		return getHead(MASTER_MQ);
-	} 
-	public Message setMasterMq(String value) {
-		this.setHead(MASTER_MQ, value);
-		return this;
-	} 
-	
-	public String getMasterToken() {
-		return getHead(MASTER_TOKEN);
-	} 
-	public Message setMasterToken(String value) {
-		this.setHead(MASTER_TOKEN, value);
-		return this;
-	} 
+	}   
 	
 	public boolean isStatus200() {
 		return "200".equals(this.getStatus());
