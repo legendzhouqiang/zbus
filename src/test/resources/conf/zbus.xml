@@ -13,7 +13,7 @@
 	<trackServerList></trackServerList>  
 	
 	<verbose>false</verbose>
-	<mqStore>./store</mqStore> 
+	<mqStore>/tmp/zbus</mqStore> 
 	<registerToken></registerToken>
 	
 	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->
@@ -27,17 +27,7 @@
 	<!-- SSL support configure, add SSL cert and private file full path name -->
 	<sslCertificateFile></sslCertificateFile>
 	<sslPrivateKeyFile></sslPrivateKeyFile>
-</server> 
-
-<http-proxy>
-<!--  
-	<proxy>
-		<name>HttpProxyExample</name>
-		<target>localhost:8080</target>
-	</proxy>
--->
-
-</http-proxy> 
+</server>  
 
 </zbus>
 

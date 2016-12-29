@@ -49,8 +49,7 @@ public class Protocol {
 	
 	
 	public static enum MqMode {
-		MQ,       //消息队列
-		PubSub,   //发布订阅 
+		MQ,       //消息队列 
 		Memory,   //是否临时
 		RPC;
 		

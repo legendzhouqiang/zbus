@@ -33,24 +33,21 @@ import org.zbus.broker.Broker;
 import org.zbus.broker.Broker.BrokerHint;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
-import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
-	private MessageInvoker client;  
-	private String topic = null;  
+	private MessageInvoker client;   
 	private int consumeTimeout = 120000; // 2 minutes
 
-	public Consumer(Broker broker, String mq, MqMode... mode) {
-		super(broker, mq, mode);
+	public Consumer(Broker broker, String mq) {
+		super(broker, mq);
 	}
 
 	public Consumer(MqConfig config) {
-		super(config);
-		this.topic = config.getTopic();
+		super(config); 
 	}
 
 	private BrokerHint brokerHint() {
@@ -63,12 +60,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
-		req.setHead("token", accessToken); 
-		if (MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			if(this.topic != null){
-				req.setTopic(this.topic);
-			}
-		}
+		req.setHead("token", accessToken);  
 
 		Message res = null;
 		try {  
@@ -157,24 +149,9 @@ public class Consumer extends MqAdmin implements Closeable {
 		}   
 		
 		client.invokeAsync(msg, null); 
-	}
-
-	public String getTopic() {
-		return topic;
-	}
-
-	public void setTopic(String topic) {
-		if (!MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			throw new IllegalStateException("topic require PubSub mode");
-		}
-		this.topic = topic;
 	} 
 	
-	public void subscribe(String topic) throws IOException{ 
-		if (!MqMode.isEnabled(this.mode, MqMode.PubSub)) {
-			throw new IllegalStateException("subscribe require PubSub mode");
-		}
-		
+	public void subscribe(String topic) throws IOException{  
 		synchronized (this) {
 			if (this.client == null) {
 				this.client = broker.getInvoker(brokerHint());
@@ -184,8 +161,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
-		req.setHead("token", accessToken); 
-		req.setTopic(topic);
+		req.setHead("token", accessToken);  
 		this.client.invokeAsync(req, null);
 		//messageClient.invokeAsync(req, null); 
 	}

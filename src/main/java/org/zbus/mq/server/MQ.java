@@ -22,6 +22,7 @@
  */
 package org.zbus.mq.server;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,21 +36,40 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.MessageQueue;
+import org.zbus.mq.server.auth.Auth;
+import org.zbus.mq.server.auth.DefaultAuth;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 
-public class MQ extends AbstractMQ{
+public class MQ implements Closeable{
+	protected final String name; 
+	protected int mode;
+	protected long lastUpdateTime = System.currentTimeMillis();
+	
+	protected final MessageQueue msgQ; 
+	
+	protected Auth auth; 
 	private static final Logger log = LoggerFactory.getLogger(MQ.class);  
 	
 	protected final Map<String, Session> pullSessions = new ConcurrentHashMap<String, Session>();
 	
 	protected final BlockingQueue<PullSession> pullQ = new LinkedBlockingQueue<PullSession>();
 	
-	public MQ(String name, MessageQueue msgQ) {
-		super(name, msgQ);
+ 
+	public String getName() { 
+		return name;
 	}
-	
-	@Override
+ 
+	public void produce(Message msg, Session sess) throws IOException { 
+		msgQ.offer(msg); 
+		dispatch(); 
+	} 
+	public MQ(String name, MessageQueue msgQ) {
+		this.msgQ = msgQ;
+		this.name = name;
+		this.auth = new DefaultAuth(msgQ.getAccessToken());
+	} 
+	 
 	public void consume(Message msg, Session sess) throws IOException {  
 		if(!pullSessions.containsKey(sess.id())){
 			pullSessions.put(sess.id(), sess);
@@ -122,8 +142,7 @@ public class MQ extends AbstractMQ{
 			} 
 		} 
 	}
-
-	@Override
+ 
 	public void cleanSession(Session sess) {
 		pullSessions.remove(sess.id());
 		
@@ -136,8 +155,7 @@ public class MQ extends AbstractMQ{
 			}
 		}
 	}
-	
-	@Override
+	 
 	public void cleanSession() { 
 		Iterator<PullSession> iter = pullQ.iterator();
 		while(iter.hasNext()){
@@ -148,8 +166,7 @@ public class MQ extends AbstractMQ{
 			}
 		}
 	}
-	
-	@Override
+	 
 	public MqInfo getMqInfo() { 
 		MqInfo info = new MqInfo(); 
 		info.name = name;
@@ -186,4 +203,44 @@ public class MQ extends AbstractMQ{
 		}
 	}
 	
+	public void setAccessToken(String accessToken){ 
+		this.msgQ.setAccessToken(accessToken);
+		this.auth.setAccessToken(accessToken);
+	} 
+	
+	public String getAccessToken() {
+		return msgQ.getAccessToken();
+	}
+
+	public void setAuth(Auth auth){
+		this.auth = auth;
+	}
+	
+	public boolean auth(String appid, String token){
+		if(this.auth == null) return true;
+		return this.auth.auth(appid, token);
+	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.mode = mode;
+	}     
+	public String getCreator() {
+		return msgQ.getCreator();
+	}
+
+	public void setCreator(String creator) {
+		this.msgQ.setCreator(creator);
+	}
+
+	public long getLastUpdateTime() {
+		return lastUpdateTime;
+	}
+
+	public void setLastUpdateTime(long lastUpdateTime) {
+		this.lastUpdateTime = lastUpdateTime;
+	}
 }

@@ -27,22 +27,15 @@ import static org.zbus.kit.ConfigKit.valueOf;
 import static org.zbus.kit.ConfigKit.xeval;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.zbus.net.IoDriver;
-import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServerConfig{ 
 	public String trackServerList = null;
@@ -60,8 +53,7 @@ public class MqServerConfig{
 	public boolean mqFilterPersist = false;
 	public String serverName = "ZbusServer";
 	public long cleanMqInterval = 3000; 
-	public long trackReportInterval = 5000;
-	public List<ProxyConfig> httpProxyConfigList;
+	public long trackReportInterval = 5000; 
 	
 	
 	public String getServerAddress(){
@@ -179,14 +171,7 @@ public class MqServerConfig{
 	public void setSslPrivateKeyFile(String sslPrivateKeyFile) {
 		this.sslPrivateKeyFile = sslPrivateKeyFile;
 	}
-
-	public List<ProxyConfig> getHttpProxyConfigList() {
-		return httpProxyConfigList;
-	}
-
-	public void setHttpProxyConfigList(List<ProxyConfig> httpProxyConfigList) {
-		this.httpProxyConfigList = httpProxyConfigList;
-	}
+ 
  
 	public void loadFromXml(InputSource source) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();     
@@ -206,19 +191,6 @@ public class MqServerConfig{
 		
 		this.sslCertificateFile = valueOf(xeval(xpath, doc, prefix, "sslCertificateFile"),null);
 		this.sslPrivateKeyFile = valueOf(xeval(xpath, doc, prefix, "sslPrivateKeyFile"),null);
-		
-		XPathExpression expr = xpath.compile("//http-proxy/*");
-		NodeList list = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-		if(list != null && list.getLength()> 0){
-			this.httpProxyConfigList = new ArrayList<ProxyConfig>();
-			for (int i = 0; i < list.getLength(); i++) {
-			    Node node = list.item(i); 
-			    ProxyConfig config = new ProxyConfig();
-			    config.entry = (String) xpath.evaluate("name", node, XPathConstants.STRING);
-			    config.target = (String) xpath.evaluate("target", node, XPathConstants.STRING);
-			    this.httpProxyConfigList.add(config);
-			}
-		} 
 	}
 	 
 	public void loadFromXml(String xmlConfigSourceFile) throws Exception{ 

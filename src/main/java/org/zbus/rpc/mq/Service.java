@@ -96,9 +96,7 @@ public class Service implements Closeable {
 			
 			MqConfig mqConfig = new MqConfig();
 			mqConfig.setBroker(brokers[i]);
-			mqConfig.setMq(config.getMq());
-			mqConfig.setMode(config.getMode());
-			mqConfig.setTopic(config.getTopic());
+			mqConfig.setMq(config.getMq()); 
 			mqConfig.setVerbose(config.isVerbose());
 			mqConfig.setAccessToken(config.getAccessToken());
 			mqConfig.setRegisterToken(config.getRegisterToken());

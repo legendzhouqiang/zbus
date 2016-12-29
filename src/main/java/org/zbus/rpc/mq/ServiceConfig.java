@@ -25,7 +25,6 @@ package org.zbus.rpc.mq;
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.mq.MqConfig;
-import org.zbus.mq.Protocol.MqMode; 
 import org.zbus.net.http.Message.MessageProcessor;
 
 public class ServiceConfig extends MqConfig { 
@@ -39,17 +38,12 @@ public class ServiceConfig extends MqConfig {
 	private int inFlightMessageCount = 100;
 	private boolean verbose = false;
 	private Broker[] brokers;
-
-	public ServiceConfig() { 
-		mode = MqMode.intValue(MqMode.MQ, MqMode.RPC);
-	}
-
+ 
 	public ServiceConfig(Broker... brokers) {
 		this.brokers = brokers;
 		if (brokers.length > 0) {
 			setBroker(brokers[0]);
-		}
-		mode = MqMode.intValue(MqMode.MQ, MqMode.RPC);
+		} 
 	}
 
 	public void setBrokers(Broker[] brokers) {

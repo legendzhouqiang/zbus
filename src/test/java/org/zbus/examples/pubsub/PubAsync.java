@@ -3,7 +3,6 @@ package org.zbus.examples.pubsub;
 import org.zbus.broker.Broker;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.mq.Producer;
-import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
@@ -11,7 +10,7 @@ public class PubAsync {
 	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
-		Producer producer = new Producer(broker, "MyPubSub", MqMode.PubSub);
+		Producer producer = new Producer(broker, "MyPubSub");
 		producer.createMQ();  
 		 
 		for(int i=0;i<100000;i++){

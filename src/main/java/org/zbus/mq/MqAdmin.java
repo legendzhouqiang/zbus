@@ -25,32 +25,24 @@ package org.zbus.mq;
 import java.io.IOException;
 
 import org.zbus.broker.Broker;
-import org.zbus.mq.Protocol.MqMode;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 
 public class MqAdmin{     
 	protected final Broker broker;      
-	protected String mq;   
-	protected final int mode;  
+	protected String mq;    
 	protected String accessToken = "";
 	protected String registerToken = ""; 
 	
-	public MqAdmin(Broker broker, String mq, MqMode... mode){  
+	public MqAdmin(Broker broker, String mq){  
 		this.broker = broker;
-		this.mq = mq;  
-		if(mode.length == 0){
-			this.mode = MqMode.intValue(MqMode.MQ); 
-		} else {
-			this.mode = MqMode.intValue(mode);
-		} 
+		this.mq = mq;   
 	} 
 	
 	public MqAdmin(MqConfig config){
 		this.broker = config.getBroker();
-		this.mq = config.getMq(); 
-		this.mode = config.getMode();
+		this.mq = config.getMq();  
 		this.accessToken = config.getAccessToken();
 		this.registerToken = config.getRegisterToken(); 
 	} 
@@ -76,8 +68,7 @@ public class MqAdmin{
 	private Message buildCreateMQMessage(){
 		Message req = new Message();
     	req.setCmd(Protocol.CreateMQ); 
-    	req.setHead("mq_name", mq);
-    	req.setHead("mq_mode", "" + mode);  
+    	req.setHead("mq_name", mq); 
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken); 
     	return req;
@@ -169,11 +160,7 @@ public class MqAdmin{
 
 	public void setMq(String mq) {
 		this.mq = mq;
-	}
-
-	public int getMode() {
-		return mode;
-	}
+	} 
 
 	public String getAccessToken() {
 		return accessToken;

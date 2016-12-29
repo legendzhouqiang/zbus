@@ -27,9 +27,7 @@ import static org.zbus.kit.ConfigKit.isBlank;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
 import org.zbus.kit.ClassKit;
@@ -53,14 +50,12 @@ import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.IoDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.MessageServer;
-import org.zbus.proxy.HttpDmzProxy;
-import org.zbus.proxy.HttpDmzProxy.ProxyConfig;
 
 public class MqServer implements Closeable{ 
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
-	private final Map<String, AbstractMQ> mqTable = new ConcurrentHashMap<String, AbstractMQ>();
+	private final Map<String, MQ> mqTable = new ConcurrentHashMap<String, MQ>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config; 
@@ -79,8 +74,7 @@ public class MqServer implements Closeable{
 	private boolean ownEventDriver = false;
 	
 	private MessageServer httpServer;// you may add WebSocket Server
-	private MqAdaptor mqAdaptor;
-	private List<HttpDmzProxy> httpDmzProxies = new ArrayList<HttpDmzProxy>();
+	private MqAdaptor mqAdaptor; 
 	
 	public MqServer(){
 		this(new MqServerConfig()); //using all defaults
@@ -128,10 +122,10 @@ public class MqServer implements Closeable{
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
-				Iterator<Entry<String, AbstractMQ>> iter = mqTable.entrySet().iterator();
+				Iterator<Entry<String, MQ>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){
-		    		Entry<String, AbstractMQ> e = iter.next();
-		    		AbstractMQ mq = e.getValue(); 
+		    		Entry<String, MQ> e = iter.next();
+		    		MQ mq = e.getValue(); 
 		    		mq.cleanSession();
 		    	}
 			}
@@ -153,19 +147,7 @@ public class MqServer implements Closeable{
 			log.info("Zbus run in HA mode");
 			setupTracker(config.trackServerList);
 		}
-		
-		if(config.getHttpProxyConfigList() != null){
-			for(ProxyConfig proxyConfig: config.getHttpProxyConfigList()){
-				BrokerConfig brokerConfig = new BrokerConfig();
-				brokerConfig.brokerAddress = null;//indicates JVM broker
-				brokerConfig.mqServer = this;
-				proxyConfig.brokerConfig = brokerConfig;
-				
-				HttpDmzProxy proxy = new HttpDmzProxy(proxyConfig);
-				httpDmzProxies.add(proxy);
-				proxy.start();
-			}
-		}
+		 
 		long end = System.currentTimeMillis();
 		log.info("Zbus started sucessfully in %d ms", (end-start));
 		
@@ -179,10 +161,7 @@ public class MqServer implements Closeable{
 		if(trackPub != null){
     		trackPub.close();
     	}
-		scheduledExecutor.shutdown();  
-		for(HttpDmzProxy proxy : httpDmzProxies){
-			proxy.close();
-		}
+		scheduledExecutor.shutdown();   
 		mqAdaptor.close();
 		if(httpServer != null){
 			httpServer.close();
@@ -204,7 +183,7 @@ public class MqServer implements Closeable{
     		@Override
     		public void onConnected() throws IOException { 
     			trackPub.pubServerJoin(serverAddr);
-    			for(AbstractMQ mq : mqTable.values()){
+    			for(MQ mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
     		}
@@ -214,14 +193,14 @@ public class MqServer implements Closeable{
     	scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			@Override
 			public void run() { 
-				for(AbstractMQ mq : mqTable.values()){
+				for(MQ mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
 			}
 		}, 2000, config.trackReportInterval, TimeUnit.MILLISECONDS);
     }  
      
-    public void pubEntryUpdate(AbstractMQ mq){
+    public void pubEntryUpdate(MQ mq){
     	if(trackPub == null) return;
     	 
     	MqInfo info = mq.getMqInfo();
@@ -237,7 +216,7 @@ public class MqServer implements Closeable{
     	trackPub.pubEntryUpdate(se);
     }  
     
-	public Map<String, AbstractMQ> getMqTable() {
+	public Map<String, MQ> getMqTable() {
 		return mqTable;
 	} 
 

@@ -23,13 +23,11 @@
 package org.zbus.mq;
 
 import org.zbus.broker.Broker;
-import org.zbus.mq.Protocol.MqMode;
 
 public class MqConfig implements Cloneable { 
 	protected Broker broker; //Broker，必须设置
-	protected String mq;     //MQ标识，必须设置  
-	protected int mode = MqMode.MQ.intValue(); //创建消息队列时采用到
-	protected String topic = null; //发布订阅模式下使用
+	protected String mq;     //MQ标识，必须设置   
+	protected String consumeGroup = null; 
 	protected boolean verbose = false;
 	protected String registerToken = "";
 	protected String accessToken = ""; 
@@ -50,27 +48,16 @@ public class MqConfig implements Cloneable {
 	public void setMq(String mq) {
 		this.mq = mq;
 	}
+	 
 	
-	public int getMode() {
-		return mode;
+	public String getConsumeGroup() {
+		return consumeGroup;
 	}
 
-	public void setMode(int mode) {
-		this.mode = mode;
-	}
-	
-	public void setMode(MqMode... mode){
-		this.mode = MqMode.intValue(mode);
+	public void setConsumeGroup(String consumeGroup) {
+		this.consumeGroup = consumeGroup;
 	}
 
-	public String getTopic() {
-		return topic;
-	}
-
-	public void setTopic(String topic) {
-		this.topic = topic;
-	}
-	
 	public boolean isVerbose() {
 		return verbose;
 	}

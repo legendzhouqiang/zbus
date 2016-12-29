@@ -139,21 +139,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 			broker = getBrokerByIpCluster();
 			if(broker != null) return Arrays.asList(broker);
 			return null;
-		} 
-
-		int mode = serverList.getMode();
-		if(ServerEntry.PubSub == mode){
-			List<Broker> res = new ArrayList<Broker>();
-			synchronized (serverList) { 
-				for(ServerEntry e : serverList){ 
-					broker = getBroker(e.serverAddr);
-					if(broker != null){
-						res.add(broker);
-					}
-				}
-			}
-			return res;
-		} 
+		}  
 		
 		int activeCount = serverList.activeServerCountWithConsumerFirst();
 		if(activeCount == 0){

@@ -32,7 +32,7 @@ import org.zbus.net.http.MessageAdaptor;
 public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
 
-	private final Map<String, AbstractMQ> mqTable; 
+	private final Map<String, MQ> mqTable; 
 	private final Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
 	
 	private boolean verbose = false;    
@@ -88,7 +88,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(method == null){
 				method = "";
 			}
-			AbstractMQ mq = mqTable.get(url.mq);
+			MQ mq = mqTable.get(url.mq);
 			if(mq != null){ 
 				if(MqMode.isEnabled(mq.getMode(), MqMode.RPC)){
 					if(url.method != null || url.cmd == null){  
@@ -160,9 +160,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	sess.write(res); 
     }  
 	
-    private AbstractMQ findMQ(Message msg, Session sess) throws IOException{
+    private MQ findMQ(Message msg, Session sess) throws IOException{
 		String mqName = msg.getMq();
-		AbstractMQ mq = mqTable.get(mqName); 
+		MQ mq = mqTable.get(mqName); 
     	if(mq == null){
     		ReplyKit.reply404(msg, sess); 
     		return null;
@@ -177,7 +177,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private MessageHandler produceHandler = new MessageHandler() { 
 		@Override
 		public void handle(final Message msg, final Session sess) throws IOException { 
-			final AbstractMQ mq = findMQ(msg, sess);
+			final MQ mq = findMQ(msg, sess);
 			if(mq == null) return;
 			if(!auth(mq, msg)){ 
 				ReplyKit.reply403(msg, sess);
@@ -249,7 +249,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private MessageHandler consumeHandler = new MessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			AbstractMQ mq = findMQ(msg, sess);
+			MQ mq = findMQ(msg, sess);
 			if(mq == null) return;
 			if(!auth(mq, msg)){ 
 				ReplyKit.reply403(msg, sess);
@@ -315,7 +315,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return;
 			}
 			synchronized (mqTable) {
-    			AbstractMQ mq = mqTable.get(mqName);
+				MQ mq = mqTable.get(mqName);
     			if(mq == null){ 
     				ReplyKit.reply404(msg, sess);
     				return;
@@ -362,7 +362,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		}
     		
     		String accessToken = msg.getHead("access_token", "");  
-    		AbstractMQ mq = null;
+    		MQ mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(mqName);
     			if(mq != null){
@@ -372,19 +372,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			
     			MessageQueue support = null;
 				if(MqMode.isEnabled(mode, MqMode.Memory) ||
-						MqMode.isEnabled(mode, MqMode.RPC) ||
-						MqMode.isEnabled(mode, MqMode.PubSub)){
+						MqMode.isEnabled(mode, MqMode.RPC)){
 					support = new MessageMemoryQueue();
 				} else {
 					DiskQueue diskQueue = diskQueuePool.getDiskQueue(mqName);
 					support = new MessageDiskQueue(mqName, mode, diskQueue);
 				}
 				
-    			if(MqMode.isEnabled(mode, MqMode.PubSub)){ 
-    				mq = new PubSub(mqName, support);
-    			} else {
-    				mq = new MQ(mqName, support);
-    			}
+    			mq = new MQ(mqName, support); 
     			mq.setMode(mode);
     			mq.setCreator(sess.getRemoteAddress());
     			mq.setAccessToken(accessToken); 
@@ -455,7 +450,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				BrokerInfo info = getStatInfo();
 				json = JsonKit.toJson(info);
 			} else { 
-				AbstractMQ mq = findMQ(msg, sess);
+				MQ mq = findMQ(msg, sess);
 		    	if(mq == null){ 
 					return;
 				} else {
@@ -528,14 +523,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		String mqName = sess.attr("mq");
 		if(mqName == null) return;
 		
-		AbstractMQ mq = mqTable.get(mqName); 
+		MQ mq = mqTable.get(mqName); 
 		if(mq == null) return; 
 		mq.cleanSession(sess);
 		
 		mqServer.pubEntryUpdate(mq); 
 	} 
 	
-	private boolean auth(AbstractMQ mq, Message msg){
+	private boolean auth(MQ mq, Message msg){
 		String appid = msg.getHead("appid", "");
 		String token = msg.getHead("token", "");
 		return mq.auth(appid, token);
@@ -547,7 +542,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
      
     public BrokerInfo getStatInfo(){
     	Map<String, MqInfo> table = new HashMap<String, MqInfo>();
-   		for(Map.Entry<String, AbstractMQ> e : this.mqTable.entrySet()){
+   		for(Map.Entry<String, MQ> e : this.mqTable.entrySet()){
    			MqInfo info = e.getValue().getMqInfo();
    			info.consumerInfoList.clear(); //clear to avoid long list
    			table.put(e.getKey(), info);
@@ -567,16 +562,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		Map<String, DiskQueue> dqs = diskQueuePool.getQueryMap();
 		for(Entry<String, DiskQueue> e : dqs.entrySet()){
-			AbstractMQ mq;
+			MQ mq;
 			String name = e.getKey();
 			DiskQueue diskq = e.getValue();
 			int flag = diskq.getFlag(); 
 			MessageDiskQueue queue = new MessageDiskQueue(name, diskq);
-			if( MqMode.isEnabled(flag, MqMode.PubSub)){ 
-				mq = new PubSub(name, queue); 
-			}  else {
-				mq = new MQ(name, queue);  
-			}
+			mq = new MQ(name, queue);   
 			mq.setMode(flag);
 			mq.lastUpdateTime = System.currentTimeMillis(); 
 			mqTable.put(name, mq);

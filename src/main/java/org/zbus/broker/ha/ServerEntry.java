@@ -23,9 +23,7 @@
 package org.zbus.broker.ha;
 
 
-public class ServerEntry implements Comparable<ServerEntry>{ 
-	public static final int MQ     = 1<<0;
-	public static final int PubSub = 1<<1;
+public class ServerEntry implements Comparable<ServerEntry>{  
 	public static final int RPC    = 1<<3;
 	
 	public String entryId = "";
