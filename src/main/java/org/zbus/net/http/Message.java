@@ -78,6 +78,7 @@ public class Message implements Id {
 	 
 	public static final String CMD    	= "cmd";     
 	public static final String MQ       = "mq";
+	public static final String CONSUME_GROUP = "consume_group"; 
 	public static final String SENDER   = "sender"; 
 	public static final String RECVER   = "recver";
 	public static final String ID      	= "id";	     
@@ -512,6 +513,15 @@ public class Message implements Id {
 	} 
 	public Message setMq(String mq) {
 		this.setHead(MQ, mq);
+		return this;
+	} 
+	
+	public String getConsumeGroup(){
+		String value = this.getHead(CONSUME_GROUP);
+		return value;
+	} 
+	public Message setConsumeGroup(String mq) {
+		this.setHead(CONSUME_GROUP, mq);
 		return this;
 	} 
 	

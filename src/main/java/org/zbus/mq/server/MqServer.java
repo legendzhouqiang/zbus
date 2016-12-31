@@ -55,7 +55,7 @@ public class MqServer implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
-	private final Map<String, MQ> mqTable = new ConcurrentHashMap<String, MQ>();
+	private final Map<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config; 
@@ -122,10 +122,10 @@ public class MqServer implements Closeable{
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
-				Iterator<Entry<String, MQ>> iter = mqTable.entrySet().iterator();
+				Iterator<Entry<String, MessageQueue>> iter = mqTable.entrySet().iterator();
 		    	while(iter.hasNext()){
-		    		Entry<String, MQ> e = iter.next();
-		    		MQ mq = e.getValue(); 
+		    		Entry<String, MessageQueue> e = iter.next();
+		    		MessageQueue mq = e.getValue(); 
 		    		mq.cleanSession();
 		    	}
 			}
@@ -183,7 +183,7 @@ public class MqServer implements Closeable{
     		@Override
     		public void onConnected() throws IOException { 
     			trackPub.pubServerJoin(serverAddr);
-    			for(MQ mq : mqTable.values()){
+    			for(MessageQueue mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
     		}
@@ -193,14 +193,14 @@ public class MqServer implements Closeable{
     	scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			@Override
 			public void run() { 
-				for(MQ mq : mqTable.values()){
+				for(MessageQueue mq : mqTable.values()){
     				pubEntryUpdate(mq);
     			}
 			}
 		}, 2000, config.trackReportInterval, TimeUnit.MILLISECONDS);
     }  
      
-    public void pubEntryUpdate(MQ mq){
+    public void pubEntryUpdate(MessageQueue mq){
     	if(trackPub == null) return;
     	 
     	MqInfo info = mq.getMqInfo();
@@ -211,12 +211,12 @@ public class MqServer implements Closeable{
     	se.consumerCount = info.consumerCount;
     	se.mode = info.mode;
     	se.unconsumedMsgCount = info.unconsumedMsgCount;
-    	se.lastUpdateTime = mq.lastUpdateTime;
+    	se.lastUpdateTime = mq.getLastUpdateTime();
 
     	trackPub.pubEntryUpdate(se);
     }  
     
-	public Map<String, MQ> getMqTable() {
+	public Map<String, MessageQueue> getMqTable() {
 		return mqTable;
 	} 
 

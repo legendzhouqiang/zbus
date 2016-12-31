@@ -47,38 +47,8 @@ public class Protocol {
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery"; 
 	
-	
-	public static enum MqMode {
-		MQ,       //消息队列 
-		Memory,   //是否临时
-		RPC;
-		
-		private MqMode(){
-	        mask = (1 << ordinal());
-	    }
-		
-	    private final int mask;
-
-	    public final int getMask() {
-	        return mask;
-	    }
-	    
-	    public int intValue(){
-	    	return this.mask;
-	    }
-	    
-	    public static boolean isEnabled(int features, MqMode feature) {
-	        return (features & feature.getMask()) != 0;
-	    }
-	    
-	    public static int intValue(MqMode... features){
-	    	int value = 0;
-	    	for(MqMode feature : features){
-	    		value |= feature.mask;
-	    	}
-	    	return value;
-	    }
-	}
+	public static final int FlagMemory    = 1<<1; 
+	public static final int FlagRpc    = 1<<4; 
 	 
 	public static class BrokerInfo{
 		public String broker;
