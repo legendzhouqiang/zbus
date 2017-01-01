@@ -23,6 +23,7 @@
 package org.zbus.mq.server;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,7 +46,7 @@ import org.zbus.net.http.Message;
 
 public class DiskQueue implements MessageQueue{
 	private static final Logger log = LoggerFactory.getLogger(DiskQueue.class); 
-	protected Index index;    
+	protected final Index index;    
 	
 	protected Map<String, ConsumeGroup> consumeGroups = new ConcurrentHashMap<String, ConsumeGroup>(); 
 	protected long lastUpdateTime = System.currentTimeMillis(); 
@@ -57,6 +58,10 @@ public class DiskQueue implements MessageQueue{
 		this.index = index;
 		this.name = index.getName();
 		this.writer = new QueueWriter(this.index);
+	}
+	
+	public DiskQueue(File dir) throws IOException {
+		this(new Index(dir));
 	}
 	  
 	@Override

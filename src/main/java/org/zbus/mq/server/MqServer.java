@@ -37,15 +37,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.broker.ha.ServerEntry;
 import org.zbus.broker.ha.TrackPub;
-import org.zbus.kit.ClassKit;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.NetKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqInfo;
-import org.zbus.mq.server.filter.MemoryMqFilter;
-import org.zbus.mq.server.filter.MqFilter;
-import org.zbus.mq.server.filter.PersistMqFilter;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.IoDriver;
 import org.zbus.net.Session;
@@ -64,8 +60,7 @@ public class MqServer implements Closeable{
     {
         this.config = config;
     }
-
-    private MqFilter mqFilter; 
+ 
 	private String serverAddr = "";  
 	
 	private TrackPub trackPub; 
@@ -108,17 +103,7 @@ public class MqServer implements Closeable{
 		if("0.0.0.0".equals(host)){
 			host = NetKit.getLocalIp(config.serverMainIpOrder);
 		}
-		serverAddr = host+":"+config.serverPort;
-		
-		if(config.mqFilterPersist){
-			if(ClassKit.bdbAvailable){
-				mqFilter = new PersistMqFilter(config.storePath + File.separator + "filter");
-			} else {
-				log.warn("MqFilter persist mode enabled, but missing je-5.0.xx jar, default to MemoryMqFilter");	 
-			}  
-		}  else {
-			mqFilter = new MemoryMqFilter();
-		}
+		serverAddr = host+":"+config.serverPort; 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -154,10 +139,7 @@ public class MqServer implements Closeable{
 	}
 	 
 	@Override
-	public void close() throws IOException { 
-		if(this.mqFilter != null){
-			this.mqFilter.close();
-		}
+	public void close() throws IOException {  
 		if(trackPub != null){
     		trackPub.close();
     	}
@@ -226,10 +208,6 @@ public class MqServer implements Closeable{
 
 	public String getServerAddr() {
 		return serverAddr;
-	} 
-
-	public MqFilter getMqFilter() {
-		return mqFilter;
 	}  
 
 	public MqServerConfig getConfig() {

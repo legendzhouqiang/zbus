@@ -36,13 +36,8 @@ public class Protocol {
 
 	public static final String QueryMQ   = "query_mq"; 
 	public static final String CreateMQ  = "create_mq"; //create MQ
-	public static final String RemoveMQ  = "remove_mq"; //remove MQ
-	
-	public static final String AddKey    = "add_key";  
-	public static final String RemoveKey = "remove_key";  
-	
-	
-	public static final String Auth      = "auth";  
+	public static final String RemoveMQ  = "remove_mq"; //remove MQ  
+	 
 	public static final String Test      = "test"; 
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery"; 

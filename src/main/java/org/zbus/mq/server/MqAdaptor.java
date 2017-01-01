@@ -1,6 +1,7 @@
 package org.zbus.mq.server;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,6 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
 import org.zbus.mq.Protocol.MqInfo;
-import org.zbus.mq.server.filter.MqFilter;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -30,8 +30,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	
 	private boolean verbose = false;    
 	private final MqServer mqServer;
-	private final MqServerConfig config; 
-	private MqFilter mqFilter; 
+	private final MqServerConfig config;  
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
@@ -42,8 +41,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.config = mqServer.getConfig();
 		
 		this.mqServer = mqServer; 
-		this.mqTable = mqServer.getMqTable(); 
-		this.mqFilter = mqServer.getMqFilter();
+		this.mqTable = mqServer.getMqTable();  
 		
 		registerHandler(Protocol.Produce, produceHandler); 
 		registerHandler(Protocol.Consume, consumeHandler);  
@@ -51,11 +49,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		registerHandler(Protocol.CreateMQ, createMqHandler);
 		registerHandler(Protocol.QueryMQ, queryMqHandler);
-		registerHandler(Protocol.RemoveMQ, removeMqHandler);
+		registerHandler(Protocol.RemoveMQ, removeMqHandler); 
 		
-		registerHandler(Protocol.AddKey, addKeyHandler); 
-		registerHandler(Protocol.RemoveKey, removeKeyHandler); 
-		 
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.Data, dataHandler); 
 		registerHandler(Protocol.Jquery, jqueryHandler);
@@ -184,15 +179,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			}
 			
 
-			final boolean ack = msg.isAck();
-			
-			if(!mqFilter.permit(msg) ){
-				if(ack){
-					ReplyKit.reply406(msg, sess);
-				}
-				return;
-			}
-			
+			final boolean ack = msg.isAck();  
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK); 
 			String ttl = msg.getTtl();
@@ -354,15 +341,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     				ReplyKit.reply200(msg, sess);
     				return;
     			}
-    			 
-				if((mode&Protocol.FlagRpc) != 0){
-					//TODO
-				} else {
-					//TODO DiskQueue diskQueue = diskQueuePool.getDiskQueue(mqName);
-					//support = new MessageDiskQueue(mqName, mode, diskQueue);
-				}
-				
-    			mq = new DiskQueue(null); //TODO
+    			  
+				File mqFile = new File(config.storePath, mqName);
+    			mq = new DiskQueue(mqFile); 
     			mq.setFlag(mode);
     			mq.setCreator(sess.getRemoteAddress());
     			mq.setAccessToken(accessToken); 
@@ -448,50 +429,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			data.setBody(json);
 			sess.write(data);
 		}
-	};
-	
-	private MessageHandler addKeyHandler = new MessageHandler() {  
-		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			String registerToken = msg.getHead("register_token", "");
-			if(!registerToken.equals(config.getRegisterToken())){
-				msg.setBody("registerToken unmatched");
-				ReplyKit.reply403(msg, sess);
-				return; 
-			}
-			String mq = msg.getMq();
-			String group = msg.getKeyGroup();
-			String key = msg.getKey(); 
-			
-			int count = mqFilter.addKey(mq, group, key);
-		    if(msg.isAck()){
-		    	msg.setBody(count+"");
-		    	ReplyKit.reply200WithBody(msg, sess);
-		    }
-		}
-	};
-	
-	private MessageHandler removeKeyHandler = new MessageHandler() {  
-		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			String registerToken = msg.getHead("register_token", "");
-			if(!registerToken.equals(config.getRegisterToken())){
-				msg.setBody("registerToken unmatched");
-				ReplyKit.reply403(msg, sess);
-				return; 
-			}
-			
-			String mq = msg.getMq();
-			String group = msg.getKeyGroup();
-			String key = msg.getKey(); 
-			
-			int count = mqFilter.removeKey(mq, group, key);
-		    if(msg.isAck()){
-		    	msg.setBody(count+"");
-		    	ReplyKit.reply200WithBody(msg, sess);
-		    }
-		}
-	};
+	}; 
 	
 	private MessageHandler heartbeatHandler = new MessageHandler() {
 		@Override

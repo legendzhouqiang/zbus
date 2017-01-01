@@ -47,10 +47,9 @@ public class MqServerConfig{
 	public String sslPrivateKeyFile;
 	
 	public boolean verbose = false;
-	public String storePath = "/tmp/zbus/mq";
+	public String storePath = "/tmp/zbus";
 	public String registerToken = "";  
-	public String serverMainIpOrder;
-	public boolean mqFilterPersist = false;
+	public String serverMainIpOrder; 
 	public String serverName = "ZbusServer";
 	public long cleanMqInterval = 3000; 
 	public long trackReportInterval = 5000; 
@@ -124,14 +123,6 @@ public class MqServerConfig{
 		this.serverMainIpOrder = serverMainIpOrder;
 	}
 
-	public boolean isMqFilterPersist() {
-		return mqFilterPersist;
-	}
-
-	public void setMqFilterPersist(boolean mqFilterPersist) {
-		this.mqFilterPersist = mqFilterPersist;
-	}
-
 	public String getServerName() {
 		return serverName;
 	}
@@ -184,8 +175,7 @@ public class MqServerConfig{
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
 		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "./store");
 		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false);
-		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), "");
-		this.mqFilterPersist = valueOf(xeval(xpath, doc, prefix, "mqFilter"), false);
+		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), ""); 
 		this.serverMainIpOrder = valueOf(xeval(xpath, doc, prefix, "mainIpOrder"),null);
 		this.trackServerList = valueOf(xeval(xpath, doc, prefix, "trackServerList"),null);
 		
