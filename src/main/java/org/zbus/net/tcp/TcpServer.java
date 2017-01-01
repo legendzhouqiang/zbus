@@ -13,7 +13,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.CodecInitializer;
 import org.zbus.net.IoAdaptor;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Server;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -35,7 +35,7 @@ public class TcpServer implements Server {
 	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 
 	
 	protected CodecInitializer codecInitializer; 
-	protected IoDriver ioDriver;
+	protected EventDriver ioDriver;
 	protected boolean ownIoDriver; 
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
@@ -44,10 +44,10 @@ public class TcpServer implements Server {
 		this(null); 
 	}
 	
-	public TcpServer(IoDriver driver){ 
+	public TcpServer(EventDriver driver){ 
 		this.ioDriver = driver; 
 		if (this.ioDriver == null) {
-			this.ioDriver = new IoDriver();
+			this.ioDriver = new EventDriver();
 			this.ownIoDriver = true;
 		} else {
 			this.ownIoDriver = false;
@@ -114,7 +114,7 @@ public class TcpServer implements Server {
 		return ((InetSocketAddress)addr).getPort();
 	}
 	
-	public IoDriver getIoDriver() {
+	public EventDriver getIoDriver() {
 		return this.ioDriver;
 	}
 	

@@ -43,7 +43,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.net.Client.ConnectedHandler;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.MessageServer;
 
@@ -65,7 +65,7 @@ public class MqServer implements Closeable{
 	
 	private TrackPub trackPub; 
 	
-	private IoDriver eventDriver;
+	private EventDriver eventDriver;
 	private boolean ownEventDriver = false;
 	
 	private MessageServer httpServer;// you may add WebSocket Server
@@ -79,7 +79,7 @@ public class MqServer implements Closeable{
 		this.config = config;  
 		eventDriver = config.getEventDriver();
 		if(eventDriver == null){
-			eventDriver = new IoDriver();
+			eventDriver = new EventDriver();
 			ownEventDriver = true;
 		} 
 		

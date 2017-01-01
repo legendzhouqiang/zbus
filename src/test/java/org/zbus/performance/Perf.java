@@ -90,8 +90,7 @@ public abstract class Perf implements Closeable{
 		final int threadCount = ConfigKit.option(args, "-c", 64);	 
 		BrokerConfig config = new BrokerConfig();
 		config.setBrokerAddress(serverAddress);
-		config.setMaxTotal(threadCount);
-		config.setMaxIdle(threadCount); 
+		config.setConnectionPoolMaxSize(threadCount); 
 		return new ZbusBroker(config); 
 	}
 }

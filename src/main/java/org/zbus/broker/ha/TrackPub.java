@@ -31,7 +31,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageClient;
 
@@ -41,9 +41,9 @@ public class TrackPub implements Closeable{
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
 	private ConnectedHandler connectedHandler;
-	private IoDriver eventDriver;
+	private EventDriver eventDriver;
 	
-	public TrackPub(String trackServerList, IoDriver driver) {
+	public TrackPub(String trackServerList, EventDriver driver) {
 		
 		if(driver == null){
 			throw new IllegalArgumentException("EventDriver can not be null");

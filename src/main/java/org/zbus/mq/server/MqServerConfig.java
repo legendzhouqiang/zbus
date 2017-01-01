@@ -35,14 +35,14 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 
 public class MqServerConfig{ 
 	public String trackServerList = null;
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;  
-	public IoDriver eventDriver;
+	public EventDriver eventDriver;
 	public String sslCertificateFile;
 	public String sslPrivateKeyFile;
 	
@@ -83,11 +83,11 @@ public class MqServerConfig{
 		this.serverPort = serverPort;
 	}
 	
-	public IoDriver getEventDriver() {
+	public EventDriver getEventDriver() {
 		return eventDriver;
 	}
 
-	public void setEventDriver(IoDriver eventDriver) {
+	public void setEventDriver(EventDriver eventDriver) {
 		this.eventDriver = eventDriver;
 	}
 

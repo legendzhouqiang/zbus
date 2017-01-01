@@ -6,7 +6,7 @@ import java.util.List;
 import org.zbus.kit.ConfigKit;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.CodecInitializer;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.MessageToHttpWsCodec;
@@ -23,7 +23,7 @@ public class TcpClientExample {
 	public static void main(String[] args) throws Exception {
 		String address = ConfigKit.option(args, "-h", "127.0.0.1:8080");
 		
-		IoDriver driver = new IoDriver();
+		EventDriver driver = new EventDriver();
 		
 		TcpClient<Message, Message> client = new TcpClient<Message, Message>(address, driver);
 

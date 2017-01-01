@@ -52,8 +52,7 @@ public class RpcPerf {
 		 
 		BrokerConfig brokerConfig = new BrokerConfig(); 
 		brokerConfig.setBrokerAddress(serverAddress);
-		brokerConfig.setMaxTotal(threadCount);
-		brokerConfig.setMaxIdle(threadCount);   
+		brokerConfig.setConnectionPoolMaxSize(threadCount); 
 		
 		final Broker broker = new ZbusBroker(brokerConfig);
 		 

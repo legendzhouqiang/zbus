@@ -92,10 +92,7 @@ public class Message implements Id {
 	
 	public static final String ORIGIN_ID    = "rawid";      //original id
 	public static final String ORIGIN_URL   = "origin_url"; //original URL  
-	public static final String ORIGIN_STATUS= "reply_code"; //original Status 
-	
-	public static final String KEY       = "key";  
-	public static final String KEY_GROUP = "key_group"; 
+	public static final String ORIGIN_STATUS= "reply_code"; //original Status  
 	
 	 
 	//1) First line of HTTP protocol
@@ -531,21 +528,6 @@ public class Message implements Id {
 	} 
 	public Message setTopic(String topic) {
 		this.setHead(TOPIC, topic);
-		return this;
-	}  
-	
-	public String getKey() {
-		return getHead(KEY);
-	} 
-	public Message setKey(String value) {
-		this.setHead(KEY, value);
-		return this;
-	} 
-	public String getKeyGroup() {
-		return getHead(KEY_GROUP);
-	} 
-	public Message setKeyGroup(String value) {
-		this.setHead(KEY_GROUP, value);
 		return this;
 	}   
 	

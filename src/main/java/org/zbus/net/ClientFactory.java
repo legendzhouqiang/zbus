@@ -5,22 +5,22 @@ import java.io.IOException;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
-import org.zbus.kit.pool.ObjectFactory;
+import org.zbus.net.Pool.ObjectFactory;
 
 public abstract class ClientFactory<REQ, RES, T extends Client<REQ, RES>> 
 	implements ObjectFactory<T>, Closeable { 
 	private static final Logger log = LoggerFactory.getLogger(ClientFactory.class); 
 	
 	protected final String serverAddress;
-	protected IoDriver eventDriver;
+	protected EventDriver eventDriver;
 	protected boolean ownEventDriver = false;
 	
 	public ClientFactory(String serverAddress){
-		this(serverAddress, new IoDriver());
+		this(serverAddress, new EventDriver());
 		this.ownEventDriver = true;
 	} 
 	
-	public ClientFactory(String serverAddress, IoDriver driver){
+	public ClientFactory(String serverAddress, EventDriver driver){
 		this.serverAddress = serverAddress;
 		this.eventDriver = driver;
 	}

@@ -33,7 +33,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -47,9 +47,9 @@ public class TrackSub implements Closeable{
 	
 	private Map<String, MessageHandler> cmdHandlers = new ConcurrentHashMap<String, MessageHandler>();
 	
-	private IoDriver eventDriver;
+	private EventDriver eventDriver;
 	
-	public TrackSub(String trackServerList, IoDriver driver) {
+	public TrackSub(String trackServerList, EventDriver driver) {
 		if(driver == null){
 			throw new IllegalArgumentException("EventDriver can not be null");
 		}

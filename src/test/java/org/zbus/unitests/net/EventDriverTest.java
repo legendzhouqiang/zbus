@@ -1,11 +1,11 @@
 package org.zbus.unitests.net;
 
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 
 public class EventDriverTest {
 
 	public static void main(String[] args) throws Exception { 
-		IoDriver driver = new IoDriver();
+		EventDriver driver = new EventDriver();
 		
 		driver.close();
 	}

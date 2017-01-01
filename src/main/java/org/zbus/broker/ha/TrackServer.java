@@ -37,7 +37,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -54,7 +54,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	private Map<String, Session> trackSubs =  new ConcurrentHashMap<String, Session>();
 	private Map<String, MessageClient> joinedServers = new ConcurrentHashMap<String, MessageClient>();
 	
-	private IoDriver eventDriver;
+	private EventDriver eventDriver;
 	private MessageServer server;
 	private String serverHost = "0.0.0.0";
 	private int serverPort = 16666;

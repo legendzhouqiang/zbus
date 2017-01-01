@@ -14,7 +14,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client;
 import org.zbus.net.CodecInitializer;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.Session;
 import org.zbus.net.Sync;
 import org.zbus.net.Sync.Id;
@@ -59,7 +59,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
 	
-	public TcpClient(String address, IoDriver driver){  
+	public TcpClient(String address, EventDriver driver){  
 		group = driver.getGroup();
 		sslCtx = driver.getSslContext();
 		

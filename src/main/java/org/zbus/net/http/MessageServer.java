@@ -3,7 +3,7 @@ package org.zbus.net.http;
 import java.util.List;
 
 import org.zbus.net.CodecInitializer;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 import org.zbus.net.tcp.TcpServer;
 
 import io.netty.channel.ChannelHandler;
@@ -15,7 +15,7 @@ public class MessageServer extends TcpServer {
 		this(null);
 	}
 
-	public MessageServer(final IoDriver driver) {
+	public MessageServer(final EventDriver driver) {
 		super(driver);  
 		codec(new CodecInitializer() {
 			@Override

@@ -1,7 +1,7 @@
 package org.zbus.net.http;
 
 import org.zbus.net.ClientFactory;
-import org.zbus.net.IoDriver;
+import org.zbus.net.EventDriver;
 
 /**
  * This factory is mainly used by Pool in kit package, a dynamic MessageClient pool can be 
@@ -16,7 +16,7 @@ public class MessageClientFactory extends ClientFactory<Message, Message, Messag
 		super(serverAddress);
 	}
 	
-	public MessageClientFactory(String serverAddress, IoDriver driver){
+	public MessageClientFactory(String serverAddress, EventDriver driver){
 		super(serverAddress, driver); 
 	} 
 
