@@ -40,7 +40,7 @@ public class DiskQueue implements MessageQueue{
 		this.writer = new QueueWriter(this.index);
 	}
 	
-	public DiskQueue(File dir) throws IOException {
+	public DiskQueue(File dir) throws IOException { 
 		this(new Index(dir));
 	}
 	  

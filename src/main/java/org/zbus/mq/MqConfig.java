@@ -25,13 +25,13 @@ package org.zbus.mq;
 import org.zbus.broker.Broker;
 
 public class MqConfig implements Cloneable { 
-	protected Broker broker; //Broker，必须设置
-	protected String mq;     //MQ标识，必须设置    
+	protected Broker broker;  
+	protected String mq;
 	protected boolean verbose = false;
 	protected String registerToken = "";
 	protected String accessToken = ""; 
 	
-	//control consume group
+	//control consume group, only consumer controls
 	protected String consumeGroup = null;
 	protected String consumeBaseGroup = null;
 	protected Long consumeStartOffset = null;

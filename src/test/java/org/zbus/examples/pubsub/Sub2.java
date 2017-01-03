@@ -8,12 +8,14 @@ import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.net.http.Message;
 
-public class Sub {
+public class Sub2 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
 		Consumer c = new Consumer(broker, "MyPubSub");    
+		c.setConsumeGroup("Group2"); //different groups consumes the same MQ data
+		
 		c.start(new ConsumerHandler() { 
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException {   
