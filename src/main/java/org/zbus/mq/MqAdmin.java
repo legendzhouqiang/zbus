@@ -35,9 +35,21 @@ public class MqAdmin{
 	protected String accessToken = "";
 	protected String registerToken = ""; 
 	
+	//control consume behavior
+	private String consumeGroup = null;
+	private String consumeBaseGroup = null;
+	private Long consumeStartOffset = null;
+	private String consumeStartMsgId = null;
+	private Long consumeStartTime = null;
+	
 	public MqAdmin(Broker broker, String mq){  
+		this(broker, mq, null);
+	} 
+	
+	public MqAdmin(Broker broker, String mq, String consumeGroup){  
 		this.broker = broker;
 		this.mq = mq;   
+		this.consumeGroup = consumeGroup;
 	} 
 	
 	public MqAdmin(MqConfig config){
@@ -45,6 +57,12 @@ public class MqAdmin{
 		this.mq = config.getMq();  
 		this.accessToken = config.getAccessToken();
 		this.registerToken = config.getRegisterToken(); 
+		
+		this.consumeGroup = config.getConsumeGroup();
+		this.consumeBaseGroup = config.getConsumeBaseGroup();
+		this.consumeStartOffset = config.getConsumeStartOffset();
+		this.consumeStartMsgId = config.getConsumeStartMsgId();
+		this.consumeStartTime = config.getConsumeStartTime();
 	} 
 	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
@@ -71,6 +89,11 @@ public class MqAdmin{
     	req.setHead("mq_name", mq); 
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken); 
+    	req.setConsumeGroup(this.consumeGroup);
+    	req.setConsumeBaseGroup(this.consumeBaseGroup);
+    	req.setConsumeStartOffset(this.consumeStartOffset);
+    	req.setConsumeStartMsgId(this.consumeStartMsgId);
+    	req.setConsumeStartTime(this.consumeStartTime);
     	return req;
 	}
     
@@ -119,5 +142,46 @@ public class MqAdmin{
 
 	public void setRegisterToken(String registerToken) {
 		this.registerToken = registerToken;
+	}
+
+	public String getConsumeGroup() {
+		return consumeGroup;
+	}
+
+	public void setConsumeGroup(String consumeGroup) {
+		this.consumeGroup = consumeGroup;
+	}
+
+	public String getConsumeBaseGroup() {
+		return consumeBaseGroup;
+	}
+
+	public void setConsumeBaseGroup(String consumeBaseGroup) {
+		this.consumeBaseGroup = consumeBaseGroup;
+	}
+
+	public Long getConsumeStartOffset() {
+		return consumeStartOffset;
+	}
+
+	public void setConsumeStartOffset(Long consumeStartOffset) {
+		this.consumeStartOffset = consumeStartOffset;
+	}
+
+	public String getConsumeStartMsgId() {
+		return consumeStartMsgId;
+	}
+
+	public void setConsumeStartMsgId(String consumeStartMsgId) {
+		this.consumeStartMsgId = consumeStartMsgId;
+	}
+
+	public Long getConsumeStartTime() {
+		return consumeStartTime;
+	}
+
+	public void setConsumeStartTime(Long consumeStartTime) {
+		this.consumeStartTime = consumeStartTime;
 	} 
+	
 }

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class QueueReader extends MappedFile {
+public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	public static final int READER_FILE_SIZE = 256;  
 	private Block block;  
 	private final Index index;  
@@ -22,10 +22,32 @@ public class QueueReader extends MappedFile {
 		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
 		File file = new File(readerDir, this.readerGroup);
 		
-		load(file, READER_FILE_SIZE); 
+		load(file, READER_FILE_SIZE);  
 		 
 		block = this.index.createReadBlock(this.blockNumber);
 	}   
+	
+	public QueueReader(QueueReader copy, String readerGroup) throws IOException{
+		this.index = copy.index; 
+		this.readerGroup = readerGroup; 
+		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
+		File file = new File(readerDir, this.readerGroup);
+		 
+		load(file, READER_FILE_SIZE); 
+		this.blockNumber = copy.blockNumber;
+		this.offset = copy.offset;
+		
+		block = this.index.createReadBlock(this.blockNumber);
+	}   
+	
+	public boolean seek(long offset, String msgid) throws IOException{ 
+		return true;
+	}   
+	
+	public boolean seek(long time) throws IOException{ 
+		return true;
+	}  
+	
 	
 	public boolean isEOF() throws IOException{
 		readLock.lock();
@@ -74,13 +96,28 @@ public class QueueReader extends MappedFile {
 		this.offset = 0;
 		
 		writeOffset();
-	}  
+	}   
 	
+	public int getBlockNumber() {
+		return blockNumber;
+	}
+
+	public int getOffset() {
+		return offset;
+	}
+
 	private void writeOffset(){
 		buffer.position(0); 
 		buffer.putInt(blockNumber);
 		
 		buffer.position(4); 
 		buffer.putInt(offset);
+	}
+
+	@Override
+	public int compareTo(QueueReader o) { 
+		if(this.blockNumber < o.blockNumber) return -1;
+		if(this.blockNumber > o.blockNumber) return 1;
+		return this.offset-o.offset;
 	}
 } 

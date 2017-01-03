@@ -17,6 +17,7 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.server.MessageQueue.ConsumeGroupCtrl;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -322,11 +323,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				ReplyKit.reply400(msg, sess);
 				return;
 			}
-			String mqMode = msg.getHead("mq_mode", "0"); //default
-			mqMode = mqMode.trim(); 
+			String flag = msg.getHead("mq_mode", "0"); //default
+			flag = flag.trim(); 
 			int mode = 0;
     		try{
-    			mode = Integer.valueOf(mqMode); 
+    			mode = Integer.valueOf(flag); 
     		} catch (Exception e){
     			msg.setBody("mq_mode invalid");
     			ReplyKit.reply400(msg, sess);
@@ -334,28 +335,42 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		}
     		
     		String accessToken = msg.getHead("access_token", "");  
+    		ConsumeGroupCtrl ctrl = new ConsumeGroupCtrl();
+    		ctrl.groupName = msg.getConsumeGroup();
+    		ctrl.baseGroupName = msg.getConsumeBaseGroup();
+    		ctrl.consumeStartOffset = msg.getConsumeStartOffset();
+    		ctrl.consumeStartTime = msg.getConsumeStartTime();
+    		ctrl.consumeStartMsgId = msg.getConsumeStartMsgId();
+    		
     		MessageQueue mq = null;
     		synchronized (mqTable) {
-    			mq = mqTable.get(mqName);
-    			if(mq != null){
-    				ReplyKit.reply200(msg, sess);
-    				return;
+    			mq = mqTable.get(mqName); 
+    			boolean newMq = false;
+    			if(mq == null){
+    				newMq = true;
+					File mqFile = new File(config.storePath, mqName);
+	    			mq = new DiskQueue(mqFile); 
+	    			mq.setFlag(mode);
+	    			mq.setCreator(sess.getRemoteAddress());
+	    			mq.setAccessToken(accessToken); 
+	    			mqTable.put(mqName, mq);
     			}
-    			  
-				File mqFile = new File(config.storePath, mqName);
-    			mq = new DiskQueue(mqFile); 
-    			mq.setFlag(mode);
-    			mq.setCreator(sess.getRemoteAddress());
-    			mq.setAccessToken(accessToken); 
-    			
-    			log.info("MQ Created: %s", mq);
-    			mqTable.put(mqName, mq);
-    			ReplyKit.reply200(msg, sess);
-    			
-    			mqServer.pubEntryUpdate(mq);
+    			try {
+					mq.declareConsumeGroup(ctrl);
+					mqServer.pubEntryUpdate(mq);
+					
+					ReplyKit.reply200(msg, sess);
+					if(newMq){
+						log.info("MQ Created: %s", mq);
+					}   
+					log.info("MQ Declared: %s", ctrl); 
+				} catch (Exception e) { 
+					log.error(e.getMessage(), e);
+					ReplyKit.reply500(msg, e, sess);
+				} 
     		}
 		}
-	};  
+	};   
 	
 	private MessageHandler testHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {

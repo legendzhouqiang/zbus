@@ -1,32 +1,12 @@
-/**
- * The MIT License (MIT)
- * Copyright (c) 2009-2015 HONG LEIMING
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package org.zbus.mq.server;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
@@ -48,7 +28,7 @@ public class DiskQueue implements MessageQueue{
 	private static final Logger log = LoggerFactory.getLogger(DiskQueue.class); 
 	protected final Index index;    
 	
-	protected Map<String, ConsumeGroup> consumeGroups = new ConcurrentHashMap<String, ConsumeGroup>(); 
+	protected Map<String, DiskConsumeGroup> consumeGroups = new ConcurrentHashMap<String, DiskConsumeGroup>(); 
 	protected long lastUpdateTime = System.currentTimeMillis(); 
 	
 	private final String name; 
@@ -64,6 +44,52 @@ public class DiskQueue implements MessageQueue{
 		this(new Index(dir));
 	}
 	  
+	public void declareConsumeGroup(ConsumeGroupCtrl ctrl) throws Exception{
+		String consumeGroup = ctrl.groupName;
+		if(consumeGroup == null){
+			consumeGroup = this.name;
+		}
+		DiskConsumeGroup group = consumeGroups.get(consumeGroup); 
+		if(group == null){
+			QueueReader copyReader = null;
+			//1) copy reader from base group 
+			if(ctrl.baseGroupName != null){
+				DiskConsumeGroup copyGroup = consumeGroups.get(ctrl.baseGroupName);
+				if(copyGroup != null){
+					copyReader = copyGroup.reader; 
+				}
+			}
+			//2) default to copy latest one
+			if(copyReader == null){ 
+				copyReader = findLatestReader(); 
+			}  
+			
+			if(copyReader != null){ 
+				group = new DiskConsumeGroup(copyReader, consumeGroup);  
+			} else {  
+				//3) consume from the very beginning
+				group = new DiskConsumeGroup(this.index, consumeGroup);  
+			} 
+			consumeGroups.put(consumeGroup, group); 
+		}
+		
+		if(ctrl.consumeStartOffset != null){
+			boolean seekOk = group.reader.seek(ctrl.consumeStartOffset, ctrl.consumeStartMsgId);
+			if(!seekOk){
+				String errorMsg = String.format("seek by offset unsuccessfull: (offset=%d, msgid=%s)", ctrl.consumeStartOffset, ctrl.consumeStartMsgId);
+				throw new IllegalArgumentException(errorMsg);
+			}
+		} else { 
+			if(ctrl.consumeStartTime != null){
+				boolean seekOk = group.reader.seek(ctrl.consumeStartTime);
+				if(!seekOk){
+					String errorMsg = String.format("seek by time unsuccessfull: (time=%d)", ctrl.consumeStartTime);
+					throw new IllegalArgumentException(errorMsg);
+				}
+			}
+		}   
+	}  
+	
 	@Override
 	public void produce(Message msg, Session session) throws IOException{   
 		writer.write(msg.toBytes()); 
@@ -72,17 +98,17 @@ public class DiskQueue implements MessageQueue{
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
-		String readerGroup = message.getConsumeGroup();
-		if(readerGroup == null){
-			readerGroup = this.name;
-		}
-		
-		ConsumeGroup group = consumeGroups.get(readerGroup);
+		String consumeGroup = message.getConsumeGroup();
+		if(consumeGroup == null){
+			consumeGroup = this.name;
+		} 
+		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
 		if(group == null){
-			group = new ConsumeGroup(this.index, readerGroup);  
-			consumeGroups.put(readerGroup, group); 
+			message.setBody(consumeGroup + " not found");
+			ReplyKit.reply404(message, session);
+			return;
 		}   
-		
+		 
 		if(!group.pullSessions.containsKey(session.id())){
 			group.pullSessions.put(session.id(), session);
 		}
@@ -100,15 +126,27 @@ public class DiskQueue implements MessageQueue{
 		dispatch(group);
 	}   
 	
-	void dispatch() throws IOException{  
-		Iterator<Entry<String, ConsumeGroup>> iter = consumeGroups.entrySet().iterator();
+	private QueueReader findLatestReader(){ 
+		List<DiskConsumeGroup> readerList = new ArrayList<DiskConsumeGroup>(consumeGroups.values());
+		if(readerList.isEmpty()) return null;
+		readerList.sort(new Comparator<DiskConsumeGroup>() { 
+			@Override
+			public int compare(DiskConsumeGroup o1, DiskConsumeGroup o2) {
+				return - o1.reader.compareTo(o2.reader);
+			}
+		}); 
+		return readerList.get(0).reader;
+	}
+	
+	protected void dispatch() throws IOException{  
+		Iterator<Entry<String, DiskConsumeGroup>> iter = consumeGroups.entrySet().iterator();
 		while(iter.hasNext()){
-			ConsumeGroup group = iter.next().getValue();
+			DiskConsumeGroup group = iter.next().getValue();
 			dispatch(group);
 		} 
 	}
 	
-	void dispatch(ConsumeGroup group) throws IOException{  
+	protected void dispatch(DiskConsumeGroup group) throws IOException{  
 		while(group.pullQ.peek() != null && !group.reader.isEOF()){
 			Message msg = null;
 			PullSession pull = null;
@@ -171,7 +209,7 @@ public class DiskQueue implements MessageQueue{
 	}
 	
 	@Override
-	public int remaining(String readerGroup) { 
+	public int remaining(String consumeGroup) { 
 		//TODO
 		return 0;
 	}
@@ -211,19 +249,19 @@ public class DiskQueue implements MessageQueue{
 	}
 	 
 	@Override
-	public int consumerCount(String readerGroup) {
-		if(readerGroup == null){
-			readerGroup = this.name;
+	public int consumerCount(String consumeGroup) {
+		if(consumeGroup == null){
+			consumeGroup = this.name;
 		}
 		
-		ConsumeGroup group = consumeGroups.get(readerGroup);
+		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
 		if(group == null){
 			return 0;
 		}   
 		return group.pullQ.size();
 	}
 	
-	private void cleanSession(ConsumeGroup group, Session sess){
+	private void cleanSession(DiskConsumeGroup group, Session sess){
 		group.pullSessions.remove(sess.id());
 		
 		Iterator<PullSession> iter = group.pullQ.iterator();
@@ -237,17 +275,17 @@ public class DiskQueue implements MessageQueue{
 	}
 	
 	public void cleanSession(Session sess) {
-		Iterator<Entry<String, ConsumeGroup>> iter = consumeGroups.entrySet().iterator();
+		Iterator<Entry<String, DiskConsumeGroup>> iter = consumeGroups.entrySet().iterator();
 		while(iter.hasNext()){
-			ConsumeGroup group = iter.next().getValue();
+			DiskConsumeGroup group = iter.next().getValue();
 			cleanSession(group, sess);
 		} 
 	}
 	 
 	public void cleanSession() { 
-		Iterator<Entry<String, ConsumeGroup>> iter = consumeGroups.entrySet().iterator();
+		Iterator<Entry<String, DiskConsumeGroup>> iter = consumeGroups.entrySet().iterator();
 		while(iter.hasNext()){
-			ConsumeGroup group = iter.next().getValue(); 
+			DiskConsumeGroup group = iter.next().getValue(); 
 			Iterator<PullSession> iterSess = group.pullQ.iterator();
 			while(iterSess.hasNext()){
 				PullSession pull = iterSess.next();
@@ -269,7 +307,7 @@ public class DiskQueue implements MessageQueue{
 		info.unconsumedMsgCount = remaining(null);//TODO
 		info.consumerCount = consumerCount(null);//TODO
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();
-		ConsumeGroup group = consumeGroups.get(null);
+		DiskConsumeGroup group = consumeGroups.get(null);
 		if(group != null){
 			for(PullSession pull : group.pullQ){ 
 				info.consumerInfoList.add(pull.getConsumerInfo());
@@ -282,23 +320,27 @@ public class DiskQueue implements MessageQueue{
 	@Override
 	public String getName() { 
 		return this.name;
-	}
+	} 
 	
-	private static class ConsumeGroup implements Closeable{ 
+	private static class DiskConsumeGroup implements Closeable{ 
 		public final QueueReader reader;
 		public final String groupName;
 		public final BlockingQueue<PullSession> pullQ = new LinkedBlockingQueue<PullSession>();  
 		public final Map<String, Session> pullSessions = new ConcurrentHashMap<String, Session>(); 
 		
-		public ConsumeGroup(Index index, String groupName) throws IOException{ 
+		public DiskConsumeGroup(Index index, String groupName) throws IOException{ 
 			this.groupName = groupName;
 			reader = new QueueReader(index, this.groupName);
+		}
+		
+		public DiskConsumeGroup(QueueReader reader, String groupName) throws IOException{ 
+			this.groupName = groupName;
+			this.reader = new QueueReader(reader, groupName);
 		}
 		
 		@Override
 		public void close() throws IOException {
 			reader.close(); 
-		}
-	}
-
+		} 
+	} 
 }

@@ -64,7 +64,7 @@ public class ReplyKit {
 		Message res = new Message();
 		String mqName = msg.getMq();
 		res.setId(msg.getId());
-		res.setStatus(404);
+		res.setStatus(502);
 		res.setMq(mqName);
 		res.setBody(String.format("MQ(%s) Service Down", mqName));
 
@@ -89,6 +89,15 @@ public class ReplyKit {
 		res.setStatus(400);
 		res.setMq(msg.getMq());
 		res.setBody(String.format("Bad format: %s", msg.getBodyString()));
+		sess.write(res);
+	}
+	
+	public static void reply500(Message msg, Exception ex, Session sess) throws IOException {
+		Message res = new Message();
+		res.setId(msg.getId());
+		res.setStatus(400);
+		res.setMq(msg.getMq());
+		res.setBody(String.format("Exception caught: %s",ex));
 		sess.write(res);
 	}
 	

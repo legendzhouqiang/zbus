@@ -26,12 +26,17 @@ import org.zbus.broker.Broker;
 
 public class MqConfig implements Cloneable { 
 	protected Broker broker; //Broker，必须设置
-	protected String mq;     //MQ标识，必须设置   
-	protected String consumeGroup = null; 
+	protected String mq;     //MQ标识，必须设置    
 	protected boolean verbose = false;
 	protected String registerToken = "";
 	protected String accessToken = ""; 
 	
+	//control consume group
+	protected String consumeGroup = null;
+	protected String consumeBaseGroup = null;
+	protected Long consumeStartOffset = null;
+	protected String consumeStartMsgId = null;
+	protected Long consumeStartTime = null;
 	
 	public Broker getBroker() {
 		return broker;
@@ -83,7 +88,40 @@ public class MqConfig implements Cloneable {
 	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
 	}  
+	 
 	
+	public String getConsumeBaseGroup() {
+		return consumeBaseGroup;
+	}
+
+	public void setConsumeBaseGroup(String consumeBaseGroup) {
+		this.consumeBaseGroup = consumeBaseGroup;
+	}
+
+	public Long getConsumeStartOffset() {
+		return consumeStartOffset;
+	}
+
+	public void setConsumeStartOffset(Long consumeStartOffset) {
+		this.consumeStartOffset = consumeStartOffset;
+	}
+
+	public Long getConsumeStartTime() {
+		return consumeStartTime;
+	}
+
+	public void setConsumeStartTime(Long consumeStartTime) {
+		this.consumeStartTime = consumeStartTime;
+	} 
+
+	public String getConsumeStartMsgId() {
+		return consumeStartMsgId;
+	}
+
+	public void setConsumeStartMsgId(String consumeStartMsgId) {
+		this.consumeStartMsgId = consumeStartMsgId;
+	}
+
 	@Override
 	public MqConfig clone() { 
 		try {

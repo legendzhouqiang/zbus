@@ -78,7 +78,16 @@ public class Message implements Id {
 	 
 	public static final String CMD    	= "cmd";     
 	public static final String MQ       = "mq";
-	public static final String CONSUME_GROUP = "consume_group"; 
+	public static final String OFFSET = "offset";
+	
+	public static final String CONSUME_GROUP = "consume_group";  
+	public static final String CONSUME_BASE_GROUP = "consume_base_group"; 
+	
+	public static final String CONSUME_START_OFFSET = "consume_start_offset";
+	public static final String CONSUME_START_MSGID = "consume_start_msgid";
+	public static final String CONSUME_START_TIME = "consume_start_time";  
+	
+	
 	public static final String SENDER   = "sender"; 
 	public static final String RECVER   = "recver";
 	public static final String ID      	= "id";	     
@@ -521,7 +530,50 @@ public class Message implements Id {
 		this.setHead(CONSUME_GROUP, mq);
 		return this;
 	} 
+	public Long getOffset(){
+		String value = this.getHead(OFFSET);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	public Message setOffset(Long value) {
+		this.setHead(OFFSET, value);
+		return this;
+	} 
 	
+	public Long getConsumeStartOffset(){
+		String value = this.getHead(CONSUME_START_OFFSET);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	public Message setConsumeStartOffset(Long value) {
+		this.setHead(CONSUME_START_OFFSET, value);
+		return this;
+	}   
+	public Long getConsumeStartTime(){
+		String value = this.getHead(CONSUME_START_TIME);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	public Message setConsumeStartTime(Long value) {
+		this.setHead(CONSUME_START_TIME, value);
+		return this;
+	}  
+	public String getConsumeBaseGroup(){
+		return this.getHead(CONSUME_BASE_GROUP);
+	} 
+	public Message setConsumeBaseGroup(String value) {
+		this.setHead(CONSUME_BASE_GROUP, value);
+		return this;
+	}  
+	
+	public String getConsumeStartMsgId(){
+		String value = this.getHead(CONSUME_START_MSGID);
+		return value;
+	} 
+	public Message setConsumeStartMsgId(String mq) {
+		this.setHead(CONSUME_START_MSGID, mq);
+		return this;
+	} 
 	
 	public String getTopic() {
 		return getHead(TOPIC);

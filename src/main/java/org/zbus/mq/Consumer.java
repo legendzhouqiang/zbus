@@ -40,14 +40,18 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	private MessageInvoker client;   
-	private int consumeTimeout = 120000; // 2 minutes
+	private int consumeTimeout = 120000; // 2 minutes 
 
 	public Consumer(Broker broker, String mq) {
 		super(broker, mq);
-	}
+	} 
+	
+	public Consumer(Broker broker, String mq, String consumeGroup) {
+		super(broker, mq, consumeGroup);
+	} 
 
 	public Consumer(MqConfig config) {
-		super(config); 
+		super(config);  
 	}
 
 	private BrokerHint brokerHint() {
@@ -61,6 +65,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		req.setCmd(Protocol.Consume);
 		req.setMq(mq);
 		req.setHead("token", accessToken);  
+		req.setConsumeGroup(this.getConsumeGroup());
 
 		Message res = null;
 		try {  
@@ -150,21 +155,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		client.invokeAsync(msg, null); 
 	} 
-	
-	public void subscribe(String topic) throws IOException{  
-		synchronized (this) {
-			if (this.client == null) {
-				this.client = broker.getInvoker(brokerHint());
-			} 
-		} 
-		 
-		Message req = new Message();
-		req.setCmd(Protocol.Consume);
-		req.setMq(mq);
-		req.setHead("token", accessToken);  
-		this.client.invokeAsync(req, null);
-		//messageClient.invokeAsync(req, null); 
-	}
 	
 	
 	//The followings are all related to start consumer cycle in another thread
