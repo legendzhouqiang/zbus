@@ -12,10 +12,9 @@ public class Sub1 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
-
-		//Consumer consumes the same group, work in load-balance mode.
+ 
 		Consumer c = new Consumer(broker, "MyPubSub");
-		c.setConsumeGroup("Group1");
+		c.setConsumeGroup("Group1"); //different groups consumes the same MQ data
 		
 		c.start(new ConsumerHandler() {
 			@Override

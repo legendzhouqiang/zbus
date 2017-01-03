@@ -12,11 +12,14 @@ public class Pub {
 		Producer producer = new Producer(broker, "MyPubSub");
 		producer.createMQ();    
 		
-		for(int i=0;i<100;i++){
+		for(int i=0;i<100000;i++){
 			Message msg = new Message(); 
-			msg.setBody("hello world" + i);
+			msg.setBody("hello world " + i);
 				
 			producer.sendSync(msg); 
+			if((i+1)%10000==0){
+				System.out.println(i+1);
+			}
 		} 
 		
 		broker.close();
