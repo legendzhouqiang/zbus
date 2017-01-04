@@ -98,8 +98,8 @@ public class Service implements Closeable {
 			mqConfig.setBroker(brokers[i]);
 			mqConfig.setMq(config.getMq()); 
 			mqConfig.setVerbose(config.isVerbose());
-			mqConfig.setAccessToken(config.getAccessToken());
-			mqConfig.setRegisterToken(config.getRegisterToken());
+			mqConfig.setAppid(config.getAppid()); 
+			mqConfig.setToken(config.getToken()); 
 			
 			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  

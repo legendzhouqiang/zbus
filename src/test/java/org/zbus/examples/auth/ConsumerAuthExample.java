@@ -16,7 +16,11 @@ public class ConsumerAuthExample {
 		
 		MqConfig config = new MqConfig();
 		config.setMq("MyMQ_Auth");
-		config.setAccessToken("MyMQ_Token"); //token to access this queue
+		//appid + token
+		config.setAppid("appid");
+		config.setToken("token");
+		
+		
 		config.setBroker(broker);
 		
 		Consumer consumer = new Consumer(config);  

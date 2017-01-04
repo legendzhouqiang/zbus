@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.mq.ConsumeGroup;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
 import org.zbus.mq.disk.Index;
@@ -44,8 +45,8 @@ public class DiskQueue implements MessageQueue{
 		this(new Index(dir));
 	}
 	  
-	public void declareConsumeGroup(ConsumeGroupCtrl ctrl) throws Exception{
-		String consumeGroup = ctrl.groupName;
+	public void declareConsumeGroup(ConsumeGroup ctrl) throws Exception{
+		String consumeGroup = ctrl.getGroupName();
 		if(consumeGroup == null){
 			consumeGroup = this.name;
 		}
@@ -53,8 +54,8 @@ public class DiskQueue implements MessageQueue{
 		if(group == null){
 			QueueReader copyReader = null;
 			//1) copy reader from base group 
-			if(ctrl.baseGroupName != null){
-				DiskConsumeGroup copyGroup = consumeGroups.get(ctrl.baseGroupName);
+			if(ctrl.getBaseGroupName() != null){
+				DiskConsumeGroup copyGroup = consumeGroups.get(ctrl.getBaseGroupName());
 				if(copyGroup != null){
 					copyReader = copyGroup.reader; 
 				}
@@ -73,17 +74,17 @@ public class DiskQueue implements MessageQueue{
 			consumeGroups.put(consumeGroup, group); 
 		}
 		
-		if(ctrl.consumeStartOffset != null){
-			boolean seekOk = group.reader.seek(ctrl.consumeStartOffset, ctrl.consumeStartMsgId);
+		if(ctrl.getStartOffset() != null){
+			boolean seekOk = group.reader.seek(ctrl.getStartOffset(), ctrl.getStartMsgId());
 			if(!seekOk){
-				String errorMsg = String.format("seek by offset unsuccessfull: (offset=%d, msgid=%s)", ctrl.consumeStartOffset, ctrl.consumeStartMsgId);
+				String errorMsg = String.format("seek by offset unsuccessfull: (offset=%d, msgid=%s)", ctrl.getStartOffset(), ctrl.getStartMsgId());
 				throw new IllegalArgumentException(errorMsg);
 			}
 		} else { 
-			if(ctrl.consumeStartTime != null){
-				boolean seekOk = group.reader.seek(ctrl.consumeStartTime);
+			if(ctrl.getStartTime() != null){
+				boolean seekOk = group.reader.seek(ctrl.getStartTime());
 				if(!seekOk){
-					String errorMsg = String.format("seek by time unsuccessfull: (time=%d)", ctrl.consumeStartTime);
+					String errorMsg = String.format("seek by time unsuccessfull: (time=%d)", ctrl.getStartTime());
 					throw new IllegalArgumentException(errorMsg);
 				}
 			}
@@ -212,19 +213,8 @@ public class DiskQueue implements MessageQueue{
 	public int remaining(String consumeGroup) { 
 		//TODO
 		return 0;
-	}
+	} 
 	
-	
-	@Override
-	public String getAccessToken() {
-		return index.getExt(1);
-	}
-
-	@Override
-	public void setAccessToken(String value) { 
-		index.setExt(1, value);
-	}
-
 	@Override
 	public String getCreator() {
 		return index.getExt(0);

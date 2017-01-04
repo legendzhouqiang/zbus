@@ -33,8 +33,9 @@ public class MqAdmin{
 	protected final Broker broker;      
 	protected String mq;    
 	protected Long flag;
-	protected String accessToken = "";
-	protected String registerToken = "";   
+	protected String appid;
+	protected String token;    
+	protected ConsumeGroup consumeGroup;  
 	
 	public MqAdmin(Broker broker, String mq){  
 		this.broker = broker;
@@ -44,8 +45,8 @@ public class MqAdmin{
 	public MqAdmin(MqConfig config){
 		this.broker = config.getBroker();
 		this.mq = config.getMq();  
-		this.accessToken = config.getAccessToken();
-		this.registerToken = config.getRegisterToken();   
+		this.appid = config.getAppid();
+		this.token = config.getToken();
 		this.flag = config.getFlag();
 	} 
 	 
@@ -57,22 +58,32 @@ public class MqAdmin{
 		broker.invokeAsync(req, callback);
 	}
 	
+	protected void fillCommonHeaders(Message message){
+		message.setMq(this.mq);
+		message.setAppid(this.appid);
+		message.setToken(this.token); 
+	}
+	
 	public Message queryMQ() throws IOException, InterruptedException{
 		Message req = new Message();
-    	req.setCmd(Protocol.QueryMQ); 
-    	req.setMq(this.mq); 
-    	req.setHead("register_token", registerToken); 
-    	req.setHead("access_token", accessToken);
+		fillCommonHeaders(req); 
+    	req.setCmd(Protocol.QueryMQ);  
     	
     	return invokeSync(req); 
 	}
 	
 	protected Message buildCreateMQMessage(){
 		Message req = new Message();
-    	req.setCmd(Protocol.CreateMQ); 
-    	req.setHead("mq_name", mq); 
-    	req.setHead("register_token", registerToken); 
-    	req.setHead("access_token", accessToken);  
+		fillCommonHeaders(req);
+    	req.setCmd(Protocol.CreateMQ);   
+    	
+    	if(this.consumeGroup != null){
+	    	req.setConsumeGroup(consumeGroup.getGroupName());
+	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
+	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
+	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
+	    	req.setConsumeStartTime(consumeGroup.getStartTime());
+		}
     	
     	return req;
 	}
@@ -84,11 +95,19 @@ public class MqAdmin{
     	return res.isStatus200();
     }  
     
+    public boolean createMQ(ConsumeGroup consumeGroup) throws IOException, InterruptedException{
+    	this.consumeGroup = consumeGroup.clone();
+    	
+    	Message req = buildCreateMQMessage(); 
+    	Message res = invokeSync(req);
+    	if(res == null) return false;
+    	return res.isStatus200();
+    }  
+    
     public boolean removeMQ() throws IOException, InterruptedException{
     	Message req = new Message();
+    	fillCommonHeaders(req); 
     	req.setCmd(Protocol.RemoveMQ); 
-    	req.setHead("mq_name", mq); 
-    	req.setHead("register_token", registerToken);  
     	
     	Message res = invokeSync(req);
     	if(res == null) return false;
@@ -102,29 +121,21 @@ public class MqAdmin{
 	public void setMq(String mq) {
 		this.mq = mq;
 	} 
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-
-	public String getRegisterToken() {
-		return registerToken;
-	}
-
-	public void setRegisterToken(String registerToken) {
-		this.registerToken = registerToken;
-	}
-
+ 
 	public Long getFlag() {
 		return flag;
 	}
 
 	public void setFlag(Long flag) {
 		this.flag = flag;
-	}  
+	} 
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	} 
 	
 }

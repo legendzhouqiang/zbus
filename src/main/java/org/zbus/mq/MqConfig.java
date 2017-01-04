@@ -27,17 +27,12 @@ import org.zbus.broker.Broker;
 public class MqConfig implements Cloneable { 
 	protected Broker broker;  
 	protected String mq;
-	protected boolean verbose = false;
-	protected String registerToken = "";
-	protected String accessToken = ""; 
+	protected String appid;
+	protected String token; 
 	protected Long flag;
+	protected boolean verbose = false;
 	
-	//control consume group, only consumer controls
-	protected String consumeGroup = null;
-	protected String consumeBaseGroup = null;
-	protected Long consumeStartOffset = null;
-	protected String consumeStartMsgId = null;
-	protected Long consumeStartTime = null;
+	protected ConsumeGroup consumeGroup; 
 	
 	public Broker getBroker() {
 		return broker;
@@ -53,16 +48,7 @@ public class MqConfig implements Cloneable {
 
 	public void setMq(String mq) {
 		this.mq = mq;
-	}
-	 
-	
-	public String getConsumeGroup() {
-		return consumeGroup;
-	}
-
-	public void setConsumeGroup(String consumeGroup) {
-		this.consumeGroup = consumeGroup;
-	}
+	} 
 
 	public boolean isVerbose() {
 		return verbose;
@@ -70,64 +56,38 @@ public class MqConfig implements Cloneable {
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
-	}
+	} 
 	
-	
-	
-	public String getRegisterToken() {
-		return registerToken;
+	public String getAppid() {
+		return appid;
 	}
 
-	public void setRegisterToken(String registerToken) {
-		this.registerToken = registerToken;
+	public void setAppid(String appid) {
+		this.appid = appid;
 	}
 
-	public String getAccessToken() {
-		return accessToken;
+	public String getToken() {
+		return token;
 	}
 
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}   
-	
+	public void setToken(String token) {
+		this.token = token;
+	}
+
 	public Long getFlag() {
 		return flag;
 	}
 
 	public void setFlag(Long flag) {
 		this.flag = flag;
-	}
-
-	public String getConsumeBaseGroup() {
-		return consumeBaseGroup;
-	}
-
-	public void setConsumeBaseGroup(String consumeBaseGroup) {
-		this.consumeBaseGroup = consumeBaseGroup;
-	}
-
-	public Long getConsumeStartOffset() {
-		return consumeStartOffset;
-	}
-
-	public void setConsumeStartOffset(Long consumeStartOffset) {
-		this.consumeStartOffset = consumeStartOffset;
-	}
-
-	public Long getConsumeStartTime() {
-		return consumeStartTime;
-	}
-
-	public void setConsumeStartTime(Long consumeStartTime) {
-		this.consumeStartTime = consumeStartTime;
 	} 
 
-	public String getConsumeStartMsgId() {
-		return consumeStartMsgId;
+	public ConsumeGroup getConsumeGroup() {
+		return consumeGroup;
 	}
 
-	public void setConsumeStartMsgId(String consumeStartMsgId) {
-		this.consumeStartMsgId = consumeStartMsgId;
+	public void setConsumeGroup(ConsumeGroup consumeGroup) {
+		this.consumeGroup = consumeGroup;
 	}
 
 	@Override

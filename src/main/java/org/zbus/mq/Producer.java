@@ -36,20 +36,11 @@ public class Producer extends MqAdmin {
 
 	public Producer(MqConfig config) {
 		super(config);
-	}
-	
-	private void fillCommonHeaders(Message msg){
-		msg.setCmd(Protocol.Produce);
-		msg.setMq(this.mq); 
-		if(accessToken != null && !accessToken.equals("")){
-			if(msg.getHead("token") == null){
-				msg.setHead("token", accessToken);
-			}
-		} 
-	}
+	} 
  
 	public void sendAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
 		fillCommonHeaders(msg);
+		msg.setCmd(Protocol.Produce);
 		broker.invokeAsync(msg, callback);
 	}
  

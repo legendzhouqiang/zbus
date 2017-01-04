@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.ZbusBroker;
+import org.zbus.mq.ConsumeGroup;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
 import org.zbus.net.http.Message;
@@ -14,9 +15,8 @@ public class Sub2 {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
 		Consumer c = new Consumer(broker, "MyMQ");    
-		c.setConsumeGroup("Group2"); //different groups consumes the same MQ data 
-		
-		c.createMQ();
+		ConsumeGroup group = new ConsumeGroup("Group2");   
+		c.createMQ(group); //different groups consumes the same MQ data  
 		
 		c.start(new ConsumerHandler() { 
 			@Override

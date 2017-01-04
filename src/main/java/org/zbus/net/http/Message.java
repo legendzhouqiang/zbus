@@ -102,7 +102,11 @@ public class Message implements Id {
 	public static final String ORIGIN_URL   = "origin_url"; //original URL  
 	public static final String ORIGIN_STATUS= "reply_code"; //original Status  
 	
-	 
+	//auth
+	public static final String APPID     = "appid";
+	public static final String TOKEN   = "token";
+	
+	
 	//1) First line of HTTP protocol
 	private Meta meta = new Meta(); 
 	//2) HTTP Key-Value headers
@@ -168,19 +172,7 @@ public class Message implements Id {
 	public boolean isResponse(){
 		return this.getStatus() != null;
 	}
-	
-	public Message asResponse(){
-		return setStatus(200);
-	}
-	
-	public Message asResponse(String status){
-		return setStatus(status);
-	}
-	
-	public Message asResponse(int status){
-		return setStatus(status);
-	}
-	
+	 
 	public Message asRequest(String url){
 		return setUrl(url);
 	}
@@ -429,6 +421,21 @@ public class Message implements Id {
 		return this;
 	}
 	
+	public String getAppid() {
+		return this.getHead(APPID);
+	} 
+	public Message setAppid(String value) {
+		this.setHead(APPID, value);
+		return this;
+	}   
+	
+	public String getToken() {
+		return this.getHead(TOKEN);
+	} 
+	public Message setToken(String value) {
+		this.setHead(TOKEN, value);
+		return this;
+	}   
 	
 	public String getRemoteAddr() {
 		return this.getHead(REMOTE_ADDR);
@@ -557,12 +564,12 @@ public class Message implements Id {
 		return this;
 	} 
 	
-	public Long getFlag(){
+	public Integer getFlag(){
 		String value = this.getHead(FLAG);
 		if(value == null) return null;
-		return Long.valueOf(value);
+		return Integer.valueOf(value);
 	} 
-	public Message setFlag(Long value) {
+	public Message setFlag(Integer value) {
 		this.setHead(FLAG, value);
 		return this;
 	} 

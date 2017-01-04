@@ -27,8 +27,7 @@ public class Index extends MappedFile {
 
 	private volatile int blockCount = 0;
 	private volatile int flag = 0;
-	public final AtomicReference<CountDownLatch> newDataAvailable = new AtomicReference<CountDownLatch>(
-			new CountDownLatch(1));;
+	public final AtomicReference<CountDownLatch> newDataAvailable = new AtomicReference<CountDownLatch>(new CountDownLatch(1));;
 
 	private File indexDir;
 	private Lock lock = new ReentrantLock();

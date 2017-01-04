@@ -40,43 +40,15 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	private MessageInvoker client;   
-	private int consumeTimeout = 120000; // 2 minutes 
-	
-	//control consume behavior
-	private String consumeGroup = null;
-	private String consumeBaseGroup = null;
-	private Long consumeStartOffset = null;
-	private String consumeStartMsgId = null;
-	private Long consumeStartTime = null;
-	
+	private int consumeTimeout = 120000; // 2 minutes   
 
 	public Consumer(Broker broker, String mq) {
 		super(broker, mq);
-	} 
+	}  
 	
-	public Consumer(Broker broker, String mq, String consumeGroup) {
-		super(broker, mq);
-		this.consumeGroup = consumeGroup;
-	} 
-
 	public Consumer(MqConfig config) {
-		super(config);  
-		this.consumeGroup = config.getConsumeGroup();
-		this.consumeBaseGroup = config.getConsumeBaseGroup();
-		this.consumeStartOffset = config.getConsumeStartOffset();
-		this.consumeStartMsgId = config.getConsumeStartMsgId();
-		this.consumeStartTime = config.getConsumeStartTime();
-	}
-	
-	protected Message buildCreateMQMessage(){
-		Message req = super.buildCreateMQMessage();
-    	req.setConsumeGroup(this.consumeGroup);
-    	req.setConsumeBaseGroup(this.consumeBaseGroup);
-    	req.setConsumeStartOffset(this.consumeStartOffset);
-    	req.setConsumeStartMsgId(this.consumeStartMsgId);
-    	req.setConsumeStartTime(this.consumeStartTime);
-    	return req;
-	}
+		super(config);   
+	}  
 
 	private BrokerHint brokerHint() {
 		BrokerHint hint = new BrokerHint();
@@ -87,9 +59,10 @@ public class Consumer extends MqAdmin implements Closeable {
 	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
-		req.setMq(mq);
-		req.setHead("token", accessToken);  
-		req.setConsumeGroup(consumeGroup);
+		fillCommonHeaders(req);  
+		if(consumeGroup != null){ //consumeGroup
+			req.setConsumeGroup(consumeGroup.getGroupName());
+		}
 
 		Message res = null;
 		try {  
@@ -326,47 +299,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
 		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
-	}  
-
-	public String getConsumeGroup() {
-		return consumeGroup;
-	}
-
-	public void setConsumeGroup(String consumeGroup) {
-		this.consumeGroup = consumeGroup;
-	}
-
-	public String getConsumeBaseGroup() {
-		return consumeBaseGroup;
-	}
-
-	public void setConsumeBaseGroup(String consumeBaseGroup) {
-		this.consumeBaseGroup = consumeBaseGroup;
-	}
-
-	public Long getConsumeStartOffset() {
-		return consumeStartOffset;
-	}
-
-	public void setConsumeStartOffset(Long consumeStartOffset) {
-		this.consumeStartOffset = consumeStartOffset;
-	}
-
-	public String getConsumeStartMsgId() {
-		return consumeStartMsgId;
-	}
-
-	public void setConsumeStartMsgId(String consumeStartMsgId) {
-		this.consumeStartMsgId = consumeStartMsgId;
-	}
-
-	public Long getConsumeStartTime() {
-		return consumeStartTime;
-	}
-
-	public void setConsumeStartTime(Long consumeStartTime) {
-		this.consumeStartTime = consumeStartTime;
-	}
+	}   
 
 	public static Logger getLog() {
 		return log;
@@ -381,7 +314,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumerHandlerExecutor.shutdown();
 		}
 		this.consumerHandlerExecutor = consumerHandlerExecutor;
-	} 
+	}  
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;
