@@ -13,8 +13,10 @@ public class Sub2 {
 	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
-		Consumer c = new Consumer(broker, "MyPubSub");    
-		c.setConsumeGroup("Group2"); //different groups consumes the same MQ data
+		Consumer c = new Consumer(broker, "MyMQ");    
+		c.setConsumeGroup("Group2"); //different groups consumes the same MQ data 
+		
+		c.createMQ();
 		
 		c.start(new ConsumerHandler() { 
 			@Override

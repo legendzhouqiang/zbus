@@ -503,16 +503,17 @@ public class Message implements Id {
 	public Message setExpire(long millis) { 
 		this.setHead(EXPIRE, millis+"");
 		return this;
-	} 
-	
+	}  
 	
 	public String getId() {
 		return this.getHead(ID);
 	} 
+	
 	public void setId(String msgId) {
 		if(msgId == null) return;
 		this.setHead(ID, msgId); 
 	}	
+	
 	public void setId(long id){
 		setId(""+id);
 	} 
@@ -523,11 +524,11 @@ public class Message implements Id {
 		ack = ack.trim().toLowerCase();
 		return ack.equals("1") || ack.equals("true");
 	} 
+	
 	public void setAck(boolean ack){
 		String value = ack? "1":"0";
 		this.setHead(ACK, value);
-	}
-	
+	} 
 	
 	public String getMq(){
 		String value = this.getHead(MQ);
@@ -553,6 +554,16 @@ public class Message implements Id {
 	} 
 	public Message setOffset(Long value) {
 		this.setHead(OFFSET, value);
+		return this;
+	} 
+	
+	public Long getFlag(){
+		String value = this.getHead(FLAG);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	public Message setFlag(Long value) {
+		this.setHead(FLAG, value);
 		return this;
 	} 
 	

@@ -9,15 +9,15 @@ public class Pub {
 	public static void main(String[] args) throws Exception{    
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
-		Producer producer = new Producer(broker, "MyPubSub");
+		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();    
-		
-		for(int i=0;i<100000;i++){
+		final int count = 10000;
+		for(int i=0;i<count;i++){
 			Message msg = new Message(); 
 			msg.setBody("hello world " + i);
 				
 			producer.sendSync(msg); 
-			if((i+1)%10000==0){
+			if((i+1)*10%count==0){
 				System.out.println(i+1);
 			}
 		} 

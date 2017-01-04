@@ -155,7 +155,7 @@ public class MessageAdaptor implements IoAdaptor{
  
 	@Override
 	public void onSessionError(Throwable e, Session sess) throws Exception {
-		log.info("Session Error: " + sess);
+		log.info("Session Error: " + e);
 		cleanSession(sess);
 	} 
 
