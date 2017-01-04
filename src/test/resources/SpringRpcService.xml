@@ -22,8 +22,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		<constructor-arg>
 			<bean class="org.zbus.broker.BrokerConfig">
 				<property name="brokerAddress" value="127.0.0.1:15555" />
-				<property name="maxTotal" value="20"/>
-				<!-- 这里可以增加连接池参数配置，不配置使用默认值（参考commons-pool2） -->
+				<property name="connectionPoolMaxSize" value="20"/> 
 			</bean>
 		</constructor-arg>
 	</bean>

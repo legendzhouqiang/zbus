@@ -14,7 +14,10 @@ public class Sub1 {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
  
 		Consumer c = new Consumer(broker, "MyPubSub");
-		c.setConsumeGroup("Group1"); //different groups consumes the same MQ data
+		c.setConsumeGroup("Group3"); //different groups consumes the same MQ data
+		c.setConsumeBaseGroup("Group2");
+		
+		c.createMQ();
 		
 		c.start(new ConsumerHandler() {
 			@Override

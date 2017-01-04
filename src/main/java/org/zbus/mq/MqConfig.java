@@ -30,6 +30,7 @@ public class MqConfig implements Cloneable {
 	protected boolean verbose = false;
 	protected String registerToken = "";
 	protected String accessToken = ""; 
+	protected Long flag;
 	
 	//control consume group, only consumer controls
 	protected String consumeGroup = null;
@@ -87,9 +88,16 @@ public class MqConfig implements Cloneable {
 
 	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
-	}  
-	 
+	}   
 	
+	public Long getFlag() {
+		return flag;
+	}
+
+	public void setFlag(Long flag) {
+		this.flag = flag;
+	}
+
 	public String getConsumeBaseGroup() {
 		return consumeBaseGroup;
 	}

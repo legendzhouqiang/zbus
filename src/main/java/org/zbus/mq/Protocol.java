@@ -43,7 +43,7 @@ public class Protocol {
 	public static final String Jquery    = "jquery"; 
 	
 	public static final int FlagMemory    = 1<<1; 
-	public static final int FlagRpc    = 1<<4; 
+	public static final int FlagRpc    	  = 1<<4; 
 	 
 	public static class BrokerInfo{
 		public String broker;

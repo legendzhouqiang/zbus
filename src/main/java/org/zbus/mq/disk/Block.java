@@ -7,12 +7,7 @@ import java.io.RandomAccessFile;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-/**
- * Non-threadsafe
- * 
- * @author Rushmore 
- */
+ 
 class Block implements Closeable {  
 	private final Index index; 
 	private final int blockNumber; 

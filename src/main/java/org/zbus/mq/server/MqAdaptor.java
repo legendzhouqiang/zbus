@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.FileKit;
 import org.zbus.kit.JsonKit;
-import org.zbus.kit.TimeKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Protocol;
@@ -183,20 +182,18 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			final boolean ack = msg.isAck();  
 			msg.removeHead(Message.CMD);
 			msg.removeHead(Message.ACK); 
-			String ttl = msg.getTtl();
+			Long ttl = msg.getTtl();
 			if(ttl != null){
-				try{
-					long value = TimeKit.parseTimeWithUnit(ttl);
-					msg.setHead("expire", System.currentTimeMillis()+value);
+				try{ 
+					msg.setExpire(System.currentTimeMillis()+ttl); 
 				} catch(IllegalArgumentException e){
 					//ignore
 				}
 			}
-			
-			String delay = msg.getHead("delay");
-			if(delay != null){
-				long value = TimeKit.parseDelayTime(delay);
-				if(value > 0){
+			 
+			Long delay = msg.getDelay();
+			if(delay != null){ 
+				if(delay > 0){
 					timer.schedule(new Runnable() { 
 						@Override
 						public void run() {
@@ -206,7 +203,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 								log.error(e.getMessage(), e);
 							}  
 						}
-					}, value, TimeUnit.MILLISECONDS);
+					}, delay, TimeUnit.MILLISECONDS);
 					
 					if(ack){
 						ReplyKit.reply200(msg, sess);

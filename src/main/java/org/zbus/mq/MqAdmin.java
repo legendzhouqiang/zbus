@@ -32,6 +32,7 @@ import org.zbus.net.http.Message;
 public class MqAdmin{     
 	protected final Broker broker;      
 	protected String mq;    
+	protected Long flag;
 	protected String accessToken = "";
 	protected String registerToken = "";   
 	
@@ -44,8 +45,8 @@ public class MqAdmin{
 		this.broker = config.getBroker();
 		this.mq = config.getMq();  
 		this.accessToken = config.getAccessToken();
-		this.registerToken = config.getRegisterToken();  
-		
+		this.registerToken = config.getRegisterToken();   
+		this.flag = config.getFlag();
 	} 
 	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
@@ -72,6 +73,7 @@ public class MqAdmin{
     	req.setHead("mq_name", mq); 
     	req.setHead("register_token", registerToken); 
     	req.setHead("access_token", accessToken);  
+    	
     	return req;
 	}
     
@@ -115,5 +117,14 @@ public class MqAdmin{
 
 	public void setRegisterToken(String registerToken) {
 		this.registerToken = registerToken;
-	} 
+	}
+
+	public Long getFlag() {
+		return flag;
+	}
+
+	public void setFlag(Long flag) {
+		this.flag = flag;
+	}  
+	
 }

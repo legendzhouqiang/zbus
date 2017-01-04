@@ -33,8 +33,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -48,6 +46,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
@@ -69,23 +68,22 @@ public class Message implements Id {
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
-	public static final String HEARTBEAT        = "heartbeat"; 
+	public static final String HEARTBEAT        = "heartbeat";  
 	
-	//使用到的标准HTTP头部
 	public static final String REMOTE_ADDR      = "remote-addr";
 	public static final String CONTENT_LENGTH   = "content-length";
 	public static final String CONTENT_TYPE     = "content-type";
 	 
 	public static final String CMD    	= "cmd";     
 	public static final String MQ       = "mq";
-	public static final String OFFSET = "offset";
+	public static final String FLAG     = "flag";
+	public static final String OFFSET   = "offset";
 	
-	public static final String CONSUME_GROUP = "consume_group";  
-	public static final String CONSUME_BASE_GROUP = "consume_base_group"; 
-	
+	public static final String CONSUME_GROUP        = "consume_group";  
+	public static final String CONSUME_BASE_GROUP   = "consume_base_group";  
 	public static final String CONSUME_START_OFFSET = "consume_start_offset";
-	public static final String CONSUME_START_MSGID = "consume_start_msgid";
-	public static final String CONSUME_START_TIME = "consume_start_time";  
+	public static final String CONSUME_START_MSGID  = "consume_start_msgid";
+	public static final String CONSUME_START_TIME   = "consume_start_time";  
 	
 	
 	public static final String SENDER   = "sender"; 
@@ -98,6 +96,7 @@ public class Message implements Id {
 	public static final String ENCODING = "encoding";
 	public static final String DELAY    = "delay";
 	public static final String TTL      = "ttl";  
+	public static final String EXPIRE   = "expire"; 
 	
 	public static final String ORIGIN_ID    = "rawid";      //original id
 	public static final String ORIGIN_URL   = "origin_url"; //original URL  
@@ -474,21 +473,38 @@ public class Message implements Id {
 		return this;
 	}
 	
-	public String getDelay() {
-		return this.getHead(DELAY);
-	} 
-	public Message setDelay(String value) {
-		this.setHead(DELAY, value);
+	public Long getDelay() {
+		String value = this.getHead(DELAY);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	}  
+	
+	public Message setDelay(long time, TimeUnit unit) { 
+		this.setHead(DELAY, unit.toMillis(time));
 		return this;
 	} 
 	
-	public String getTtl() {
-		return this.getHead(TTL);
+	public Long getTtl() {
+		String value = this.getHead(TTL);
+		if(value == null) return null;
+		return Long.valueOf(value); 
 	} 
-	public Message setTtl(String value) {
-		this.setHead(TTL, value);
+	public Message setTtl(long time, TimeUnit unit) { 
+		this.setHead(TTL, unit.toMillis(time));
 		return this;
 	} 
+	
+	public Long getExpire() {
+		String value = this.getHead(EXPIRE);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	}  
+	
+	public Message setExpire(long millis) { 
+		this.setHead(EXPIRE, millis+"");
+		return this;
+	} 
+	
 	
 	public String getId() {
 		return this.getHead(ID);
@@ -921,71 +937,5 @@ public class Message implements Id {
 	public static interface MessageInvoker extends Invoker<Message, Message> { }	
 	public static interface MessageProcessor { 
 		Message process(Message request);
-	}
-	
-	
-	public Message invokeSimpleHttp() throws IOException {
-		String server = this.getServer();
-		if(server == null){
-			throw new IllegalArgumentException("request missing target server");
-		}
-		String format = "http://%s%s";
-		if(server.startsWith("http://")){
-			format = "%s%s";
-		}
-		String urlString = String.format(format, server, this.getUrl());
-		URL url = new URL(urlString);
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		for(Entry<String, String> e : this.getHead().entrySet()){
-			conn.setRequestProperty(e.getKey(), e.getValue());
-		}
-		conn.setRequestMethod(this.getMethod());
-		
-		if(this.getBody() != null && this.getBody().length > 0){
-			conn.setDoOutput(true);
-			conn.getOutputStream().write(this.getBody());
-		}
-		
-		int code = conn.getResponseCode();
-		Message res = new Message();
-		res.setStatus(code);
-		
-		for (Entry<String, List<String>> header : conn.getHeaderFields().entrySet()){
-			String key = header.getKey();
-			if(key == null) continue;
-			key = key.toLowerCase();
-			if(key.equals("transfer-encoding")){ //ignore transfer-encoding
-				continue;
-			}
-			
-			List<String> values = header.getValue();
-			String value = null;
-			if(values.size() == 1){
-				value = values.get(0);
-			} else if(values.size() > 1){
-				value = "[";
-				for(int i=0; i<values.size(); i++){
-					if(i == value.length()-1){
-						value += values.get(i);
-					} else {
-						value += values.get(i) + ",";
-					}
-				}
-			} 
-			res.setHead(key, value);
-		}
-		InputStream bodyStream = conn.getInputStream();
-		if(bodyStream != null){
-			ByteArrayOutputStream sink = new ByteArrayOutputStream();
-			byte[] buf = new byte[1024];
-			int len = 0;
-			while((len=bodyStream.read(buf))>=0){
-				sink.write(buf, 0, len);
-			}
-			res.setBody(sink.toByteArray()); 
-		} 
-		conn.disconnect(); 
-		return res;
-	}
-	
+	} 
 }
