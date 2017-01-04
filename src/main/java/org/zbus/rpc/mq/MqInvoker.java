@@ -7,6 +7,10 @@ import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 
+/** 
+ * @author hong.leiming
+ *
+ */
 public class MqInvoker implements MessageInvoker{
 	private final MessageInvoker messageInvoker;
 	private final String mq;

@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -129,8 +130,8 @@ public class DiskQueue implements MessageQueue{
 	
 	private QueueReader findLatestReader(){ 
 		List<DiskConsumeGroup> readerList = new ArrayList<DiskConsumeGroup>(consumeGroups.values());
-		if(readerList.isEmpty()) return null;
-		readerList.sort(new Comparator<DiskConsumeGroup>() { 
+		if(readerList.isEmpty()) return null; 
+		Collections.sort(readerList, new Comparator<DiskConsumeGroup>() { 
 			@Override
 			public int compare(DiskConsumeGroup o1, DiskConsumeGroup o2) {
 				return - o1.reader.compareTo(o2.reader);
