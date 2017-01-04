@@ -2,54 +2,47 @@ package org.zbus.rpc.mq;
 
 import java.io.IOException;
 
-import org.zbus.mq.Protocol;
+import org.zbus.broker.Broker;
+import org.zbus.mq.MqConfig;
+import org.zbus.mq.Producer;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageInvoker;
 
-/** 
+/**
  * @author hong.leiming
  *
  */
-public class MqInvoker implements MessageInvoker{
-	private final MessageInvoker messageInvoker;
-	private final String mq;
-	private final String accessToken;
-	
-	public MqInvoker(MessageInvoker messageInvoker, String mq, String accessToken){
-		 this.messageInvoker = messageInvoker;
-		 this.mq = mq;
-		 this.accessToken = accessToken;
+public class MqInvoker implements MessageInvoker {
+	private final Producer producer;
+
+	public MqInvoker(Producer producer) {
+		this.producer = producer;
+	}
+
+	public MqInvoker(Broker broker, String mq) {
+		this.producer = new Producer(broker, mq);
 	}
 	
-	public MqInvoker(MessageInvoker messageInvoker, String mq){
-		this(messageInvoker, mq, "");
-	}
-	
-	private void fillBrokerMessage(Message req){
-		req.setCmd(Protocol.Produce);
-		req.setAck(false);
-		req.setMq(this.mq);
-		req.setHead("token", this.accessToken);
-	}
-	
-	@Override
-	public Message invokeSync(Message req, int timeout) throws IOException,
-			InterruptedException { 
-		fillBrokerMessage(req);
-		return this.messageInvoker.invokeSync(req, timeout); 
+	public MqInvoker(MqConfig config) {
+		this.producer = new Producer(config);
 	}
 
 	@Override
-	public void invokeAsync(Message req, ResultCallback<Message> callback)
-			throws IOException { 
-		fillBrokerMessage(req);
-		this.messageInvoker.invokeAsync(req, callback);
+	public Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
+		req.setAck(false);
+		return this.producer.sendSync(req, timeout);
+	}
+
+	@Override
+	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+		req.setAck(false);
+		this.producer.sendAsync(req, callback);
 	}
 
 	@Override
 	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		fillBrokerMessage(req);
-		return this.messageInvoker.invokeSync(req);
-	} 
+		req.setAck(false);
+		return this.producer.sendSync(req);
+	}
 }

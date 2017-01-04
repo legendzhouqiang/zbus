@@ -28,6 +28,8 @@ public class Producer extends MqAdmin {
  
 	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException {
 		fillCommonHeaders(msg);
+		msg.setCmd(Protocol.Produce);
+		
 		return broker.invokeSync(msg, timeout);
 	}
  

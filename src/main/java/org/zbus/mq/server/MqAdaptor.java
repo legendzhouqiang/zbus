@@ -388,59 +388,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     } 
     
     private Message handleUrlMessage(Message msg){
-		UrlInfo url = new UrlInfo(msg.getUrl()); 
-		if(url.empty){
-			msg.setCmd(""); //default to home monitor
+    	if(msg.getCmd() == null){
+    		msg.setCmd(""); //default to home monitor
 			return msg;
-		}   
-		
-		if(url.mq != null){
-			if(msg.getMq() == null){
-				msg.setMq(url.mq);
-			}
-			String method = url.method;
-			if(method == null){
-				method = "";
-			}
-			MessageQueue mq = mqTable.get(url.mq);
-			if(mq != null){ 
-				if((mq.getFlag()&Protocol.FlagRpc) != 0){
-					if(url.method != null || url.cmd == null){  
-						msg.setMq(url.mq);
-						msg.setAck(false); 
-						msg.setCmd(Protocol.Produce);
-						String module = url.module == null? "" : url.module;   
-						String json = "{";
-						json += "\"module\": " + "\"" + module + "\"";
-						json += ", \"method\": " + "\"" + method + "\"";
-						if(url.params != null){
-							if(url.params.startsWith("[") && url.params.endsWith("]")){
-								json += ", \"params\": " + url.params;  
-							} else {
-								json += ", \"params\": " + "[" + url.params + "]"; 
-							}
-						}
-						json += "}";
-						msg.setJsonBody(json);
-					}
-				} else {
-					if(url.cmd == null){ 
-						msg.setMq(url.mq);
-						msg.setAck(false); 
-						msg.setCmd(Protocol.Produce);
-					}
-				}
-			} 
-		} 
-		
-		if(url.cmd != null){
-			if(msg.getCmd() == null){
-				msg.setCmd(url.cmd);
-			}
-		}  
-		
+    	} 
+    	
 		return msg;
 	}
+    
     public void onSessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
