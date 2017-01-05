@@ -84,11 +84,11 @@ public class Message implements Id {
 	public static final String CONSUME_START_OFFSET = "consume_start_offset";
 	public static final String CONSUME_START_MSGID  = "consume_start_msgid";
 	public static final String CONSUME_START_TIME   = "consume_start_time";  
-	
+	public static final String CONSUME_WINDOW       = "consume_window";  
 	
 	public static final String SENDER   = "sender"; 
 	public static final String RECVER   = "recver";
-	public static final String ID      	= "id";	     
+	public static final String ID      	= "id";	   
 	
 	public static final String SERVER   = "server"; 
 	public static final String TOPIC    = "topic";  //use ',' to seperate different topics
@@ -103,7 +103,7 @@ public class Message implements Id {
 	public static final String ORIGIN_STATUS= "reply_code"; //original Status  
 	
 	//auth
-	public static final String APPID     = "appid";
+	public static final String APPID   = "appid";
 	public static final String TOKEN   = "token";
 	
 	
@@ -606,6 +606,16 @@ public class Message implements Id {
 	} 
 	public Message setConsumeStartMsgId(String mq) {
 		this.setHead(CONSUME_START_MSGID, mq);
+		return this;
+	} 
+	
+	public Integer getConsumeWindow(){
+		String value = this.getHead(CONSUME_WINDOW);
+		if(value == null) return null;
+		return Integer.valueOf(value);
+	} 
+	public Message setConsumeWindow(Integer value) {
+		this.setHead(CONSUME_WINDOW, value);
 		return this;
 	} 
 	

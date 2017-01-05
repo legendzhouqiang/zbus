@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.zbus.broker.Broker;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.mq.Consumer;
-import org.zbus.mq.MqConfig;
 import org.zbus.mq.Consumer.ConsumerHandler;
+import org.zbus.mq.ConsumerConfig;
 import org.zbus.net.http.Message;
 
 public class ConsumerAuthExample { 
@@ -14,17 +14,17 @@ public class ConsumerAuthExample {
 	public static void main(String[] args) throws Exception {  
 		Broker broker = new ZbusBroker("127.0.0.1:15555");   
 		
-		MqConfig config = new MqConfig();
+		ConsumerConfig config = new ConsumerConfig();
+		config.setBroker(broker);
 		config.setMq("MyMQ_Auth");
+		
+		
 		//appid + token
 		config.setAppid("appid");
-		config.setToken("token");
+		config.setToken("token");  
 		
-		
-		config.setBroker(broker);
-		
-		Consumer consumer = new Consumer(config);  
-		 
+		Consumer consumer = new Consumer(config);   
+		consumer.createMQ();
 		consumer.start(new ConsumerHandler() { 
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException { 

@@ -4,21 +4,22 @@ import java.io.IOException;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.ZbusBroker;
-import org.zbus.mq.ConsumeGroup;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
+import org.zbus.mq.ConsumerConfig;
 import org.zbus.net.http.Message;
 
-public class Sub2 {
+public class Sub4 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
-		Consumer c = new Consumer(broker, "MyMQ");  
+		ConsumerConfig config = new ConsumerConfig();
+		config.setBroker(broker);
+		config.setMq("MyMQ");
+		config.setConsumeGroup("Group4");
 		
-		//control more details
-		ConsumeGroup group = new ConsumeGroup("Group2");
-		c.setConsumeGroup(group);  
+		Consumer c = new Consumer(config);    
 		c.createMQ();
 		
 		c.start(new ConsumerHandler() { 

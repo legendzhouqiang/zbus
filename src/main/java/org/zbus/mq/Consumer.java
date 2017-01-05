@@ -18,25 +18,51 @@ import org.zbus.net.http.Message.MessageInvoker;
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	private MessageInvoker client;   
+	
 	private int consumeTimeout = 120000; // 2 minutes   
+	private ConsumeGroup consumeGroup;
+	private Integer consumeWindow;
 
 	public Consumer(Broker broker, String mq) {
 		super(broker, mq);
 	}  
 	
+	/**
+	 * @deprecated
+	 * @param config
+	 */
 	public Consumer(MqConfig config) {
 		super(config);   
-	}  
+	}
+	
+	public Consumer(ConsumerConfig config) {
+		super(config);  
+		this.consumeGroup = config.getConsumeGroup();
+		this.consumeWindow = config.getConsumeWindow();
+	}   
 
 	private BrokerHint brokerHint() {
 		BrokerHint hint = new BrokerHint();
 		hint.setEntry(this.mq);
 		return hint;
 	}
+	
+	protected Message buildCreateMQMessage(){
+		Message req = super.buildCreateMQMessage();  
+    	if(this.consumeGroup != null){
+	    	req.setConsumeGroup(consumeGroup.getGroupName());
+	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
+	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
+	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
+	    	req.setConsumeStartTime(consumeGroup.getStartTime());
+		}
+    	return req;
+	}
 
 	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
 		req.setCmd(Protocol.Consume);
+		req.setConsumeWindow(consumeWindow);
 		fillCommonHeaders(req);  
 		if(consumeGroup != null){ //consumeGroup
 			req.setConsumeGroup(consumeGroup.getGroupName());
@@ -71,6 +97,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				}
 				return take(timeout);
 			}
+			
 			throw new MqException(res.getBodyString());
 		} catch (ClosedByInterruptException e) {
 			throw new InterruptedException(e.getMessage());
@@ -129,6 +156,18 @@ public class Consumer extends MqAdmin implements Closeable {
 		}   
 		
 		client.invokeAsync(msg, null); 
+	} 
+	
+	public ConsumeGroup getConsumeGroup() {
+		return consumeGroup;
+	}
+
+	public void setConsumeGroup(ConsumeGroup consumeGroup) {
+		this.consumeGroup = consumeGroup;
+	} 
+	
+	public void setConsumeGroup(String consumeGroup) {
+		this.consumeGroup = new ConsumeGroup(consumeGroup);
 	} 
 	
 	
@@ -277,11 +316,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
 		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
-	}   
-
-	public static Logger getLog() {
-		return log;
-	}
+	}    
 
 	public ThreadPoolExecutor getConsumeExecutor() {
 		return consumerHandlerExecutor;
@@ -292,7 +327,8 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumerHandlerExecutor.shutdown();
 		}
 		this.consumerHandlerExecutor = consumerHandlerExecutor;
-	}  
+	}   
+	
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;

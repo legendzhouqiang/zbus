@@ -78,4 +78,12 @@ public class ConsumeGroup implements Cloneable {
 			return null;
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "ConsumeGroup [groupName=" + groupName + ", baseGroupName=" + baseGroupName + ", startOffset="
+				+ startOffset + ", startMsgId=" + startMsgId + ", startTime=" + startTime + ", exclusive=" + exclusive
+				+ ", deleteOnExit=" + deleteOnExit + "]";
+	} 
+	
 }

@@ -11,7 +11,7 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.Consumer.ConsumerHandler;
-import org.zbus.mq.MqConfig;
+import org.zbus.mq.ConsumerConfig;
 import org.zbus.net.http.Message;
 
 public class ConsumerPerf {
@@ -27,7 +27,7 @@ public class ConsumerPerf {
 		brokerConfig.setBrokerAddress(serverAddress);
 		Broker broker = new ZbusBroker(brokerConfig);
 		
-		MqConfig config = new MqConfig(); 
+		ConsumerConfig config = new ConsumerConfig(); 
 		config.setBroker(broker);
 		config.setMq(mq); 
 		

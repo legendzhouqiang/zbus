@@ -10,10 +10,9 @@ import org.zbus.net.http.Message;
 public class MqAdmin{     
 	protected final Broker broker;      
 	protected String mq;    
-	protected Long flag;
+	protected Integer flag;
 	protected String appid;
-	protected String token;    
-	protected ConsumeGroup consumeGroup;  
+	protected String token;     
 	
 	public MqAdmin(Broker broker, String mq){  
 		this.broker = broker;
@@ -25,7 +24,7 @@ public class MqAdmin{
 		this.mq = config.getMq();  
 		this.appid = config.getAppid();
 		this.token = config.getToken();
-		this.flag = config.getFlag();
+		this.flag = config.getFlag(); 
 	} 
 	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
@@ -48,39 +47,20 @@ public class MqAdmin{
     	req.setCmd(Protocol.QueryMQ);  
     	
     	return invokeSync(req); 
-	}
-	
+	} 
 	protected Message buildCreateMQMessage(){
 		Message req = new Message();
 		fillCommonHeaders(req);
     	req.setCmd(Protocol.CreateMQ);   
-    	
-    	if(this.consumeGroup != null){
-	    	req.setConsumeGroup(consumeGroup.getGroupName());
-	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
-	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
-	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
-	    	req.setConsumeStartTime(consumeGroup.getStartTime());
-		}
-    	
     	return req;
 	}
-    
-    public boolean createMQ() throws IOException, InterruptedException{
+     
+    public boolean createMQ() throws IOException, InterruptedException{ 
     	Message req = buildCreateMQMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return res.isStatus200();
-    }  
-    
-    public boolean createMQ(ConsumeGroup consumeGroup) throws IOException, InterruptedException{
-    	this.consumeGroup = consumeGroup.clone();
-    	
-    	Message req = buildCreateMQMessage(); 
-    	Message res = invokeSync(req);
-    	if(res == null) return false;
-    	return res.isStatus200();
-    }  
+    }    
     
     public boolean removeMQ() throws IOException, InterruptedException{
     	Message req = new Message();
@@ -100,11 +80,11 @@ public class MqAdmin{
 		this.mq = mq;
 	} 
  
-	public Long getFlag() {
+	public Integer getFlag() {
 		return flag;
 	}
 
-	public void setFlag(Long flag) {
+	public void setFlag(Integer flag) {
 		this.flag = flag;
 	} 
 
@@ -114,6 +94,6 @@ public class MqAdmin{
 
 	public void setToken(String token) {
 		this.token = token;
-	} 
-	
+	}  
+
 }

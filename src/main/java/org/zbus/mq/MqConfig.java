@@ -7,10 +7,8 @@ public class MqConfig implements Cloneable {
 	protected String mq;
 	protected String appid;
 	protected String token; 
-	protected Long flag;
-	protected boolean verbose = false;
-	
-	protected ConsumeGroup consumeGroup; 
+	protected Integer flag;
+	protected boolean verbose = false; 
 	
 	public Broker getBroker() {
 		return broker;
@@ -52,22 +50,14 @@ public class MqConfig implements Cloneable {
 		this.token = token;
 	}
 
-	public Long getFlag() {
+	public Integer getFlag() {
 		return flag;
 	}
 
-	public void setFlag(Long flag) {
+	public void setFlag(Integer flag) {
 		this.flag = flag;
-	} 
-
-	public ConsumeGroup getConsumeGroup() {
-		return consumeGroup;
-	}
-
-	public void setConsumeGroup(ConsumeGroup consumeGroup) {
-		this.consumeGroup = consumeGroup;
-	}
-
+	}  
+	
 	@Override
 	public MqConfig clone() { 
 		try {

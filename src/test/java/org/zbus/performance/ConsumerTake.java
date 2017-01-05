@@ -5,7 +5,7 @@ import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.ZbusBroker;
 import org.zbus.kit.ConfigKit;
 import org.zbus.mq.Consumer;
-import org.zbus.mq.MqConfig;
+import org.zbus.mq.ConsumerConfig;
 
 public class ConsumerTake {
 	public static void main(String[] args) throws Exception{   
@@ -19,7 +19,7 @@ public class ConsumerTake {
 		brokerConfig.setBrokerAddress(serverAddress);
 		Broker broker = new ZbusBroker(brokerConfig);
 		
-		final MqConfig config = new MqConfig(); 
+		final ConsumerConfig config = new ConsumerConfig(); 
 		config.setBroker(broker);
 		config.setMq(mq); 
 		
