@@ -354,6 +354,14 @@ public class Message implements Id {
 		return this;
 	}   
 	
+	public String getTag() {
+		return this.getHead(TAG);
+	} 
+	public Message setTag(String value) {
+		this.setHead(TAG, value);
+		return this;
+	}   
+	
 	public String getRemoteAddr() {
 		return this.getHead(REMOTE_ADDR);
 	} 

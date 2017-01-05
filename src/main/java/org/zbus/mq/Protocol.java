@@ -24,6 +24,7 @@ public class Protocol {
 	public static final String CMD    	= "cmd";     
 	public static final String MQ       = "mq";
 	public static final String FLAG     = "flag";
+	public static final String TAG   	= "tag";  
 	public static final String OFFSET   = "offset";
 	
 	public static final String CONSUME_GROUP        = "consume_group";  
