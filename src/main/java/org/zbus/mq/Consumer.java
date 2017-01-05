@@ -25,7 +25,13 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Consumer(Broker broker, String mq) {
 		super(broker, mq);
-	}  
+	}   
+	
+	public Consumer(ConsumerConfig config) {
+		super(config);  
+		this.consumeGroup = config.getConsumeGroup();
+		this.consumeWindow = config.getConsumeWindow();
+	}    
 	
 	/**
 	 * @deprecated
@@ -35,11 +41,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		super(config);   
 	}
 	
-	public Consumer(ConsumerConfig config) {
-		super(config);  
-		this.consumeGroup = config.getConsumeGroup();
-		this.consumeWindow = config.getConsumeWindow();
-	}   
 
 	private BrokerHint brokerHint() {
 		BrokerHint hint = new BrokerHint();
@@ -79,19 +80,19 @@ public class Consumer extends MqAdmin implements Closeable {
 			if (res == null)
 				return res;
 			res.setId(res.getOriginId());
-			res.removeHead(Message.ORIGIN_ID);
-			if (res.isStatus200()){
+			res.removeHead(Protocol.ORIGIN_ID);
+			if ("200".equals(res.getStatus())){
 				String originUrl = res.getOriginUrl();
 				if(originUrl == null){
 					originUrl = "/";
 				} else {
-					res.removeHead(Message.ORIGIN_URL);
+					res.removeHead(Protocol.ORIGIN_URL);
 				}
 				res.setUrl(originUrl);
 				return res;
 			}
 
-			if (res.isStatus404()) {
+			if ("404".equals(res.getStatus())) {
 				if (!this.createMQ()) {
 					throw new MqException(res.getBodyString());
 				}
@@ -149,12 +150,11 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void routeMessage(Message msg) throws IOException {
 		msg.setCmd(Protocol.Route);
 		msg.setAck(false); 
-		
-		if(msg.isResponse()){
-			msg.setOriginStatus(msg.getStatus());
-			msg.asRequest(); //must send back request message type
-		}   
-		
+		String status = msg.getStatus();
+		if(status != null){
+			msg.setOriginStatus(status); 
+			msg.setStatus(null); //make it as request 
+		} 
 		client.invokeAsync(msg, null); 
 	} 
 	
@@ -170,7 +170,15 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeGroup = new ConsumeGroup(consumeGroup);
 	} 
 	
-	
+	public Integer getConsumeWindow() {
+		return consumeWindow;
+	}
+
+	public void setConsumeWindow(Integer consumeWindow) {
+		this.consumeWindow = consumeWindow;
+	} 
+
+
 	//The followings are all related to start consumer cycle in another thread
 	private volatile Thread consumerThread = null;
 	private volatile ConsumerHandler consumerHandler;
@@ -327,8 +335,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumerHandlerExecutor.shutdown();
 		}
 		this.consumerHandlerExecutor = consumerHandlerExecutor;
-	}   
-	
+	}    
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;

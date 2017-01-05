@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.zbus.kit.ConfigKit;
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.mq.Protocol;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.EventDriver;
@@ -108,7 +109,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			Entry<String, Session> entry = iter.next();
 			Session sub = entry.getValue();
 			try{ 
-				msg.removeHead(Message.ID);
+				msg.removeHead(Protocol.ID);
 				msg.setStatus(200); //!!! must be response message type
 				sub.writeAndFlush(msg);
 			}catch(Exception e){

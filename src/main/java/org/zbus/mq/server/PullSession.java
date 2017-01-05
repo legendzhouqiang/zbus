@@ -22,8 +22,6 @@
  */
 package org.zbus.mq.server;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,36 +34,13 @@ public class PullSession {
 	Session session;
     Message pullMessage;  
    
-    final ReentrantLock lock = new ReentrantLock();
-	final Set<String> topicSet = new HashSet<String>(); 
+    final ReentrantLock lock = new ReentrantLock(); 
 	final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>(); 
 	
 	public PullSession(Session sess, Message pullMessage) { 
 		this.session = sess;
 		this.setPullMessage(pullMessage);
-	}
-	
-	private void subscribeTopics(String topicString){
-		if(topicString == null) return;  
-		String[] ts = topicString.split("[,]");
-		topicSet.clear();
-		for(String t : ts){
-			if(t.trim().length() == 0) continue;
-			topicSet.add(t.trim());
-		}
-	}
-	
-	public boolean isTopicMatched(String topic){
-		try{
-			lock.lock();
-			if(topic == null) return false;  
-			if(topicSet.contains("*")) return true;
-			return topicSet.contains(topic);
-		} finally {
-			lock.unlock();
-		} 
-	} 
-	
+	}  
 	public Session getSession() {
 		return session;
 	}
@@ -84,17 +59,9 @@ public class PullSession {
 		if(msg == null){
 			this.lock.unlock();
 			return; 
-		}
-		String topic = this.pullMessage.getTopic();
-		if(topic != null){
-			this.subscribeTopics(topic);
-		}
+		} 
 		this.lock.unlock();
-	} 
-	
-	public Set<String> getTopics(){
-		return this.topicSet;
-	}
+	}  
 
 	public BlockingQueue<Message> getMsgQ() {
 		return msgQ;
@@ -102,8 +69,7 @@ public class PullSession {
 	
 	public ConsumerInfo getConsumerInfo(){
 		ConsumerInfo info = new ConsumerInfo();
-		info.remoteAddr = session.getRemoteAddress(); 
-		info.topics = topicSet;
+		info.remoteAddr = session.getRemoteAddress();  
 		return info;
 	}
 }

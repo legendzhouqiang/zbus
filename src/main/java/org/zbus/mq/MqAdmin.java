@@ -59,7 +59,7 @@ public class MqAdmin{
     	Message req = buildCreateMQMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
-    	return res.isStatus200();
+    	return "200".equals(res.getStatus());
     }    
     
     public boolean removeMQ() throws IOException, InterruptedException{
@@ -69,7 +69,7 @@ public class MqAdmin{
     	
     	Message res = invokeSync(req);
     	if(res == null) return false;
-    	return res.isStatus200();
+    	return "200".equals(res.getStatus());
     } 
    
 	public String getMq() {

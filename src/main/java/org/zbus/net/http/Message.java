@@ -22,6 +22,8 @@
  */
 package org.zbus.net.http;
 
+import static org.zbus.mq.Protocol.*;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,17 +35,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -52,18 +49,10 @@ import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.Client.MsgHandler;
 import org.zbus.net.Invoker;
-import org.zbus.net.Sync.Id; 
+import org.zbus.net.Sync.Id;
 
-/**
- * HTTP Protocol Message, stands for both request and response formats.
- * 
- * Message is NOT standard HTTP protocol, but compatible to HTTP standard format.
- * Message may extend HTTP protocol in the header part, for example: mq: MyMQ\r\n
- * means a header extension of Key=mq, Value=MyMQ.
- * 
- * @author rushmore (洪磊明)
- *
- */
+import io.netty.handler.codec.http.HttpResponseStatus;
+
 public class Message implements Id {  
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
@@ -72,46 +61,13 @@ public class Message implements Id {
 	
 	public static final String REMOTE_ADDR      = "remote-addr";
 	public static final String CONTENT_LENGTH   = "content-length";
-	public static final String CONTENT_TYPE     = "content-type";
+	public static final String CONTENT_TYPE     = "content-type";   
 	 
-	public static final String CMD    	= "cmd";     
-	public static final String MQ       = "mq";
-	public static final String FLAG     = "flag";
-	public static final String OFFSET   = "offset";
+	private String status; //null: request, otherwise: response
+	private String url = "/";
+	private String method = "GET"; 
 	
-	public static final String CONSUME_GROUP        = "consume_group";  
-	public static final String CONSUME_BASE_GROUP   = "consume_base_group";  
-	public static final String CONSUME_START_OFFSET = "consume_start_offset";
-	public static final String CONSUME_START_MSGID  = "consume_start_msgid";
-	public static final String CONSUME_START_TIME   = "consume_start_time";  
-	public static final String CONSUME_WINDOW       = "consume_window";  
-	
-	public static final String SENDER   = "sender"; 
-	public static final String RECVER   = "recver";
-	public static final String ID      	= "id";	   
-	
-	public static final String SERVER   = "server"; 
-	public static final String TOPIC    = "topic";  //use ',' to seperate different topics
-	public static final String ACK      = "ack";	  
-	public static final String ENCODING = "encoding";
-	public static final String DELAY    = "delay";
-	public static final String TTL      = "ttl";  
-	public static final String EXPIRE   = "expire"; 
-	
-	public static final String ORIGIN_ID    = "rawid";      //original id
-	public static final String ORIGIN_URL   = "origin_url"; //original URL  
-	public static final String ORIGIN_STATUS= "reply_code"; //original Status  
-	
-	//auth
-	public static final String APPID   = "appid";
-	public static final String TOKEN   = "token";
-	
-	
-	//1) First line of HTTP protocol
-	private Meta meta = new Meta(); 
-	//2) HTTP Key-Value headers
-	private Map<String, String> head = new ConcurrentHashMap<String, String>();
-	//HTTP body
+	private Map<String, String> head = new ConcurrentHashMap<String, String>(); 
 	private byte[] body; 
 	
 	public Message(){
@@ -131,90 +87,43 @@ public class Message implements Id {
 	
 	public static Message copyWithoutBody(Message msg){
 		Message res = new Message();
-		res.meta = new Meta(msg.meta);
+		res.status = msg.status;
+		res.url = msg.url;
+		res.method = msg.method;
 		res.head = new ConcurrentHashMap<String, String>(msg.head);
 		res.body = msg.body;
 		return res;
 	}
-	
-	/**
-	 * HTTP request string
-	 * eg. http://localhost/hello?xx=yy
-	 * url=/hello?xx=yy
-	 * @return
-	 */
+	 
 	public String getUrl(){
-		return this.meta.url;
+		return this.url;
 	} 
+	
 	public Message setUrl(String url){ 
-		this.meta.setUrl(url);
-		this.meta.status = null; //once requestString is set, it becomes a request message
+		this.url = url;  
 		return this;
 	}
 	
 	public Message setStatus(String status) { 
-		meta.status = status;
+		this.status = status;
 		return this; 
 	} 
 	
 	public String getStatus(){
-		return meta.status;
+		return status;
 	}
 	
 	public Message setStatus(int status){
 		return setStatus(""+status);
-	}
-	
-	public boolean isRequest(){
-		return this.getStatus() == null;
-	}
-	
-	public boolean isResponse(){
-		return this.getStatus() != null;
-	}
-	 
-	public Message asRequest(String url){
-		return setUrl(url);
-	}
-	
-	public Message asRequest(){
-		return setUrl("/");
-	}
+	} 
 	
 	public String getMethod(){
-		return meta.getMethod();
+		return this.method;
 	}
 	
 	public void setMethod(String method){
-		this.meta.setMethod(method);
-	}
-	
-	/**
-	 * HTTP请求串
-	 * eg. http://localhost/hello?xx=yy
-	 * requestPath=/hello
-	 * @return
-	 */
-	public String getRequestPath(){
-		return this.meta.requestPath;
-	}
-	 
-	public void setRequestPath(String path){
-		meta.setRequestPath(path);
-	}
-	
-	public Map<String, String> getRequestParams(){
-		return meta.requestParams;
-	}
-	public String getRequestParam(String key){  
-		String value = meta.getRequestParam(key); 
-		if(value == null) return null;
-		return urlDecode(value);
-	}  
-	public void setRequestParam(String key, String value){ 
-		value = urlEncode(value);
-		meta.setRequestParam(key, value);
-	}
+		this.method = method;
+	} 
 	
 	public Map<String,String> getHead() {
 		return head;
@@ -358,7 +267,15 @@ public class Message implements Id {
 			bufferedReader = new BufferedReader(inputStreamReader);
 			String meta = bufferedReader.readLine();
 			if(meta == null) return;
-			this.meta = new Meta(meta);
+
+			StringTokenizer st = new StringTokenizer(meta);
+			String start = st.nextToken();
+			if(start.toUpperCase().startsWith("HTTP")){ //As response
+				this.status = st.nextToken(); 
+			} else {
+				this.method = start;  
+				this.url = st.nextToken();
+			}
 			
 			String line = bufferedReader.readLine();
 	        while (line != null && line.trim().length() > 0) {
@@ -614,31 +531,19 @@ public class Message implements Id {
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
+	
 	public Message setConsumeWindow(Integer value) {
 		this.setHead(CONSUME_WINDOW, value);
 		return this;
+	}  
+	public String getConsumeFilterTag() {
+		return getHead(CONSUME_FILTER_TAG);
 	} 
 	
-	public String getTopic() {
-		return getHead(TOPIC);
-	} 
-	public Message setTopic(String topic) {
-		this.setHead(TOPIC, topic);
+	public Message setConsumeFilterTag(String topic) {
+		this.setHead(CONSUME_FILTER_TAG, topic);
 		return this;
-	}   
-	
-	public boolean isStatus200() {
-		return "200".equals(this.getStatus());
-	} 
-	public boolean isStatus404() {
-		return "404".equals(this.getStatus());
-	} 
-	public boolean isStatus500() {
-		return "500".equals(this.getStatus());
-	}  
-	public boolean isStatus406() {
-		return "406".equals(this.getStatus());
-	}  
+	}    
 	
 	protected String getBodyPrintString() {
 		if (this.body == null)
@@ -656,7 +561,7 @@ public class Message implements Id {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(meta+"\r\n");
+		sb.append(generateHttpLine()+"\r\n");
 		
 		List<String> keys = new ArrayList<String>(head.keySet());
 		Collections.sort(keys);
@@ -735,8 +640,47 @@ public class Message implements Id {
 		return msg; 
 	}
 	
-	private void writeTo(OutputStream out) throws IOException{
-		meta.writeTo(out);
+	private final static byte[] BLANK = " ".getBytes();
+	private final static byte[] PREFIX = "HTTP/1.1 ".getBytes();
+	private final static byte[] SUFFIX = " HTTP/1.1".getBytes(); 
+	
+	private String generateHttpLine(){
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			writeHttpLine(out);
+		} catch (IOException e) { 
+			return null;
+		}
+		return out.toString();
+	}
+	
+	private void writeHttpLine(OutputStream out) throws IOException{
+		if(this.status != null){
+			String desc = null;
+			HttpResponseStatus s = HttpResponseStatus.valueOf(Integer.valueOf(status));
+			if(s != null){
+				desc = s.reasonPhrase();
+			} else {
+				desc = "Unknown Status";
+			}
+			out.write(PREFIX);
+			out.write(status.getBytes());
+			out.write(BLANK);
+			out.write(desc.getBytes());  
+		} else {
+			String method = this.method; 
+			if(method == null) method = ""; 
+			out.write(method.getBytes());
+			out.write(BLANK); 
+			String requestString = this.url;
+			if(requestString == null) requestString = "/";
+			out.write(requestString.getBytes());
+			out.write(SUFFIX); 
+		}
+	} 
+	
+	public void writeTo(OutputStream out) throws IOException{
+		writeHttpLine(out);
 		out.write(CLCR);
 		Iterator<Entry<String, String>> it = head.entrySet().iterator();
 		while(it.hasNext()){
@@ -751,216 +695,7 @@ public class Message implements Id {
 			out.write(body);
 		}
 	} 
-	
-	static private String urlDecode(String str) {
-        String decoded = null;
-        try {
-            decoded = URLDecoder.decode(str, "UTF8");
-        } catch (UnsupportedEncodingException ignored) {
-        }
-        return decoded;
-    }
-	
-	static private String urlEncode(String str) {
-        String encoded = null;
-        try {
-        	encoded = URLEncoder.encode(str, "UTF8");
-        } catch (UnsupportedEncodingException ignored) {
-        }
-        return encoded;
-    }
-
-	static class Meta{   
-		String status; //null if request type, HTTP status code if response	
-		//HTTP request method
-		String method = "GET"; 
-		
-		String url = "/";         //request string(updated by requestPath and requestParams)
-		
-		String requestPath = url; //request path
-		Map<String,String> requestParams;   //request key-value pairs 
-		
-		static Set<String> httpMethod = new HashSet<String>();
-		static Map<String,String> httpStatus = new HashMap<String, String>();
-		
-		static{ 
-			httpMethod.add("GET");
-			httpMethod.add("POST"); 
-			httpMethod.add("PUT");
-			httpMethod.add("DELETE");
-			httpMethod.add("HEAD");
-			httpMethod.add("OPTIONS"); 
-			
-			httpStatus.put("101", "Switching Protocols"); 
-			httpStatus.put("200", "OK");
-			httpStatus.put("201", "Created");
-			httpStatus.put("202", "Accepted");
-			httpStatus.put("204", "No Content"); 
-			httpStatus.put("206", "Partial Content"); 
-			httpStatus.put("301", "Moved Permanently");
-			httpStatus.put("304", "Not Modified"); 
-			httpStatus.put("400", "Bad Request"); 
-			httpStatus.put("401", "Unauthorized"); 
-			httpStatus.put("403", "Forbidden");
-			httpStatus.put("404", "Not Found"); 
-			httpStatus.put("405", "Method Not Allowed"); 
-			httpStatus.put("416", "Requested Range Not Satisfiable");
-			httpStatus.put("500", "Internal Server Error");
-		} 
-		
-		@Override
-		public String toString() { 
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			try {
-				writeTo(out);
-				return new String(out.toByteArray());
-			} catch (IOException e) {
-				//ignore
-				return null;
-			} 
-		} 
-		
-		public void writeTo(OutputStream out) throws IOException{
-			if(this.status != null){
-				String desc = httpStatus.get(this.status);
-				if(desc == null){
-					desc = "Unknown Status";
-				}
-				out.write(PREFIX);
-				out.write(status.getBytes());
-				out.write(BLANK);
-				out.write(desc.getBytes());  
-			} else {
-				String method = this.method; 
-				if(method == null) method = ""; 
-				out.write(method.getBytes());
-				out.write(BLANK); 
-				String requestString = this.url;
-				if(requestString == null) requestString = "";
-				out.write(requestString.getBytes());
-				out.write(SUFFIX); 
-			}
-		} 
-		final static byte[] BLANK = " ".getBytes();
-		final static byte[] PREFIX = "HTTP/1.1 ".getBytes();
-		final static byte[] SUFFIX = " HTTP/1.1".getBytes(); 
-		 
-		public Meta(){ }
-		
-		public Meta(Meta m){
-			this.url = m.url;
-			this.requestPath = m.requestPath;
-			this.method = m.method;
-			this.status = m.status;
-			if(m.requestParams != null){
-				this.requestParams = new HashMap<String, String>(m.requestParams);
-			}
-		}
-		
-		public Meta(String meta){
-			if("".equals(meta)){
-				return;
-			}
-			StringTokenizer st = new StringTokenizer(meta);
-			String firstWord = st.nextToken();
-			if(firstWord.toUpperCase().startsWith("HTTP")){ //As response
-				this.status = st.nextToken();
-				return;
-			}
-			//As request
-			this.method = firstWord;  
-			this.url = st.nextToken();
-			decodeUrl(this.url);
-		} 
-		
-		public String getMethod(){
-			return this.method;
-		}
-		
-		public void setMethod(String method){
-			this.method = method;
-		}
-		
-		public void setUrl(String url){
-			this.url = url;
-			decodeUrl(url);
-		} 
-		
-		private void calcUrl(){
-			StringBuilder sb = new StringBuilder();
-			if(this.requestPath != null){ 
-				sb.append(this.requestPath);
-			}
-			if(this.requestParams != null){
-				sb.append("?");
-				Iterator<Entry<String, String>> it = requestParams.entrySet().iterator();
-				while(it.hasNext()){
-					Entry<String, String> e = it.next();
-					sb.append(e.getKey()+"="+e.getValue());
-					if(it.hasNext()){
-						sb.append("&&");
-					}
-				}
-			}
-			this.url = sb.toString(); 
-		}
-		private void decodeUrl(String url){
-			int idx = url.indexOf('?');
-			if(idx < 0){
-				this.requestPath = urlDecode(url);
-			} else {
-				this.requestPath = url.substring(0, idx);
-			}  
-			if(!this.requestPath.equals("/")){
-				if(this.requestPath.endsWith("/")){
-					this.requestPath = this.requestPath.substring(0, this.requestPath.length()-1);
-				}
-			}
-			if(idx < 0) return;
-			if(this.requestParams == null){
-				this.requestParams = new ConcurrentHashMap<String, String>(); 
-			}
-			String paramString = url.substring(idx+1); 
-			StringTokenizer st = new StringTokenizer(paramString, "&");
-	        while (st.hasMoreTokens()) {
-	            String e = st.nextToken();
-	            int sep = e.indexOf('=');
-	            if (sep >= 0) {
-	                this.requestParams.put(urlDecode(e.substring(0, sep)).trim(),
-	                		urlDecode(e.substring(sep + 1)));
-	            } else {
-	                this.requestParams.put(urlDecode(e).trim(), "");
-	            }
-	        } 
-		}  
-		
-		public String getRequestParam(String key){
-			if(requestParams == null) return null;
-			return requestParams.get(key);
-		}
-		
-		public String getRequestParam(String key, String defaultValue){
-			String value = getRequestParam(key);
-			if(value == null){
-				value = defaultValue;
-			}
-			return value;
-		}
-		
-		public void setRequestPath(String path){
-			this.requestPath = path;
-			calcUrl();
-		}
-		
-		public void setRequestParam(String key, String value){
-			if(requestParams == null){
-				requestParams = new HashMap<String, String>();
-			}
-			requestParams.put(key, value);
-			calcUrl();
-		}
-	}
-
+	 
 	public static interface MessageHandler extends MsgHandler<Message> { }
 	public static interface MessageInvoker extends Invoker<Message, Message> { }	
 	public static interface MessageProcessor { 

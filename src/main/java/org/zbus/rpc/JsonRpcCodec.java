@@ -101,7 +101,7 @@ public class JsonRpcCodec implements RpcCodec {
 				json = JSON.parseObject(jsonString); 
 			} catch(Exception ex){
 				String prefix = "";
-				if(msg.isStatus200()){
+				if("200".equals(msg.getStatus())){ 
 					prefix = "JSON format invalid: ";
 				}
 				throw new RpcException(prefix + jsonString);

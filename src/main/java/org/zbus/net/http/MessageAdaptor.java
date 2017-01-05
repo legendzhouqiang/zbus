@@ -31,13 +31,11 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.net.IoAdaptor;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message.MessageHandler;
-import org.zbus.net.http.Message.MessageProcessor;
 
 public class MessageAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);
 	protected MessageHandler filterHandler;   
-	protected Map<String, MessageHandler> cmdHandlerMap = new ConcurrentHashMap<String, MessageHandler>();
-	protected Map<String, MessageProcessor> urlHandlerMap = new ConcurrentHashMap<String, MessageProcessor>();
+	protected Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>(); 
 	protected Map<String, Session> sessionTable;
 	
 	public MessageAdaptor(){ 
@@ -54,31 +52,8 @@ public class MessageAdaptor implements IoAdaptor{
 	}
 	 
 	public void cmd(String command, MessageHandler handler){
-    	this.cmdHandlerMap.put(command, handler);
+    	this.handlerMap.put(command, handler);
     }
-	
-	public void url(String path, final MessageProcessor processor){
-		if(!path.startsWith("/")){
-			path = "/"+path;
-		}
-		
-		this.urlHandlerMap.put(path, processor);
-		String cmd = path;
-		if(cmd.startsWith("/")){
-			cmd = cmd.substring(1);
-		}
-		cmd(cmd, new MessageHandler() { 
-			@Override
-			public void handle(Message msg, Session sess) throws IOException {
-				final String msgId = msg.getId();
-				Message res = processor.process(msg);
-				if(res != null){
-					res.setId(msgId);
-					sess.write(res);
-				}
-			}
-		});
-	}
 	 
     public void registerFilterHandler(MessageHandler filterHandler) {
 		this.filterHandler = filterHandler;
@@ -94,49 +69,17 @@ public class MessageAdaptor implements IoAdaptor{
     	
     	String cmd = msg.getCmd();
     	if(cmd != null){ //cmd
-    		MessageHandler handler = cmdHandlerMap.get(cmd);
+    		MessageHandler handler = handlerMap.get(cmd);
         	if(handler != null){
         		handler.handle(msg, sess);
         		return;
         	}
     	}
-    	
-    	String path = msg.getRequestPath(); //requestPath
-    	if(path == null){ 
-    		Message res = new Message();
-    		res.setId(msgId); 
-        	res.setStatus(400);
-        	res.setBody("Bad Format(400): Missing Command and RequestPath"); 
-        	sess.write(res);
-    		return;
-    	}
-    	
-    	MessageProcessor urlHandler = urlHandlerMap.get(path);
-    	if(urlHandler != null){
-    		Message res = null; 
-    		try{
-    			res = urlHandler.process(msg); 
-	    		if(res != null){
-	    			res.setId(msgId);
-	    			if(res.getStatus() == null){
-	    				res.setStatus(200);// default to 200
-	    			}
-	    			sess.write(res);
-	    		}
-    		} catch (Exception e) { 
-    			res = new Message();
-    			res.setStatus(500);
-    			res.setBody("Internal Error(500): " + e);
-    			sess.write(res);
-			}
-    
-    		return;
-    	} 
-    	
+    	 
     	Message res = new Message();
     	res.setId(msgId); 
     	res.setStatus(404);
-    	String text = String.format("Not Found(404): %s", path);
+    	String text = String.format("Not Found(404): Command(%s)", cmd);
     	res.setBody(text); 
     	sess.write(res); 
     } 

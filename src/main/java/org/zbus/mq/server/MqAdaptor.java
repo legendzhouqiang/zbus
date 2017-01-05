@@ -80,8 +80,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			
 
 			final boolean ack = msg.isAck();  
-			msg.removeHead(Message.CMD);
-			msg.removeHead(Message.ACK); 
+			msg.removeHead(Protocol.CMD);
+			msg.removeHead(Protocol.ACK); 
 			Long ttl = msg.getTtl();
 			if(ttl != null){
 				try{ 
@@ -153,14 +153,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				log.warn("Missing target %s", recver); 
 				return; //just ignore
 			} 
-			msg.removeHead(Message.ACK);
-			msg.removeHead(Message.RECVER);
-			msg.removeHead(Message.CMD);
+			msg.removeHead(Protocol.ACK);
+			msg.removeHead(Protocol.RECVER);
+			msg.removeHead(Protocol.CMD);
 			
 			String status = "200";
 			if(msg.getOriginStatus() != null){
 				status = msg.getOriginStatus(); 
-				msg.removeHead(Message.ORIGIN_STATUS);
+				msg.removeHead(Protocol.ORIGIN_STATUS);
 			} 
 			msg.setStatus(status);
 			

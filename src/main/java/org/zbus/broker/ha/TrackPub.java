@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.zbus.kit.log.Logger;
 import org.zbus.kit.log.LoggerFactory;
+import org.zbus.mq.Protocol;
 import org.zbus.net.Client.ConnectedHandler;
 import org.zbus.net.Client.DisconnectedHandler;
 import org.zbus.net.EventDriver;
@@ -88,7 +89,7 @@ public class TrackPub implements Closeable{
 	}
 	
 	public void sendToAllTrackers(Message msg){
-		msg.removeHead(Message.ID);
+		msg.removeHead(Protocol.ID);
 		for(MessageClient client : healthyTrackers){ 
 			try{ 
 				if(client.hasConnected()){

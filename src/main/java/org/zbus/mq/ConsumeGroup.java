@@ -10,6 +10,7 @@ public class ConsumeGroup implements Cloneable {
 	private Long startTime;
 	private Boolean exclusive;
 	private Boolean deleteOnExit;
+	private String filterTag;
 	
 	public ConsumeGroup(){
 		
@@ -68,8 +69,16 @@ public class ConsumeGroup implements Cloneable {
 	}
 	public void setDeleteOnExit(Boolean deleteOnExit) {
 		this.deleteOnExit = deleteOnExit;
-	}  
+	}   
 	
+	public String getFilterTag() {
+		return filterTag;
+	}
+
+	public void setFilterTag(String filterTag) {
+		this.filterTag = filterTag;
+	}
+
 	@Override
 	public ConsumeGroup clone() { 
 		try {
@@ -77,13 +86,5 @@ public class ConsumeGroup implements Cloneable {
 		} catch (CloneNotSupportedException e) {
 			return null;
 		}
-	}
-
-	@Override
-	public String toString() {
-		return "ConsumeGroup [groupName=" + groupName + ", baseGroupName=" + baseGroupName + ", startOffset="
-				+ startOffset + ", startMsgId=" + startMsgId + ", startTime=" + startTime + ", exclusive=" + exclusive
-				+ ", deleteOnExit=" + deleteOnExit + "]";
-	} 
-	
+	}  
 }
