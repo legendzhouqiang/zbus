@@ -12,7 +12,7 @@ public class Pub {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();    
 		
-		final int count = 10000;
+		final int count = 1000000;
 		for(int i=0;i<count;i++){
 			Message msg = new Message(); 
 			msg.setBody("hello world " + i);

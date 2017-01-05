@@ -19,6 +19,7 @@ import org.zbus.kit.log.LoggerFactory;
 import org.zbus.mq.ConsumeGroup;
 import org.zbus.mq.Protocol.ConsumerInfo;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.disk.DiskMessage;
 import org.zbus.mq.disk.Index;
 import org.zbus.mq.disk.QueueReader;
 import org.zbus.mq.disk.QueueWriter;
@@ -93,8 +94,13 @@ public class DiskQueue implements MessageQueue{
 	}  
 	
 	@Override
-	public void produce(Message msg, Session session) throws IOException{   
-		writer.write(msg.toBytes()); 
+	public void produce(Message msg, Session session) throws IOException{ 
+		DiskMessage data = new DiskMessage();
+		//TODO validate
+		data.id = msg.getId();
+		data.tag = msg.getTag(); 
+		data.body = msg.toBytes(); 
+		writer.write(data); 
 		dispatch();
 	}
 
@@ -162,21 +168,20 @@ public class DiskQueue implements MessageQueue{
 					continue;
 				}  
 				
-				byte[] data = group.reader.read();
+				DiskMessage data = group.reader.read();
 				if(data == null){
 					break;
 				} 
-				msg = Message.parse(data);
+				msg = Message.parse(data.body);
 				if(msg == null){ 
 					log.error("data read from queue can not be serialized back to Message type");
 					break;
 				}
 				
-				String expire = msg.getHead("expire");
+				Long expire = msg.getExpire();
 				if(expire != null){
-					try{
-						long value = Long.valueOf(expire);
-						if(value < System.currentTimeMillis()){ 
+					try{ 
+						if(expire < System.currentTimeMillis()){ 
 							log.info("Remove expired message: \n" + msg); //remove message
 							continue; //expired message
 						}

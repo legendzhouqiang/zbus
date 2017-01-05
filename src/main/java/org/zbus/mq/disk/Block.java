@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +35,6 @@ class Block implements Closeable {
 		this.diskFile = new RandomAccessFile(file,"rw");   
 	}   
 	
-	private static int HEAD_SIZE_FIXED = 41;
 	public int write(DiskMessage data) throws IOException{
 		try{
 			lock.lock();
@@ -46,40 +44,51 @@ class Block implements Closeable {
 				return 0;
 			} 
 			
-			int headSize = HEAD_SIZE_FIXED;
+			int size = 0;
 			
 			diskFile.seek(endOffset);
 			diskFile.writeLong(endOffset);
+			size += 8;
 			if(data.timestamp == null){
 				diskFile.writeLong(System.currentTimeMillis()); 
 			} else {
 				diskFile.writeLong(data.timestamp);
 			}
+			size += 8;
 			if(data.id != null){
-				diskFile.writeLong(data.id.getMostSignificantBits());
-				diskFile.writeLong(data.id.getLeastSignificantBits());
+				diskFile.writeByte(data.id.length());
+				diskFile.write(data.id.getBytes()); 
 			} else {
-				diskFile.writeLong(0);
-				diskFile.writeLong(0);
+				diskFile.writeByte(0); 
 			}
+			size += 40;
+			diskFile.seek(endOffset + size); 
 			diskFile.writeLong(data.corrOffset==null? 0 : data.corrOffset);
+			size += 8;
 			if(data.tag == null){
 				diskFile.writeByte(0);
-			} else {
-				headSize += data.tag.length();
+			} else { 
 				diskFile.writeByte(data.tag.length());
 				diskFile.write(data.tag.getBytes());
 			}
-			diskFile.writeInt(data.body.length);
-			diskFile.write(data.body);
+			size += 128; 
+			diskFile.seek(endOffset + size); 
+			if(data.body != null){
+				diskFile.writeInt(data.body.length);
+				diskFile.write(data.body);
+				size += 4 + data.body.length;
+			} else {
+				diskFile.writeInt(0); 
+				size += 4;
+			}
 			
-			endOffset += headSize + data.body.length;   
+			endOffset += size;   
 			index.writeEndOffset(endOffset);
 			
 			index.newDataAvailable.get().countDown();
 			index.newDataAvailable.set(new CountDownLatch(1));
 			
-			return headSize + 4 + data.body.length;
+			return size;
 		} finally {
 			lock.unlock();
 		}
@@ -89,19 +98,26 @@ class Block implements Closeable {
     	DiskMessage data = new DiskMessage(); 
 		
     	diskFile.seek(pos); 
+    	int size = 0;
 		data.offset = diskFile.readLong(); //offset 
+		size += 8;
 		data.timestamp = diskFile.readLong();
-		long idHigh = diskFile.readLong();
-		long idLow = diskFile.readLong();
-		data.id = new UUID(idHigh, idLow);
+		size += 8;
+		int idLen = diskFile.readByte();
+		byte[] id = new byte[idLen];
+		diskFile.read(id);
+		data.id = new String(id); //!!<=39
+		size += 40;
+		
+		diskFile.seek(pos + size); 
 		data.corrOffset = diskFile.readLong();
+		size += 8;
 		byte tagLen = diskFile.readByte();
 		if(tagLen > 0){
 			byte[] tag = new byte[tagLen];
 			diskFile.read(tag);
 			data.tag = new String(tag);
-		} 
-		
+		}  
 		return data; 
 	}
 	
@@ -118,6 +134,7 @@ class Block implements Closeable {
     	try{
 			lock.lock();
 			DiskMessage data = readHeadUnsafe(pos);
+			diskFile.seek(pos + DiskMessage.BODY_POS);
 			int size = diskFile.readInt();
 			byte[] body = new byte[size];
 			diskFile.read(body, 0, size);
@@ -130,9 +147,8 @@ class Block implements Closeable {
     
     public void readBody(DiskMessage head) throws IOException{ 
     	try{
-			lock.lock();  
-			int pos = HEAD_SIZE_FIXED + head.tag==null? 1 : head.tag.length();
-			diskFile.seek(head.offset + pos); 
+			lock.lock();   
+			diskFile.seek(head.offset + DiskMessage.BODY_POS);
 			int size = diskFile.readInt();
 			byte[] body = new byte[size];
 			diskFile.read(body, 0, size);
@@ -141,46 +157,6 @@ class Block implements Closeable {
 			lock.unlock();
 		}
 	}
-	
-	public int write(byte[] data) throws IOException{
-		try{
-			lock.lock();
-			
-			int endOffset = endOffset();
-			if(endOffset >= Index.BlockMaxSize){
-				return 0;
-			}
-			diskFile.seek(endOffset);
-			diskFile.writeLong(endOffset);
-			diskFile.writeInt(data.length);
-			diskFile.write(data);
-			endOffset += 8 + 4 + data.length;  
-			
-			index.writeEndOffset(endOffset);
-			
-			index.newDataAvailable.get().countDown();
-			index.newDataAvailable.set(new CountDownLatch(1));
-			return data.length;
-		} finally {
-			lock.unlock();
-		}
-	}  
-
-	
-    public byte[] read(int pos) throws IOException{
-    	try{
-			lock.lock();
-			diskFile.seek(pos); 
-			diskFile.readLong(); //offset 
-			int size = diskFile.readInt();
-			byte[] data = new byte[size];
-			diskFile.read(data, 0, size);
-			return data;
-    	} finally {
-			lock.unlock();
-		}
-	}
-    
     /**
      * Check if endOffset of block reached max block size allowed
      * @return true if max block size reached, false other wise
@@ -211,14 +187,5 @@ class Block implements Closeable {
 	@Override
 	public void close() throws IOException {  
 		this.diskFile.close();
-	} 
-	
-	public static class DiskMessage{
-		public Long offset; //ignore when write
-		public Long timestamp;
-		public UUID id;
-		public Long corrOffset; 
-		public String tag;
-		public byte[] body; 
 	}
 }

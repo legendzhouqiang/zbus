@@ -63,7 +63,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		} 
 	}
 	
-	public byte[] read() throws IOException{
+	public DiskMessage read() throws IOException{
 		readLock.lock();
 		try{  
 			if(block.isEndOfBlock(this.offset)){ 
@@ -74,8 +74,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 				block = this.index.createReadBlock(this.blockNumber);
 				this.offset = 0;
 			}
-			byte[] data = block.read(offset);
-			this.offset += 12 + data.length;
+			DiskMessage data = block.readFully(offset);
+			this.offset += data.size();
 			writeOffset(); 
 			return data;
 		} finally {

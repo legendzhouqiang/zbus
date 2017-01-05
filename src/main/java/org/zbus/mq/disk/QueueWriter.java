@@ -13,11 +13,11 @@ public class QueueWriter {
 		this.index = index;
 		writeBlock = index.createWriteBlock();
 	}
-	
-	public void write(byte[] data) throws IOException{
+	 
+	public void write(DiskMessage data) throws IOException{
 		writeLock.lock();
 		try{ 
-			int count = writeBlock.write(data); 
+			int count = writeBlock.write(data);
 			if(count <= 0){
 				writeBlock.close();
 				writeBlock = index.createWriteBlock();
