@@ -12,10 +12,11 @@ public class QueueReaderPerf {
 		Index index = new Index(new File("C:/tmp/MyMQ"));  
 		
 		QueueReader reader = new QueueReader(index, "ConsumeGroup2"); 
-		long count = 0;
-		String[] tags = "abc.*".split("[.]");
+		reader.setFilterTag("abc.*"); 
+		
+		long count = 0; 
 		while(true){
-			DiskMessage data = reader.read(tags);
+			DiskMessage data = reader.read();
 			if(data == null) break;
 			count++; 
 			System.out.println(data.bytesScanned +  ": " + count);

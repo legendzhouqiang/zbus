@@ -72,9 +72,11 @@ public class DiskQueue implements MessageQueue{
 			} else {  
 				//3) consume from the very beginning
 				group = new DiskConsumeGroup(this.index, consumeGroup);  
-			} 
+			}   
 			consumeGroups.put(consumeGroup, group); 
 		}
+		
+		group.reader.setFilterTag(ctrl.getFilterTag());
 		
 		if(ctrl.getStartOffset() != null){
 			boolean seekOk = group.reader.seek(ctrl.getStartOffset(), ctrl.getStartMsgId());

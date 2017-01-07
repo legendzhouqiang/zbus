@@ -26,6 +26,7 @@ public class ConsumeGroup implements Cloneable {
 		startOffset = msg.getConsumeStartOffset();
 		startTime = msg.getConsumeStartTime();
 		startMsgId = msg.getConsumeStartMsgId();
+		filterTag = msg.getConsumeFilterTag();
 	}
 	
 	public String getBaseGroupName() {

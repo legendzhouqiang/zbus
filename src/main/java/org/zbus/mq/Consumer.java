@@ -56,6 +56,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
 	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
 	    	req.setConsumeStartTime(consumeGroup.getStartTime());
+	    	req.setConsumeFilterTag(consumeGroup.getFilterTag());
 		}
     	return req;
 	}

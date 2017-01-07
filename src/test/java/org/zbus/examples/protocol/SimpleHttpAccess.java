@@ -10,20 +10,18 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 public class SimpleHttpAccess {
 	
 	static void createMq(HttpPost http){
 		http.addHeader("cmd", "create_mq");   
-		http.addHeader("mq_name", "MyMQ1");   
+		http.addHeader("mq", "MyMQ1");   
 	}
 	
 	static void removeMq(HttpPost http){
 		http.addHeader("cmd", "remove_mq");   
-		http.addHeader("mq_name", "MyMQ1");   
+		http.addHeader("mq", "MyMQ1");   
 	}
 	
 	static void produce(HttpPost http) throws Exception{
@@ -48,15 +46,7 @@ public class SimpleHttpAccess {
 		StringEntity body = new StringEntity(json.toJSONString());
 		http.setEntity(body); //body is the request json
 	}
-
-	static HttpPost urlRpcClient(String zbusAddress){
-		Object[] params = new Object[]{"zbus"}; //parameter arrays, should be array!
-		String jsonParamsString = JSON.toJSONString(params, SerializerFeature.UseSingleQuotes);
-		
-		String url = zbusAddress + "/MyRpc/echo?"+jsonParamsString; 
-		return new HttpPost(url);
-	}
-	
+ 
 	
 	public static void main(String[] args) throws Exception {
 		CloseableHttpClient httpClient = HttpClients.createDefault(); 
@@ -65,12 +55,10 @@ public class SimpleHttpAccess {
 		
 		//createMq(http); 
 		//removeMq(http);
-		//produce(http);
+		produce(http);
 		//consume(http); 
 		//rpcClient(http);
-		
-		//Direct url to access 
-		http = urlRpcClient(zbusAddress);
+		 
 		
 		CloseableHttpResponse resp = httpClient.execute(http);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(resp.getEntity().getContent()));

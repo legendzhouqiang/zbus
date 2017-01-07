@@ -21,7 +21,7 @@ public class RpcService {
 		config.setMq("MyRpc");  
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor); 
-		config.setVerbose(true);
+		config.setVerbose(false);
 		config.setConsumerHandlerRunInPool(true); //enable pooling for service handler
 		config.setConsumerHandlerPoolSize(100);  
 		
