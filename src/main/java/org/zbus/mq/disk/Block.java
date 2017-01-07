@@ -8,7 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
  
-class Block implements Closeable {  
+public class Block implements Closeable {  
 	private final Index index; 
 	private final int blockNumber; 
 	
@@ -33,61 +33,52 @@ class Block implements Closeable {
 		}  
 		
 		this.diskFile = new RandomAccessFile(file,"rw");   
-	}   
-	
-	public int write(DiskMessage data) throws IOException{
+	}    
+	public int write(DiskMessage data) throws IOException{ 
 		try{
 			lock.lock();
 			
 			int endOffset = endOffset();
 			if(endOffset >= Index.BlockMaxSize){
 				return 0;
-			} 
-			
-			int size = 0;
-			
+			}  
 			diskFile.seek(endOffset);
-			diskFile.writeLong(endOffset);
-			size += 8;
+			diskFile.writeLong(endOffset); 
 			if(data.timestamp == null){
 				diskFile.writeLong(System.currentTimeMillis()); 
 			} else {
 				diskFile.writeLong(data.timestamp);
-			}
-			size += 8;
+			} 
+			byte[] id = new byte[40]; 
 			if(data.id != null){
-				diskFile.writeByte(data.id.length());
-				diskFile.write(data.id.getBytes()); 
+				id[0] = (byte)data.id.length();
+				System.arraycopy(data.id.getBytes(), 0, id, 1, id[0]); 
 			} else {
-				diskFile.writeByte(0); 
+				id[0] = 0; 
 			}
-			size += 40;
-			diskFile.seek(endOffset + size); 
+			diskFile.write(id); 
 			diskFile.writeLong(data.corrOffset==null? 0 : data.corrOffset);
-			size += 8;
-			if(data.tag == null){
-				diskFile.writeByte(0);
+			byte[] tag = new byte[128];
+			if(data.tag != null){
+				tag[0] = (byte)data.tag.length();
+				System.arraycopy(data.tag.getBytes(), 0, tag, 1, tag[0]);
 			} else { 
-				diskFile.writeByte(data.tag.length());
-				diskFile.write(data.tag.getBytes());
+				tag[0] = 0; 
 			}
-			size += 128; 
-			diskFile.seek(endOffset + size); 
+			diskFile.write(tag); 
+			int size = DiskMessage.BODY_POS + 4;
 			if(data.body != null){
 				diskFile.writeInt(data.body.length);
-				diskFile.write(data.body);
-				size += 4 + data.body.length;
+				diskFile.write(data.body); 
+				size += data.body.length;
 			} else {
-				diskFile.writeInt(0); 
-				size += 4;
-			}
+				diskFile.writeInt(0);  
+			} 
 			
-			endOffset += size;   
-			index.writeEndOffset(endOffset);
+			index.writeEndOffset(endOffset+size);
 			
 			index.newDataAvailable.get().countDown();
-			index.newDataAvailable.set(new CountDownLatch(1));
-			
+			index.newDataAvailable.set(new CountDownLatch(1)); 
 			return size;
 		} finally {
 			lock.unlock();
@@ -97,66 +88,112 @@ class Block implements Closeable {
 	private DiskMessage readHeadUnsafe(int pos) throws IOException{
     	DiskMessage data = new DiskMessage(); 
 		
-    	diskFile.seek(pos); 
-    	int size = 0;
-		data.offset = diskFile.readLong(); //offset 
-		size += 8;
-		data.timestamp = diskFile.readLong();
-		size += 8;
-		int idLen = diskFile.readByte();
-		byte[] id = new byte[idLen];
-		diskFile.read(id);
-		data.id = new String(id); //!!<=39
-		size += 40;
-		
-		diskFile.seek(pos + size); 
+    	diskFile.seek(pos);  
+		data.offset = diskFile.readLong(); //offset  
+		data.timestamp = diskFile.readLong(); 
+		byte[] id = new byte[40];
+		diskFile.read(id); 
+		int idLen = id[0];
+		if(idLen>0){
+			data.id = new String(id, 1, idLen);  
+		}
 		data.corrOffset = diskFile.readLong();
-		size += 8;
-		byte tagLen = diskFile.readByte();
-		if(tagLen > 0){
-			byte[] tag = new byte[tagLen];
-			diskFile.read(tag);
-			data.tag = new String(tag);
+		byte[] tag = new byte[128];
+		diskFile.read(tag);
+		int tagLen = tag[0];
+		if(tagLen > 0){ 
+			data.tag = new String(tag, 1, tagLen);  
 		}  
+		data.bytesScanned = DiskMessage.BODY_POS;
 		return data; 
 	}
-	
-    public DiskMessage readHead(int pos) throws IOException{ 
-    	try{
-			lock.lock();
-			return readHeadUnsafe(pos);
-    	} finally {
-			lock.unlock();
+	 
+    private DiskMessage readFullyUnsafe(int pos) throws IOException{   
+		DiskMessage data = readHeadUnsafe(pos); 
+		int size = diskFile.readInt();
+		data.bytesScanned = DiskMessage.BODY_POS + 4;
+		if(size > 0){
+			byte[] body = new byte[size];
+			diskFile.read(body, 0, size);
+			data.body = body;
+			data.bytesScanned += size;
 		}
-	}
+		return data; 
+    }
     
     public DiskMessage readFully(int pos) throws IOException{ 
     	try{
 			lock.lock();
-			DiskMessage data = readHeadUnsafe(pos);
-			diskFile.seek(pos + DiskMessage.BODY_POS);
-			int size = diskFile.readInt();
-			byte[] body = new byte[size];
-			diskFile.read(body, 0, size);
-			data.body = body;
-			return data;
+			return readFullyUnsafe(pos);
     	} finally {
 			lock.unlock();
 		}
     }
+     
+    protected static boolean isMatched(String[] tagParts, String target){
+    	if(target == null){
+    		if(tagParts == null) return true;
+    		return false;
+    	}
+    	String[] targetParts = target.split("[.]");
+    	for(int i=0;i<tagParts.length;i++){
+    		String tagPart = tagParts[i];
+    		if(i >= targetParts.length){
+    			return false;
+    		}
+    		String targetPart = targetParts[i];
+    		if("*".equals(tagPart)){
+    			return true;
+    		}
+    		if("#".equals(tagPart)){
+    			continue;
+    		}
+    		if(targetPart.equals(tagPart)){
+    			continue;
+    		} 
+    		return false;
+    	} 
+    	return targetParts.length == tagParts.length;
+    }
     
-    public void readBody(DiskMessage head) throws IOException{ 
+    public DiskMessage readFully(int pos, String[] tagParts) throws IOException{ 
     	try{
-			lock.lock();   
-			diskFile.seek(head.offset + DiskMessage.BODY_POS);
-			int size = diskFile.readInt();
-			byte[] body = new byte[size];
-			diskFile.read(body, 0, size);
-			head.body = body;
+			lock.lock(); 
+			if(tagParts == null){
+				return readFullyUnsafe(pos);
+			}
+			
+			int bytesScanned = 0;
+			while(!isEndOfBlock(pos+bytesScanned)){
+				DiskMessage data = readHeadUnsafe(pos+bytesScanned);  
+				int size = diskFile.readInt();
+				bytesScanned += data.bytesScanned+4+size; 
+				if(!isMatched(tagParts, data.tag)){ 
+					int n = diskFile.skipBytes(size);
+					if( n != size){
+						throw new IllegalStateException("DiskMessage format error: " + data.offset);
+					}
+					continue;
+				}
+				
+				if(size > 0){
+					byte[] body = new byte[size];
+					diskFile.read(body, 0, size);
+					data.body = body; 
+				}
+				data.bytesScanned = bytesScanned; 
+				return data;
+			}
+			
+			DiskMessage data = new DiskMessage();
+			data.valid = false;
+			data.bytesScanned = bytesScanned;
+			return data;
     	} finally {
 			lock.unlock();
 		}
-	}
+    } 
+    
     /**
      * Check if endOffset of block reached max block size allowed
      * @return true if max block size reached, false other wise
@@ -187,5 +224,5 @@ class Block implements Closeable {
 	@Override
 	public void close() throws IOException {  
 		this.diskFile.close();
-	}
+	}  
 }

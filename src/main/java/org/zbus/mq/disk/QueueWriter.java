@@ -20,7 +20,8 @@ public class QueueWriter {
 			int count = writeBlock.write(data);
 			if(count <= 0){
 				writeBlock.close();
-				writeBlock = index.createWriteBlock();
+				writeBlock = index.createWriteBlock(); 
+				writeBlock.write(data);
 			}
 		}
 		finally {

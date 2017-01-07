@@ -14,6 +14,7 @@ public class ProducerPerf {
 		final int threadCount = ConfigKit.option(args, "-c", 16); 
 		final int loopCount = ConfigKit.option(args, "-loop", 1000000);
 		final int logCount = ConfigKit.option(args, "-log", 10000);
+		final int msgSize = ConfigKit.option(args, "-msgSize", 10240);
 		final String mq = ConfigKit.option(args, "-mq", "MyMQ"); 
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
@@ -40,7 +41,7 @@ public class ProducerPerf {
 					public void doTask() throws Exception {
 						Message msg = new Message();
 						
-						msg.setBody("hello world"); 
+						msg.setBody(new byte[msgSize]); 
 						msg = producer.sendSync(msg); 
 					}
 				};

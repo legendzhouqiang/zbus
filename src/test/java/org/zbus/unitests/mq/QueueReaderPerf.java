@@ -11,16 +11,15 @@ public class QueueReaderPerf {
 	public static void main(String[] args) throws Exception {
 		Index index = new Index(new File("C:/tmp/MyMQ"));  
 		
-		QueueReader reader = new QueueReader(index, "ConsumeGroup4"); 
+		QueueReader reader = new QueueReader(index, "ConsumeGroup2"); 
 		long count = 0;
+		String[] tags = "abc.*".split("[.]");
 		while(true){
-			DiskMessage data = reader.read();
+			DiskMessage data = reader.read(tags);
 			if(data == null) break;
 			count++; 
-			if(count%1000 == 0){
-				
-				System.out.println(data.body.length+ ": " + count);
-			}
+			System.out.println(data.bytesScanned +  ": " + count);
+			
 		} 
 		System.out.println(count);
 		

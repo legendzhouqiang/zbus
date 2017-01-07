@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Index extends MappedFile {
+	public static final int IndexVersion  = 0x01;
 	public static final String IndexSuffix = ".idx";
 	public static final String BlockSuffix = ".zbus";
 	public static final String BlockDir = "data";
@@ -201,13 +202,17 @@ public class Index extends MappedFile {
 	}
 
 	private void writeBlockCount() {
-		buffer.position(0);
+		buffer.position(4);
 		buffer.putInt(blockCount);
 	}
 
 	@Override
 	protected void loadDefaultData() throws IOException {
 		buffer.position(0);
+		int version = buffer.getInt();
+		if(version != IndexVersion){
+			throw new IllegalStateException("IndexVersion NOT matched");
+		}
 		this.blockCount = buffer.getInt();
 		this.flag = buffer.getInt();
 		readExt();
@@ -215,6 +220,8 @@ public class Index extends MappedFile {
 
 	@Override
 	protected void writeDefaultData() throws IOException {
+		buffer.position(0);
+		buffer.putInt(IndexVersion);
 		writeBlockCount();
 		buffer.putInt(this.flag);
 		initExt();

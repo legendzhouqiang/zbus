@@ -61,27 +61,40 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		} finally {
 			readLock.unlock();
 		} 
+	} 
+	
+	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
+		if(block.isEndOfBlock(this.offset)){ 
+			this.blockNumber++;
+			if(this.blockNumber >= index.getBlockCount()){
+				return null;
+			}
+			block = this.index.createReadBlock(this.blockNumber);
+			this.offset = 0;
+		}
+		DiskMessage data = block.readFully(offset, tagParts);
+		this.offset += data.bytesScanned;
+		writeOffset(); 
+		
+		if(!data.valid){
+			return readUnsafe(tagParts);
+		}
+		return data;
 	}
 	
-	public DiskMessage read() throws IOException{
+	public DiskMessage read(String[] tagParts) throws IOException{
 		readLock.lock();
 		try{  
-			if(block.isEndOfBlock(this.offset)){ 
-				this.blockNumber++;
-				if(this.blockNumber >= index.getBlockCount()){
-					return null;
-				}
-				block = this.index.createReadBlock(this.blockNumber);
-				this.offset = 0;
-			}
-			DiskMessage data = block.readFully(offset);
-			this.offset += data.size();
-			writeOffset(); 
-			return data;
+			return readUnsafe(tagParts);
 		} finally {
 			readLock.unlock();
 		} 
 	} 
+	
+	public DiskMessage read() throws IOException{
+		return read(null);
+	} 
+	
 	
 	@Override
 	protected void loadDefaultData() throws IOException {

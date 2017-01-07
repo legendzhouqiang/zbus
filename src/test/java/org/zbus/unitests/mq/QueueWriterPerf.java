@@ -14,14 +14,17 @@ public class QueueWriterPerf {
 		
 		long start = System.currentTimeMillis();
 		
-		for(int i=0;i<200000;i++){
+		for(int i=0;i<20000000;i++){
 			DiskMessage data = new DiskMessage();
-			data.body = new byte[1024*1024];
+			data.body = new byte[102400]; 
+			if(i%100==0){
+				data.tag = String.format("abc.%d", i/100);
+			}
 			q.write(data);
 			
 			if((i+1)%1000 == 0){
-				long end = System.currentTimeMillis();
-				System.out.format("%.2f M/s\n", 1000*1000.0/(end-start));
+				long end = System.currentTimeMillis(); 
+				System.out.format("%.4f M/s %d\n", 1000*data.size()*1000.0/1024.0/1024.0/(end-start),(i+1));
 				start = System.currentTimeMillis();
 			}
 		}

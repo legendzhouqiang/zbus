@@ -214,7 +214,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		
 			String mqName = msg.getMq();
 			if(mqName == null){ //backward compatible, to remove
-				msg.getHead("mq_name", "");
+				mqName = msg.getHead("mq_name", "");
 			} 
 			mqName = mqName.trim();
 			if("".equals(mqName)){
