@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Index extends MappedFile {
 	public static final int IndexVersion  = 0x01;
 	public static final String IndexSuffix = ".idx";
+	public static final String ReaderSuffix = ".rdx";
 	public static final String BlockSuffix = ".zbus";
 	public static final String BlockDir = "data";
 	public static final String ReaderDir = "reader";
@@ -175,6 +176,14 @@ public class Index extends MappedFile {
 	public File getIndexDir() {
 		return indexDir;
 	}
+	
+	public File getReaderDir(){
+		return new File(indexDir,ReaderDir);
+	}
+	
+	public static boolean isReaderFile(File file){
+		return file.getName().endsWith(ReaderSuffix);
+	} 
 
 	public int getBlockCount() {
 		return blockCount;

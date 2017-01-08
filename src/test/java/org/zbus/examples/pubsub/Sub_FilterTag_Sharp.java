@@ -23,7 +23,7 @@ public class Sub_FilterTag_Sharp {
 		
 		ConsumeGroup group = new ConsumeGroup();
 		group.setGroupName("Group6");
-		//group.setFilterTag("abc.#"); //abc.xx, abc.yy.
+		group.setFilterTag("abc.#"); //abc.xx, abc.yy.
 		
 		config.setConsumeGroup(group);  
 		

@@ -118,7 +118,11 @@ public class MqServer implements Closeable{
 		
 		mqAdaptor = new MqAdaptor(this); 
 		mqAdaptor.setVerbose(config.verbose);
-		mqAdaptor.loadMQ(); 
+		try {
+			mqAdaptor.loadMQ();
+		} catch (IOException e) {
+			log.error("LoadMQ error: " + e);
+		} 
 	} 
 	
 	public void start() throws Exception{  

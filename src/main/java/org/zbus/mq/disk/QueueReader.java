@@ -32,11 +32,9 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public QueueReader(Index index, String readerGroup) throws IOException{
 		this.index = index; 
-		this.readerGroup = readerGroup; 
-		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
-		File file = new File(readerDir, this.readerGroup);
+		this.readerGroup = readerGroup;  
 		
-		load(file, READER_FILE_SIZE);  
+		load(readerFile(this.readerGroup), READER_FILE_SIZE); 
 		 
 		block = this.index.createReadBlock(this.blockNumber);
 		loadMessageCount();
@@ -44,17 +42,21 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public QueueReader(QueueReader copy, String readerGroup) throws IOException{
 		this.index = copy.index; 
-		this.readerGroup = readerGroup; 
-		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
-		File file = new File(readerDir, this.readerGroup);
-		 
-		load(file, READER_FILE_SIZE); 
+		this.readerGroup = readerGroup;   
+		
+		load(readerFile(this.readerGroup), READER_FILE_SIZE); 
+		
 		this.blockNumber = copy.blockNumber;
 		this.offset = copy.offset;
 		this.messageCount = copy.messageCount;
 		
 		block = this.index.createReadBlock(this.blockNumber);
-	}   
+	}  
+	
+	private File readerFile(String readerGroup){
+		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
+		return new File(readerDir, this.readerGroup + Index.ReaderSuffix); 
+	}
 	
 	public boolean seek(long offset, String msgid) throws IOException{ 
 		return true;
@@ -89,7 +91,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			this.offset = 0;
 		}
 		DiskMessage data = block.readHead(offset);
-		this.messageCount = data.messageCount; 
+		this.messageCount = data.messageCount-1; 
 	}
 	
 	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
@@ -104,7 +106,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		DiskMessage data = block.readByTag(offset, tagParts);
 		this.offset += data.bytesScanned;
 		if(data.messageCount > 0){
-			this.messageCount = data.messageCount;
+			this.messageCount = data.messageCount-1;
 		}
 		writeOffset();  
 		

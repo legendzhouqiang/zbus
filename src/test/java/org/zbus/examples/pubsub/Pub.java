@@ -12,7 +12,7 @@ public class Pub {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();    
 		
-		final int count = 10;
+		final int count = 1;
 		for(int i=0;i<count;i++){
 			Message msg = new Message(); 
 			msg.setTag("abc.zzz.yy");

@@ -703,6 +703,26 @@ public class Message implements Id {
 			out.write(body);
 		}
 	} 
+	
+	public void urlToHead(){ 
+		int idx = url.lastIndexOf('?');
+		if(idx < 0){
+			return;
+		} 
+		String paramString = url.substring(idx+1); 
+		StringTokenizer st = new StringTokenizer(paramString, "&");
+        while (st.hasMoreTokens()) {
+            String e = st.nextToken();
+            int sep = e.indexOf('=');
+            if (sep >= 0) {
+            	String key = e.substring(0, sep).trim().toLowerCase();
+            	String val = e.substring(sep + 1).trim(); 
+            	if(!this.head.containsKey(key)){
+            		this.head.put(key, val);
+            	}
+            }  
+        }  
+	} 
 	 
 	public static interface MessageHandler extends MsgHandler<Message> { }
 	public static interface MessageInvoker extends Invoker<Message, Message> { }	

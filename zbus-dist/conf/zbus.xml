@@ -13,7 +13,7 @@
 	<trackServerList></trackServerList>  
 	
 	<verbose>false</verbose>
-	<mqStore>/tmp/store</mqStore> 
+	<mqStore>/tmp/zbus</mqStore> 
 	<registerToken></registerToken>
 	
 	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->

@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>ZBUS Monitor</title>
-<script type="text/javascript" src="?cmd=jquery"></script>
+<script type="text/javascript" src="/jquery"></script>
 <style>
 table {
   font-family: "Helvetica Neue", Helvetica, sans-serif
@@ -85,28 +85,18 @@ function timeConverter(unixTime){
 	//return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+d.getMinutes();
 }
 
-$(document).ready(function(){
-var MODE_MQ = 1;
-var MODE_PUBSUB = 2; 
-var MODE_TEMP = 4;
-var MODE_RPC = 8;
-
-function mode_name(mode){
-	if((mode & MODE_PUBSUB) != 0) return "PubSub";
-	if((mode & MODE_RPC) != 0) return "RPC";
+$(document).ready(function(){ 
+function mode_name(mode){ 
 	return "MQ";
 }
 
-$.getJSON('?cmd=data',function(data){ 
+$.getJSON('/data',function(data){ 
     $("#broker").html(data.broker); 
      
     $.each(data.mqTable, function(key, mq){  
     	if(key=='@type') return; 
     	var link = "/" + mq.name + "/?cmd=query_mq";
-    	var op = "Methods";
-    	if((mq.mode & MODE_RPC) == 0){ 
-    		op = ""
-    	}
+    	var op = ""; 
         $("#mq_table").append(
 			"<tr>\
 				<td><a target='_blank' href='" + link + "'>"+ mq.name +"</a></td>\

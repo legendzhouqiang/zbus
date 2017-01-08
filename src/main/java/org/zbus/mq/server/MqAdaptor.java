@@ -2,6 +2,7 @@ package org.zbus.mq.server;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -393,13 +394,26 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		return info;
     }
     
-    public void loadMQ(){ 
-    	log.info("Loading DiskQueues...");
-    	mqTable.clear();  
-    	
-		//notify
-		//mqServer.pubEntryUpdate(mq);
-    }   
+	public void loadMQ() throws IOException {
+		log.info("Loading DiskQueues...");
+		mqTable.clear();
+		
+		File[] mqDirs = new File(config.storePath).listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isDirectory();
+			}
+		});
+		if (mqDirs != null && mqDirs.length > 0) {
+			for (File mqDir : mqDirs) {
+				MessageQueue mq = new DiskQueue(mqDir);
+				mqTable.put(mqDir.getName(), mq);
+				log.info("MQ=%s loaded", mqDir.getName());
+				
+				mqServer.pubEntryUpdate(mq);
+			}
+		} 
+	}
     
     public void close() throws IOException {     
     	if(this.timer != null){
@@ -407,13 +421,30 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	}
     } 
     
-    private Message handleUrlMessage(Message msg){
-    	if(msg.getCmd() == null){
-    		msg.setCmd(""); //default to home monitor
-			return msg;
+    private void handleUrlMessage(Message msg){ 
+    	if(msg.getCmd() != null){
+    		return;
     	} 
+    	String url = msg.getUrl(); 
+    	if(url == null || "/".equals(url)){
+    		msg.setCmd("");
+    		return;
+    	} 
+    	int idx = url.indexOf('?');
+    	String cmd = "";
+    	if(idx >= 0){
+    		cmd = url.substring(1, idx); 
+    		if(url.charAt(idx-1) == '/'){
+    			cmd = url.substring(1, idx-1);
+    		} else {
+    			cmd = url.substring(1, idx);
+    		}
+    	} else {
+    		cmd = url.substring(1);
+    	}  
     	
-		return msg;
+    	msg.setCmd(cmd);
+    	msg.urlToHead(); 
 	}
     
     public void onSessionMessage(Object obj, Session sess) throws IOException {  
@@ -426,12 +457,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			log.info("\n%s", msg);
 		}
 		
-		String cmd = msg.getCmd(); 
+		handleUrlMessage(msg);
 		
-		if(cmd == null){
-			msg = handleUrlMessage(msg);
-			cmd = msg.getCmd();
-		} 
+		String cmd = msg.getCmd(); 
     	if(cmd != null){
 	    	MessageHandler handler = handlerMap.get(cmd);
 	    	if(handler != null){

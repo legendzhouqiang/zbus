@@ -2,6 +2,7 @@ package org.zbus.mq.server;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +42,29 @@ public class DiskQueue implements MessageQueue{
 		this.index = index;
 		this.name = index.getName();
 		this.writer = new QueueWriter(this.index);
+		loadConsumeGroups();
 	}
 	
 	public DiskQueue(File dir) throws IOException { 
 		this(new Index(dir));
+	}
+	
+	private void loadConsumeGroups() throws IOException{ 
+        File[] readerFiles = index.getReaderDir().listFiles(new FileFilter() { 
+			@Override
+			public boolean accept(File pathname) {
+				return Index.isReaderFile(pathname);
+			}
+		});
+        if (readerFiles != null && readerFiles.length> 0) {
+            for (File readerFile : readerFiles) {  
+            	String groupName = readerFile.getName();
+            	groupName = groupName.substring(0, groupName.lastIndexOf('.'));
+            	
+            	DiskConsumeGroup group = new DiskConsumeGroup(this.index, groupName);
+            	consumeGroups.put(groupName, group);
+            }
+        } 
 	}
 	  
 	public void declareConsumeGroup(ConsumeGroup ctrl) throws Exception{
@@ -234,7 +254,7 @@ public class DiskQueue implements MessageQueue{
 			throw new IllegalArgumentException(consumeGroup + " not found");
 		}   
 		 
-		return index.getMessageCount() - group.reader.getMessageCount()+1; //reader.messageCount is the message to read
+		return index.getMessageCount() - group.reader.getMessageCount(); //reader.messageCount is the message to read
 	} 
 	
 	@Override
@@ -316,10 +336,10 @@ public class DiskQueue implements MessageQueue{
 		info.lastUpdateTime = lastUpdateTime;
 		info.creator = getCreator();
 		info.mode = this.getFlag();
-		info.unconsumedMsgCount = remaining(null);//TODO
-		info.consumerCount = consumerCount(null);//TODO
+		info.unconsumedMsgCount = remaining(name);//TODO
+		info.consumerCount = consumerCount(name);//TODO
 		info.consumerInfoList = new ArrayList<ConsumerInfo>();
-		DiskConsumeGroup group = consumeGroups.get(null);
+		DiskConsumeGroup group = consumeGroups.get(name);
 		if(group != null){
 			for(PullSession pull : group.pullQ){ 
 				info.consumerInfoList.add(pull.getConsumerInfo());
