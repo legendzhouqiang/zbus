@@ -12,10 +12,10 @@ public class Pub {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();    
 		
-		final int count = 1;
+		final int count = 10;
 		for(int i=0;i<count;i++){
 			Message msg = new Message(); 
-			msg.setTag("abc.xx.yy");
+			msg.setTag("abc.zzz.yy");
 			msg.setBody("hello world " + i);
 				
 			producer.sendSync(msg); 

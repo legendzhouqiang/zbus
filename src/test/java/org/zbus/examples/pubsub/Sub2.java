@@ -17,7 +17,7 @@ public class Sub2 {
 		Consumer c = new Consumer(broker, "MyMQ");  
 		
 		//control more details
-		ConsumeGroup group = new ConsumeGroup("Group2");
+		ConsumeGroup group = new ConsumeGroup("Group2"); 
 		c.setConsumeGroup(group);  
 		c.createMQ();
 		

@@ -93,14 +93,14 @@ public class DiskQueue implements MessageQueue{
 				}
 			}
 		}   
-	}  
+	}   
 	
 	@Override
 	public void produce(Message msg, Session session) throws IOException{ 
 		DiskMessage data = new DiskMessage();
-		//TODO validate
 		data.id = msg.getId();
 		data.tag = msg.getTag(); 
+
 		data.body = msg.toBytes(); 
 		writer.write(data); 
 		dispatch();
@@ -135,6 +135,12 @@ public class DiskQueue implements MessageQueue{
 		group.pullQ.offer(pull);  
 		dispatch(group);
 	}   
+	
+	@Override
+	public MessageQueue childMessageQueue() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	private QueueReader findLatestReader(){ 
 		List<DiskConsumeGroup> readerList = new ArrayList<DiskConsumeGroup>(consumeGroups.values());
@@ -179,6 +185,7 @@ public class DiskQueue implements MessageQueue{
 					log.error("data read from queue can not be serialized back to Message type");
 					break;
 				}
+				msg.setOffset(data.offset);
 				
 				Long expire = msg.getExpire();
 				if(expire != null){
@@ -218,9 +225,16 @@ public class DiskQueue implements MessageQueue{
 	}
 	
 	@Override
-	public int remaining(String consumeGroup) { 
-		//TODO
-		return 0;
+	public long remaining(String consumeGroup) { 
+		if(consumeGroup == null){
+			consumeGroup = this.name;
+		} 
+		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
+		if(group == null){
+			throw new IllegalArgumentException(consumeGroup + " not found");
+		}   
+		 
+		return index.getMessageCount() - group.reader.getMessageCount()+1; //reader.messageCount is the message to read
 	} 
 	
 	@Override

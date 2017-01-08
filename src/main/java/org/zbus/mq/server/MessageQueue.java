@@ -14,9 +14,11 @@ public interface MessageQueue {
 	
 	void consume(Message message, Session session) throws IOException;  
 	
+	MessageQueue childMessageQueue();
+	
 	void declareConsumeGroup(ConsumeGroup ctrl) throws Exception;
 	
-	int remaining(String consumeGroup);
+	long remaining(String consumeGroup);
 	
 	int consumerCount(String consumeGroup); 
 	

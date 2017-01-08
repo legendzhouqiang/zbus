@@ -5,17 +5,28 @@ import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * 
+ * 000--blockNumber: 4
+ * 004--offset: 4 
+ * 008--tag: 128
+ * 
+ * @author Rushmore
+ *
+ */
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
-	public static final int READER_FILE_SIZE = 256;  
+	private static final int READER_FILE_SIZE = 256;  
+	private static final int FITER_TAG_POS = 8;  
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
-	
-	private String filterTag; //max: 127 bytes
-	private String[] filterTagParts;
-	
+	 
 	private int blockNumber = 0;
-	private int offset = 0;
+	private int offset = 0; 
+	private String filterTag; //max: 127 bytes
+	
+	private String[] filterTagParts;
+	private long messageCount = 0; 
 	
 	private final Lock readLock = new ReentrantLock();  
 	
@@ -28,6 +39,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		load(file, READER_FILE_SIZE);  
 		 
 		block = this.index.createReadBlock(this.blockNumber);
+		loadMessageCount();
 	}   
 	
 	public QueueReader(QueueReader copy, String readerGroup) throws IOException{
@@ -39,6 +51,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		load(file, READER_FILE_SIZE); 
 		this.blockNumber = copy.blockNumber;
 		this.offset = copy.offset;
+		this.messageCount = copy.messageCount;
 		
 		block = this.index.createReadBlock(this.blockNumber);
 	}   
@@ -49,8 +62,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public boolean seek(long time) throws IOException{ 
 		return true;
-	}  
-	
+	}   
 	
 	public boolean isEOF() throws IOException{
 		readLock.lock();
@@ -66,6 +78,20 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		} 
 	} 
 	
+	private void loadMessageCount() throws IOException{
+		if(block.isEndOfBlock(this.offset)){  
+			if(this.blockNumber+1 >= index.getBlockCount()){
+				this.messageCount = index.getMessageCount();
+				return;
+			}
+			this.blockNumber++;
+			block = this.index.createReadBlock(this.blockNumber);
+			this.offset = 0;
+		}
+		DiskMessage data = block.readHead(offset);
+		this.messageCount = data.messageCount; 
+	}
+	
 	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
 			if(this.blockNumber+1 >= index.getBlockCount()){
@@ -75,9 +101,12 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			block = this.index.createReadBlock(this.blockNumber);
 			this.offset = 0;
 		}
-		DiskMessage data = block.readFully(offset, tagParts);
+		DiskMessage data = block.readByTag(offset, tagParts);
 		this.offset += data.bytesScanned;
-		writeOffset(); 
+		if(data.messageCount > 0){
+			this.messageCount = data.messageCount;
+		}
+		writeOffset();  
 		
 		if(!data.valid){
 			return readUnsafe(tagParts);
@@ -99,7 +128,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	protected void loadDefaultData() throws IOException {
 		buffer.position(0);
 		this.blockNumber = buffer.getInt();
-		this.offset = buffer.getInt();
+		this.offset = buffer.getInt();    
 		
 		byte[] tag = new byte[128];
 		buffer.get(tag);
@@ -117,38 +146,46 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		writeOffset();
 		
 		//write tag
-		buffer.position(8);
+		buffer.position(FITER_TAG_POS);
 		buffer.put((byte)0); //tag default to null
 	}   
-	
+	 
 	public int getBlockNumber() {
 		return blockNumber;
 	}
 
 	public int getOffset() {
 		return offset;
-	} 
-	
+	}  
 
 	public String getFilterTag() {
 		return filterTag;
-	}
+	} 
 
 	public void setFilterTag(String filterTag) {
-		this.filterTag = filterTag;
-		int len = 0;
-		if(filterTag != null){
-			len = filterTag.length();
-			buffer.position(8);
-			buffer.put((byte)len); 
-			buffer.put(this.filterTag.getBytes());
-			
-			filterTagParts = this.filterTag.split("[.]");
-		} else { //clear
-			buffer.position(8);
-			buffer.put((byte)0); 
-			filterTagParts = null;
-		}
+		readLock.lock();
+		try{  
+			this.filterTag = filterTag;
+			int len = 0;
+			if(filterTag != null){
+				len = filterTag.length();
+				buffer.position(FITER_TAG_POS);
+				buffer.put((byte)len); 
+				buffer.put(this.filterTag.getBytes());
+				
+				filterTagParts = this.filterTag.split("[.]");
+			} else { //clear
+				buffer.position(FITER_TAG_POS);
+				buffer.put((byte)0); 
+				filterTagParts = null;
+			}
+		} finally {
+			readLock.unlock();
+		}  
+	} 
+
+	public long getMessageCount() {
+		return messageCount;
 	}
 
 	private void writeOffset(){

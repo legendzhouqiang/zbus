@@ -12,7 +12,7 @@ public class ProducerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		producer.createMQ();
 
-		Message msg = new Message(); 
+		Message msg = new Message();   
 		msg.setBody("hello world " + System.currentTimeMillis());
 		msg = producer.sendSync(msg);
 		

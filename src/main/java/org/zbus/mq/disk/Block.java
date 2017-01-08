@@ -34,6 +34,8 @@ public class Block implements Closeable {
 		
 		this.diskFile = new RandomAccessFile(file,"rw");   
 	}    
+	
+	
 	public int write(DiskMessage data) throws IOException{ 
 		try{
 			lock.lock();
@@ -58,6 +60,8 @@ public class Block implements Closeable {
 			}
 			diskFile.write(id); 
 			diskFile.writeLong(data.corrOffset==null? 0 : data.corrOffset);
+			diskFile.writeLong(index.increaseMessageCount()); //message count write
+			
 			byte[] tag = new byte[128];
 			if(data.tag != null){
 				tag[0] = (byte)data.tag.length();
@@ -75,7 +79,7 @@ public class Block implements Closeable {
 				diskFile.writeInt(0);  
 			} 
 			
-			index.writeEndOffset(endOffset+size);
+			index.writeEndOffset(endOffset+size); 
 			
 			index.newDataAvailable.get().countDown();
 			index.newDataAvailable.set(new CountDownLatch(1)); 
@@ -98,6 +102,7 @@ public class Block implements Closeable {
 			data.id = new String(id, 1, idLen);  
 		}
 		data.corrOffset = diskFile.readLong();
+		data.messageCount = diskFile.readLong();
 		byte[] tag = new byte[128];
 		diskFile.read(tag);
 		int tagLen = tag[0];
@@ -119,6 +124,15 @@ public class Block implements Closeable {
 			data.bytesScanned += size;
 		}
 		return data; 
+    }
+    
+    public DiskMessage readHead(int pos) throws IOException{
+    	try{
+			lock.lock();
+			return readHeadUnsafe(pos);
+    	} finally {
+			lock.unlock();
+		}
     }
     
     public DiskMessage readFully(int pos) throws IOException{ 
@@ -156,7 +170,7 @@ public class Block implements Closeable {
     	return targetParts.length == tagParts.length;
     }
     
-    public DiskMessage readFully(int pos, String[] tagParts) throws IOException{ 
+    public DiskMessage readByTag(int pos, String[] tagParts) throws IOException{ 
     	try{
 			lock.lock(); 
 			if(tagParts == null){
@@ -164,8 +178,10 @@ public class Block implements Closeable {
 			}
 			
 			int bytesScanned = 0;
+			long messageCount = 0;
 			while(!isEndOfBlock(pos+bytesScanned)){
-				DiskMessage data = readHeadUnsafe(pos+bytesScanned);  
+				DiskMessage data = readHeadUnsafe(pos+bytesScanned); 
+				messageCount = data.messageCount;
 				int size = diskFile.readInt();
 				bytesScanned += data.bytesScanned+4+size; 
 				if(!isMatched(tagParts, data.tag)){ 
@@ -186,6 +202,7 @@ public class Block implements Closeable {
 			}
 			
 			DiskMessage data = new DiskMessage();
+			data.messageCount = messageCount;
 			data.valid = false;
 			data.bytesScanned = bytesScanned;
 			return data;

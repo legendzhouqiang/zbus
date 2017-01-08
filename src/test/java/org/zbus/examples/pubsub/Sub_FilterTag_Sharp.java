@@ -14,13 +14,16 @@ public class Sub_FilterTag_Sharp {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception{   
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
-		 
+		
+		
+		
 		ConsumerConfig config = new ConsumerConfig();
 		config.setBroker(broker);
-		config.setMq("MyMQ");
+		config.setMq("MyMQ"); 
+		
 		ConsumeGroup group = new ConsumeGroup();
 		group.setGroupName("Group6");
-		group.setFilterTag("abc.#"); //abc.xx, abc.yy.
+		//group.setFilterTag("abc.#"); //abc.xx, abc.yy.
 		
 		config.setConsumeGroup(group);  
 		

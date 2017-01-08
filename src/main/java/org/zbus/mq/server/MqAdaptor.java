@@ -17,6 +17,7 @@ import org.zbus.mq.ConsumeGroup;
 import org.zbus.mq.Protocol;
 import org.zbus.mq.Protocol.BrokerInfo;
 import org.zbus.mq.Protocol.MqInfo;
+import org.zbus.mq.disk.DiskMessage;
 import org.zbus.net.Session;
 import org.zbus.net.http.Message;
 import org.zbus.net.http.Message.MessageHandler;
@@ -60,9 +61,29 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 	}   
 	
+	private boolean validateMessage(Message msg, Session session) throws IOException{
+		final boolean ack = msg.isAck();  
+		String id = msg.getId();
+		String tag = msg.getTag();
+		if(id != null && id.length()>DiskMessage.ID_MAX_LEN){
+			msg.setBody("Message.Id length should <= "+DiskMessage.ID_MAX_LEN);
+			if(ack) ReplyKit.reply400(msg, session);
+			return false;
+		}
+		if(tag != null && tag.length()>DiskMessage.TAG_MAX_LEN){
+			msg.setBody("Message.Tag length should <= "+DiskMessage.TAG_MAX_LEN);
+			if(ack) ReplyKit.reply400(msg, session);
+			return false;
+		}
+		return true;
+	}
+	
 	private MessageHandler produceHandler = new MessageHandler() { 
 		@Override
-		public void handle(final Message msg, final Session sess) throws IOException { 
+		public void handle(final Message msg, final Session sess) throws IOException {  
+			boolean ok = validateMessage(msg,sess);
+			if(!ok) return;
+			
 			if(!auth(msg)){ 
 				ReplyKit.reply403(msg, sess);
 				return;
@@ -76,9 +97,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					ReplyKit.reply502(msg, sess);
 					return;
 				}
-			}
+			} 
 			
-
 			final boolean ack = msg.isAck();  
 			msg.removeHead(Protocol.CMD);
 			msg.removeHead(Protocol.ACK); 

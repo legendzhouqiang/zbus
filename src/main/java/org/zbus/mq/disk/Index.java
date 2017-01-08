@@ -3,10 +3,22 @@ package org.zbus.mq.disk;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * 
+ * 000-- IndexVersion: 4
+ * 004-- BlockCount: 4
+ * 008-- Flag: 4
+ * 012-- MessageCount: 8 
+ * 
+ * 
+ * @author Rushmore
+ *
+ */
 public class Index extends MappedFile {
 	public static final int IndexVersion  = 0x01;
 	public static final String IndexSuffix = ".idx";
@@ -28,6 +40,8 @@ public class Index extends MappedFile {
 
 	private volatile int blockCount = 0;
 	private volatile int flag = 0;
+	private volatile AtomicLong messageCount = new AtomicLong(0);
+	
 	public final AtomicReference<CountDownLatch> newDataAvailable = new AtomicReference<CountDownLatch>(new CountDownLatch(1));;
 
 	private File indexDir;
@@ -59,6 +73,18 @@ public class Index extends MappedFile {
 			lock.unlock();
 		}
 	}
+	
+	public long increaseMessageCount(){
+		try {
+			lock.lock();
+			buffer.position(12); 
+			long count = messageCount.incrementAndGet();
+			buffer.putLong(count);
+			return count;
+		} finally {
+			lock.unlock();
+		} 
+	} 
 
 	public int readEndOffset() throws IOException {
 		try {
@@ -166,8 +192,8 @@ public class Index extends MappedFile {
 		buffer.putLong(offset.createdTime);
 		buffer.putLong(offset.baseOffset);
 		buffer.putInt(offset.endOffset);
-	}
-
+	} 
+	
 	private Offset addNewOffset() throws IOException {
 		if (blockCount >= BlockMaxCount) {
 			throw new IllegalStateException("Offset table full");
@@ -215,6 +241,7 @@ public class Index extends MappedFile {
 		}
 		this.blockCount = buffer.getInt();
 		this.flag = buffer.getInt();
+		this.messageCount.set(buffer.getLong());
 		readExt();
 	}
 
@@ -224,6 +251,7 @@ public class Index extends MappedFile {
 		buffer.putInt(IndexVersion);
 		writeBlockCount();
 		buffer.putInt(this.flag);
+		buffer.putLong(this.messageCount.get());
 		initExt();
 	}
 
@@ -302,15 +330,15 @@ public class Index extends MappedFile {
 		} finally {
 			lock.unlock();
 		}
+	} 
+	
+	public long getMessageCount(){
+		return this.messageCount.get();
 	}
-	
-	
 
 	public String getName() {
 		return name;
-	}
-
-
+	} 
 
 	public static class Offset {
 		public long baseOffset;
