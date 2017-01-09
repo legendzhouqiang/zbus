@@ -15,7 +15,7 @@ public class Protocol {
 	public static final String CreateMQ  = "create_mq"; //create MQ
 	public static final String RemoveMQ  = "remove_mq"; //remove MQ  
 	 
-	public static final String Test      = "test"; 
+	public static final String Ping      = "ping"; 
 	public static final String Data      = "data"; 
 	public static final String Jquery    = "jquery";  
 	

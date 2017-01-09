@@ -8,20 +8,20 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * 
  * 000--blockNumber: 4
- * 004--offset: 4 
- * 008--tag: 128
+ * 008--offset: 4 
+ * 012--tag: 128
  * 
  * @author Rushmore
  *
  */
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private static final int READER_FILE_SIZE = 256;  
-	private static final int FITER_TAG_POS = 8;  
+	private static final int FITER_TAG_POS = 12;  
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
 	 
-	private int blockNumber = 0;
+	private long blockNumber = 0;
 	private int offset = 0; 
 	private String filterTag; //max: 127 bytes
 	
@@ -34,7 +34,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		this.index = index; 
 		this.readerGroup = readerGroup;  
 		
-		load(readerFile(this.readerGroup), READER_FILE_SIZE); 
+		load(readerFile(this.readerGroup), READER_FILE_SIZE);  
 		 
 		block = this.index.createReadBlock(this.blockNumber);
 		loadMessageCount();
@@ -70,7 +70,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		readLock.lock();
 		try{  
 			if(block.isEndOfBlock(this.offset)){  
-				if(this.blockNumber+1 >= index.getBlockCount()){
+				if(index.overflow(blockNumber+1)){
 					return true;
 				} 
 			} 
@@ -82,7 +82,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	private void loadMessageCount() throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
-			if(this.blockNumber+1 >= index.getBlockCount()){
+			if(index.overflow(blockNumber+1)){
 				this.messageCount = index.getMessageCount();
 				return;
 			}
@@ -96,7 +96,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
-			if(this.blockNumber+1 >= index.getBlockCount()){
+			if(index.overflow(blockNumber+1)){
 				return null;
 			}
 			this.blockNumber++;
@@ -129,7 +129,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	@Override
 	protected void loadDefaultData() throws IOException {
 		buffer.position(0);
-		this.blockNumber = buffer.getInt();
+		this.blockNumber = buffer.getLong();
 		this.offset = buffer.getInt();    
 		
 		byte[] tag = new byte[128];
@@ -152,10 +152,6 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		buffer.put((byte)0); //tag default to null
 	}   
 	 
-	public int getBlockNumber() {
-		return blockNumber;
-	}
-
 	public int getOffset() {
 		return offset;
 	}  
@@ -192,7 +188,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 
 	private void writeOffset(){
 		buffer.position(0); 
-		buffer.putInt(blockNumber);
+		buffer.putLong(blockNumber);
 		
 		buffer.position(4); 
 		buffer.putInt(offset);

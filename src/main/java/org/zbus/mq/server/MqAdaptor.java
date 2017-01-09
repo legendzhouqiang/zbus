@@ -56,7 +56,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.Data, dataHandler); 
 		registerHandler(Protocol.Jquery, jqueryHandler);
-		registerHandler(Protocol.Test, testHandler);
+		registerHandler(Protocol.Ping, pingHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -276,12 +276,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};   
 	
-	private MessageHandler testHandler = new MessageHandler() {
+	private MessageHandler pingHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
 			res.setStatus(200); 
 			res.setId(msg.getId()); 
-			res.setBody("OK");
+			res.setBody(""+System.currentTimeMillis());
 			sess.write(res);
 		}
 	};

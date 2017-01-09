@@ -8,29 +8,24 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
  
-public class Block implements Closeable {  
+class Block implements Closeable {  
 	private final Index index; 
-	private final int blockNumber; 
+	private final long blockNumber; 
 	
 	private RandomAccessFile diskFile; 
 	private final Lock lock = new ReentrantLock();  
 	
-	Block(Index index, File file, int blockNumber) throws IOException{   
+	Block(Index index, File file, long blockNumber) throws IOException{   
 		this.index = index;
 		this.blockNumber = blockNumber;
-		if(this.blockNumber < 0){
-			throw new IllegalArgumentException("blockNumber should>=0 but was " + blockNumber);
-		}
-		if(this.blockNumber >= index.getBlockCount()){
-			throw new IllegalArgumentException("blockNumber should<"+index.getBlockCount() + " but was " + blockNumber);
-		}
+		this.index.checkBlockNumber(blockNumber);
 		
 		if(!file.exists()){
 			File dir = file.getParentFile();
 			if(!dir.exists()){
 				dir.mkdirs();
 			}  
-		}  
+		}   
 		
 		this.diskFile = new RandomAccessFile(file,"rw");   
 	}    
@@ -232,11 +227,7 @@ public class Block implements Closeable {
     
     private int endOffset() throws IOException{
     	return index.readOffset(blockNumber).endOffset;
-    }
-	
-    public int getBlockNumber() {
-		return blockNumber;
-	}
+    } 
     
 	@Override
 	public void close() throws IOException {  
