@@ -1,4 +1,4 @@
-package org.zbus.unitests.mq;
+package org.zbus.mq;
 
 import java.io.IOException;
 

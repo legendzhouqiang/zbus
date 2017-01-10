@@ -31,7 +31,7 @@ public class Index extends MappedFile {
 	public static final long BlockMaxSize = 64 * 1024 * 1024; // default to 64M
 	
 
-	private static final int OffsetSize = 20;
+	private static final int OffsetSize = 28;
 	private static final int IndexHeadSize = 1024;
 	private static final int IndexSize = IndexHeadSize + BlockMaxCount * OffsetSize;
 
@@ -62,18 +62,7 @@ public class Index extends MappedFile {
 		this.name = indexDir.getName();
 		File file = new File(indexDir, this.indexDir.getName() + IndexSuffix);
 		load(file, IndexSize);
-	}
-
-	private long currentBlockNumber(){ 
-		return blockStart+blockCount-1;
-	}
-	private int currentBlockPosition(){ 
-		return blockPosition(currentBlockNumber());
-	}
-	private int blockPosition(long blockNumber){ 
-		return (int)(IndexHeadSize + (blockNumber%BlockMaxCount)*OffsetSize);
-	}
-	
+	}  
 	/**
 	 * Write endOffset of last block
 	 * 
@@ -86,6 +75,7 @@ public class Index extends MappedFile {
 			lock.lock();
 			buffer.position(currentBlockPosition() + 16);
 			buffer.putInt(endOffset);
+			buffer.putLong(System.currentTimeMillis());
 		} finally {
 			lock.unlock();
 		}
@@ -135,6 +125,7 @@ public class Index extends MappedFile {
 		offset.createdTime = buffer.getLong();
 		offset.baseOffset = buffer.getLong();
 		offset.endOffset = buffer.getInt();
+		offset.updatedTime = buffer.getLong();
 		return offset;
 	}
 
@@ -191,11 +182,76 @@ public class Index extends MappedFile {
 	public int getBlockCount() {
 		return blockCount;
 	}
+	public long getBlockStart(){
+		return this.blockStart;
+	}
+	
+	public long currentBlockNumber(){ 
+		return blockStart+blockCount-1;
+	} 
+	
+	private int currentBlockPosition(){ 
+		return blockPosition(currentBlockNumber());
+	}
+	
+	private int blockPosition(long blockNumber){ 
+		return (int)(IndexHeadSize + (blockNumber%BlockMaxCount)*OffsetSize);
+	}
+	
+	public int currentWriteOffset() throws IOException{
+		return readOffset(currentBlockNumber()).endOffset;
+	}
 	
 	public boolean overflow(long blockNumber){
-		return blockNumber>(blockStart+blockCount);
+		return blockNumber>=(blockStart+blockCount);
 	}
-
+	
+	public long shrinkBySize(long targetSize) throws IOException{
+		if(targetSize <=0){
+			throw new IllegalArgumentException("targetSize should > 0, but = " + targetSize);
+		}
+		try {
+			lock.lock();
+			int remainBlockCount = (int)(targetSize/BlockMaxSize);
+			if(remainBlockCount <= 0){
+				return Long.MAX_VALUE; //all deleted
+			}
+			if(remainBlockCount >= blockCount){
+				remainBlockCount = blockCount;
+			}
+			Offset offset = readOffsetUnsafe(blockStart+blockCount-remainBlockCount);
+			blockCount = remainBlockCount;
+			blockStart += (blockCount-remainBlockCount);
+			
+			return offset.baseOffset + offset.endOffset;
+		} finally {
+			lock.unlock();
+		}  
+	} 
+	
+	public long shrinkByTime(long startTime) throws IOException{ 
+		try {
+			lock.lock();
+			if(startTime >= System.currentTimeMillis()){
+				return Long.MAX_VALUE;
+			}
+			int remainBlockCount = blockCount;
+			for(long i=blockStart;i<blockStart+blockCount;i++){
+				Offset offset = readOffsetUnsafe(i);
+				if(startTime < offset.updatedTime) break;
+				remainBlockCount--;
+			}
+			
+			Offset offset = readOffsetUnsafe(blockStart+blockCount-remainBlockCount);
+			blockCount = remainBlockCount;
+			blockStart += (blockCount-remainBlockCount);
+			
+			return offset.baseOffset + offset.endOffset;
+		} finally {
+			lock.unlock();
+		}  
+	} 
+	
 	private File blockFile(long baseOffset) {
 		String fileName = String.format("%020d%s", baseOffset, BlockSuffix);
 		File blockDir = new File(indexDir, BlockDir);
@@ -208,6 +264,7 @@ public class Index extends MappedFile {
 		buffer.putLong(offset.createdTime);
 		buffer.putLong(offset.baseOffset);
 		buffer.putInt(offset.endOffset);
+		buffer.putLong(offset.updatedTime);
 	} 
 	
 	private Offset addNewOffset() throws IOException {
@@ -222,9 +279,9 @@ public class Index extends MappedFile {
 		}
 
 		Offset offset = new Offset();
-		offset.createdTime = System.currentTimeMillis();
+		offset.updatedTime = offset.createdTime = System.currentTimeMillis();
 		offset.baseOffset = baseOffset;
-		offset.endOffset = 0;
+		offset.endOffset = 0; 
 		
 		blockCount++;
 		writeBlockCount();
@@ -363,5 +420,6 @@ public class Index extends MappedFile {
 		public long baseOffset;
 		public long createdTime;
 		public int endOffset;
+		public long updatedTime; 
 	}
 }

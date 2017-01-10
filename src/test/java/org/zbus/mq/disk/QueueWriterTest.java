@@ -1,4 +1,4 @@
-package org.zbus.unitests.mq;
+package org.zbus.mq.disk;
 
 import java.io.File;
 
@@ -13,7 +13,7 @@ public class QueueWriterTest {
 		Index index = new Index(new File("C:/tmp/StringQueue")); 
 		QueueWriter w = new QueueWriter(index);
 		
-		for(int i=0; i<1;i++){
+		for(int i=0; i<10;i++){
 			DiskMessage message = new DiskMessage();
 			message.body = new String("hello"+i).getBytes();
 			w.write(message);

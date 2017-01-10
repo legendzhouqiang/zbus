@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 
- * 000--blockNumber: 4
+ * 000--blockNumber: 8
  * 008--offset: 4 
  * 012--tag: 128
  * 
@@ -21,7 +21,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private final Index index;  
 	private final String readerGroup; 
 	 
-	private long blockNumber = 0;
+	private long blockNumber;
 	private int offset = 0; 
 	private String filterTag; //max: 127 bytes
 	
@@ -32,9 +32,19 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public QueueReader(Index index, String readerGroup) throws IOException{
 		this.index = index; 
-		this.readerGroup = readerGroup;  
+		this.readerGroup = readerGroup;   
 		
-		load(readerFile(this.readerGroup), READER_FILE_SIZE);  
+		load(readerFile(this.readerGroup), READER_FILE_SIZE); 
+		
+		if(this.blockNumber < index.getBlockStart()){ //forward to oldest available
+			this.blockNumber = index.getBlockStart();
+			this.offset = 0;
+			writeOffset();
+		}
+		if(index.overflow(this.blockNumber)){ //backward to latest available
+			this.blockNumber = index.currentBlockNumber(); 
+			this.offset = index.currentWriteOffset();
+		}
 		 
 		block = this.index.createReadBlock(this.blockNumber);
 		loadMessageCount();
@@ -108,6 +118,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		if(data.messageCount > 0){
 			this.messageCount = data.messageCount-1;
 		}
+		
 		writeOffset();  
 		
 		if(!data.valid){
@@ -142,7 +153,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	@Override
 	protected void writeDefaultData() throws IOException {
-		this.blockNumber = 0;
+		this.blockNumber = index.getBlockStart();
 		this.offset = 0;
 		
 		writeOffset();
@@ -188,9 +199,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 
 	private void writeOffset(){
 		buffer.position(0); 
-		buffer.putLong(blockNumber);
-		
-		buffer.position(4); 
+		buffer.putLong(blockNumber); 
 		buffer.putInt(offset);
 	}
 

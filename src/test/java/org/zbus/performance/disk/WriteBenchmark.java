@@ -1,4 +1,4 @@
-package org.zbus.unitests.mq;
+package org.zbus.performance.disk;
 
 import java.io.File;
 import java.io.RandomAccessFile;
