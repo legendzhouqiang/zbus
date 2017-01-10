@@ -12,7 +12,7 @@ public class ProducerExpireExample {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		Producer producer = new Producer(broker, "MyMQ");
-		producer.createMQ();
+		producer.declareMQ();
 
 		Message msg = new Message();
 		msg.setTtl(10, TimeUnit.SECONDS);

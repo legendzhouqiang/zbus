@@ -25,7 +25,7 @@ public class Sub_FilterTag_Star {
 		config.setConsumeGroup(group);  
 		
 		Consumer c = new Consumer(config);    
-		c.createMQ();
+		c.declareMQ();
 		
 		c.start(new ConsumerHandler() { 
 			@Override

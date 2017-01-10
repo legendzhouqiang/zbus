@@ -15,7 +15,7 @@ public class Sub1 {
 		
 		Consumer c = new Consumer(broker, "MyMQ");  
 		c.setConsumeGroup("Group1"); //different groups consumes the same MQ data	 
-		c.createMQ();
+		c.declareMQ();
 		
 		c.start(new ConsumerHandler() {
 			@Override

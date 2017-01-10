@@ -9,7 +9,7 @@ public class MqAdminExample {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");    
 		for(int i=0;i<100;i++){
 			MqAdmin admin = new MqAdmin(broker, "MyMQ-"+i); 
-			admin.createMQ();
+			admin.declareMQ();
 		} 
 		
 		for(int i=0;i<100;i++){

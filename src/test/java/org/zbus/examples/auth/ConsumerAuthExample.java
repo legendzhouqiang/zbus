@@ -24,7 +24,7 @@ public class ConsumerAuthExample {
 		config.setToken("token");  
 		
 		Consumer consumer = new Consumer(config);   
-		consumer.createMQ();
+		consumer.declareMQ();
 		consumer.start(new ConsumerHandler() { 
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException { 

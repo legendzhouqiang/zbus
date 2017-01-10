@@ -10,7 +10,7 @@ public class ProducerPressure {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		Producer producer = new Producer(broker, "MyMQ");
-		producer.createMQ();
+		producer.declareMQ();
 
 		for(int i=0;i<100000000;i++){
 			Message msg = new Message();

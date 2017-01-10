@@ -48,15 +48,15 @@ public class MqAdmin{
     	
     	return invokeSync(req); 
 	} 
-	protected Message buildCreateMQMessage(){
+	protected Message buildDeclareMQMessage(){
 		Message req = new Message();
 		fillCommonHeaders(req);
     	req.setCmd(Protocol.CreateMQ);   
     	return req;
 	}
      
-    public boolean createMQ() throws IOException, InterruptedException{ 
-    	Message req = buildCreateMQMessage(); 
+    public boolean declareMQ() throws IOException, InterruptedException{ 
+    	Message req = buildDeclareMQMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
@@ -96,4 +96,15 @@ public class MqAdmin{
 		this.token = token;
 	}  
 
+	
+	/**
+	 * @deprecated use declareMQ instead
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+    public boolean createMQ() throws IOException, InterruptedException{ 
+    	return declareMQ();
+    }    
+    
 }

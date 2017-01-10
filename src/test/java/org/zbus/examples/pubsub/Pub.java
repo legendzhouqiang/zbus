@@ -10,7 +10,7 @@ public class Pub {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555");
 		 
 		Producer producer = new Producer(broker, "MyMQ");
-		producer.createMQ();    
+		producer.declareMQ();    
 		
 		final int count = 1;
 		for(int i=0;i<count;i++){

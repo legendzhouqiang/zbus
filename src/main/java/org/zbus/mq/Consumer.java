@@ -48,8 +48,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		return hint;
 	}
 	
-	protected Message buildCreateMQMessage(){
-		Message req = super.buildCreateMQMessage();  
+	protected Message buildDeclareMQMessage(){
+		Message req = super.buildDeclareMQMessage();  
     	if(this.consumeGroup != null){
 	    	req.setConsumeGroup(consumeGroup.getGroupName());
 	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
@@ -94,7 +94,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 
 			if ("404".equals(res.getStatus())) {
-				if (!this.createMQ()) {
+				if (!this.declareMQ()) {
 					throw new MqException(res.getBodyString());
 				}
 				return take(timeout);

@@ -20,7 +20,7 @@ public class Sub4 {
 		config.setConsumeGroup("Group4");
 		
 		Consumer c = new Consumer(config);    
-		c.createMQ();
+		c.declareMQ();
 		
 		c.start(new ConsumerHandler() { 
 			@Override
