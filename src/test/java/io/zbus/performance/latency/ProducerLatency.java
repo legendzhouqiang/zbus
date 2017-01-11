@@ -17,7 +17,7 @@ public class ProducerLatency {
 		final Broker broker = Perf.buildBroker(args);
  
 		Producer producer = new Producer(broker, mq);
-		producer.declareMQ(); 
+		producer.declareQueue(); 
   
 		long total = 0;
 		for(int i=0;i<loopCount;i++){

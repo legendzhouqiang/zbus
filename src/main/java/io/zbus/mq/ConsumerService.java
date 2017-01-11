@@ -69,7 +69,7 @@ public class ConsumerService implements Closeable {
 		for(int i=0; i<consumers.length; i++){
 			Consumer[] consumerGroup = consumers[i] = new Consumer[consumerCount];
 			
-			ConsumerConfig mqConfig = new ConsumerConfig();
+			MqConfig mqConfig = new MqConfig();
 			mqConfig.setBroker(brokers[i]);
 			mqConfig.setMq(config.getMq()); 
 			mqConfig.setVerbose(config.isVerbose());

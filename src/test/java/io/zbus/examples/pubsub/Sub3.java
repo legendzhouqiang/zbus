@@ -12,7 +12,7 @@ public class Sub3 {
 		
 		Consumer c = new Consumer(broker, "MyMQ");   
 		c.setConsumeGroup("Group3");  
-		c.declareMQ();
+		c.declareQueue();
 		
 		while(true){ //take one by one, controlled by caller
 			Message message = c.take();

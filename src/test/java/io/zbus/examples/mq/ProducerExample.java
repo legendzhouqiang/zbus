@@ -10,7 +10,7 @@ public class ProducerExample {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		Producer producer = new Producer(broker, "MyMQ");
-		producer.declareMQ();
+		producer.declareQueue();
 
 		Message msg = new Message();   
 		msg.setBody("hello world " + System.currentTimeMillis());

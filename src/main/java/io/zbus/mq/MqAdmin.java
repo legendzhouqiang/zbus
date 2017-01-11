@@ -40,7 +40,7 @@ public class MqAdmin{
 		message.setToken(this.token); 
 	}
 	
-	public Message queryMQ() throws IOException, InterruptedException{
+	public Message queryQueue() throws IOException, InterruptedException{
 		Message req = new Message();
 		fillCommonHeaders(req); 
     	req.setCmd(Protocol.QueryMQ);  
@@ -54,14 +54,14 @@ public class MqAdmin{
     	return req;
 	}
      
-    public boolean declareMQ() throws IOException, InterruptedException{ 
+    public boolean declareQueue() throws IOException, InterruptedException{ 
     	Message req = buildDeclareMQMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
     }    
     
-    public boolean removeMQ() throws IOException, InterruptedException{
+    public boolean removeQueue() throws IOException, InterruptedException{
     	Message req = new Message();
     	fillCommonHeaders(req); 
     	req.setCmd(Protocol.RemoveMQ); 
@@ -93,17 +93,6 @@ public class MqAdmin{
 
 	public void setToken(String token) {
 		this.token = token;
-	}  
-
-	
-	/**
-	 * @deprecated use declareMQ instead
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-    public boolean createMQ() throws IOException, InterruptedException{ 
-    	return declareMQ();
-    }    
+	}   
     
 }

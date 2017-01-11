@@ -19,7 +19,7 @@ public class Sub2 {
 		//control more details
 		ConsumeGroup group = new ConsumeGroup("Group2"); 
 		c.setConsumeGroup(group);  
-		c.declareMQ();
+		c.declareQueue();
 		
 		c.start(new ConsumerHandler() { 
 			@Override

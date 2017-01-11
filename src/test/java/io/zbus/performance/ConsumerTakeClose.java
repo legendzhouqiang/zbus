@@ -3,7 +3,7 @@ package io.zbus.performance;
 import io.zbus.kit.ConfigKit;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
-import io.zbus.mq.ConsumerConfig;
+import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
@@ -17,7 +17,7 @@ public class ConsumerTakeClose {
 		brokerConfig.setBrokerAddress(serverAddress);
 		Broker broker = new ZbusBroker(brokerConfig);
 		
-		final ConsumerConfig config = new ConsumerConfig(); 
+		final MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
 		config.setMq(mq); 
 		

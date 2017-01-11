@@ -34,7 +34,7 @@ public class ProducerPerf {
 					
 					@Override
 					public void initTask() throws Exception {
-						producer.declareMQ();
+						producer.declareQueue();
 					}
 					
 					@Override

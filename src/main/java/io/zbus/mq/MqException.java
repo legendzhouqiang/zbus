@@ -13,6 +13,5 @@ public class MqException extends RuntimeException {
 	}
 	public MqException(Throwable cause) {
 		super(cause); 
-	}  
-    
+	}   
 }

@@ -6,6 +6,11 @@ public class MqConfig implements Cloneable {
 	protected String appid;
 	protected String token; 
 	protected Integer flag;
+	
+	protected ConsumeGroup consumeGroup; 
+	protected Integer consumeWindow;
+	
+	
 	protected boolean verbose = false; 
 	
 	public Broker getBroker() {
@@ -55,6 +60,27 @@ public class MqConfig implements Cloneable {
 	public void setFlag(Integer flag) {
 		this.flag = flag;
 	}  
+	
+	public ConsumeGroup getConsumeGroup() {
+		return consumeGroup;
+	} 
+	
+	public void setConsumeGroup(ConsumeGroup consumeGroup) {
+		this.consumeGroup = consumeGroup;
+	}  
+	
+	public void setConsumeGroup(String consumeGroup) {
+		this.consumeGroup = new ConsumeGroup(consumeGroup);
+	} 
+
+	public Integer getConsumeWindow() {
+		return consumeWindow;
+	}
+	
+	public void setConsumeWindow(Integer consumeWindow) {
+		this.consumeWindow = consumeWindow;
+	} 
+	
 	
 	@Override
 	public MqConfig clone() { 

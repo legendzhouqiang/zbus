@@ -8,8 +8,8 @@ import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
-import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Consumer.ConsumerHandler;
+import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
@@ -27,7 +27,7 @@ public class ConsumerPerf {
 		brokerConfig.setBrokerAddress(serverAddress);
 		Broker broker = new ZbusBroker(brokerConfig);
 		
-		ConsumerConfig config = new ConsumerConfig(); 
+		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
 		config.setMq(mq); 
 		

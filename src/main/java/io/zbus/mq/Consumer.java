@@ -24,22 +24,13 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Consumer(Broker broker, String mq) {
 		super(broker, mq);
-	}   
+	} 
 	
-	public Consumer(ConsumerConfig config) {
-		super(config);  
-		this.consumeGroup = config.getConsumeGroup();
-		this.consumeWindow = config.getConsumeWindow();
-	}    
-	
-	/**
-	 * @deprecated
-	 * @param config
-	 */
 	public Consumer(MqConfig config) {
 		super(config);   
-	}
-	
+		this.consumeGroup = config.getConsumeGroup();
+		this.consumeWindow = config.getConsumeWindow();
+	} 
 
 	private BrokerHint brokerHint() {
 		BrokerHint hint = new BrokerHint();
@@ -93,7 +84,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 
 			if ("404".equals(res.getStatus())) {
-				if (!this.declareMQ()) {
+				if (!this.declareQueue()) {
 					throw new MqException(res.getBodyString());
 				}
 				return take(timeout);
