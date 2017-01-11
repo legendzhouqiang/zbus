@@ -31,18 +31,18 @@ public class MqInvoker implements MessageInvoker {
 	@Override
 	public Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
 		req.setAck(false);
-		return this.producer.sendSync(req, timeout);
+		return this.producer.produce(req, timeout);
 	}
 
 	@Override
 	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
 		req.setAck(false);
-		this.producer.sendAsync(req, callback);
+		this.producer.produceAsync(req, callback);
 	}
 
 	@Override
 	public Message invokeSync(Message req) throws IOException, InterruptedException {
 		req.setAck(false);
-		return this.producer.sendSync(req);
+		return this.producer.produce(req);
 	}
 }

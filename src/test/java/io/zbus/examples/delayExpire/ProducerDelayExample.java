@@ -18,7 +18,7 @@ public class ProducerDelayExample {
 		msg.setDelay(10, TimeUnit.SECONDS);
 		
 		msg.setBody("hello world " + System.currentTimeMillis());
-		msg = producer.sendSync(msg);
+		msg = producer.produce(msg);
 		System.out.println(msg);
 
 		broker.close();

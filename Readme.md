@@ -3,7 +3,7 @@
  Do **NOT** use in production, still alpha
 
 ##API
-	QueueConfig
+	MqConfig
 		+ broker
 		+ mq
 		+ appid
@@ -13,7 +13,7 @@
 		+ consumeTimeout
 		+ filterTag
 	
-	QueueAdmin
+	MqAdmin
 		+ declareQueue()
 		+ queryQueue()
 		+ removeQueue()
@@ -25,7 +25,7 @@
 		+ consume()
 		+ route(msg)
 	
-	ConsumerServiceConfig : QueueConfig
+	ConsumerServiceConfig : MqConfig
 		+ messageHandler
 		+ messagePrefetchCount
 		+ parallelFactor

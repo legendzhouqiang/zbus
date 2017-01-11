@@ -15,24 +15,24 @@ public class Producer extends MqAdmin {
 		super(config);
 	} 
  
-	public void sendAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
+	public void produceAsync(Message msg, final ResultCallback<Message> callback) throws IOException {
 		fillCommonHeaders(msg);
 		msg.setCmd(Protocol.Produce);
 		broker.invokeAsync(msg, callback);
 	}
  
-	public void sendAsync(Message msg) throws IOException {
-		sendAsync(msg, null);
+	public void produceAsync(Message msg) throws IOException {
+		produceAsync(msg, null);
 	}
  
-	public Message sendSync(Message msg, int timeout) throws IOException, InterruptedException {
+	public Message produce(Message msg, int timeout) throws IOException, InterruptedException {
 		fillCommonHeaders(msg);
 		msg.setCmd(Protocol.Produce);
 		
 		return broker.invokeSync(msg, timeout);
 	}
  
-	public Message sendSync(Message msg) throws IOException, InterruptedException {
-		return sendSync(msg, 10000);
+	public Message produce(Message msg) throws IOException, InterruptedException {
+		return produce(msg, 10000);
 	} 
 }

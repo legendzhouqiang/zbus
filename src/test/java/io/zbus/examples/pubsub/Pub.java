@@ -18,7 +18,7 @@ public class Pub {
 			msg.setTag("abc.zzz.yy");
 			msg.setBody("hello world " + i);
 				
-			producer.sendSync(msg); 
+			producer.produce(msg); 
 			if((i+1)*10%count==0){
 				System.out.println(i+1);
 			}

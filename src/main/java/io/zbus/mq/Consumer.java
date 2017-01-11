@@ -172,8 +172,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	//The followings are all related to start consumer cycle in another thread
 	private volatile Thread consumerThread = null;
-	private volatile ConsumerHandler consumerHandler;
-	private volatile ConsumerExceptionHandler consumerExceptionHandler;
+	private volatile ConsumerHandler consumerHandler; 
 	private int consumerHandlerPoolSize = 64;
 	private int inFlightMessageCount = 64;
 	private boolean consumerHandlerRunInPool = false;
@@ -201,11 +200,7 @@ public class Consumer extends MqAdmin implements Closeable {
 					} catch (InterruptedException e) {
 						Consumer.this.close();
 						break;
-					} catch (MqException e) {
-						if(consumerExceptionHandler != null){
-							consumerExceptionHandler.onException(e, Consumer.this);
-							break;
-						} 
+					} catch (MqException e) { 
 						throw e; 
 					} 
 					if (consumerHandler == null) {
@@ -232,12 +227,8 @@ public class Consumer extends MqAdmin implements Closeable {
 						}
 					}
 					
-				} catch (IOException e) { 
-					if(consumerExceptionHandler != null){
-						consumerExceptionHandler.onException(e, Consumer.this);
-					} else {
-						log.error(e.getMessage(), e);
-					}
+				} catch (IOException e) {  
+					log.error(e.getMessage(), e); 
 				}
 			}
 		}
@@ -245,11 +236,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void onMessage(final ConsumerHandler handler) throws IOException { 
 		this.consumerHandler = handler; 
-	}
-	
-	public void onException(final ConsumerExceptionHandler handler) {
-		this.consumerExceptionHandler = handler;
-	}
+	} 
 
 	public void close() throws IOException {
 		stop(); 
@@ -330,9 +317,5 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public static interface ConsumerHandler{
 		void handle(Message msg, Consumer consumer) throws IOException;
-	}
-	
-	public static interface ConsumerExceptionHandler { 
-		void onException(Exception e, Consumer consumer);   
-	}
+	} 
 }

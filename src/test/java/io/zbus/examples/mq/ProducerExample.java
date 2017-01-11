@@ -9,12 +9,12 @@ public class ProducerExample {
 	public static void main(String[] args) throws Exception {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
-		Producer producer = new Producer(broker, "MyMQ");
-		producer.declareQueue();
+		Producer p = new Producer(broker, "MyMQ");
+		p.declareQueue();
 
 		Message msg = new Message();   
 		msg.setBody("hello world " + System.currentTimeMillis());
-		msg = producer.sendSync(msg);
+		msg = p.produce(msg);
 		
 		System.out.println(msg);
 
