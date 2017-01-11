@@ -5,7 +5,7 @@ JAVA_HOME=/apps/jdk7
 fi
 ZBUS_HOME=../
 JAVA_OPTS="-Dfile.encoding=UTF-8 -server -Xms64m -Xmx1024m -XX:+UseParallelGC"
-MAIN_CLASS=org.zbus.broker.ha.TrackServer
+MAIN_CLASS=io.zbus.broker.ha.TrackServer
 if [ -z "$1" ]
   then
     MAIN_OPTS="-conf ../conf/ha/tracker1.xml"

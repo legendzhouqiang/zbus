@@ -3,7 +3,7 @@ ECHO OFF
 REM SET JAVA_HOME=D:\SDK\jdk6_x64
 SET ZBUS_HOME=..
 SET JAVA_OPTS=-server -Xms64m -Xmx1024m -XX:+UseParallelGC
-SET MAIN_CLASS=org.zbus.broker.ha.TrackServer
+SET MAIN_CLASS=io.zbus.broker.ha.TrackServer
 
 IF "%1" == "" ( 
 	SET MAIN_OPTS=-conf ../conf/ha/tracker1.xml 
