@@ -138,7 +138,7 @@ MqServer uses a HTTP header extension key called 'cmd' to distinguish job reques
 
 	[R]recver={string} -- route back message to a specified producer
 
-## HTTP URL Access
+**HTTP URL Access**
 
 Url parse rule: 1) requestPath trimmed of / => cmd, 2)key-value extracted to override header if missing.
 
