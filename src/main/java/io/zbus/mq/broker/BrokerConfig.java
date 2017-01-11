@@ -20,9 +20,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker;
+package io.zbus.mq.broker;
 
-import io.zbus.broker.HaBroker.BrokerSelector;
+import io.zbus.mq.broker.HaBroker.BrokerSelector;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
 import io.zbus.net.EventDriver;

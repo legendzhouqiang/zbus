@@ -1,7 +1,7 @@
 package io.zbus.examples.broker;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
+import io.zbus.mq.Broker;
+import io.zbus.mq.broker.ZbusBroker;
 
 public class BrokerExample {
 

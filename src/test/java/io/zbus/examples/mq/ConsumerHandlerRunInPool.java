@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Consumer.ConsumerHandler;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 
 public class ConsumerHandlerRunInPool { 

@@ -1,6 +1,5 @@
 package io.zbus.mq;
 
-import io.zbus.broker.Broker;
 import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.net.http.Message.MessageProcessor;
 

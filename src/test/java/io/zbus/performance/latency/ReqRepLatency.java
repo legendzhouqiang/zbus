@@ -1,11 +1,11 @@
 package io.zbus.performance.latency;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.BrokerConfig;
-import io.zbus.broker.ZbusBroker;
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker;
+import io.zbus.mq.broker.BrokerConfig;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 import io.zbus.net.http.Message.MessageInvoker;
 import io.zbus.rpc.mq.MqInvoker;

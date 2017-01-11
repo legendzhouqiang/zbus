@@ -2,13 +2,13 @@ package io.zbus.performance.rpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.BrokerConfig;
-import io.zbus.broker.ZbusBroker;
 import io.zbus.examples.rpc.appdomain.InterfaceExample;
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker;
+import io.zbus.mq.broker.BrokerConfig;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message.MessageInvoker;
 import io.zbus.rpc.RpcFactory;
 import io.zbus.rpc.mq.MqInvoker;

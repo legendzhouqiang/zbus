@@ -2,8 +2,8 @@ package io.zbus.examples.ha;
 
 import java.io.InputStream;
 
-import io.zbus.broker.ha.TrackServer;
-import io.zbus.broker.ha.TrackServerConfig;
+import io.zbus.mq.tracker.TrackServer;
+import io.zbus.mq.tracker.TrackServerConfig;
 
 public class Track1 { 
 	@SuppressWarnings("resource")

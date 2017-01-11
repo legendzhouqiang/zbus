@@ -20,14 +20,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker.ha;
+package io.zbus.mq;
 
-public interface HaCommand {  
-	public static final String EntryUpdate   = "entry_update"; 
-	public static final String EntryRemove   = "entry_remove";
-	public static final String ServerJoin    = "server_join";
-	public static final String ServerLeave   = "server_leave";
+import java.io.Closeable;
+import java.io.IOException;
+
+import io.zbus.kit.NetKit;
+import io.zbus.net.http.Message.MessageInvoker;
+
+
+public interface Broker extends MessageInvoker, Closeable{ 
+	MessageInvoker getInvoker(BrokerHint hint) throws IOException; 
+	void closeInvoker(MessageInvoker invoker) throws IOException; 
 	
-	public static final String PubAll        = "pub_all"; 
-	public static final String SubAll        = "sub_all";   
+	public static class BrokerHint {   
+		private static final String requestIp = NetKit.getLocalIp();
+		private String server;  
+		private String entry;   
+		
+		public String getRequestIp(){
+			return requestIp;
+		} 
+		public String getEntry() {
+			return entry;
+		}
+		public void setEntry(String entry) {
+			this.entry = entry;
+		}
+		public String getServer() {
+			return server;
+		}
+		public void setServer(String server) {
+			this.server = server;
+		}  
+	}
 }

@@ -2,10 +2,10 @@ package io.zbus.examples.mq;
 
 import java.io.IOException;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Consumer.ConsumerHandler;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 
 public class ConsumerCloseClear { 

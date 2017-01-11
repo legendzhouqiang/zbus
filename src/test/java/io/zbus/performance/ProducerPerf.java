@@ -1,11 +1,11 @@
 package io.zbus.performance;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.BrokerConfig;
-import io.zbus.broker.ZbusBroker;
 import io.zbus.kit.ConfigKit;
+import io.zbus.mq.Broker;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.Producer;
+import io.zbus.mq.broker.BrokerConfig;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 
 public class ProducerPerf {

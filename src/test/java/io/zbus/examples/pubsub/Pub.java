@@ -1,8 +1,8 @@
 package io.zbus.examples.pubsub;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Producer;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 
 public class Pub {

@@ -2,11 +2,11 @@ package io.zbus.examples.broker;
 
 import java.io.IOException;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.JvmBroker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Producer;
 import io.zbus.mq.Consumer.ConsumerHandler;
+import io.zbus.mq.broker.JvmBroker;
 import io.zbus.net.http.Message;
 
 public class JvmBrokerExample {

@@ -20,24 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker;
+package io.zbus.mq.tracker;
 
-import java.io.IOException;
-
-public class BrokerException extends IOException {   
-	private static final long serialVersionUID = -468381747145861969L;
+public interface HaCommand {  
+	public static final String EntryUpdate   = "entry_update"; 
+	public static final String EntryRemove   = "entry_remove";
+	public static final String ServerJoin    = "server_join";
+	public static final String ServerLeave   = "server_leave";
 	
-	public BrokerException(String message){
-    	super(message);
-    }
-	public BrokerException() {
-		super(); 
-	}
-	public BrokerException(String message, Throwable cause) {
-		super(message, cause); 
-	}
-	public BrokerException(Throwable cause) {
-		super(cause); 
-	}  
-    
+	public static final String PubAll        = "pub_all"; 
+	public static final String SubAll        = "sub_all";   
 }

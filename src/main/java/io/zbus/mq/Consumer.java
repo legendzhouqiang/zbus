@@ -7,10 +7,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.Broker.BrokerHint;
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker.BrokerHint;
 import io.zbus.net.Sync.ResultCallback;
 import io.zbus.net.http.Message;
 import io.zbus.net.http.Message.MessageInvoker; 

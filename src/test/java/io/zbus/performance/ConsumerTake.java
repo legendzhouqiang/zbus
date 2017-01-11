@@ -1,11 +1,11 @@
 package io.zbus.performance;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.BrokerConfig;
-import io.zbus.broker.ZbusBroker;
 import io.zbus.kit.ConfigKit;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
+import io.zbus.mq.broker.BrokerConfig;
+import io.zbus.mq.broker.ZbusBroker;
 
 public class ConsumerTake {
 	public static void main(String[] args) throws Exception{   

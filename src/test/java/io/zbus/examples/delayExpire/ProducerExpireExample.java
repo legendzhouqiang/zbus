@@ -2,9 +2,9 @@ package io.zbus.examples.delayExpire;
 
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Producer;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.net.http.Message;
 
 public class ProducerExpireExample {

@@ -20,13 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker;
+package io.zbus.mq.broker;
 
 import java.io.Closeable;
 import java.io.IOException;
 
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
 import io.zbus.net.Sync.ResultCallback;

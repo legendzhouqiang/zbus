@@ -2,11 +2,11 @@ package io.zbus.examples.ha.rpc;
 
 import java.io.IOException;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.ZbusBroker;
 import io.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
+import io.zbus.mq.Broker;
 import io.zbus.mq.ConsumerService;
 import io.zbus.mq.ConsumerServiceConfig;
+import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.rpc.RpcProcessor;
 
 public class RpcService {

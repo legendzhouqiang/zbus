@@ -1,7 +1,8 @@
-package io.zbus.broker;
+package io.zbus.mq.broker;
 
 import java.io.IOException;
 
+import io.zbus.mq.Broker;
 import io.zbus.net.Sync.ResultCallback;
 import io.zbus.net.http.Message;
 import io.zbus.net.http.Message.MessageInvoker;

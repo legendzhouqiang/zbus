@@ -35,13 +35,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.broker.ha.ServerEntry;
-import io.zbus.broker.ha.TrackPub;
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.NetKit;
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Protocol.MqInfo;
+import io.zbus.mq.tracker.ServerEntry;
+import io.zbus.mq.tracker.TrackPub;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;

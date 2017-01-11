@@ -20,38 +20,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker;
+package io.zbus.mq.broker;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-import io.zbus.kit.NetKit;
-import io.zbus.net.http.Message.MessageInvoker;
-
-
-public interface Broker extends MessageInvoker, Closeable{ 
-	MessageInvoker getInvoker(BrokerHint hint) throws IOException; 
-	void closeInvoker(MessageInvoker invoker) throws IOException; 
+public class BrokerException extends IOException {   
+	private static final long serialVersionUID = -468381747145861969L;
 	
-	public static class BrokerHint {   
-		private static final String requestIp = NetKit.getLocalIp();
-		private String server;  
-		private String entry;   
-		
-		public String getRequestIp(){
-			return requestIp;
-		} 
-		public String getEntry() {
-			return entry;
-		}
-		public void setEntry(String entry) {
-			this.entry = entry;
-		}
-		public String getServer() {
-			return server;
-		}
-		public void setServer(String server) {
-			this.server = server;
-		}  
+	public BrokerException(String message){
+    	super(message);
+    }
+	public BrokerException() {
+		super(); 
 	}
+	public BrokerException(String message, Throwable cause) {
+		super(message, cause); 
+	}
+	public BrokerException(Throwable cause) {
+		super(cause); 
+	}  
+    
 }

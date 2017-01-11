@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.broker.ha;
+package io.zbus.mq.tracker;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,20 +31,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.broker.Broker;
-import io.zbus.broker.BrokerConfig;
-import io.zbus.broker.SingleBroker;
-import io.zbus.broker.Broker.BrokerHint;
-import io.zbus.broker.HaBroker.BrokerSelector;
-import io.zbus.broker.ha.ServerEntryTable.ServerList;
-import io.zbus.broker.ha.TrackSub.EntryRemoveHandler;
-import io.zbus.broker.ha.TrackSub.EntryUpdateHandler;
-import io.zbus.broker.ha.TrackSub.PubAllHandler;
-import io.zbus.broker.ha.TrackSub.ServerJoinHandler;
-import io.zbus.broker.ha.TrackSub.ServerLeaveHandler;
 import io.zbus.kit.NetKit;
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker;
+import io.zbus.mq.Broker.BrokerHint;
+import io.zbus.mq.broker.BrokerConfig;
+import io.zbus.mq.broker.SingleBroker;
+import io.zbus.mq.broker.HaBroker.BrokerSelector;
+import io.zbus.mq.tracker.ServerEntryTable.ServerList;
+import io.zbus.mq.tracker.TrackSub.EntryRemoveHandler;
+import io.zbus.mq.tracker.TrackSub.EntryUpdateHandler;
+import io.zbus.mq.tracker.TrackSub.PubAllHandler;
+import io.zbus.mq.tracker.TrackSub.ServerJoinHandler;
+import io.zbus.mq.tracker.TrackSub.ServerLeaveHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.http.Message;
 import io.zbus.net.http.MessageClient;

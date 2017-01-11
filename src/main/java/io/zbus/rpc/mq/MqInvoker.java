@@ -2,7 +2,7 @@ package io.zbus.rpc.mq;
 
 import java.io.IOException;
 
-import io.zbus.broker.Broker;
+import io.zbus.mq.Broker;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.Producer;
 import io.zbus.net.Sync.ResultCallback;

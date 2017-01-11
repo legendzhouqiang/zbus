@@ -1,4 +1,4 @@
-package io.zbus.broker;
+package io.zbus.mq.broker;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.log.Logger;
 import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Broker;
 import io.zbus.mq.server.MqAdaptor;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
