@@ -73,7 +73,7 @@ Unified model for unicast, multicast, broadcast messaging style
 * HTTP format compatible, but TCP based. 
 * Control via HTTP header extension.
 
-** Gist of HTTP Format **
+**Gist of HTTP Format**
 
 	Request/Responose\r\n -- First line to distinguish between request and response message type, e.g. GET /(request), 200 OK(response)
 	(Key: Value\r\n)*     -- lines for key-value pairs
@@ -130,11 +130,11 @@ MqServer uses a HTTP header extension key called 'cmd' to distinguish job reques
 
 	[O]consume_group={string}
 
-** cmd = remove_mq**
+**cmd = remove_mq**
 
 	[O]consume_group={string}
 
-** cmd = route**
+**cmd = route**
 
 	[R]recver={string} -- route back message to a specified producer
 
