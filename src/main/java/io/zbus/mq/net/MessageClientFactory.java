@@ -1,5 +1,6 @@
-package io.zbus.net.http;
+package io.zbus.mq.net;
 
+import io.zbus.mq.Message;
 import io.zbus.net.ClientFactory;
 import io.zbus.net.EventDriver;
 

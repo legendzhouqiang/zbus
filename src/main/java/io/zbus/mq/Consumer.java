@@ -7,12 +7,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker.BrokerHint;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.Message.MessageInvoker; 
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 

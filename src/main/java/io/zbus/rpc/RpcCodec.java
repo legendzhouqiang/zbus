@@ -25,7 +25,7 @@ package io.zbus.rpc;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import io.zbus.net.http.Message;
+import io.zbus.mq.Message;
 
 
 public interface RpcCodec {

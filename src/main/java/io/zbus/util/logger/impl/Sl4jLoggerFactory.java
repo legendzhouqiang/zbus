@@ -20,13 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.kit.log.impl;
+package io.zbus.util.logger.impl;
  
 
 import org.slf4j.spi.LocationAwareLogger;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory.InternalLoggerFactory;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory.InternalLoggerFactory;
 
 public class Sl4jLoggerFactory implements InternalLoggerFactory {
 	

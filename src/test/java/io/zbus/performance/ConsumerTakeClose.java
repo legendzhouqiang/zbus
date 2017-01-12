@@ -1,17 +1,17 @@
 package io.zbus.performance;
 
-import io.zbus.kit.ConfigKit;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
+import io.zbus.util.ConfigUtil;
 
 public class ConsumerTakeClose {
 	public static void main(String[] args) throws Exception{   
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final String mq = ConfigKit.option(args, "-mq", "MyMQ"); 
+		final String serverAddress = ConfigUtil.option(args, "-b", "127.0.0.1:15555");
+		final String mq = ConfigUtil.option(args, "-mq", "MyMQ"); 
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setBrokerAddress(serverAddress);

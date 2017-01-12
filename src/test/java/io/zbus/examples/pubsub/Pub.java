@@ -1,9 +1,9 @@
 package io.zbus.examples.pubsub;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
 
 public class Pub {
 	public static void main(String[] args) throws Exception{    

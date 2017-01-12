@@ -24,13 +24,13 @@ package io.zbus.rpc;
 
 import java.io.IOException;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.Message.MessageInvoker;
 import io.zbus.rpc.RpcCodec.Request;
 import io.zbus.rpc.RpcCodec.Response;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class RpcInvoker{  
 	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class); 

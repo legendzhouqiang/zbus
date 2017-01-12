@@ -22,7 +22,7 @@
  */
 package io.zbus.mq.server;
 
-import static io.zbus.kit.ConfigKit.isBlank;
+import static io.zbus.util.ConfigUtil.isBlank;
 
 import java.io.Closeable;
 import java.io.File;
@@ -35,17 +35,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.ConfigKit;
-import io.zbus.kit.NetKit;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Protocol.MqInfo;
+import io.zbus.mq.net.MessageServer;
 import io.zbus.mq.tracker.ServerEntry;
 import io.zbus.mq.tracker.TrackPub;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;
-import io.zbus.net.http.MessageServer;
+import io.zbus.util.ConfigUtil;
+import io.zbus.util.NetUtil;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class MqServer implements Closeable{ 
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
@@ -101,7 +101,7 @@ public class MqServer implements Closeable{
 		
 		String host = config.serverHost;
 		if("0.0.0.0".equals(host)){
-			host = NetKit.getLocalIp(config.serverMainIpOrder);
+			host = NetUtil.getLocalIp(config.serverMainIpOrder);
 		}
 		serverAddr = host+":"+config.serverPort; 
 		
@@ -224,7 +224,7 @@ public class MqServer implements Closeable{
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig(); 
-		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/zbus.xml");
+		String xmlConfigFile = ConfigUtil.option(args, "-conf", "conf/zbus.xml");
 		try{
 			config.loadFromXml(xmlConfigFile); 
 		} catch(Exception ex){ 

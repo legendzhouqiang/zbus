@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
 import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.broker.JvmBroker;
-import io.zbus.net.http.Message;
 
 public class JvmBrokerExample {
 

@@ -8,12 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.Message.MessageProcessor;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageProcessor;
 import io.zbus.rpc.RpcCodec.Request;
 import io.zbus.rpc.RpcCodec.Response;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 
 public class RpcProcessor implements MessageProcessor{

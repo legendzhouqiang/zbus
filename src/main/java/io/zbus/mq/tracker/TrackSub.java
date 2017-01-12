@@ -29,15 +29,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageHandler;
+import io.zbus.mq.net.MessageClient;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageClient;
-import io.zbus.net.http.Message.MessageHandler;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class TrackSub implements Closeable{  
 	private static final Logger log = LoggerFactory.getLogger(TrackSub.class);

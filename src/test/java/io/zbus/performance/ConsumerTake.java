@@ -1,19 +1,19 @@
 package io.zbus.performance;
 
-import io.zbus.kit.ConfigKit;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.util.ConfigUtil;
 
 public class ConsumerTake {
 	public static void main(String[] args) throws Exception{   
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 16); 
-		final int loopCount = ConfigKit.option(args, "-loop", 1000000);
-		final int logCount = ConfigKit.option(args, "-log", 10000);
-		final String mq = ConfigKit.option(args, "-mq", "MyMQ"); 
+		final String serverAddress = ConfigUtil.option(args, "-b", "127.0.0.1:15555");
+		final int threadCount = ConfigUtil.option(args, "-c", 16); 
+		final int loopCount = ConfigUtil.option(args, "-loop", 1000000);
+		final int logCount = ConfigUtil.option(args, "-log", 10000);
+		final String mq = ConfigUtil.option(args, "-mq", "MyMQ"); 
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setBrokerAddress(serverAddress);

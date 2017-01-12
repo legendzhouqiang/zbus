@@ -20,17 +20,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.net.http;
+package io.zbus.mq.net;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageHandler;
 import io.zbus.net.IoAdaptor;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message.MessageHandler;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class MessageAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);

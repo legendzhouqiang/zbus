@@ -1,4 +1,4 @@
-package io.zbus.kit;
+package io.zbus.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class JsonKit {
+public class JsonUtil {
 	private static Method fastjsonMethod;
 	
 	static{
@@ -34,7 +34,7 @@ public class JsonKit {
 	}
 	
 	public static void main(String[] args){
-		System.out.println(JsonKit.toJson("xx"));
+		System.out.println(JsonUtil.toJson("xx"));
 	}
 }
 

@@ -3,11 +3,11 @@ package io.zbus.rpc.mq;
 import java.io.IOException;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.Producer;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.Message.MessageInvoker;
 
 /**
  * @author hong.leiming

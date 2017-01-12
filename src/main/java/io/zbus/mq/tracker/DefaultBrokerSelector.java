@@ -31,14 +31,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.NetKit;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
 import io.zbus.mq.Broker.BrokerHint;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.broker.HaBroker.BrokerSelector;
+import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.ServerEntryTable.ServerList;
 import io.zbus.mq.tracker.TrackSub.EntryRemoveHandler;
 import io.zbus.mq.tracker.TrackSub.EntryUpdateHandler;
@@ -46,12 +45,13 @@ import io.zbus.mq.tracker.TrackSub.PubAllHandler;
 import io.zbus.mq.tracker.TrackSub.ServerJoinHandler;
 import io.zbus.mq.tracker.TrackSub.ServerLeaveHandler;
 import io.zbus.net.EventDriver;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageClient;
+import io.zbus.util.NetUtil;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = LoggerFactory.getLogger(DefaultBrokerSelector.class);
-	private static final int localIpHashCode = Math.abs(NetKit.getLocalIp().hashCode());
+	private static final int localIpHashCode = Math.abs(NetUtil.getLocalIp().hashCode());
 	
 	private ServerEntryTable serverEntryTable = new ServerEntryTable();
 	private final Map<String, Broker> allBrokers = new ConcurrentHashMap<String, Broker>();

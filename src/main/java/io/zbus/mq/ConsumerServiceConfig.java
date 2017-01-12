@@ -1,7 +1,7 @@
 package io.zbus.mq;
 
 import io.zbus.mq.Consumer.ConsumerHandler;
-import io.zbus.net.http.Message.MessageProcessor;
+import io.zbus.mq.Message.MessageProcessor;
 
 public class ConsumerServiceConfig extends MqConfig{
 	private ConsumerHandler consumerHandler; 

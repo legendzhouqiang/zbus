@@ -27,14 +27,14 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.net.MessageClient;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageClient;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class TrackPub implements Closeable{  
 	private static final Logger log = LoggerFactory.getLogger(TrackPub.class);

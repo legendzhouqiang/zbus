@@ -3,7 +3,6 @@ package io.zbus.mq;
 import java.io.IOException;
 
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
 
 
 public class MqAdmin{     

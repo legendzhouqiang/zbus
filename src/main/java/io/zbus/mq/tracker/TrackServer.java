@@ -32,19 +32,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.ConfigKit;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Message.MessageHandler;
+import io.zbus.mq.net.MessageAdaptor;
+import io.zbus.mq.net.MessageClient;
+import io.zbus.mq.net.MessageServer;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageAdaptor;
-import io.zbus.net.http.MessageClient;
-import io.zbus.net.http.MessageServer;
-import io.zbus.net.http.Message.MessageHandler;
+import io.zbus.util.ConfigUtil;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class TrackServer extends MessageAdaptor implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(TrackServer.class); 
@@ -271,7 +271,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	
 	public static void main(String[] args) throws Exception { 
 		TrackServerConfig config = new TrackServerConfig(); 
-		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/ha/tracker1.xml");
+		String xmlConfigFile = ConfigUtil.option(args, "-conf", "conf/ha/tracker1.xml");
 		try{
 			config.loadFromXml(xmlConfigFile); 
 		} catch(Exception ex){ 

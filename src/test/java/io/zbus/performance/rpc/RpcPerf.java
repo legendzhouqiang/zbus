@@ -3,15 +3,15 @@ package io.zbus.performance.rpc;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.examples.rpc.appdomain.InterfaceExample;
-import io.zbus.kit.ConfigKit;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message.MessageInvoker;
 import io.zbus.rpc.RpcFactory;
 import io.zbus.rpc.mq.MqInvoker;
+import io.zbus.util.ConfigUtil;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 
 public class RpcPerf {
@@ -45,10 +45,10 @@ public class RpcPerf {
 		}
 	}
 	public static void main(String[] args) throws Exception { 
-		final String serverAddress = ConfigKit.option(args, "-b", "127.0.0.1:15555");
-		final int threadCount = ConfigKit.option(args, "-c", 32); 
-		final int loopCount = ConfigKit.option(args, "-loop", 10000000);  
-		final String mq = ConfigKit.option(args, "-mq", "MyRpc"); 
+		final String serverAddress = ConfigUtil.option(args, "-b", "127.0.0.1:15555");
+		final int threadCount = ConfigUtil.option(args, "-c", 32); 
+		final int loopCount = ConfigUtil.option(args, "-loop", 10000000);  
+		final String mq = ConfigUtil.option(args, "-mq", "MyRpc"); 
 		 
 		BrokerConfig brokerConfig = new BrokerConfig(); 
 		brokerConfig.setBrokerAddress(serverAddress);

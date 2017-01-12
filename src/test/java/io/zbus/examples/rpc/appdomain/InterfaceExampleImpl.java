@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
  
 /**
  * 私有异常，测试前端未知场景

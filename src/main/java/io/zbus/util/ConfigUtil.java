@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.kit;
+package io.zbus.util;
 
 import java.io.InputStream;
 import java.util.HashSet;
@@ -40,7 +40,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-public class ConfigKit {    
+public class ConfigUtil {    
 	
 	public static String option(Properties props, String opt, String defaultValue){
 		String value = props.getProperty(opt, defaultValue);
@@ -110,7 +110,7 @@ public class ConfigKit {
 	public static Properties loadConfig(String fileName){ 
 		Properties props = new Properties();
 		try{
-			InputStream fis = FileKit.loadFile(fileName);
+			InputStream fis = FileUtil.loadFile(fileName);
 			if(fis != null){
 				props.load(fis);
 			}

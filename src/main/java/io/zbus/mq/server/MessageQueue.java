@@ -4,9 +4,9 @@ package io.zbus.mq.server;
 import java.io.IOException;
 
 import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.MqInfo;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message;
 
 public interface MessageQueue { 
 

@@ -1,4 +1,4 @@
-package io.zbus.net.http;
+package io.zbus.mq.net;
 
 import java.util.List;
 

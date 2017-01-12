@@ -5,7 +5,6 @@ import java.io.IOException;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
 
 public class ConsumerTest {  
 	public static void main(String[] args) throws Exception {  

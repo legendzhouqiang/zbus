@@ -29,7 +29,7 @@ import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
 
-import io.zbus.net.http.Message;
+import io.zbus.mq.Message;
  
 
 public class JsonRpcCodec implements RpcCodec {  

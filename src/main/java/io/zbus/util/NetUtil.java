@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.kit;
+package io.zbus.util;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -30,7 +30,7 @@ import java.util.Enumeration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NetKit {
+public class NetUtil {
 
 	public static String normalizeAddress(String address) {
 		String[] blocks = address.split("[:]");
@@ -57,7 +57,7 @@ public class NetKit {
 		int port = Integer.valueOf(blocks[1]);
 
 		if ("0.0.0.0".equals(host)) {
-			return String.format("%s:%d", NetKit.getLocalIp(), port);
+			return String.format("%s:%d", NetUtil.getLocalIp(), port);
 		}
 		return address;
 	}

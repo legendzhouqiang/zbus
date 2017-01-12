@@ -15,9 +15,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.ConsumerInfo;
 import io.zbus.mq.Protocol.MqInfo;
 import io.zbus.mq.disk.DiskMessage;
@@ -25,7 +24,8 @@ import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 
 public class DiskQueue implements MessageQueue{

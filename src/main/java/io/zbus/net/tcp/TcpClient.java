@@ -19,8 +19,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.net.Client;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
@@ -29,6 +27,8 @@ import io.zbus.net.Sync;
 import io.zbus.net.Sync.Id;
 import io.zbus.net.Sync.ResultCallback;
 import io.zbus.net.Sync.Ticket;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 
 public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RES> {

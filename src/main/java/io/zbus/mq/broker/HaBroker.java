@@ -26,14 +26,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.DefaultBrokerSelector;
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageClient;
-import io.zbus.net.http.Message.MessageInvoker;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class HaBroker implements Broker {   
 	private static final Logger log = LoggerFactory.getLogger(HaBroker.class);

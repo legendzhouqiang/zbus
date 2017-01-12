@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.net.http;
+package io.zbus.mq;
 
 import static io.zbus.mq.Protocol.*;
 
@@ -46,11 +46,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.net.Invoker;
 import io.zbus.net.Client.MsgHandler;
 import io.zbus.net.Sync.Id;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class Message implements Id {  
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 

@@ -26,9 +26,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.ConsumerInfo;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message;
 
 public class PullSession { 
 	Session session;

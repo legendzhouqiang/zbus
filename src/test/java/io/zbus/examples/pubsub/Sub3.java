@@ -2,8 +2,8 @@ package io.zbus.examples.pubsub;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.Message;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
 
 public class Sub3 {
 	@SuppressWarnings("resource")

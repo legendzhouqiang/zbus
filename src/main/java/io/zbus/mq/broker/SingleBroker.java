@@ -25,16 +25,16 @@ package io.zbus.mq.broker;
 import java.io.Closeable;
 import java.io.IOException;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.net.MessageClient;
+import io.zbus.mq.net.MessageClientFactory;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
 import io.zbus.net.Sync.ResultCallback;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageClient;
-import io.zbus.net.http.MessageClientFactory;
-import io.zbus.net.http.Message.MessageInvoker;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class SingleBroker implements Broker {
 	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     

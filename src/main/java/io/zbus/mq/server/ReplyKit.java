@@ -24,8 +24,8 @@ package io.zbus.mq.server;
 
 import java.io.IOException;
 
+import io.zbus.mq.Message;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message;
 
 public class ReplyKit {
 

@@ -29,9 +29,9 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
-import io.zbus.net.http.Message.MessageInvoker;
+import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 
 public class RpcFactory { 

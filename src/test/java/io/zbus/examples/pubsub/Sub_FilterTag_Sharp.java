@@ -5,10 +5,10 @@ import java.io.IOException;
 import io.zbus.mq.Broker;
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.Message;
 import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
 
 public class Sub_FilterTag_Sharp {
 	@SuppressWarnings("resource")

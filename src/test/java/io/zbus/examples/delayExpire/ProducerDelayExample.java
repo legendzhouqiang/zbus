@@ -3,9 +3,9 @@ package io.zbus.examples.delayExpire;
 import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
 import io.zbus.mq.broker.ZbusBroker;
-import io.zbus.net.http.Message;
 
 public class ProducerDelayExample {
 	public static void main(String[] args) throws Exception {

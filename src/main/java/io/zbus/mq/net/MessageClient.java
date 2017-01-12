@@ -1,4 +1,4 @@
-package io.zbus.net.http;
+package io.zbus.mq.net;
 
 import java.io.IOException;
 import java.util.List;
@@ -7,9 +7,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
-import io.zbus.net.http.Message.MessageInvoker;
 import io.zbus.net.tcp.TcpClient;
 
 public class MessageClient extends TcpClient<Message, Message> implements MessageInvoker{

@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
+import io.zbus.mq.Message.MessageInvoker;
 import io.zbus.mq.server.MqAdaptor;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
@@ -16,8 +16,8 @@ import io.zbus.net.Session;
 import io.zbus.net.Sync;
 import io.zbus.net.Sync.ResultCallback;
 import io.zbus.net.Sync.Ticket;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.Message.MessageInvoker;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 /**
  * JvmBroker is a type of Broker acting as invocation to a local MqServer instance, which do 

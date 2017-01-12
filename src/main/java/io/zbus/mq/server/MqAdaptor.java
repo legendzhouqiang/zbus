@@ -10,19 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.kit.FileKit;
-import io.zbus.kit.JsonKit;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Message.MessageHandler;
 import io.zbus.mq.Protocol.BrokerInfo;
 import io.zbus.mq.Protocol.MqInfo;
 import io.zbus.mq.disk.DiskMessage;
+import io.zbus.mq.net.MessageAdaptor;
 import io.zbus.net.Session;
-import io.zbus.net.http.Message;
-import io.zbus.net.http.MessageAdaptor;
-import io.zbus.net.http.Message.MessageHandler;
+import io.zbus.util.FileUtil;
+import io.zbus.util.JsonUtil;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
@@ -293,7 +293,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setStatus("200");
 			msg.setId(msgId);
 			msg.setHead("content-type", "text/html");
-			String body = FileKit.loadFileContent("zbus.htm");
+			String body = FileUtil.loadFileContent("zbus.htm");
 			if ("".equals(body)) {
 				body = "<strong>zbus.htm file missing</strong>";
 			}
@@ -307,7 +307,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg = new Message();
 			msg.setStatus("200");
 			msg.setHead("content-type", "application/javascript");
-			String body = FileKit.loadFileContent("jquery.js");
+			String body = FileUtil.loadFileContent("jquery.js");
 			msg.setBody(body);
 			sess.write(msg);
 		}
@@ -321,7 +321,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			data.setStatus("200");
 			data.setId(msg.getId());
 			data.setHead("content-type", "application/json");
-			data.setBody(JsonKit.toJson(info));
+			data.setBody(JsonUtil.toJson(info));
 			sess.write(data);
 		}
 	};
@@ -331,13 +331,13 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			String json = "";
 			if(msg.getMq() == null){
 				BrokerInfo info = getStatInfo();
-				json = JsonKit.toJson(info);
+				json = JsonUtil.toJson(info);
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 
 					return;
 				} else {
-					json = JsonKit.toJson(mq.getMqInfo());
+					json = JsonUtil.toJson(mq.getMqInfo());
 				}
 			}
 

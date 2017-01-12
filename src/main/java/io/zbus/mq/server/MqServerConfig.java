@@ -23,8 +23,8 @@
 package io.zbus.mq.server;
 
 
-import static io.zbus.kit.ConfigKit.valueOf;
-import static io.zbus.kit.ConfigKit.xeval;
+import static io.zbus.util.ConfigUtil.valueOf;
+import static io.zbus.util.ConfigUtil.xeval;
 
 import java.io.InputStream;
 

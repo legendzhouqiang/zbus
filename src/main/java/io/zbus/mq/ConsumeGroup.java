@@ -1,7 +1,5 @@
 package io.zbus.mq;
 
-import io.zbus.net.http.Message;
-
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
 	private String baseGroupName;

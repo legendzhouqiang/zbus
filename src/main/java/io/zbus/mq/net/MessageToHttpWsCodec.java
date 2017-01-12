@@ -1,4 +1,4 @@
-package io.zbus.net.http;
+package io.zbus.mq.net;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
@@ -29,8 +29,9 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.handler.ssl.SslHandler;
-import io.zbus.kit.log.Logger;
-import io.zbus.kit.log.LoggerFactory;
+import io.zbus.mq.Message;
+import io.zbus.util.logger.Logger;
+import io.zbus.util.logger.LoggerFactory;
 
 /**
  * Object -- HttpRequest/HttpResponse(HttpMessage) Message -- Zbus Message

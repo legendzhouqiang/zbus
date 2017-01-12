@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.kit;
+package io.zbus.util;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +34,7 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-public class FileKit { 
+public class FileUtil { 
 	
 	public static InputStream loadFile(String resource, Class<?> clazz) {
 		ClassLoader classLoader = null;
@@ -78,7 +78,7 @@ public class FileKit {
 			e.printStackTrace();
 		}
 		if (classLoader == null) {
-			classLoader = FileKit.class.getClassLoader();
+			classLoader = FileUtil.class.getClassLoader();
 		}
 		try {
 			if (classLoader != null) {
@@ -88,7 +88,7 @@ public class FileKit {
 					return null;
 				}
 				if (url.toString().startsWith("jar:file:")) {
-					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
+					return FileUtil.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
 				} else {
 					return new FileInputStream(new File(url.toURI()));
 				}
@@ -101,7 +101,7 @@ public class FileKit {
 	}
 
 	public static String loadFileContent(String resource) {
-		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);
+		InputStream in = FileUtil.class.getClassLoader().getResourceAsStream(resource);
 		if (in == null)
 			return "";
 
