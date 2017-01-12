@@ -60,7 +60,7 @@ public class MessageAdaptor implements IoAdaptor{
 		this.filterHandler = filterHandler;
 	}  
     
-    public void onSessionMessage(Object obj, Session sess) throws IOException {  
+    public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	final String msgId = msg.getId();
     	
@@ -86,25 +86,25 @@ public class MessageAdaptor implements IoAdaptor{
     } 
      
 	@Override
-	public void onSessionCreated(Session sess) throws IOException {
+	public void sessionCreated(Session sess) throws IOException {
 		log.info("Session Created: " + sess);
 		sessionTable.put(sess.id(), sess);
 	}
 
 	@Override
-	public void onSessionToDestroy(Session sess) throws IOException {
+	public void sessionToDestroy(Session sess) throws IOException {
 		log.info("Session Destroyed: " + sess);
 		cleanSession(sess);
 	}
  
 	@Override
-	public void onSessionError(Throwable e, Session sess) throws Exception {
+	public void sessionError(Throwable e, Session sess) throws Exception {
 		log.info("Session Error: " + e);
 		cleanSession(sess);
 	} 
 
 	@Override
-	public void onSessionIdle(Session sess) throws IOException { 
+	public void sessionIdle(Session sess) throws IOException { 
 		log.info("Session Idle Remove: " + sess);
 		cleanSession(sess);
 	}

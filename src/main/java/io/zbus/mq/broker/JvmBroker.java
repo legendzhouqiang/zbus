@@ -68,7 +68,7 @@ public class JvmBroker implements Session, Broker {
 		this.adaptor = this.mqServer.getMqAdaptor(); 
 		
 		try {
-			adaptor.onSessionCreated(this);
+			adaptor.sessionCreated(this);
 		} catch (IOException e) {
 			//should not run up here
 			log.error(e.getMessage(), e); 
@@ -130,7 +130,7 @@ public class JvmBroker implements Session, Broker {
 			}
 		}
 		try {
-			adaptor.onSessionMessage(req, this);
+			adaptor.sessionMessage(req, this);
 		} catch (IOException e) {
 			if (ticket != null) {
 				sync.removeTicket(ticket.getId());
@@ -146,7 +146,7 @@ public class JvmBroker implements Session, Broker {
 
 	@Override
 	public void close() throws IOException { 
-		adaptor.onSessionToDestroy(this);
+		adaptor.sessionToDestroy(this);
 		if(ownMqServer){
 			this.mqServer.close();
 		}

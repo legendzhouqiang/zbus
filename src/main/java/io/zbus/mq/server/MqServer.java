@@ -128,7 +128,7 @@ public class MqServer implements Closeable{
 	public void start() throws Exception{  
 		long start = System.currentTimeMillis();
 		httpServer = new MessageServer(eventDriver); 
-		eventDriver = httpServer.getIoDriver();
+		eventDriver = httpServer.getEventDriver();
 		
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor); 
 		

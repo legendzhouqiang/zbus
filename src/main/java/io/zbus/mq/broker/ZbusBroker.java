@@ -40,22 +40,7 @@ public class ZbusBroker implements Broker{
 	 * @throws IOException  if underlying IO exception occurs
 	 */
 	public ZbusBroker(BrokerConfig config) throws IOException { 
-		String brokerAddress = config.getBrokerAddress();  
-		if(brokerAddress == null || "jvm".equalsIgnoreCase(brokerAddress.trim())){
-			if(config.getMqServer() != null){
-				support = new JvmBroker(config.getMqServer());
-			} else {
-				if(config.getMqServerConfig() != null){
-					if(config.getMqServerConfig().getEventDriver() == null){
-						config.getMqServerConfig().setEventDriver(config.getEventDriver());
-					} 
-					support = new JvmBroker(config.getMqServerConfig());
-				} else {
-					support = new JvmBroker();
-				}
-			}
-			return;
-		} 
+		String brokerAddress = config.getBrokerAddress();   
 		brokerAddress = brokerAddress.trim();
 		boolean ha = false;
 		if(brokerAddress.startsWith("[")){

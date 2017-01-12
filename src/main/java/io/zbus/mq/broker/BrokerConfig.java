@@ -23,8 +23,6 @@
 package io.zbus.mq.broker;
 
 import io.zbus.mq.broker.HaBroker.BrokerSelector;
-import io.zbus.mq.server.MqServer;
-import io.zbus.mq.server.MqServerConfig;
 import io.zbus.net.EventDriver;
 
 /**
@@ -48,14 +46,7 @@ public class BrokerConfig {
 	public String brokerAddress = "127.0.0.1:15555";  
 	/** EventDriver support */
 	public EventDriver eventDriver; 
-	public int connectionPoolMaxSize = 32;
-	
-	
-	// JvmBroker Configuration, priority: mqServer > mqServerConfig
-	/** Used only for JvmBroker if supplied */
-	public MqServer mqServer;
-	/** Configured to create MqServer, in use if mqServer not supplied */
-	public MqServerConfig mqServerConfig;
+	public int connectionPoolMaxSize = 32; 
 
 	// HaBroker Configuration
 	public BrokerSelector brokerSelector; 
@@ -81,24 +72,7 @@ public class BrokerConfig {
 
 	public void setEventDriver(EventDriver eventDriver) {
 		this.eventDriver = eventDriver;
-	}
-
-	public MqServer getMqServer() {
-		return mqServer;
-	}
-
-	public void setMqServer(MqServer mqServer) {
-		this.mqServer = mqServer;
-	}
-
-	public MqServerConfig getMqServerConfig() {
-		return mqServerConfig;
-	}
-
-	public void setMqServerConfig(MqServerConfig mqServerConfig) {
-		this.mqServerConfig = mqServerConfig;
 	} 
-
 	public BrokerSelector getBrokerSelector() {
 		return brokerSelector;
 	}

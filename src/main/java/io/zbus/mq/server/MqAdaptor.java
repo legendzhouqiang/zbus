@@ -447,7 +447,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	msg.urlToHead(); 
 	}
     
-    public void onSessionMessage(Object obj, Session sess) throws IOException {  
+    public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
 		msg.setServer(mqServer.getServerAddr()); 

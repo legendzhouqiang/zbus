@@ -30,25 +30,25 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		Session sess = getSession(ctx);
-		ioAdaptor.onSessionMessage(msg, sess);
+		ioAdaptor.sessionMessage(msg, sess);
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		Session sess = getSession(ctx);
-		ioAdaptor.onSessionError(cause, sess);
+		ioAdaptor.sessionError(cause, sess);
 	}
 	 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		Session sess = attachSession(ctx); 
-		ioAdaptor.onSessionCreated(sess);
+		ioAdaptor.sessionCreated(sess);
 	}  
 	
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		Session sess = getSession(ctx);
-		ioAdaptor.onSessionToDestroy(sess);
+		ioAdaptor.sessionToDestroy(sess);
 		sessionMap.remove(sess.id());
 	} 
 	
@@ -56,7 +56,7 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {
 			Session sess = getSession(ctx);
-			ioAdaptor.onSessionIdle(sess);
+			ioAdaptor.sessionIdle(sess);
         }
 	}
 	

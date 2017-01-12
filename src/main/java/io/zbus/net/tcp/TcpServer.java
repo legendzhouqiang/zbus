@@ -113,7 +113,7 @@ public class TcpServer implements Server {
 		return ((InetSocketAddress)addr).getPort();
 	}
 	
-	public EventDriver getIoDriver() {
+	public EventDriver getEventDriver() {
 		return this.ioDriver;
 	}
 	

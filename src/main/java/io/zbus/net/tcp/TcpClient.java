@@ -304,7 +304,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
   
 
 	@Override
-	public void onSessionCreated(Session sess) throws IOException { 
+	public void sessionCreated(Session sess) throws IOException { 
 		this.session = sess;
 		activeLatch.countDown();
 		if(connectedHandler != null){
@@ -312,7 +312,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		}
 	}
 
-	public void onSessionToDestroy(Session sess) throws IOException {
+	public void sessionToDestroy(Session sess) throws IOException {
 		if(this.session != null){
 			this.session.close(); 
 			this.session = null;
@@ -325,7 +325,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	} 
 
 	@Override
-	public void onSessionError(Throwable e, Session sess) throws IOException { 
+	public void sessionError(Throwable e, Session sess) throws IOException { 
 		if(errorHandler != null){
 			errorHandler.onError(e, session);
 		} else {
@@ -334,7 +334,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	} 
 	
 	@Override
-	public void onSessionIdle(Session sess) throws IOException { 
+	public void sessionIdle(Session sess) throws IOException { 
 		
 	}
 	 
@@ -380,7 +380,7 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	} 
 	
 	@Override
-	public void onSessionMessage(Object msg, Session sess) throws IOException {
+	public void sessionMessage(Object msg, Session sess) throws IOException {
 		@SuppressWarnings("unchecked")
 		RES res = (RES)msg;  
     	Ticket<REQ, RES> ticket = sync.removeTicket(res.getId());

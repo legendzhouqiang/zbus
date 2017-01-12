@@ -91,7 +91,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 	public void start() throws Exception{
 		server = new MessageServer(eventDriver);
 		server.start(serverHost, serverPort, this);
-		eventDriver = server.getIoDriver(); //if eventDriver is null, set the internal created one
+		eventDriver = server.getEventDriver(); //if eventDriver is null, set the internal created one
 		
 		dumpExecutor.scheduleAtFixedRate(new Runnable() { 
 			@Override
@@ -245,15 +245,15 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		}
 	}
 	
-	public void onSessionToDestroy(Session sess) throws IOException {
+	public void sessionToDestroy(Session sess) throws IOException {
 		log.info("Remove " + sess);
 		trackSubs.remove(sess.id()); 
 	}
 	
 	@Override
-	public void onSessionError(Throwable e, Session sess) throws Exception {
+	public void sessionError(Throwable e, Session sess) throws Exception {
 		trackSubs.remove(sess.id());
-		super.onSessionError(e, sess);
+		super.sessionError(e, sess);
 	}
 	
 	@Override
