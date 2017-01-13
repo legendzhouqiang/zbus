@@ -6,8 +6,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.mq.Consumer.ConsumerHandler;
-import io.zbus.mq.Message.MessageProcessor;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 

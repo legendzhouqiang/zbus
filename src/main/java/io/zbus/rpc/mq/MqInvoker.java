@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.Producer;
-import io.zbus.mq.Message.MessageInvoker;
-import io.zbus.net.Sync.ResultCallback;
 
 /**
  * @author hong.leiming
@@ -31,18 +31,18 @@ public class MqInvoker implements MessageInvoker {
 	@Override
 	public Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
 		req.setAck(false);
-		return this.producer.produce(req, timeout);
+		return this.producer.sendSync(req, timeout);
 	}
 
 	@Override
-	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+	public void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		req.setAck(false);
-		this.producer.produceAsync(req, callback);
+		this.producer.sendAsync(req, callback);
 	}
 
 	@Override
 	public Message invokeSync(Message req) throws IOException, InterruptedException {
 		req.setAck(false);
-		return this.producer.produce(req);
+		return this.producer.sendSync(req);
 	}
 }

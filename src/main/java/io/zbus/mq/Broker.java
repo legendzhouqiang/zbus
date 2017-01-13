@@ -25,33 +25,10 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 
-import io.zbus.mq.Message.MessageInvoker;
-import io.zbus.util.NetUtil;
-
 
 public interface Broker extends MessageInvoker, Closeable{ 
-	MessageInvoker getInvoker(BrokerHint hint) throws IOException; 
-	void closeInvoker(MessageInvoker invoker) throws IOException; 
 	
-	public static class BrokerHint {   
-		private static final String requestIp = NetUtil.getLocalIp();
-		private String server;  
-		private String entry;   
-		
-		public String getRequestIp(){
-			return requestIp;
-		} 
-		public String getEntry() {
-			return entry;
-		}
-		public void setEntry(String entry) {
-			this.entry = entry;
-		}
-		public String getServer() {
-			return server;
-		}
-		public void setServer(String server) {
-			this.server = server;
-		}  
-	}
+	MessageInvoker selectInvoker(String mq) throws IOException; 
+	
+	void releaseInvoker(MessageInvoker invoker) throws IOException; 
 }

@@ -1,8 +1,6 @@
 package io.zbus.net;
 
 import java.io.IOException;
-
-import io.zbus.net.Sync.ResultCallback;
  
 
 /**

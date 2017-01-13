@@ -14,7 +14,7 @@ public class ProducerExample {
 
 		Message msg = new Message();   
 		msg.setBody("hello world " + System.currentTimeMillis());
-		msg = p.produce(msg);
+		msg = p.sendSync(msg);
 		
 		System.out.println(msg);
 

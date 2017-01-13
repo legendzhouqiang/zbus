@@ -7,9 +7,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.mq.Broker.BrokerHint;
-import io.zbus.mq.Message.MessageInvoker;
-import io.zbus.net.Sync.ResultCallback;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory; 
 
@@ -30,12 +27,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeGroup = config.getConsumeGroup();
 		this.consumeWindow = config.getConsumeWindow();
 	} 
-
-	private BrokerHint brokerHint() {
-		BrokerHint hint = new BrokerHint();
-		hint.setEntry(this.mq);
-		return hint;
-	}
+ 
 	
 	protected Message buildDeclareMQMessage(){
 		Message req = super.buildDeclareMQMessage();  
@@ -63,7 +55,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		try {  
 			synchronized (this) {
 				if (this.client == null) {
-					this.client = broker.getInvoker(brokerHint());
+					this.client = broker.selectInvoker(this.mq);
 				}
 				res = client.invokeSync(req, timeout);
 			} 
@@ -95,7 +87,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 			try {
-				broker.closeInvoker(client); 
+				broker.releaseInvoker(client); 
 			} catch (IOException ex) {
 				log.error(ex.getMessage(), ex);
 			} finally{
@@ -120,17 +112,17 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
 		synchronized (this) {
 			if (this.client == null) {
-				this.client = broker.getInvoker(brokerHint());
+				this.client = broker.selectInvoker(this.mq);
 			}
 			return client.invokeSync(req, 10000);
 		} 
 	}
 	
 	@Override
-	protected void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		synchronized (this) {
 			if (this.client == null) {
-				this.client = broker.getInvoker(brokerHint());
+				this.client = broker.selectInvoker(this.mq);
 			}
 			client.invokeAsync(req, callback);
 		} 
@@ -252,7 +244,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 		try {
 			if (this.client != null) {
-				this.broker.closeInvoker(this.client);
+				this.broker.releaseInvoker(this.client);
 			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
@@ -312,9 +304,5 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumerHandlerExecutor.shutdown();
 		}
 		this.consumerHandlerExecutor = consumerHandlerExecutor;
-	}    
-
-	public static interface ConsumerHandler{
-		void handle(Message msg, Consumer consumer) throws IOException;
 	} 
 }

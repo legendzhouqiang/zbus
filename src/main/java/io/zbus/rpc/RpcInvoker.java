@@ -25,8 +25,9 @@ package io.zbus.rpc;
 import java.io.IOException;
 
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
-import io.zbus.net.Sync.ResultCallback;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
+import io.zbus.net.ResultCallback;
 import io.zbus.rpc.RpcCodec.Request;
 import io.zbus.rpc.RpcCodec.Response;
 import io.zbus.util.logger.Logger;
@@ -170,7 +171,7 @@ public class RpcInvoker{
 			log.info("[REQ]: %s", msgReq);
 		}  
 		try {
-			messageInvoker.invokeAsync(msgReq, new ResultCallback<Message>() {
+			messageInvoker.invokeAsync(msgReq, new MessageCallback() { 
 				@Override
 				public void onReturn(Message result) { 
 					if(isVerbose()){

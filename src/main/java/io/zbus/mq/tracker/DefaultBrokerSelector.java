@@ -33,10 +33,9 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Broker.BrokerHint;
 import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.broker.HaBroker.BrokerSelector;
+import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.ServerEntryTable.ServerList;
 import io.zbus.mq.tracker.TrackSub.EntryRemoveHandler;
@@ -92,31 +91,17 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		return msg.getMq();
 	} 
 	
-	/**
-	 * 优先级顺序:
-	 * 1) 指定Server
-	 * 2) 指定Entry
-	 */
-	public Broker selectByBrokerHint(BrokerHint hint) { 
-		//1) Server最高优先级
-		Broker broker = getBroker(hint.getServer()); //优先级最高
-		if(broker != null) return broker;
-		
-		//2) Entry次之
-		String entryId = hint.getEntry(); 
-		if(entryId!= null){
-			ServerList p = serverEntryTable.getServerList(entryId); 
-			if(p != null && !p.isEmpty()){ 
-				ServerEntry se = p.getServerEntryWithMostMsgs();
-				if(se.unconsumedMsgCount > 0){ //存在未能消费掉消息的Entry，优先选择
-					broker = getBroker(se.serverAddr);
-					if(broker != null) return broker;
-				}
+	
+	public Broker selectByBrokerHint(String mq) {    
+		ServerList p = serverEntryTable.getServerList(mq); 
+		if(p != null && !p.isEmpty()){ 
+			ServerEntry se = p.getServerEntryWithMostMsgs();
+			if(se.unconsumedMsgCount > 0){ //存在未能消费掉消息的Entry，优先选择
+				Broker broker = getBroker(se.serverAddr);
+				if(broker != null) return broker;
 			}
 		} 
-		
-		//最后使用默认按IP簇集
-		return getBrokerByIpCluster();
+		return null;
 	} 
 	
 	

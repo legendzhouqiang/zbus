@@ -29,7 +29,7 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 

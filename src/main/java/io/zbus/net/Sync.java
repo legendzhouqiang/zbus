@@ -183,14 +183,4 @@ public class Sync<REQ extends Id, RES extends Id> {
 		void setId(String id);
 		String getId();
 	}
-	
-	/**
-	 * Asynchronous message callback
-	 * @author rushmore (洪磊明)
-	 *
-	 * @param <T> returned message type
-	 */
-	public static interface ResultCallback<T> { 
-		public void onReturn(T result);  
-	}
 }

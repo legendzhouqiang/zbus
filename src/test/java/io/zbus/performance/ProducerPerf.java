@@ -42,7 +42,7 @@ public class ProducerPerf {
 						Message msg = new Message();
 						
 						msg.setBody(new byte[msgSize]); 
-						msg = producer.produce(msg); 
+						msg = producer.sendSync(msg); 
 					}
 				};
 			} 

@@ -2,7 +2,7 @@ package io.zbus.performance.latency;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.rpc.mq.MqInvoker;

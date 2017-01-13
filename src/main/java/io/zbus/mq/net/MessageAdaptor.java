@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageHandler;
 import io.zbus.net.IoAdaptor;
 import io.zbus.net.Session;
 import io.zbus.util.logger.Logger;

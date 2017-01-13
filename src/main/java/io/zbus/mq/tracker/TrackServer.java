@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
-import io.zbus.mq.Message.MessageHandler;
 import io.zbus.mq.net.MessageAdaptor;
 import io.zbus.mq.net.MessageClient;
+import io.zbus.mq.net.MessageHandler;
 import io.zbus.mq.net.MessageServer;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;

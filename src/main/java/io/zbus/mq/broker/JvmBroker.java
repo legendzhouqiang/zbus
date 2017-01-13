@@ -8,13 +8,14 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.server.MqAdaptor;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
+import io.zbus.net.ResultCallback;
 import io.zbus.net.Session;
 import io.zbus.net.Sync;
-import io.zbus.net.Sync.ResultCallback;
 import io.zbus.net.Sync.Ticket;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
@@ -120,10 +121,18 @@ public class JvmBroker implements Session, Broker {
 	}
 
 	@Override
-	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+	public void invokeAsync(Message req, final MessageCallback callback) throws IOException {
 		Ticket<Message, Message> ticket = null;
 		if (callback != null) {
-			ticket = sync.createTicket(req, readTimeout, callback);
+			ticket = sync.createTicket(req, readTimeout, new ResultCallback<Message>() {
+				
+				@Override
+				public void onReturn(Message result) {
+					if(callback != null){
+						callback.onReturn(result);
+					}
+				}
+			});
 		} else {
 			if (req.getId() == null) {
 				req.setId(Ticket.nextId());
@@ -154,12 +163,12 @@ public class JvmBroker implements Session, Broker {
 	}
 
 	@Override
-	public MessageInvoker getInvoker(BrokerHint hint) throws IOException {
+	public MessageInvoker selectInvoker(String mq) throws IOException {
 		return this;
 	}
 
 	@Override
-	public void closeInvoker(MessageInvoker client) throws IOException {
+	public void releaseInvoker(MessageInvoker client) throws IOException {
 
 	} 
 

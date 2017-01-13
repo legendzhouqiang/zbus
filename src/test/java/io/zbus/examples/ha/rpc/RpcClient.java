@@ -3,7 +3,7 @@ package io.zbus.examples.ha.rpc;
 import io.zbus.examples.rpc.RpcCases;
 import io.zbus.examples.rpc.appdomain.InterfaceExample;
 import io.zbus.mq.Broker;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.broker.ZbusBroker;
 import io.zbus.rpc.RpcFactory;
 import io.zbus.rpc.mq.MqInvoker;

@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
-import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.broker.ZbusBroker;
 

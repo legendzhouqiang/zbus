@@ -30,8 +30,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageHandler;
 import io.zbus.mq.net.MessageClient;
+import io.zbus.mq.net.MessageHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;

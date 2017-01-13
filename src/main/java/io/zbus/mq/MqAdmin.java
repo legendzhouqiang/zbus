@@ -2,8 +2,6 @@ package io.zbus.mq;
 
 import java.io.IOException;
 
-import io.zbus.net.Sync.ResultCallback;
-
 
 public class MqAdmin{     
 	protected final Broker broker;      
@@ -29,7 +27,7 @@ public class MqAdmin{
 		return broker.invokeSync(req, 10000);
 	}
 	
-	protected void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		broker.invokeAsync(req, callback);
 	}
 	

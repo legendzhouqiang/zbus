@@ -40,8 +40,7 @@ public class BrokerConfig {
 	/**
 	 * broker address abstraction: 
 	 * 1) single broker use zbus address 
-	 * 2) ha broker, use ha trackserver list, ; split 
-	 * 3) jvm broker, set to null or jvm if use JvmBroker
+	 * 2) ha broker, use ha trackserver list, ; split  
 	 */
 	public String brokerAddress = "127.0.0.1:15555";  
 	/** EventDriver support */

@@ -3,7 +3,6 @@ package io.zbus.mq;
 import java.io.IOException;
 
 import io.zbus.mq.Consumer;
-import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.broker.ZbusBroker;
 
 public class ConsumerTest {  

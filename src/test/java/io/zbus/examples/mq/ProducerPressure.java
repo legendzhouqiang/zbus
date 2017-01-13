@@ -17,7 +17,7 @@ public class ProducerPressure {
 			//msg.setAck(false);
 			msg.setBody("hello world " + i);
 			//producer.sendAsync(msg);
-			producer.produce(msg);
+			producer.sendSync(msg);
 			//System.out.println(msg);
 		}
 		

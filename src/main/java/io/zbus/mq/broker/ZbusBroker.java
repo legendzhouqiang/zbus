@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
-import io.zbus.net.Sync.ResultCallback;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 
 /**
  * Broker factory class, abstraction of all broker types
@@ -68,7 +68,7 @@ public class ZbusBroker implements Broker{
 	}
 
 	@Override
-	public void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
+	public void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		support.invokeAsync(req, callback);
 	}
 
@@ -78,13 +78,13 @@ public class ZbusBroker implements Broker{
 	}
 
 	@Override
-	public MessageInvoker getInvoker(BrokerHint hint) throws IOException {
-		return support.getInvoker(hint);
+	public MessageInvoker selectInvoker(String mq) throws IOException {
+		return support.selectInvoker(mq);
 	}
 
 	@Override
-	public void closeInvoker(MessageInvoker client) throws IOException {
-		support.closeInvoker(client);
+	public void releaseInvoker(MessageInvoker client) throws IOException {
+		support.releaseInvoker(client);
 	}
 
 	@Override

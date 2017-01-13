@@ -46,8 +46,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.zbus.net.Invoker;
-import io.zbus.net.Client.MsgHandler;
 import io.zbus.net.Sync.Id;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
@@ -721,11 +719,5 @@ public class Message implements Id {
             	}
             }  
         }  
-	} 
-	 
-	public static interface MessageHandler extends MsgHandler<Message> { }
-	public static interface MessageInvoker extends Invoker<Message, Message> { }	
-	public static interface MessageProcessor { 
-		Message process(Message request);
 	} 
 }

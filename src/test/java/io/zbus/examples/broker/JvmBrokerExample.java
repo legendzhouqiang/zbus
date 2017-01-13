@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
-import io.zbus.mq.Consumer.ConsumerHandler;
 import io.zbus.mq.broker.JvmBroker;
 
 public class JvmBrokerExample {
@@ -25,7 +25,7 @@ public class JvmBrokerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		Message message = new Message();
 		message.setBody("test body");
-		producer.produceAsync(message);
+		producer.sendAsync(message);
 		
 		Thread.sleep(100);
 		System.out.println("destroy consumer");

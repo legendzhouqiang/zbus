@@ -19,7 +19,7 @@ public class ProducerExpireExample {
 		
 		msg.setBody("hello world " + System.currentTimeMillis());
 		
-		msg = producer.produce(msg);
+		msg = producer.sendSync(msg);
 		System.out.println(msg);
 
 		broker.close();

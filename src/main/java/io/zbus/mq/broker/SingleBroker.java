@@ -27,12 +27,12 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.net.MessageClientFactory;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
-import io.zbus.net.Sync.ResultCallback;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
@@ -70,7 +70,7 @@ public class SingleBroker implements Broker {
 		}
 	}  
 	
-	public void invokeAsync(Message msg, ResultCallback<Message> callback) throws IOException {  
+	public void invokeAsync(Message msg, MessageCallback callback) throws IOException {  
 		MessageClient client = null;
 		try {
 			client = this.pool.borrowObject(); 
@@ -109,18 +109,17 @@ public class SingleBroker implements Broker {
 		}
 	}
 	
-	public MessageInvoker getInvoker(BrokerHint hint) throws IOException{ 
+	public MessageInvoker selectInvoker(String mq) throws IOException{ 
 		try {
 			MessageClient client = factory.createObject();
 			client.attr("server", factory.getServerAddress());
 			return client;
 		} catch (Exception e) {
 			throw new BrokerException(e.getMessage(), e);
-		}
-		
+		} 
 	}
 
-	public void closeInvoker(MessageInvoker client) throws IOException {
+	public void releaseInvoker(MessageInvoker client) throws IOException {
 		if(client == null) return; //ignore
 		if(client instanceof Closeable){
 			((Closeable)client).close();

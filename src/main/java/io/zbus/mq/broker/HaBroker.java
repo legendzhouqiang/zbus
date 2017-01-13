@@ -28,10 +28,10 @@ import java.util.List;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.DefaultBrokerSelector;
-import io.zbus.net.Sync.ResultCallback;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
@@ -57,16 +57,16 @@ public class HaBroker implements Broker {
 	}
 	
 	@Override
-	public MessageInvoker getInvoker(BrokerHint hint) throws IOException { 
-		Broker broker = brokerSelector.selectByBrokerHint(hint);
+	public MessageInvoker selectInvoker(String mq) throws IOException { 
+		Broker broker = brokerSelector.selectByBrokerHint(mq);
 		if(broker == null){
-			throw new BrokerException("Missing broker for " + hint);
+			throw new BrokerException("Missing broker for " + mq);
 		}
-		return broker.getInvoker(hint);
+		return broker.selectInvoker(mq);
 	}
 
 	@Override
-	public void closeInvoker(MessageInvoker client) throws IOException { 
+	public void releaseInvoker(MessageInvoker client) throws IOException { 
 		if(!(client instanceof MessageClient)){
 			throw new IllegalArgumentException("client should be instance of MessageClient");
 		}
@@ -77,7 +77,7 @@ public class HaBroker implements Broker {
 			log.warn("Missing broker for " + messageClient);
 			messageClient.close();
 		} else {
-			broker.closeInvoker(messageClient); 
+			broker.releaseInvoker(messageClient); 
 		}
 	}
 	
@@ -96,7 +96,7 @@ public class HaBroker implements Broker {
 	}
 
 	@Override
-	public void invokeAsync(Message req, ResultCallback<Message> callback)
+	public void invokeAsync(Message req, MessageCallback callback)
 			throws IOException { 
 		List<Broker> brokerList = brokerSelector.selectByRequestMsg(req);
 		if(brokerList == null || brokerList.size() == 0){
@@ -128,11 +128,11 @@ public class HaBroker implements Broker {
 	 */
 	public static interface BrokerSelector extends Closeable{
 		/**
-		 * Select single broker based the hint, which includes Server,EntryID,SourceIP etc
+		 * Select single broker based on mq entry
 		 * @param hint
 		 * @return best broker matched for the hint
 		 */
-		Broker selectByBrokerHint(BrokerHint hint);
+		Broker selectByBrokerHint(String mq);
 		/**
 		 * Select best broker(s) based on the request message content
 		 * Criteria could be Server/EntryId(MQ) etc.

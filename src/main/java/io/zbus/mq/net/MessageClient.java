@@ -8,9 +8,11 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.zbus.mq.Message;
-import io.zbus.mq.Message.MessageInvoker;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.MessageInvoker;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
+import io.zbus.net.ResultCallback;
 import io.zbus.net.tcp.TcpClient;
 
 public class MessageClient extends TcpClient<Message, Message> implements MessageInvoker{
@@ -37,7 +39,7 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 			Message hbt = new Message();
 			hbt.setCmd(Message.HEARTBEAT);
 			try {
-				this.invokeAsync(hbt, null);
+				this.invokeAsync(hbt, (MessageCallback)null);
 			} catch (IOException e) {  
 				//ignore
 			}
@@ -48,6 +50,19 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 	public String toString() {
 		return "MessageClient" +  super.toString();
 	}
-	
+
+	@Override
+	public void invokeAsync(Message req, final MessageCallback callback) throws IOException {
+		if(callback == null){
+			super.invokeAsync(req, null);
+		} else {
+			super.invokeAsync(req, new ResultCallback<Message>() { 
+				@Override
+				public void onReturn(Message result) {
+					callback.onReturn(result); 
+				}
+			});
+		}
+	} 
 }
  
