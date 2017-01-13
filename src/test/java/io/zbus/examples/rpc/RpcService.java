@@ -20,10 +20,8 @@ public class RpcService {
 		ConsumerServiceConfig config = new ConsumerServiceConfig(); 
 		config.setMq("MyRpc");  
 		config.setBroker(broker);    
-		config.setMessageProcessor(processor); 
-		config.setVerbose(false);
-		config.setConsumerHandlerRunInPool(true); //enable pooling for service handler
-		config.setConsumerHandlerPoolSize(100);  
+		config.setMessageProcessor(processor);  
+		config.setThreadPoolSize(100);   
 		
 		ConsumerService svc = new ConsumerService(config);
 		svc.start();  

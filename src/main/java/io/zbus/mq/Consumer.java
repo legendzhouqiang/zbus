@@ -12,7 +12,7 @@ import io.zbus.util.logger.LoggerFactory;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
-	private MessageInvoker client;   
+	private MessageInvoker messageInvoker;   
 	
 	private int consumeTimeout = 120000; // 2 minutes   
 	private ConsumeGroup consumeGroup;
@@ -27,20 +27,6 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeGroup = config.getConsumeGroup();
 		this.consumeWindow = config.getConsumeWindow();
 	} 
- 
-	
-	protected Message buildDeclareMQMessage(){
-		Message req = super.buildDeclareMQMessage();  
-    	if(this.consumeGroup != null){
-	    	req.setConsumeGroup(consumeGroup.getGroupName());
-	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
-	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
-	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
-	    	req.setConsumeStartTime(consumeGroup.getStartTime());
-	    	req.setConsumeFilterTag(consumeGroup.getFilterTag());
-		}
-    	return req;
-	}
 
 	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
@@ -54,10 +40,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		Message res = null;
 		try {  
 			synchronized (this) {
-				if (this.client == null) {
-					this.client = broker.selectInvoker(this.mq);
+				if (this.messageInvoker == null) {
+					this.messageInvoker = broker.selectInvoker(this.mq);
 				}
-				res = client.invokeSync(req, timeout);
+				res = messageInvoker.invokeSync(req, timeout);
 			} 
 			if (res == null)
 				return res;
@@ -87,12 +73,12 @@ public class Consumer extends MqAdmin implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 			try {
-				broker.releaseInvoker(client); 
+				broker.releaseInvoker(messageInvoker); 
 			} catch (IOException ex) {
 				log.error(ex.getMessage(), ex);
 			} finally{
 				synchronized (this) {
-					this.client = null;
+					this.messageInvoker = null;
 				}
 			}
 		}
@@ -106,28 +92,40 @@ public class Consumer extends MqAdmin implements Closeable {
 				continue;
 			return message; 
 		}
+	}  
+	
+	protected Message buildDeclareMQMessage(){
+		Message req = super.buildDeclareMQMessage();  
+    	if(this.consumeGroup != null){
+	    	req.setConsumeGroup(consumeGroup.getGroupName());
+	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
+	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
+	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
+	    	req.setConsumeStartTime(consumeGroup.getStartTime());
+	    	req.setConsumeFilterTag(consumeGroup.getFilterTag());
+		}
+    	return req;
 	} 
 
 	@Override
 	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
 		synchronized (this) {
-			if (this.client == null) {
-				this.client = broker.selectInvoker(this.mq);
+			if (this.messageInvoker == null) {
+				this.messageInvoker = broker.selectInvoker(this.mq);
 			}
-			return client.invokeSync(req, 10000);
+			return messageInvoker.invokeSync(req, invokeTimeout);
 		} 
 	}
 	
 	@Override
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		synchronized (this) {
-			if (this.client == null) {
-				this.client = broker.selectInvoker(this.mq);
+			if (this.messageInvoker == null) {
+				this.messageInvoker = broker.selectInvoker(this.mq);
 			}
-			client.invokeAsync(req, callback);
+			messageInvoker.invokeAsync(req, callback);
 		} 
-	}
-
+	} 
 	 
 	public void routeMessage(Message msg) throws IOException {
 		msg.setCmd(Protocol.Route);
@@ -137,7 +135,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			msg.setOriginStatus(status); 
 			msg.setStatus(null); //make it as request 
 		} 
-		client.invokeAsync(msg, null); 
+		messageInvoker.invokeAsync(msg, null); 
 	} 
 	
 	public ConsumeGroup getConsumeGroup() {
@@ -243,8 +241,8 @@ public class Consumer extends MqAdmin implements Closeable {
 			consumerHandlerExecutor = null;
 		}
 		try {
-			if (this.client != null) {
-				this.broker.releaseInvoker(this.client);
+			if (this.messageInvoker != null) {
+				this.broker.releaseInvoker(this.messageInvoker);
 			} 
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);

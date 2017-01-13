@@ -146,13 +146,8 @@ public class JvmBroker implements Session, Broker {
 			}
 			throw e;
 		}
-	}
+	} 
 	
-	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		return invokeSync(req, readTimeout);
-	}
-
 	@Override
 	public void close() throws IOException { 
 		adaptor.sessionToDestroy(this);

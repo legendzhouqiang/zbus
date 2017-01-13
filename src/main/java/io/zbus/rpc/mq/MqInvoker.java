@@ -38,11 +38,5 @@ public class MqInvoker implements MessageInvoker {
 	public void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		req.setAck(false);
 		this.producer.sendAsync(req, callback);
-	}
-
-	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		req.setAck(false);
-		return this.producer.sendSync(req);
-	}
+	} 
 }

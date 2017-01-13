@@ -30,6 +30,6 @@ public class Producer extends MqAdmin {
 	}
  
 	public Message sendSync(Message msg) throws IOException, InterruptedException {
-		return sendSync(msg, 10000);
+		return sendSync(msg, invokeTimeout);
 	} 
 }

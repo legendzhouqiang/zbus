@@ -11,14 +11,11 @@ import io.zbus.util.logger.LoggerFactory;
 
 public class ConsumerService implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerService.class); 
-	protected ConsumerServiceConfig config; 
+	private ConsumerServiceConfig config; 
 	private Consumer[][] consumers; 
 	private boolean isStarted = false; 
 	private ThreadPoolExecutor executor; 
-	
-	public ConsumerService(){
-		
-	}
+	 
 	public ConsumerService(ConsumerServiceConfig config){
 		this.config = config; 
 	}
@@ -47,15 +44,12 @@ public class ConsumerService implements Closeable {
 		}
 		if(config.getMessageProcessor() == null && config.getConsumerHandler() == null){
 			throw new IllegalArgumentException("ConsumerHandler or MessageProcessor required");
-		}  
-		
-		
-		if(config.isConsumerHandlerRunInPool()){
-			int n = config.getConsumerHandlerPoolSize();
-			executor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
-					new LinkedBlockingQueue<Runnable>(config.getInFlightMessageCount()),
-					new ThreadPoolExecutor.CallerRunsPolicy());
-		}
+		}   
+		 
+		int n = config.getThreadPoolSize();
+		executor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
+				new LinkedBlockingQueue<Runnable>(config.getMaxInFlightMessage()),
+				new ThreadPoolExecutor.CallerRunsPolicy()); 
 		
 		final MessageProcessor processor = config.getMessageProcessor();
 		Broker[] brokers = config.getBrokers();
@@ -76,10 +70,9 @@ public class ConsumerService implements Closeable {
 			ConsumerHandler handler = config.getConsumerHandler();
 			for(int j=0; j<consumerGroup.length; j++){  
 				Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
-				if(config.isConsumerHandlerRunInPool()){
-					c.setConsumerHandlerExecutor(executor);
-					c.setConsumerHandlerRunInPool(true);
-				}
+				
+				c.setConsumerHandlerExecutor(executor);
+				c.setConsumerHandlerRunInPool(true); 
 				
 				if(handler == null){
 					handler = new ConsumerHandler() { 

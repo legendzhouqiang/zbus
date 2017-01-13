@@ -8,7 +8,8 @@ public class MqAdmin{
 	protected String mq;    
 	protected Integer flag;
 	protected String appid;
-	protected String token;     
+	protected String token;  
+	protected int invokeTimeout = 10000;// 10s
 	
 	public MqAdmin(Broker broker, String mq){  
 		this.broker = broker;
@@ -24,7 +25,7 @@ public class MqAdmin{
 	} 
 	 
 	protected Message invokeSync(Message req) throws IOException, InterruptedException{
-		return broker.invokeSync(req, 10000);
+		return broker.invokeSync(req, invokeTimeout);
 	}
 	
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
@@ -44,6 +45,7 @@ public class MqAdmin{
     	
     	return invokeSync(req); 
 	} 
+	
 	protected Message buildDeclareMQMessage(){
 		Message req = new Message();
 		fillCommonHeaders(req);

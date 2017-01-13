@@ -85,11 +85,6 @@ public class ZbusBroker implements Broker{
 	@Override
 	public void releaseInvoker(MessageInvoker client) throws IOException {
 		support.releaseInvoker(client);
-	}
-
-	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		return support.invokeSync(req);
-	}
+	} 
 
 }

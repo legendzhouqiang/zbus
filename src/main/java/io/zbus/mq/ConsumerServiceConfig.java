@@ -1,14 +1,14 @@
 package io.zbus.mq;
 
 public class ConsumerServiceConfig extends MqConfig{
+	private Broker[] brokers;
+	private int consumerCount = 4;  
+	private int threadPoolSize = 64; 
+	private int maxInFlightMessage = 100;
+	private boolean verbose = false; 
+	
 	private ConsumerHandler consumerHandler; 
 	private MessageProcessor messageProcessor; 
-	private int consumerCount = 4; 
-	private boolean consumerHandlerRunInPool = true;
-	private int consumerHandlerPoolSize = 64; 
-	private int inFlightMessageCount = 100;
-	private boolean verbose = false;
-	private Broker[] brokers;
  
 	public ConsumerServiceConfig(Broker... brokers) {
 		this.brokers = brokers;
@@ -65,33 +65,22 @@ public class ConsumerServiceConfig extends MqConfig{
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
-	}  
+	}   
 	
-	
-	public int getConsumerHandlerPoolSize() {
-		return consumerHandlerPoolSize;
+	public int getThreadPoolSize() {
+		return threadPoolSize;
 	}
 
-	public void setConsumerHandlerPoolSize(int consumerHandlerPoolSize) {
-		this.consumerHandlerPoolSize = consumerHandlerPoolSize;
-	} 
+	public void setThreadPoolSize(int threadPoolSize) {
+		this.threadPoolSize = threadPoolSize;
+	}   
 
-	public boolean isConsumerHandlerRunInPool() {
-		return consumerHandlerRunInPool;
+	public int getMaxInFlightMessage() {
+		return maxInFlightMessage;
 	}
 
-	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
-		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
-	}
-	
-	
-
-	public int getInFlightMessageCount() {
-		return inFlightMessageCount;
-	}
-
-	public void setInFlightMessageCount(int inFlightMessageCount) {
-		this.inFlightMessageCount = inFlightMessageCount;
+	public void setMaxInFlightMessage(int maxInFlightMessage) {
+		this.maxInFlightMessage = maxInFlightMessage;
 	}
 
 	@Override

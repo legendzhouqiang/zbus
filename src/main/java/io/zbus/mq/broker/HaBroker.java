@@ -112,11 +112,6 @@ public class HaBroker implements Broker {
 		if(ownBrokerSelector){
 			brokerSelector.close();
 		}
-	}
-
-	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		return invokeSync(req, 10000);
 	} 
 	
 	

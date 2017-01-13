@@ -86,11 +86,6 @@ public class SingleBroker implements Broker {
 			}
 		}
 	} 
-	
-	@Override
-	public Message invokeSync(Message req) throws IOException, InterruptedException {
-		return invokeSync(req, 10000);//default 10s
-	}
 
 	public Message invokeSync(Message req, int timeout) throws IOException {
 		MessageClient client = null;
