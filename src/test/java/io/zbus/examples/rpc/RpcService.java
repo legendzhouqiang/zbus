@@ -6,7 +6,7 @@ import io.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
 import io.zbus.mq.Broker;
 import io.zbus.mq.ConsumerService;
 import io.zbus.mq.ConsumerServiceConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.rpc.RpcProcessor;
 
 public class RpcService {
@@ -18,7 +18,7 @@ public class RpcService {
 		Broker broker = new ZbusBroker("127.0.0.1:15555");
 
 		ConsumerServiceConfig config = new ConsumerServiceConfig(); 
-		config.setMq("MyRpc");  
+		config.setTopic("MyRpc");  
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor);  
 		config.setThreadPoolSize(100);   

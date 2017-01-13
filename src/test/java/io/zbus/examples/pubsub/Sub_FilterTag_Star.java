@@ -8,7 +8,7 @@ import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 
 public class Sub_FilterTag_Star {
 	@SuppressWarnings("resource")
@@ -17,7 +17,7 @@ public class Sub_FilterTag_Star {
 		 
 		MqConfig config = new MqConfig();
 		config.setBroker(broker);
-		config.setMq("MyMQ");
+		config.setTopic("MyMQ");
 		ConsumeGroup group = new ConsumeGroup();
 		group.setGroupName("Group5");
 		group.setFilterTag("abc.*");
@@ -25,7 +25,7 @@ public class Sub_FilterTag_Star {
 		config.setConsumeGroup(group);  
 		
 		Consumer c = new Consumer(config);    
-		c.declareQueue();
+		c.declareTopic();
 		
 		c.start(new ConsumerHandler() { 
 			@Override

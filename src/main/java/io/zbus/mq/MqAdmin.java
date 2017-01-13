@@ -5,20 +5,20 @@ import java.io.IOException;
 
 public class MqAdmin{     
 	protected final Broker broker;      
-	protected String mq;    
+	protected String topic;    
 	protected Integer flag;
 	protected String appid;
 	protected String token;  
 	protected int invokeTimeout = 10000;// 10s
 	
-	public MqAdmin(Broker broker, String mq){  
+	public MqAdmin(Broker broker, String topic){  
 		this.broker = broker;
-		this.mq = mq;    
+		this.topic = topic;    
 	} 
 	
 	public MqAdmin(MqConfig config){
 		this.broker = config.getBroker();
-		this.mq = config.getMq();  
+		this.topic = config.getTopic();  
 		this.appid = config.getAppid();
 		this.token = config.getToken();
 		this.flag = config.getFlag(); 
@@ -33,49 +33,49 @@ public class MqAdmin{
 	}
 	
 	protected void fillCommonHeaders(Message message){
-		message.setMq(this.mq);
+		message.setTopic(this.topic);
 		message.setAppid(this.appid);
 		message.setToken(this.token); 
 	}
 	
-	public Message queryQueue() throws IOException, InterruptedException{
-		Message req = new Message();
-		fillCommonHeaders(req); 
-    	req.setCmd(Protocol.QueryMQ);  
-    	
-    	return invokeSync(req); 
-	} 
-	
-	protected Message buildDeclareMQMessage(){
-		Message req = new Message();
-		fillCommonHeaders(req);
-    	req.setCmd(Protocol.CreateMQ);   
-    	return req;
-	}
-     
-    public boolean declareQueue() throws IOException, InterruptedException{ 
-    	Message req = buildDeclareMQMessage(); 
+	public boolean declareTopic() throws IOException, InterruptedException{ 
+    	Message req = buildDeclareTopicMessage(); 
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
     }    
-    
-    public boolean removeQueue() throws IOException, InterruptedException{
+	
+	public Message queryTopic() throws IOException, InterruptedException{
+		Message req = new Message();
+		fillCommonHeaders(req); 
+    	req.setCommand(Protocol.QueryTopic);  
+    	
+    	return invokeSync(req); 
+	} 
+	
+	public boolean removeTopic() throws IOException, InterruptedException{
     	Message req = new Message();
     	fillCommonHeaders(req); 
-    	req.setCmd(Protocol.RemoveMQ); 
+    	req.setCommand(Protocol.RemoveTopic); 
     	
     	Message res = invokeSync(req);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
     } 
+	 
+	protected Message buildDeclareTopicMessage(){
+		Message req = new Message();
+		fillCommonHeaders(req);
+    	req.setCommand(Protocol.DeclareTopic);   
+    	return req;
+	}  
    
-	public String getMq() {
-		return mq;
+	public String getTopic() {
+		return topic;
 	}
 
-	public void setMq(String mq) {
-		this.mq = mq;
+	public void setTopic(String topic) {
+		this.topic = topic;
 	} 
  
 	public Integer getFlag() {

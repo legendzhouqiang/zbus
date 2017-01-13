@@ -303,11 +303,11 @@ public class Message implements Id {
 		} 
 	}
 	
-	public String getCmd() { 
-		return this.getHead(CMD);
+	public String getCommand() { 
+		return this.getHead(COMMAND);
 	} 
-	public Message setCmd(String value) {
-		this.setHead(CMD, value); 
+	public Message setCommand(String value) {
+		this.setHead(COMMAND, value); 
 		return this;
 	}   
 	
@@ -327,10 +327,10 @@ public class Message implements Id {
 	}
 	
 	
-	public String getRecver() {
+	public String getReceiver() {
 		return this.getHead(RECVER);
 	} 
-	public Message setRecver(String value) {
+	public Message setReceiver(String value) {
 		this.setHead(RECVER, value);
 		return this;
 	}
@@ -459,12 +459,12 @@ public class Message implements Id {
 		this.setHead(ACK, value);
 	} 
 	
-	public String getMq(){
-		String value = this.getHead(MQ);
+	public String getTopic(){
+		String value = this.getHead(Topic);
 		return value;
 	} 
-	public Message setMq(String mq) {
-		this.setHead(MQ, mq);
+	public Message setTopic(String mq) {
+		this.setHead(Topic, mq);
 		return this;
 	} 
 	

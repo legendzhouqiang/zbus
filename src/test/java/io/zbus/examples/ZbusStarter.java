@@ -9,6 +9,7 @@ public class ZbusStarter {
 	public static void main(String[] args) throws Exception { 
 		MqServerConfig config = new MqServerConfig();   
 		config.serverPort = 15555;  
+		config.setVerbose(true);
 		
 		final MqServer server = new MqServer(config);  
 		server.start();  

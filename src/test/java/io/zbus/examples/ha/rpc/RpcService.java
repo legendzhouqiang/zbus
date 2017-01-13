@@ -6,7 +6,7 @@ import io.zbus.examples.rpc.appdomain.InterfaceExampleImpl;
 import io.zbus.mq.Broker;
 import io.zbus.mq.ConsumerService;
 import io.zbus.mq.ConsumerServiceConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.rpc.RpcProcessor;
 
 public class RpcService {
@@ -20,7 +20,7 @@ public class RpcService {
 
 		ConsumerServiceConfig config = new ConsumerServiceConfig();
 		config.setConsumerCount(2); 
-		config.setMq("MyRpc"); 
+		config.setTopic("MyRpc"); 
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor); 
 		config.setVerbose(true);

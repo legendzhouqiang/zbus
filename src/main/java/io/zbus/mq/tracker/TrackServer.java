@@ -142,7 +142,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			if(serverAddr == null) return; 
 			serverEntryTable.removeServer(serverAddr);
 			
-			msg.setCmd(HaCommand.ServerLeave); 
+			msg.setCommand(HaCommand.ServerLeave); 
 			pubMessage(msg);
 		}
 	};
@@ -167,7 +167,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 				onNewServer(se.serverAddr, sess);
 			}
 			
-			msg.setCmd(HaCommand.EntryUpdate);
+			msg.setCommand(HaCommand.EntryUpdate);
 			pubMessage(msg);
 		}
 	}; 
@@ -176,10 +176,10 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			String serverAddr = msg.getServer();
-			String entryId = msg.getMq(); //TODO use mq for entryId
+			String entryId = msg.getTopic(); //TODO use mq for entryId
 			serverEntryTable.removeServerEntry(serverAddr, entryId);
 			
-			msg.setCmd(HaCommand.EntryRemove);
+			msg.setCommand(HaCommand.EntryRemove);
 			pubMessage(msg);
 		}
 	}; 
@@ -194,7 +194,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 			
 			Message m = new Message(); 
 			m.setStatus(200);
-			m.setCmd(HaCommand.PubAll);
+			m.setCommand(HaCommand.PubAll);
 			m.setBody(serverEntryTable.pack());
 			sess.write(m);
 		}
@@ -218,7 +218,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					
 					serverEntryTable.addServer(serverAddr);
 					Message msg = new Message();
-					msg.setCmd(HaCommand.ServerJoin);
+					msg.setCommand(HaCommand.ServerJoin);
 					msg.setServer(serverAddr); 
 					pubMessage(msg);
 				}
@@ -234,7 +234,7 @@ public class TrackServer extends MessageAdaptor implements Closeable{
 					client.close();
 					log.info("Sending ServerLeave message");
 					Message msg = new Message();
-					msg.setCmd(HaCommand.ServerLeave);
+					msg.setCommand(HaCommand.ServerLeave);
 					msg.setServer(serverAddr); 
 					
 					pubMessage(msg);

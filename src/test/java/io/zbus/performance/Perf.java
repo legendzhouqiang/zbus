@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.mq.Broker;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.BrokerConfig;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;

@@ -37,7 +37,7 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 	public void heartbeat() {
 		if(this.hasConnected()){
 			Message hbt = new Message();
-			hbt.setCmd(Message.HEARTBEAT);
+			hbt.setCommand(Message.HEARTBEAT);
 			try {
 				this.invokeAsync(hbt, (MessageCallback)null);
 			} catch (IOException e) {  

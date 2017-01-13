@@ -8,15 +8,15 @@ import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 
 public class ConsumerHandlerRunInPool { 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
 		Broker broker = new ZbusBroker("127.0.0.1:15555");   
 		Consumer consumer = new Consumer(broker, "MyMQ");  
-		consumer.setConsumerHandlerPoolSize(1000); 
-		consumer.setConsumerHandlerRunInPool(true); //enable consumer handler run in thread
+		consumer.setConsumeThreadPoolSize(1000); 
+		consumer.setConsumeInPool(true); //enable consumer handler run in thread
 		
 		final AtomicLong msgCounter = new AtomicLong(0);
 		final long start = System.currentTimeMillis();

@@ -17,9 +17,17 @@ public class Consumer extends MqAdmin implements Closeable {
 	private int consumeTimeout = 120000; // 2 minutes   
 	private ConsumeGroup consumeGroup;
 	private Integer consumeWindow;
+	
+	private volatile Thread consumerThread = null;
+	private volatile ConsumerHandler consumerHandler; 
+	private int consumeThreadPoolSize = 64;
+	private int maxInFlightMessage = 64;
+	private boolean consumeInPool = false;
+	private ThreadPoolExecutor consumeExecutor;  
+	private boolean ownConsumeExecutor = false;
 
-	public Consumer(Broker broker, String mq) {
-		super(broker, mq);
+	public Consumer(Broker broker, String topic) {
+		super(broker, topic);
 	} 
 	
 	public Consumer(MqConfig config) {
@@ -30,7 +38,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
-		req.setCmd(Protocol.Consume);
+		req.setCommand(Protocol.Consume);
 		req.setConsumeWindow(consumeWindow);
 		fillCommonHeaders(req);  
 		if(consumeGroup != null){ //consumeGroup
@@ -41,7 +49,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		try {  
 			synchronized (this) {
 				if (this.messageInvoker == null) {
-					this.messageInvoker = broker.selectInvoker(this.mq);
+					this.messageInvoker = broker.selectInvoker(this.topic);
 				}
 				res = messageInvoker.invokeSync(req, timeout);
 			} 
@@ -61,7 +69,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			}
 
 			if ("404".equals(res.getStatus())) {
-				if (!this.declareQueue()) {
+				if (!this.declareTopic()) {
 					throw new MqException(res.getBodyString());
 				}
 				return take(timeout);
@@ -94,8 +102,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	}  
 	
-	protected Message buildDeclareMQMessage(){
-		Message req = super.buildDeclareMQMessage();  
+	protected Message buildDeclareTopicMessage(){
+		Message req = super.buildDeclareTopicMessage();  
     	if(this.consumeGroup != null){
 	    	req.setConsumeGroup(consumeGroup.getGroupName());
 	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
@@ -111,7 +119,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
 		synchronized (this) {
 			if (this.messageInvoker == null) {
-				this.messageInvoker = broker.selectInvoker(this.mq);
+				this.messageInvoker = broker.selectInvoker(this.topic);
 			}
 			return messageInvoker.invokeSync(req, invokeTimeout);
 		} 
@@ -121,14 +129,14 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		synchronized (this) {
 			if (this.messageInvoker == null) {
-				this.messageInvoker = broker.selectInvoker(this.mq);
+				this.messageInvoker = broker.selectInvoker(this.topic);
 			}
 			messageInvoker.invokeAsync(req, callback);
 		} 
 	} 
 	 
 	public void routeMessage(Message msg) throws IOException {
-		msg.setCmd(Protocol.Route);
+		msg.setCommand(Protocol.Route);
 		msg.setAck(false); 
 		String status = msg.getStatus();
 		if(status != null){
@@ -158,23 +166,14 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeWindow = consumeWindow;
 	} 
 
-
-	//The followings are all related to start consumer cycle in another thread
-	private volatile Thread consumerThread = null;
-	private volatile ConsumerHandler consumerHandler; 
-	private int consumerHandlerPoolSize = 64;
-	private int inFlightMessageCount = 64;
-	private boolean consumerHandlerRunInPool = false;
-	private ThreadPoolExecutor consumerHandlerExecutor;  
-	private boolean ownConsumerHandlerExecutor = false;
-	
+    //-------------------------------------------------------------------------  
 	private void initConsumerHandlerPoolIfNeeded(){
-		if(consumerHandlerRunInPool && consumerHandlerExecutor == null){
-			consumerHandlerExecutor = new ThreadPoolExecutor(consumerHandlerPoolSize, 
-					consumerHandlerPoolSize, 120, TimeUnit.SECONDS, 
-					new LinkedBlockingQueue<Runnable>(inFlightMessageCount),
+		if(consumeInPool && consumeExecutor == null){
+			consumeExecutor = new ThreadPoolExecutor(consumeThreadPoolSize, 
+					consumeThreadPoolSize, 120, TimeUnit.SECONDS, 
+					new LinkedBlockingQueue<Runnable>(maxInFlightMessage),
 					new ThreadPoolExecutor.CallerRunsPolicy());
-			ownConsumerHandlerExecutor = true;
+			ownConsumeExecutor = true;
 		}
 	}
 	private final Runnable consumerTask = new Runnable() {
@@ -197,8 +196,8 @@ public class Consumer extends MqAdmin implements Closeable {
 						continue;
 					}
 					
-					if (consumerHandlerRunInPool && consumerHandlerExecutor != null) { 
-						consumerHandlerExecutor.submit(new Runnable() {
+					if (consumeInPool && consumeExecutor != null) { 
+						consumeExecutor.submit(new Runnable() {
 							@Override
 							public void run() {
 								try {
@@ -236,9 +235,9 @@ public class Consumer extends MqAdmin implements Closeable {
 			consumerThread.interrupt();
 			consumerThread = null;
 		}
-		if(ownConsumerHandlerExecutor && consumerHandlerExecutor != null){
-			consumerHandlerExecutor.shutdown();
-			consumerHandlerExecutor = null;
+		if(ownConsumeExecutor && consumeExecutor != null){
+			consumeExecutor.shutdown();
+			consumeExecutor = null;
 		}
 		try {
 			if (this.messageInvoker != null) {
@@ -269,38 +268,38 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeTimeout = consumeTimeout;
 	} 
 	
-	public int getConsumerHandlerPoolSize() {
-		return consumerHandlerPoolSize;
+	public int getConsumeThreadPoolSize() {
+		return consumeThreadPoolSize;
 	}
 
-	public void setConsumerHandlerPoolSize(int consumerHandlerPoolSize) {
-		this.consumerHandlerPoolSize = consumerHandlerPoolSize; 
+	public void setConsumeThreadPoolSize(int consumeThreadPoolSize) {
+		this.consumeThreadPoolSize = consumeThreadPoolSize; 
 	} 
 
-	public int getInFlightMessageCount() {
-		return inFlightMessageCount;
+	public int getMaxInFlightMessage() {
+		return maxInFlightMessage;
 	}
 
-	public void setInFlightMessageCount(int inFlightMessageCount) {
-		this.inFlightMessageCount = inFlightMessageCount;
+	public void setMaxInFlightMessage(int maxInFlightMessage) {
+		this.maxInFlightMessage = maxInFlightMessage;
 	}
  
-	public boolean isConsumeHandlerRunInPool() {
-		return consumerHandlerRunInPool;
+	public boolean isConsumeInPool() {
+		return consumeInPool;
 	}
 
-	public void setConsumerHandlerRunInPool(boolean consumerHandlerRunInPool) {
-		this.consumerHandlerRunInPool = consumerHandlerRunInPool;
+	public void setConsumeInPool(boolean consumeInPool) {
+		this.consumeInPool = consumeInPool;
 	}    
 
 	public ThreadPoolExecutor getConsumeExecutor() {
-		return consumerHandlerExecutor;
+		return consumeExecutor;
 	}
 
-	public void setConsumerHandlerExecutor(ThreadPoolExecutor consumerHandlerExecutor) {
-		if(this.consumerHandlerExecutor != null && ownConsumerHandlerExecutor){
-			this.consumerHandlerExecutor.shutdown();
+	public void setConsumeExecutor(ThreadPoolExecutor consumeExecutor) {
+		if(this.consumeExecutor != null && ownConsumeExecutor){
+			this.consumeExecutor.shutdown();
 		}
-		this.consumerHandlerExecutor = consumerHandlerExecutor;
+		this.consumeExecutor = consumeExecutor;
 	} 
 }

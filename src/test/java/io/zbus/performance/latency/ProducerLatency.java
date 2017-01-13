@@ -17,14 +17,14 @@ public class ProducerLatency {
 		final Broker broker = Perf.buildBroker(args);
  
 		Producer producer = new Producer(broker, mq);
-		producer.declareQueue(); 
+		producer.declareTopic(); 
   
 		long total = 0;
 		for(int i=0;i<loopCount;i++){
 			long start = System.currentTimeMillis();
 			Message msg = new Message();
 			msg.setBody("hello world"+i);
-			producer.sendSync(msg);  
+			producer.publish(msg);  
 			long end = System.currentTimeMillis();
 			total += (end-start);
 			if(i%1000 == 0){

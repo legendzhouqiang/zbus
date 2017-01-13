@@ -1,11 +1,9 @@
-package io.zbus.mq.broker;
+package io.zbus.mq;
 
 import java.io.IOException;
 
-import io.zbus.mq.Broker;
-import io.zbus.mq.Message;
-import io.zbus.mq.MessageCallback;
-import io.zbus.mq.MessageInvoker;
+import io.zbus.mq.broker.HaBroker;
+import io.zbus.mq.broker.SingleBroker;
 
 /**
  * Broker factory class, abstraction of all broker types

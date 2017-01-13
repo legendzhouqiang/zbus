@@ -105,14 +105,14 @@ public class TrackPub implements Closeable{
 	
 	public void pubServerJoin(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.ServerJoin);
+		msg.setCommand(HaCommand.ServerJoin);
 		msg.setServer(targetServerAddr); 
 		sendToAllTrackers(msg);
 	}
 	
 	public void pubServerLeave(String targetServerAddr){
 		Message msg = new Message();
-		msg.setCmd(HaCommand.ServerLeave);
+		msg.setCommand(HaCommand.ServerLeave);
 		msg.setServer(targetServerAddr);
 		sendToAllTrackers(msg);
 	}
@@ -120,14 +120,14 @@ public class TrackPub implements Closeable{
 	public void pubEntryUpdate(ServerEntry se){ 
 		Message msg = new Message();
 		msg.setBody(se.pack());
-		msg.setCmd(HaCommand.EntryUpdate);  
+		msg.setCommand(HaCommand.EntryUpdate);  
 		sendToAllTrackers(msg);
 	} 
 	
 	public void pubEntryRemove(String entryId){ 
 		Message msg = new Message();
 		msg.setBody(entryId);
-		msg.setCmd(HaCommand.EntryRemove);  
+		msg.setCommand(HaCommand.EntryRemove);  
 		sendToAllTrackers(msg);
 	} 
 	

@@ -2,9 +2,9 @@ package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.appdomain.InterfaceExample;
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.MessageInvoker;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.rpc.RpcFactory;
 import io.zbus.rpc.mq.MqInvoker;
 

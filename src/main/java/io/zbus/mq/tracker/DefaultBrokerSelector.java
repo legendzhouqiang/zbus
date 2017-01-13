@@ -32,8 +32,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
-import io.zbus.mq.broker.BrokerConfig;
 import io.zbus.mq.broker.HaBroker.BrokerSelector;
 import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.net.MessageClient;
@@ -88,7 +88,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	
 	@Override
 	public String getEntry(Message msg) {
-		return msg.getMq();
+		return msg.getTopic();
 	} 
 	
 	

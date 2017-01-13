@@ -39,7 +39,7 @@ public class ConsumerService implements Closeable {
 		if(config == null){
 			throw new IllegalArgumentException("Missing ServiceConfig");
 		}
-		if(config.getMq() == null || "".equals(config.getMq())){
+		if(config.getTopic() == null || "".equals(config.getTopic())){
 			throw new IllegalArgumentException("MQ required");
 		}
 		if(config.getMessageProcessor() == null && config.getConsumerHandler() == null){
@@ -62,7 +62,7 @@ public class ConsumerService implements Closeable {
 			
 			MqConfig mqConfig = new MqConfig();
 			mqConfig.setBroker(brokers[i]);
-			mqConfig.setMq(config.getMq()); 
+			mqConfig.setTopic(config.getTopic()); 
 			mqConfig.setVerbose(config.isVerbose());
 			mqConfig.setAppid(config.getAppid()); 
 			mqConfig.setToken(config.getToken()); 
@@ -71,8 +71,8 @@ public class ConsumerService implements Closeable {
 			for(int j=0; j<consumerGroup.length; j++){  
 				Consumer c = consumerGroup[j] = new Consumer(mqConfig); 
 				
-				c.setConsumerHandlerExecutor(executor);
-				c.setConsumerHandlerRunInPool(true); 
+				c.setConsumeExecutor(executor);
+				c.setConsumeInPool(true); 
 				
 				if(handler == null){
 					handler = new ConsumerHandler() { 
@@ -81,15 +81,15 @@ public class ConsumerService implements Closeable {
 							if(config.isVerbose()){
 								log.info("Request:\n"+msg);
 							}
-							final String mq = msg.getMq();
+							final String mq = msg.getTopic();
 							final String msgId  = msg.getId();
 							final String sender = msg.getSender();
 							Message res = processor.process(msg);
 							
 							if(res != null){
 								res.setId(msgId);
-								res.setMq(mq);  
-								res.setRecver(sender); 
+								res.setTopic(mq);  
+								res.setReceiver(sender); 
 								if(config.isVerbose()){
 									log.info("Response:\n"+res);
 								}

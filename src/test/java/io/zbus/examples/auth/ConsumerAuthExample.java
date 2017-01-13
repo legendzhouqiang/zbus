@@ -7,7 +7,7 @@ import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 
 public class ConsumerAuthExample { 
 	@SuppressWarnings("resource")
@@ -16,7 +16,7 @@ public class ConsumerAuthExample {
 		
 		MqConfig config = new MqConfig();
 		config.setBroker(broker);
-		config.setMq("MyMQ_Auth");
+		config.setTopic("MyMQ_Auth");
 		
 		
 		//appid + token
@@ -24,7 +24,7 @@ public class ConsumerAuthExample {
 		config.setToken("token");  
 		
 		Consumer consumer = new Consumer(config);   
-		consumer.declareQueue();
+		consumer.declareTopic();
 		consumer.start(new ConsumerHandler() { 
 			@Override
 			public void handle(Message msg, Consumer consumer) throws IOException { 

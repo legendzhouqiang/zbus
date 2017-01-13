@@ -1,11 +1,11 @@
 package io.zbus.performance;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
 
 public class ConsumerTakeClose {
@@ -19,7 +19,7 @@ public class ConsumerTakeClose {
 		
 		final MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq(mq); 
+		config.setTopic(mq); 
 		
 		for(int i=0;i<1000000;i++){
 			Consumer consumer = new Consumer(config);

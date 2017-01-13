@@ -2,7 +2,7 @@ package io.zbus.mq;
 
 public class MqConfig implements Cloneable { 
 	protected Broker broker;  
-	protected String mq;
+	protected String topic;
 	protected String appid;
 	protected String token; 
 	protected Integer flag;
@@ -21,12 +21,12 @@ public class MqConfig implements Cloneable {
 		this.broker = broker;
 	}
 
-	public String getMq() {
-		return mq;
+	public String getTopic() {
+		return topic;
 	}
 
-	public void setMq(String mq) {
-		this.mq = mq;
+	public void setTopic(String topic) {
+		this.topic = topic;
 	} 
 
 	public boolean isVerbose() {

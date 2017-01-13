@@ -5,7 +5,7 @@
 ##API
 	MqConfig
 		+ broker
-		+ mq
+		+ topic
 		+ appid
 		+ token
 		+ consumeGroup
@@ -14,15 +14,15 @@
 		+ filterTag
 	
 	MqAdmin
-		+ declareQueue()
-		+ queryQueue()
-		+ removeQueue()
+		+ declareTopic()
+		+ queryTopic()
+		+ removeTopic()
 	
 	Producer
-		+ produce(msg)
+		+ publish(msg)
 	
 	Consumer
-		+ consume()
+		+ take()
 		+ route(msg)
 	
 	ConsumerServiceConfig : MqConfig
@@ -37,8 +37,8 @@
 		+ close()
  	
 	Broker
-		+ selectForProducer(mq: String)
-		+ selectForConsumer(mq: String)
+		+ selectForProducer(topic: String)
+		+ selectForConsumer(topic: String)
 		+ release(clients: MessageClient)
 	
 	ZbusBroker: Broker
@@ -61,7 +61,7 @@
 	io.zbus.kit -- useful tools including pool
 
 ##MQ Model
-	MQ   |||||||||||||||||||||| <-- Produce Write
+	Topic   |||||||||||||||||||||| <-- Produce Write
 	                   ^-------ConsumeGroup1              (reader group1)
 	                       ^-------ConsumeGroup2          (reader group2)
 	               ^-------ConsumeGroup3                  (reader group3)
@@ -87,9 +87,9 @@ MqServer uses a HTTP header extension key called 'cmd' to distinguish job reques
 
 	cmd=produce -- produce message(s) to MqServer
 	cmd=consume -- consume message(s) from MqServer
-	cmd=declare_mq -- create or update a MQ with consume group details.
-	cmd=query_mq -- query MQ details
-	cmd=remove_mq -- remove MQ
+	cmd=declare_topic -- create or update a topic with consume group details.
+	cmd=query_topic -- query topic details
+	cmd=remove_topic -- remove topic
 	cmd=ping -- ping test, return server's time to response
 	cmd=route -- route message back to a producer, designed for RPC
 
@@ -97,7 +97,7 @@ MqServer uses a HTTP header extension key called 'cmd' to distinguish job reques
 
 	[R]cmd={string}
 	[R]id={string, max:39}
-	[R]mq={string}
+	[R]topic={string}
 	[O]appid={string}
 	[O]token={string}
 
@@ -142,12 +142,12 @@ MqServer uses a HTTP header extension key called 'cmd' to distinguish job reques
 
 Url parse rule: 1) requestPath trimmed of / => cmd, 2)key-value extracted to override header if missing.
 
-	/produce/?mq=MyMQ
-	/consume/?mq=MyMQ&&consume_group=xxxxx
-	/declare_mq/?mq=MyMQ
-	/query_mq/?mq=MyMQ
-	/remove_mq/?mq=MyMQ
-	/route/?mq=MyMQ&&recver=xxxxx
+	/produce/?topic=MyTopic
+	/consume/?topic=MyTopic&&consume_group=xxxxx
+	/declare_mq/?topic=MyTopic
+	/query_mq/?topic=MyTopic
+	/remove_mq/?topic=MyTopic
+	/route/?topic=MyTopic&&recver=xxxxx
 	
 	/ping
  
@@ -168,9 +168,9 @@ Url parse rule: 1) requestPath trimmed of / => cmd, 2)key-value extracted to ove
  
 ##Monitor
 
-	MQ:
-	- MQ Name, Flag, ConsumeGroups, MQ Disk, LastActivity, InnerReplyQueue
-	- Create, Pause, Resume, Remove MQ
+	Topic:
+	- Topic Name, Flag, ConsumeGroups, MQ Disk, LastActivity, InnerReplyQueue
+	- Create, Pause, Resume, Remove Topic
 	
 	ConsumeGroup:
 	- Remaining MessageCount, MessageSize
@@ -191,11 +191,11 @@ Url parse rule: 1) requestPath trimmed of / => cmd, 2)key-value extracted to ove
  
 ##Tracker
 
-	MQ Details: broker, mq, flag, consumeGroups, DiskInfo
+	Topic Details: broker, topic, flag, consumeGroups, DiskInfo
 	ConsumeGroup: name, activeConsumerCount, remainingMsgCount
 	
-	MQ => broker list
-	broker => MQ list
+	topic => broker list
+	broker => topic list
 	
 	/pub
 	/sub

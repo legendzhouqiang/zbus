@@ -25,7 +25,7 @@ public class JvmBrokerExample {
 		Producer producer = new Producer(broker, "MyMQ");
 		Message message = new Message();
 		message.setBody("test body");
-		producer.sendAsync(message);
+		producer.publishAsync(message);
 		
 		Thread.sleep(100);
 		System.out.println("destroy consumer");

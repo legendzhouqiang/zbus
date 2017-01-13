@@ -1,11 +1,11 @@
 package io.zbus.performance;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
 import io.zbus.mq.Producer;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
 
 public class ProducerPerf {
@@ -23,7 +23,7 @@ public class ProducerPerf {
 		
 		final MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq(mq); 
+		config.setTopic(mq); 
 		
 		Perf perf = new Perf(){ 
 			
@@ -34,7 +34,7 @@ public class ProducerPerf {
 					
 					@Override
 					public void initTask() throws Exception {
-						producer.declareQueue();
+						producer.declareTopic();
 					}
 					
 					@Override
@@ -42,7 +42,7 @@ public class ProducerPerf {
 						Message msg = new Message();
 						
 						msg.setBody(new byte[msgSize]); 
-						msg = producer.sendSync(msg); 
+						msg = producer.publish(msg); 
 					}
 				};
 			} 

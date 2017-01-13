@@ -32,7 +32,7 @@ public class ReplyKit {
 	public static void reply200WithBody(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
-		res.setMq(msg.getMq());
+		res.setTopic(msg.getTopic());
 		res.setStatus(200);
 		res.setBody(msg.getBody());
 
@@ -42,7 +42,7 @@ public class ReplyKit {
 	public static void reply200(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
-		res.setMq(msg.getMq());
+		res.setTopic(msg.getTopic());
 		res.setStatus(200);
 		res.setBody("" + System.currentTimeMillis());
 
@@ -51,10 +51,10 @@ public class ReplyKit {
 
 	public static void reply404(Message msg, Session sess) throws IOException {
 		Message res = new Message();
-		String mqName = msg.getMq();
+		String mqName = msg.getTopic();
 		res.setId(msg.getId());
 		res.setStatus(404);
-		res.setMq(mqName);
+		res.setTopic(mqName);
 		res.setBody(String.format("MQ(%s) Not Found", mqName));
 
 		sess.write(res);
@@ -62,10 +62,10 @@ public class ReplyKit {
 	
 	public static void reply502(Message msg, Session sess) throws IOException {
 		Message res = new Message();
-		String mqName = msg.getMq();
+		String mqName = msg.getTopic();
 		res.setId(msg.getId());
 		res.setStatus(502);
-		res.setMq(mqName);
+		res.setTopic(mqName);
 		res.setBody(String.format("MQ(%s) Service Down", mqName));
 
 		sess.write(res);
@@ -74,10 +74,10 @@ public class ReplyKit {
 
 	public static void reply403(Message msg, Session sess) throws IOException {
 		Message res = new Message();
-		String mqName = msg.getMq();
+		String mqName = msg.getTopic();
 		res.setId(msg.getId());
 		res.setStatus(403);
-		res.setMq(mqName);
+		res.setTopic(mqName);
 		res.setBody(String.format("MQ(%s) forbbiden", mqName));
 
 		sess.write(res);
@@ -87,7 +87,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setStatus(400);
-		res.setMq(msg.getMq());
+		res.setTopic(msg.getTopic());
 		res.setBody(String.format("Bad format: %s", msg.getBodyString()));
 		sess.write(res);
 	}
@@ -96,7 +96,7 @@ public class ReplyKit {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setStatus(400);
-		res.setMq(msg.getMq());
+		res.setTopic(msg.getTopic());
 		res.setBody(String.format("Exception caught: %s",ex));
 		sess.write(res);
 	}
@@ -104,7 +104,7 @@ public class ReplyKit {
 	public static void reply406(Message msg, Session sess) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
-		res.setMq(msg.getMq());
+		res.setTopic(msg.getTopic());
 		res.setStatus(406);
 		res.setBody("" + System.currentTimeMillis());
 

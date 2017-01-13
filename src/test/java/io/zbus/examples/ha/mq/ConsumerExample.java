@@ -6,7 +6,7 @@ import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 
 public class ConsumerExample { 
 	@SuppressWarnings("resource")

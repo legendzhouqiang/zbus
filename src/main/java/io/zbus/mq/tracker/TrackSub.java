@@ -88,7 +88,7 @@ public class TrackSub implements Closeable{
 				@Override
 				public void handle(Message msg, Session sess) throws IOException { 
 					log.debug("%s", msg);
-					String cmd = msg.getCmd();
+					String cmd = msg.getCommand();
 			    	if(cmd != null){ //cmd
 			    		MessageHandler handler = cmdHandlers.get(cmd);
 			        	if(handler != null){
@@ -146,7 +146,7 @@ public class TrackSub implements Closeable{
 			@Override
 			public void handle(Message msg, Session sess) throws IOException { 
 				String serverAddr = msg.getServer();
-				String entryId = msg.getMq();
+				String entryId = msg.getTopic();
 				if(entryRemoveHandler != null){
 					entryRemoveHandler.onEntryRemove(entryId, serverAddr);
 				}
@@ -184,7 +184,7 @@ public class TrackSub implements Closeable{
 	private void clientSubAll(MessageClient client){
 		try { 
     		Message msg = new Message(); 
-    		msg.setCmd(HaCommand.SubAll); 
+    		msg.setCommand(HaCommand.SubAll); 
     		client.sendMessage(msg);
 		} catch (IOException e) { 
 			log.error(e.getMessage(), e);

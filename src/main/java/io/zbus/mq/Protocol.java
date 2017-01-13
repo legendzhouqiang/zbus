@@ -10,10 +10,10 @@ public class Protocol {
 	public static final String Produce   = "produce";   //produce message
 	public static final String Consume   = "consume";   //consume message
 	public static final String Route   	 = "route";     //route back message to sender
-
-	public static final String QueryMQ   = "query_mq"; 
-	public static final String CreateMQ  = "create_mq"; //create MQ
-	public static final String RemoveMQ  = "remove_mq"; //remove MQ  
+ 
+	public static final String DeclareTopic = "declare_topic"; //create topic
+	public static final String QueryTopic   = "query_topic"; 
+	public static final String RemoveTopic  = "remove_topic"; //remove topic  
 	 
 	public static final String Ping      = "ping"; 
 	public static final String Data      = "data"; 
@@ -21,8 +21,8 @@ public class Protocol {
 	
 	
 
-	public static final String CMD    	= "cmd";     
-	public static final String MQ       = "mq";
+	public static final String COMMAND  = "cmd";     
+	public static final String Topic    = "topic";
 	public static final String FLAG     = "flag";
 	public static final String TAG   	= "tag";  
 	public static final String OFFSET   = "offset";

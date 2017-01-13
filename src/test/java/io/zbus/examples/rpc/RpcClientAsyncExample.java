@@ -2,7 +2,7 @@ package io.zbus.examples.rpc;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.MessageInvoker;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.net.ResultCallback;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.rpc.RpcCodec.Request;

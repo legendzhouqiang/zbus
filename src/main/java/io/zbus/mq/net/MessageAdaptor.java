@@ -67,7 +67,7 @@ public class MessageAdaptor implements IoAdaptor{
     		this.filterHandler.handle(msg, sess);
     	}
     	
-    	String cmd = msg.getCmd();
+    	String cmd = msg.getCommand();
     	if(cmd != null){ //cmd
     		MessageHandler handler = handlerMap.get(cmd);
         	if(handler != null){

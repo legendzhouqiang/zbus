@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
@@ -29,7 +29,7 @@ public class ConsumerPerf {
 		
 		MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq(mq); 
+		config.setTopic(mq); 
 		
 		final AtomicLong counter = new AtomicLong(0);
 		final AtomicLong lastMark = new AtomicLong(System.currentTimeMillis());

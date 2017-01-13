@@ -1,10 +1,10 @@
 package io.zbus.performance;
 
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.MqConfig;
-import io.zbus.mq.broker.BrokerConfig;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
 
 public class ConsumerTake {
@@ -21,7 +21,7 @@ public class ConsumerTake {
 		
 		final MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
-		config.setMq(mq); 
+		config.setTopic(mq); 
 		
 		
 		Perf perf = new Perf(){ 

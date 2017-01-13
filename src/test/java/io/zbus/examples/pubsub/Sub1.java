@@ -1,12 +1,9 @@
 package io.zbus.examples.pubsub;
 
-import java.io.IOException;
-
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
-import io.zbus.mq.ConsumerHandler;
 import io.zbus.mq.Message;
-import io.zbus.mq.broker.ZbusBroker;
+import io.zbus.mq.ZbusBroker;
 
 public class Sub1 {
 	@SuppressWarnings("resource")
@@ -15,13 +12,11 @@ public class Sub1 {
 		
 		Consumer c = new Consumer(broker, "MyMQ");  
 		c.setConsumeGroup("Group1"); //different groups consumes the same MQ data	 
-		c.declareQueue();
+		c.declareTopic();
 		
-		c.start(new ConsumerHandler() {
-			@Override
-			public void handle(Message msg, Consumer consumer) throws IOException {
-				System.out.println(msg);
-			}
-		});
+		while(true){
+			Message message = c.take();
+			System.out.println(message);
+		} 
 	}
 }
