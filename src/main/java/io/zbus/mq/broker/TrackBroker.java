@@ -32,29 +32,18 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.DefaultBrokerSelector;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class TrackBroker implements Broker {   
 	private static final Logger log = LoggerFactory.getLogger(TrackBroker.class);
 	
-	BrokerSelector brokerSelector; 
-	final boolean ownBrokerSelector;
+	BrokerSelector brokerSelector;  
 	
-	public TrackBroker(BrokerConfig config) throws IOException{ 
-		this.brokerSelector = config.brokerSelector;
-		if(this.brokerSelector == null){
-			this.brokerSelector = new DefaultBrokerSelector(config);
-			ownBrokerSelector = true;
-		} else {
-			ownBrokerSelector = false;
-		} 
+	public TrackBroker(BrokerConfig config) throws IOException{  
+		this.brokerSelector = new DefaultBrokerSelector(config);  
 	}
-	
-	public TrackBroker(BrokerSelector brokerSelector, BrokerConfig config) throws IOException{ 
-		this.brokerSelector = brokerSelector;
-		ownBrokerSelector = false;
-	} 
+	 
 	
 	@Override
 	public MessageInvoker selectForProducer(String topic) throws IOException {
@@ -86,9 +75,7 @@ public class TrackBroker implements Broker {
 
 	@Override
 	public void close() throws IOException { 
-		if(ownBrokerSelector){
-			brokerSelector.close();
-		}
+		brokerSelector.close(); 
 	} 
 	
 	

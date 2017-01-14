@@ -29,8 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.zbus.mq.Message;
 import io.zbus.net.IoAdaptor;
 import io.zbus.net.Session;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class MessageAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);

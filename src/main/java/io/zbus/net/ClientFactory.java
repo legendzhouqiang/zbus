@@ -4,8 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import io.zbus.net.Pool.ObjectFactory;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public abstract class ClientFactory<REQ, RES, T extends Client<REQ, RES>> 
 	implements ObjectFactory<T>, Closeable { 

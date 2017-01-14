@@ -45,9 +45,9 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import io.netty.handler.codec.http.HttpResponseStatus; 
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class Message {  
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 

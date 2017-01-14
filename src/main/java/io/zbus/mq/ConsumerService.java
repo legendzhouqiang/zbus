@@ -8,8 +8,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class ConsumerService implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerService.class); 

@@ -8,8 +8,8 @@ import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.ZbusBroker;
 import io.zbus.util.ConfigUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 
 public abstract class Perf implements Closeable{

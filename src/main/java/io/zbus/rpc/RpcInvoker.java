@@ -28,8 +28,8 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.net.ResultCallback;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class RpcInvoker{  
 	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class); 

@@ -36,8 +36,8 @@ import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class TrackSub implements Closeable{  
 	private static final Logger log = LoggerFactory.getLogger(TrackSub.class);

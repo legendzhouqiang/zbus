@@ -4,8 +4,8 @@ import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.performance.Perf;
 import io.zbus.util.ConfigUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class ConsumerLatency {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerLatency.class);

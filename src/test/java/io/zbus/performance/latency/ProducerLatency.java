@@ -5,8 +5,8 @@ import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
 import io.zbus.performance.Perf;
 import io.zbus.util.ConfigUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class ProducerLatency {
 	private static final Logger log = LoggerFactory.getLogger(ProducerLatency.class);

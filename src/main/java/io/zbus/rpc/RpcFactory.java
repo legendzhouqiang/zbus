@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.MessageInvoker;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 
 public class RpcFactory { 

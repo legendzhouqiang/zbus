@@ -18,8 +18,8 @@ import io.zbus.net.ResultCallback;
 import io.zbus.net.Session;
 import io.zbus.net.Sync;
 import io.zbus.net.Sync.Ticket;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 /**
  * JvmBroker is a type of Broker acting as invocation to a local MqServer instance, which do 

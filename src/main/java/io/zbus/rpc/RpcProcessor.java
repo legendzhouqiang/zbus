@@ -10,8 +10,8 @@ import java.util.Map;
 
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageProcessor;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 
 public class RpcProcessor implements MessageProcessor{

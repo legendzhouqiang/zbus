@@ -36,8 +36,7 @@ import io.zbus.net.Pool;
 
 public class SingleBroker implements Broker {   
 	private BrokerConfig config; 
-	private EventDriver eventDriver;
-	private boolean ownEventDriver = false;
+	private EventDriver eventDriver; 
 	
 	private final Pool<MessageClient> pool; 
 	private final MessageClientFactory factory;  
@@ -47,12 +46,8 @@ public class SingleBroker implements Broker {
 	}
 	
 	public SingleBroker(BrokerConfig config) throws IOException{ 
-		this.config = config;
-		this.eventDriver = config.getEventDriver();
-		if(this.eventDriver == null){
-			this.eventDriver = new EventDriver();
-			this.ownEventDriver = true;
-		}
+		this.config = config; ;
+		this.eventDriver = new EventDriver(); 
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(),eventDriver);
 		this.pool = new Pool<MessageClient>(factory, config.getConnectionPoolSize());
 	}  
@@ -60,7 +55,7 @@ public class SingleBroker implements Broker {
 	@Override
 	public void close() throws IOException { 
 		this.pool.close(); 
-		if(ownEventDriver && eventDriver != null){
+		if(eventDriver != null){
 			eventDriver.close();
 			eventDriver = null;
 		}

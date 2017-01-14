@@ -44,8 +44,8 @@ import io.zbus.net.Session;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.util.ConfigUtil;
 import io.zbus.util.NetUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class MqServer implements Closeable{ 
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 

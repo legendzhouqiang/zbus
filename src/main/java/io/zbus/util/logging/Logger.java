@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.util.logger;
+package io.zbus.util.logging;
 
 public abstract class Logger {  
 	public void debug(String format, Object... args){

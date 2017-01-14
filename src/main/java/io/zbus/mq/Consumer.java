@@ -4,8 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory; 
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 

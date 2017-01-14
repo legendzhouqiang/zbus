@@ -10,8 +10,8 @@ import io.zbus.mq.ZbusBroker;
 import io.zbus.rpc.RpcFactory;
 import io.zbus.rpc.mq.MqInvoker;
 import io.zbus.util.ConfigUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 
 public class RpcPerf {

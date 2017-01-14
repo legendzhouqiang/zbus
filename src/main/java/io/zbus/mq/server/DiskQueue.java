@@ -24,8 +24,8 @@ import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
 import io.zbus.net.Session;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 
 public class DiskQueue implements MessageQueue{

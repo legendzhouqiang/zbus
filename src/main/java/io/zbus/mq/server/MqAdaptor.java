@@ -21,8 +21,8 @@ import io.zbus.mq.net.MessageHandler;
 import io.zbus.net.Session;
 import io.zbus.util.FileUtil;
 import io.zbus.util.JsonUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
@@ -416,7 +416,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			for (File mqDir : mqDirs) {
 				MessageQueue mq = new DiskQueue(mqDir);
 				mqTable.put(mqDir.getName(), mq);
-				log.info("Topic=%s loaded", mqDir.getName());
+				log.info("Topic = %s loaded", mqDir.getName());
 				
 				mqServer.pubEntryUpdate(mq);
 			}

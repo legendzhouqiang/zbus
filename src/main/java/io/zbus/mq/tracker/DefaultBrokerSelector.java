@@ -45,8 +45,8 @@ import io.zbus.mq.tracker.TrackSub.ServerJoinHandler;
 import io.zbus.mq.tracker.TrackSub.ServerLeaveHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.util.NetUtil;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class DefaultBrokerSelector implements BrokerSelector{
 	private static final Logger log = LoggerFactory.getLogger(DefaultBrokerSelector.class);
@@ -58,19 +58,14 @@ public class DefaultBrokerSelector implements BrokerSelector{
 	private TrackSub trackSub;
 	 
 	private BrokerConfig config;
-	private EventDriver eventDriver;
-	private boolean ownEventDriver = false;
+	private EventDriver eventDriver; 
 	
 	private CountDownLatch syncFromTracker = new CountDownLatch(1);
 	private int syncFromTrackerTimeout = 3000;
 	
 	public DefaultBrokerSelector(BrokerConfig config){
-		this.config = config; 
-		this.eventDriver = config.getEventDriver();
-		if(this.eventDriver == null){
-			this.eventDriver = new EventDriver();
-			this.ownEventDriver = true;
-		} 
+		this.config = config;  
+		this.eventDriver = new EventDriver(); 
 		subscribeNotification(); 
 	} 
 	
@@ -156,7 +151,7 @@ public class DefaultBrokerSelector implements BrokerSelector{
 		allBrokers.clear();
 		trackSub.close(); 
 		
-		if(ownEventDriver && eventDriver != null){
+		if(eventDriver != null){
 			eventDriver.close();
 			eventDriver = null;
 		}

@@ -20,12 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.util.logger.impl;
+package io.zbus.util.logging.impl;
 
 import java.util.logging.Level;
 
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory.InternalLoggerFactory;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory.InternalLoggerFactory;
 
 public class JdkLoggerFactory implements InternalLoggerFactory {
 	
