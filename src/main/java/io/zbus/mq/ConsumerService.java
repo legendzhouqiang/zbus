@@ -73,7 +73,7 @@ public class ConsumerService implements Closeable {
 						log.info("Response:\n"+res);
 					}
 					//route back message
-					consumer.routeMessage(res);
+					consumer.reply(res);
 				}
 			}
 		};
@@ -109,13 +109,9 @@ public class ConsumerService implements Closeable {
 		 
 		for(int i=0; i<brokers.length; i++){
 			ConsumerThread[] consumerThreadGroup = new ConsumerThread[consumerCount]; 
-			MqConfig mqConfig = new MqConfig();
-			mqConfig.setBroker(brokers[i]);
-			mqConfig.setTopic(config.getTopic());  
-			mqConfig.setAppid(config.getAppid()); 
-			mqConfig.setToken(config.getToken());  
-			mqConfig.setVerbose(config.isVerbose());
-			 
+			MqConfig mqConfig = config.clone();
+			mqConfig.setBroker(brokers[i]); 
+			
 			String brokerId = ""+i; //TODO
 			 
 			for(int j=0; j<consumerCount; j++){   

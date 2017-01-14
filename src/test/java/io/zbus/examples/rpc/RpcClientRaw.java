@@ -16,9 +16,7 @@ public class RpcClientRaw {
 		MessageInvoker mqInvoker = new MqInvoker(broker, "MyRpc");  
 		 
 		RpcInvoker rpc = new RpcInvoker(mqInvoker); 
-		
-		rpc.invokeSync(String.class, "echo", "test");
-		
+		  
 		Request request = new Request(); 
 		request.setMethod("echo");
 		request.setParams(new Object[]{"test"});

@@ -18,7 +18,7 @@ import io.zbus.net.tcp.TcpClient;
 public class MessageClient extends TcpClient<Message, Message> implements MessageInvoker{
 	
 	public MessageClient(String address, final EventDriver driver){
-		super(address, driver); 
+		super(address, driver, MessageIdentifier.INSTANCE, MessageIdentifier.INSTANCE);
 		
 		codec(new CodecInitializer() {
 			@Override

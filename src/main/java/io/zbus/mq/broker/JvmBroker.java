@@ -10,6 +10,7 @@ import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
+import io.zbus.mq.net.MessageIdentifier;
 import io.zbus.mq.server.MqAdaptor;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
@@ -34,7 +35,7 @@ public class JvmBroker implements Session, Broker {
 
 	private MqServer mqServer;
 	private MqAdaptor adaptor;
-	private final Sync<Message, Message> sync = new Sync<Message, Message>();
+	private final Sync<Message, Message> sync = new Sync<Message, Message>(MessageIdentifier.INSTANCE, MessageIdentifier.INSTANCE);
 	private int readTimeout = 3000;
 	private boolean ownMqServer = false;
 	private final String id;

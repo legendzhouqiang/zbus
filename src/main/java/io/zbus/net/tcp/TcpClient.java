@@ -22,16 +22,16 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.net.Client;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
+import io.zbus.net.Identifier;
 import io.zbus.net.ResultCallback;
 import io.zbus.net.Session;
 import io.zbus.net.Sync;
-import io.zbus.net.Sync.Id;
 import io.zbus.net.Sync.Ticket;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
 
-public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RES> {
+public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	private static final Logger log = LoggerFactory.getLogger(TcpClient.class); 
 	
 	protected Bootstrap bootstrap;
@@ -45,11 +45,9 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected final int port; 
 	protected int readTimeout = 3000;
 	protected int connectTimeout = 3000; 
-	protected CountDownLatch activeLatch = new CountDownLatch(1);  
+	protected CountDownLatch activeLatch = new CountDownLatch(1);   
 	
-	private ConcurrentMap<String, Object> attributes = null;
-	
-	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();  
+	protected final Sync<REQ, RES> sync;   
 	
 	protected volatile ScheduledExecutorService heartbeator = null;
 	
@@ -58,9 +56,12 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
 	
-	public TcpClient(String address, EventDriver driver){  
+	private ConcurrentMap<String, Object> attributes = null;
+	
+	public TcpClient(String address, EventDriver driver, Identifier<REQ> idReq, Identifier<RES> idRes){  
 		group = driver.getGroup();
 		sslCtx = driver.getSslContext();
+		sync = new Sync<REQ, RES>(idReq, idRes);
 		
 		String[] bb = address.split(":");
 		if(bb.length > 2) {
@@ -88,8 +89,8 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 				ensureConnectedAsync();//automatically reconnect by default
 			}
 		});
-	} 
-	
+	}  
+	 
 	public String getConnectedServerAddress(){
 		return host+":"+port;
 	}
@@ -342,11 +343,12 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 		Ticket<REQ, RES> ticket = null;
 		if(callback != null){
 			ticket = sync.createTicket(req, readTimeout, callback);
-		} else {
-			if(req.getId() == null){
-				req.setId(Ticket.nextId());
+		} else { 
+			String id = sync.getRequestId(req);
+			if(id == null){ //if message id missing, set it
+				sync.setRequestId(req);
 			}
-		} 
+		}
 		try{
 			sendMessage(req); 
 		} catch(IOException e) {
@@ -382,8 +384,8 @@ public class TcpClient<REQ extends Id, RES extends Id> implements Client<REQ, RE
 	@Override
 	public void sessionMessage(Object msg, Session sess) throws IOException {
 		@SuppressWarnings("unchecked")
-		RES res = (RES)msg;  
-    	Ticket<REQ, RES> ticket = sync.removeTicket(res.getId());
+		RES res = (RES)msg;   
+    	Ticket<REQ, RES> ticket = sync.removeTicket(res);
     	if(ticket != null){
     		ticket.notifyResponse(res); 
     		return;

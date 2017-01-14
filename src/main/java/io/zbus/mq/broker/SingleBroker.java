@@ -30,6 +30,7 @@ import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
+import io.zbus.mq.MqException;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.net.MessageClientFactory;
 import io.zbus.net.EventDriver;
@@ -80,7 +81,7 @@ public class SingleBroker implements Broker {
 			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			throw new BrokerException(e.getMessage(), e);
+			throw new MqException(e.getMessage(), e);
 		} finally{
 			if(client != null){
 				this.pool.returnObject(client);
@@ -97,7 +98,7 @@ public class SingleBroker implements Broker {
 			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			throw new BrokerException(e.getMessage(), e);
+			throw new MqException(e.getMessage(), e);
 		} finally{
 			if(client != null){
 				this.pool.returnObject(client);
@@ -111,7 +112,7 @@ public class SingleBroker implements Broker {
 			client.attr("server", factory.getServerAddress());
 			return client;
 		} catch (Exception e) {
-			throw new BrokerException(e.getMessage(), e);
+			throw new MqException(e.getMessage(), e);
 		} 
 	}
 

@@ -125,7 +125,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		} 
 	} 
 	 
-	public void routeMessage(Message msg) throws IOException {
+	public void reply(Message msg) throws IOException {
 		msg.setCommand(Protocol.Route);
 		msg.setAck(false); 
 		String status = msg.getStatus();

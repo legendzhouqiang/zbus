@@ -45,12 +45,11 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.zbus.net.Sync.Id;
+import io.netty.handler.codec.http.HttpResponseStatus; 
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
-public class Message implements Id {  
+public class Message {  
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
@@ -441,11 +440,7 @@ public class Message implements Id {
 	public void setId(String msgId) {
 		if(msgId == null) return;
 		this.setHead(ID, msgId); 
-	}	
-	
-	public void setId(long id){
-		setId(""+id);
-	} 
+	}	 
 	
 	public boolean isAck() {
 		String ack = this.getHead(ACK);

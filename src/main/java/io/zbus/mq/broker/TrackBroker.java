@@ -31,6 +31,7 @@ import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
+import io.zbus.mq.MqException;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.DefaultBrokerSelector;
 import io.zbus.util.logger.Logger;
@@ -61,7 +62,7 @@ public class TrackBroker implements Broker {
 	public MessageInvoker selectInvoker(String mq) throws IOException { 
 		Broker broker = brokerSelector.selectByBrokerHint(mq);
 		if(broker == null){
-			throw new BrokerException("Missing broker for " + mq);
+			throw new MqException("Missing broker for " + mq);
 		}
 		return broker.selectInvoker(mq);
 	}
@@ -87,7 +88,7 @@ public class TrackBroker implements Broker {
 			InterruptedException { 
 		List<Broker> brokerList = brokerSelector.selectByRequestMsg(req);
 		if(brokerList == null || brokerList.size() == 0){
-			throw new BrokerException("Missing broker for " + req);
+			throw new MqException("Missing broker for " + req);
 		} 
 		Message res = null;
 		for(Broker broker : brokerList){
@@ -101,7 +102,7 @@ public class TrackBroker implements Broker {
 			throws IOException { 
 		List<Broker> brokerList = brokerSelector.selectByRequestMsg(req);
 		if(brokerList == null || brokerList.size() == 0){
-			throw new BrokerException("Missing broker for " + req);
+			throw new MqException("Missing broker for " + req);
 		}  
 		for(Broker broker : brokerList){
 			broker.invokeAsync(req, callback);
