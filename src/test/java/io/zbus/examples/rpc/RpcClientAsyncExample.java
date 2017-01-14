@@ -5,8 +5,8 @@ import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.ZbusBroker;
 import io.zbus.net.ResultCallback;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.RpcCodec.Request;
-import io.zbus.rpc.RpcCodec.Response;
+import io.zbus.rpc.Request;
+import io.zbus.rpc.Response;
 import io.zbus.rpc.mq.MqInvoker;
 
 public class RpcClientAsyncExample { 

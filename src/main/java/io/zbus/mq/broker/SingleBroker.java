@@ -71,6 +71,7 @@ public class SingleBroker implements Broker {
 		try {
 			MessageClient client = this.pool.borrowObject(); 
 			client.attr(Protocol.SERVER, factory.getServerAddress());
+			client.attr("type", "producer");
 			return client;
 		} catch (Exception e) {
 			throw new MqException(e.getMessage(), e);
@@ -79,21 +80,23 @@ public class SingleBroker implements Broker {
 	
 	@Override
 	public MessageInvoker selectForConsumer(String topic) throws IOException{ 
-		return selectForProducer(topic); //same
+		MessageClient client = factory.createObject();
+		client.attr(Protocol.SERVER, factory.getServerAddress());
+		client.attr("type", "consumer");
+		return client;
 	}
 
 	public void releaseInvoker(MessageInvoker messageInvoker) throws IOException {
 		if(messageInvoker == null) return; //ignore 
 		if(!(messageInvoker instanceof MessageClient)){
 			throw new IllegalArgumentException("releaseInvoker should accept MessageClient");
-		}
+		} 
 		MessageClient client = (MessageClient)messageInvoker;
-		this.pool.returnObject(client);
-		if(!client.hasConnected()){
-			//client.close();
-		} else {
-			
+		if("consumer".equals(client.attr("type"))){
+			client.close();
+			return;
 		}
+		this.pool.returnObject(client); 
 	}
 }
 

@@ -43,7 +43,7 @@ public class ConsumerPerf {
 					long start = lastMark.get();
 					lastMark.set(System.currentTimeMillis());
 					long end = System.currentTimeMillis();
-					log.info(""+msg);
+					log.info(""+msg.getOffset());
 					log.info("Consumed:%d, QPS: %.4f", curr, interval*1000.0/(end-start) );
 				}
 			}

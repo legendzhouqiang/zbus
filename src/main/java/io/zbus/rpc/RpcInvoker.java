@@ -28,8 +28,6 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.net.ResultCallback;
-import io.zbus.rpc.RpcCodec.Request;
-import io.zbus.rpc.RpcCodec.Response;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 

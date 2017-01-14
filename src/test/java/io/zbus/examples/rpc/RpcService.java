@@ -21,7 +21,8 @@ public class RpcService {
 		config.setTopic("MyRpc");  
 		config.setBroker(broker);    
 		config.setMessageProcessor(processor);  
-		config.setThreadPoolSize(100);   
+		config.setThreadPoolSize(100); 
+		config.setVerbose(true);
 		
 		ConsumerService svc = new ConsumerService(config);
 		svc.start();  

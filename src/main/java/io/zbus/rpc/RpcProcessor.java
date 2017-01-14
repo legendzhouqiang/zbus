@@ -10,8 +10,6 @@ import java.util.Map;
 
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageProcessor;
-import io.zbus.rpc.RpcCodec.Request;
-import io.zbus.rpc.RpcCodec.Response;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
