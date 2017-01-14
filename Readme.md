@@ -1,6 +1,6 @@
 # Gist of zbus project: ZBUS = MQ + RPC 
 
- Do **NOT** use in production, still alpha
+ Do **NOT** use code of **master** in production, still alpha
 
 ##API
 	MqConfig
