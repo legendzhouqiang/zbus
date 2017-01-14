@@ -16,7 +16,7 @@ public class ConsumerExample {
 		
 		while(true){
 			Message message = consumer.take();
-			System.out.println(message);
+			System.out.println(message.getOffset());
 		}  
 	}
 }

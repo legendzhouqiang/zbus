@@ -9,18 +9,27 @@ import io.zbus.util.logger.LoggerFactory;
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
-	private MessageInvoker messageInvoker;    
+	protected final Broker broker; 
 	
 	private ConsumeGroup consumeGroup;
 	private Integer consumeWindow; 
 	private int consumeTimeout = 120000; // 2 minutes 
+	
+	private Object invokerInitLock = new Object();
 
 	public Consumer(Broker broker, String topic) {
-		super(broker, topic);
+		this.broker = broker;
+		this.topic = topic;
 	} 
 	
 	public Consumer(MqConfig config) {
-		super(config);   
+		this.broker = config.getBroker();
+		this.topic = config.getTopic();
+		this.flag = config.getFlag();
+		this.appid = config.getAppid();
+		this.token = config.getToken();
+		this.invokeTimeout = config.getInvokeTimeout();
+		
 		this.consumeGroup = config.getConsumeGroup();
 		this.consumeWindow = config.getConsumeWindow();
 		this.consumeTimeout = config.getConsumeTimeout();
@@ -37,12 +46,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 		Message res = null;
 		try {  
-			synchronized (this) {
-				if (this.messageInvoker == null) {
-					this.messageInvoker = broker.selectInvoker(this.topic);
-				}
-				res = messageInvoker.invokeSync(req, timeout);
-			} 
+			res = invokeSync(req, timeout);
 			if (res == null)
 				return res;
 			res.setId(res.getOriginId());
@@ -75,7 +79,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			} catch (IOException ex) {
 				log.error(ex.getMessage(), ex);
 			} finally{
-				synchronized (this) {
+				synchronized (invokerInitLock) {
 					this.messageInvoker = null;
 				}
 			}
@@ -104,25 +108,27 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
     	return req;
 	} 
+	
+	private void initMessageInvokerIfNeeded() throws IOException{
+		if (this.messageInvoker == null) {
+			synchronized (invokerInitLock) { 
+				if (this.messageInvoker == null) {
+					this.messageInvoker = broker.selectForConsumer(this.topic);
+				}
+			} 
+		}  
+	}
 
 	@Override
-	protected Message invokeSync(Message req) throws IOException, InterruptedException { 
-		synchronized (this) {
-			if (this.messageInvoker == null) {
-				this.messageInvoker = broker.selectInvoker(this.topic);
-			}
-			return messageInvoker.invokeSync(req, invokeTimeout);
-		} 
+	protected Message invokeSync(Message req, int timeout) throws IOException, InterruptedException { 
+		initMessageInvokerIfNeeded();
+		return messageInvoker.invokeSync(req, timeout);  
 	}
 	
 	@Override
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
-		synchronized (this) {
-			if (this.messageInvoker == null) {
-				this.messageInvoker = broker.selectInvoker(this.topic);
-			}
-			messageInvoker.invokeAsync(req, callback);
-		} 
+		initMessageInvokerIfNeeded();  
+		messageInvoker.invokeAsync(req, callback); 
 	} 
 	 
 	public void reply(Message msg) throws IOException {
@@ -133,7 +139,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			msg.setOriginStatus(status); 
 			msg.setStatus(null); //make it as request 
 		} 
-		messageInvoker.invokeAsync(msg, null); 
+		invokeAsync(msg, null); 
 	} 
 	
 	public ConsumeGroup getConsumeGroup() {

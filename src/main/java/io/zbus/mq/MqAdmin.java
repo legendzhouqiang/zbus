@@ -4,35 +4,36 @@ import java.io.IOException;
 
 
 public class MqAdmin{     
-	protected final Broker broker;      
+	protected MessageInvoker messageInvoker;      
 	protected String topic;    
 	protected Integer flag;
 	protected String appid;
 	protected String token;  
-	protected int invokeTimeout = 10000;// 10s
+	protected int invokeTimeout = 10000;// 10s 
 	
-	public MqAdmin(Broker broker, String topic){  
-		this.broker = broker;
+	public MqAdmin(){
+		
+	}
+	public MqAdmin(MessageInvoker messageInvoker, String topic){  
+		this.messageInvoker = messageInvoker;
 		this.topic = topic;    
-	} 
-	
-	public MqAdmin(MqConfig config){
-		this.broker = config.getBroker();
-		this.topic = config.getTopic();  
-		this.appid = config.getAppid();
-		this.token = config.getToken();
-		this.flag = config.getFlag(); 
-	} 
+	}  
 	 
-	protected Message invokeSync(Message req) throws IOException, InterruptedException{
-		return broker.invokeSync(req, invokeTimeout);
+	protected Message invokeSync(Message req, int timeout) throws IOException, InterruptedException{
+		if(messageInvoker == null){
+			throw new IllegalStateException("messageInvoker missing");
+		}
+		return messageInvoker.invokeSync(req, timeout);
 	}
 	
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
-		broker.invokeAsync(req, callback);
+		if(messageInvoker == null){
+			throw new IllegalStateException("messageInvoker missing");
+		}
+		messageInvoker.invokeAsync(req, callback);
 	}
 	
-	protected void fillCommonHeaders(Message message){
+	protected void fillCommonHeaders(Message message){ 
 		message.setTopic(this.topic);
 		message.setAppid(this.appid);
 		message.setToken(this.token); 
@@ -40,7 +41,7 @@ public class MqAdmin{
 	
 	public boolean declareTopic() throws IOException, InterruptedException{ 
     	Message req = buildDeclareTopicMessage(); 
-    	Message res = invokeSync(req);
+    	Message res = invokeSync(req, invokeTimeout);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
     }    
@@ -50,7 +51,7 @@ public class MqAdmin{
 		fillCommonHeaders(req); 
     	req.setCommand(Protocol.QueryTopic);  
     	
-    	return invokeSync(req); 
+    	return invokeSync(req, invokeTimeout); 
 	} 
 	
 	public boolean removeTopic() throws IOException, InterruptedException{
@@ -58,7 +59,7 @@ public class MqAdmin{
     	fillCommonHeaders(req); 
     	req.setCommand(Protocol.RemoveTopic); 
     	
-    	Message res = invokeSync(req);
+    	Message res = invokeSync(req, invokeTimeout);
     	if(res == null) return false;
     	return "200".equals(res.getStatus());
     } 

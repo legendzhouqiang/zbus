@@ -416,7 +416,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			for (File mqDir : mqDirs) {
 				MessageQueue mq = new DiskQueue(mqDir);
 				mqTable.put(mqDir.getName(), mq);
-				log.info("MQ=%s loaded", mqDir.getName());
+				log.info("Topic=%s loaded", mqDir.getName());
 				
 				mqServer.pubEntryUpdate(mq);
 			}

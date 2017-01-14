@@ -2,28 +2,12 @@ package io.zbus.mq;
 
 import java.io.IOException;
 
-import io.zbus.mq.broker.TrackBroker;
 import io.zbus.mq.broker.SingleBroker;
-
-/**
- * Broker factory class, abstraction of all broker types
- * 1) JvmBroker, brokerAddess=null/jvm 
- * 2) SingleBroker, brokerAddress=ip:port, eg. 127.0.0.1:15555
- * 3) HaBroker, brokerAddress=[ip:port;ip:port], 
- * 	 '[' and ']' could be omitted, ';' ',' and ' ' are supported to split trackServer ip:port list
- *   eg. [127.0.0.1:16666;127.0.0.1:166667], [127.0.0.1:16666]
- *   127.0.0.1:16666;127.0.0.1:16667
- *   
- * @author rushmore (洪磊明)
- *
- */
+import io.zbus.mq.broker.TrackBroker;
+ 
 public class ZbusBroker implements Broker{
 	private Broker support;
-	
-	/**
-	 * Default to SingleBroker to localhost:15555
-	 * @throws IOException if underlying IO exception occurs
-	 */
+	 
 	public ZbusBroker() throws IOException { 
 		this(new BrokerConfig());
 	}
@@ -31,12 +15,7 @@ public class ZbusBroker implements Broker{
 	public ZbusBroker(String brokerAddress) throws IOException {
 		this(new BrokerConfig(brokerAddress));
 	}
-	
-	/**
-	 * Build underlying Broker by borkerAddress
-	 * @param config
-	 * @throws IOException  if underlying IO exception occurs
-	 */
+	 
 	public ZbusBroker(BrokerConfig config) throws IOException { 
 		String brokerAddress = config.getBrokerAddress();   
 		brokerAddress = brokerAddress.trim();
@@ -59,27 +38,22 @@ public class ZbusBroker implements Broker{
 			support = new SingleBroker(config);
 		}
 	}
+	 
+	@Override
+	public MessageInvoker selectForProducer(String topic) throws IOException {
+		return support.selectForProducer(topic);
+	}
 	
 	@Override
-	public Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
-		return support.invokeSync(req, timeout);
-	}
-
-	@Override
-	public void invokeAsync(Message req, MessageCallback callback) throws IOException {
-		support.invokeAsync(req, callback);
+	public MessageInvoker selectForConsumer(String topic) throws IOException {
+		return support.selectForConsumer(topic);
 	}
 
 	@Override
 	public void close() throws IOException {
 		support.close();
 	}
-
-	@Override
-	public MessageInvoker selectInvoker(String mq) throws IOException {
-		return support.selectInvoker(mq);
-	}
-
+ 
 	@Override
 	public void releaseInvoker(MessageInvoker client) throws IOException {
 		support.releaseInvoker(client);

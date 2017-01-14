@@ -20,8 +20,7 @@ public class ReqRepLatency {
 		BrokerConfig config = new BrokerConfig();
 		config.setBrokerAddress(serverAddress);
 		final Broker broker = new ZbusBroker(config);
-		
-		//基于MQ的调用
+		 
 		MessageInvoker invoker = new MqInvoker(broker, mq);
 		//MessageInvoker invoker = broker;
 		
@@ -37,7 +36,7 @@ public class ReqRepLatency {
 				log.info("Time: %.4f", total*1.0/(i+1));
 			}
 		} 
-		
+		invoker.close();
 		broker.close();
 	} 
 	

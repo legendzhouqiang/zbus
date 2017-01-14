@@ -22,25 +22,19 @@
  */
 package io.zbus.mq.broker;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
-import io.zbus.mq.Message;
-import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.MqException;
+import io.zbus.mq.Protocol;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.net.MessageClientFactory;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
-import io.zbus.util.logger.Logger;
-import io.zbus.util.logger.LoggerFactory;
 
-public class SingleBroker implements Broker {
-	private static final Logger log = LoggerFactory.getLogger(SingleBroker.class);     
-	
+public class SingleBroker implements Broker {   
 	private BrokerConfig config; 
 	private EventDriver eventDriver;
 	private boolean ownEventDriver = false;
@@ -71,58 +65,36 @@ public class SingleBroker implements Broker {
 			eventDriver = null;
 		}
 	}  
-	
-	public void invokeAsync(Message msg, MessageCallback callback) throws IOException {  
-		MessageClient client = null;
+	 
+	@Override
+	public MessageInvoker selectForProducer(String topic) throws IOException{ 
 		try {
-			client = this.pool.borrowObject(); 
-			client.invokeAsync(msg, callback);
-		} catch(IOException e){
-			throw e;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new MqException(e.getMessage(), e);
-		} finally{
-			if(client != null){
-				this.pool.returnObject(client);
-			}
-		}
-	} 
-
-	public Message invokeSync(Message req, int timeout) throws IOException {
-		MessageClient client = null;
-		try {
-			client = this.pool.borrowObject(); 
-			return client.invokeSync(req, timeout);
-		} catch (IOException e) {
-			throw e;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new MqException(e.getMessage(), e);
-		} finally{
-			if(client != null){
-				this.pool.returnObject(client);
-			}
-		}
-	}
-	
-	public MessageInvoker selectInvoker(String mq) throws IOException{ 
-		try {
-			MessageClient client = factory.createObject();
-			client.attr("server", factory.getServerAddress());
+			MessageClient client = this.pool.borrowObject(); 
+			client.attr(Protocol.SERVER, factory.getServerAddress());
 			return client;
 		} catch (Exception e) {
 			throw new MqException(e.getMessage(), e);
 		} 
 	}
-
-	public void releaseInvoker(MessageInvoker client) throws IOException {
-		if(client == null) return; //ignore
-		if(client instanceof Closeable){
-			((Closeable)client).close();
-		} 
+	
+	@Override
+	public MessageInvoker selectForConsumer(String topic) throws IOException{ 
+		return selectForProducer(topic); //same
 	}
- 
+
+	public void releaseInvoker(MessageInvoker messageInvoker) throws IOException {
+		if(messageInvoker == null) return; //ignore 
+		if(!(messageInvoker instanceof MessageClient)){
+			throw new IllegalArgumentException("releaseInvoker should accept MessageClient");
+		}
+		MessageClient client = (MessageClient)messageInvoker;
+		this.pool.returnObject(client);
+		if(!client.hasConnected()){
+			//client.close();
+		} else {
+			
+		}
+	}
 }
 
 

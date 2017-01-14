@@ -30,7 +30,7 @@ import io.zbus.util.logger.LoggerFactory;
  * @author rushmore (洪磊明)
  *
  */
-public class JvmBroker implements Session, Broker {
+public class JvmBroker implements Session, Broker, MessageInvoker {
 	private static final Logger log = LoggerFactory.getLogger(JvmBroker.class);
 
 	private MqServer mqServer;
@@ -125,8 +125,7 @@ public class JvmBroker implements Session, Broker {
 	public void invokeAsync(Message req, final MessageCallback callback) throws IOException {
 		Ticket<Message, Message> ticket = null;
 		if (callback != null) {
-			ticket = sync.createTicket(req, readTimeout, new ResultCallback<Message>() {
-				
+			ticket = sync.createTicket(req, readTimeout, new ResultCallback<Message>() { 
 				@Override
 				public void onReturn(Message result) {
 					if(callback != null){
@@ -136,7 +135,7 @@ public class JvmBroker implements Session, Broker {
 			});
 		} else {
 			if (req.getId() == null) {
-				req.setId(Ticket.nextId());
+				sync.setRequestId(req); 
 			}
 		}
 		try {
@@ -159,7 +158,12 @@ public class JvmBroker implements Session, Broker {
 	}
 
 	@Override
-	public MessageInvoker selectInvoker(String mq) throws IOException {
+	public MessageInvoker selectForProducer(String topic) throws IOException {
+		return this;
+	}
+	
+	@Override
+	public MessageInvoker selectForConsumer(String topic) throws IOException {
 		return this;
 	}
 

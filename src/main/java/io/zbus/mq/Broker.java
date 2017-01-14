@@ -26,9 +26,11 @@ import java.io.Closeable;
 import java.io.IOException;
 
 
-public interface Broker extends MessageInvoker, Closeable{ 
+public interface Broker extends Closeable{  
 	
-	MessageInvoker selectInvoker(String mq) throws IOException; 
+	MessageInvoker selectForProducer(String topic) throws IOException; 
+	
+	MessageInvoker selectForConsumer(String topic) throws IOException;  
 	
 	void releaseInvoker(MessageInvoker invoker) throws IOException; 
 }

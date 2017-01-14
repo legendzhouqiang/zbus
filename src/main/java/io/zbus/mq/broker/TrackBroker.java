@@ -29,9 +29,7 @@ import java.util.List;
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
-import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
-import io.zbus.mq.MqException;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.mq.tracker.DefaultBrokerSelector;
 import io.zbus.util.logger.Logger;
@@ -56,16 +54,19 @@ public class TrackBroker implements Broker {
 	public TrackBroker(BrokerSelector brokerSelector, BrokerConfig config) throws IOException{ 
 		this.brokerSelector = brokerSelector;
 		ownBrokerSelector = false;
+	} 
+	
+	@Override
+	public MessageInvoker selectForProducer(String topic) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	@Override
-	public MessageInvoker selectInvoker(String mq) throws IOException { 
-		Broker broker = brokerSelector.selectByBrokerHint(mq);
-		if(broker == null){
-			throw new MqException("Missing broker for " + mq);
-		}
-		return broker.selectInvoker(mq);
-	}
+	public MessageInvoker selectForConsumer(String topic) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	} 
 
 	@Override
 	public void releaseInvoker(MessageInvoker client) throws IOException { 
@@ -81,33 +82,7 @@ public class TrackBroker implements Broker {
 		} else {
 			broker.releaseInvoker(messageClient); 
 		}
-	}
-	
-	@Override
-	public Message invokeSync(Message req, int timeout) throws IOException,
-			InterruptedException { 
-		List<Broker> brokerList = brokerSelector.selectByRequestMsg(req);
-		if(brokerList == null || brokerList.size() == 0){
-			throw new MqException("Missing broker for " + req);
-		} 
-		Message res = null;
-		for(Broker broker : brokerList){
-			res = broker.invokeSync(req, timeout);
-		}
-		return res;
-	}
-
-	@Override
-	public void invokeAsync(Message req, MessageCallback callback)
-			throws IOException { 
-		List<Broker> brokerList = brokerSelector.selectByRequestMsg(req);
-		if(brokerList == null || brokerList.size() == 0){
-			throw new MqException("Missing broker for " + req);
-		}  
-		for(Broker broker : brokerList){
-			broker.invokeAsync(req, callback);
-		}  
-	}
+	} 
 
 	@Override
 	public void close() throws IOException { 

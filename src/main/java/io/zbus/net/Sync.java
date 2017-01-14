@@ -172,7 +172,7 @@ public class Sync<REQ, RES> {
 			return startTime;
 		} 
 		
-		public static String nextId(){
+		private static String nextId(){
 			return UUID.randomUUID().toString();  
 		}
 	}

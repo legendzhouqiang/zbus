@@ -39,4 +39,9 @@ public class MqInvoker implements MessageInvoker {
 		req.setAck(false);
 		this.producer.publishAsync(req, callback);
 	} 
+	
+	@Override
+	public void close() throws IOException { 
+		//nothing to do
+	}
 }

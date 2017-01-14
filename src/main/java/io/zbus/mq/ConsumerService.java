@@ -150,14 +150,20 @@ public class ConsumerService implements Closeable {
 		
 		@Override
 		public void run() { 
-			try {
-				consumer.declareTopic();
-			} catch (Exception e) {
-				log.error(e.getMessage(), e); 
-				return;
-			}  
 			while (true) {
 				try {
+					consumer.declareTopic();
+					break;
+				} catch (IOException e) {
+					log.error(e.getMessage(), e); 
+					continue;
+				} catch (InterruptedException e) {
+					return;
+				}  
+			}
+			
+			while (true) {
+				try { 
 					final Message msg;
 					try {
 						msg = consumer.take();
