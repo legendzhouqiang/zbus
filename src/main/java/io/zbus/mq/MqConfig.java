@@ -7,8 +7,10 @@ public class MqConfig implements Cloneable {
 	protected String token; 
 	protected Integer flag;
 	
+	//consume details
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow;
+	protected int consumeTimeout = 120000;// 2 minutes
 	
 	
 	protected boolean verbose = false; 
@@ -79,9 +81,16 @@ public class MqConfig implements Cloneable {
 	
 	public void setConsumeWindow(Integer consumeWindow) {
 		this.consumeWindow = consumeWindow;
-	} 
+	}  
 	
-	
+	public Integer getConsumeTimeout() {
+		return consumeTimeout;
+	}
+
+	public void setConsumeTimeout(Integer consumeTimeout) {
+		this.consumeTimeout = consumeTimeout;
+	}
+
 	@Override
 	public MqConfig clone() { 
 		try {

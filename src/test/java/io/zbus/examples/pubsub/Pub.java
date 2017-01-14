@@ -15,7 +15,7 @@ public class Pub {
 		final int count = 1;
 		for(int i=0;i<count;i++){
 			Message msg = new Message(); 
-			msg.setTag("abc.zzz.yy");
+			msg.setTag("abc.zzz");
 			msg.setBody("hello world " + i);
 				
 			producer.publish(msg); 

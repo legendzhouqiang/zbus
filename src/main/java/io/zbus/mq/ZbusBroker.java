@@ -2,7 +2,7 @@ package io.zbus.mq;
 
 import java.io.IOException;
 
-import io.zbus.mq.broker.HaBroker;
+import io.zbus.mq.broker.TrackBroker;
 import io.zbus.mq.broker.SingleBroker;
 
 /**
@@ -54,7 +54,7 @@ public class ZbusBroker implements Broker{
 		} 
 		config.setBrokerAddress(brokerAddress);
 		if(ha){
-			support = new HaBroker(config);  
+			support = new TrackBroker(config);  
 		} else {
 			support = new SingleBroker(config);
 		}

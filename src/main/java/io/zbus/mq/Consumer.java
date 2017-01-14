@@ -3,28 +3,17 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
-	private MessageInvoker messageInvoker;   
+	private MessageInvoker messageInvoker;    
 	
-	private int consumeTimeout = 120000; // 2 minutes   
 	private ConsumeGroup consumeGroup;
-	private Integer consumeWindow;
-	
-	private volatile Thread consumerThread = null;
-	private volatile ConsumerHandler consumerHandler; 
-	private int consumeThreadPoolSize = 64;
-	private int maxInFlightMessage = 64;
-	private boolean consumeInPool = false;
-	private ThreadPoolExecutor consumeExecutor;  
-	private boolean ownConsumeExecutor = false;
+	private Integer consumeWindow; 
+	private int consumeTimeout = 120000; // 2 minutes 
 
 	public Consumer(Broker broker, String topic) {
 		super(broker, topic);
@@ -34,6 +23,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		super(config);   
 		this.consumeGroup = config.getConsumeGroup();
 		this.consumeWindow = config.getConsumeWindow();
+		this.consumeTimeout = config.getConsumeTimeout();
 	} 
 
 	public Message take(int timeout) throws IOException, InterruptedException { 
@@ -164,81 +154,17 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public void setConsumeWindow(Integer consumeWindow) {
 		this.consumeWindow = consumeWindow;
-	} 
+	}  
 
-    //-------------------------------------------------------------------------  
-	private void initConsumerHandlerPoolIfNeeded(){
-		if(consumeInPool && consumeExecutor == null){
-			consumeExecutor = new ThreadPoolExecutor(consumeThreadPoolSize, 
-					consumeThreadPoolSize, 120, TimeUnit.SECONDS, 
-					new LinkedBlockingQueue<Runnable>(maxInFlightMessage),
-					new ThreadPoolExecutor.CallerRunsPolicy());
-			ownConsumeExecutor = true;
-		}
+	public int getConsumeTimeout() {
+		return consumeTimeout;
 	}
-	private final Runnable consumerTask = new Runnable() {
-		@Override
-		public void run() {
-			initConsumerHandlerPoolIfNeeded(); 
-			while (true) {
-				try {
-					final Message msg;
-					try {
-						msg = take();
-					} catch (InterruptedException e) {
-						Consumer.this.close();
-						break;
-					} catch (MqException e) { 
-						throw e; 
-					} 
-					if (consumerHandler == null) {
-						log.warn("Missing consumerHandler, call onMessage first");
-						continue;
-					}
-					
-					if (consumeInPool && consumeExecutor != null) { 
-						consumeExecutor.submit(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									consumerHandler.handle(msg, Consumer.this);
-								} catch (IOException e) {
-									log.error(e.getMessage(), e);
-								}
-							}
-						});
-					} else {
-						try {
-							consumerHandler.handle(msg, Consumer.this);
-						} catch (IOException e) {
-							log.error(e.getMessage(), e);
-						}
-					}
-					
-				} catch (IOException e) {  
-					log.error(e.getMessage(), e); 
-				}
-			}
-		}
-	};
 
-	public void onMessage(final ConsumerHandler handler) throws IOException { 
-		this.consumerHandler = handler; 
-	} 
-
-	public void close() throws IOException {
-		stop(); 
+	public void setConsumeTimeout(int consumeTimeout) {
+		this.consumeTimeout = consumeTimeout;
 	}
-	
-	public void stop() {
-		if (consumerThread != null) {
-			consumerThread.interrupt();
-			consumerThread = null;
-		}
-		if(ownConsumeExecutor && consumeExecutor != null){
-			consumeExecutor.shutdown();
-			consumeExecutor = null;
-		}
+
+	public void close() throws IOException { 
 		try {
 			if (this.messageInvoker != null) {
 				this.broker.releaseInvoker(this.messageInvoker);
@@ -246,60 +172,5 @@ public class Consumer extends MqAdmin implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		} 
-	}
-	
-	public synchronized void start(ConsumerHandler handler) throws IOException{
-		onMessage(handler);
-		start();
-	}
-
-	public synchronized void start() throws IOException { 
-		if (consumerThread == null) {
-			consumerThread = new Thread(consumerTask);
-			consumerThread.setName("ConsumerThread");
-		}
-
-		if (consumerThread.isAlive())
-			return;
-		consumerThread.start();
-	} 
-
-	public void setConsumeTimeout(int consumeTimeout) {
-		this.consumeTimeout = consumeTimeout;
-	} 
-	
-	public int getConsumeThreadPoolSize() {
-		return consumeThreadPoolSize;
-	}
-
-	public void setConsumeThreadPoolSize(int consumeThreadPoolSize) {
-		this.consumeThreadPoolSize = consumeThreadPoolSize; 
-	} 
-
-	public int getMaxInFlightMessage() {
-		return maxInFlightMessage;
-	}
-
-	public void setMaxInFlightMessage(int maxInFlightMessage) {
-		this.maxInFlightMessage = maxInFlightMessage;
-	}
- 
-	public boolean isConsumeInPool() {
-		return consumeInPool;
-	}
-
-	public void setConsumeInPool(boolean consumeInPool) {
-		this.consumeInPool = consumeInPool;
-	}    
-
-	public ThreadPoolExecutor getConsumeExecutor() {
-		return consumeExecutor;
-	}
-
-	public void setConsumeExecutor(ThreadPoolExecutor consumeExecutor) {
-		if(this.consumeExecutor != null && ownConsumeExecutor){
-			this.consumeExecutor.shutdown();
-		}
-		this.consumeExecutor = consumeExecutor;
 	} 
 }

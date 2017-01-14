@@ -59,7 +59,7 @@ public class SingleBroker implements Broker {
 			this.ownEventDriver = true;
 		}
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(),eventDriver);
-		this.pool = new Pool<MessageClient>(factory, config.getConnectionPoolMaxSize());
+		this.pool = new Pool<MessageClient>(factory, config.getConnectionPoolSize());
 	}  
 
 	@Override

@@ -36,13 +36,13 @@ import io.zbus.mq.tracker.DefaultBrokerSelector;
 import io.zbus.util.logger.Logger;
 import io.zbus.util.logger.LoggerFactory;
 
-public class HaBroker implements Broker {   
-	private static final Logger log = LoggerFactory.getLogger(HaBroker.class);
+public class TrackBroker implements Broker {   
+	private static final Logger log = LoggerFactory.getLogger(TrackBroker.class);
 	
 	BrokerSelector brokerSelector; 
 	final boolean ownBrokerSelector;
 	
-	public HaBroker(BrokerConfig config) throws IOException{ 
+	public TrackBroker(BrokerConfig config) throws IOException{ 
 		this.brokerSelector = config.brokerSelector;
 		if(this.brokerSelector == null){
 			this.brokerSelector = new DefaultBrokerSelector(config);
@@ -52,7 +52,7 @@ public class HaBroker implements Broker {
 		} 
 	}
 	
-	public HaBroker(BrokerSelector brokerSelector, BrokerConfig config) throws IOException{ 
+	public TrackBroker(BrokerSelector brokerSelector, BrokerConfig config) throws IOException{ 
 		this.brokerSelector = brokerSelector;
 		ownBrokerSelector = false;
 	}

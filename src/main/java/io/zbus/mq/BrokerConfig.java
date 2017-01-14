@@ -22,7 +22,7 @@
  */
 package io.zbus.mq;
 
-import io.zbus.mq.broker.HaBroker.BrokerSelector;
+import io.zbus.mq.broker.TrackBroker.BrokerSelector;
 import io.zbus.net.EventDriver;
 
 /**
@@ -45,7 +45,7 @@ public class BrokerConfig {
 	public String brokerAddress = "127.0.0.1:15555";  
 	/** EventDriver support */
 	public EventDriver eventDriver; 
-	public int connectionPoolMaxSize = 32; 
+	public int connectionPoolSize = 32; 
 
 	// HaBroker Configuration
 	public BrokerSelector brokerSelector; 
@@ -80,12 +80,12 @@ public class BrokerConfig {
 		this.brokerSelector = brokerSelector;
 	} 
 
-	public int getConnectionPoolMaxSize() {
-		return connectionPoolMaxSize;
+	public int getConnectionPoolSize() {
+		return connectionPoolSize;
 	}
 
-	public void setConnectionPoolMaxSize(int connectionPoolMaxSize) {
-		this.connectionPoolMaxSize = connectionPoolMaxSize;
+	public void setConnectionPoolSize(int connectionPoolSize) {
+		this.connectionPoolSize = connectionPoolSize;
 	}
 
 	@Override

@@ -19,6 +19,7 @@ public class ProducerPerf {
 		
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setBrokerAddress(serverAddress);
+		brokerConfig.setConnectionPoolSize(threadCount);
 		Broker broker = new ZbusBroker(brokerConfig);
 		
 		final MqConfig config = new MqConfig(); 
