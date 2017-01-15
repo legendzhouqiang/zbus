@@ -20,14 +20,14 @@ public class Producer extends MqAdmin {
 	
 	public Message publish(Message msg, int timeout) throws IOException, InterruptedException {
 		fillCommonHeaders(msg);
-		msg.setCommand(Protocol.Produce);
+		msg.setCommand(Protocol.PRODUCE);
 		
 		return invokeSync(msg, timeout);
 	}
  
 	public void publishAsync(Message msg, final MessageCallback callback) throws IOException {
 		fillCommonHeaders(msg);
-		msg.setCommand(Protocol.Produce);
+		msg.setCommand(Protocol.PRODUCE);
 		invokeAsync(msg, callback);
 	} 
 	

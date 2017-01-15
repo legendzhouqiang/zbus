@@ -7,22 +7,24 @@ import java.util.Map;
 
 
 public class Protocol {  
-	public static final String Produce   = "produce";   //produce message
-	public static final String Consume   = "consume";   //consume message
-	public static final String Route   	 = "route";     //route back message to sender
- 
-	public static final String DeclareTopic = "declare_topic"; //create topic
-	public static final String QueryTopic   = "query_topic"; 
-	public static final String RemoveTopic  = "remove_topic"; //remove topic  
-	 
-	public static final String Ping      = "ping"; 
-	public static final String Data      = "data"; 
-	public static final String Jquery    = "jquery";  
+	public static final String VERSION_VALUE = "080";          //start from 0.8.0
+	public static final String VERSION       = "version";
 	
+	public static final String PRODUCE       = "produce";   //produce message
+	public static final String CONSUME       = "consume";   //consume message
+	public static final String ROUTE   	     = "route";     //route back message to sender
+ 
+	public static final String DECLARE_TOPIC = "declare_topic"; //create topic
+	public static final String QUERY_TOPIC   = "query_topic"; 
+	public static final String REMOVE_TOPIC  = "remove_topic"; //remove topic  
+	 
+	public static final String PING          = "ping"; 
+	public static final String DATA          = "data"; 
+	public static final String JQUERY        = "jquery";   
 	
 
 	public static final String COMMAND  = "cmd";     
-	public static final String Topic    = "topic";
+	public static final String TOPIC    = "topic";
 	public static final String FLAG     = "flag";
 	public static final String TAG   	= "tag";  
 	public static final String OFFSET   = "offset";
@@ -46,18 +48,18 @@ public class Protocol {
 	public static final String TTL      = "ttl";  
 	public static final String EXPIRE   = "expire"; 
 	
-	public static final String ORIGIN_ID    = "rawid";      //original id
-	public static final String ORIGIN_URL   = "origin_url"; //original URL  
-	public static final String ORIGIN_STATUS= "reply_code"; //original Status  
+	public static final String ORIGIN_ID     = "rawid";      //original id
+	public static final String ORIGIN_URL    = "origin_url"; //original URL  
+	public static final String ORIGIN_STATUS = "reply_code"; //original Status  
 	
 	//auth
 	public static final String APPID   = "appid";
 	public static final String TOKEN   = "token";
 	
 	
-	public static final int FlagRpc    	  	 = 1<<0; 
-	public static final int FlagExclusive 	 = 1<<1;  
-	public static final int FlagDeleteOnExit = 1<<2; 
+	public static final int FLAG_RPC    	    = 1<<0; 
+	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
+	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
 	 
 	public static class BrokerInfo{

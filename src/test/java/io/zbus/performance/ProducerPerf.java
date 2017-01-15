@@ -25,7 +25,11 @@ public class ProducerPerf {
 		final MqConfig config = new MqConfig(); 
 		config.setBroker(broker);
 		config.setTopic(mq); 
-		
+		StringBuilder sb = new StringBuilder();
+		for(int i=0;i<msgSize/10;i++){
+			sb.append("0123456789");
+		}
+		final byte[] data = sb.toString().getBytes();
 		Perf perf = new Perf(){ 
 			
 			@Override
@@ -42,7 +46,7 @@ public class ProducerPerf {
 					public void doTask() throws Exception {
 						Message msg = new Message();
 						
-						msg.setBody(new byte[msgSize]); 
+						msg.setBody(data); 
 						msg = producer.publish(msg); 
 					}
 				};

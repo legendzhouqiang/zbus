@@ -68,17 +68,22 @@ public class Message {
 	
 	public Message(){
 		setBody((byte[])null);
-		setHead("connection", "Keep-Alive");  
+		setCommonHeaders();
 	} 
 	
 	public Message(String body){
 		setBody(body); 
-		setHead("connection", "Keep-Alive");
+		setCommonHeaders();
 	}
 	
 	public Message(byte[] body){
 		setBody(body);
+		setCommonHeaders();
+	}
+	
+	private void setCommonHeaders(){
 		setHead("connection", "Keep-Alive");
+		setVersion(Protocol.VERSION_VALUE);
 	}
 	
 	public static Message copyWithoutBody(Message msg){
@@ -302,6 +307,14 @@ public class Message {
 		} 
 	}
 	
+	public String getVersion(){
+		return this.getHead(VERSION); 
+	} 
+	public Message setVersion(String value) {
+		this.setHead(VERSION, value);
+		return this;
+	} 
+	
 	public String getCommand() { 
 		return this.getHead(COMMAND);
 	} 
@@ -455,11 +468,11 @@ public class Message {
 	} 
 	
 	public String getTopic(){
-		String value = this.getHead(Topic);
+		String value = this.getHead(TOPIC);
 		return value;
 	} 
 	public Message setTopic(String mq) {
-		this.setHead(Topic, mq);
+		this.setHead(TOPIC, mq);
 		return this;
 	} 
 	

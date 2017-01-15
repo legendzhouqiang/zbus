@@ -45,18 +45,18 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
 		
-		registerHandler(Protocol.Produce, produceHandler); 
-		registerHandler(Protocol.Consume, consumeHandler);  
-		registerHandler(Protocol.Route, routeHandler); 
+		registerHandler(Protocol.PRODUCE, produceHandler); 
+		registerHandler(Protocol.CONSUME, consumeHandler);  
+		registerHandler(Protocol.ROUTE, routeHandler); 
 		
-		registerHandler(Protocol.DeclareTopic, declareTopicHandler); 
-		registerHandler(Protocol.QueryTopic, queryTopicHandler);
-		registerHandler(Protocol.RemoveTopic, removeTopicHandler); 
+		registerHandler(Protocol.DECLARE_TOPIC, declareTopicHandler); 
+		registerHandler(Protocol.QUERY_TOPIC, queryTopicHandler);
+		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
 		
 		registerHandler("", homeHandler);  
-		registerHandler(Protocol.Data, dataHandler); 
-		registerHandler(Protocol.Jquery, jqueryHandler);
-		registerHandler(Protocol.Ping, pingHandler);
+		registerHandler(Protocol.DATA, dataHandler); 
+		registerHandler(Protocol.JQUERY, jqueryHandler);
+		registerHandler(Protocol.PING, pingHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -98,7 +98,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			final MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
-			if((mq.getFlag()&Protocol.FlagRpc) != 0){ 
+			if((mq.getFlag()&Protocol.FLAG_RPC) != 0){ 
 				if(mq.consumerCount(null) == 0){ //default consumeGroup
 					ReplyKit.reply502(msg, sess);
 					return;
@@ -159,9 +159,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			
 			mq.consume(msg, sess);
 			
-			String topic = sess.attr(Protocol.Topic);
+			String topic = sess.attr(Protocol.TOPIC);
 			if(!msg.getTopic().equals(topic)){
-				sess.attr(Protocol.Topic, mq.getName()); //mark
+				sess.attr(Protocol.TOPIC, mq.getName()); //mark
 				mqServer.pubEntryUpdate(mq); //notify TrackServer
 			} 
 		}
@@ -368,7 +368,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	protected void cleanSession(Session sess) throws IOException{
 		super.cleanSession(sess);
 		
-		String topic = sess.attr(Protocol.Topic);
+		String topic = sess.attr(Protocol.TOPIC);
 		if(topic == null) return;
 		
 		MessageQueue mq = mqTable.get(topic); 

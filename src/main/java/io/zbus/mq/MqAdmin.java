@@ -49,7 +49,7 @@ public class MqAdmin{
 	public Message queryTopic() throws IOException, InterruptedException{
 		Message req = new Message();
 		fillCommonHeaders(req); 
-    	req.setCommand(Protocol.QueryTopic);  
+    	req.setCommand(Protocol.QUERY_TOPIC);  
     	
     	return invokeSync(req, invokeTimeout); 
 	} 
@@ -57,7 +57,7 @@ public class MqAdmin{
 	public boolean removeTopic() throws IOException, InterruptedException{
     	Message req = new Message();
     	fillCommonHeaders(req); 
-    	req.setCommand(Protocol.RemoveTopic); 
+    	req.setCommand(Protocol.REMOVE_TOPIC); 
     	
     	Message res = invokeSync(req, invokeTimeout);
     	if(res == null) return false;
@@ -67,7 +67,7 @@ public class MqAdmin{
 	protected Message buildDeclareTopicMessage(){
 		Message req = new Message();
 		fillCommonHeaders(req);
-    	req.setCommand(Protocol.DeclareTopic);   
+    	req.setCommand(Protocol.DECLARE_TOPIC);   
     	return req;
 	}  
    

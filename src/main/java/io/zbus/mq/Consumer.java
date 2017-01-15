@@ -37,7 +37,7 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Message take(int timeout) throws IOException, InterruptedException { 
 		Message req = new Message();
-		req.setCommand(Protocol.Consume);
+		req.setCommand(Protocol.CONSUME);
 		req.setConsumeWindow(consumeWindow);
 		fillCommonHeaders(req);  
 		if(consumeGroup != null){ //consumeGroup
@@ -96,6 +96,19 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	}  
 	
+	public void reply(Message msg) throws IOException {
+		msg.setCommand(Protocol.ROUTE);
+		msg.setAck(false); 
+		String status = msg.getStatus();
+		if(status != null){
+			msg.setOriginStatus(status); 
+			msg.setStatus(null); //make it as request 
+		} 
+		invokeAsync(msg, null); 
+	} 
+	
+	
+	
 	protected Message buildDeclareTopicMessage(){
 		Message req = super.buildDeclareTopicMessage();  
     	if(this.consumeGroup != null){
@@ -129,17 +142,6 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
 		initMessageInvokerIfNeeded();  
 		messageInvoker.invokeAsync(req, callback); 
-	} 
-	 
-	public void reply(Message msg) throws IOException {
-		msg.setCommand(Protocol.Route);
-		msg.setAck(false); 
-		String status = msg.getStatus();
-		if(status != null){
-			msg.setOriginStatus(status); 
-			msg.setStatus(null); //make it as request 
-		} 
-		invokeAsync(msg, null); 
 	} 
 	
 	public ConsumeGroup getConsumeGroup() {
