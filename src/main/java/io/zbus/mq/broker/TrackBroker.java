@@ -31,17 +31,10 @@ import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.net.MessageClient;
-import io.zbus.mq.tracker.DefaultBrokerSelector;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
-public class TrackBroker implements Broker {   
-	private static final Logger log = LoggerFactory.getLogger(TrackBroker.class);
+public class TrackBroker implements Broker {    
 	
-	BrokerSelector brokerSelector;  
-	
-	public TrackBroker(BrokerConfig config) throws IOException{  
-		this.brokerSelector = new DefaultBrokerSelector(config);  
+	public TrackBroker(BrokerConfig config) throws IOException{   
 	}
 	 
 	
@@ -59,25 +52,54 @@ public class TrackBroker implements Broker {
 
 	@Override
 	public void releaseInvoker(MessageInvoker client) throws IOException { 
-		if(!(client instanceof MessageClient)){
-			throw new IllegalArgumentException("client should be instance of MessageClient");
-		}
-		
-		MessageClient messageClient = (MessageClient)client;
-		Broker broker = brokerSelector.selectByClient(messageClient);
-		if(broker == null){
-			log.warn("Missing broker for " + messageClient);
-			messageClient.close();
-		} else {
-			broker.releaseInvoker(messageClient); 
-		}
+		// TODO Auto-generated method stub 
 	} 
 
 	@Override
-	public void close() throws IOException { 
-		brokerSelector.close(); 
-	} 
-	
+	public void close() throws IOException {  
+	}  
+
+
+	@Override
+	public List<Broker> availableServerList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void onSelect(ServerSelector selector) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void registerServer(String serverAddress) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void unregisterServer(String serverAddress) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void addServerListener(ServerNotifyListener listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void removeServerListener(ServerNotifyListener listener) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	/**
 	 * Broker selector interface for HA broker, default implementation is DefaultBrokerSelector

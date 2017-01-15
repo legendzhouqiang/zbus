@@ -1,6 +1,8 @@
 package io.zbus.mq.broker;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -211,6 +213,36 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 			}
 		}
 		this.attributes.put(key, value);
+	}
+
+	@Override
+	public List<Broker> availableServerList() { 
+		return Arrays.asList((Broker)this);
+	}
+
+	@Override
+	public void onSelect(ServerSelector selector) { 
+		
+	}
+
+	@Override
+	public void registerServer(String serverAddress) { 
+		
+	}
+
+	@Override
+	public void unregisterServer(String serverAddress) { 
+		
+	}
+
+	@Override
+	public void addServerListener(ServerNotifyListener listener) { 
+		
+	}
+
+	@Override
+	public void removeServerListener(ServerNotifyListener listener) { 
+		
 	} 
 
 }

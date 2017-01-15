@@ -1,13 +1,13 @@
 package io.zbus.mq;
 
 import java.io.IOException;
+import java.util.List;
 
 import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.broker.TrackBroker;
  
 public class ZbusBroker implements Broker{
-	private Broker support;
-	 
+	private Broker support; 
 	public ZbusBroker() throws IOException { 
 		this(new BrokerConfig());
 	}
@@ -57,6 +57,35 @@ public class ZbusBroker implements Broker{
 	@Override
 	public void releaseInvoker(MessageInvoker client) throws IOException {
 		support.releaseInvoker(client);
-	} 
+	}
 
+	@Override
+	public List<Broker> availableServerList() {
+		return support.availableServerList();
+	}
+
+	@Override
+	public void onSelect(ServerSelector selector) {
+		support.onSelect(selector);
+	}
+
+	@Override
+	public void registerServer(String serverAddress) {
+		support.registerServer(serverAddress);
+	}
+
+	@Override
+	public void unregisterServer(String serverAddress) {
+		support.unregisterServer(serverAddress);
+	}
+
+	@Override
+	public void addServerListener(ServerNotifyListener listener) {
+		support.addServerListener(listener);
+	}
+
+	@Override
+	public void removeServerListener(ServerNotifyListener listener) {
+		support.removeServerListener(listener);
+	}  
 }

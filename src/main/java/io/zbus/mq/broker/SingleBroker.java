@@ -23,6 +23,8 @@
 package io.zbus.mq.broker;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
@@ -93,6 +95,38 @@ public class SingleBroker implements Broker {
 		}
 		this.pool.returnObject(client); 
 	}
+	
+	
+	@Override
+	public List<Broker> availableServerList() {
+		return Arrays.asList((Broker)this);
+	}
+
+	
+	@Override
+	public void onSelect(ServerSelector selector) { 
+		//ignore
+	}
+
+	@Override
+	public void registerServer(String serverAddress) { 
+		//ignore
+	}
+
+	@Override
+	public void unregisterServer(String serverAddress) { 
+		//ignore
+	}
+
+	@Override
+	public void addServerListener(ServerNotifyListener listener) { 
+		//ignore
+	}
+
+	@Override
+	public void removeServerListener(ServerNotifyListener listener) { 
+		//ignore
+	} 
 }
 
 
