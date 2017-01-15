@@ -22,119 +22,14 @@
  */
 package io.zbus.mq.broker;
 
-import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
 
-import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
-import io.zbus.mq.Message;
-import io.zbus.mq.MessageInvoker;
-import io.zbus.mq.net.MessageClient;
 
-public class TrackBroker implements Broker {    
+public class TrackBroker extends MultiBroker {    
 	
 	public TrackBroker(BrokerConfig config) throws IOException{   
-	}
-	 
-	
-	@Override
-	public MessageInvoker selectForProducer(String topic) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	public MessageInvoker selectForConsumer(String topic) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	} 
-
-	@Override
-	public void releaseInvoker(MessageInvoker client) throws IOException { 
-		// TODO Auto-generated method stub 
-	} 
-
-	@Override
-	public void close() throws IOException {  
+		
 	}  
-
-
-	@Override
-	public List<Broker> availableServerList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public void onSelect(ServerSelector selector) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void registerServer(String serverAddress) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void unregisterServer(String serverAddress) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void addServerListener(ServerNotifyListener listener) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void removeServerListener(ServerNotifyListener listener) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/**
-	 * Broker selector interface for HA broker, default implementation is DefaultBrokerSelector
-	 * 
-	 * @author HONG LEIMING 
-	 *
-	 */
-	public static interface BrokerSelector extends Closeable{
-		/**
-		 * Select single broker based on mq entry
-		 * @param hint
-		 * @return best broker matched for the hint
-		 */
-		Broker selectByBrokerHint(String mq);
-		/**
-		 * Select best broker(s) based on the request message content
-		 * Criteria could be Server/EntryId(MQ) etc.
-		 * @param msg
-		 * @return List of brokers for PubSub, list of single broker otherwise
-		 */
-		List<Broker> selectByRequestMsg(Message msg);
-		/**
-		 * Provide a mechanism to resolve the entry abstraction in a Message
-		 * @param msg
-		 * @return
-		 */
-		String getEntry(Message msg);
-		/**
-		 * Select a broker based on the MessageClient.
-		 * This is usually implemented by tagging a client when being generated.
-		 * 
-		 * @param client
-		 * @return
-		 */
-		Broker selectByClient(MessageClient client);
-	}
 }
 

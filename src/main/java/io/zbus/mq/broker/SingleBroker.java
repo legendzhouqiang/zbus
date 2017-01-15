@@ -104,7 +104,7 @@ public class SingleBroker implements Broker {
 
 	
 	@Override
-	public void onSelect(ServerSelector selector) { 
+	public void setServerSelector(ServerSelector selector) { 
 		//ignore
 	}
 

@@ -221,7 +221,7 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 	}
 
 	@Override
-	public void onSelect(ServerSelector selector) { 
+	public void setServerSelector(ServerSelector selector) { 
 		
 	}
 

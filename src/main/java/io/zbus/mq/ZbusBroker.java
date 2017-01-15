@@ -65,8 +65,8 @@ public class ZbusBroker implements Broker{
 	}
 
 	@Override
-	public void onSelect(ServerSelector selector) {
-		support.onSelect(selector);
+	public void setServerSelector(ServerSelector selector) {
+		support.setServerSelector(selector);
 	}
 
 	@Override
