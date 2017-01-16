@@ -62,14 +62,14 @@ public class NettyToIoAdaptor extends ChannelInboundHandlerAdapter {
 	
 	private Session attachSession(ChannelHandlerContext ctx){
 		Session sess = new TcpSession(ctx); 
-		Attribute<String> attr = ctx.attr(sessionKey); 
+		Attribute<String> attr = ctx.channel().attr(sessionKey); 
 		attr.set(sess.id()); 
 		sessionMap.put(sess.id(), sess);
 		return sess;
 	}
 	
 	private Session getSession(ChannelHandlerContext ctx){
-		Attribute<String> attr = ctx.attr(sessionKey); 
+		Attribute<String> attr = ctx.channel().attr(sessionKey); 
 		if(attr.get() == null){
 			throw new IllegalThreadStateException("Missing sessionKey");
 		}

@@ -55,6 +55,7 @@ public class SingleBroker implements Broker {
 	public SingleBroker(BrokerConfig config) throws IOException{
 		this.config = config.clone();
 		this.ownEventDriver = true;
+		this.eventDriver = new EventDriver();
 		
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(), eventDriver);
 		this.pool = new Pool<MessageClient>(factory, this.config.getConnectionPoolSize());

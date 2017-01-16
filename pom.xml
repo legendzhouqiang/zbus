@@ -7,7 +7,7 @@
 	<artifactId>zbus</artifactId>
 	<version>0.8.0-SNAPSHOT</version>
 	<name>zbus</name>
-	<description>lightweight MQ, RPC, ServiceBus</description>
+	<description>a lightweight yet powerful MQ and RPC to build service bus</description>
 	<url>https://zbus.io</url>
 
 
@@ -47,13 +47,13 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.0.33.Final</version>
+			<version>4.1.6.Final</version>
 		</dependency>  
 
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.12</version>
+			<version>1.2.21</version>
 			<scope>provided</scope>
 		</dependency> 
 
