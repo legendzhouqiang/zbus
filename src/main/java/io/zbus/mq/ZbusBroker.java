@@ -70,12 +70,12 @@ public class ZbusBroker implements Broker{
 	}
 
 	@Override
-	public void registerServer(String serverAddress) {
+	public void registerServer(String serverAddress) throws IOException{
 		support.registerServer(serverAddress);
 	}
 
 	@Override
-	public void unregisterServer(String serverAddress) {
+	public void unregisterServer(String serverAddress) throws IOException {
 		support.unregisterServer(serverAddress);
 	}
 

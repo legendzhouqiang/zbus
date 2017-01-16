@@ -1,6 +1,6 @@
 package io.zbus.mq;
 
-public class BrokerConfig { 
+public class BrokerConfig implements Cloneable { 
 	private String brokerAddress = "127.0.0.1:15555";  
 	private int connectionPoolSize = 32;   
 	

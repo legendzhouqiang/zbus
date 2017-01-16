@@ -20,9 +20,9 @@ public interface Broker extends Closeable{
 	
 	void setServerSelector(ServerSelector selector);
 	
-	void registerServer(String serverAddress);
+	void registerServer(String serverAddress) throws IOException;
 	
-	void unregisterServer(String serverAddress);
+	void unregisterServer(String serverAddress) throws IOException;
 	
 	void addServerListener(ServerNotifyListener listener);
 	
@@ -35,11 +35,12 @@ public interface Broker extends Closeable{
 	}
 	
 	public static interface ServerNotifyListener{
-		
+		void onServerJoin(String serverAddress, Broker broker);
+		void onServerLeave(String serverAddress);
 	} 
 	
 	public static class ServerTable{  
-		public List<String> activeServerList = new ArrayList<String>();
+		public List<String> activeList = new ArrayList<String>();
 		public Map<String, List<TopicInfo>> topicMap = new ConcurrentHashMap<String, List<TopicInfo>>();
 	}
 	
@@ -54,14 +55,5 @@ public interface Broker extends Closeable{
 		public long messageCount;
 		public int consumerCount;
 		public long lastUpdated; 
-		
-		public List<ConsumeGroupInfo> consumeGroups;
-	} 
-	
-	public static class ConsumeGroupInfo {
-		public String name;
-		public long messageCount;
-		public int consumerCount;
-		public long lastUpdated;
-	}
+	}  
 }

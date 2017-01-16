@@ -36,28 +36,34 @@ import io.zbus.mq.net.MessageClientFactory;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
 
-public class SingleBroker implements Broker {   
-	private BrokerConfig config; 
-	private EventDriver eventDriver; 
-	
+public class SingleBroker implements Broker {    
 	private final Pool<MessageClient> pool; 
 	private final MessageClientFactory factory;  
+	private final BrokerConfig config;
+	private final boolean ownEventDriver; 
+	private EventDriver eventDriver; 
 	
-	public SingleBroker() throws IOException{
-		this(new BrokerConfig());
+	public SingleBroker(BrokerConfig config, EventDriver eventDriver) throws IOException{ 
+		this.config = config.clone();
+		this.eventDriver = eventDriver; 
+		this.ownEventDriver = false;
+		
+		this.factory = new MessageClientFactory(this.config.getBrokerAddress(), eventDriver);
+		this.pool = new Pool<MessageClient>(factory, this.config.getConnectionPoolSize());
+	}  
+	 
+	public SingleBroker(BrokerConfig config) throws IOException{
+		this.config = config.clone();
+		this.ownEventDriver = true;
+		
+		this.factory = new MessageClientFactory(this.config.getBrokerAddress(), eventDriver);
+		this.pool = new Pool<MessageClient>(factory, this.config.getConnectionPoolSize());
 	}
 	
-	public SingleBroker(BrokerConfig config) throws IOException{ 
-		this.config = config; ;
-		this.eventDriver = new EventDriver(); 
-		this.factory = new MessageClientFactory(this.config.getBrokerAddress(),eventDriver);
-		this.pool = new Pool<MessageClient>(factory, config.getConnectionPoolSize());
-	}  
-
 	@Override
 	public void close() throws IOException { 
 		this.pool.close(); 
-		if(eventDriver != null){
+		if(eventDriver != null && this.ownEventDriver){
 			eventDriver.close();
 			eventDriver = null;
 		}
@@ -109,12 +115,12 @@ public class SingleBroker implements Broker {
 	}
 
 	@Override
-	public void registerServer(String serverAddress) { 
+	public void registerServer(String serverAddress) throws IOException { 
 		//ignore
 	}
 
 	@Override
-	public void unregisterServer(String serverAddress) { 
+	public void unregisterServer(String serverAddress) throws IOException { 
 		//ignore
 	}
 

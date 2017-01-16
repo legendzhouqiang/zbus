@@ -9,11 +9,14 @@ import io.zbus.mq.ConsumerService;
 import io.zbus.mq.Message;
 import io.zbus.mq.Producer;
 import io.zbus.mq.broker.JvmBroker;
+import io.zbus.mq.server.MqServer;
 
 public class JvmBrokerExample {
 
 	public static void main(String[] args) throws Exception {  
-		Broker broker = new JvmBroker();
+		MqServer server = new MqServer();
+		
+		Broker broker = new JvmBroker(server);
 		
 		ConsumerService service = new ConsumerService(broker, "MyMQ");  
 		service.start(new ConsumerHandler() { 

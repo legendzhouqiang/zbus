@@ -15,7 +15,6 @@ import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.net.MessageIdentifier;
 import io.zbus.mq.server.MqAdaptor;
 import io.zbus.mq.server.MqServer;
-import io.zbus.mq.server.MqServerConfig;
 import io.zbus.net.ResultCallback;
 import io.zbus.net.Session;
 import io.zbus.net.Sync;
@@ -23,54 +22,22 @@ import io.zbus.net.Sync.Ticket;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
-/**
- * JvmBroker is a type of Broker acting as invocation to a local MqServer instance, which do 
- * not need to be started in networking mode. MQ clients(both Producer and Consumer) can still work
- * with LocalBroker. The advantage of employing LocalBroker is the performance gain especially when
- * working scenario is in-jvm process mode.
- * 
- * @author rushmore (洪磊明)
- *
- */
+
 public class JvmBroker implements Session, Broker, MessageInvoker {
 	private static final Logger log = LoggerFactory.getLogger(JvmBroker.class);
 
 	private MqServer mqServer;
 	private MqAdaptor adaptor;
 	private final Sync<Message, Message> sync = new Sync<Message, Message>(MessageIdentifier.INSTANCE, MessageIdentifier.INSTANCE);
-	private int readTimeout = 3000;
-	private boolean ownMqServer = false;
+	private int readTimeout = 3000; 
 	private final String id;
 	private ConcurrentMap<String, Object> attributes = null;
 	private boolean isActive = true;
-
-	/**
-	 * The underlying MqServer is configured with defaults
-	 * If you want to do personalization, use constructor with MqServerConfig
-	 */
-	public JvmBroker(){
-		this(new MqServerConfig()); 
-	}
-	
-	/**
-	 * Configure the underlying MqServer with configuration 
-	 * 
-	 * @param config MqServer configuration
-	 */
-	public JvmBroker(MqServerConfig config){
-		this(new MqServer(config));
-		this.ownMqServer = true;
-	}
-	
-	/**
-	 * Configure with a MqServer instance (it can be non-started)
-	 * @param mqServer MqServer instance
-	 */
+ 
 	public JvmBroker(MqServer mqServer) { 
 		this.id = UUID.randomUUID().toString();
 		this.mqServer = mqServer;  
-		this.adaptor = this.mqServer.getMqAdaptor(); 
-		
+		this.adaptor = this.mqServer.getMqAdaptor();  
 		try {
 			adaptor.sessionCreated(this);
 		} catch (IOException e) {
@@ -152,10 +119,7 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 	
 	@Override
 	public void close() throws IOException { 
-		adaptor.sessionToDestroy(this);
-		if(ownMqServer){
-			this.mqServer.close();
-		}
+		adaptor.sessionToDestroy(this); 
 		isActive = false;
 	}
 
