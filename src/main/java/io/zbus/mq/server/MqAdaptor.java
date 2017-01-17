@@ -54,9 +54,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
 		
 		registerHandler("", homeHandler);  
+		registerHandler(Protocol.JAVASCRIPT, jsHandler);
 		registerHandler(Protocol.DATA, dataHandler); 
-		registerHandler(Protocol.JQUERY, jqueryHandler);
+		registerHandler(Protocol.CSS, cssHandler);
 		registerHandler(Protocol.PING, pingHandler);
+		registerHandler(Protocol.INFO, infoHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -294,6 +296,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
+	private MessageHandler infoHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = new Message();
+			res.setStatus(200); 
+			res.setId(msg.getId()); 
+			res.setBody(Protocol.VERSION_VALUE);
+			sess.write(res);
+		}
+	};
+	
 	private MessageHandler homeHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String msgId = msg.getId();
@@ -308,16 +320,50 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setBody(body);
 			sess.write(msg);
 		}
+	}; 
+	
+	private Message handleFileRequest(String prefixPath, String url){
+		Message res = new Message(); 
+		if(!url.startsWith(prefixPath)){
+			res.setStatus(400);
+			res.setBody("Missing file name in URL"); 
+			return res;
+		}
+		url = url.substring(prefixPath.length());   
+		String body = null;
+		try{
+			body = FileUtil.loadFileContent(url);
+			if(body == null){
+				res.setStatus(404);
+				body = "404: File (" + url +") Not Found";
+			} else {
+				res.setStatus(200); 
+			}
+		} catch (IOException e){
+			res.setStatus(404);
+			body = e.getMessage();
+		}  
+		res.setBody(body); 
+		return res;
+	}
+	
+	private MessageHandler jsHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = handleFileRequest("/js/", msg.getUrl());
+			if("200".equals(res.getStatus())){
+				res.setHead("content-type", "application/javascript");
+			}
+			sess.write(res); 
+		}
 	};
 	
-	private MessageHandler jqueryHandler = new MessageHandler() {
+	private MessageHandler cssHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
-			msg = new Message();
-			msg.setStatus("200");
-			msg.setHead("content-type", "application/javascript");
-			String body = FileUtil.loadFileContent("jquery.js");
-			msg.setBody(body);
-			sess.write(msg);
+			Message res = handleFileRequest("/css/", msg.getUrl());
+			if("200".equals(res.getStatus())){
+				res.setHead("content-type", "text/css");
+			} 
+			sess.write(res);
 		}
 	};
 	
@@ -441,17 +487,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	int idx = url.indexOf('?');
     	String cmd = "";
     	if(idx >= 0){
-    		cmd = url.substring(1, idx); 
-    		if(url.charAt(idx-1) == '/'){
-    			cmd = url.substring(1, idx-1);
-    		} else {
-    			cmd = url.substring(1, idx);
-    		}
+    		cmd = url.substring(1, idx);  
     	} else {
     		cmd = url.substring(1);
-    	}  
+    	} 
+    	idx = cmd.indexOf('/');
+    	if(idx > 0){
+    		cmd = cmd.substring(0, idx);
+    	}
     	
-    	msg.setCommand(cmd);
+    	msg.setCommand(cmd.toLowerCase());
     	msg.urlToHead(); 
 	}
     

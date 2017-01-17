@@ -100,10 +100,9 @@ public class FileUtil {
 		return null;
 	}
 
-	public static String loadFileContent(String resource) {
+	public static String loadFileContent(String resource) throws IOException {
 		InputStream in = FileUtil.class.getClassLoader().getResourceAsStream(resource);
-		if (in == null)
-			return "";
+		if (in == null) return null;
 
 		Writer writer = new StringWriter();
 		char[] buffer = new char[1024];
@@ -113,9 +112,7 @@ public class FileUtil {
 			while ((n = reader.read(buffer)) != -1) {
 				writer.write(buffer, 0, n);
 			}
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (UnsupportedEncodingException e) { 
 			e.printStackTrace();
 		} finally {
 			try {

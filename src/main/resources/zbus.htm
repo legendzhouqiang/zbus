@@ -3,7 +3,8 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>ZBUS Monitor</title>
-<script type="text/javascript" src="/jquery"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
 <style>
 table {
   font-family: "Helvetica Neue", Helvetica, sans-serif
@@ -59,7 +60,7 @@ margin: 30px 30px;
 </head>
 <body> 
 <h2 id="slogan" align="center">
-ZBUS = MQ + RPC (Version-0.8.0)
+ZBUS = MQ + RPC (Version-<span id="version"></span>)
 </h2>
 
 
@@ -87,12 +88,14 @@ function timeConverter(unixTime){
 
 $(document).ready(function(){ 
 function mode_name(mode){ 
-	return "MQ";
+	return "";
 }
 
-$.getJSON('/data',function(data){ 
-    $("#broker").html(data.broker); 
-     
+$.get('/info',function(data){  
+	$("#version").text(data); 
+});
+
+$.getJSON('/data',function(data){   
     $.each(data.mqTable, function(key, mq){  
     	if(key=='@type') return; 
     	var link = "/" + mq.name + "/?cmd=query_mq";

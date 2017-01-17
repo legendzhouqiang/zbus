@@ -7,22 +7,39 @@ import java.util.Map;
 
 
 public class Protocol {  
-	public static final String VERSION_VALUE = "080";          //start from 0.8.0
+	public static final String VERSION_VALUE = "0.8.0";       //start from 0.8.0
 	public static final String VERSION       = "version";
 	
-	public static final String PRODUCE       = "produce";   //produce message
-	public static final String CONSUME       = "consume";   //consume message
-	public static final String ROUTE   	     = "route";     //route back message to sender
+	//MQ Produce/Consume
+	public static final String PRODUCE       = "produce";   
+	public static final String CONSUME       = "consume";   
+	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC
  
-	public static final String DECLARE_TOPIC = "declare_topic"; //create topic
+	//Topic control
+	public static final String DECLARE_TOPIC = "declare_topic";  
 	public static final String QUERY_TOPIC   = "query_topic"; 
-	public static final String REMOVE_TOPIC  = "remove_topic"; //remove topic  
+	public static final String REMOVE_TOPIC  = "remove_topic";  
+	public static final String PAUSE_TOPIC   = "pause_topic";  
+	public static final String RESUME_TOPIC  = "resume_topic";  
+	public static final String EMPTY_TOPIC   = "empty_topic";  
+	
+	//ConsumeGroup control
+	public static final String DECLARE_GROUP = "declare_group";  
+	public static final String QUERY_GROUP   = "query_group"; 
+	public static final String REMOVE_GROUP  = "remove_group";  
+	public static final String PAUSE_GROUP   = "pause_group";  
+	public static final String RESUME_GROUP  = "resume_group";  
+	public static final String EMPTY_GROUP   = "empty_group";  
 	 
 	public static final String PING          = "ping"; 
-	public static final String DATA          = "data"; 
-	public static final String JQUERY        = "jquery";   
+	public static final String INFO          = "info"; 
+	public static final String JAVASCRIPT    = "js";  //serve javascript file
+	public static final String CSS           = "css"; //serve css file
+	
+	public static final String DATA          = "data";  
 	
 
+	//Message parameters
 	public static final String COMMAND  = "cmd";     
 	public static final String TOPIC    = "topic";
 	public static final String FLAG     = "flag";
@@ -52,7 +69,7 @@ public class Protocol {
 	public static final String ORIGIN_URL    = "origin_url"; //original URL  
 	public static final String ORIGIN_STATUS = "reply_code"; //original Status  
 	
-	//auth
+	//Security
 	public static final String APPID   = "appid";
 	public static final String TOKEN   = "token";
 	
