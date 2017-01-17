@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
-import io.zbus.mq.Protocol.BrokerInfo;
-import io.zbus.mq.Protocol.MqInfo;
+import io.zbus.mq.Protocol.ServerInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.net.MessageAdaptor;
 import io.zbus.mq.net.MessageHandler;
@@ -54,8 +54,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
 		
 		registerHandler("", homeHandler);  
-		registerHandler(Protocol.JAVASCRIPT, jsHandler);
-		registerHandler(Protocol.DATA, dataHandler); 
+		registerHandler(Protocol.JAVASCRIPT, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
 		registerHandler(Protocol.PING, pingHandler);
 		registerHandler(Protocol.INFO, infoHandler);
@@ -365,33 +364,20 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			} 
 			sess.write(res);
 		}
-	};
-	
-	private MessageHandler dataHandler = new MessageHandler() {
-		public void handle(Message msg, Session sess) throws IOException {
-			BrokerInfo info = getStatInfo();
-
-			Message data = new Message();
-			data.setStatus("200");
-			data.setId(msg.getId());
-			data.setHead("content-type", "application/json");
-			data.setBody(JsonUtil.toJson(info));
-			sess.write(data);
-		}
-	};
+	}; 
 	
 	private MessageHandler queryTopicHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String json = "";
 			if(msg.getTopic() == null){
-				BrokerInfo info = getStatInfo();
+				ServerInfo info = getServerInfo();
 				json = JsonUtil.toJson(info);
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 
 					return;
 				} else {
-					json = JsonUtil.toJson(mq.getMqInfo());
+					json = JsonUtil.toJson(mq.getTopicInfo());
 				}
 			}
 
@@ -435,16 +421,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.verbose = verbose;
 	}  
      
-    public BrokerInfo getStatInfo(){
-    	Map<String, MqInfo> table = new HashMap<String, MqInfo>();
+    public ServerInfo getServerInfo(){
+    	Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
    		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			MqInfo info = e.getValue().getMqInfo();
-   			info.consumerInfoList.clear(); //clear to avoid long list
+   			TopicInfo info = e.getValue().getTopicInfo(); 
    			table.put(e.getKey(), info);
    		}  
-		BrokerInfo info = new BrokerInfo();
-		info.broker = mqServer.getServerAddr();
-		info.mqTable = table;  
+   		ServerInfo info = new ServerInfo();
+		info.serverAddress = mqServer.getServerAddr();
+		info.topicMap = table;  
 		return info;
     }
     

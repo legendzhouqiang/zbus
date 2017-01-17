@@ -17,7 +17,7 @@ import io.zbus.net.EventDriver;
 public class MultiBroker implements Broker {
 	private Map<String, Broker> brokerMap = new ConcurrentHashMap<String, Broker>();
 	private ServerSelector serverSelector = new DefaultServerSelector(); 
-	private ServerTable serverTable = new ServerTable();
+	private RouteTable routeTable = new RouteTable();
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>();
 	
 	private EventDriver eventDriver; 
@@ -38,7 +38,7 @@ public class MultiBroker implements Broker {
 	
 	@Override
 	public MessageInvoker selectForProducer(String topic) throws IOException {
-		String serverAddress = serverSelector.selectForProducer(serverTable, topic); 
+		String serverAddress = serverSelector.selectForProducer(routeTable, topic); 
 		if(serverAddress == null){
 			throw new MqException("Missing broker for topic=" + topic);
 		}
@@ -51,7 +51,7 @@ public class MultiBroker implements Broker {
 
 	@Override
 	public MessageInvoker selectForConsumer(String topic) throws IOException {
-		String serverAddress = serverSelector.selectForConsumer(serverTable, topic);
+		String serverAddress = serverSelector.selectForConsumer(routeTable, topic);
 		if(serverAddress == null){
 			throw new MqException("Missing broker for topic=" + topic);
 		}

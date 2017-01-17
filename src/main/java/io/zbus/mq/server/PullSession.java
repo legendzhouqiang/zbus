@@ -27,7 +27,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.zbus.mq.Message;
-import io.zbus.mq.Protocol.ConsumerInfo;
 import io.zbus.net.Session;
 
 public class PullSession { 
@@ -67,10 +66,8 @@ public class PullSession {
 		return msgQ;
 	}
 	
-	public ConsumerInfo getConsumerInfo(){
-		ConsumerInfo info = new ConsumerInfo();
-		info.remoteAddr = session.getRemoteAddress();  
-		return info;
+	public String getConsumerAddress(){
+		return session.getRemoteAddress();   
 	}
 }
 

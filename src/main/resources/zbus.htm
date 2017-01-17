@@ -87,7 +87,7 @@ function timeConverter(unixTime){
 }
 
 $(document).ready(function(){ 
-function mode_name(mode){ 
+function show_flag(flag){ 
 	return "";
 }
 
@@ -95,20 +95,20 @@ $.get('/info',function(data){
 	$("#version").text(data); 
 });
 
-$.getJSON('/data',function(data){   
-    $.each(data.mqTable, function(key, mq){  
+$.getJSON('/query_topic',function(serverInfo){   
+    $.each(serverInfo.topicMap, function(key, topic){  
     	if(key=='@type') return; 
-    	var link = "/" + mq.name + "/?cmd=query_mq";
+    	var link = "/query_topic/?topic=" + topic.topicName;
     	var op = ""; 
         $("#mq_table").append(
 			"<tr>\
-				<td><a target='_blank' href='" + link + "'>"+ mq.name +"</a></td>\
-				<td style='text-align:left;'>" + mode_name(mq.mode) +"</td>\
-				<td>"+ mq.consumerCount +"</td>\
-				<td>"+ mq.unconsumedMsgCount +"</td>\
+				<td><a target='_blank' href='" + link + "'>"+ topic.topicName +"</a></td>\
+				<td style='text-align:left;'>" + show_flag(topic.flag) +"</td>\
+				<td>"+ topic.consumerCount +"</td>\
+				<td>"+ topic.messageCount +"</td>\
 				<td>0.0</td>\
-				<td>"+ timeConverter(mq.lastUpdateTime) +" </td>\
-				<td><a target='_blank' href='/" + mq.name + "'>" + op + "</a></td>\
+				<td>"+ timeConverter(topic.lastUpdatedTime) +" </td>\
+				<td><a target='_blank' href='/" + topic.topicName + "'>" + op + "</a></td>\
 			</tr>"
 		);
     }); 

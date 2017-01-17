@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.mq.Protocol.TopicInfo;
+
 
 public interface Broker extends Closeable{  
 	
@@ -30,8 +32,8 @@ public interface Broker extends Closeable{
 	
 	
 	public static interface ServerSelector {
-		String selectForProducer(ServerTable table, String topic);
-		String selectForConsumer(ServerTable table, String topic);
+		String selectForProducer(RouteTable table, String topic);
+		String selectForConsumer(RouteTable table, String topic);
 	}
 	
 	public static interface ServerNotifyListener{
@@ -39,21 +41,8 @@ public interface Broker extends Closeable{
 		void onServerLeave(String serverAddress);
 	} 
 	
-	public static class ServerTable{  
-		public List<String> activeList = new ArrayList<String>();
-		public Map<String, List<TopicInfo>> topicMap = new ConcurrentHashMap<String, List<TopicInfo>>();
-	}
-	
-	public static class ServerInfo{
-		public String serverAddress;
-		public Map<String, TopicInfo> topicTable;
-	}
-	
-	public static class TopicInfo {
-		public String serverAddress;
-		public String topicName;
-		public long messageCount;
-		public int consumerCount;
-		public long lastUpdated; 
-	}  
+	public static class RouteTable{  
+		public List<String> serverList = new ArrayList<String>();
+		public Map<String, List<TopicInfo>> topicTable = new ConcurrentHashMap<String, List<TopicInfo>>();
+	} 
 }

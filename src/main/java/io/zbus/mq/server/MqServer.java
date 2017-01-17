@@ -35,13 +35,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.mq.Protocol.MqInfo;
 import io.zbus.mq.net.MessageServer;
-import io.zbus.mq.tracker.ServerEntry;
-import io.zbus.mq.tracker.TrackPub;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
-import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.util.ConfigUtil;
 import io.zbus.util.NetUtil;
 import io.zbus.util.logging.Logger;
@@ -61,9 +57,7 @@ public class MqServer implements Closeable{
         this.config = config;
     }
  
-	private String serverAddr = "";  
-	
-	private TrackPub trackPub; 
+	private String serverAddr = "";   
 	
 	private EventDriver eventDriver;
 	private boolean ownEventDriver = false;
@@ -130,12 +124,7 @@ public class MqServer implements Closeable{
 		httpServer = new MessageServer(eventDriver); 
 		eventDriver = httpServer.getEventDriver();
 		
-		httpServer.start(config.serverHost, config.serverPort, mqAdaptor); 
-		
-		if(config.trackServerList != null && !"".equals(config.trackServerList)){
-			log.info("Zbus run in HA mode");
-			setupTracker(config.trackServerList);
-		}
+		httpServer.start(config.serverHost, config.serverPort, mqAdaptor);  
 		 
 		long end = System.currentTimeMillis();
 		log.info("Zbus started sucessfully in %d ms", (end-start));
@@ -143,10 +132,7 @@ public class MqServer implements Closeable{
 	}
 	 
 	@Override
-	public void close() throws IOException {  
-		if(trackPub != null){
-    		trackPub.close();
-    	}
+	public void close() throws IOException {   
 		scheduledExecutor.shutdown();   
 		mqAdaptor.close();
 		if(httpServer != null){
@@ -156,50 +142,10 @@ public class MqServer implements Closeable{
 			eventDriver.close();
 			eventDriver = null;
 		}
-	}
-	
-	
-    
-	public void setupTracker(String trackServerList){
-		if(eventDriver == null){
-			throw new IllegalStateException("Missing eventDriver");
-		}
-    	trackPub = new TrackPub(trackServerList, eventDriver);
-    	trackPub.onConnected(new ConnectedHandler() {
-    		@Override
-    		public void onConnected() throws IOException { 
-    			trackPub.pubServerJoin(serverAddr);
-    			for(MessageQueue mq : mqTable.values()){
-    				pubEntryUpdate(mq);
-    			}
-    		}
-		});
-    	trackPub.start();
-    	
-    	scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
-			@Override
-			public void run() { 
-				for(MessageQueue mq : mqTable.values()){
-    				pubEntryUpdate(mq);
-    			}
-			}
-		}, 2000, config.trackReportInterval, TimeUnit.MILLISECONDS);
-    }  
+	} 
      
     public void pubEntryUpdate(MessageQueue mq){
-    	if(trackPub == null) return;
-    	 
-    	MqInfo info = mq.getMqInfo();
-    	
-    	ServerEntry se = new ServerEntry();
-    	se.entryId = info.name;
-    	se.serverAddr = serverAddr;
-    	se.consumerCount = info.consumerCount;
-    	se.mode = info.mode;
-    	se.unconsumedMsgCount = info.unconsumedMsgCount;
-    	se.lastUpdateTime = mq.getLastUpdateTime();
-
-    	trackPub.pubEntryUpdate(se);
+    	 //TODO
     }  
     
 	public Map<String, MessageQueue> getMqTable() {

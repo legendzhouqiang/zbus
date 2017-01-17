@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
-import io.zbus.mq.Protocol.MqInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.net.Session;
 
 public interface MessageQueue { 
@@ -26,7 +26,7 @@ public interface MessageQueue {
 	
 	void cleanSession();
 	
-	MqInfo getMqInfo();
+	TopicInfo getTopicInfo();
 	
 	String getCreator();
 

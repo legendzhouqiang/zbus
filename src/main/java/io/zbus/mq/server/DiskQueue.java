@@ -17,8 +17,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
-import io.zbus.mq.Protocol.ConsumerInfo;
-import io.zbus.mq.Protocol.MqInfo;
+import io.zbus.mq.Protocol.ConsumeGroupInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueReader;
@@ -330,22 +330,20 @@ public class DiskQueue implements MessageQueue{
 	}
 	
 	@Override
-	public MqInfo getMqInfo() {
-		MqInfo info = new MqInfo(); 
-		info.name = name;
-		info.lastUpdateTime = lastUpdateTime;
+	public TopicInfo getTopicInfo() {
+		TopicInfo info = new TopicInfo(); 
+		info.topicName = name;
+		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
-		info.mode = this.getFlag();
-		info.unconsumedMsgCount = remaining(name);//TODO
-		info.consumerCount = consumerCount(name);//TODO
-		info.consumerInfoList = new ArrayList<ConsumerInfo>();
-		DiskConsumeGroup group = consumeGroups.get(name);
-		if(group != null){
-			for(PullSession pull : group.pullQ){ 
-				info.consumerInfoList.add(pull.getConsumerInfo());
-			} 
-		}   
-		
+		info.flag = this.getFlag();
+		info.messageCount = remaining(name); 
+		info.consumerCount = consumerCount(name); 
+		info.consumeGroupCount = consumeGroups.size();
+		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
+		for(DiskConsumeGroup group : consumeGroups.values()){
+			info.consumeGroupList.add(group.getConsumeGroupInfo());
+		}
+		//TODO 
 		return info;
 	}
 	
@@ -374,5 +372,16 @@ public class DiskQueue implements MessageQueue{
 		public void close() throws IOException {
 			reader.close(); 
 		} 
+		
+		public ConsumeGroupInfo getConsumeGroupInfo(){
+			ConsumeGroupInfo info = new ConsumeGroupInfo();
+			info.consumerCount = pullSessions.size();
+			info.groupName = groupName;
+			info.consumerList = new ArrayList<String>();
+			for(Session session : pullSessions.values()){
+				info.consumerList.add(session.getRemoteAddress());
+			}
+			return info;
+		}
 	} 
 }

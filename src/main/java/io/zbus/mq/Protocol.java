@@ -1,7 +1,5 @@
 package io.zbus.mq;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,12 +29,10 @@ public class Protocol {
 	public static final String RESUME_GROUP  = "resume_group";  
 	public static final String EMPTY_GROUP   = "empty_group";  
 	 
-	public static final String PING          = "ping"; 
-	public static final String INFO          = "info"; 
-	public static final String JAVASCRIPT    = "js";  //serve javascript file
-	public static final String CSS           = "css"; //serve css file
-	
-	public static final String DATA          = "data";  
+	public static final String PING          = "ping"; //ping server, returning back server time
+	public static final String INFO          = "info"; //version info
+	public static final String JAVASCRIPT    = "js";   //serve javascript file
+	public static final String CSS           = "css";  //serve css file 
 	
 
 	//Message parameters
@@ -78,29 +74,38 @@ public class Protocol {
 	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
-	 
-	public static class BrokerInfo{
-		public String broker;
-		public long lastUpdatedTime = System.currentTimeMillis(); 
-		public Map<String, MqInfo> mqTable = new HashMap<String, MqInfo>(); 
-		
-		public boolean isObsolete(long timeout){
-			return (System.currentTimeMillis()-lastUpdatedTime)>timeout;
-		}
-	}
-	 
-	public static class MqInfo { 
-		public String name;
-		public int mode;
-		public String creator;
-		public long lastUpdateTime;
-		public int consumerCount;
-		public long unconsumedMsgCount;
-		public List<ConsumerInfo> consumerInfoList = new ArrayList<ConsumerInfo>();
+	  
+	public static class ServerInfo{
+		public String serverAddress;
+		public Map<String, TopicInfo> topicMap;
 	}
 	
-	public static class ConsumerInfo {
-		public String remoteAddr;
-		public String status; 
-	} 
+	public static class TopicInfo {
+		public String serverAddress;
+		public String topicName;
+		public int flag; 
+		
+		public long messageCount;
+		public int consumerCount;
+		public int consumeGroupCount;
+		public List<ConsumeGroupInfo> consumeGroupList;
+		
+		public String creator;
+		public long createdTime;
+		public long lastUpdatedTime;
+	}  
+	
+	public static class ConsumeGroupInfo{
+		public String serverAddress;
+		public String topicName;
+		public String groupName;
+		public int flag; 
+		public long messageCount;
+		public int consumerCount;
+		public List<String> consumerList;
+		
+		public String creator;
+		public long createdTime;
+		public long lastUpdatedTime; 
+	}
 }
