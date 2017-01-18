@@ -203,11 +203,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private MessageHandler removeTopicHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			String registerToken = msg.getHead("register_token", "");
-			if(!registerToken.equals(config.getRegisterToken())){
-				msg.setBody("registerToken unmatched");
+			if(!auth(msg)){ 
 				ReplyKit.reply403(msg, sess);
-				return; 
+				return;
 			}
 			String mqName = msg.getHead("mq_name", "");
 			mqName = mqName.trim();

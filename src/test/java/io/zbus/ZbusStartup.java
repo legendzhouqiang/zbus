@@ -1,9 +1,9 @@
-package io.zbus.examples;
+package io.zbus;
 
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
 
-public class ZbusStarter {  
+public class ZbusStartup {  
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception { 

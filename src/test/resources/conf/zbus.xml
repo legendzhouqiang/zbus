@@ -9,9 +9,8 @@
 	<trackServerList></trackServerList>  
 	
 	<verbose>false</verbose>
-	<mqStore>/tmp/zbus</mqStore> 
-	<registerToken></registerToken>   
-	<!-- SSL support configure, add SSL cert and private file full path name -->
+	<mqStore>/tmp/zbus</mqStore>     
+	
 	<sslCertificateFile></sslCertificateFile>
 	<sslPrivateKeyFile></sslPrivateKeyFile>
 </server>  

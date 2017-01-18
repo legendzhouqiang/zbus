@@ -48,8 +48,7 @@ public class MqServerConfig{
 	public String sslPrivateKeyFile;
 	
 	public boolean verbose = false;
-	public String storePath = "/tmp/zbus";
-	public String registerToken = "";  
+	public String storePath = "/tmp/zbus"; 
 	public String serverMainIpOrder; 
 	public String serverName = "ZbusServer";
 	public long cleanMqInterval = 3000; 
@@ -106,15 +105,7 @@ public class MqServerConfig{
 
 	public void setStorePath(String storePath) {
 		this.storePath = storePath;
-	}
-
-	public String getRegisterToken() {
-		return registerToken;
-	}
-
-	public void setRegisterToken(String registerToken) {
-		this.registerToken = registerToken;
-	}
+	} 
 
 	public String getServerMainIpOrder() {
 		return serverMainIpOrder;
@@ -175,8 +166,7 @@ public class MqServerConfig{
 		this.serverHost = valueOf(xeval(xpath, doc, prefix, "host"), "0.0.0.0");  
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
 		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "./store");
-		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false);
-		this.registerToken = valueOf(xeval(xpath, doc, prefix, "registerToken"), ""); 
+		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false); 
 		this.serverMainIpOrder = valueOf(xeval(xpath, doc, prefix, "mainIpOrder"),null);
 		this.trackServerList = valueOf(xeval(xpath, doc, prefix, "trackServerList"),null);
 		
