@@ -10,7 +10,7 @@ public class MqConfig implements Cloneable {
 	protected int invokeTimeout = 10000;  // 10 s
 	
 	//consume details
-	protected ConsumeGroup consumeGroup; 
+	protected ConsumerGroup consumerGroup; 
 	protected Integer consumeWindow;
 	protected int consumeTimeout = 120000;// 2 minutes
 	
@@ -64,16 +64,16 @@ public class MqConfig implements Cloneable {
 		this.flag = flag;
 	}  
 	
-	public ConsumeGroup getConsumeGroup() {
-		return consumeGroup;
+	public ConsumerGroup getConsumerGroup() {
+		return consumerGroup;
 	} 
 	
-	public void setConsumeGroup(ConsumeGroup consumeGroup) {
-		this.consumeGroup = consumeGroup;
+	public void setConsumerGroup(ConsumerGroup consumerGroup) {
+		this.consumerGroup = consumerGroup;
 	}  
 	
-	public void setConsumeGroup(String consumeGroup) {
-		this.consumeGroup = new ConsumeGroup(consumeGroup);
+	public void setConsumerGroup(String consumeGroup) {
+		this.consumerGroup = new ConsumerGroup(consumeGroup);
 	} 
 
 	public Integer getConsumeWindow() {

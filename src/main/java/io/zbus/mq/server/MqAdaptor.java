@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerInfo;
@@ -251,7 +251,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return;
 			}
 			Integer flag = msg.getFlag();   
-    		ConsumeGroup ctrl = new ConsumeGroup(msg);  
+    		ConsumerGroup ctrl = new ConsumerGroup(msg);  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(topic); 
@@ -267,7 +267,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	    			mqTable.put(topic, mq);
     			}
     			try {
-					mq.declareConsumeGroup(ctrl);
+					mq.declareConsumerGroup(ctrl);
 					mqServer.pubEntryUpdate(mq);
 					
 					ReplyKit.reply200(msg, sess);

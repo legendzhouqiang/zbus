@@ -3,7 +3,7 @@ package io.zbus.mq.server;
 
 import java.io.IOException;
 
-import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.net.Session;
@@ -16,7 +16,7 @@ public interface MessageQueue {
 	
 	MessageQueue childMessageQueue();
 	
-	void declareConsumeGroup(ConsumeGroup ctrl) throws Exception;
+	void declareConsumerGroup(ConsumerGroup ctrl) throws Exception;
 	
 	long remaining(String consumeGroup);
 	

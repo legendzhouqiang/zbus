@@ -11,7 +11,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class); 
 	protected final Broker broker; 
 	
-	private ConsumeGroup consumeGroup;
+	private ConsumerGroup consumerGroup;
 	private Integer consumeWindow; 
 	private int consumeTimeout = 120000; // 2 minutes 
 	
@@ -30,7 +30,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.token = config.getToken();
 		this.invokeTimeout = config.getInvokeTimeout();
 		
-		this.consumeGroup = config.getConsumeGroup();
+		this.consumerGroup = config.getConsumerGroup();
 		this.consumeWindow = config.getConsumeWindow();
 		this.consumeTimeout = config.getConsumeTimeout();
 	} 
@@ -40,8 +40,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		req.setCommand(Protocol.CONSUME);
 		req.setConsumeWindow(consumeWindow);
 		fillCommonHeaders(req);  
-		if(consumeGroup != null){ //consumeGroup
-			req.setConsumeGroup(consumeGroup.getGroupName());
+		if(consumerGroup != null){ //consumeGroup
+			req.setConsumeGroup(consumerGroup.getGroupName());
 		}
 
 		Message res = null;
@@ -111,13 +111,13 @@ public class Consumer extends MqAdmin implements Closeable {
 	
 	protected Message buildDeclareTopicMessage(){
 		Message req = super.buildDeclareTopicMessage();  
-    	if(this.consumeGroup != null){
-	    	req.setConsumeGroup(consumeGroup.getGroupName());
-	    	req.setConsumeBaseGroup(consumeGroup.getBaseGroupName());
-	    	req.setConsumeStartOffset(consumeGroup.getStartOffset());
-	    	req.setConsumeStartMsgId(consumeGroup.getStartMsgId());
-	    	req.setConsumeStartTime(consumeGroup.getStartTime());
-	    	req.setConsumeFilterTag(consumeGroup.getFilterTag());
+    	if(this.consumerGroup != null){
+	    	req.setConsumeGroup(consumerGroup.getGroupName());
+	    	req.setConsumeBaseGroup(consumerGroup.getBaseGroupName());
+	    	req.setConsumeStartOffset(consumerGroup.getStartOffset());
+	    	req.setConsumeStartMsgId(consumerGroup.getStartMsgId());
+	    	req.setConsumeStartTime(consumerGroup.getStartTime());
+	    	req.setConsumeFilterTag(consumerGroup.getFilterTag());
 		}
     	return req;
 	} 
@@ -144,16 +144,16 @@ public class Consumer extends MqAdmin implements Closeable {
 		messageInvoker.invokeAsync(req, callback); 
 	} 
 	
-	public ConsumeGroup getConsumeGroup() {
-		return consumeGroup;
+	public ConsumerGroup getConsumerGroup() {
+		return consumerGroup;
 	}
 
-	public void setConsumeGroup(ConsumeGroup consumeGroup) {
-		this.consumeGroup = consumeGroup;
+	public void setConsumerGroup(ConsumerGroup consumerGroup) {
+		this.consumerGroup = consumerGroup;
 	} 
 	
-	public void setConsumeGroup(String consumeGroup) {
-		this.consumeGroup = new ConsumeGroup(consumeGroup);
+	public void setConsumerGroup(String consumerGroup) {
+		this.consumerGroup = new ConsumerGroup(consumerGroup);
 	} 
 	
 	public Integer getConsumeWindow() {

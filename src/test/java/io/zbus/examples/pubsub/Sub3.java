@@ -11,7 +11,7 @@ public class Sub3 {
 		final Broker broker = new ZbusBroker("127.0.0.1:15555"); 
 		
 		Consumer c = new Consumer(broker, "MyMQ");   
-		c.setConsumeGroup("Group3");  
+		c.setConsumerGroup("Group3");  
 		c.declareTopic();
 		
 		while(true){ //take one by one, controlled by caller

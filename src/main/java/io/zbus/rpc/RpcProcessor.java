@@ -47,11 +47,11 @@ public class RpcProcessor implements MessageProcessor{
 		for(Object obj : services){
 			for(Class<?> intf : getAllInterfaces(obj.getClass())){
 				addModule(intf.getSimpleName(), obj);
-				addModule(intf.getCanonicalName(), obj);
+				addModule(intf.getName(), obj);
 			}
 			addModule("", obj);
 			addModule(obj.getClass().getSimpleName(), obj);
-			addModule(obj.getClass().getCanonicalName(), obj);
+			addModule(obj.getClass().getName(), obj);
 		} 
 	}
 	

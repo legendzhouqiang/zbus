@@ -1,7 +1,7 @@
 package io.zbus.examples.pubsub;
 
 import io.zbus.mq.Broker;
-import io.zbus.mq.ConsumeGroup;
+import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.Message;
 import io.zbus.mq.MqConfig;
@@ -15,11 +15,11 @@ public class Sub_FilterTag_OnePlus {
 		MqConfig config = new MqConfig();
 		config.setBroker(broker);
 		config.setTopic("MyMQ");
-		ConsumeGroup group = new ConsumeGroup();
+		ConsumerGroup group = new ConsumerGroup();
 		group.setGroupName("Group5");
 		group.setFilterTag("abc.+");
 		
-		config.setConsumeGroup(group);  
+		config.setConsumerGroup(group);  
 		
 		Consumer c = new Consumer(config);    
 		c.declareTopic();

@@ -87,7 +87,7 @@ public class Protocol {
 		
 		public long messageCount;
 		public int consumerCount;
-		public int consumeGroupCount;
+		public int consumerGroupCount;
 		public List<ConsumeGroupInfo> consumeGroupList;
 		
 		public String creator;

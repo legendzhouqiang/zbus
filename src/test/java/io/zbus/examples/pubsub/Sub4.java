@@ -15,7 +15,7 @@ public class Sub4 {
 		MqConfig config = new MqConfig();
 		config.setBroker(broker);
 		config.setTopic("MyMQ");
-		config.setConsumeGroup("Group4");
+		config.setConsumerGroup("Group4");
 		
 		Consumer c = new Consumer(config);    
 		c.declareTopic();

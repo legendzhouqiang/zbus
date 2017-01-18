@@ -18,7 +18,7 @@ public class ConsumerServiceExample {
 		ConsumerServiceConfig config = new ConsumerServiceConfig();
 		config.setBroker(broker);
 		config.setTopic("MyMQ");  
-		config.setConsumeGroup("FirstOfFirst");
+		config.setConsumerGroup("FirstOfFirst");
 		config.setConsumerCount(4);
 		
 		config.setConsumerHandler(new ConsumerHandler() { 

@@ -1,6 +1,6 @@
 package io.zbus.mq;
 
-public class ConsumeGroup implements Cloneable { 
+public class ConsumerGroup implements Cloneable { 
 	private String groupName;
 	private String baseGroupName;
 	private Long startOffset;
@@ -10,15 +10,15 @@ public class ConsumeGroup implements Cloneable {
 	private Boolean deleteOnExit;
 	private String filterTag;
 	
-	public ConsumeGroup(){
+	public ConsumerGroup(){
 		
 	} 
 	
-	public ConsumeGroup(String groupName){
+	public ConsumerGroup(String groupName){
 		this.groupName = groupName;
 	} 
 	
-	public ConsumeGroup(Message msg){ 
+	public ConsumerGroup(Message msg){ 
 		groupName = msg.getConsumeGroup();
 		baseGroupName = msg.getConsumeBaseGroup();
 		startOffset = msg.getConsumeStartOffset();
@@ -79,9 +79,9 @@ public class ConsumeGroup implements Cloneable {
 	}
 
 	@Override
-	public ConsumeGroup clone() { 
+	public ConsumerGroup clone() { 
 		try {
-			return (ConsumeGroup)super.clone();
+			return (ConsumerGroup)super.clone();
 		} catch (CloneNotSupportedException e) {
 			return null;
 		}

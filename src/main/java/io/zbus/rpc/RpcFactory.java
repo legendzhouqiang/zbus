@@ -62,7 +62,7 @@ public class RpcFactory {
 	public <T> T getService(Class<T> api, RpcConfig config) throws Exception {   
 		String module = config.getModule();
 		if(module == null ||module.trim().length()==0){
-			module = api.getSimpleName();
+			module = api.getName(); 
 			config.setModule(module);
 		}
 			
