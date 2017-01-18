@@ -1,4 +1,5 @@
 package io.zbus.mq;
+ 
 
 public class MqConfig implements Cloneable { 
 	protected Broker broker;  

@@ -1,8 +1,8 @@
 package io.zbus.examples.pubsub;
 
 import io.zbus.mq.Broker;
-import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Consumer;
+import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.ZbusBroker;
 

@@ -110,6 +110,9 @@ public class MultiBroker implements Broker {
 			}  
 			broker = createBroker(serverAddress);
 		}    
+		if(!routeTable.serverList.contains(serverAddress)){
+			routeTable.serverList.add(serverAddress);
+		}
 		
 		for(final ServerNotifyListener listener : listeners){
 			eventDriver.getGroup().submit(new Runnable() { 

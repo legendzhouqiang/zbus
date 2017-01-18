@@ -1,13 +1,14 @@
 package io.zbus.mq;
 
 public class BrokerConfig implements Cloneable { 
-	private String brokerAddress = "127.0.0.1:15555";  
+	private String brokerAddress;  
 	private int connectionPoolSize = 32;   
+	private Object serverInJvm; // Only used for Jvm broker, must be instance of MqServer
 	
-	public BrokerConfig() {
+	public BrokerConfig(){
 		
 	}
-
+	
 	public BrokerConfig(String brokerAddress) {
 		this.brokerAddress = brokerAddress;
 	}
@@ -26,6 +27,14 @@ public class BrokerConfig implements Cloneable {
 
 	public void setConnectionPoolSize(int connectionPoolSize) {
 		this.connectionPoolSize = connectionPoolSize;
+	} 
+	
+	public Object getServerInJvm() {
+		return serverInJvm;
+	}
+
+	public void setServerInJvm(Object serverInJvm) {
+		this.serverInJvm = serverInJvm;
 	}
 
 	@Override

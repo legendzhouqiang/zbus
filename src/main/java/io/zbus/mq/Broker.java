@@ -30,7 +30,6 @@ public interface Broker extends Closeable{
 	
 	void removeServerListener(ServerNotifyListener listener); 
 	
-	
 	public static interface ServerSelector {
 		String selectForProducer(RouteTable table, String topic);
 		String selectForConsumer(RouteTable table, String topic);

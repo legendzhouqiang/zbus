@@ -44,11 +44,10 @@ public class ConsumerService implements Closeable {
 			consumerHandler = config.getConsumerHandler();
 		} else {
 			final MessageProcessor messageProcessor = config.getMessageProcessor();
-			if(messageProcessor == null){
-				throw new IllegalArgumentException("MessageHandler is null, and MessageProcessor must be provided");
-			} 
-			//default consumer trying to route back message if processed
-			consumerHandler = buildFromMessageProcessor(messageProcessor);
+			if(messageProcessor != null){
+				//default consumer trying to route back message if processed
+				consumerHandler = buildFromMessageProcessor(messageProcessor); 
+			}  
 		}
 	}
 	
@@ -98,6 +97,10 @@ public class ConsumerService implements Closeable {
 	
 	public synchronized void start() throws IOException{ 
 		if(isStarted) return;  
+		if(this.consumerHandler == null){
+			throw new IllegalArgumentException("MessageHandler and MessageProcessor are both null");
+		}
+		
 		int n = config.getThreadPoolSize();
 		consumerExecutor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
 				new LinkedBlockingQueue<Runnable>(config.getMaxInFlightMessage()),
@@ -168,8 +171,7 @@ public class ConsumerService implements Closeable {
 					try {
 						msg = consumer.take();
 					} catch (InterruptedException e) {
-						consumer.close();
-						consumer = null;
+						consumer.close(); 
 						break;
 					} catch (MqException e) { 
 						throw e; 
@@ -199,10 +201,7 @@ public class ConsumerService implements Closeable {
 		@Override
 		public void close() throws IOException {
 			interrupt();
-			if(consumer != null){
-				consumer.close();
-				consumer = null;
-			}
+			consumer.close();  
 		} 
 	}
 }

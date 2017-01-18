@@ -119,7 +119,7 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 	
 	@Override
 	public void close() throws IOException { 
-		adaptor.sessionToDestroy(this); 
+		//adaptor.sessionToDestroy(this); TODO
 		isActive = false;
 	}
 

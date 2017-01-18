@@ -4,9 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.zbus.mq.Broker;
-import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.ZbusBroker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.util.ConfigUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
@@ -85,7 +84,7 @@ public abstract class Perf implements Closeable{
 	}
 	 
 	
-	public static Broker buildBroker(String[] args) throws Exception{
+	public static ZbusBroker buildBroker(String[] args) throws Exception{
 		final String serverAddress = ConfigUtil.option(args, "-b", "127.0.0.1:15555");
 		final int threadCount = ConfigUtil.option(args, "-c", 64);	 
 		BrokerConfig config = new BrokerConfig();
