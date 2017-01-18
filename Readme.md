@@ -1,6 +1,9 @@
 # Gist of zbus project: ZBUS = MQ + RPC 
 
- Do **NOT** use code of **master** in production, still alpha
+ Do **NOT** use **master** in production, still under heavy refinement.
+
+## Project QQ Group: 467741880  
+## [Released Version-7.2.1](http://git.oschina.net/rushmore/zbus/tree/7.2.1/ "") 
 
 ##API
 	MqConfig
