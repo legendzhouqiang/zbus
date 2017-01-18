@@ -3,7 +3,7 @@ package io.zbus.mq;
 public class BrokerConfig implements Cloneable { 
 	private String brokerAddress;  
 	private int connectionPoolSize = 32;   
-	private Object serverInJvm; // Only used for Jvm broker, must be instance of MqServer
+	private Object serverInJvm; // Only used for JVM broker, must be instance of io.zbus.mq.server.MqServer
 	
 	public BrokerConfig(){
 		

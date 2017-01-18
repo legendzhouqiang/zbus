@@ -36,6 +36,11 @@ public class MultiBroker implements Broker {
 		}
 	}
 	
+	public MultiBroker(String brokerAddress) throws IOException{ 
+		this(new BrokerConfig(brokerAddress));
+	}
+	
+	
 	@Override
 	public MessageInvoker selectForProducer(String topic) throws IOException {
 		String serverAddress = serverSelector.selectForProducer(routeTable, topic); 
@@ -162,5 +167,6 @@ public class MultiBroker implements Broker {
 			}
 			brokerMap.clear();
 		} 
+		eventDriver.close();
 	}
 }

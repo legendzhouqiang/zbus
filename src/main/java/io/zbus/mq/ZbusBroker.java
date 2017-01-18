@@ -22,10 +22,10 @@ public class ZbusBroker implements Broker{
 			brokerAddress = brokerAddress.trim(); 
 		}
 		
-		if(brokerAddress == null || "jvm".equalsIgnoreCase(brokerAddress)){
+		if(brokerAddress == null){
 			MqServer server = (MqServer)config.getServerInJvm();
 			if(server == null){
-				throw new IllegalArgumentException("Try to initiate JvmBroker, but MqServer missed");
+				throw new IllegalArgumentException("Try to initiate JvmBroker, but severInJvm(MqServer) not set");
 			}
 			support = new JvmBroker((MqServer)config.getServerInJvm());
 			return;
