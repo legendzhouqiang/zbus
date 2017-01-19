@@ -14,7 +14,7 @@ public class ProducerPerf {
 		final int threadCount = ConfigUtil.option(args, "-c", 16); 
 		final int loopCount = ConfigUtil.option(args, "-loop", 100000);
 		final int logCount = ConfigUtil.option(args, "-log", 10000);
-		final int msgSize = ConfigUtil.option(args, "-msgSize", 10240);
+		final int msgSize = ConfigUtil.option(args, "-msgSize", 100);
 		final String mq = ConfigUtil.option(args, "-mq", "MyMQ"); 
 		
 		BrokerConfig brokerConfig = new BrokerConfig();

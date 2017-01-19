@@ -14,8 +14,8 @@ import io.zbus.mq.Protocol;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.EventDriver;
 
-public class MultiBroker implements Broker {
-	private Map<String, Broker> brokerMap = new ConcurrentHashMap<String, Broker>();
+public class MultiBroker implements Broker { 
+	private Map<String, Broker> brokerMap = new ConcurrentHashMap<String, Broker>();  
 	private ServerSelector serverSelector = new DefaultServerSelector(); 
 	private RouteTable routeTable = new RouteTable();
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>();
@@ -51,6 +51,7 @@ public class MultiBroker implements Broker {
 		if(broker == null){
 			throw new IllegalStateException("Can not find server=" + serverAddress);
 		}
+		
 		return broker.selectForProducer(topic);
 	}
 
@@ -68,10 +69,7 @@ public class MultiBroker implements Broker {
 	}
 	
 	@Override
-	public void releaseInvoker(MessageInvoker invoker) throws IOException {
-		if(invoker instanceof JvmBroker){
-			return;
-		}
+	public void releaseInvoker(MessageInvoker invoker) throws IOException { 
 		if(!(invoker instanceof MessageClient)){
 			return; 
 		}
@@ -89,25 +87,33 @@ public class MultiBroker implements Broker {
 	}
 
 	@Override
-	public List<Broker> availableServerList() { 
+	public List<Broker> availableServerList() {  
 		return new ArrayList<Broker>(brokerMap.values());
 	}
 
 	@Override
 	public void setServerSelector(ServerSelector selector) {
 		this.serverSelector = selector;
+	} 
+	
+	@Override
+	public void registerServer(final String serverAddress) throws IOException { 
+		//TODO
+		onServerConnected(serverAddress);
 	}
-
+	
 	private Broker createBroker(String serverAddress) throws IOException{
 		BrokerConfig config = this.config.clone();
 		config.setBrokerAddress(serverAddress);
-		Broker broker = new SingleBroker(config, eventDriver); 
-		brokerMap.put(serverAddress, broker); 
+		Broker broker = new SingleBroker(config);
 		return broker;
 	}
 	
-	@Override
-	public void registerServer(final String serverAddress) throws IOException {
+	private void onServerConnected(final String serverAddress) throws IOException{
+		if(routeTable.serverList.contains(serverAddress)){
+			return;
+		} 
+		
 		final Broker broker;
 		synchronized (brokerMap) {
 			if(brokerMap.containsKey(serverAddress)){
@@ -115,9 +121,6 @@ public class MultiBroker implements Broker {
 			}  
 			broker = createBroker(serverAddress);
 		}    
-		if(!routeTable.serverList.contains(serverAddress)){
-			routeTable.serverList.add(serverAddress);
-		}
 		
 		for(final ServerNotifyListener listener : listeners){
 			eventDriver.getGroup().submit(new Runnable() { 
@@ -130,7 +133,7 @@ public class MultiBroker implements Broker {
 	}
 
 	@Override
-	public void unregisterServer(final String serverAddress) throws IOException {
+	public void unregisterServer(final String serverAddress) throws IOException { 
 		final Broker broker;
 		synchronized (brokerMap) { 
 			broker = brokerMap.remove(serverAddress);
@@ -162,11 +165,13 @@ public class MultiBroker implements Broker {
 	@Override
 	public void close() throws IOException {
 		synchronized (brokerMap) {
-			for(Broker broker : brokerMap.values()){
+			for(Broker broker : brokerMap.values()){ 
 				broker.close();
 			}
 			brokerMap.clear();
 		} 
+		
+		
 		eventDriver.close();
-	}
+	} 
 }

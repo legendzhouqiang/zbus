@@ -50,15 +50,8 @@ public class MqServer implements Closeable{
 	private final Map<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
-	private MqServerConfig config; 
-	
-	public void setConfig(MqServerConfig config)
-    {
-        this.config = config;
-    }
- 
-	private String serverAddr = "";   
-	
+	private MqServerConfig config;   
+	private String serverAddr = "";    
 	private EventDriver eventDriver;
 	private boolean ownEventDriver = false;
 	
@@ -166,6 +159,10 @@ public class MqServer implements Closeable{
 	
 	public MqAdaptor getMqAdaptor() {
 		return mqAdaptor;
+	}
+	
+	public EventDriver getEventDriver() {
+		return eventDriver;
 	}
 
 	public static void main(String[] args) throws Exception {

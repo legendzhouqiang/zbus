@@ -50,7 +50,7 @@ public class MqServerConfig{
 	public boolean verbose = false;
 	public String storePath = "/tmp/zbus"; 
 	public String serverMainIpOrder; 
-	public String serverName = "ZbusServer";
+	public String serverName = "MqServer";
 	public long cleanMqInterval = 3000; 
 	public long trackReportInterval = 5000; 
 	

@@ -137,7 +137,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					}
 					return;
 				} 
-			} 
+			}  
 			
 			mq.produce(msg, sess);  
 			

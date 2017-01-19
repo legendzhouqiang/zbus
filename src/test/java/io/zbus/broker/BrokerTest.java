@@ -2,8 +2,9 @@ package io.zbus.broker;
 
 public class BrokerTest {
 
-	public static void main(String[] args) {
-
+	public static void main(String[] args) throws Exception { 
+		
+		
 	}
 
 }
