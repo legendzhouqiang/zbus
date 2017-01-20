@@ -6,6 +6,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -488,6 +489,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	msg.setSender(sess.id());
 		msg.setServer(mqServer.getServerAddr()); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
+		if(msg.getId() == null){
+			msg.setId(UUID.randomUUID().toString());
+		}
 		
 		if(verbose){
 			log.info("\n%s", msg);

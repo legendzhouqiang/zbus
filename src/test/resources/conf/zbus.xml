@@ -1,19 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<zbus>  
-
-<server> 
+<zbus>   
 	<host>0.0.0.0</host> 
-	<port>15555</port>
+	<port>15555</port> 
+	<mqStore>/tmp/zbus</mqStore>
 	
-	<!-- HA mode, specify TrackServer list, e.g. 127.0.0.1:16666;127.0.0.1:16667 -->
-	<trackServerList></trackServerList>  
+	<trackServerList></trackServerList>   
 	
-	<verbose>false</verbose>
-	<mqStore>/tmp/zbus</mqStore>     
-	
+	<verbose>false</verbose> 
+	  
 	<sslCertificateFile></sslCertificateFile>
-	<sslPrivateKeyFile></sslPrivateKeyFile>
-</server>  
-
+	<sslPrivateKeyFile></sslPrivateKeyFile>  
 </zbus>
 

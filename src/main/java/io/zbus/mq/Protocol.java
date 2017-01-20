@@ -29,12 +29,17 @@ public class Protocol {
 	public static final String RESUME_GROUP  = "resume_group";  
 	public static final String EMPTY_GROUP   = "empty_group";  
 	 
+	
+	//High Availability (HA)
+	public static final String TRACK_QUERY   = "track_query";  
+	
+	//Simple HTTP server command
 	public static final String PING          = "ping"; //ping server, returning back server time
 	public static final String INFO          = "info"; //version info
 	public static final String JAVASCRIPT    = "js";   //serve javascript file
 	public static final String CSS           = "css";  //serve css file 
 	
-
+	
 	//Message parameters
 	public static final String COMMAND  = "cmd";     
 	public static final String TOPIC    = "topic";

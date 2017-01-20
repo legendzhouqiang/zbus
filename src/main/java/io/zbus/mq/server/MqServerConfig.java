@@ -162,7 +162,7 @@ public class MqServerConfig{
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(source); 
 		
-		String prefix = "//server"; 
+		String prefix = "//zbus"; 
 		this.serverHost = valueOf(xeval(xpath, doc, prefix, "host"), "0.0.0.0");  
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
 		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "./store");
