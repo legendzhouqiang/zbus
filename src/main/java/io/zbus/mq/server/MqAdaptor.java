@@ -36,7 +36,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private final MqServer mqServer;
 	private final MqServerConfig config;   
 	
-	private final TrackPub trackPub;
+	private final TrackerPub trackPub;
 	private final Tracker tracker;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
@@ -50,7 +50,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
 		this.tracker = new Tracker(this, mqServer.getServerAddr(), mqServer.getEventDriver());
-		this.trackPub = mqServer.getTrackPub();
+		this.trackPub = mqServer.getTrackerPub();
 		
 		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 

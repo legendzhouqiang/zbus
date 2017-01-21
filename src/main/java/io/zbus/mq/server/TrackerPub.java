@@ -25,8 +25,8 @@ import io.zbus.util.logging.LoggerFactory;
  * @author Rushmore
  *
  */
-public class TrackPub implements Closeable{  
-	private static final Logger log = LoggerFactory.getLogger(TrackPub.class);
+public class TrackerPub implements Closeable{  
+	private static final Logger log = LoggerFactory.getLogger(TrackerPub.class);
 	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
@@ -34,7 +34,7 @@ public class TrackPub implements Closeable{
 	private EventDriver eventDriver;
 	private final String trackServerList;
 	
-	public TrackPub(String trackServerList, EventDriver driver) {  
+	public TrackerPub(String trackServerList, EventDriver driver) {  
 		this.trackServerList = trackServerList;
 		this.eventDriver = driver; 
     }
