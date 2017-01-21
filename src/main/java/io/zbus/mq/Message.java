@@ -63,7 +63,7 @@ public class Message {
 	private String url = "/";
 	private String method = "GET"; 
 	
-	private Map<String, String> head = new ConcurrentHashMap<String, String>(); 
+	private Map<String, String> headers = new ConcurrentHashMap<String, String>(); 
 	private byte[] body; 
 	
 	public Message(){
@@ -82,7 +82,7 @@ public class Message {
 	}
 	
 	private void setCommonHeaders(){
-		setHead("connection", "Keep-Alive");
+		setHeader("connection", "Keep-Alive");
 		setVersion(Protocol.VERSION_VALUE);
 	}
 	
@@ -91,7 +91,7 @@ public class Message {
 		res.status = msg.status;
 		res.url = msg.url;
 		res.method = msg.method;
-		res.head = new ConcurrentHashMap<String, String>(msg.head);
+		res.headers = new ConcurrentHashMap<String, String>(msg.headers);
 		res.body = msg.body;
 		return res;
 	}
@@ -126,41 +126,41 @@ public class Message {
 		this.method = method;
 	} 
 	
-	public Map<String,String> getHead() {
-		return head;
+	public Map<String,String> getHeaders() {
+		return headers;
 	} 
 	
-	public void setHead(Map<String,String> head) {
-		this.head = head;
+	public void setHeaders(Map<String,String> head) {
+		this.headers = head;
 	} 
 	
-	public String getHead(String key){
-		return this.head.get(key);
+	public String getHeader(String key){
+		return this.headers.get(key);
 	}
 	
-	public String getHead(String key, String defaultValue){
-		String res = this.head.get(key);
+	public String getHeader(String key, String defaultValue){
+		String res = this.headers.get(key);
 		if(res == null) return defaultValue;
 		return res;
 	}
 	
-	public void setHead(String key, String value){
+	public void setHeader(String key, String value){
 		if(value == null) return;
-		this.head.put(key, value);
+		this.headers.put(key, value);
 	} 
 	
-	public void setHead(String key, Object value){
+	public void setHeader(String key, Object value){
 		if(value == null) return;
-		this.head.put(key, value.toString());
+		this.headers.put(key, value.toString());
 	} 
 	
-	public String removeHead(String key){
-		return this.head.remove(key);
+	public String removeHeader(String key){
+		return this.headers.remove(key);
 	}
 	
 	public byte[] getBody() {
 		byte[] b = body;
-		String bodyOfHead = getHead("body");
+		String bodyOfHead = getHeader("body");
 		if(b == null && bodyOfHead != null){
 			b = bodyOfHead.getBytes();
 		}
@@ -172,7 +172,7 @@ public class Message {
 		if( body != null){
 			len = body.length;
 		}
-		this.setHead(CONTENT_LENGTH, ""+len);
+		this.setHeader(CONTENT_LENGTH, ""+len);
 		this.body = body;
 		return this;
 	}
@@ -236,7 +236,7 @@ public class Message {
 	}
 	
 	public Message setJsonBody(byte[] body){
-		this.setHead(CONTENT_TYPE, "application/json");
+		this.setHeader(CONTENT_TYPE, "application/json");
 		this.setBody(body);
 		return this;
 	}
@@ -282,7 +282,7 @@ public class Message {
 	        while (line != null && line.trim().length() > 0) {
 	            int p = line.indexOf(':');
 	            if (p >= 0){ 
-	                head.put(line.substring(0, p).trim().toLowerCase(), line.substring(p + 1).trim());
+	                headers.put(line.substring(0, p).trim().toLowerCase(), line.substring(p + 1).trim());
 	            } 
 	            line = bufferedReader.readLine();
 	        }
@@ -308,155 +308,155 @@ public class Message {
 	}
 	
 	public String getVersion(){
-		return this.getHead(VERSION); 
+		return this.getHeader(VERSION); 
 	} 
 	public Message setVersion(String value) {
-		this.setHead(VERSION, value);
+		this.setHeader(VERSION, value);
 		return this;
 	} 
 	
 	public String getCommand() { 
-		return this.getHead(COMMAND);
+		return this.getHeader(COMMAND);
 	} 
 	public Message setCommand(String value) {
-		this.setHead(COMMAND, value); 
+		this.setHeader(COMMAND, value); 
 		return this;
 	}   
 	
 	public String getServer(){
-		return this.getHead(SERVER);
+		return this.getHeader(SERVER);
 	}  
 	public void setServer(String value){
-		this.setHead(SERVER, value);
+		this.setHeader(SERVER, value);
 	} 
 	
 	public String getSender() {
-		return this.getHead(SENDER);
+		return this.getHeader(SENDER);
 	} 
 	public Message setSender(String value) {
-		this.setHead(SENDER, value);
+		this.setHeader(SENDER, value);
 		return this;
 	}
 	
 	
 	public String getReceiver() {
-		return this.getHead(RECVER);
+		return this.getHeader(RECVER);
 	} 
 	public Message setReceiver(String value) {
-		this.setHead(RECVER, value);
+		this.setHeader(RECVER, value);
 		return this;
 	}
 	
 	public String getAppid() {
-		return this.getHead(APPID);
+		return this.getHeader(APPID);
 	} 
 	public Message setAppid(String value) {
-		this.setHead(APPID, value);
+		this.setHeader(APPID, value);
 		return this;
 	}   
 	
 	public String getToken() {
-		return this.getHead(TOKEN);
+		return this.getHeader(TOKEN);
 	} 
 	public Message setToken(String value) {
-		this.setHead(TOKEN, value);
+		this.setHeader(TOKEN, value);
 		return this;
 	}   
 	
 	public String getTag() {
-		return this.getHead(TAG);
+		return this.getHeader(TAG);
 	} 
 	public Message setTag(String value) {
-		this.setHead(TAG, value);
+		this.setHeader(TAG, value);
 		return this;
 	}   
 	
 	public String getRemoteAddr() {
-		return this.getHead(REMOTE_ADDR);
+		return this.getHeader(REMOTE_ADDR);
 	} 
 	public Message setRemoteAddr(String value) {
-		this.setHead(REMOTE_ADDR, value);
+		this.setHeader(REMOTE_ADDR, value);
 		return this;
 	}  
 	
 	
 	public String getOriginStatus() {
-		return this.getHead(ORIGIN_STATUS);
+		return this.getHeader(ORIGIN_STATUS);
 	} 
 	public Message setOriginStatus(String value) {
-		this.setHead(ORIGIN_STATUS, value);
+		this.setHeader(ORIGIN_STATUS, value);
 		return this;
 	}  
 	
 	public String getOriginUrl() {
-		return this.getHead(ORIGIN_URL);
+		return this.getHeader(ORIGIN_URL);
 	} 
 	public Message setOriginUrl(String value) {
-		this.setHead(ORIGIN_URL, value);
+		this.setHeader(ORIGIN_URL, value);
 		return this;
 	}   
 	
 	public String getOriginId() {
-		return this.getHead(ORIGIN_ID);
+		return this.getHeader(ORIGIN_ID);
 	} 
 	public Message setOriginId(String value) {
 		if(value == null) return this;
-		this.setHead(ORIGIN_ID, value);
+		this.setHeader(ORIGIN_ID, value);
 		return this;
 	}
 	 
 	
 	public String getEncoding() {
-		return this.getHead(ENCODING);
+		return this.getHeader(ENCODING);
 	} 
 	public Message setEncoding(String encoding) {
-		this.setHead(ENCODING, encoding);
+		this.setHeader(ENCODING, encoding);
 		return this;
 	}
 	
 	public Long getDelay() {
-		String value = this.getHead(DELAY);
+		String value = this.getHeader(DELAY);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	}  
 	
 	public Message setDelay(long time, TimeUnit unit) { 
-		this.setHead(DELAY, unit.toMillis(time));
+		this.setHeader(DELAY, unit.toMillis(time));
 		return this;
 	} 
 	
 	public Long getTtl() {
-		String value = this.getHead(TTL);
+		String value = this.getHeader(TTL);
 		if(value == null) return null;
 		return Long.valueOf(value); 
 	} 
 	public Message setTtl(long time, TimeUnit unit) { 
-		this.setHead(TTL, unit.toMillis(time));
+		this.setHeader(TTL, unit.toMillis(time));
 		return this;
 	} 
 	
 	public Long getExpire() {
-		String value = this.getHead(EXPIRE);
+		String value = this.getHeader(EXPIRE);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	}  
 	
 	public Message setExpire(long millis) { 
-		this.setHead(EXPIRE, millis+"");
+		this.setHeader(EXPIRE, millis+"");
 		return this;
 	}  
 	
 	public String getId() {
-		return this.getHead(ID);
+		return this.getHeader(ID);
 	} 
 	
 	public void setId(String msgId) {
 		if(msgId == null) return;
-		this.setHead(ID, msgId); 
+		this.setHeader(ID, msgId); 
 	}	 
 	
 	public boolean isAck() {
-		String ack = this.getHead(ACK);
+		String ack = this.getHeader(ACK);
 		if(ack == null) return true; //default to true
 		ack = ack.trim().toLowerCase();
 		return ack.equals("1") || ack.equals("true");
@@ -464,97 +464,97 @@ public class Message {
 	
 	public void setAck(boolean ack){
 		String value = ack? "1":"0";
-		this.setHead(ACK, value);
+		this.setHeader(ACK, value);
 	} 
 	
 	public String getTopic(){
-		String value = this.getHead(TOPIC);
+		String value = this.getHeader(TOPIC);
 		return value;
 	} 
 	public Message setTopic(String mq) {
-		this.setHead(TOPIC, mq);
+		this.setHeader(TOPIC, mq);
 		return this;
 	} 
 	
 	public String getConsumeGroup(){
-		String value = this.getHead(CONSUME_GROUP);
+		String value = this.getHeader(CONSUME_GROUP);
 		return value;
 	} 
 	public Message setConsumeGroup(String mq) {
-		this.setHead(CONSUME_GROUP, mq);
+		this.setHeader(CONSUME_GROUP, mq);
 		return this;
 	} 
 	public Long getOffset(){
-		String value = this.getHead(OFFSET);
+		String value = this.getHeader(OFFSET);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	} 
 	public Message setOffset(Long value) {
-		this.setHead(OFFSET, value);
+		this.setHeader(OFFSET, value);
 		return this;
 	} 
 	
 	public Integer getFlag(){
-		String value = this.getHead(FLAG);
+		String value = this.getHeader(FLAG);
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
 	public Message setFlag(Integer value) {
-		this.setHead(FLAG, value);
+		this.setHeader(FLAG, value);
 		return this;
 	} 
 	
 	public Long getConsumeStartOffset(){
-		String value = this.getHead(CONSUME_START_OFFSET);
+		String value = this.getHeader(CONSUME_START_OFFSET);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	} 
 	public Message setConsumeStartOffset(Long value) {
-		this.setHead(CONSUME_START_OFFSET, value);
+		this.setHeader(CONSUME_START_OFFSET, value);
 		return this;
 	}   
 	public Long getConsumeStartTime(){
-		String value = this.getHead(CONSUME_START_TIME);
+		String value = this.getHeader(CONSUME_START_TIME);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	} 
 	public Message setConsumeStartTime(Long value) {
-		this.setHead(CONSUME_START_TIME, value);
+		this.setHeader(CONSUME_START_TIME, value);
 		return this;
 	}  
 	public String getConsumeBaseGroup(){
-		return this.getHead(CONSUME_BASE_GROUP);
+		return this.getHeader(CONSUME_BASE_GROUP);
 	} 
 	public Message setConsumeBaseGroup(String value) {
-		this.setHead(CONSUME_BASE_GROUP, value);
+		this.setHeader(CONSUME_BASE_GROUP, value);
 		return this;
 	}  
 	
 	public String getConsumeStartMsgId(){
-		String value = this.getHead(CONSUME_START_MSGID);
+		String value = this.getHeader(CONSUME_START_MSGID);
 		return value;
 	} 
 	public Message setConsumeStartMsgId(String mq) {
-		this.setHead(CONSUME_START_MSGID, mq);
+		this.setHeader(CONSUME_START_MSGID, mq);
 		return this;
 	} 
 	
 	public Integer getConsumeWindow(){
-		String value = this.getHead(CONSUME_WINDOW);
+		String value = this.getHeader(CONSUME_WINDOW);
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
 	
 	public Message setConsumeWindow(Integer value) {
-		this.setHead(CONSUME_WINDOW, value);
+		this.setHeader(CONSUME_WINDOW, value);
 		return this;
 	}  
 	public String getConsumeFilterTag() {
-		return getHead(CONSUME_FILTER_TAG);
+		return getHeader(CONSUME_FILTER_TAG);
 	} 
 	
 	public Message setConsumeFilterTag(String topic) {
-		this.setHead(CONSUME_FILTER_TAG, topic);
+		this.setHeader(CONSUME_FILTER_TAG, topic);
 		return this;
 	}    
 	
@@ -576,11 +576,11 @@ public class Message {
 		StringBuilder sb = new StringBuilder();
 		sb.append(generateHttpLine()+"\r\n");
 		
-		List<String> keys = new ArrayList<String>(head.keySet());
+		List<String> keys = new ArrayList<String>(headers.keySet());
 		Collections.sort(keys);
 		
 		for(String key : keys){ 
-			String val = head.get(key);
+			String val = headers.get(key);
 			sb.append(key+": "+val+"\r\n");
 		}
 		sb.append("\r\n");
@@ -637,7 +637,7 @@ public class Message {
 		int headLen = idx + 1;
 		Message msg = new Message();
 		msg.decodeHeaders(data, 0, headLen);
-		String contentLength = msg.getHead(Message.CONTENT_LENGTH);
+		String contentLength = msg.getHeader(Message.CONTENT_LENGTH);
 		if(contentLength == null){ //just head 
 			return msg;
 		}
@@ -695,7 +695,7 @@ public class Message {
 	public void writeTo(OutputStream out) throws IOException{
 		writeHttpLine(out);
 		out.write(CLCR);
-		Iterator<Entry<String, String>> it = head.entrySet().iterator();
+		Iterator<Entry<String, String>> it = headers.entrySet().iterator();
 		while(it.hasNext()){
 			Entry<String, String> kv = it.next();
 			out.write(kv.getKey().getBytes());
@@ -722,8 +722,8 @@ public class Message {
             if (sep >= 0) {
             	String key = e.substring(0, sep).trim().toLowerCase();
             	String val = e.substring(sep + 1).trim(); 
-            	if(!this.head.containsKey(key)){
-            		this.head.put(key, val);
+            	if(!this.headers.containsKey(key)){
+            		this.headers.put(key, val);
             	}
             }  
         }  

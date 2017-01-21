@@ -34,8 +34,8 @@ public class TcpServer implements Server {
 	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 
 	
 	protected CodecInitializer codecInitializer; 
-	protected EventDriver ioDriver;
-	protected boolean ownIoDriver; 
+	protected EventDriver eventDriver;
+	protected boolean ownEventDriver; 
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> serverMap = new ConcurrentHashMap<Integer, ServerInfo>();
   
@@ -44,20 +44,20 @@ public class TcpServer implements Server {
 	}
 	
 	public TcpServer(EventDriver driver){ 
-		this.ioDriver = driver; 
-		if (this.ioDriver == null) {
-			this.ioDriver = new EventDriver();
-			this.ownIoDriver = true;
+		this.eventDriver = driver; 
+		if (this.eventDriver == null) {
+			this.eventDriver = new EventDriver();
+			this.ownEventDriver = true;
 		} else {
-			this.ownIoDriver = false;
+			this.ownEventDriver = false;
 		} 
 	} 
 	
 	@Override
 	public void close() throws IOException {
-		if(ownIoDriver && ioDriver != null){
-			ioDriver.close();
-			ioDriver = null;
+		if(ownEventDriver && eventDriver != null){
+			eventDriver.close();
+			eventDriver = null;
 		}
 	} 
 	 
@@ -75,8 +75,8 @@ public class TcpServer implements Server {
 
 	@Override
 	public void start(final String host, final int port, IoAdaptor ioAdaptor) {
-		EventLoopGroup bossGroup = (EventLoopGroup)ioDriver.getGroup();
-		EventLoopGroup workerGroup = (EventLoopGroup)ioDriver.getWorkerGroup(); 
+		EventLoopGroup bossGroup = (EventLoopGroup)eventDriver.getGroup();
+		EventLoopGroup workerGroup = (EventLoopGroup)eventDriver.getWorkerGroup(); 
 		if(workerGroup == null){
 			workerGroup = bossGroup;
 		} 
@@ -114,7 +114,7 @@ public class TcpServer implements Server {
 	}
 	
 	public EventDriver getEventDriver() {
-		return this.ioDriver;
+		return this.eventDriver;
 	}
 	
 	public void codec(CodecInitializer codecInitializer) {
@@ -146,9 +146,9 @@ public class TcpServer implements Server {
 		@Override
 		protected void initChannel(SocketChannel ch) throws Exception {  
 			ChannelPipeline p = ch.pipeline(); 
-			int timeout = ioDriver.getIdleTimeInSeconds();
+			int timeout = eventDriver.getIdleTimeInSeconds();
 			p.addLast(new IdleStateHandler(0, 0, timeout));
-			SslContext sslCtx = ioDriver.getSslContext();
+			SslContext sslCtx = eventDriver.getSslContext();
 			if(sslCtx != null){
 				p.addLast(sslCtx.newHandler(ch.alloc()));
 			}

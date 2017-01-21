@@ -64,7 +64,7 @@ public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message>
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 
-		for (Entry<String, String> e : msg.getHead().entrySet()) {
+		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
 			httpMsg.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
 		if (msg.getBody() != null) {
@@ -95,7 +95,7 @@ public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message>
 		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
-			msg.setHead(e.getKey().toLowerCase(), e.getValue());
+			msg.setHeader(e.getKey().toLowerCase(), e.getValue());
 		}
 
 		if (httpMsg instanceof HttpRequest) {

@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSON;
+
 public class JsonUtil {
 	private static Method fastjsonMethod;
 	
@@ -22,7 +24,7 @@ public class JsonUtil {
 		}
 	}
 	
-	public static String toJson(Object value) {
+	public static String toJSONString(Object value) {
 		if(fastjsonMethod != null){
 			try {
 				return (String)fastjsonMethod.invoke(null, value);
@@ -33,9 +35,9 @@ public class JsonUtil {
 		return JsonWriter.toJson(value);
 	}
 	
-	public static void main(String[] args){
-		System.out.println(JsonUtil.toJson("xx"));
-	}
+	public static <T> T parseObject(String jsonString, Class<T> clazz) {
+		return JSON.parseObject(jsonString, clazz);
+	} 
 }
 
 

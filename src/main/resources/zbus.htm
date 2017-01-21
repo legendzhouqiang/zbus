@@ -95,8 +95,8 @@ $.get('/info',function(data){
 	$("#version").text(data); 
 });
 
-$.getJSON('/query_topic',function(serverInfo){   
-    $.each(serverInfo.topicMap, function(key, topic){  
+$.getJSON('/query_topic',function(topicMap){   
+    $.each(topicMap, function(key, topic){  
     	if(key=='@type') return; 
     	var link = "/query_topic/?topic=" + topic.topicName;
     	var op = ""; 

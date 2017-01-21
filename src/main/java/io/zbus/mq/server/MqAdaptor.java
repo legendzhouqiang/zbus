@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+ 
 
 import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
@@ -35,6 +36,10 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private final MqServer mqServer;
 	private final MqServerConfig config;  
 	
+	
+	private final TrackReport trackReport;
+	private final TrackTable trackTable;
+	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
  
@@ -45,15 +50,26 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
+		this.trackTable = new TrackTable(this, mqServer.getServerAddr());
+		this.trackReport = mqServer.getTrackReport();
 		
+		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 
 		registerHandler(Protocol.CONSUME, consumeHandler);  
 		registerHandler(Protocol.ROUTE, routeHandler); 
 		
+		//Topic/ConsumerGroup 
 		registerHandler(Protocol.DECLARE_TOPIC, declareTopicHandler); 
 		registerHandler(Protocol.QUERY_TOPIC, queryTopicHandler);
 		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
 		
+		//Tracker
+		registerHandler(Protocol.TRACK_QUERY, trackQueryHandler); 
+		registerHandler(Protocol.TRACK_PUB, trackPubHandler);
+		registerHandler(Protocol.TRACK_SUB, trackSubHandler); 
+		
+		
+		//Monitor/Management
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.JAVASCRIPT, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
@@ -61,6 +77,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.INFO, infoHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
+		
+		
 		
 		//TODO backward compatible
 		registerHandler("create_mq", declareTopicHandler);
@@ -108,8 +126,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			} 
 			
 			final boolean ack = msg.isAck();  
-			msg.removeHead(Protocol.COMMAND);
-			msg.removeHead(Protocol.ACK); 
+			msg.removeHeader(Protocol.COMMAND);
+			msg.removeHeader(Protocol.ACK); 
 			Long ttl = msg.getTtl();
 			if(ttl != null){
 				try{ 
@@ -164,7 +182,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			String topic = sess.attr(Protocol.TOPIC);
 			if(!msg.getTopic().equals(topic)){
 				sess.attr(Protocol.TOPIC, mq.getName()); //mark
-				mqServer.pubEntryUpdate(mq); //notify TrackServer
+				
+				trackReport.reportUpdate(mq.getTopicInfo()); 
 			} 
 		}
 	}; 
@@ -181,14 +200,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				log.warn("Missing target %s", recver); 
 				return; //just ignore
 			} 
-			msg.removeHead(Protocol.ACK);
-			msg.removeHead(Protocol.RECVER);
-			msg.removeHead(Protocol.COMMAND);
+			msg.removeHeader(Protocol.ACK);
+			msg.removeHeader(Protocol.RECVER);
+			msg.removeHeader(Protocol.COMMAND);
 			
 			String status = "200";
 			if(msg.getOriginStatus() != null){
 				status = msg.getOriginStatus(); 
-				msg.removeHead(Protocol.ORIGIN_STATUS);
+				msg.removeHeader(Protocol.ORIGIN_STATUS);
 			} 
 			msg.setStatus(status);
 			
@@ -208,7 +227,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				ReplyKit.reply403(msg, sess);
 				return;
 			}
-			String mqName = msg.getHead("mq_name", "");
+			String mqName = msg.getHeader("mq_name", "");
 			mqName = mqName.trim();
 			if("".equals(mqName)){
 				msg.setBody("Missing mq_name");
@@ -240,9 +259,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		
 			String topic = msg.getTopic();
 			if(topic == null){ //TODO backward compatible
-				topic = msg.getHead("mq");
+				topic = msg.getHeader("mq");
 				if(topic == null){
-					topic = msg.getHead("mq_name", "");
+					topic = msg.getHeader("mq_name", "");
 				}
 			} 
 			topic = topic.trim();
@@ -269,7 +288,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			}
     			try {
 					mq.declareConsumerGroup(ctrl);
-					mqServer.pubEntryUpdate(mq);
+					trackReport.reportUpdate(mq.getTopicInfo()); 
 					
 					ReplyKit.reply200(msg, sess);
 					if(newMq){
@@ -310,7 +329,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg = new Message();
 			msg.setStatus("200");
 			msg.setId(msgId);
-			msg.setHead("content-type", "text/html");
+			msg.setHeader("content-type", "text/html");
 			String body = FileUtil.loadFileContent("zbus.htm");
 			if ("".equals(body)) {
 				body = "<strong>zbus.htm file missing</strong>";
@@ -349,7 +368,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/js/", msg.getUrl());
 			if("200".equals(res.getStatus())){
-				res.setHead("content-type", "application/javascript");
+				res.setHeader("content-type", "application/javascript");
 			}
 			sess.write(res); 
 		}
@@ -359,7 +378,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/css/", msg.getUrl());
 			if("200".equals(res.getStatus())){
-				res.setHead("content-type", "text/css");
+				res.setHeader("content-type", "text/css");
 			} 
 			sess.write(res);
 		}
@@ -370,20 +389,20 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			String json = "";
 			if(msg.getTopic() == null){
 				ServerInfo info = getServerInfo();
-				json = JsonUtil.toJson(info);
+				json = JsonUtil.toJSONString(info.topicMap);
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 
 					return;
 				} else {
-					json = JsonUtil.toJson(mq.getTopicInfo());
+					json = JsonUtil.toJSONString(mq.getTopicInfo());
 				}
 			}
 
 			Message data = new Message();
 			data.setStatus("200");
 			data.setId(msg.getId());
-			data.setHead("content-type", "application/json");
+			data.setHeader("content-type", "application/json");
 			data.setBody(json);
 			sess.write(data);
 		}
@@ -396,6 +415,38 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
+	
+	private MessageHandler trackQueryHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException { 
+			Map<String, ServerInfo> table = trackTable.buildServerTable();
+			msg.setBody(JsonUtil.toJSONString(table));
+			ReplyKit.reply200WithBody(msg, session);
+		}
+	};
+	
+	private MessageHandler trackPubHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException {  
+			try{
+				trackTable.update(msg);
+				ReplyKit.reply200(msg, session);
+			} catch (Exception e) { 
+				ReplyKit.reply400(msg, session);
+			} 
+		}
+	};
+	
+	private MessageHandler trackSubHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException { 
+			
+		}
+	}; 
+	
 	protected void cleanSession(Session sess) throws IOException{
 		super.cleanSession(sess);
 		
@@ -406,7 +457,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		if(mq == null) return; 
 		mq.cleanSession(sess);
 		
-		mqServer.pubEntryUpdate(mq); 
+		trackReport.reportUpdate(mq.getTopicInfo());  
 	} 
 	
 	private boolean auth(Message msg){ 
@@ -442,15 +493,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return pathname.isDirectory();
 			}
 		});
+		
 		if (mqDirs != null && mqDirs.length > 0) {
 			for (File mqDir : mqDirs) {
 				MessageQueue mq = new DiskQueue(mqDir);
 				mqTable.put(mqDir.getName(), mq);
-				log.info("Topic = %s loaded", mqDir.getName());
-				
-				mqServer.pubEntryUpdate(mq);
+				log.info("Topic = %s loaded", mqDir.getName()); 
 			}
 		} 
+		
+		trackReport.reportUpdate(getServerInfo()); 
 	}
     
     public void close() throws IOException {     
@@ -519,7 +571,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String topic = msg.getTopic();
 		if(topic == null){ 
-			topic = msg.getHead("mq"); //TODO backward compatible
+			topic = msg.getHeader("mq"); //TODO backward compatible
 		}
 		MessageQueue mq = mqTable.get(topic); 
     	if(mq == null){

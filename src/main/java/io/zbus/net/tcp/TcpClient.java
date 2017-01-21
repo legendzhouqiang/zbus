@@ -235,8 +235,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 				throw new IOException(msg);
 			}
 		}  
-		session.writeAndFlush(req); 
-    	
+		session.writeAndFlush(req);  
     } 
 	
 	 

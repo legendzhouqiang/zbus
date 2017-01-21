@@ -50,13 +50,13 @@ public class Consumer extends MqAdmin implements Closeable {
 			if (res == null)
 				return res;
 			res.setId(res.getOriginId());
-			res.removeHead(Protocol.ORIGIN_ID);
+			res.removeHeader(Protocol.ORIGIN_ID);
 			if ("200".equals(res.getStatus())){
 				String originUrl = res.getOriginUrl();
 				if(originUrl == null){
 					originUrl = "/";
 				} else {
-					res.removeHead(Protocol.ORIGIN_URL);
+					res.removeHeader(Protocol.ORIGIN_URL);
 				}
 				res.setUrl(originUrl);
 				return res;

@@ -1,7 +1,9 @@
 package io.zbus.mq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Protocol {  
@@ -32,6 +34,10 @@ public class Protocol {
 	
 	//High Availability (HA)
 	public static final String TRACK_QUERY   = "track_query";  
+	public static final String TRACK_PUB     = "track_pub"; 
+	public static final String TRACK_SUB     = "track_sub";   
+	
+	
 	
 	//Simple HTTP server command
 	public static final String PING          = "ping"; //ping server, returning back server time
@@ -75,6 +81,10 @@ public class Protocol {
 	public static final String TOKEN   = "token";
 	
 	
+	public static final String TRACK_TYPE   = "track_type"; 
+	public static final String TRACK_TOPIC  = "track_topic";
+	public static final String TRACK_SERVER = "track_server";
+	
 	public static final int FLAG_RPC    	    = 1<<0; 
 	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
@@ -82,7 +92,7 @@ public class Protocol {
 	  
 	public static class ServerInfo{
 		public String serverAddress;
-		public Map<String, TopicInfo> topicMap;
+		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();
 	}
 	
 	public static class TopicInfo {
@@ -93,7 +103,7 @@ public class Protocol {
 		public long messageCount;
 		public int consumerCount;
 		public int consumerGroupCount;
-		public List<ConsumeGroupInfo> consumeGroupList;
+		public List<ConsumeGroupInfo> consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		
 		public String creator;
 		public long createdTime;
@@ -107,7 +117,7 @@ public class Protocol {
 		public int flag; 
 		public long messageCount;
 		public int consumerCount;
-		public List<String> consumerList;
+		public List<String> consumerList = new ArrayList<String>();
 		
 		public String creator;
 		public long createdTime;

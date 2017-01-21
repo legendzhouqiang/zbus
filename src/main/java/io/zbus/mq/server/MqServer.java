@@ -1,25 +1,3 @@
-/**
- * The MIT License (MIT)
- * Copyright (c) 2009-2015 HONG LEIMING
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package io.zbus.mq.server;
 
 import static io.zbus.util.ConfigUtil.isBlank;
@@ -50,25 +28,23 @@ public class MqServer implements Closeable{
 	private final Map<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
+	
+	
 	private MqServerConfig config;   
 	private String serverAddr = "";    
-	private EventDriver eventDriver;
-	private boolean ownEventDriver = false;
+	private EventDriver eventDriver; 
 	
-	private MessageServer httpServer;// you may add WebSocket Server
+	private MessageServer httpServer;
 	private MqAdaptor mqAdaptor; 
+	private TrackReport trackReport;
 	
 	public MqServer(){
-		this(new MqServerConfig()); //using all defaults
+		this(new MqServerConfig());
 	}
 	
 	public MqServer(MqServerConfig config){  
-		this.config = config;  
-		eventDriver = config.getEventDriver();
-		if(eventDriver == null){
-			eventDriver = new EventDriver();
-			ownEventDriver = true;
-		} 
+		this.config = config;   
+		this.eventDriver = new EventDriver();  
 		
 		if(eventDriver.getSslContext() == null){
 			if (!isBlank(config.sslCertificateFile) && !isBlank(config.sslPrivateKeyFile)){ 
@@ -103,25 +79,30 @@ public class MqServer implements Closeable{
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		
-		mqAdaptor = new MqAdaptor(this); 
+		trackReport = new TrackReport(config.trackServerList, eventDriver);
+		mqAdaptor = new MqAdaptor(this);   
+	} 
+	
+	public void start() throws Exception{  
+		log.info("zbus starting...");
+		long start = System.currentTimeMillis();
+		
+		if(config.trackServerList != null && !config.trackServerList.isEmpty()){ 
+			trackReport.start();
+		}
+		
 		mqAdaptor.setVerbose(config.verbose);
 		try {
 			mqAdaptor.loadMQ();
 		} catch (IOException e) {
 			log.error("LoadMQ error: " + e);
 		} 
-	} 
-	
-	public void start() throws Exception{  
-		long start = System.currentTimeMillis();
-		httpServer = new MessageServer(eventDriver); 
-		eventDriver = httpServer.getEventDriver();
 		
+		httpServer = new MessageServer(eventDriver);   
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor);  
 		 
 		long end = System.currentTimeMillis();
-		log.info("Zbus started sucessfully in %d ms", (end-start));
-		
+		log.info("zbus started sucessfully in %d ms", (end-start)); 
 	}
 	 
 	@Override
@@ -131,15 +112,10 @@ public class MqServer implements Closeable{
 		if(httpServer != null){
 			httpServer.close();
 		} 
-		if(ownEventDriver && eventDriver != null){
-			eventDriver.close();
-			eventDriver = null;
+		if(eventDriver != null){
+			eventDriver.close(); 
 		}
-	} 
-     
-    public void pubEntryUpdate(MessageQueue mq){
-    	 //TODO
-    }  
+	}  
     
 	public Map<String, MessageQueue> getMqTable() {
 		return mqTable;
@@ -163,6 +139,10 @@ public class MqServer implements Closeable{
 	
 	public EventDriver getEventDriver() {
 		return eventDriver;
+	} 
+
+	public TrackReport getTrackReport() {
+		return trackReport;
 	}
 
 	public static void main(String[] args) throws Exception {

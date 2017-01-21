@@ -122,7 +122,7 @@ public class ConfigUtil {
 	
 	public static String valueOf(String value, String defaultValue){
 		if(value == null) return defaultValue;
-		return value;
+		return value.trim();
 	}
 	public static int valueOf(String value, int defaultValue){
 		if(value == null) return defaultValue;
