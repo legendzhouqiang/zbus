@@ -18,8 +18,15 @@ import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
-public class TrackReport implements Closeable{  
-	private static final Logger log = LoggerFactory.getLogger(TrackReport.class);
+/**
+ * 
+ * Publish current MqServer status to other MqServers(Tracker)
+ * 
+ * @author Rushmore
+ *
+ */
+public class TrackPub implements Closeable{  
+	private static final Logger log = LoggerFactory.getLogger(TrackPub.class);
 	
 	private Set<MessageClient> allTrackers = new HashSet<MessageClient>();
 	private Set<MessageClient> healthyTrackers = new HashSet<MessageClient>();
@@ -27,7 +34,7 @@ public class TrackReport implements Closeable{
 	private EventDriver eventDriver;
 	private final String trackServerList;
 	
-	public TrackReport(String trackServerList, EventDriver driver) {  
+	public TrackPub(String trackServerList, EventDriver driver) {  
 		this.trackServerList = trackServerList;
 		this.eventDriver = driver; 
     }

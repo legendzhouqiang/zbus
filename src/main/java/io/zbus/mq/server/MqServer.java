@@ -36,7 +36,7 @@ public class MqServer implements Closeable{
 	
 	private MessageServer httpServer;
 	private MqAdaptor mqAdaptor; 
-	private TrackReport trackReport;
+	private TrackPub trackPub;
 	
 	public MqServer(){
 		this(new MqServerConfig());
@@ -79,7 +79,7 @@ public class MqServer implements Closeable{
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		
-		trackReport = new TrackReport(config.trackServerList, eventDriver);
+		trackPub = new TrackPub(config.trackServerList, eventDriver);
 		mqAdaptor = new MqAdaptor(this);   
 	} 
 	
@@ -88,7 +88,7 @@ public class MqServer implements Closeable{
 		long start = System.currentTimeMillis();
 		
 		if(config.trackServerList != null && !config.trackServerList.isEmpty()){ 
-			trackReport.start();
+			trackPub.start();
 		}
 		
 		mqAdaptor.setVerbose(config.verbose);
@@ -141,8 +141,8 @@ public class MqServer implements Closeable{
 		return eventDriver;
 	} 
 
-	public TrackReport getTrackReport() {
-		return trackReport;
+	public TrackPub getTrackPub() {
+		return trackPub;
 	}
 
 	public static void main(String[] args) throws Exception {

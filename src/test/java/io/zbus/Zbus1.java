@@ -5,8 +5,7 @@ import java.io.InputStream;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
 
-public class Zbus1 {  
-	 
+public class Zbus1 {   
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {     
