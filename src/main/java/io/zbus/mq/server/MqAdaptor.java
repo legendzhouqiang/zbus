@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
- 
 
 import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
@@ -34,10 +33,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	
 	private boolean verbose = false;    
 	private final MqServer mqServer;
-	private final MqServerConfig config;   
-	
-	private final TrackerPub trackPub;
-	private final Tracker tracker;
+	private final MqServerConfig config;    
+	private final TrackService tracker;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
@@ -49,8 +46,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
-		this.tracker = new Tracker(this, mqServer.getServerAddr(), mqServer.getEventDriver());
-		this.trackPub = mqServer.getTrackerPub();
+		this.tracker = new TrackService(mqServer, config.getTrackServerList()); 
 		
 		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 
@@ -182,7 +178,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(!msg.getTopic().equals(topic)){
 				sess.attr(Protocol.TOPIC, mq.getName()); //mark
 				
-				trackPub.reportUpdate(mq.getTopicInfo()); 
+				tracker.publish(mq.getTopicInfo()); 
 			} 
 		}
 	}; 
@@ -287,7 +283,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			}
     			try {
 					mq.declareConsumerGroup(ctrl);
-					trackPub.reportUpdate(mq.getTopicInfo()); 
+					tracker.publish(mq.getTopicInfo()); 
 					
 					ReplyKit.reply200(msg, sess);
 					if(newMq){
@@ -418,7 +414,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			Map<String, ServerInfo> table = tracker.buildServerTable();
+			Map<String, ServerInfo> table = tracker.queryServerTable();
 			msg.setBody(JsonUtil.toJSONString(table));
 			ReplyKit.reply200WithBody(msg, session);
 		}
@@ -429,7 +425,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
-				tracker.update(msg);
+				tracker.publish(msg, session);
 				ReplyKit.reply200(msg, session);
 			} catch (Exception e) { 
 				ReplyKit.reply400(msg, session);
@@ -455,7 +451,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		if(mq == null) return; 
 		mq.cleanSession(sess);
 		
-		trackPub.reportUpdate(mq.getTopicInfo());  
+		tracker.publish(mq.getTopicInfo());  
 	} 
 	
 	private boolean auth(Message msg){ 
@@ -498,9 +494,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				mqTable.put(mqDir.getName(), mq);
 				log.info("Topic = %s loaded", mqDir.getName()); 
 			}
-		} 
-		
-		trackPub.reportUpdate(getServerInfo()); 
+		}   
 	}
     
     public void close() throws IOException {     

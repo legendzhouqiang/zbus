@@ -28,15 +28,13 @@ public class MqServer implements Closeable{
 	private final Map<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
-	
-	
 	private MqServerConfig config;   
 	private String serverAddr = "";    
 	private EventDriver eventDriver; 
 	
 	private MessageServer httpServer;
-	private MqAdaptor mqAdaptor; 
-	private TrackerPub trackerPub;
+	private MqAdaptor mqAdaptor;  
+	private TrackService trackService;
 	
 	public MqServer(){
 		this(new MqServerConfig());
@@ -78,25 +76,22 @@ public class MqServer implements Closeable{
 		    	}
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
-		
-		trackerPub = new TrackerPub(config.trackServerList, eventDriver);
+		 
 		mqAdaptor = new MqAdaptor(this);   
+		trackService = new TrackService(this, config.getTrackServerList(), true);//TODO configure 
 	} 
 	
 	public void start() throws Exception{  
 		log.info("zbus starting...");
-		long start = System.currentTimeMillis();
-		
-		if(config.trackServerList != null && !config.trackServerList.isEmpty()){ 
-			trackerPub.start();
-		}
+		long start = System.currentTimeMillis(); 
 		
 		mqAdaptor.setVerbose(config.verbose);
 		try {
 			mqAdaptor.loadMQ();
 		} catch (IOException e) {
 			log.error("LoadMQ error: " + e);
-		} 
+		}   
+		trackService.start();
 		
 		httpServer = new MessageServer(eventDriver);   
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor);  
@@ -139,11 +134,7 @@ public class MqServer implements Closeable{
 	
 	public EventDriver getEventDriver() {
 		return eventDriver;
-	} 
-
-	public TrackerPub getTrackerPub() {
-		return trackerPub;
-	}
+	}  
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig(); 
