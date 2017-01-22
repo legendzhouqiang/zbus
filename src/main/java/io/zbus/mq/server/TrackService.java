@@ -53,7 +53,9 @@ public class TrackService implements Closeable{
 		this(mqServer, outboundServerAddressList, true);
 	}
 	
-	
+	/**
+	 * Trying to connect to trackServers(zbus mqserver)
+	 */
 	public void start(){
 		if(outboundServerAddressList == null || outboundServerAddressList.isEmpty()) return;
 		
@@ -85,8 +87,16 @@ public class TrackService implements Closeable{
 	
 	@Override
 	public void close() throws IOException {
-		
+		for(MessageClient client : allOutboundServerList){
+			client.close();
+		}
+		allOutboundServerList.clear();
+		for(MessageClient client : healthyInboundServerMap.values()){
+			client.close();
+		}
+		healthyInboundServerMap.clear();
 	}
+	
 	
 	public Map<String, ServerInfo> queryServerTable(){
 		Map<String, ServerInfo> map = new HashMap<String, ServerInfo>(serverMap);
@@ -113,6 +123,10 @@ public class TrackService implements Closeable{
 	} 
 	
 	private void publishToOutboundServers(final ServerInfo serverInfo){
+		if(healthyOutboundServerMap.isEmpty()){
+			return;
+		}
+		
 		Message message = new Message(); 
 		message.setCommand(Protocol.TRACK_PUB);
 		message.setHeader(Protocol.TRACK_TYPE, Protocol.TRACK_SERVER);
