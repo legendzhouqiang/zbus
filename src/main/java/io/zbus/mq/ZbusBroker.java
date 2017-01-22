@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import io.zbus.mq.broker.JvmBroker;
-import io.zbus.mq.broker.MultiBroker;
-import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.broker.TrackBroker;
+import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.server.MqServer;
  
 public class ZbusBroker implements Broker{
@@ -29,31 +28,15 @@ public class ZbusBroker implements Broker{
 			}
 			support = new JvmBroker((MqServer)config.getServerInJvm());
 			return;
-		}
-		
-		
-		boolean tracker = false;
-		String trackerPrefix = "tracker://";
-		String defaultPrefix = "mq://";
-		if(brokerAddress.startsWith("tracker://")){ 
-			brokerAddress = brokerAddress.substring(trackerPrefix.length());
-			tracker = true;
-		}  
-		if(brokerAddress.startsWith("mq://")){ 
-			brokerAddress = brokerAddress.substring(defaultPrefix.length());
-			tracker = false;
-		}  
+		} 
+		 
 		brokerAddress = brokerAddress.trim();
 		config.setBrokerAddress(brokerAddress); 
 		
-		if(tracker){
-			support = new TrackBroker(config);  
-		} else {
-			if(brokerAddress.split("[,; ]").length > 1){
-				support = new MultiBroker(config);
-			} else {
-				support = new SingleBroker(config);
-			}
+		if(brokerAddress.split("[,; ]").length > 1){
+			support = new TrackBroker(config);
+		} else { 
+			support = new SingleBroker(config); 
 		}
 	}
 	 

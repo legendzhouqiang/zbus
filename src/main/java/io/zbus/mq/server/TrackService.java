@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.Message;
+import io.zbus.mq.MessageCallback;
+import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.net.MessageClient;
@@ -18,6 +20,7 @@ import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
+import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
@@ -93,12 +96,35 @@ public class TrackService implements Closeable{
 		return map;
 	}
 	
+	
 	private void publishToSubscribers(final ServerInfo serverInfo){
+		Message message = new Message();
+		message.setHeader(Protocol.TRACK_TYPE, Protocol.TRACK_SERVER);
+		message.setJsonBody(JsonUtil.toJSONString(serverInfo));
 		
-	}
+		for(Session session : subscribers){
+			try{
+				session.writeAndFlush(message);
+			} catch (Exception e) { 
+				log.error(e.getMessage(), e);
+				subscribers.remove(session);
+			}
+		}
+	} 
 	
 	private void publishToOutboundServers(final ServerInfo serverInfo){
+		Message message = new Message(); 
+		message.setCommand(Protocol.TRACK_PUB);
+		message.setHeader(Protocol.TRACK_TYPE, Protocol.TRACK_SERVER);
+		message.setJsonBody(JsonUtil.toJSONString(serverInfo));
 		
+		for(MessageClient client : healthyOutboundServerMap.values()){
+			try {
+				client.invokeAsync(message,(MessageCallback)null);
+			} catch (IOException e) { 
+				log.error(e.getMessage(), e);
+			} 
+		}
 	}
 	
 	private void serverLeave(final String serverAddress){
