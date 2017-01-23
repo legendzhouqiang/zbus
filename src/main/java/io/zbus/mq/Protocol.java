@@ -104,6 +104,8 @@ public class Protocol {
 		public String publisher;
 		public long timestamp;
 		
+		public boolean live = true; //false means topic removed
+		
 		public String serverAddress;
 		public String topicName;
 		public int flag; 
