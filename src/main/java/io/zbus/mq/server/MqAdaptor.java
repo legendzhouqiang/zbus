@@ -282,7 +282,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	    			mqTable.put(topic, mq);
     			}
     			try {
-					mq.declareConsumerGroup(ctrl);
+					mq.declareConsumerGroup(ctrl); 
 					tracker.publish(mq.getTopicInfo()); 
 					
 					ReplyKit.reply200(msg, sess);
@@ -292,7 +292,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					log.info("MQ Declared: %s", ctrl); 
 				} catch (Exception e) { 
 					log.error(e.getMessage(), e);
-					ReplyKit.reply500(msg, e, sess);
+					ReplyKit.reply500(msg, e, sess); //TODO client update to handle 500
 				} 
     		}
 		}

@@ -252,6 +252,9 @@ public class TrackService implements Closeable{
 	}
 	
 	public void publish(final TopicInfo info){ 
+		if(info.serverAddress == null){
+			info.serverAddress = thisServerAddress;
+		}
 		if(!info.live){
 			topicRemove(info);
 			return;
