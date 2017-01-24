@@ -34,7 +34,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
-	private final TrackService tracker;
+	private final TrackService trackService;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
@@ -46,7 +46,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
-		this.tracker = new TrackService(mqServer, config.getTrackServerList()); 
+		this.trackService = mqServer.getTrackService();
 		
 		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 
@@ -178,7 +178,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(!msg.getTopic().equals(topic)){
 				sess.attr(Protocol.TOPIC, mq.getName()); //mark
 				
-				tracker.publish(mq.getTopicInfo()); 
+				trackService.publish(mq.getTopicInfo()); 
 			} 
 		}
 	}; 
@@ -283,7 +283,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			}
     			try {
 					mq.declareConsumerGroup(ctrl); 
-					tracker.publish(mq.getTopicInfo()); 
+					trackService.publish(mq.getTopicInfo()); 
 					
 					ReplyKit.reply200(msg, sess);
 					if(newMq){
@@ -414,7 +414,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			Map<String, ServerInfo> table = tracker.queryServerTable();
+			Map<String, ServerInfo> table = trackService.queryServerTable();
 			msg.setBody(JsonUtil.toJSONString(table));
 			ReplyKit.reply200WithBody(msg, session);
 		}
@@ -426,12 +426,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
 				boolean ack = msg.isAck();
-				tracker.publish(msg, session);
+				trackService.publish(msg, session);
 				if(ack){
 					ReplyKit.reply200(msg, session);
 				}
 			} catch (Exception e) { 
-				ReplyKit.reply400(msg, session);
+				ReplyKit.reply500(msg, e, session);
 			} 
 		}
 	};
@@ -440,7 +440,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			tracker.subscribe(msg, session);
+			trackService.subscribe(msg, session);
 		}
 	}; 
 	
@@ -454,7 +454,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		if(mq == null) return; 
 		mq.cleanSession(sess);
 		
-		tracker.publish(mq.getTopicInfo());  
+		trackService.publish(mq.getTopicInfo());  
 	} 
 	
 	private boolean auth(Message msg){ 

@@ -76,9 +76,10 @@ public class MqServer implements Closeable{
 		    	}
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
-		 
-		mqAdaptor = new MqAdaptor(this);   
+		  
 		trackService = new TrackService(this, config.getTrackServerList(), true);//TODO configure 
+		//trackService should be ahead of mqAdaptor to initialize
+		mqAdaptor = new MqAdaptor(this);   
 	} 
 	
 	public void start() throws Exception{  
@@ -134,7 +135,12 @@ public class MqServer implements Closeable{
 	
 	public EventDriver getEventDriver() {
 		return eventDriver;
-	}  
+	} 
+	
+
+	public TrackService getTrackService() {
+		return trackService;
+	}
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig(); 
