@@ -90,38 +90,31 @@ public class Protocol {
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
 	  
-	public static class ServerInfo{
-		public String publisher;
-		public long timestamp;
-		
-		public boolean live = true; //false means server down
-		
-		public String serverAddress;
+	public static class ServerInfo extends TrackItem{   
 		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();
 	}
 	
-	public static class TopicInfo {
-		public String publisher;
-		public long timestamp;
-		
-		public boolean live = true; //false means topic removed
-		
-		public String serverAddress;
+	public static class TopicInfo extends TrackItem{ 
 		public String topicName;
 		public int flag; 
 		
 		public long messageCount;
 		public int consumerCount;
 		public int consumerGroupCount;
-		public List<ConsumeGroupInfo> consumeGroupList = new ArrayList<ConsumeGroupInfo>();
+		public List<ConsumerGroupInfo> consumeGroupList = new ArrayList<ConsumerGroupInfo>();
 		
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime;
 	}  
 	
-	public static class ConsumeGroupInfo{
-		public String serverAddress;
+	public static class TrackItem{
+		public String serverAddress;  
+		public long publishTimestamp = System.currentTimeMillis(); 
+		public boolean live = true;    
+	}
+	
+	public static class ConsumerGroupInfo{ 
 		public String topicName;
 		public String groupName;
 		public int flag; 
@@ -132,5 +125,6 @@ public class Protocol {
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime; 
-	}
+	} 
+	
 }

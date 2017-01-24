@@ -425,8 +425,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
+				boolean ack = msg.isAck();
 				tracker.publish(msg, session);
-				ReplyKit.reply200(msg, session);
+				if(ack){
+					ReplyKit.reply200(msg, session);
+				}
 			} catch (Exception e) { 
 				ReplyKit.reply400(msg, session);
 			} 
@@ -437,7 +440,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			
+			tracker.subscribe(msg, session);
 		}
 	}; 
 	

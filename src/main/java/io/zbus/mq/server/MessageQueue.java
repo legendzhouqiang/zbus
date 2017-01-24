@@ -12,9 +12,7 @@ public interface MessageQueue {
 
 	void produce(Message message, Session session) throws IOException;
 	
-	void consume(Message message, Session session) throws IOException;  
-	
-	MessageQueue childMessageQueue();
+	void consume(Message message, Session session) throws IOException;   
 	
 	void declareConsumerGroup(ConsumerGroup ctrl) throws Exception;
 	

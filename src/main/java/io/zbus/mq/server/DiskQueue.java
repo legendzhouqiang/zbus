@@ -17,7 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
-import io.zbus.mq.Protocol.ConsumeGroupInfo;
+import io.zbus.mq.Protocol.ConsumerGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.disk.Index;
@@ -154,13 +154,7 @@ public class DiskQueue implements MessageQueue{
 		PullSession pull = new PullSession(session, message);
 		group.pullQ.offer(pull);  
 		dispatch(group);
-	}   
-	
-	@Override
-	public MessageQueue childMessageQueue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	}    
 	
 	private QueueReader findLatestReader(){ 
 		List<DiskConsumerGroup> readerList = new ArrayList<DiskConsumerGroup>(consumerGroups.values());
@@ -339,7 +333,7 @@ public class DiskQueue implements MessageQueue{
 		info.messageCount = remaining(name); 
 		info.consumerCount = consumerCount(name); 
 		info.consumerGroupCount = consumerGroups.size();
-		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
+		info.consumeGroupList = new ArrayList<ConsumerGroupInfo>();
 		for(DiskConsumerGroup group : consumerGroups.values()){
 			info.consumeGroupList.add(group.getConsumeGroupInfo());
 		}
@@ -373,8 +367,8 @@ public class DiskQueue implements MessageQueue{
 			reader.close(); 
 		} 
 		
-		public ConsumeGroupInfo getConsumeGroupInfo(){
-			ConsumeGroupInfo info = new ConsumeGroupInfo();
+		public ConsumerGroupInfo getConsumeGroupInfo(){
+			ConsumerGroupInfo info = new ConsumerGroupInfo(); 
 			info.consumerCount = pullSessions.size();
 			info.groupName = groupName;
 			info.consumerList = new ArrayList<String>();
