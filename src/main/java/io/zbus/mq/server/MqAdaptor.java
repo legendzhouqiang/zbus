@@ -60,7 +60,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		//Tracker
 		registerHandler(Protocol.TRACK_QUERY, trackQueryHandler); 
-		registerHandler(Protocol.TRACK_PUB, trackPubHandler);
+		registerHandler(Protocol.TRACK_PUB_SERVER, trackPubServerHandler);
+		registerHandler(Protocol.TRACK_PUB_TOPIC, trackPubTopicHandler);
 		registerHandler(Protocol.TRACK_SUB, trackSubHandler); 
 		
 		
@@ -420,13 +421,44 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler trackPubHandler = new MessageHandler() {
+	private MessageHandler trackPubServerHandler = new MessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
 				boolean ack = msg.isAck();
-				trackService.publish(msg, session);
+				ServerInfo info = JsonUtil.parseObject(msg.getBodyString(), ServerInfo.class); 
+				if(info.serverAddress == null){
+					ReplyKit.reply400(msg, session); 
+					return;
+				} 
+				
+				trackService.publish(info); 
+				
+				if(ack){
+					ReplyKit.reply200(msg, session);
+				}
+			} catch (Exception e) { 
+				ReplyKit.reply500(msg, e, session);
+			} 
+		}
+	};
+	
+	private MessageHandler trackPubTopicHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException {  
+			try{
+				boolean ack = msg.isAck();
+				TopicInfo info = JsonUtil.parseObject(msg.getBodyString(), TopicInfo.class);
+				
+				if(info.serverAddress == null){
+					ReplyKit.reply400(msg, session); 
+					return;
+				} 
+				
+				trackService.publish(info);
+				
 				if(ack){
 					ReplyKit.reply200(msg, session);
 				}

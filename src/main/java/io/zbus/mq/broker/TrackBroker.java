@@ -8,20 +8,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
+import io.zbus.mq.Message;
+import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.MqException;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.net.MessageClient;
+import io.zbus.net.Client.ConnectedHandler;
+import io.zbus.net.Client.DisconnectedHandler;
+import io.zbus.net.Client.MsgHandler;
 import io.zbus.net.EventDriver;
+import io.zbus.net.Session;
+import io.zbus.util.logging.Logger;
+import io.zbus.util.logging.LoggerFactory;
 
 public class TrackBroker implements Broker { 
+	private static final Logger log = LoggerFactory.getLogger(TrackBroker.class);
 	private Map<String, Broker> brokerMap = new ConcurrentHashMap<String, Broker>();  
 	private ServerSelector serverSelector = new DefaultServerSelector(); 
 	private RouteTable routeTable = new RouteTable();
-	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>();
-	
+	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver; 
 	private final BrokerConfig config;
+	 
+	private Map<String, MessageClient> trackSubscribers = new ConcurrentHashMap<String, MessageClient>(); 
 	 
 	
 	public TrackBroker(BrokerConfig config) throws IOException{ 
@@ -32,12 +42,44 @@ public class TrackBroker implements Broker {
 		for(String serverAddress : serverAddressList){
 			serverAddress = serverAddress.trim();
 			if(serverAddress.isEmpty()) continue;
-			registerServer(serverAddress);
+			subscribeToTracker(serverAddress);
 		}
 	}
 	
 	public TrackBroker(String brokerAddress) throws IOException{ 
 		this(new BrokerConfig(brokerAddress));
+	}
+	
+	private void subscribeToTracker(final String serverAddress){
+		final MessageClient client = new MessageClient(serverAddress, eventDriver);  
+		client.onDisconnected(new DisconnectedHandler() { 
+			@Override
+			public void onDisconnected() throws IOException { 
+				log.warn("Disconnected from tracker(%s)", serverAddress); 
+				client.ensureConnectedAsync(); 
+			}  
+		});
+		
+		client.onConnected(new ConnectedHandler() {
+			@Override
+			public void onConnected() throws IOException { 
+				log.info("Connected to tracker(%s)", serverAddress);  
+				Message req = new Message();
+				req.setCommand(Protocol.TRACK_SUB);
+				req.setAck(false); 
+				client.invokeAsync(req, (MessageCallback)null);
+			}
+		}); 
+		
+		client.onMessage(new MsgHandler<Message>() { 
+			@Override
+			public void handle(Message msg, Session session) throws IOException {  
+				//TODO
+			}
+		});
+		
+		client.ensureConnectedAsync();
+		trackSubscribers.put(serverAddress, client);
 	}
 	
 	
@@ -97,19 +139,7 @@ public class TrackBroker implements Broker {
 	} 
 	
 	@Override
-	public void registerServer(final String serverAddress) throws IOException { 
-		//TODO
-		onServerConnected(serverAddress);
-	}
-	
-	private Broker createBroker(String serverAddress) throws IOException{
-		BrokerConfig config = this.config.clone();
-		config.setBrokerAddress(serverAddress);
-		Broker broker = new SingleBroker(config);
-		return broker;
-	}
-	
-	private void onServerConnected(final String serverAddress) throws IOException{
+	public void registerServer(final String serverAddress) throws IOException {  
 		if(routeTable.serverList.contains(serverAddress)){
 			return;
 		} 
@@ -130,8 +160,8 @@ public class TrackBroker implements Broker {
 				}
 			});
 		}
-	}
-
+	} 
+	
 	@Override
 	public void unregisterServer(final String serverAddress) throws IOException { 
 		final Broker broker;
@@ -152,6 +182,15 @@ public class TrackBroker implements Broker {
 		}
 	}
 
+	
+	private Broker createBroker(String serverAddress) throws IOException{
+		BrokerConfig config = this.config.clone();
+		config.setBrokerAddress(serverAddress);
+		Broker broker = new SingleBroker(config);
+		return broker;
+	} 
+
+	
 	@Override
 	public void addServerListener(ServerNotifyListener listener) {
 		this.listeners.add(listener);
@@ -169,8 +208,7 @@ public class TrackBroker implements Broker {
 				broker.close();
 			}
 			brokerMap.clear();
-		} 
-		
+		}  
 		
 		eventDriver.close();
 	} 

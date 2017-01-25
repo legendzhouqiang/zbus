@@ -26,6 +26,13 @@ import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
+/**
+ * 
+ * TODO Add 1) Timer to pull table from inbounds
+ * 			2) Timer to push table to subscribers
+ * @author Rushmore
+ *
+ */
 public class TrackService implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(TrackService.class); 
 	private Map<String, ServerInfo> serverMap = new ConcurrentHashMap<String, ServerInfo>();
@@ -116,12 +123,11 @@ public class TrackService implements Closeable{
 	}
 	 
 	
-	private void publishToSubscribers(TrackItem info, String type){
+	private void publishToSubscribers(TrackItem info, String cmd){
 		if(subscribers.isEmpty()) return;
 		
 		Message message = new Message();
-		message.setCommand(Protocol.TRACK_PUB);
-		message.setHeader(Protocol.TRACK_TYPE, type);
+		message.setCommand(cmd); 
 		message.setJsonBody(JsonUtil.toJSONString(info));
 		for(Session session : subscribers){
 			try{
@@ -133,14 +139,13 @@ public class TrackService implements Closeable{
 		}
 	}  
 	
-	private void publishToOutboundServers(TrackItem info, String type){
+	private void publishToOutboundServers(TrackItem info, String cmd){
 		if(healthyOutboundServerMap.isEmpty()){
 			return;
 		}
 		
 		Message message = new Message(); 
-		message.setCommand(Protocol.TRACK_PUB);
-		message.setHeader(Protocol.TRACK_TYPE, type);
+		message.setCommand(cmd); 
 		message.setJsonBody(JsonUtil.toJSONString(info));
 		message.setAck(false);
 		for(Entry<String, MessageClient> e : healthyOutboundServerMap.entrySet()){
@@ -159,17 +164,16 @@ public class TrackService implements Closeable{
 	}
 	
 	private void publishToSubscribers(final ServerInfo serverInfo){
-		publishToSubscribers(serverInfo, Protocol.TRACK_SERVER);
+		publishToSubscribers(serverInfo, Protocol.TRACK_PUB_SERVER);
 	} 
 	
 	private void publishToSubscribers(final TopicInfo topicInfo){
-		publishToSubscribers(topicInfo, Protocol.TRACK_TOPIC); 
+		publishToSubscribers(topicInfo, Protocol.TRACK_PUB_TOPIC); 
 	}   
 	
 	private void publishToOutboundServer(MessageClient client , ServerInfo info){ 
 		Message message = new Message(); 
-		message.setCommand(Protocol.TRACK_PUB);
-		message.setHeader(Protocol.TRACK_TYPE, Protocol.TRACK_SERVER);
+		message.setCommand(Protocol.TRACK_PUB_SERVER); 
 		message.setJsonBody(JsonUtil.toJSONString(info)); 
 		message.setAck(false);
 		try {  
@@ -180,37 +184,53 @@ public class TrackService implements Closeable{
 	}
 	
 	private void publishToOutboundServers(ServerInfo serverInfo){
-		publishToOutboundServers(serverInfo, Protocol.TRACK_SERVER);
+		publishToOutboundServers(serverInfo, Protocol.TRACK_PUB_SERVER);
 	}
 	
 	private void publishToOutboundServers(TopicInfo topicInfo){
-		publishToOutboundServers(topicInfo, Protocol.TRACK_TOPIC);
+		publishToOutboundServers(topicInfo, Protocol.TRACK_PUB_TOPIC);
 	}
 	
 	
-	private void serverRemove(final ServerInfo info) {
-		//TODO filter duplicated updates
+	private void serverRemove(final ServerInfo info) { 
 		if(info.live){
 			throw new IllegalArgumentException("calling serverRemove, ServerInfo should not be live");
 		}
-		serverMap.remove(info.serverAddress);
-		MessageClient client = healthyInboundServerMap.remove(info.serverAddress);
-		if(client != null){
-			try {
-				client.close();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
+		boolean needUpdate = true;
+		if(!thisServerAddress.equals(info.serverAddress)){
+			ServerInfo old = serverMap.remove(info.serverAddress); 
+			if(old == null){
+				needUpdate = false;
+			} else { 
+				MessageClient client = healthyInboundServerMap.remove(info.serverAddress);
+				if(client != null){
+					try {
+						client.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
 			}
 		}
+		if(!needUpdate) return;
+		
+		
 		publishToOutboundServers(info);
 		publishToSubscribers(info);
 	}
 	
 	private void serverUpdate(final ServerInfo info){
-		//TODO filter duplicated updates
+		boolean needUpdate = true;
 		if(!thisServerAddress.equals(info.serverAddress)){
-			serverMap.put(info.serverAddress, info);
+			ServerInfo old = serverMap.get(info.serverAddress);
+			if(old == null || !old.equals(info)){
+				serverMap.put(info.serverAddress, info);
+			} else {
+				needUpdate = false;
+			} 
 		} 
+		if(!needUpdate) return;
+		
 		publishToOutboundServers(info);
 		publishToSubscribers(info); 
 	} 
@@ -219,30 +239,40 @@ public class TrackService implements Closeable{
 		if(info.live){
 			throw new IllegalArgumentException("calling topicRemove, TopicInfo should not be live");
 		}
-		//TODO filter duplicated updates
-		if(!thisServerAddress.equals(info.serverAddress)){ 
+		boolean needUpdate = true;
+		if(!thisServerAddress.equals(info.serverAddress)){ //from other server
 			ServerInfo serverInfo = serverMap.get(info.serverAddress);
 			if(serverInfo == null){ 
 				log.warn("server not in local table:" + info.serverAddress);
 				return; //not recorded, ignore it
 			}
-			serverInfo.topicMap.put(info.topicName, info);
+			TopicInfo old = serverInfo.topicMap.remove(info.topicName);
+			if(old == null){
+				needUpdate = false;
+			}
 		} 
-		
+		if(!needUpdate) return;
 		publishToOutboundServers(info);
 		publishToSubscribers(info); 
 	}
 	
-	private void topicUpdate(final TopicInfo info){
-		//TODO filter duplicated updates
+	private void topicUpdate(final TopicInfo info){ 
+		boolean needUpdate = true;
 		if(!thisServerAddress.equals(info.serverAddress)){
 			ServerInfo serverInfo = serverMap.get(info.serverAddress);
 			if(serverInfo == null){ 
 				log.warn("server not in local table:" + info.serverAddress);
 				return; //not recorded, ignore it
 			}
-			serverInfo.topicMap.put(info.topicName, info);
+			TopicInfo old = serverInfo.topicMap.get(info.topicName);
+			if(old == null || !old.equals(info)){
+				serverInfo.topicMap.put(info.topicName, info);
+			} else {
+				needUpdate = false;
+			}
 		} 
+		
+		if(!needUpdate) return;
 		publishToOutboundServers(info);
 		publishToSubscribers(info); 
 	}
@@ -284,7 +314,7 @@ public class TrackService implements Closeable{
 			}); 
 			
 			allInboundServerList.add(client);
-			client.connectAsync(); //TODO clean client
+			client.connectAsync();
 			return;
 		}  
 		
@@ -304,26 +334,19 @@ public class TrackService implements Closeable{
 		topicUpdate(info);
 	}
 	
-	public void publish(Message message, Session session){
-		String type = message.getHeader(Protocol.TRACK_TYPE);
-		if(Protocol.TRACK_SERVER.equals(type)){
-			ServerInfo info = JsonUtil.parseObject(message.getBodyString(), ServerInfo.class);
-			if(info.serverAddress == null){
-				log.warn("missing server address, dicarded: " + message.getBodyString());
-				return;
-			}
-			publish(info);
-		} else {
-			TopicInfo info = JsonUtil.parseObject(message.getBodyString(), TopicInfo.class);
-			if(info.serverAddress == null){
-				log.warn("missing server address, dicarded: " + message.getBodyString());
-				return;
-			}
-			publish(info);
-		} 
-	}
-	
-	public void subscribe(Message message, Session session){
-		subscribers.add(session);
+	public void subscribe(Message msg, Session session){
+		subscribers.add(session); 
+		
+		for(ServerInfo info : queryServerTable().values()){ 
+			Message message = new Message(); 
+			message.setCommand(Protocol.TRACK_PUB_SERVER); 
+			message.setJsonBody(JsonUtil.toJSONString(info)); 
+			message.setAck(false);
+			try {  
+				session.writeAndFlush(message);
+			} catch (Exception ex) { 
+				log.error(ex.getMessage(), ex);
+			}  
+		}
 	} 
 }

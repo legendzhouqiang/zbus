@@ -33,9 +33,10 @@ public class Protocol {
 	 
 	
 	//High Availability (HA)
-	public static final String TRACK_QUERY   = "track_query";  
-	public static final String TRACK_PUB     = "track_pub"; 
-	public static final String TRACK_SUB     = "track_sub";   
+	public static final String TRACK_QUERY      = "track_query";  
+	public static final String TRACK_PUB_TOPIC  = "track_pub_topic"; 
+	public static final String TRACK_PUB_SERVER = "track_pub_server"; 
+	public static final String TRACK_SUB        = "track_sub";   
 	
 	
 	
@@ -80,18 +81,36 @@ public class Protocol {
 	public static final String APPID   = "appid";
 	public static final String TOKEN   = "token";
 	
-	
-	public static final String TRACK_TYPE   = "track_type"; 
-	public static final String TRACK_TOPIC  = "track_topic";
-	public static final String TRACK_SERVER = "track_server";
-	
 	public static final int FLAG_RPC    	    = 1<<0; 
 	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
 	  
 	public static class ServerInfo extends TrackItem{   
-		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();
+		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>(); 
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ServerInfo other = (ServerInfo) obj;
+			if (topicMap == null) {
+				if (other.topicMap != null)
+					return false;
+			} else if (!topicMap.equals(other.topicMap))
+				return false;
+			
+			if (serverAddress == null) {
+				if (other.serverAddress != null)
+					return false;
+			} else if (!serverAddress.equals(other.serverAddress))
+				return false;
+			return true;
+		}  
 	}
 	
 	public static class TopicInfo extends TrackItem{ 
@@ -105,7 +124,41 @@ public class Protocol {
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime;
+		public long lastUpdatedTime; 
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			TopicInfo other = (TopicInfo) obj; 
+			
+			if (consumerCount != other.consumerCount)
+				return false;
+			if (consumerGroupCount != other.consumerGroupCount)
+				return false; 
+			
+			if (flag != other.flag)
+				return false; 
+			if (messageCount != other.messageCount)
+				return false;
+			if (topicName == null) {
+				if (other.topicName != null)
+					return false;
+			} else if (!topicName.equals(other.topicName))
+				return false;
+			
+			if (serverAddress == null) {
+				if (other.serverAddress != null)
+					return false;
+			} else if (!serverAddress.equals(other.serverAddress))
+				return false;
+			
+			return true;
+		} 
 	}  
 	
 	public static class TrackItem{
@@ -124,7 +177,7 @@ public class Protocol {
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime; 
+		public long lastUpdatedTime;  
 	} 
 	
 }
