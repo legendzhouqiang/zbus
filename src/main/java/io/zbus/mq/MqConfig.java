@@ -73,8 +73,8 @@ public class MqConfig implements Cloneable {
 		this.consumerGroup = consumerGroup;
 	}  
 	
-	public void setConsumerGroup(String consumeGroup) {
-		this.consumerGroup = new ConsumerGroup(consumeGroup);
+	public void setConsumerGroup(String consumerGroup) {
+		this.consumerGroup = new ConsumerGroup(consumerGroup);
 	} 
 
 	public Integer getConsumeWindow() {

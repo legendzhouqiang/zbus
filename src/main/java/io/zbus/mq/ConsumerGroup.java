@@ -19,7 +19,7 @@ public class ConsumerGroup implements Cloneable {
 	} 
 	
 	public ConsumerGroup(Message msg){ 
-		groupName = msg.getConsumeGroup();
+		groupName = msg.getConsumerGroup();
 		baseGroupName = msg.getConsumeBaseGroup();
 		startOffset = msg.getConsumeStartOffset();
 		startTime = msg.getConsumeStartTime();

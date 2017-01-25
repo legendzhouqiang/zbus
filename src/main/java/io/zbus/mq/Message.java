@@ -476,12 +476,12 @@ public class Message {
 		return this;
 	} 
 	
-	public String getConsumeGroup(){
-		String value = this.getHeader(CONSUME_GROUP);
+	public String getConsumerGroup(){
+		String value = this.getHeader(CONSUMER_GROUP);
 		return value;
 	} 
-	public Message setConsumeGroup(String mq) {
-		this.setHeader(CONSUME_GROUP, mq);
+	public Message setConsumerGroup(String value) {
+		this.setHeader(CONSUMER_GROUP, value);
 		return this;
 	} 
 	public Long getOffset(){

@@ -115,7 +115,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(mq == null) return; 
 			
 			if((mq.getFlag()&Protocol.FLAG_RPC) != 0){ 
-				if(mq.consumerCount(null) == 0){ //default consumeGroup
+				if(mq.consumerCount(null) == 0){ //default consumerGroup
 					ReplyKit.reply502(msg, sess);
 					return;
 				}

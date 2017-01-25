@@ -23,7 +23,7 @@ public class Protocol {
 	public static final String RESUME_TOPIC  = "resume_topic";  
 	public static final String EMPTY_TOPIC   = "empty_topic";  
 	
-	//ConsumeGroup control
+	//ConsumerGroup control
 	public static final String DECLARE_GROUP = "declare_group";  
 	public static final String QUERY_GROUP   = "query_group"; 
 	public static final String REMOVE_GROUP  = "remove_group";  
@@ -54,7 +54,7 @@ public class Protocol {
 	public static final String TAG   	= "tag";  
 	public static final String OFFSET   = "offset";
 	
-	public static final String CONSUME_GROUP        = "consume_group";  
+	public static final String CONSUMER_GROUP       = "consumer_group";  
 	public static final String CONSUME_BASE_GROUP   = "consume_base_group";  
 	public static final String CONSUME_START_OFFSET = "consume_start_offset";
 	public static final String CONSUME_START_MSGID  = "consume_start_msgid";
@@ -120,7 +120,7 @@ public class Protocol {
 		public long messageCount;
 		public int consumerCount;
 		public int consumerGroupCount;
-		public List<ConsumerGroupInfo> consumeGroupList = new ArrayList<ConsumerGroupInfo>();
+		public List<ConsumerGroupInfo> consumerGroupList = new ArrayList<ConsumerGroupInfo>();
 		
 		public String creator;
 		public long createdTime;

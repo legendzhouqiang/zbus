@@ -42,14 +42,14 @@ public class DiskQueue implements MessageQueue{
 		this.index = index;
 		this.name = index.getName();
 		this.writer = new QueueWriter(this.index);
-		loadConsumeGroups();
+		loadConsumerGroups();
 	}
 	
 	public DiskQueue(File dir) throws IOException { 
 		this(new Index(dir));
 	}
 	
-	private void loadConsumeGroups() throws IOException{ 
+	private void loadConsumerGroups() throws IOException{ 
         File[] readerFiles = index.getReaderDir().listFiles(new FileFilter() { 
 			@Override
 			public boolean accept(File pathname) {
@@ -128,7 +128,7 @@ public class DiskQueue implements MessageQueue{
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
-		String consumeGroup = message.getConsumeGroup();
+		String consumeGroup = message.getConsumerGroup();
 		if(consumeGroup == null){
 			consumeGroup = this.name;
 		} 
@@ -333,9 +333,9 @@ public class DiskQueue implements MessageQueue{
 		info.messageCount = remaining(name); 
 		info.consumerCount = consumerCount(name); 
 		info.consumerGroupCount = consumerGroups.size();
-		info.consumeGroupList = new ArrayList<ConsumerGroupInfo>();
+		info.consumerGroupList = new ArrayList<ConsumerGroupInfo>();
 		for(DiskConsumerGroup group : consumerGroups.values()){
-			info.consumeGroupList.add(group.getConsumeGroupInfo());
+			info.consumerGroupList.add(group.getConsumeGroupInfo());
 		}
 		//TODO 
 		return info;

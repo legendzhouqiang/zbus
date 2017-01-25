@@ -40,8 +40,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		req.setCommand(Protocol.CONSUME);
 		req.setConsumeWindow(consumeWindow);
 		fillCommonHeaders(req);  
-		if(consumerGroup != null){ //consumeGroup
-			req.setConsumeGroup(consumerGroup.getGroupName());
+		if(consumerGroup != null){ //consumerGroup
+			req.setConsumerGroup(consumerGroup.getGroupName());
 		}
 
 		Message res = null;
@@ -112,7 +112,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected Message buildDeclareTopicMessage(){
 		Message req = super.buildDeclareTopicMessage();  
     	if(this.consumerGroup != null){
-	    	req.setConsumeGroup(consumerGroup.getGroupName());
+	    	req.setConsumerGroup(consumerGroup.getGroupName());
 	    	req.setConsumeBaseGroup(consumerGroup.getBaseGroupName());
 	    	req.setConsumeStartOffset(consumerGroup.getStartOffset());
 	    	req.setConsumeStartMsgId(consumerGroup.getStartMsgId());

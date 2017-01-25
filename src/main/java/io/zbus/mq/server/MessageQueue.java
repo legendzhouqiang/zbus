@@ -16,9 +16,9 @@ public interface MessageQueue {
 	
 	void declareConsumerGroup(ConsumerGroup ctrl) throws Exception;
 	
-	long remaining(String consumeGroup);
+	long remaining(String consumerGroup);
 	
-	int consumerCount(String consumeGroup); 
+	int consumerCount(String consumerGroup); 
 	
 	void cleanSession(Session sess);
 	
