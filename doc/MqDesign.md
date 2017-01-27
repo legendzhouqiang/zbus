@@ -59,7 +59,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 **Index**
 
 Index stores an infinite(long sized) array of block metadata, each block metadata item identifies 
-* **base offset **, the block file name, which is also the first message'offset in current block file, e.g. 00000000000000000000.zbus is the first block name. 
+* **base offset**, the block file name, which is also the first message'offset in current block file, e.g. 00000000000000000000.zbus is the first block name. 
 * **end offset**, the offset of the block to write if not full, the end of block if full.
 * **created time stamp**, initialized when block created
 * **updated time stamp**, updated when any writes occurs.
