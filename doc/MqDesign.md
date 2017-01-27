@@ -1,11 +1,12 @@
 ##Message Queue Design
-zbus disk file system model targets to support Unicast, Multicast and Broadcast messaging model based on the following 5 components.
+zbus file system targets to support Unicast, Multicast and Broadcast messaging model based on the following 5 components.
 
 * Index -- manages the block files
 * Block -- stores the real data
 * DiskMessage -- message format in disk, the read and write unit for message queue
 * QueueWriter -- writes message to indexed blocks, a thin layer on Index
 * QueueReader -- reads message from indexed blocks
+
 
 
 					   Index MappedFile
@@ -25,7 +26,7 @@ zbus disk file system model targets to support Unicast, Multicast and Broadcast 
 	       |0_baseOffset | endOffset | createdTs | updatedTs|<-----+
 	       +------------------------------------------------+
 	  +--->|1_baseOffset | endOffset | createdTs | updatedTs|        BlockFile 00000000000000000000.zbus
-	  |    +------------------------------------------------+      +------->+---------------+                   DiskMessage Format
+	  |    +------------------------------------------------+      +------->+---------------+                 DiskMessage Format
 	  |    |                    ...                         |      |        | DiskMessage_0 |                   +---------------+
 	  |    +------------------------------------------------+      |        | DiskMessage_1 |                   | Offset       8|
 	  |    |n_baseOffset | endOffset | createdTs | updatedTs|      |        | DiskMessage_2 |<---+              +---------------+
@@ -53,6 +54,7 @@ zbus disk file system model targets to support Unicast, Multicast and Broadcast 
             +---------------+
             | Tag        128|
             +---------------+
+     
             
 **Index**
 
