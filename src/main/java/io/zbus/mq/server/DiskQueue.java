@@ -248,7 +248,7 @@ public class DiskQueue implements MessageQueue{
 			throw new IllegalArgumentException(consumeGroup + " not found");
 		}   
 		 
-		return index.getMessageCount() - group.reader.getMessageCount(); //reader.messageCount is the message to read
+		return index.getMessageCount() - group.reader.getMessageNumber()-1;
 	} 
 	
 	@Override

@@ -26,7 +26,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private String filterTag; //max: 127 bytes
 	
 	private String[] filterTagParts;
-	private long messageCount = 0; 
+	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
 	
 	private final Lock readLock = new ReentrantLock();  
 	
@@ -47,7 +47,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		}
 		 
 		block = this.index.createReadBlock(this.blockNumber);
-		loadMessageCount();
+		readMessageNumber();
 	}   
 	
 	public QueueReader(QueueReader copy, String readerGroup) throws IOException{
@@ -58,7 +58,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		
 		this.blockNumber = copy.blockNumber;
 		this.offset = copy.offset;
-		this.messageCount = copy.messageCount;
+		this.messageNumber = copy.messageNumber;
 		
 		block = this.index.createReadBlock(this.blockNumber);
 	}  
@@ -90,18 +90,18 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		} 
 	} 
 	
-	private void loadMessageCount() throws IOException{
+	private void readMessageNumber() throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
 			if(index.overflow(blockNumber+1)){
-				this.messageCount = index.getMessageCount();
+				this.messageNumber = index.getMessageCount()-1;
 				return;
 			}
 			this.blockNumber++;
 			block = this.index.createReadBlock(this.blockNumber);
 			this.offset = 0;
 		}
-		DiskMessage data = block.readHead(offset);
-		this.messageCount = data.messageCount-1; 
+		DiskMessage data = block.readHead(offset); 
+		this.messageNumber = data.messageNumber - 1;  
 	}
 	
 	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
@@ -115,9 +115,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		}
 		DiskMessage data = block.readByTag(offset, tagParts);
 		this.offset += data.bytesScanned;
-		if(data.messageCount > 0){
-			this.messageCount = data.messageCount-1;
-		}
+		this.messageNumber = data.messageNumber; 
 		
 		writeOffset();  
 		
@@ -193,8 +191,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		}  
 	} 
 
-	public long getMessageCount() {
-		return messageCount;
+	public long getMessageNumber() {
+		return messageNumber;
 	}
 
 	private void writeOffset(){

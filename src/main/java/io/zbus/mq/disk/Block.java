@@ -55,7 +55,7 @@ class Block implements Closeable {
 			}
 			diskFile.write(id); 
 			diskFile.writeLong(data.corrOffset==null? 0 : data.corrOffset);
-			diskFile.writeLong(index.increaseMessageCount()); //message count write
+			diskFile.writeLong(index.increaseMessageCount()-1); //write message number
 			
 			byte[] tag = new byte[128];
 			if(data.tag != null){
@@ -97,7 +97,7 @@ class Block implements Closeable {
 			data.id = new String(id, 1, idLen);  
 		}
 		data.corrOffset = diskFile.readLong();
-		data.messageCount = diskFile.readLong();
+		data.messageNumber = diskFile.readLong();
 		byte[] tag = new byte[128];
 		diskFile.read(tag);
 		int tagLen = tag[0];
@@ -176,7 +176,7 @@ class Block implements Closeable {
 			long messageCount = 0;
 			while(!isEndOfBlock(pos+bytesScanned)){
 				DiskMessage data = readHeadUnsafe(pos+bytesScanned); 
-				messageCount = data.messageCount;
+				messageCount = data.messageNumber;
 				int size = diskFile.readInt();
 				bytesScanned += data.bytesScanned+4+size; 
 				if(!isMatched(tagParts, data.tag)){ 
@@ -197,7 +197,7 @@ class Block implements Closeable {
 			}
 			
 			DiskMessage data = new DiskMessage();
-			data.messageCount = messageCount;
+			data.messageNumber = messageCount;
 			data.valid = false;
 			data.bytesScanned = bytesScanned;
 			return data;

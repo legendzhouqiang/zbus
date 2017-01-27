@@ -5,7 +5,7 @@ public class DiskMessage {
 	public Long timestamp; // 8
 	public String id; // 1 + id(max 39)
 	public Long corrOffset; // 8
-	public Long messageCount; // 8, write ignore
+	public Long messageNumber; // 8, write ignore
 	public String tag; // 1 + tag(max 127)
 	public byte[] body; // 4 + len 
 
