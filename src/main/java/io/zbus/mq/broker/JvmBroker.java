@@ -45,6 +45,11 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 			log.error(e.getMessage(), e); 
 		}
 	}
+	
+	@Override
+	public String brokerAddress() { 
+		return "jvm";
+	}
 
 	@Override
 	public String getLocalAddress() {

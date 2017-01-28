@@ -33,7 +33,7 @@ public class TrackBroker implements Broker {
 	private RouteTable routeTable = new RouteTable();
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver; 
-	private final BrokerConfig config;
+	private final BrokerConfig config; 
 	
 	private CountDownLatch ready = new CountDownLatch(1);
 	private Map<String, MessageClient> trackSubscribers = new ConcurrentHashMap<String, MessageClient>(); 
@@ -61,6 +61,11 @@ public class TrackBroker implements Broker {
 	
 	public TrackBroker(String brokerAddress) throws IOException{ 
 		this(new BrokerConfig(brokerAddress));
+	}
+	
+	@Override
+	public String brokerAddress() { 
+		return config.getBrokerAddress();
 	}
 	
 	private void subscribeToTracker(final String serverAddress){
@@ -200,7 +205,7 @@ public class TrackBroker implements Broker {
 			eventDriver.getGroup().submit(new Runnable() { 
 				@Override
 				public void run() { 
-					listener.onServerJoin(serverAddress, broker);
+					listener.onServerJoin(broker);
 				}
 			});
 		}

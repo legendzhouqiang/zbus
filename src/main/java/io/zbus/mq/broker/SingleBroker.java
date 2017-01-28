@@ -18,13 +18,13 @@ public class SingleBroker implements Broker {
 	private final Pool<MessageClient> pool; 
 	private final MessageClientFactory factory;  
 	private final BrokerConfig config;
-	private final boolean ownEventDriver; 
+	private final boolean ownEventDriver;  
 	private EventDriver eventDriver; 
 	
 	public SingleBroker(BrokerConfig config, EventDriver eventDriver) throws IOException{ 
 		this.config = config.clone();
 		this.eventDriver = eventDriver; 
-		this.ownEventDriver = false;
+		this.ownEventDriver = false; 
 		
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(), eventDriver);
 		this.pool = new Pool<MessageClient>(factory, this.config.getConnectionPoolSize());
@@ -33,10 +33,15 @@ public class SingleBroker implements Broker {
 	public SingleBroker(BrokerConfig config) throws IOException{
 		this.config = config.clone();
 		this.ownEventDriver = true;
-		this.eventDriver = new EventDriver();
+		this.eventDriver = new EventDriver(); 
 		
 		this.factory = new MessageClientFactory(this.config.getBrokerAddress(), eventDriver);
 		this.pool = new Pool<MessageClient>(factory, this.config.getConnectionPoolSize());
+	}
+	
+	@Override
+	public String brokerAddress() { 
+		return this.config.getBrokerAddress();
 	}
 	
 	@Override

@@ -83,4 +83,9 @@ public class ZbusBroker implements Broker{
 	public void removeServerListener(ServerNotifyListener listener) {
 		support.removeServerListener(listener);
 	}   
+	
+	@Override
+	public String brokerAddress() { 
+		return support.brokerAddress();
+	}
 }

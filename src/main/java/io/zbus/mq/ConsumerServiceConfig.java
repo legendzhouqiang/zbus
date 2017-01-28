@@ -1,38 +1,15 @@
 package io.zbus.mq;
 
-public class ConsumerServiceConfig extends MqConfig{
-	private Broker[] brokers;
+public class ConsumerServiceConfig extends MqConfig{ 
 	private int consumerCount = 4;  
 	private int threadPoolSize = 64; 
 	private int maxInFlightMessage = 100;
 	private boolean verbose = false; 
+	private boolean parallelMode = true;
 	
 	private ConsumerHandler consumerHandler; 
-	private MessageProcessor messageProcessor; 
- 
-	public ConsumerServiceConfig(Broker... brokers) {
-		this.brokers = brokers;
-		if (brokers.length > 0) {
-			setBroker(brokers[0]);
-		} 
-	}
-
-	public void setBrokers(Broker[] brokers) {
-		this.brokers = brokers;
-		if (brokers.length > 0) {
-			setBroker(brokers[0]);
-		}
-		
-	}
-
-	public Broker[] getBrokers() {
-		if (brokers == null || brokers.length == 0) {
-			if (getBroker() != null) {
-				brokers = new Broker[] { getBroker() };
-			}
-		}
-		return this.brokers;
-	}
+	private MessageProcessor messageProcessor;  
+	
 
 	public int getConsumerCount() {
 		return consumerCount;
@@ -65,8 +42,16 @@ public class ConsumerServiceConfig extends MqConfig{
 
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
-	}   
+	}     
 	
+	public boolean isParallelMode() {
+		return parallelMode;
+	}
+
+	public void setParallelMode(boolean parallelMode) {
+		this.parallelMode = parallelMode;
+	}
+
 	public int getThreadPoolSize() {
 		return threadPoolSize;
 	}

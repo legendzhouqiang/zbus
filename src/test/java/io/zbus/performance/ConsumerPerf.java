@@ -30,7 +30,7 @@ public class ConsumerPerf {
 		
 		Broker broker = new ZbusBroker(serverAddress);
 		
-		ConsumerServiceConfig config = new ConsumerServiceConfig(broker); 
+		ConsumerServiceConfig config = new ConsumerServiceConfig(); 
 		config.setBroker(broker);
 		config.setTopic(topic); 
 		config.setConsumerCount(threadCount); 

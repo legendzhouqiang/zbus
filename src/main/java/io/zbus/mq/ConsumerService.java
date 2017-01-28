@@ -8,13 +8,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.zbus.mq.Broker.ServerNotifyListener;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
 public class ConsumerService implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerService.class); 
 	private ConsumerServiceConfig config; 
-	private Map<String, ConsumerThread[]> consumerThreadGroupMap = new ConcurrentHashMap<String, ConsumerThread[]>(); 
+	private Map<String, ConsumerThreadGroup> consumerThreadGroupMap = new ConcurrentHashMap<String, ConsumerThreadGroup>(); 
 	private ThreadPoolExecutor consumerExecutor;  
 	private ConsumerHandler consumerHandler; 
 	private boolean isStarted = false; 
@@ -24,7 +25,8 @@ public class ConsumerService implements Closeable {
 	}
 	
 	public ConsumerService(Broker broker, String topic){
-		ConsumerServiceConfig config = new ConsumerServiceConfig(broker);
+		ConsumerServiceConfig config = new ConsumerServiceConfig();
+		config.setBroker(broker);
 		config.setTopic(topic);
 		config.setConsumerCount(1); //default to single Consumer
 		
@@ -38,6 +40,9 @@ public class ConsumerService implements Closeable {
 		}
 		if(config.getTopic() == null || "".equals(config.getTopic())){
 			throw new IllegalArgumentException("topic required");
+		} 
+		if(config.getBroker() == null){
+			throw new IllegalArgumentException("broker required");
 		} 
 		
 		if(config.getConsumerHandler() != null){
@@ -81,10 +86,8 @@ public class ConsumerService implements Closeable {
 	@Override
 	public void close() throws IOException {
 		if(this.consumerThreadGroupMap != null){ 
-			for(ConsumerThread[] consumerThreadGroup : consumerThreadGroupMap.values()){
-				for(ConsumerThread consumerThread : consumerThreadGroup){
-					consumerThread.close();
-				}
+			for(ConsumerThreadGroup consumerThreadGroup : consumerThreadGroupMap.values()){
+				consumerThreadGroup.close();
 			}
 			this.consumerThreadGroupMap.clear();
 			this.consumerThreadGroupMap = null;
@@ -95,9 +98,36 @@ public class ConsumerService implements Closeable {
 		}
 	} 
 	
+	private void addConsumerThreadGroup(Broker broker, MqConfig config, int consumerCount){
+		if(consumerThreadGroupMap.containsKey(broker.brokerAddress())) return;
+		
+		MqConfig mqConfig = config.clone();
+		mqConfig.setBroker(broker); 
+		ConsumerThreadGroup consumerThreadGroup = new ConsumerThreadGroup(consumerCount, config);
+		consumerThreadGroup.start(); 
+		consumerThreadGroupMap.put(broker.brokerAddress(), consumerThreadGroup);
+	}
+	
+	private void removeConsumerThreadGroup(String serverAddress){
+		ConsumerThreadGroup consumerThreadGroup = consumerThreadGroupMap.get(serverAddress);
+		if(consumerThreadGroup == null){
+			return;
+		}
+		
+		try {
+			consumerThreadGroup.close();
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);		
+		}
+	}
+	
+	
 	public synchronized void start() throws IOException{ 
 		if(isStarted) return;  
 		if(this.consumerHandler == null){
+			throw new IllegalArgumentException("MessageHandler and MessageProcessor are both null");
+		}
+		if(this.config.getBroker() == null){
 			throw new IllegalArgumentException("MessageHandler and MessageProcessor are both null");
 		}
 		
@@ -105,23 +135,27 @@ public class ConsumerService implements Closeable {
 		consumerExecutor = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
 				new LinkedBlockingQueue<Runnable>(config.getMaxInFlightMessage()),
 				new ThreadPoolExecutor.CallerRunsPolicy()); 
-		 
-		Broker[] brokers = config.getBrokers();
-		int consumerCount = config.getConsumerCount();
-		if(brokers.length < 1 || consumerCount < 1) return;
-		 
-		for(int i=0; i<brokers.length; i++){
-			ConsumerThread[] consumerThreadGroup = new ConsumerThread[consumerCount]; 
-			MqConfig mqConfig = config.clone();
-			mqConfig.setBroker(brokers[i]); 
-			
-			String brokerId = ""+i; //TODO
-			 
-			for(int j=0; j<consumerCount; j++){   
-				ConsumerThread thread = consumerThreadGroup[j] = new ConsumerThread(mqConfig); 
-				thread.start();
+		
+		Broker broker = config.getBroker(); 
+		
+		if(config.isParallelMode()){
+			broker.addServerListener(new ServerNotifyListener() { 
+				@Override
+				public void onServerLeave(String serverAddress) { 
+					removeConsumerThreadGroup(serverAddress);
+				}
+				
+				@Override
+				public void onServerJoin(Broker broker) { 
+					addConsumerThreadGroup(broker, config, config.getConsumerCount());
+				}
+			});  
+			for(Broker sbroker : broker.availableServerList()){
+				addConsumerThreadGroup(sbroker, config, config.getConsumerCount());
 			}
-			consumerThreadGroupMap.put(brokerId, consumerThreadGroup);
+			
+		} else {
+			addConsumerThreadGroup(broker, config, config.getConsumerCount());
 		} 
 		
 		isStarted = true;
@@ -143,6 +177,31 @@ public class ConsumerService implements Closeable {
 	
 	public synchronized void onMessage(MessageProcessor messageProcessor){
 		this.consumerHandler = buildFromMessageProcessor(messageProcessor);
+	}
+	
+	class ConsumerThreadGroup implements Closeable{
+		private int consumerCount;
+		private ConsumerThread[] threads;
+		
+		public ConsumerThreadGroup(int consumerCount, MqConfig config){
+			this.consumerCount = consumerCount;
+			threads = new ConsumerThread[consumerCount];
+			for(int i=0;i<this.consumerCount;i++){
+				threads[i] = new ConsumerThread(config);
+			}
+		}
+		
+		public void start(){
+			for(Thread thread : threads){
+				thread.start();
+			}
+		}
+		
+		public void close() throws IOException{
+			for(ConsumerThread thread : threads){
+				thread.close();
+			}
+		} 
 	}
 	
 	class ConsumerThread extends Thread implements Closeable{
