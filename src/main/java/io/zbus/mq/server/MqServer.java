@@ -29,7 +29,7 @@ public class MqServer implements Closeable{
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config;   
-	private String serverAddr = "";    
+	private String serverAddress = "";    
 	private EventDriver eventDriver; 
 	
 	private MessageServer httpServer;
@@ -64,7 +64,7 @@ public class MqServer implements Closeable{
 		if("0.0.0.0".equals(host)){
 			host = NetUtil.getLocalIp(config.serverMainIpOrder);
 		}
-		serverAddr = host+":"+config.serverPort; 
+		serverAddress = host+":"+config.serverPort; 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -121,8 +121,8 @@ public class MqServer implements Closeable{
 		return sessionTable;
 	}  
 
-	public String getServerAddr() {
-		return serverAddr;
+	public String getServerAddress() {
+		return serverAddress;
 	}  
 
 	public MqServerConfig getConfig() {

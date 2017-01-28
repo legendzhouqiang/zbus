@@ -111,6 +111,11 @@ public class Protocol {
 				return false;
 			return true;
 		}  
+		
+		@Override
+		public ServerInfo clone() { 
+			return (ServerInfo) super.clone(); 
+		}
 	}
 	
 	public static class TopicInfo extends TrackItem{ 
@@ -125,6 +130,11 @@ public class Protocol {
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime; 
+		
+		@Override
+		public TopicInfo clone() { 
+			return (TopicInfo)super.clone();
+		}
 		
 		@Override
 		public boolean equals(Object obj) {
@@ -161,13 +171,22 @@ public class Protocol {
 		} 
 	}  
 	
-	public static class TrackItem{
+	public static class TrackItem implements Cloneable{
 		public String serverAddress;  
 		public long publishTimestamp = System.currentTimeMillis(); 
-		public boolean live = true;    
+		public boolean live = true;   
+		
+		@Override
+		public TrackItem clone() { 
+			try {
+				return (TrackItem) super.clone();
+			} catch (CloneNotSupportedException e) {
+				return null;
+			}
+		}
 	}
 	
-	public static class ConsumerGroupInfo{ 
+	public static class ConsumerGroupInfo implements Cloneable{ 
 		public String topicName;
 		public String groupName;
 		public int flag; 
@@ -178,6 +197,15 @@ public class Protocol {
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime;  
+		
+		@Override
+		public ConsumerGroupInfo clone() { 
+			try {
+				return (ConsumerGroupInfo) super.clone();
+			} catch (CloneNotSupportedException e) {
+				return null;
+			}
+		}
 	} 
 	
 }

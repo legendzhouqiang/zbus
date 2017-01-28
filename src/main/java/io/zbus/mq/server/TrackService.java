@@ -53,7 +53,7 @@ public class TrackService implements Closeable{
 	
 	public TrackService(MqServer mqServer, String trackServerList, boolean thisServerIncluded){
 		this.mqServer = mqServer;
-		this.thisServerAddress = mqServer.getServerAddr();
+		this.thisServerAddress = mqServer.getServerAddress();
 		this.eventDriver = mqServer.getEventDriver();
 		this.trackServerList = trackServerList;
 		this.thisServerIncluded = thisServerIncluded;
@@ -339,6 +339,7 @@ public class TrackService implements Closeable{
 		
 		for(ServerInfo info : queryServerTable().values()){ 
 			Message message = new Message(); 
+			message.setStatus(200);//must be response message
 			message.setCommand(Protocol.TRACK_PUB_SERVER); 
 			message.setJsonBody(JsonUtil.toJSONString(info)); 
 			message.setAck(false);

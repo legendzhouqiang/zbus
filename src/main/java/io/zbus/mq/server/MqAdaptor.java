@@ -501,13 +501,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	}  
      
     public ServerInfo getServerInfo(){
+    	String serverAddress = mqServer.getServerAddress();
     	Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
    		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
    			TopicInfo info = e.getValue().getTopicInfo(); 
+   			info.serverAddress = serverAddress;
    			table.put(e.getKey(), info);
    		}  
    		ServerInfo info = new ServerInfo();
-		info.serverAddress = mqServer.getServerAddr();
+		info.serverAddress = mqServer.getServerAddress();
 		info.topicMap = table;  
 		return info;
     }
@@ -566,7 +568,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
-		msg.setServer(mqServer.getServerAddr()); 
+		msg.setServer(mqServer.getServerAddress()); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
 		if(msg.getId() == null){
 			msg.setId(UUID.randomUUID().toString());

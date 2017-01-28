@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 public class JsonUtil {
 	private static Method fastjsonMethod;
@@ -37,6 +38,20 @@ public class JsonUtil {
 	
 	public static <T> T parseObject(String jsonString, Class<T> clazz) {
 		return JSON.parseObject(jsonString, clazz);
+	} 
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T convert(Object json, Class<T> clazz) { 
+		if(clazz.isAssignableFrom(json.getClass())){ 
+			return (T)json;
+		}
+		if(json instanceof JSONObject){
+			JSONObject jsonObject = (JSONObject)json;
+			return jsonObject.toJavaObject(clazz);
+		}
+		
+		String jsonString = JSON.toJSONString(json);
+		return parseObject(jsonString, clazz);
 	} 
 }
 

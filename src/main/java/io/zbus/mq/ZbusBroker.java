@@ -5,7 +5,6 @@ import java.util.List;
 
 import io.zbus.mq.broker.JvmBroker;
 import io.zbus.mq.broker.TrackBroker;
-import io.zbus.mq.broker.SingleBroker;
 import io.zbus.mq.server.MqServer;
  
 public class ZbusBroker implements Broker{
@@ -32,12 +31,7 @@ public class ZbusBroker implements Broker{
 		 
 		brokerAddress = brokerAddress.trim();
 		config.setBrokerAddress(brokerAddress); 
-		
-		if(brokerAddress.split("[,; ]").length > 1){
-			support = new TrackBroker(config);
-		} else { 
-			support = new SingleBroker(config); 
-		}
+		support = new TrackBroker(config); 
 	}
 	 
 	@Override

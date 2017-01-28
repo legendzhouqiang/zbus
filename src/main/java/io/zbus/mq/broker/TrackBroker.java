@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
@@ -13,12 +14,15 @@ import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.MqException;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ServerInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.Client.MsgHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
+import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
@@ -30,7 +34,8 @@ public class TrackBroker implements Broker {
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver; 
 	private final BrokerConfig config;
-	 
+	
+	private CountDownLatch ready = new CountDownLatch(1);
 	private Map<String, MessageClient> trackSubscribers = new ConcurrentHashMap<String, MessageClient>(); 
 	 
 	
@@ -39,10 +44,18 @@ public class TrackBroker implements Broker {
 		this.eventDriver = new EventDriver();
 		
 		String[] serverAddressList = config.getBrokerAddress().split("[;, ]");
+		if(serverAddressList.length <= 0){
+			throw new IllegalArgumentException("brokerAddress illegal: " + config.getBrokerAddress());
+		}
 		for(String serverAddress : serverAddressList){
 			serverAddress = serverAddress.trim();
 			if(serverAddress.isEmpty()) continue;
 			subscribeToTracker(serverAddress);
+		}
+		try {
+			ready.await();
+		} catch (InterruptedException e) {
+			//ignore
 		}
 	}
 	
@@ -56,6 +69,9 @@ public class TrackBroker implements Broker {
 			@Override
 			public void onDisconnected() throws IOException { 
 				log.warn("Disconnected from tracker(%s)", serverAddress); 
+				if(routeTable.serverInfo(serverAddress) != null){
+					routeTable.removeServer(serverAddress);
+				}
 				client.ensureConnectedAsync(); 
 			}  
 		});
@@ -65,6 +81,26 @@ public class TrackBroker implements Broker {
 			public void onConnected() throws IOException { 
 				log.info("Connected to tracker(%s)", serverAddress);  
 				Message req = new Message();
+				req.setCommand(Protocol.TRACK_QUERY);
+				client.invokeAsync(req, new MessageCallback() { 
+					@Override
+					public void onReturn(Message result) { 
+						@SuppressWarnings("unchecked")
+						Map<String, Object> table = JsonUtil.parseObject(result.getBodyString(), Map.class);
+						for(Object object : table.values()){
+							try {
+								ServerInfo serverInfo = JsonUtil.convert(object, ServerInfo.class);
+								registerServer(serverInfo.serverAddress);
+								routeTable.update(serverInfo);
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}
+						} 
+						ready.countDown();
+					}
+				});
+				
+				req = new Message();
 				req.setCommand(Protocol.TRACK_SUB);
 				req.setAck(false); 
 				client.invokeAsync(req, (MessageCallback)null);
@@ -74,12 +110,23 @@ public class TrackBroker implements Broker {
 		client.onMessage(new MsgHandler<Message>() { 
 			@Override
 			public void handle(Message msg, Session session) throws IOException {  
-				//TODO
+				if(Protocol.TRACK_PUB_SERVER.equals(msg.getCommand())){
+					ServerInfo serverInfo = JsonUtil.parseObject(msg.getBodyString(), ServerInfo.class);  
+					routeTable.update(serverInfo);
+					if(serverInfo.live){
+						registerServer(serverInfo.serverAddress);
+					} else {
+						unregisterServer(serverInfo.serverAddress);
+					}
+				} else {
+					TopicInfo topicInfo = JsonUtil.parseObject(msg.getBodyString(), TopicInfo.class);  
+					routeTable.update(topicInfo);
+				}
 			}
 		});
 		
 		client.ensureConnectedAsync();
-		trackSubscribers.put(serverAddress, client);
+		trackSubscribers.put(serverAddress, client); 
 	}
 	
 	
@@ -139,17 +186,14 @@ public class TrackBroker implements Broker {
 	} 
 	
 	@Override
-	public void registerServer(final String serverAddress) throws IOException {  
-		if(routeTable.serverList.contains(serverAddress)){
-			return;
-		} 
-		
+	public void registerServer(final String serverAddress) throws IOException {  	
 		final Broker broker;
 		synchronized (brokerMap) {
 			if(brokerMap.containsKey(serverAddress)){
 				return;
 			}  
 			broker = createBroker(serverAddress);
+			brokerMap.put(serverAddress, broker);
 		}    
 		
 		for(final ServerNotifyListener listener : listeners){
@@ -203,6 +247,10 @@ public class TrackBroker implements Broker {
 	
 	@Override
 	public void close() throws IOException {
+		for(MessageClient client : trackSubscribers.values()){
+			client.close();
+		}
+		trackSubscribers.clear();
 		synchronized (brokerMap) {
 			for(Broker broker : brokerMap.values()){ 
 				broker.close();

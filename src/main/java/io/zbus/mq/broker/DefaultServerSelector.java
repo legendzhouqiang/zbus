@@ -1,24 +1,21 @@
 package io.zbus.mq.broker;
 
 import java.util.List;
-import java.util.Random;
 
 import io.zbus.mq.Broker.RouteTable;
 import io.zbus.mq.Broker.ServerSelector;
 import io.zbus.mq.Protocol.TopicInfo;
 
-public class DefaultServerSelector implements ServerSelector {
-	private Random random = new Random();
-
+public class DefaultServerSelector implements ServerSelector { 
 	@Override
 	public String selectForProducer(RouteTable table, String topic) {
-		int serverCount = table.serverList.size();
+		int serverCount = table.serverMap().size();
 		if (serverCount == 0) {
 			return null;
 		}
-		List<TopicInfo> topicList = table.topicTable.get(topic);
+		List<TopicInfo> topicList = table.topicTable().get(topic);
 		if (topicList == null || topicList.size() == 0) {
-			return table.serverList.get(random.nextInt(serverCount));
+			return table.randomServerInfo().serverAddress;
 		}
 		TopicInfo target = topicList.get(0);
 		for (int i = 1; i < topicList.size(); i++) {
@@ -32,13 +29,13 @@ public class DefaultServerSelector implements ServerSelector {
 
 	@Override
 	public String selectForConsumer(RouteTable table, String topic) {
-		int serverCount = table.serverList.size();
+		int serverCount = table.serverMap().size();
 		if (serverCount == 0) {
 			return null;
 		}
-		List<TopicInfo> topicInfoList = table.topicTable.get(topic);
+		List<TopicInfo> topicInfoList = table.topicTable().get(topic);
 		if (topicInfoList == null || topicInfoList.size() == 0) {
-			return table.serverList.get(random.nextInt(serverCount));
+			return table.randomServerInfo().serverAddress;
 		}
 		TopicInfo target = topicInfoList.get(0);
 		for (int i = 1; i < topicInfoList.size(); i++) {
