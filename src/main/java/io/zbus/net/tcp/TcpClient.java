@@ -97,7 +97,9 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 
 	private void init(){
 		if(bootstrap != null) return;
-		
+		if(this.group == null){
+			throw new IllegalStateException("group missing");
+		}
 		bootstrap = new Bootstrap();
 		bootstrap.group(this.group) 
 		 .channel(NioSocketChannel.class)  
@@ -204,26 +206,32 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 		synchronized (this) {
 			if(!hasConnected()){ 
 	    		connectAsync();
-				activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
+	    		activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
 				
 				if(hasConnected()){ 
 					return;
 				}  
 				String msg = String.format("Connection(%s:%d) timeout", host, port); 
 				log.warn(msg);
-				cleanSession(); 
+				cleanSession();
+				
+	    		channelFuture.sync();
 			}
 		} 
 	}
 	
 	public void ensureConnected() throws IOException, InterruptedException{
 		while(!hasConnected()){
-			connectSync(connectTimeout); 
-			if(hasConnected()) break;
-			
-			String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
-			log.warn(msg); 
-			Thread.sleep(connectTimeout);
+			try{
+				connectSync(connectTimeout); 
+			} catch (IOException e) {    
+				String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
+				log.warn(msg); 
+				Thread.sleep(connectTimeout);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				break;
+			}  
 		} 
 	} 
 	

@@ -228,7 +228,18 @@ public class TrackBroker implements Broker {
 			broker = brokerMap.remove(serverAddress);
 			if(broker == null) return;
 			
-			broker.close();
+			eventDriver.getGroup().schedule(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						broker.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					} 
+				}
+			}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
+			
 		}    
 		
 		for(final ServerNotifyListener listener : listeners){
