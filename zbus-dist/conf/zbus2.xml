@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus>  
+	<!-- MqServer host, change to public IP if you are using Aliyun -->
+	<host>0.0.0.0</host> 
+	<port>15556</port>  
+	
+	<trackServerList>127.0.0.1:15555</trackServerList>   
+	<verbose>false</verbose>
+	<mqStore>/tmp/zbus2</mqStore>  
+	
+	<!-- SSL support configure, add SSL cert and private file full path name -->
+	<sslCertificateFile></sslCertificateFile>
+	<sslPrivateKeyFile></sslPrivateKeyFile> 
+</zbus>
+
