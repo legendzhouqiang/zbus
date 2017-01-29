@@ -127,6 +127,7 @@ public class TrackService implements Closeable{
 		if(subscribers.isEmpty()) return;
 		
 		Message message = new Message();
+		message.setStatus(200);// server to client
 		message.setCommand(cmd); 
 		message.setJsonBody(JsonUtil.toJSONString(info));
 		for(Session session : subscribers){
@@ -139,7 +140,7 @@ public class TrackService implements Closeable{
 		}
 	}  
 	
-	private void publishToOutboundServers(TrackItem info, String cmd){
+	private void publishToOutboundServers(TrackItem info, String cmd){//client to server
 		if(healthyOutboundServerMap.isEmpty()){
 			return;
 		}

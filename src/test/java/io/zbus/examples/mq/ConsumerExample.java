@@ -11,7 +11,7 @@ public class ConsumerExample {
 		
 		Broker broker = new ZbusBroker("127.0.0.1:15555");    
 		
-		Consumer consumer = new Consumer(broker, "MyMQ");  
+		Consumer consumer = new Consumer(broker, "MyTopic");  
 		consumer.declareTopic();
 		
 		while(true){

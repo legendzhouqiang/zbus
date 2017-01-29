@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
@@ -33,11 +34,12 @@ public class TrackBroker implements Broker {
 	private RouteTable routeTable = new RouteTable();
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver; 
-	private final BrokerConfig config; 
+	private final BrokerConfig config;  
+	
+	private Map<String, MessageClient> trackSubscribers = new ConcurrentHashMap<String, MessageClient>(); 
 	
 	private CountDownLatch ready = new CountDownLatch(1);
-	private Map<String, MessageClient> trackSubscribers = new ConcurrentHashMap<String, MessageClient>(); 
-	 
+	private boolean waitCheck = true;
 	
 	public TrackBroker(BrokerConfig config) throws IOException{ 
 		this.config = config.clone();
@@ -51,12 +53,7 @@ public class TrackBroker implements Broker {
 			serverAddress = serverAddress.trim();
 			if(serverAddress.isEmpty()) continue;
 			subscribeToTracker(serverAddress);
-		}
-		try {
-			ready.await();
-		} catch (InterruptedException e) {
-			//ignore
-		}
+		} 
 	}
 	
 	public TrackBroker(String brokerAddress) throws IOException{ 
@@ -102,6 +99,7 @@ public class TrackBroker implements Broker {
 							}
 						} 
 						ready.countDown();
+						waitCheck = false;
 					}
 				});
 				
@@ -134,9 +132,20 @@ public class TrackBroker implements Broker {
 		trackSubscribers.put(serverAddress, client); 
 	}
 	
+	private void checkReady(){
+		if(waitCheck){
+			try {
+				ready.await(3000, TimeUnit.MILLISECONDS); //TODO make it configurable
+			} catch (InterruptedException e) {
+				//ignore 
+			}
+			waitCheck = false;
+		}
+	}
 	
 	@Override
 	public MessageInvoker selectForProducer(String topic) throws IOException {
+		checkReady();
 		String serverAddress = serverSelector.selectForProducer(routeTable, topic); 
 		if(serverAddress == null){
 			throw new MqException("Missing broker for topic=" + topic);
@@ -151,6 +160,7 @@ public class TrackBroker implements Broker {
 
 	@Override
 	public MessageInvoker selectForConsumer(String topic) throws IOException {
+		checkReady();
 		String serverAddress = serverSelector.selectForConsumer(routeTable, topic);
 		if(serverAddress == null){
 			throw new MqException("Missing broker for topic=" + topic);

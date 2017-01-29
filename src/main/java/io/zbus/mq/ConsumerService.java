@@ -103,13 +103,13 @@ public class ConsumerService implements Closeable {
 		
 		MqConfig mqConfig = config.clone();
 		mqConfig.setBroker(broker); 
-		ConsumerThreadGroup consumerThreadGroup = new ConsumerThreadGroup(consumerCount, config);
+		ConsumerThreadGroup consumerThreadGroup = new ConsumerThreadGroup(consumerCount, mqConfig);
 		consumerThreadGroup.start(); 
 		consumerThreadGroupMap.put(broker.brokerAddress(), consumerThreadGroup);
 	}
 	
 	private void removeConsumerThreadGroup(String serverAddress){
-		ConsumerThreadGroup consumerThreadGroup = consumerThreadGroupMap.get(serverAddress);
+		ConsumerThreadGroup consumerThreadGroup = consumerThreadGroupMap.remove(serverAddress);
 		if(consumerThreadGroup == null){
 			return;
 		}
@@ -234,7 +234,7 @@ public class ConsumerService implements Closeable {
 						break;
 					} catch (MqException e) { 
 						throw e; 
-					} 
+					}  
 					if (consumerHandler == null) {
 						log.warn("Missing consumerHandler, call onMessage first");
 						continue;
@@ -259,8 +259,8 @@ public class ConsumerService implements Closeable {
 
 		@Override
 		public void close() throws IOException {
-			interrupt();
-			consumer.close();  
+			interrupt(); 
+			consumer.close();   
 		} 
 	}
 }
