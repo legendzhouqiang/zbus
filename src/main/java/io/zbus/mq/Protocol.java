@@ -43,9 +43,10 @@ public class Protocol {
 	public static final String PING          = "ping"; //ping server, returning back server time
 	public static final String INFO          = "info"; //server info 
 	public static final String VERSION       = "version";
-	public static final String JAVASCRIPT    = "js";   //serve javascript file
+	public static final String JS            = "js";   //serve javascript file
 	public static final String CSS           = "css";  //serve css file 
-	public static final String IMG           = "img";  //serve image file(PNG)
+	public static final String IMG           = "img";  //serve image file(SVG)
+	public static final String PAGE          = "page";  //serve image file(SVG)
 	
 	
 	//Message parameters

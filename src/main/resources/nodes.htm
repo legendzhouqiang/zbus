@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>ZBUS = MQ + RPC</title>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/base.js"></script>
+<link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
+<link rel="stylesheet" href="/css/base.css" type="text/css">
+
+</head>
+<body> 
+<div class="header">
+
+<nav class="navbar navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button> 
+            <a class="navbar-brand" href="/"> 
+            	<img src="/img/logo.svg"></img>
+            	<span>zbus</span>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="nav navbar-nav">
+            	<li><a class="link" href="/page/topic_list.htm">Topics</a></li>  
+            	<li><a class="link" href="/page/nodes.htm">Nodes</a></li> 
+                <li><a class="link" href="/page/traffic.htm">Traffic</a></li> 
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
+                <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitosc</a></li>
+                <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
+                <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
+            </ul> 
+        </div>
+    </div>
+</nav>
+</div>
+ 
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>This Node</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="this-node"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 16%">Server Address</th> 
+	            <th style="width: 8%">Version</th> 
+                <th>Topics</th>
+            </tr>  
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>
+ 
+
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Inbound Nodes(<span id="inbound-count"></span>)</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="inbound" class="table table-condensed table-bordered">
+            <tbody>
+	            <tr> 
+	                <th style="width: 16%">Server Address</th> 
+	                <th style="width: 8%">Version</th> 
+	                <th>Topics</th>
+	            </tr>    
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>  
+
+
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Outbound Nodes(<span id="outbound-count"></span>)</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="outbound" class="table table-condensed table-bordered">
+            <tbody>
+	            <tr> 
+	                <th style="width: 16%">Server Address</th> 
+	            	<th style="width: 8%">Version</th> 
+	                <th>Topics</th>
+	            </tr>    
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>  
+ 
+<script type="text/javascript"> 
+$(document).ready(function(){  
+	
+$.get('/version',function(data){  
+	$("#version").text(data); 
+});
+
+
+function buildTopicList(topicMap){
+	var res = "";
+   	$.each(topicMap, function(topic, topicInfo){
+   		res += "<a href='#' class='topic link label label-primary'>" + topic + "</a>";
+   	}); 
+   	return res;
+}
+ 
+var thisServerInfo;
+$.getJSON('/info',function(serverInfo){      
+   	var topicList = buildTopicList(serverInfo.topicMap); 
+   	thisServerInfo = serverInfo;
+   	$("#this-node").append(
+		"<tr>\
+			<td>" + serverInfo.serverAddress + "</td>\
+			<td>" + serverInfo.serverVersion + "</td>\
+			<td>\
+                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+           	</td>\
+		</tr>"
+	);  
+   	
+   	$("#outbound-count").text(serverInfo.trackServerList.length); 
+   	$.each(serverInfo.trackServerList, function(key, trackServer){  
+	   	$("#outbound").append(
+			"<tr>\
+				<td><a class='link' target='_blank' href='#'>" + trackServer + "</a></td>\
+				<td></td>\
+				<td></td>\
+			</tr>"
+		);  
+   	});
+}); 
+
+$.getJSON('/track_query',function(serverMap){    
+	$("#inbound-count").text(dictSize(serverMap)-1); 
+    $.each(serverMap, function(key, serverInfo){  
+    	if(key=='@type') return;    
+    	if(key == thisServerInfo.serverAddress) return;
+    	var topicList = buildTopicList(serverInfo.topicMap);
+    	$("#inbound").append(
+			"<tr>\
+				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a></td>\
+				<td>" + serverInfo.serverVersion + "</td>\
+				<td>\
+	                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+            	</td>\
+			</tr>"
+		);
+    }); 
+});  
+});
+</script> 
+
+</body>
+
+</html>

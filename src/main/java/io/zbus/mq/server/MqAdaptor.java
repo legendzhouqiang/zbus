@@ -68,9 +68,10 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		//Monitor/Management
 		registerHandler("", homeHandler);  
-		registerHandler(Protocol.JAVASCRIPT, jsHandler); 
+		registerHandler(Protocol.JS, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
 		registerHandler(Protocol.IMG, imgHandler);
+		registerHandler(Protocol.PAGE, pageHandler);
 		registerHandler(Protocol.PING, pingHandler);
 		registerHandler(Protocol.INFO, infoHandler);
 		registerHandler(Protocol.VERSION, versionHandler);
@@ -339,7 +340,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setStatus("200");
 			msg.setId(msgId);
 			msg.setHeader("content-type", "text/html");
-			String body = FileUtil.loadFileString("zbus.htm");
+			String body = FileUtil.loadFileString("home.htm");
 			if ("".equals(body)) {
 				body = "<strong>zbus.htm file missing</strong>";
 			}
@@ -372,6 +373,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		res.setBody(body); 
 		return res;
 	}
+	
+	private MessageHandler pageHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = handleFileRequest("/page/", msg.getUrl());
+			if("200".equals(res.getStatus())){
+				res.setHeader("content-type", "text/html");
+			}
+			sess.write(res); 
+		}
+	};
 	
 	private MessageHandler jsHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {

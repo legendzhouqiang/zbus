@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>ZBUS = MQ + RPC</title>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/base.js"></script>
+<link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
+<link rel="stylesheet" href="/css/base.css" type="text/css">
+
+</head>
+<body> 
+<div class="header">
+
+<nav class="navbar navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button> 
+            <a class="navbar-brand" href="/"> 
+            	<img src="/img/logo.svg"></img>
+            	<span>zbus</span>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="nav navbar-nav">
+            	<li><a class="link" href="/page/topic_list.htm">Topics</a></li>  
+            	<li><a class="link" href="/page/nodes.htm">Nodes</a></li> 
+                <li><a class="link" href="/page/traffic.htm">Traffic</a></li> 
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
+                <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitosc</a></li>
+                <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
+                <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
+            </ul> 
+        </div>
+    </div>
+</nav>
+</div>
+ 
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Topic List</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="topic-list"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 16%">Topic</th> 
+	            <th style="width: 16%">Message Depth</th> 
+                <th style="width: 16%">ConsumerGroup Count</th> 
+                <th style="width: 16%">Consumer Count</th> 
+            </tr>  
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>
+ 
+ 
+<script type="text/javascript"> 
+$(document).ready(function(){  
+	
+$.get('/version',function(data){  
+	$("#version").text(data); 
+}); 
+  
+$.getJSON('/track_query',function(serverMap){     
+    $.each(serverMap, function(key, serverInfo){  
+    	if(key=='@type') return;  
+    	
+    	$.each(serverInfo.topicMap, function(key, topicInfo){
+    		if(key=='@type') return;  
+    		$("#topic-list").append(
+   				"<tr>\
+   					<td><a class='link' target='_blank' href='#'>" + topicInfo.topicName + "</a></td>\
+   					<td>0</td>\
+   					<td>0</td>\
+   					<td>0</td>\
+   				</tr>"
+   			);
+    	});
+    }); 
+});  
+
+});
+</script> 
+
+</body>
+
+</html>
