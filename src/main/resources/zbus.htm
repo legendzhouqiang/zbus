@@ -2,68 +2,114 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>ZBUS Monitor</title>
+<title>ZBUS = MQ + RPC</title>
 <script type="text/javascript" src="/js/jquery.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
-<style>
-table {
-  font-family: "Helvetica Neue", Helvetica, sans-serif
-}
-caption {
-  text-align: left;
-  color: silver;
-  font-weight: bold;
-  text-transform: uppercase;
-  padding: 5px;
-}
+<link rel="stylesheet" href="/css/zbus.css" type="text/css">
 
-thead {
-  background: SteelBlue;
-  color: white;
-}
-th,
-td {
-  padding: 5px 10px;
-}
-
-tbody tr:nth-child(even) {
-  background: WhiteSmoke;
-}
-
-tbody tr td:nth-child(2) {
-  text-align:center;
-}
-
-tbody tr td:nth-child(3),
-tbody tr td:nth-child(4) {
-  text-align: right;
-  font-family: monospace;
-}
-
-tfoot {
-  background: SeaGreen;
-  color: white;
-  text-align: right;
-}
-
-tfoot tr th:last-child {
-  font-family: monospace;
-}
-
-#slogan {
-text-align: center; 
-font:bold 24px arial,sans-serif; 
-margin: 30px 30px;
-}
-
-</style>
 </head>
 <body> 
-<h2 id="slogan" align="center">
-ZBUS = MQ + RPC (Version-<span id="version"></span>)
-</h2>
+<div class="header">
+
+<nav class="navbar navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button> 
+            <a class="navbar-brand" href="/"> 
+            	<img src="/img/zbus_logo.svg"></img>
+            	<span>zbus</span>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="nav navbar-nav">
+            	<li><a class="link" href="#">Topics</a></li>  
+            	<li><a class="link" href="#">Nodes</a></li> 
+                <li><a class="link" href="#">Traffic</a></li> 
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
+                <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitosc</a></li>
+                <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
+                <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
+            </ul> 
+        </div>
+    </div>
+</nav>
+</div>
+ 
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>This Node</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="this-node"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 16%">Server Address</th> 
+	            <th style="width: 8%">Version</th> 
+                <th>Topics</th>
+            </tr>  
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>
+ 
+
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Inbound Nodes(<span id="inbound-count"></span>)</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="inbound" class="table table-condensed table-bordered">
+            <tbody>
+	            <tr> 
+	                <th style="width: 16%">Server Address</th> 
+	                <th style="width: 8%">Version</th> 
+	                <th>Topics</th>
+	            </tr>    
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>  
 
 
+<div class="nodes container-fluid">   
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Outbound Nodes(<span id="outbound-count"></span>)</h3>
+    </div>
+</div> 
+<div class="row">
+    <div class="col-md-12">
+        <table id="outbound" class="table table-condensed table-bordered">
+            <tbody>
+	            <tr> 
+	                <th style="width: 16%">Server Address</th> 
+	            	<th style="width: 8%">Version</th> 
+	                <th>Topics</th>
+	            </tr>    
+        	</tbody>
+        </table>
+    </div>
+</div> 
+</div>  
+ 
 <script type="text/javascript">
 Date.prototype.Format = function (fmt) { //author: meizz 
     var o = {
@@ -87,56 +133,70 @@ function timeConverter(unixTime){
 }
 
 $(document).ready(function(){ 
-function show_flag(flag){ 
-	return "";
+
+function dictSize(dict){
+	return Object.keys(dict).length
 }
 
-$.get('/info',function(data){  
+$.get('/version',function(data){  
 	$("#version").text(data); 
 });
 
-$.getJSON('/query_topic',function(topicMap){   
-    $.each(topicMap, function(key, topic){  
-    	if(key=='@type') return; 
-    	var link = "/query_topic/?topic=" + topic.topicName;
-    	var op = ""; 
-        $("#mq_table").append(
+
+function buildTopicList(topicMap){
+	var res = "";
+   	$.each(topicMap, function(topic, topicInfo){
+   		res += "<a href='#' class='topic link label label-primary'>" + topic + "</a>";
+   	}); 
+   	return res;
+}
+ 
+var thisServerInfo;
+$.getJSON('/info',function(serverInfo){      
+   	var topicList = buildTopicList(serverInfo.topicMap); 
+   	thisServerInfo = serverInfo;
+   	$("#this-node").append(
+		"<tr>\
+			<td>" + serverInfo.serverAddress + "</td>\
+			<td>" + serverInfo.serverVersion + "</td>\
+			<td>\
+                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+           	</td>\
+		</tr>"
+	);  
+   	
+   	$("#outbound-count").text(serverInfo.trackServerList.length); 
+   	$.each(serverInfo.trackServerList, function(key, trackServer){  
+	   	$("#outbound").append(
 			"<tr>\
-				<td><a target='_blank' href='" + link + "'>"+ topic.topicName +"</a></td>\
-				<td style='text-align:left;'>" + show_flag(topic.flag) +"</td>\
-				<td>"+ topic.consumerCount +"</td>\
-				<td>"+ topic.messageCount +"</td>\
-				<td>0.0</td>\
-				<td>"+ timeConverter(topic.lastUpdatedTime) +" </td>\
-				<td><a target='_blank' href='/" + topic.topicName + "'>" + op + "</a></td>\
+				<td><a class='link' target='_blank' href='#'>" + trackServer + "</a></td>\
+				<td></td>\
+				<td></td>\
+			</tr>"
+		);  
+   	});
+}); 
+
+$.getJSON('/track_query',function(serverMap){    
+	$("#inbound-count").text(dictSize(serverMap)-1); 
+    $.each(serverMap, function(key, serverInfo){  
+    	if(key=='@type') return;    
+    	if(key == thisServerInfo.serverAddress) return;
+    	var topicList = buildTopicList(serverInfo.topicMap);
+    	$("#inbound").append(
+			"<tr>\
+				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a></td>\
+				<td>" + serverInfo.serverVersion + "</td>\
+				<td>\
+	                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+            	</td>\
 			</tr>"
 		);
     }); 
-}); 
-
+});  
 });
 </script> 
 
-<div align="center">
-<table>
-	<thead>
-	<tr>
-	<th>Topic</th>
-	<th>Flag</th>
-	<th>#Consumer</th>
-	<th>#MsgInGroup</th> 
-	<th>TPS</th>
-	<th>LastUpdated</th>  
-	<th>Operation</th>
-	</tr>
-	</thead>
-
-<tbody id="mq_table"> 
-
-</tbody>
-
-</table> 
-</div>	
 </body>
 
 </html>

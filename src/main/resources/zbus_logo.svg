@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024px" height="1024px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 42 (36781) - http://www.bohemiancoding.com/sketch -->
+    <title>Desktop</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Oval-2" fill="#161616" cx="505" cy="473" r="316"></circle>
+        <g id="Desktop" stroke="#A0D500">
+            <g id="Group-2" transform="translate(271.000000, 264.000000)">
+                <path d="M404,48 L65.5,361.5" id="Line" stroke-width="46" stroke-dasharray="25,15"></path>
+                <g id="Group-3" transform="translate(73.000000, 265.000000)" stroke-width="20">
+                    <path d="M13,115 L283,88" id="Line" transform="translate(148.000000, 101.500000) scale(-1, 1) translate(-148.000000, -101.500000) "></path>
+                    <path d="M336,86 L0,32" id="Line" stroke-linecap="square" transform="translate(168.000000, 59.000000) scale(-1, 1) translate(-168.000000, -59.000000) "></path>
+                    <circle id="Oval" transform="translate(312.000000, 118.000000) scale(-1, 1) translate(-312.000000, -118.000000) " cx="312" cy="118" r="30"></circle>
+                    <circle id="Oval" transform="translate(367.000000, 30.000000) scale(-1, 1) translate(-367.000000, -30.000000) " cx="367" cy="30" r="30"></circle>
+                </g>
+                <g id="Group-3" transform="translate(198.500000, 74.000000) scale(-1, -1) translate(-198.500000, -74.000000) " stroke-width="20">
+                    <path d="M13,115 L283,88" id="Line" transform="translate(148.000000, 101.500000) scale(-1, 1) translate(-148.000000, -101.500000) "></path>
+                    <path d="M336,86 L0,32" id="Line" stroke-linecap="square" transform="translate(168.000000, 59.000000) scale(-1, 1) translate(-168.000000, -59.000000) "></path>
+                    <circle id="Oval" transform="translate(312.000000, 118.000000) scale(-1, 1) translate(-312.000000, -118.000000) " cx="312" cy="118" r="30"></circle>
+                    <circle id="Oval" transform="translate(367.000000, 30.000000) scale(-1, 1) translate(-367.000000, -30.000000) " cx="367" cy="30" r="30"></circle>
+                </g>
+                <circle id="Oval" stroke-width="10" fill="#A0D500" cx="397" cy="62" r="40"></circle>
+                <circle id="Oval" stroke-width="10" fill="#A0D500" cx="69" cy="354" r="40"></circle>
+            </g>
+        </g>
+    </g>
+</svg>

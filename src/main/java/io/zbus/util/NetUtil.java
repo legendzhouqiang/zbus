@@ -81,7 +81,7 @@ public class NetUtil {
 	}
 
 	public static String getLocalIp(String ipPreference) {
-		if (ipPreference == null) {
+		if (ipPreference == null || "".equals(ipPreference.trim())) {
 			ipPreference = "*>10>172>192>127";
 		}
 		String[] prefix = ipPreference.split("[> ]+");

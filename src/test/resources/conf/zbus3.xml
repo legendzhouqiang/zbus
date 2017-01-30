@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus>   
+	<host>0.0.0.0</host> 
+	<port>15557</port> 
+	<mqStore>/tmp/zbus3</mqStore>
+	
+	<trackServerList>127.0.0.1:15555</trackServerList>   
+	
+	<verbose>false</verbose> 
+	  
+	<sslCertificateFile></sslCertificateFile>
+	<sslPrivateKeyFile></sslPrivateKeyFile>  
+</zbus>
+

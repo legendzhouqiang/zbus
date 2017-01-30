@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -69,8 +70,10 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler("", homeHandler);  
 		registerHandler(Protocol.JAVASCRIPT, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
+		registerHandler(Protocol.IMG, imgHandler);
 		registerHandler(Protocol.PING, pingHandler);
 		registerHandler(Protocol.INFO, infoHandler);
+		registerHandler(Protocol.VERSION, versionHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -314,6 +317,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			Message res = new Message();
 			res.setStatus(200); 
 			res.setId(msg.getId()); 
+			res.setJsonBody(JsonUtil.toJSONString(getServerInfo()));  
+			sess.write(res);
+		}
+	};
+	
+	private MessageHandler versionHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = new Message();
+			res.setStatus(200); 
+			res.setId(msg.getId()); 
 			res.setBody(Protocol.VERSION_VALUE);
 			sess.write(res);
 		}
@@ -326,7 +339,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setStatus("200");
 			msg.setId(msgId);
 			msg.setHeader("content-type", "text/html");
-			String body = FileUtil.loadFileContent("zbus.htm");
+			String body = FileUtil.loadFileString("zbus.htm");
 			if ("".equals(body)) {
 				body = "<strong>zbus.htm file missing</strong>";
 			}
@@ -343,18 +356,18 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			return res;
 		}
 		url = url.substring(prefixPath.length());   
-		String body = null;
+		byte[] body = null;
 		try{
-			body = FileUtil.loadFileContent(url);
+			body = FileUtil.loadFileBytes(url);
 			if(body == null){
 				res.setStatus(404);
-				body = "404: File (" + url +") Not Found";
+				body = ("404: File (" + url +") Not Found").getBytes();
 			} else {
 				res.setStatus(200); 
 			}
 		} catch (IOException e){
 			res.setStatus(404);
-			body = e.getMessage();
+			body = e.getMessage().getBytes();
 		}  
 		res.setBody(body); 
 		return res;
@@ -375,6 +388,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			Message res = handleFileRequest("/css/", msg.getUrl());
 			if("200".equals(res.getStatus())){
 				res.setHeader("content-type", "text/css");
+			} 
+			sess.write(res);
+		}
+	}; 
+	
+	private MessageHandler imgHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = handleFileRequest("/img/", msg.getUrl());
+			if("200".equals(res.getStatus())){
+				res.setHeader("content-type", "image/svg+xml");
 			} 
 			sess.write(res);
 		}
@@ -511,6 +534,19 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
    		ServerInfo info = new ServerInfo();
 		info.serverAddress = mqServer.getServerAddress();
 		info.topicMap = table;  
+		
+		String serverList = config.getTrackServerList();
+		if(serverList == null){
+			serverList = "";
+		}
+		serverList = serverList.trim();
+		
+		info.trackServerList = new ArrayList<String>();
+		for(String s : serverList.split("[;, ]")){
+			s = s.trim();
+			if("".equals(s)) continue;
+			info.trackServerList.add(s);
+		}
 		return info;
     }
     

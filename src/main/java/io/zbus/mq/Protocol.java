@@ -7,8 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Protocol {  
-	public static final String VERSION_VALUE = "0.8.0";       //start from 0.8.0
-	public static final String VERSION       = "version";
+	public static final String VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 	
 	//MQ Produce/Consume
 	public static final String PRODUCE       = "produce";   
@@ -42,9 +41,11 @@ public class Protocol {
 	
 	//Simple HTTP server command
 	public static final String PING          = "ping"; //ping server, returning back server time
-	public static final String INFO          = "info"; //version info
+	public static final String INFO          = "info"; //server info 
+	public static final String VERSION       = "version";
 	public static final String JAVASCRIPT    = "js";   //serve javascript file
 	public static final String CSS           = "css";  //serve css file 
+	public static final String IMG           = "img";  //serve image file(PNG)
 	
 	
 	//Message parameters
@@ -86,7 +87,8 @@ public class Protocol {
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
 	  
-	public static class ServerInfo extends TrackItem{   
+	public static class ServerInfo extends TrackItem{  
+		public List<String> trackServerList;
 		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>(); 
 
 		@Override
@@ -173,6 +175,7 @@ public class Protocol {
 	
 	public static class TrackItem implements Cloneable{
 		public String serverAddress;  
+		public String serverVersion = VERSION_VALUE;
 		public long publishTimestamp = System.currentTimeMillis(); 
 		public boolean live = true;   
 		

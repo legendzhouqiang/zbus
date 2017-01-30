@@ -23,6 +23,7 @@
 package io.zbus.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -100,7 +101,7 @@ public class FileUtil {
 		return null;
 	}
 
-	public static String loadFileContent(String resource) throws IOException {
+	public static String loadFileString(String resource) throws IOException {
 		InputStream in = FileUtil.class.getClassLoader().getResourceAsStream(resource);
 		if (in == null) return null;
 
@@ -122,6 +123,30 @@ public class FileUtil {
 			}
 		}
 		return writer.toString();
+	}
+	
+	public static byte[] loadFileBytes(String resource) throws IOException {
+		InputStream in = FileUtil.class.getClassLoader().getResourceAsStream(resource);
+		if (in == null)
+			return null;
+
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		int nRead;
+		byte[] data = new byte[1024];
+		try {
+			while ((nRead = in.read(data, 0, data.length)) != -1) {
+				buffer.write(data, 0, nRead);
+			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return buffer.toByteArray();
 	}
 
 	public static void deleteFile(File file) {
