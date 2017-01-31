@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Message Test</title>
+<script type="text/javascript" src="http://localhost:15555/js/zbus.js"></script>
+<style>
+table {
+	font-family: "Helvetica Neue", Helvetica, sans-serif
+}
+
+caption {
+	text-align: left;
+	color: silver;
+	font-weight: bold;
+	text-transform: uppercase;
+	padding: 5px;
+}
+
+thead {
+	background: SteelBlue;
+	color: white;
+}
+
+th, td {
+	padding: 5px 10px;
+}
+
+tbody tr:nth-child(even) {
+	background: WhiteSmoke;
+}
+
+tbody tr td:nth-child(2) {
+	text-align: center;
+}
+
+tbody tr td:nth-child(3), tbody tr td:nth-child(4) {
+	text-align: right;
+	font-family: monospace;
+}
+
+tfoot {
+	background: SeaGreen;
+	color: white;
+	text-align: right;
+}
+
+tfoot tr th:last-child {
+	font-family: monospace;
+}
+
+#slogan {
+	text-align: center;
+	font: bold 24px arial, sans-serif;
+	margin: 30px 30px;
+}
+</style>
+</head>
+<body>   
+	<script type="text/javascript">
+	var msg = {'status':200, 'body': 'hello', 'declare_group': 'hong'}
+	x =httpDump(msg)
+	y = httpParse(x)
+	</script>
+</body>
+
+</html>

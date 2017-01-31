@@ -74,21 +74,17 @@ $.get('/version',function(data){
 	$("#version").text(data); 
 }); 
   
-$.getJSON('/track_query',function(serverMap){     
-    $.each(serverMap, function(key, serverInfo){  
-    	if(key=='@type') return;  
-    	
-    	$.each(serverInfo.topicMap, function(key, topicInfo){
-    		if(key=='@type') return;  
-    		$("#topic-list").append(
-   				"<tr>\
-   					<td><a class='link' target='_blank' href='#'>" + topicInfo.topicName + "</a></td>\
-   					<td>0</td>\
-   					<td>0</td>\
-   					<td>0</td>\
-   				</tr>"
-   			);
-    	});
+$.getJSON('/track_query',function(serverTable){  
+	var topicSumMap = toTopicSummary(serverTable);
+    $.each(topicSumMap, function(topicName, topicSum){   
+    	$("#topic-list").append(
+			"<tr>\
+				<td><a class='link' target='_blank' href='#'>" +topicName + "</a></td>\
+				<td>"+ topicSum.messageDepth + "</td>\
+				<td>"+ topicSum.consumerGroupCount+ "</td>\
+				<td>"+ topicSum.consumerCount+ "</td>\
+			</tr>"
+   		); 
     }); 
 });  
 

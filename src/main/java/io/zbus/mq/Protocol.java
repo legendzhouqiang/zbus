@@ -75,13 +75,14 @@ public class Protocol {
 	public static final String TTL      = "ttl";  
 	public static final String EXPIRE   = "expire"; 
 	
-	public static final String ORIGIN_ID     = "rawid";      //original id
+	public static final String ORIGIN_ID     = "origin_id";  //original id, TODO compatible issue: rawid
 	public static final String ORIGIN_URL    = "origin_url"; //original URL  
-	public static final String ORIGIN_STATUS = "reply_code"; //original Status  
+	public static final String ORIGIN_STATUS = "origin_status"; //original Status  TODO compatible issue: reply_code
 	
 	//Security
 	public static final String APPID   = "appid";
 	public static final String TOKEN   = "token";
+	
 	
 	public static final int FLAG_RPC    	    = 1<<0; 
 	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
