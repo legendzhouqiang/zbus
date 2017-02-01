@@ -58,9 +58,19 @@ tfoot tr th:last-child {
 </head>
 <body>   
 	<script type="text/javascript">
-	var msg = {'status':200, 'body': 'hello', 'declare_group': 'hong'}
-	x =httpDump(msg)
-	y = httpParse(x)
+	var msg = {}
+	msg.status = 200;
+	msg.consumeStartOffset = 1024;
+	msg.body = new ArrayBuffer(100);
+	
+	
+	var decoder = new TextDecoder("utf8");
+	var encoder = new TextEncoder("utf8");
+	
+	var msgBuf = httpDump(msg) 
+	var msg2 = httpParse(msgBuf);
+	
+	
 	</script>
 </body>
 
