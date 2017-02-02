@@ -113,7 +113,7 @@ public class TrackBroker implements Broker {
 		client.onMessage(new MsgHandler<Message>() { 
 			@Override
 			public void handle(Message msg, Session session) throws IOException {  
-				if(Protocol.TRACK_PUB_SERVER.equals(msg.getCommand())){
+				if(Protocol.TRACK_PUB.equals(msg.getCommand())){
 					ServerInfo serverInfo = JsonUtil.parseObject(msg.getBodyString(), ServerInfo.class);  
 					routeTable.update(serverInfo);
 					if(serverInfo.live){

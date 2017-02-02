@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.TrackTable;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
@@ -61,8 +62,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		//Tracker
 		registerHandler(Protocol.TRACK_QUERY, trackQueryHandler); 
-		registerHandler(Protocol.TRACK_PUB_SERVER, trackPubServerHandler);
-		registerHandler(Protocol.TRACK_PUB_TOPIC, trackPubTopicHandler);
+		registerHandler(Protocol.TRACK_PUB, trackPubServerHandler); 
 		registerHandler(Protocol.TRACK_SUB, trackSubHandler); 
 		
 		
@@ -183,7 +183,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(!msg.getTopic().equals(topic)){
 				sess.attr(Protocol.TOPIC, mq.getName()); //mark
 				
-				trackService.publish(mq.getTopicInfo()); 
+				trackService.publish(); 
 			} 
 		}
 	}; 
@@ -288,7 +288,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			}
     			try {
 					mq.declareConsumerGroup(ctrl); 
-					trackService.publish(mq.getTopicInfo()); 
+					trackService.publish(); 
 					
 					ReplyKit.reply200(msg, sess);
 					if(newMq){
@@ -449,7 +449,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			Map<String, ServerInfo> table = trackService.queryServerTable();
+			TrackTable table = trackService.queryTrackTable(); 
 			
 			Message res = new Message();
 			res.setStatus(200);
@@ -464,13 +464,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
 				boolean ack = msg.isAck();
-				ServerInfo info = JsonUtil.parseObject(msg.getBodyString(), ServerInfo.class); 
-				if(info.serverAddress == null){
-					ReplyKit.reply400(msg, session); 
-					return;
-				} 
-				
-				trackService.publish(info); 
+				TrackTable table = JsonUtil.parseObject(msg.getBodyString(), TrackTable.class);   
+				trackService.publish(table); //TODO
 				
 				if(ack){
 					ReplyKit.reply200(msg, session);
@@ -480,30 +475,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			} 
 		}
 	};
-	
-	private MessageHandler trackPubTopicHandler = new MessageHandler() {
-		
-		@Override
-		public void handle(Message msg, Session session) throws IOException {  
-			try{
-				boolean ack = msg.isAck();
-				TopicInfo info = JsonUtil.parseObject(msg.getBodyString(), TopicInfo.class);
-				
-				if(info.serverAddress == null){
-					ReplyKit.reply400(msg, session); 
-					return;
-				} 
-				
-				trackService.publish(info);
-				
-				if(ack){
-					ReplyKit.reply200(msg, session);
-				}
-			} catch (Exception e) { 
-				ReplyKit.reply500(msg, e, session);
-			} 
-		}
-	};
+	 
 	
 	private MessageHandler trackSubHandler = new MessageHandler() {
 		
@@ -523,7 +495,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		if(mq == null) return; 
 		mq.cleanSession(sess);
 		
-		trackService.publish(mq.getTopicInfo());  
+		trackService.publish();  //TODO
 	} 
 	
 	private boolean auth(Message msg){ 

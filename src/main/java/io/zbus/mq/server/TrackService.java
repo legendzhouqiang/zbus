@@ -15,8 +15,7 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerInfo;
-import io.zbus.mq.Protocol.TopicInfo;
-import io.zbus.mq.Protocol.TrackItem;
+import io.zbus.mq.TrackTable;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
@@ -90,10 +89,7 @@ public class TrackService implements Closeable{
     			public void onConnected() throws IOException { 
     				log.info("Connected to tracker(%s)", serverAddress);
     				healthyOutboundServerMap.put(serverAddress, client);
-    				
-    				for(ServerInfo info : queryServerTable().values()){ 
-    					publishToOutboundServer(client, info);
-    				}
+    				//TODO 
     			}
 			});
     		allOutboundServerList.add(client);
@@ -112,24 +108,28 @@ public class TrackService implements Closeable{
 		}
 		healthyInboundServerMap.clear();
 	}
+	 
 	
-	
-	public Map<String, ServerInfo> queryServerTable(){
+	public TrackTable queryTrackTable(){
 		Map<String, ServerInfo> map = new HashMap<String, ServerInfo>(serverMap);
 		if(thisServerIncluded){
 			map.put(thisServerAddress, mqServer.getMqAdaptor().getServerInfo());
 		}
-		return map;
+		TrackTable table = new TrackTable();
+		table.publisher = thisServerAddress;
+		
+		table.serverMap = map;
+		return table;
 	}
 	 
 	
-	private void publishToSubscribers(TrackItem info, String cmd){
+	private void publishToSubscribers(TrackTable table){
 		if(subscribers.isEmpty()) return;
 		
-		Message message = new Message();
+		Message message = new Message(); 
+		message.setCommand(Protocol.TRACK_PUB); 
+		message.setJsonBody(JsonUtil.toJSONString(table));
 		message.setStatus(200);// server to client
-		message.setCommand(cmd); 
-		message.setJsonBody(JsonUtil.toJSONString(info));
 		for(Session session : subscribers){
 			try{
 				session.writeAndFlush(message);
@@ -139,20 +139,20 @@ public class TrackService implements Closeable{
 			}
 		}
 	}  
+	 
 	
-	private void publishToOutboundServers(TrackItem info, String cmd){//client to server
+	private void publishToOutboundServers(TrackTable table){//client to server
 		if(healthyOutboundServerMap.isEmpty()){
 			return;
 		}
-		
-		Message message = new Message(); 
-		message.setCommand(cmd); 
-		message.setJsonBody(JsonUtil.toJSONString(info));
+		 
+		Message message = new Message();
+		message.setCommand(Protocol.TRACK_PUB); 
+		message.setJsonBody(JsonUtil.toJSONString(table));
 		message.setAck(false);
 		for(Entry<String, MessageClient> e : healthyOutboundServerMap.entrySet()){
-			try {
-				String serverAddress = e.getKey();
-				if(serverAddress.equals(info.serverAddress)){
+			try { 
+				if(e.getKey().equals(table.trigger)){ //ignore trigger
 					continue;
 				}
 				
@@ -162,193 +162,36 @@ public class TrackService implements Closeable{
 				log.error(ex.getMessage(), ex);
 			} 
 		}
-	}
-	
-	private void publishToSubscribers(final ServerInfo serverInfo){
-		publishToSubscribers(serverInfo, Protocol.TRACK_PUB_SERVER);
 	} 
-	
-	private void publishToSubscribers(final TopicInfo topicInfo){
-		publishToSubscribers(topicInfo, Protocol.TRACK_PUB_TOPIC); 
-	}   
-	
-	private void publishToOutboundServer(MessageClient client , ServerInfo info){ 
-		Message message = new Message(); 
-		message.setCommand(Protocol.TRACK_PUB_SERVER); 
-		message.setJsonBody(JsonUtil.toJSONString(info)); 
-		message.setAck(false);
-		try {  
-			client.invokeAsync(message,(MessageCallback)null);
-		} catch (IOException ex) { 
-			log.error(ex.getMessage(), ex);
-		}  
+  
+	public void publish(TrackTable table){ 
+		publishToOutboundServers(table);
+		publishToSubscribers(table); 
+		
+		//TODO handle inbounds new added
 	}
 	
-	private void publishToOutboundServers(ServerInfo serverInfo){
-		publishToOutboundServers(serverInfo, Protocol.TRACK_PUB_SERVER);
+	public void publish(){ 
+		final TrackTable table = queryTrackTable();
+		table.trigger = thisServerAddress;
+		
+		publish(table);
 	}
-	
-	private void publishToOutboundServers(TopicInfo topicInfo){
-		publishToOutboundServers(topicInfo, Protocol.TRACK_PUB_TOPIC);
-	}
-	
-	
-	private void serverRemove(final ServerInfo info) { 
-		if(info.live){
-			throw new IllegalArgumentException("calling serverRemove, ServerInfo should not be live");
-		}
-		boolean needUpdate = true;
-		if(!thisServerAddress.equals(info.serverAddress)){
-			ServerInfo old = serverMap.remove(info.serverAddress); 
-			if(old == null){
-				needUpdate = false;
-			} else { 
-				MessageClient client = healthyInboundServerMap.remove(info.serverAddress);
-				if(client != null){
-					try {
-						client.close();
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
-					}
-				}
-			}
-		}
-		if(!needUpdate) return;
-		
-		
-		publishToOutboundServers(info);
-		publishToSubscribers(info);
-	}
-	
-	private void serverUpdate(final ServerInfo info){
-		boolean needUpdate = true;
-		if(!thisServerAddress.equals(info.serverAddress)){
-			ServerInfo old = serverMap.get(info.serverAddress);
-			if(old == null || !old.equals(info)){
-				serverMap.put(info.serverAddress, info);
-			} else {
-				needUpdate = false;
-			} 
-		} 
-		if(!needUpdate) return;
-		
-		publishToOutboundServers(info);
-		publishToSubscribers(info); 
-	} 
-	
-	private void topicRemove(final TopicInfo info) {
-		if(info.live){
-			throw new IllegalArgumentException("calling topicRemove, TopicInfo should not be live");
-		}
-		boolean needUpdate = true;
-		if(!thisServerAddress.equals(info.serverAddress)){ //from other server
-			ServerInfo serverInfo = serverMap.get(info.serverAddress);
-			if(serverInfo == null){ 
-				log.warn("server not in local table:" + info.serverAddress);
-				return; //not recorded, ignore it
-			}
-			TopicInfo old = serverInfo.topicMap.remove(info.topicName);
-			if(old == null){
-				needUpdate = false;
-			}
-		} 
-		if(!needUpdate) return;
-		publishToOutboundServers(info);
-		publishToSubscribers(info); 
-	}
-	
-	private void topicUpdate(final TopicInfo info){ 
-		boolean needUpdate = true;
-		if(!thisServerAddress.equals(info.serverAddress)){
-			ServerInfo serverInfo = serverMap.get(info.serverAddress);
-			if(serverInfo == null){ 
-				log.warn("server not in local table:" + info.serverAddress);
-				return; //not recorded, ignore it
-			}
-			TopicInfo old = serverInfo.topicMap.get(info.topicName);
-			if(old == null || !old.equals(info)){
-				serverInfo.topicMap.put(info.topicName, info);
-			} else {
-				needUpdate = false;
-			}
-		} 
-		
-		if(!needUpdate) return;
-		publishToOutboundServers(info);
-		publishToSubscribers(info); 
-	}
-	
-	/**
-	 * publish ServerInfo to all subscribers, update local route if new
-	 * @param info
-	 */
-	public void publish(final ServerInfo info){ 
-		if(info.serverAddress == null){
-			info.serverAddress = thisServerAddress;
-		}
-		final String serverAddress = info.serverAddress; 
-		
-		if(!info.live){
-			serverRemove(info);
-			return;
-		}
-		
-		if(!serverAddress.equals(thisServerAddress) && !serverMap.containsKey(serverAddress)){  
-			//server join
-			final MessageClient client = new MessageClient(serverAddress, eventDriver);  
-			client.onConnected(new ConnectedHandler() {
-				@Override
-				public void onConnected() throws IOException {   
-					log.info("server(%s) in track", serverAddress);
-					healthyInboundServerMap.put(serverAddress, client);
-					serverUpdate(info);
-				}
-			});  
-			
-			client.onDisconnected(new DisconnectedHandler() { 
-				@Override
-				public void onDisconnected() throws IOException {  
-					log.warn("server(%s) lost track", serverAddress);
-					info.live = false;
-					serverRemove(info);
-				}  
-			}); 
-			
-			allInboundServerList.add(client);
-			client.connectAsync();
-			return;
-		}  
-		
-		serverUpdate(info);
-	}
-	
-	public void publish(final TopicInfo info){  
-		if(info.serverAddress == null){
-			info.serverAddress = thisServerAddress;
-		}
-		
-		if(!info.live){
-			topicRemove(info);
-			return;
-		} 
-		
-		topicUpdate(info);
-	}
+	 
 	
 	public void subscribe(Message msg, Session session){
 		subscribers.add(session); 
+		 
+		Message message = new Message(); 
+		message.setCommand(Protocol.TRACK_PUB); 
+		message.setJsonBody(JsonUtil.toJSONString(queryTrackTable())); 
+		message.setStatus(200);
+		message.setAck(false);
 		
-		for(ServerInfo info : queryServerTable().values()){ 
-			Message message = new Message(); 
-			message.setStatus(200);//must be response message
-			message.setCommand(Protocol.TRACK_PUB_SERVER); 
-			message.setJsonBody(JsonUtil.toJSONString(info)); 
-			message.setAck(false);
-			try {  
-				session.writeAndFlush(message);
-			} catch (Exception ex) { 
-				log.error(ex.getMessage(), ex);
-			}  
-		}
+		try {  
+			session.writeAndFlush(message);
+		} catch (Exception ex) { 
+			log.error(ex.getMessage(), ex);
+		}   
 	} 
 }

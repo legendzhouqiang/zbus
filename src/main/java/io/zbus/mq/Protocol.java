@@ -32,9 +32,8 @@ public class Protocol {
 	 
 	
 	//High Availability (HA)
-	public static final String TRACK_QUERY      = "track_query";  
-	public static final String TRACK_PUB_TOPIC  = "track_pub_topic"; 
-	public static final String TRACK_PUB_SERVER = "track_pub_server"; 
+	public static final String TRACK_QUERY      = "track_query";   
+	public static final String TRACK_PUB        = "track_pub"; 
 	public static final String TRACK_SUB        = "track_sub";   
 	
 	

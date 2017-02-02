@@ -347,7 +347,21 @@ function MessageClient(address) {
     this.autoReconnect = true;
     this.reconnectInterval = 3000;
     this.ticketTable = {}; 
+    this.messageHandler = null;
 }
+MessageClient.prototype.onMessage = function (messageHandler) {
+	this.messageHandler = messageHandler;
+}
+
+MessageClient.prototype.sendMessage = function (msg) {
+    if (this.socket.readyState != WebSocket.OPEN) {
+        console.log("socket is not open, invalid");
+        return;
+    } 
+    var buf = httpEncode(msg);
+    this.socket.send(buf);
+};
+
 
 MessageClient.prototype.connect = function (connectedHandler) {
     console.log("Trying to connect to " + this.address);
@@ -388,16 +402,17 @@ MessageClient.prototype.connect = function (connectedHandler) {
                 ticket.callback(msg);
             }
             delete client.ticketTable[msgid];
+        } else if(client.messageHandler){
+        	client.messageHandler(msg);
         } else {
-            console.log("Warn: drop message\n" + msg.toString());
+        	console.log("Warn: drop message\n" + msg.toString());
         }
     }
 
     this.socket.onerror = function (data) {
         console.log("Error: " + data);
     }
-}
-
+} 
 
 MessageClient.prototype.invoke = function (msg, callback) {
     if (this.socket.readyState != WebSocket.OPEN) {
