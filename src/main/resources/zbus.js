@@ -182,7 +182,7 @@ function underscore2camel(key){
  * @param msg
  * @returns ArrayBuffer
  */
-function httpDump(msg){
+function httpEncode(msg) {
 	var headers = "";
 	var encoding = msg.encoding;
 	if(!encoding) encoding = "utf8";
@@ -204,7 +204,9 @@ function httpDump(msg){
 			} 
 			body = encoder.encode(body); 
 		}  
-	} 
+	} else {
+	    body = new Uint8Array(0);
+	}
 	msg["content-length"] = body.byteLength;
 	msg["content-type"] = contentType;
 	
@@ -221,17 +223,15 @@ function httpDump(msg){
 		if(!url) url = "/";
 		line = "{0} {1} HTTP/1.1\r\n".format(method, url);  
 	}
-	
-	
-	headers += line; 
 
-
+	headers += line;  
 	for(var key in msg){
 		if(key in nonHeaders) continue;  
 		line = "{0}: {1}\r\n".format(camel2underscore(key), msg[key]);
 		headers += line;
 	}
 	headers += "\r\n";
+
 	delete msg["content-length"]; //clear
 	delete msg["content-type"]
      
@@ -251,9 +251,9 @@ function httpDump(msg){
 };
 
  
-function httpParse(data){
+function httpDecode(data){
 	if(typeof data == "string"){
-		data = new TextEncoder("utf8").encode();
+		data = new TextEncoder("utf8").encode(data);
 	} else if (data instanceof Uint8Array || data instanceof Int8Array){
 		//ignore
 	} else if (data instanceof ArrayBuffer) {
@@ -331,8 +331,168 @@ function httpParse(data){
 	} 
 	
 	return msg;	 
+} 
+
+
+function Ticket(reqMsg, callback) {
+    this.id = uuid();
+    this.request = reqMsg;
+    this.response = null;
+    this.callback = callback;
+    reqMsg.id = this.id;
+} 
+
+function MessageClient(address) {
+    this.address = address;
+    this.autoReconnect = true;
+    this.reconnectInterval = 3000;
+    this.ticketTable = {}; 
+}
+
+MessageClient.prototype.connect = function (connectedHandler) {
+    console.log("Trying to connect to " + this.address);
+
+    var WebSocket = window.WebSocket;
+    if (!WebSocket) {
+        WebSocket = window.MozWebSocket;
+    }
+
+    this.socket = new WebSocket(this.address);
+    var client = this;
+    this.socket.onopen = function (event) {
+        console.log("Connected to " + client.address);
+        if (connectedHandler) {
+            connectedHandler(event);
+        }
+        client.heartbeatInterval = setInterval(function () {
+            var msg = {};
+            msg.cmd = "heartbeat";
+            client.invoke(msg);
+        }, 30*1000);
+    };
+
+    this.socket.onclose = function (event) {
+        clearInterval(client.heartbeatInterval);
+        setTimeout(function () {
+            try { client.connect(connectedHandler); } catch (e) { }//ignore
+        }, client.reconnectInterval);
+    };
+
+    this.socket.onmessage = function (event) {
+        var msg = httpDecode(event.data);
+        var msgid = msg.id;
+        var ticket = client.ticketTable[msgid];
+        if (ticket) {
+            ticket.response = msg;
+            if (ticket.callback) {
+                ticket.callback(msg);
+            }
+            delete client.ticketTable[msgid];
+        } else {
+            console.log("Warn: drop message\n" + msg.toString());
+        }
+    }
+
+    this.socket.onerror = function (data) {
+        console.log("Error: " + data);
+    }
 }
 
 
+MessageClient.prototype.invoke = function (msg, callback) {
+    if (this.socket.readyState != WebSocket.OPEN) {
+        console.log("socket is not open, invalid");
+        return;
+    }
+    if (callback) {
+        var ticket = new Ticket(msg, callback);
+        this.ticketTable[ticket.id] = ticket;
+    }
+    var buf = httpEncode(msg);
+    this.socket.send(buf);
+};
+
+var Broker = MessageClient;
+
+
+function MqAdmin(broker, topic){
+	this.broker = broker;
+	this.topic = topic; 
+	this.flag = 0;
+} 
+
+MqAdmin.prototype.declareTopic = function(callback){ 
+    var msg = {};
+    msg.cmd = Protocol.DECLARE_TOPIC; 
+    msg.topic = this.topic; 
+    msg.flag = this.flag; 
+    
+    this.broker.invoke(msg, callback);
+};
+
+
+function Producer(broker, topic){
+	MqAdmin.call(this, broker, topic); 
+}
+
+
+inherits(Producer, MqAdmin)
+
+Producer.prototype.publish = function(msg, callback){
+    msg.cmd = Protocol.PRODUCE;
+    msg.topic = this.topic;
+    this.broker.invoke(msg, callback);
+};
+
+
+function Consumer(broker, topic){
+	MqAdmin.call(this, broker, topic); 
+}
+
+inherits(Consumer, MqAdmin);
+
+Consumer.prototype.take = function(callback){
+    var msg = {};
+    msg.cmd = Protocol.CONSUME;
+    msg.topic = this.topic;  
+
+    var consumer = this;
+    this.broker.invoke(msg, function(res){
+        if(res.status == 404){
+            consumer.declareTopic(function(res){ 
+            	if(res.status == 200){
+            		console.log(consumer.topic + " created");
+            	}
+                consumer.take(callback);
+            });
+            return;
+        } 
+        if(res.status == 200){
+        	var originUrl = res.originUrl
+        	var id = res.originId;
+        	
+        	delete res.originUrl
+        	delete res.originId 
+        	if(typeof originUrl == "undefined"){
+        		originUrl = "/";
+        	}  
+        	
+        	res.id = id;  
+        	res.url = originUrl; 
+        	try{  
+                callback(res);
+            } catch (error){
+                console.log(error);
+            }
+        } 
+        return consumer.take(callback);
+    });
+};
+
+Consumer.prototype.route = function(msg){
+    msg.cmd = Protocol.Route;
+    msg.ack = false;
+    this.broker.invoke(msg);
+}; 
 
 

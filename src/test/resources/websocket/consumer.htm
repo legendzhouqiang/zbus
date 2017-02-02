@@ -8,12 +8,11 @@
 <body>   
 	<script type="text/javascript"> 
 	var broker = new Broker("ws://localhost:15555");
+	var consumer = new Consumer(broker, "MyTopic");
     broker.connect(function(event){
-        var msg = {}
-        msg.cmd = "track_query";
-        broker.invoke(msg, function(data){ 
-            console.log(data.body);
-        });
+        consumer.take(function(data){
+        	console.log(data);
+        }); 
     });  
 	</script>
 </body>

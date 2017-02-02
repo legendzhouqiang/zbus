@@ -450,8 +450,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
 			Map<String, ServerInfo> table = trackService.queryServerTable();
-			msg.setBody(JsonUtil.toJSONString(table));
-			ReplyKit.reply200WithBody(msg, session);
+			
+			Message res = new Message();
+			res.setStatus(200);
+			res.setJsonBody(JsonUtil.toJSONString(table));
+			ReplyKit.reply(msg, res, session);
 		}
 	};
 	

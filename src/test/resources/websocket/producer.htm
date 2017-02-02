@@ -8,12 +8,18 @@
 <body>   
 	<script type="text/javascript"> 
 	var broker = new Broker("ws://localhost:15555");
+	
+	var producer = new Producer(broker, "MyTopicWS");
     broker.connect(function(event){
-        var msg = {}
-        msg.cmd = "track_query";
-        broker.invoke(msg, function(data){ 
-            console.log(data.body);
-        });
+    	producer.declareTopic(function(res){
+    		if(res.status == 200){
+    			var msg = {};
+    	    	msg.body = "from websocket";
+    	        producer.publish(msg, function(data){
+    	        	console.log(data);
+    	        }); 
+    		}
+    	}); 
     });  
 	</script>
 </body>
