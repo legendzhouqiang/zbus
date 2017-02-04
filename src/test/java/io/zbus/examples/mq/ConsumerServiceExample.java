@@ -17,7 +17,7 @@ public class ConsumerServiceExample {
 		
 		ConsumerServiceConfig config = new ConsumerServiceConfig();
 		config.setBroker(broker);
-		config.setTopic("MyTopic");   
+		config.setTopic("MyTopic2");   
 		config.setConsumerCount(4);
 		
 		config.setConsumerHandler(new ConsumerHandler() { 

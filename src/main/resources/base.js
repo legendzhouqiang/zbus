@@ -22,28 +22,4 @@ function timeConverter(unixTime){
 
 function dictSize(dict){
 	return Object.keys(dict).length
-}
-
-function toTopicSummary(serverTable){
-	var topicSumMap = {};
-	for(var key in serverTable){
-		if(key == '@type') continue;
-		var serverInfo = serverTable[key];
-		var topicMap = serverInfo.topicMap;
-		for(var topic in topicMap){
-			if(topic == '@type') continue;
-			var topicSum = {'messageDepth': 0, 'consumerGroupCount': 0, 'consumerCount': 0};
-			var topicInfo = topicMap[topic];
-			if(topic in topicSumMap){
-				topicSum = topicSumMap[topic]; 
-			} else {
-				topicSumMap[topic] = topicSum;
-				
-			}
-			topicSum.messageDepth += topicInfo.messageCount; 
-			topicSum.consumerGroupCount += topicInfo.consumerGroupCount; 
-			topicSum.consumerCount += topicInfo.consumerCount
-		}
-	}
-	return topicSumMap;
-}
+} 

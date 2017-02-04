@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import io.zbus.mq.ConsumerGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
-import io.zbus.mq.TrackTable;
+import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
@@ -71,6 +71,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.JS, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
 		registerHandler(Protocol.IMG, imgHandler);
+		registerHandler("favicon.ico", faviconHandler);
 		registerHandler(Protocol.PAGE, pageHandler);
 		registerHandler(Protocol.PING, pingHandler);
 		registerHandler(Protocol.INFO, infoHandler);
@@ -414,6 +415,16 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
+	private MessageHandler faviconHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = handleFileRequest("/img/", "/img/logo.svg");
+			if("200".equals(res.getStatus())){
+				res.setHeader("content-type", "image/svg+xml");
+			} 
+			sess.write(res);
+		}
+	}; 
+	
 	private MessageHandler queryTopicHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String json = "";
@@ -448,12 +459,10 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private MessageHandler trackQueryHandler = new MessageHandler() {
 		
 		@Override
-		public void handle(Message msg, Session session) throws IOException { 
-			TrackTable table = trackService.queryTrackTable(); 
-			
+		public void handle(Message msg, Session session) throws IOException {  
 			Message res = new Message();
 			res.setStatus(200);
-			res.setJsonBody(JsonUtil.toJSONString(table));
+			res.setJsonBody(JsonUtil.toJSONString(trackService.queryTrackerInfo()));
 			ReplyKit.reply(msg, res, session);
 		}
 	};
@@ -464,8 +473,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
 				boolean ack = msg.isAck();
-				TrackTable table = JsonUtil.parseObject(msg.getBodyString(), TrackTable.class);   
-				trackService.publish(table); //TODO
+				ServerEvent event = JsonUtil.parseObject(msg.getBodyString(), ServerEvent.class);   
+				trackService.publish(event); 
 				
 				if(ack){
 					ReplyKit.reply200(msg, session);
@@ -489,13 +498,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		super.cleanSession(sess);
 		
 		String topic = sess.attr(Protocol.TOPIC);
-		if(topic == null) return;
+		if(topic != null){
+			MessageQueue mq = mqTable.get(topic); 
+			if(mq != null){
+				mq.cleanSession(sess); 
+				trackService.publish();
+			}
+		}
 		
-		MessageQueue mq = mqTable.get(topic); 
-		if(mq == null) return; 
-		mq.cleanSession(sess);
-		
-		trackService.publish();  //TODO
+		trackService.cleanSession(sess); 
 	} 
 	
 	private boolean auth(Message msg){ 
@@ -527,11 +538,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 		serverList = serverList.trim();
 		
-		info.trackServerList = new ArrayList<String>();
+		info.trackerList = new ArrayList<String>();
 		for(String s : serverList.split("[;, ]")){
 			s = s.trim();
 			if("".equals(s)) continue;
-			info.trackServerList.add(s);
+			info.trackerList.add(s);
 		}
 		return info;
     }

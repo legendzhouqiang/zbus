@@ -76,26 +76,90 @@ $.get('/version',function(data){
 }); 
   
 
-  
-$.getJSON('/track_query',function(serverTable){  
-	var topicSumMap = toTopicSummary(serverTable);
-    $.each(topicSumMap, function(topicName, topicSum){   
-    	$("#topic-list").append(
-			"<tr>\
+function showTopicSumUpdate(topicSumMap){
+	$("#topic-list").find("tr:gt(0)").remove();
+	var topics = [];
+	for(var key in topicSumMap){
+		topics.push(key);
+	}
+	topics.sort();
+	for(var i in topics){
+		var topicName = topics[i];
+		var topicSum = topicSumMap[topicName];
+		
+		$("#topic-list").append(
+			"<tr id="+topicName+">\
 				<td><a class='link' target='_blank' href='#'>" +topicName + "</a></td>\
 				<td>"+ topicSum.messageDepth + "</td>\
 				<td>"+ topicSum.consumerGroupCount+ "</td>\
 				<td>"+ topicSum.consumerCount+ "</td>\
 			</tr>"
    		); 
-    });  
-}); 
- 
+	}  
+}
 
-$.getJSON('/info',function(serverInfo){   
-   	var broker = new Broker("ws://"+serverInfo.serverAddress); 
-   	broker.onMessage(function(data){
-   		console.log(data);
+var brokerMap = {};
+var serverInfoMap = {}; 
+
+function updateTopicSummary(serverInfo){  
+	var topicSumMap = {};
+	serverInfoMap[serverInfo.serverAddress] = serverInfo;
+	for(var address in serverInfoMap){
+		var serverInfo = serverInfoMap[address];
+		
+		var topicMap = serverInfo.topicMap;
+		for(var topic in topicMap){
+			if(topic == '@type') continue;
+			var topicSum = {'messageDepth': 0, 'consumerGroupCount': 0, 'consumerCount': 0};
+			var topicInfo = topicMap[topic];
+			if(topic in topicSumMap){
+				topicSum = topicSumMap[topic]; 
+			} else {
+				topicSumMap[topic] = topicSum; 
+			}
+			topicSum.messageDepth += topicInfo.messageCount; 
+			topicSum.consumerGroupCount += topicInfo.consumerGroupCount; 
+			topicSum.consumerCount += topicInfo.consumerCount
+		}  
+	} 
+	return topicSumMap;
+} 
+
+function queryServerInfo(broker){
+	var msg = {};
+	msg.cmd = "info";
+	broker.invoke(msg, function(msg){ 
+		var topicSumMap = updateTopicSummary(msg.body);
+		showTopicSumUpdate(topicSumMap); 
+	});
+}
+
+function updateServer(serverAddress){
+	var broker = brokerMap[serverAddress];
+	if(broker == null){
+		broker = new Broker("ws://"+serverAddress);  
+		broker.connect(function(event){
+			brokerMap[serverAddress] = broker;
+			queryServerInfo(broker);
+	    });    
+	} else {
+		queryServerInfo(broker);
+	} 
+}
+
+
+$.getJSON('/info',function(serverInfo){  
+	//serverInfo
+	var broker = new Broker("ws://"+serverInfo.serverAddress); 
+	brokerMap[serverInfo.serverAddress] = broker;
+	
+   	broker.onMessage(function(msg){
+   		var trackInfo = msg.body;
+   		var servers = trackInfo.liveServerList;
+   		for(var i in servers){
+   			var serverAddress = servers[i];
+   			updateServer(serverAddress);
+   		}
    	});
 	
     broker.connect(function(event){
@@ -103,7 +167,8 @@ $.getJSON('/info',function(serverInfo){
         msg.cmd = Protocol.TRACK_SUB;
         broker.sendMessage(msg);
     });   
-});
+});    
+
 
 
 });

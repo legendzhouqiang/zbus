@@ -3,12 +3,12 @@ package io.zbus.mq;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.concurrent.ConcurrentHashMap; 
 
 public class Protocol {  
 	public static final String VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 	
+	//=============================[1] Command Values================================================
 	//MQ Produce/Consume
 	public static final String PRODUCE       = "produce";   
 	public static final String CONSUME       = "consume";   
@@ -28,16 +28,13 @@ public class Protocol {
 	public static final String REMOVE_GROUP  = "remove_group";  
 	public static final String PAUSE_GROUP   = "pause_group";  
 	public static final String RESUME_GROUP  = "resume_group";  
-	public static final String EMPTY_GROUP   = "empty_group";  
-	 
+	public static final String EMPTY_GROUP   = "empty_group";   
 	
 	//High Availability (HA)
-	public static final String TRACK_QUERY      = "track_query";   
-	public static final String TRACK_PUB        = "track_pub"; 
-	public static final String TRACK_SUB        = "track_sub";   
-	
-	
-	
+	public static final String TRACK_QUERY   = "track_query";   
+	public static final String TRACK_PUB     = "track_pub"; 
+	public static final String TRACK_SUB     = "track_sub";   
+	 
 	//Simple HTTP server command
 	public static final String PING          = "ping"; //ping server, returning back server time
 	public static final String INFO          = "info"; //server info 
@@ -45,15 +42,15 @@ public class Protocol {
 	public static final String JS            = "js";   //serve javascript file
 	public static final String CSS           = "css";  //serve css file 
 	public static final String IMG           = "img";  //serve image file(SVG)
-	public static final String PAGE          = "page";  //serve image file(SVG)
+	public static final String PAGE          = "page"; //serve image file(SVG)
 	
 	
-	//Message parameters
-	public static final String COMMAND  = "cmd";     
-	public static final String TOPIC    = "topic";
-	public static final String FLAG     = "flag";
-	public static final String TAG   	= "tag";  
-	public static final String OFFSET   = "offset";
+	//=============================[2] Parameter Values================================================
+	public static final String COMMAND       		= "cmd";     
+	public static final String TOPIC         		= "topic";
+	public static final String FLAG          		= "flag";
+	public static final String TAG   	     		= "tag";  
+	public static final String OFFSET        		= "offset";
 	
 	public static final String CONSUMER_GROUP       = "consumer_group";  
 	public static final String CONSUME_BASE_GROUP   = "consume_base_group";  
@@ -63,62 +60,42 @@ public class Protocol {
 	public static final String CONSUME_WINDOW       = "consume_window";  
 	public static final String CONSUME_FILTER_TAG   = "consume_filter_tag";  
 	
-	public static final String SENDER   = "sender"; 
-	public static final String RECVER   = "recver";
-	public static final String ID      	= "id";	   
+	public static final String SENDER   			= "sender"; 
+	public static final String RECVER   			= "recver";
+	public static final String ID      				= "id";	   
 	
-	public static final String SERVER   = "server";  
-	public static final String ACK      = "ack";	  
-	public static final String ENCODING = "encoding";
-	public static final String DELAY    = "delay";
-	public static final String TTL      = "ttl";  
-	public static final String EXPIRE   = "expire"; 
+	public static final String SERVER   			= "server";  
+	public static final String ACK      			= "ack";	  
+	public static final String ENCODING 			= "encoding";
+	public static final String DELAY    			= "delay";
+	public static final String TTL      			= "ttl";  
+	public static final String EXPIRE   			= "expire"; 
 	
-	public static final String ORIGIN_ID     = "origin_id";  //original id, TODO compatible issue: rawid
-	public static final String ORIGIN_URL    = "origin_url"; //original URL  
-	public static final String ORIGIN_STATUS = "origin_status"; //original Status  TODO compatible issue: reply_code
+	public static final String ORIGIN_ID     		= "origin_id";  //original id, TODO compatible issue: rawid
+	public static final String ORIGIN_URL   		= "origin_url"; //original URL  
+	public static final String ORIGIN_STATUS 		= "origin_status"; //original Status  TODO compatible issue: reply_code
 	
 	//Security
-	public static final String APPID   = "appid";
-	public static final String TOKEN   = "token";
+	public static final String APPID   				= "appid";
+	public static final String TOKEN   				= "token";
 	
 	
 	public static final int FLAG_RPC    	    = 1<<0; 
 	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
 	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
 	
+	public static class ServerEvent{  
+		public String serverAddress;
+		public boolean live = true;  
+	}
+	
+	public static class TrackerInfo extends TrackItem{
+		public List<String> liveServerList;
+	}
 	  
 	public static class ServerInfo extends TrackItem{  
-		public List<String> trackServerList;
-		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>(); 
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			ServerInfo other = (ServerInfo) obj;
-			if (topicMap == null) {
-				if (other.topicMap != null)
-					return false;
-			} else if (!topicMap.equals(other.topicMap))
-				return false;
-			
-			if (serverAddress == null) {
-				if (other.serverAddress != null)
-					return false;
-			} else if (!serverAddress.equals(other.serverAddress))
-				return false;
-			return true;
-		}  
-		
-		@Override
-		public ServerInfo clone() { 
-			return (ServerInfo) super.clone(); 
-		}
+		public List<String> trackerList; 
+		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	
 	public static class TopicInfo extends TrackItem{ 
@@ -132,65 +109,15 @@ public class Protocol {
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime; 
-		
-		@Override
-		public TopicInfo clone() { 
-			return (TopicInfo)super.clone();
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			TopicInfo other = (TopicInfo) obj; 
-			
-			if (consumerCount != other.consumerCount)
-				return false;
-			if (consumerGroupCount != other.consumerGroupCount)
-				return false; 
-			
-			if (flag != other.flag)
-				return false; 
-			if (messageCount != other.messageCount)
-				return false;
-			if (topicName == null) {
-				if (other.topicName != null)
-					return false;
-			} else if (!topicName.equals(other.topicName))
-				return false;
-			
-			if (serverAddress == null) {
-				if (other.serverAddress != null)
-					return false;
-			} else if (!serverAddress.equals(other.serverAddress))
-				return false;
-			
-			return true;
-		} 
+		public long lastUpdatedTime;  
 	}  
 	
-	public static class TrackItem implements Cloneable{
+	public static class TrackItem {
 		public String serverAddress;  
-		public String serverVersion = VERSION_VALUE;
-		public long publishTimestamp = System.currentTimeMillis(); 
-		public boolean live = true;   
-		
-		@Override
-		public TrackItem clone() { 
-			try {
-				return (TrackItem) super.clone();
-			} catch (CloneNotSupportedException e) {
-				return null;
-			}
-		}
+		public String serverVersion = VERSION_VALUE;  
 	}
 	
-	public static class ConsumerGroupInfo implements Cloneable{ 
+	public static class ConsumerGroupInfo{ 
 		public String topicName;
 		public String groupName;
 		public int flag; 
@@ -200,16 +127,6 @@ public class Protocol {
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime;  
-		
-		@Override
-		public ConsumerGroupInfo clone() { 
-			try {
-				return (ConsumerGroupInfo) super.clone();
-			} catch (CloneNotSupportedException e) {
-				return null;
-			}
-		}
-	} 
-	
+		public long lastUpdatedTime;   
+	}  
 }

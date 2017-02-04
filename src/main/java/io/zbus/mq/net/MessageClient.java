@@ -64,5 +64,9 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 			});
 		}
 	} 
+	
+	public void invokeAsync(Message req) throws IOException {
+		invokeAsync(req, (MessageCallback)null);
+	}
 }
  

@@ -16,7 +16,9 @@ import io.zbus.mq.MessageInvoker;
 import io.zbus.mq.MqException;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerInfo;
-import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.mq.Protocol.TrackerInfo;
+import io.zbus.mq.broker.SingleBroker.BrokerConnectedHandler;
+import io.zbus.mq.broker.SingleBroker.BrokerDisconnectedHandler;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
@@ -29,7 +31,7 @@ import io.zbus.util.logging.LoggerFactory;
 
 public class TrackBroker implements Broker { 
 	private static final Logger log = LoggerFactory.getLogger(TrackBroker.class);
-	private Map<String, Broker> brokerMap = new ConcurrentHashMap<String, Broker>();  
+	private Map<String, SingleBroker> brokerMap = new ConcurrentHashMap<String, SingleBroker>();  
 	private ServerSelector serverSelector = new DefaultServerSelector(); 
 	private RouteTable routeTable = new RouteTable();
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
@@ -58,12 +60,7 @@ public class TrackBroker implements Broker {
 	
 	public TrackBroker(String brokerAddress) throws IOException{ 
 		this(new BrokerConfig(brokerAddress));
-	}
-	
-	@Override
-	public String brokerAddress() { 
-		return config.getBrokerAddress();
-	}
+	} 
 	
 	private void subscribeToTracker(final String serverAddress){
 		final MessageClient client = new MessageClient(serverAddress, eventDriver);  
@@ -82,48 +79,20 @@ public class TrackBroker implements Broker {
 			@Override
 			public void onConnected() throws IOException { 
 				log.info("Connected to tracker(%s)", serverAddress);  
-				Message req = new Message();
-				req.setCommand(Protocol.TRACK_QUERY);
-				client.invokeAsync(req, new MessageCallback() { 
-					@Override
-					public void onReturn(Message result) { 
-						@SuppressWarnings("unchecked")
-						Map<String, Object> table = JsonUtil.parseObject(result.getBodyString(), Map.class);
-						for(Object object : table.values()){
-							try {
-								ServerInfo serverInfo = JsonUtil.convert(object, ServerInfo.class);
-								registerServer(serverInfo.serverAddress);
-								routeTable.update(serverInfo);
-							} catch (IOException e) {
-								log.error(e.getMessage(), e);
-							}
-						} 
-						ready.countDown();
-						waitCheck = false;
-					}
-				});
 				
-				req = new Message();
+				Message req = new Message();  
 				req.setCommand(Protocol.TRACK_SUB);
 				req.setAck(false); 
-				client.invokeAsync(req, (MessageCallback)null);
+				client.invokeAsync(req);
 			}
 		}); 
 		
-		client.onMessage(new MsgHandler<Message>() { 
+		client.onMessage(new MsgHandler<Message>() {  
 			@Override
-			public void handle(Message msg, Session session) throws IOException {  
-				if(Protocol.TRACK_PUB.equals(msg.getCommand())){
-					ServerInfo serverInfo = JsonUtil.parseObject(msg.getBodyString(), ServerInfo.class);  
-					routeTable.update(serverInfo);
-					if(serverInfo.live){
-						registerServer(serverInfo.serverAddress);
-					} else {
-						unregisterServer(serverInfo.serverAddress);
-					}
-				} else {
-					TopicInfo topicInfo = JsonUtil.parseObject(msg.getBodyString(), TopicInfo.class);  
-					routeTable.update(topicInfo);
+			public void handle(Message msg, Session session) throws IOException { 
+				if(Protocol.TRACK_PUB.equals(msg.getCommand())){ 
+					TrackerInfo trackerInfo = JsonUtil.parseObject(msg.getBodyString(), TrackerInfo.class);
+					onTrackInfoUpdate(trackerInfo);
 				}
 			}
 		});
@@ -132,16 +101,120 @@ public class TrackBroker implements Broker {
 		trackSubscribers.put(serverAddress, client); 
 	}
 	
-	private void checkReady(){
-		if(waitCheck){
-			try {
-				ready.await(3000, TimeUnit.MILLISECONDS); //TODO make it configurable
-			} catch (InterruptedException e) {
-				//ignore 
+	private void onTrackInfoUpdate(TrackerInfo trackerInfo) throws IOException {
+		List<String> toRemove = routeTable.updateVotes(trackerInfo);
+		if(!toRemove.isEmpty()){ 
+			for(String serverAddress : toRemove){
+				unregisterServer(serverAddress);
 			}
-			waitCheck = false;
+		}
+		
+		for(String serverAddress : trackerInfo.liveServerList){
+			SingleBroker broker = brokerMap.get(serverAddress);
+			if(broker == null){
+				registerServer(serverAddress);
+				broker = brokerMap.get(serverAddress);
+			} 
+			try{
+				updateServerInfo(broker); 
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+	} 
+	
+	private void updateServerInfo(SingleBroker broker) throws IOException{
+		Message message = new Message();
+		message.setCommand(Protocol.INFO);  
+		broker.invokeAsync(message, new MessageCallback() { 
+			@Override
+			public void onReturn(Message result) {
+				ServerInfo serverInfo = JsonUtil.parseObject(result.getBodyString(), ServerInfo.class);
+				routeTable.update(serverInfo);
+				ready.countDown();
+			}
+		}); 
+	}
+	
+	@Override
+	public void registerServer(final String serverAddress) throws IOException {  	
+		final SingleBroker broker;
+		synchronized (brokerMap) {
+			if(brokerMap.containsKey(serverAddress)){
+				return;
+			}  
+			broker = createBroker(serverAddress);
+			brokerMap.put(serverAddress, broker);  
+		}    
+		
+		broker.onBrokerConnected(new BrokerConnectedHandler() { 
+			@Override
+			public void onConnected(final SingleBroker broker) {
+				for(final ServerNotifyListener listener : listeners){
+					eventDriver.getGroup().submit(new Runnable() { 
+						@Override
+						public void run() {  
+							listener.onServerJoin(broker);
+						}
+					});
+				}
+			}
+		});
+		
+		broker.onBrokerDisconnected(new BrokerDisconnectedHandler() { 
+			@Override
+			public void onDisconnected(SingleBroker broker) { 
+				try {
+					unregisterServer(serverAddress);
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		});
+		
+		broker.dectectConnection();  
+	} 
+	
+	@Override
+	public void unregisterServer(final String serverAddress) throws IOException { 
+		final Broker broker;
+		synchronized (brokerMap) { 
+			broker = brokerMap.remove(serverAddress);
+			if(broker == null) return;
+			
+			eventDriver.getGroup().schedule(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						broker.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					} 
+				}
+			}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
+			
+		}    
+		
+		for(final ServerNotifyListener listener : listeners){
+			eventDriver.getGroup().submit(new Runnable() { 
+				@Override
+				public void run() { 
+					listener.onServerLeave(serverAddress);
+				}
+			});
 		}
 	}
+
+	
+	private SingleBroker createBroker(String serverAddress) throws IOException{
+		BrokerConfig config = this.config.clone();
+		config.setBrokerAddress(serverAddress);
+		SingleBroker broker = new SingleBroker(config);
+		return broker;
+	} 
+
+
 	
 	@Override
 	public MessageInvoker selectForProducer(String topic) throws IOException {
@@ -201,67 +274,6 @@ public class TrackBroker implements Broker {
 	} 
 	
 	@Override
-	public void registerServer(final String serverAddress) throws IOException {  	
-		final Broker broker;
-		synchronized (brokerMap) {
-			if(brokerMap.containsKey(serverAddress)){
-				return;
-			}  
-			broker = createBroker(serverAddress);
-			brokerMap.put(serverAddress, broker);
-		}    
-		
-		for(final ServerNotifyListener listener : listeners){
-			eventDriver.getGroup().submit(new Runnable() { 
-				@Override
-				public void run() { 
-					listener.onServerJoin(broker);
-				}
-			});
-		}
-	} 
-	
-	@Override
-	public void unregisterServer(final String serverAddress) throws IOException { 
-		final Broker broker;
-		synchronized (brokerMap) { 
-			broker = brokerMap.remove(serverAddress);
-			if(broker == null) return;
-			
-			eventDriver.getGroup().schedule(new Runnable() {
-				
-				@Override
-				public void run() {
-					try {
-						broker.close();
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
-					} 
-				}
-			}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
-			
-		}    
-		
-		for(final ServerNotifyListener listener : listeners){
-			eventDriver.getGroup().submit(new Runnable() { 
-				@Override
-				public void run() { 
-					listener.onServerLeave(serverAddress);
-				}
-			});
-		}
-	}
-
-	
-	private Broker createBroker(String serverAddress) throws IOException{
-		BrokerConfig config = this.config.clone();
-		config.setBrokerAddress(serverAddress);
-		Broker broker = new SingleBroker(config);
-		return broker;
-	} 
-
-	
-	@Override
 	public void addServerListener(ServerNotifyListener listener) {
 		this.listeners.add(listener);
 	}
@@ -286,4 +298,21 @@ public class TrackBroker implements Broker {
 		
 		eventDriver.close();
 	} 
+	
+	private void checkReady(){
+		if(waitCheck){
+			try {
+				ready.await(3000, TimeUnit.MILLISECONDS); //TODO make it configurable
+			} catch (InterruptedException e) {
+				//ignore 
+			}
+			waitCheck = false;
+		}
+	}
+	
+	
+	@Override
+	public String brokerAddress() { 
+		return config.getBrokerAddress();
+	}
 }
