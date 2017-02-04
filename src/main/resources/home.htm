@@ -43,9 +43,19 @@
  
 <div class="nodes container-fluid">   
   
+
+
+<div class="row">
+    <div class="col-md-12">   
+        <div id="track-list" class="table table-condensed">  
+       	 	<span class="label label-info">Trackers</span>
+        </div> 
+    </div>  
+</div>    
+  
 <div class="row">
     <div class="col-md-12">
-        <h4>Servers</h4>
+        <span class="label label-info">Servers</span>
     </div> 
     <div class="col-md-12">
         <table id="server-list"  class="table table-condensed table-bordered">
@@ -58,30 +68,11 @@
         	</tbody>
         </table>
     </div> 
-</div>  
-  
- 
-<div class="row">
-    <div class="col-md-12">
-        <h4>Trackers</h4>
-    </div> 
-    <div class="col-md-12">
-        <table id="tracker-list"  class="table table-condensed table-bordered">
-            <tbody>
-            <tr> 
-                <th style="width: 16%">Server Address</th> 
-	            <th style="width: 8%">Version</th> 
-                <th>Topics</th>
-            </tr>  
-        	</tbody>
-        </table>
-    </div> 
-</div>  
-  
+</div>   
 
 <div class="row">
     <div class="col-md-12">
-        <h4>Topics</h4>
+        <span class="label label-info">Topics</span>
     </div>
 </div> 
 
@@ -109,9 +100,6 @@ $.get('/version',function(data){
 	$("#version").text(data); 
 }); 
   
-var brokerMap = {};
-var serverInfoMap = {};  
-
 function buildTopicList(topicMap){
 	var res = "";
    	$.each(topicMap, function(topic, topicInfo){
@@ -119,14 +107,14 @@ function buildTopicList(topicMap){
    	}); 
    	return res;
 }
-  
-function showServerList(){ 
-	$("#server-list").find("tr:gt(0)").remove();
+   
+function showServerList(domId, serverInfoMap){ 
+	$(domId).find("tr:gt(0)").remove();
 	
 	for(var key in serverInfoMap){
 		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo.topicMap);
-		$("#server-list").append(
+		var topicList = buildTopicList(serverInfo.topicMap); 
+		$(domId).append(
 			"<tr>\
 				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a></td>\
 				<td>" + serverInfo.serverVersion + "</td>\
@@ -160,85 +148,25 @@ function showTopicSumUpdate(topicSumMap){
    		); 
 	}  
 } 
+ 
 
-function updateTopicSummary(serverInfo){  
-	var topicSumMap = {};
-	if(serverInfo){
-		serverInfoMap[serverInfo.serverAddress] = serverInfo;
+$.getJSON('/info',function(serverInfo){   
+	var trackBroker = new TrackBroker(serverInfo.serverAddress); 
+	trackBroker.onServerUpdated = function(broker){
+		showTopicSumUpdate(broker.topicSumMap);
+		showServerList("#server-list", broker.serverInfoMap);
+	};
+	trackBroker.connect();
+	 
+	for(var i in serverInfo.trackerList){
+		var address = serverInfo.trackerList[i]; 
+		$("#track-list").append(
+			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
+		);
 	} 
-	for(var address in serverInfoMap){
-		var serverInfo = serverInfoMap[address];
+	if(serverInfo.trackerList.length==0){
 		
-		var topicMap = serverInfo.topicMap;
-		for(var topic in topicMap){
-			if(topic == '@type') continue;
-			var topicSum = {'messageDepth': 0, 'consumerGroupCount': 0, 'consumerCount': 0};
-			var topicInfo = topicMap[topic];
-			if(topic in topicSumMap){
-				topicSum = topicSumMap[topic]; 
-			} else {
-				topicSumMap[topic] = topicSum; 
-			}
-			topicSum.messageDepth += topicInfo.messageCount; 
-			topicSum.consumerGroupCount += topicInfo.consumerGroupCount; 
-			topicSum.consumerCount += topicInfo.consumerCount
-		}  
-	} 
-	return topicSumMap;
-} 
-
-function queryServerInfo(broker){
-	var msg = {};
-	msg.cmd = "info";
-	broker.invoke(msg, function(msg){ 
-		var topicSumMap = updateTopicSummary(msg.body);
-		showTopicSumUpdate(topicSumMap);
-		showServerList();
-	});
-}
-
-function updateServer(serverAddress){
-	var broker = brokerMap[serverAddress];
-	if(broker == null){
-		broker = new Broker("ws://"+serverAddress);  
-		broker.onDisconnected(function(event){
-			console.log("Disconnected from "+serverAddress);
-			broker.close();
-			delete serverInfoMap[serverAddress];
-			delete brokerMap[serverAddress] 
-			var topicSumMap = updateTopicSummary();
-			showTopicSumUpdate(topicSumMap); 
-		});
-		
-		broker.connect(function(event){
-			brokerMap[serverAddress] = broker;
-			queryServerInfo(broker);
-	    });    
-	} else {
-		queryServerInfo(broker);
-	} 
-}
-
-
-$.getJSON('/info',function(serverInfo){  
-	//serverInfo
-	var broker = new Broker("ws://"+serverInfo.serverAddress); 
-	brokerMap[serverInfo.serverAddress] = broker;
-	
-   	broker.onMessage(function(msg){
-   		var trackInfo = msg.body;
-   		var servers = trackInfo.liveServerList;
-   		for(var i in servers){
-   			var serverAddress = servers[i];
-   			updateServer(serverAddress);
-   		}
-   	});
-	
-    broker.connect(function(event){
-        var msg = {};
-        msg.cmd = Protocol.TRACK_SUB;
-        broker.sendMessage(msg);
-    });   
+	}
 });    
 
 

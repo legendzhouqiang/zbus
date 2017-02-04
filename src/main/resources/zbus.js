@@ -452,6 +452,126 @@ MessageClient.prototype.close = function(){
 var Broker = MessageClient;
 
 
+function TrackBroker(serverAddress) {
+    this.defaultScheme = "ws://";
+    if (serverAddress.startsWith("ws://")) {
+        this.defaultScheme = "ws://";
+        this.trackerAddress = serverAddress.substring(this.defaultScheme.length); 
+    } else if (serverAddress.startsWith("wss://")) { 
+        this.defaultScheme = "wss://";
+        this.trackerAddress = serverAddress.substring(this.defaultScheme.length);
+    } else {
+        this.trackerAddress = serverAddress 
+    }
+     
+    this.serverUpdateHandler = null; 
+    this.brokerMap = {};
+    this.serverInfoMap = {};
+    this.topicSumMap = {}
+}
+
+TrackBroker.prototype.normalizeAddress = function (address) {
+    if (address.startsWith(this.defaultScheme)) {
+        return address;
+    } else {
+        return this.defaultScheme + address;
+    }
+} 
+
+TrackBroker.prototype.connect = function () { 
+    var broker = new Broker(this.normalizeAddress(this.trackerAddress));
+    this.brokerMap[this.trackerAddress] = broker;
+    
+    var trackBroker = this;
+    broker.onMessage(function (msg) {
+        var trackInfo = msg.body;
+        var servers = trackInfo.liveServerList;
+        for (var i in servers) {
+        	trackBroker.serverUpdate(servers[i]);
+        }
+    });
+
+    broker.connect(function (event) {
+        var msg = {};
+        msg.cmd = Protocol.TRACK_SUB;
+        broker.sendMessage(msg);
+    });
+}
+
+ 
+TrackBroker.prototype.serverUpdate = function(serverAddress) {
+    var broker = this.brokerMap[serverAddress];
+    var trackBroker = this;
+    if (broker == null) {
+        broker = new Broker(this.normalizeAddress(serverAddress));
+
+        broker.onDisconnected(function (event) {
+            console.log("Disconnected from " + serverAddress);
+            broker.close();
+            delete trackBroker.serverInfoMap[serverAddress];
+            delete trackBroker.brokerMap[serverAddress]
+            trackBroker.updateTopicSummary();
+            if (trackBroker.onServerUpdated) {
+                trackBroker.onServerUpdated(trackBroker);
+            }
+        });
+
+        broker.connect(function (event) {
+            trackBroker.brokerMap[serverAddress] = broker;
+            trackBroker.queryServerInfo(broker);
+        });
+    } else {
+        this.queryServerInfo(broker);
+    }
+}
+
+TrackBroker.prototype.queryServerInfo = function(broker){
+	var trackBroker = this;
+	var msg = {};
+    msg.cmd = "info";
+    broker.invoke(msg, function (msg) {
+        trackBroker.updateTopicSummary(msg.body);
+        if (trackBroker.onServerUpdated) {
+            trackBroker.onServerUpdated(trackBroker);
+        }
+    });
+}
+
+
+TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
+    if (serverInfo) {
+        this.serverInfoMap[serverInfo.serverAddress] = serverInfo;
+    }
+    this.topicSumMap = {};
+    for (var address in this.serverInfoMap) {
+        var serverInfo = this.serverInfoMap[address];
+
+        var topicMap = serverInfo.topicMap;
+        for (var topic in topicMap) {
+            if (topic == '@type') continue; //fastjson added
+            var topicSum = { 'messageDepth': 0, 'consumerGroupCount': 0, 'consumerCount': 0 };
+            var topicInfo = topicMap[topic];
+            if (topic in this.topicSumMap) {
+                topicSum = this.topicSumMap[topic];
+            } else {
+                this.topicSumMap[topic] = topicSum;
+            }
+            topicSum.messageDepth += topicInfo.messageCount;
+            topicSum.consumerGroupCount += topicInfo.consumerGroupCount;
+            topicSum.consumerCount += topicInfo.consumerCount
+        }
+    } 
+}  
+
+TrackBroker.prototype.onServerUpdated = function (updateHandler) {
+    this.onServerUpdated = updateHandler;
+}
+
+
+
+
+
+
 function MqAdmin(broker, topic){
 	this.broker = broker;
 	this.topic = topic; 
