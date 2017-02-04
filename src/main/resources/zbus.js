@@ -348,9 +348,17 @@ function MessageClient(address) {
     this.reconnectInterval = 3000;
     this.ticketTable = {}; 
     this.messageHandler = null;
+    this.connectedHandler = null;
+    this.disconnectedHandler = null;
 }
 MessageClient.prototype.onMessage = function (messageHandler) {
 	this.messageHandler = messageHandler;
+}
+MessageClient.prototype.onConnected = function (connectedHandler) {
+	this.connectedHandler = connectedHandler;
+}
+MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
+	this.disconnectedHandler = disconnectedHandler;
 }
 
 MessageClient.prototype.sendMessage = function (msg) {
@@ -365,7 +373,10 @@ MessageClient.prototype.sendMessage = function (msg) {
 
 MessageClient.prototype.connect = function (connectedHandler) {
     console.log("Trying to connect to " + this.address);
-
+    if(!connectedHandler){
+    	connectedHandler = this.connectedHandler;
+    }
+    
     var WebSocket = window.WebSocket;
     if (!WebSocket) {
         WebSocket = window.MozWebSocket;
@@ -377,7 +388,7 @@ MessageClient.prototype.connect = function (connectedHandler) {
         console.log("Connected to " + client.address);
         if (connectedHandler) {
             connectedHandler(event);
-        }
+        }  
         client.heartbeatInterval = setInterval(function () {
             var msg = {};
             msg.cmd = "heartbeat";
@@ -386,6 +397,10 @@ MessageClient.prototype.connect = function (connectedHandler) {
     };
 
     this.socket.onclose = function (event) {
+    	if(client.disconnectedHandler){
+    		client.disconnectedHandler(event);
+    		return;
+    	}
         clearInterval(client.heartbeatInterval);
         setTimeout(function () {
             try { client.connect(connectedHandler); } catch (e) { }//ignore
@@ -426,6 +441,13 @@ MessageClient.prototype.invoke = function (msg, callback) {
     var buf = httpEncode(msg);
     this.socket.send(buf);
 };
+
+MessageClient.prototype.close = function(){
+	clearInterval(this.heartbeatInterval);
+	this.socket.onclose = function () {}
+	this.socket.close();
+}
+
 
 var Broker = MessageClient;
 

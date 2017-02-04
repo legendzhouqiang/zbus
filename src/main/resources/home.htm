@@ -28,10 +28,7 @@
             </a>
         </div>
         <div class="collapse navbar-collapse" id="navbar">
-            <ul class="nav navbar-nav">
-            	<li><a class="link" href="/page/topic_list.htm">Topics</a></li>  
-            	<li><a class="link" href="/page/nodes.htm">Nodes</a></li> 
-                <li><a class="link" href="/page/traffic.htm">Traffic</a></li> 
+            <ul class="nav navbar-nav"> 
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
@@ -45,12 +42,49 @@
 </div>
  
 <div class="nodes container-fluid">   
+  
+<div class="row">
+    <div class="col-md-12">
+        <h4>Servers</h4>
+    </div> 
+    <div class="col-md-12">
+        <table id="server-list"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 16%">Server Address</th> 
+	            <th style="width: 8%">Version</th> 
+                <th>Topics</th>
+            </tr>  
+        	</tbody>
+        </table>
+    </div> 
+</div>  
+  
+ 
+<div class="row">
+    <div class="col-md-12">
+        <h4>Trackers</h4>
+    </div> 
+    <div class="col-md-12">
+        <table id="tracker-list"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 16%">Server Address</th> 
+	            <th style="width: 8%">Version</th> 
+                <th>Topics</th>
+            </tr>  
+        	</tbody>
+        </table>
+    </div> 
+</div>  
+  
 
 <div class="row">
     <div class="col-md-12">
-        <h3>Topic List</h3>
+        <h4>Topics</h4>
     </div>
 </div> 
+
 <div class="row">
     <div class="col-md-12">
         <table id="topic-list"  class="table table-condensed table-bordered">
@@ -75,6 +109,35 @@ $.get('/version',function(data){
 	$("#version").text(data); 
 }); 
   
+var brokerMap = {};
+var serverInfoMap = {};  
+
+function buildTopicList(topicMap){
+	var res = "";
+   	$.each(topicMap, function(topic, topicInfo){
+   		res += "<a href='#' class='topic link label label-primary'>" + topic + "</a>";
+   	}); 
+   	return res;
+}
+  
+function showServerList(){ 
+	$("#server-list").find("tr:gt(0)").remove();
+	
+	for(var key in serverInfoMap){
+		var serverInfo = serverInfoMap[key];
+		var topicList = buildTopicList(serverInfo.topicMap);
+		$("#server-list").append(
+			"<tr>\
+				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a></td>\
+				<td>" + serverInfo.serverVersion + "</td>\
+				<td>\
+	                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+	           	</td>\
+			</tr>"
+		);    
+	} 
+}
+
 
 function showTopicSumUpdate(topicSumMap){
 	$("#topic-list").find("tr:gt(0)").remove();
@@ -96,14 +159,13 @@ function showTopicSumUpdate(topicSumMap){
 			</tr>"
    		); 
 	}  
-}
-
-var brokerMap = {};
-var serverInfoMap = {}; 
+} 
 
 function updateTopicSummary(serverInfo){  
 	var topicSumMap = {};
-	serverInfoMap[serverInfo.serverAddress] = serverInfo;
+	if(serverInfo){
+		serverInfoMap[serverInfo.serverAddress] = serverInfo;
+	} 
 	for(var address in serverInfoMap){
 		var serverInfo = serverInfoMap[address];
 		
@@ -130,7 +192,8 @@ function queryServerInfo(broker){
 	msg.cmd = "info";
 	broker.invoke(msg, function(msg){ 
 		var topicSumMap = updateTopicSummary(msg.body);
-		showTopicSumUpdate(topicSumMap); 
+		showTopicSumUpdate(topicSumMap);
+		showServerList();
 	});
 }
 
@@ -138,6 +201,15 @@ function updateServer(serverAddress){
 	var broker = brokerMap[serverAddress];
 	if(broker == null){
 		broker = new Broker("ws://"+serverAddress);  
+		broker.onDisconnected(function(event){
+			console.log("Disconnected from "+serverAddress);
+			broker.close();
+			delete serverInfoMap[serverAddress];
+			delete brokerMap[serverAddress] 
+			var topicSumMap = updateTopicSummary();
+			showTopicSumUpdate(topicSumMap); 
+		});
+		
 		broker.connect(function(event){
 			brokerMap[serverAddress] = broker;
 			queryServerInfo(broker);
