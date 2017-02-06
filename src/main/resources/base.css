@@ -151,12 +151,11 @@
 
 /* line 163, stdin */
 .navbar-brand {
-  padding-top: 5px;	
+  padding-top: 8px;	
 }
 .navbar-brand > img {
-  width: 48px;
-  height: 48px; 
-  margin-top: -5px; 
+  width: 36px;
+  height: 36px;  
   display: inline;
 } 
  
