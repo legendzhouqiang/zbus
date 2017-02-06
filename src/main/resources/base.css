@@ -168,3 +168,9 @@
 	clear: right;  
 	padding-top: 1px;
 }
+textarea.log { 
+	border-style: none; 
+    border-color: Transparent; 
+    overflow: auto; 
+    resize: none;
+}

@@ -35,6 +35,7 @@ public class MqServer implements Closeable{
 	private MessageServer httpServer;
 	private MqAdaptor mqAdaptor;  
 	private TrackService trackService;
+	private TraceService traceService;
 	
 	public MqServer(){
 		this(new MqServerConfig());
@@ -77,6 +78,7 @@ public class MqServer implements Closeable{
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		  
+		traceService = new TraceService();
 		trackService = new TrackService(this, config.getTrackServerList(), true);//TODO configure 
 		//trackService should be ahead of mqAdaptor to initialize
 		mqAdaptor = new MqAdaptor(this);   
@@ -85,6 +87,8 @@ public class MqServer implements Closeable{
 	public void start() throws Exception{  
 		log.info("zbus starting...");
 		long start = System.currentTimeMillis(); 
+		
+		traceService.start();
 		
 		mqAdaptor.setVerbose(config.verbose);
 		try {
@@ -140,6 +144,10 @@ public class MqServer implements Closeable{
 
 	public TrackService getTrackService() {
 		return trackService;
+	}
+	
+	public TraceService getTraceService() {
+		return traceService;
 	}
 
 	public static void main(String[] args) throws Exception {

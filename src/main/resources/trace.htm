@@ -30,7 +30,7 @@
         <div class="collapse navbar-collapse" id="navbar">
              <ul class="nav navbar-nav">
             	<li><a class="link" href="#">Topics</a></li>  
-            	<li><a class="link" href="/page/trace.htm">Trace</a></li>  
+            	<li><a class="link" href="#">Trace</a></li>  
             	<li><a class="link" href="#">Topology</a></li> 
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -44,17 +44,7 @@
 </nav>
 </div>
  
-<div class="nodes container-fluid">   
-  
-
-
-<div class="row">
-    <div class="col-md-12">   
-        <div id="track-list" class="table table-condensed">  
-       	 	<span class="label label-info">Trackers</span>
-        </div> 
-    </div>  
-</div>    
+<div class="nodes container-fluid">    
   
 <div class="row">
     <div class="col-md-12">
@@ -79,27 +69,14 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-info">Topics</span>
-    </div>
-</div> 
-
-<div class="row">
+        <span class="label label-info">Trace Log</span>
+    </div> 
     <div class="col-md-12">
-        <table id="topic-list"  class="table table-condensed table-bordered">
-            <tbody>
-            <tr> 
-                <th style="width: 6%">Topic</th> 
-                <th style="width: 1%">Server List</th> 
-	            <th style="width: 8%">Message Depth</th> 
-	            <th style="width: 8%">Message Active</th>
-	            <th style="width: 8%">Message Filter</th>  
-	            <th style="width: 8%">Consumer (Idle / Total)</th> 
-                <th style="width: 8%">Consumer Group</th>  
-            </tr>  
-        	</tbody>
-        </table>
-    </div>
-</div> 
+    	<div id="trace-log">
+    	</div> 
+    </div> 
+</div>   
+ 
 </div>
  
  
@@ -121,8 +98,7 @@ function updateServerList(){
     
     if(trackBroker){
     	trackBroker.filterServerList = filterServerList;
-    	trackBroker.updateTopicSummary();
-    	showTopicSumUpdate(trackBroker.topicSumMap);
+    	trackBroker.updateTopicSummary(); 
     } 
 } 
 
@@ -192,38 +168,10 @@ function buildServerList(serverList){
 	} 
    	return res;
 }
-
-function showTopicSumUpdate(topicSumMap){
-	$("#topic-list").find("tr:gt(0)").remove();
-	var topics = [];
-	for(var key in topicSumMap){
-		topics.push(key);
-	}
-	topics.sort();
-	for(var i in topics){
-		var topicName = topics[i];
-		var topicSum = topicSumMap[topicName];
-		var serverList = buildServerList(topicSum.serverList);
-		var filterTagList = "";
-		$("#topic-list").append(
-			"<tr id="+topicName+">\
-				<td><a class='link' target='_blank' href='#'>" +topicName + "</a></td>\
-				<td>"+ serverList + "</td>\
-				<td>"+ topicSum.messageDepth + "</td>\
-				<td>"+ topicSum.messageActive + "</td>\
-				<td>"+ filterTagList + "</td>\
-				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
-				<td>"+ topicSum.consumerGroupCount+ "</td>\
-			</tr>"
-   		); 
-	}  
-} 
  
-
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(broker){
-		showTopicSumUpdate(broker.topicSumMap);
+	trackBroker.onServerUpdated = function(broker){ 
 		showServerList("#server-list", broker.serverInfoMap);
 	};
 	trackBroker.connect();
@@ -234,9 +182,25 @@ $.getJSON('/info',function(serverInfo){
 			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
 		);
 	} 
-	if(serverInfo.trackerList.length==0){
-		
+	if(serverInfo.trackerList.length==0){ 
 	}
+	
+	
+	var broker = new Broker("ws://"+ serverInfo.serverAddress);
+	broker.onMessage(function (msg) {
+		var buf = httpEncode(msg); 
+		var str = new TextDecoder("utf8").decode(buf);
+		if($("#trace-log pre").length > 50){
+			$('#trace-log pre:last-child').remove();
+		}
+		$("#trace-log").prepend("<pre>"+str+"</pre>");
+    });
+
+    broker.connect(function (event) {
+        var msg = {};
+        msg.cmd = Protocol.TRACE;
+        broker.sendMessage(msg);
+    });
 });    
 
 

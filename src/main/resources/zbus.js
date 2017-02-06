@@ -34,6 +34,7 @@ Protocol.TRACK_SUB        = "track_sub";
 //Simple HTTP server command
 Protocol.PING          = "ping"; //ping server, returning back server time
 Protocol.INFO          = "info"; //server info 
+Protocol.TRACE         = "trace";   
 Protocol.VERSION       = "version";
 Protocol.JS            = "js";   //serve javascript file
 Protocol.CSS           = "css";  //serve css file 
@@ -108,20 +109,7 @@ function uuid(){
         return v.toString(16);
     });
 }
-
-function string2Buffer(str) {
-  var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-  var bufView = new Int16Array(buf);
-  for (var i=0, strLen=str.length; i<strLen; i++) {
-    bufView[i] = str.charCodeAt(i);
-  }
-  return bufView;
-}
-
-function buffer2String(buf) {
-  return String.fromCharCode.apply(null, buf);
-}
-
+ 
 //First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
   String.prototype.format = function() {
@@ -556,6 +544,7 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
             var topicSum = { 
             	'messageDepth': 0,  
             	'messageActive': 0,
+            	'messageFilterTags': [],
             	'consumerGroupCount': 0, 
             	'consumerIdle': 0,
             	'consumerTotal': 0,
@@ -571,6 +560,7 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
             }
             topicSum.messageDepth += topicInfo.messageCount;
             topicSum.messageActive += 0; //TODO
+            topicSum.messageFilterTags = []; //TODO
             topicSum.consumerGroupCount += topicInfo.consumerGroupCount;
             topicSum.consumerIdle += topicInfo.consumerCount;
             topicSum.consumerTotal = topicSum.consumerIdle;//TODO

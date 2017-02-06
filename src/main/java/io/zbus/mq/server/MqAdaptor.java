@@ -37,6 +37,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
 	private final TrackService trackService;
+	private final TraceService traceService;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 
@@ -49,6 +50,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
 		this.trackService = mqServer.getTrackService();
+		this.traceService = mqServer.getTraceService();
+		
 		
 		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 
@@ -76,6 +79,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.PING, pingHandler);
 		registerHandler(Protocol.INFO, infoHandler);
 		registerHandler(Protocol.VERSION, versionHandler);
+		registerHandler(Protocol.TRACE, traceHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
 		
@@ -494,6 +498,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
+	private MessageHandler traceHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException { 
+			traceService.subscribe(session); 
+		}
+	}; 
+	
 	protected void cleanSession(Session sess) throws IOException{
 		super.cleanSession(sess);
 		
@@ -507,6 +519,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 		
 		trackService.cleanSession(sess); 
+		traceService.cleanSession(sess);
 	} 
 	
 	private boolean auth(Message msg){ 
@@ -598,6 +611,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	msg.urlToHead(); 
 	}
     
+    private boolean ignoreOnTrace(String cmd){
+    	if(Protocol.TRACE.equals(cmd)) return true;
+    	if(Message.HEARTBEAT.equals(cmd)) return true;
+    	return false;
+    }
+    
     public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
@@ -609,11 +628,21 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		if(verbose){
 			log.info("\n%s", msg);
-		}
+		} 
 		
-		handleUrlMessage(msg);
+		
+		handleUrlMessage(msg); 
 		
 		String cmd = msg.getCommand(); 
+		
+		if(!ignoreOnTrace(cmd)){
+			try {
+				traceService.publish(msg);
+			} catch (InterruptedException e) {
+				log.error(e.getMessage(), e);
+			}
+		} 
+		
     	if(cmd != null){
 	    	MessageHandler handler = handlerMap.get(cmd);
 	    	if(handler != null){

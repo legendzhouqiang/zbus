@@ -34,15 +34,16 @@ public class Protocol {
 	public static final String TRACK_QUERY   = "track_query";   
 	public static final String TRACK_PUB     = "track_pub"; 
 	public static final String TRACK_SUB     = "track_sub";   
-	 
-	//Simple HTTP server command
-	public static final String PING          = "ping"; //ping server, returning back server time
-	public static final String INFO          = "info"; //server info 
+
+
+	public static final String PING          = "ping";    //ping server, returning back server time
+	public static final String INFO          = "info";    //server info 
+	public static final String TRACE         = "trace";   //trace latest message in server 
 	public static final String VERSION       = "version";
-	public static final String JS            = "js";   //serve javascript file
-	public static final String CSS           = "css";  //serve css file 
-	public static final String IMG           = "img";  //serve image file(SVG)
-	public static final String PAGE          = "page"; //serve image file(SVG)
+	public static final String JS            = "js";      //serve javascript file
+	public static final String CSS           = "css";     //serve css file 
+	public static final String IMG           = "img";     //serve image file(SVG)
+	public static final String PAGE          = "page";    //serve image file(SVG)
 	
 	
 	//=============================[2] Parameter Values================================================
