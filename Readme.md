@@ -7,7 +7,7 @@
 
 ## Monitoring
 
-![zbus](http://git.oschina.net/uploads/images/2017/0206/104609_93b9fb39_7458.png "zbus")	 
+![zbus](http://git.oschina.net/uploads/images/2017/0206/110227_60952f04_7458.png "zbus")	 
 
 ##API
 	MqConfig
