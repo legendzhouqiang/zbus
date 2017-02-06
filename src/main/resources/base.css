@@ -163,3 +163,9 @@
 .topic {
 	margin: 3px;
 } 
+
+.filter-box{
+	float: right; 
+	clear: right;  
+	padding-top: 1px;
+}

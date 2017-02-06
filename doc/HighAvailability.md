@@ -4,14 +4,14 @@ Yet, Data Replication Not Support.
 **HA Diagram**
 	                    
 	                    [Tracker1]   [Tracker2]
-			                |           |
-		    +---------------+-----+-----+---------------+
-			|                     ^                     |
-			|sub route            | pub route           | sub route
-			|                     |                     v
-			v      ------->  [MqServer1]  ---------> Consumer
-		 Producer  choose ?                         
-				   ------->  [MqServer2]  ---------> Consumer
+	                        |           |
+	        +---------------+-----+-----+---------------+
+	        |                     ^                     |
+	        |sub(to_update)+pull  | pub(to_update)      | sub(to_update)+pull
+	        |                     |                     v
+	        v      ------->  [MqServer1]  ---------> Consumer
+	     Producer  choose ?                         
+	               ------->  [MqServer2]  ---------> Consumer
 
 Pysically, Tracker serves in MqServer.
 1. Single Point Of Failure(SPOF) will not affect the availability of the whole system.
@@ -23,85 +23,22 @@ Pysically, Tracker serves in MqServer.
 		     +-----sub-----> Broker <-----sub-----+
 	         |                                    |
 	         |                                    |
-	Server(TrackService) --outbound pub--> Server(TrackService)
+	Server(TrackService) --pub to tracker--> Server(TrackService)
 	         ^                                    |
 	         |                                    v
-	         +----------inbound tracking----------+	 
-
-
-
-
-
-	TopicInfo
-		 + publisher
-		 + timestamp
-		 + live 
-		 + serverAddress 
-		 + topicName
-		 + consumerGroupList
-
-	ServerInfo
-		 + publisher
-		 + timestamp
-		 + live 
-		 + serverAddress 
-		 + topicMap: Map<String, TopicInfo>
-
-
-	TrackService(trackServerList--outbound)
-		- { serverAddress=>ServerInfo }
-		- allOutbounds
-		- healthyOutbounds 
-		- healthyInbounds
-		- subscribers 
-		+ queryServerTable
-		+ publish(serverInfo)
-		+ pulbish(topiInfo)
-		+ subscribe()
-		+ start
-		+ close
-
-**queryServerTable**
-   
-	plus current ServerInfo if included
-
-
-**start**
-
-	connect to all outbound servers
-		onConnected: add client to healthyOutbounds 
-		onDisconnected: remove from healthyOutbonds
-
-
-**publish(serverInfo)**
-
-	1)server join
-     	onConnected(call serverJoin)
-	 	onDisconnected(call serverLeave)
-	2)server upate
-     	call serverUpdate
-    3)server leave 
-     	call serverLeave
-    
-**serverJoin(serverInfo)** 
+	         +--------server online check---------+	 
 	
-	add to serverMap
-	call publish2outbounds
-	call publish2subscribers 
+	TrackerInfo[TrackItem] 
+		- liveServerList: List<String>
 
-**serverUpdate(serverInfo)**
+	ServerInfo[TrackItem]  
+		- trackerList List<String>
+		- topicMap: Map<String, TopicInfo>
+
+	TopicInfo[TrackItem]  
+		- topicName: String
+		- consumerGroupList: List<ConsumerGroupInfo>  
 	
-	upate serverMap
-	call publish2outbounds
-	call publish2subscribers 
-      
-**serverLeave(serverInfo)**
-  
-	remove from serverMap
-	call publish2outbounds
-	call publish2subscribers   
-
-**Report timer(every 10sec configurable)**
-
-	call publish2outbounds
-	call publish2subscribers   
+	TrackItem
+		- serverAddress: String 
+		- serverVersion: String

@@ -464,10 +464,11 @@ function TrackBroker(serverAddress) {
         this.trackerAddress = serverAddress 
     }
      
-    this.serverUpdateHandler = null; 
+    this.onServerUpdated = null; 
     this.brokerMap = {};
     this.serverInfoMap = {};
     this.topicSumMap = {}
+    this.filterServerList = null;
 }
 
 TrackBroker.prototype.normalizeAddress = function (address) {
@@ -496,8 +497,7 @@ TrackBroker.prototype.connect = function () {
         msg.cmd = Protocol.TRACK_SUB;
         broker.sendMessage(msg);
     });
-}
-
+} 
  
 TrackBroker.prototype.serverUpdate = function(serverAddress) {
     var broker = this.brokerMap[serverAddress];
@@ -544,28 +544,43 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
     }
     this.topicSumMap = {};
     for (var address in this.serverInfoMap) {
+    	if(this.filterServerList != null){
+    		if(!this.filterServerList.includes(address)) continue;
+    	}
+    	
         var serverInfo = this.serverInfoMap[address];
 
         var topicMap = serverInfo.topicMap;
         for (var topic in topicMap) {
             if (topic == '@type') continue; //fastjson added
-            var topicSum = { 'messageDepth': 0, 'consumerGroupCount': 0, 'consumerCount': 0 };
+            var topicSum = { 
+            	'messageDepth': 0,  
+            	'messageActive': 0,
+            	'consumerGroupCount': 0, 
+            	'consumerIdle': 0,
+            	'consumerTotal': 0,
+            	'serverList': [],
+            };
+            
             var topicInfo = topicMap[topic];
             if (topic in this.topicSumMap) {
                 topicSum = this.topicSumMap[topic];
             } else {
                 this.topicSumMap[topic] = topicSum;
+                topicSum.serverList = [topicInfo.serverAddress];
             }
             topicSum.messageDepth += topicInfo.messageCount;
+            topicSum.messageActive += 0; //TODO
             topicSum.consumerGroupCount += topicInfo.consumerGroupCount;
-            topicSum.consumerCount += topicInfo.consumerCount
+            topicSum.consumerIdle += topicInfo.consumerCount;
+            topicSum.consumerTotal = topicSum.consumerIdle;//TODO
+            
+            if(!topicSum.serverList.includes(topicInfo.serverAddress)){
+            	topicSum.serverList.push(topicInfo.serverAddress);
+            }
         }
     } 
-}  
-
-TrackBroker.prototype.onServerUpdated = function (updateHandler) {
-    this.onServerUpdated = updateHandler;
-}
+}   
 
 
 
