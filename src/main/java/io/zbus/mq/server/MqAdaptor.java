@@ -36,7 +36,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
-	private final TrackService trackService;
+	private final Tracker trackService;
 	private final TraceService traceService;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
@@ -49,7 +49,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
-		this.trackService = mqServer.getTrackService();
+		this.trackService = mqServer.getTracker();
 		this.traceService = mqServer.getTraceService();
 		
 		
@@ -502,7 +502,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			traceService.subscribe(session); 
+			traceService.subscribe(msg, session); 
 		}
 	}; 
 	

@@ -34,7 +34,7 @@ public class MqServer implements Closeable{
 	
 	private MessageServer httpServer;
 	private MqAdaptor mqAdaptor;  
-	private TrackService trackService;
+	private Tracker tracker;
 	private TraceService traceService;
 	
 	public MqServer(){
@@ -79,7 +79,7 @@ public class MqServer implements Closeable{
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		  
 		traceService = new TraceService();
-		trackService = new TrackService(this, config.getTrackServerList(), true);//TODO configure 
+		tracker = new Tracker(this, config.getTrackServerList(), true);//TODO configure 
 		//trackService should be ahead of mqAdaptor to initialize
 		mqAdaptor = new MqAdaptor(this);   
 	} 
@@ -96,7 +96,7 @@ public class MqServer implements Closeable{
 		} catch (IOException e) {
 			log.error("LoadMQ error: " + e);
 		}   
-		trackService.start();
+		tracker.connect();
 		
 		httpServer = new MessageServer(eventDriver);   
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor);  
@@ -142,8 +142,8 @@ public class MqServer implements Closeable{
 	} 
 	
 
-	public TrackService getTrackService() {
-		return trackService;
+	public Tracker getTracker() {
+		return tracker;
 	}
 	
 	public TraceService getTraceService() {

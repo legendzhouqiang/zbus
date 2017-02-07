@@ -28,8 +28,8 @@ import io.zbus.util.logging.LoggerFactory;
  * @author Rushmore
  *
  */
-public class TrackService implements Closeable{
-	private static final Logger log = LoggerFactory.getLogger(TrackService.class);  
+public class Tracker implements Closeable{
+	private static final Logger log = LoggerFactory.getLogger(Tracker.class);  
 	
 	private final String trackerList; 
 	private Map<String, MessageClient> reporterMap = new ConcurrentHashMap<String, MessageClient>();  
@@ -43,21 +43,21 @@ public class TrackService implements Closeable{
 	private boolean thisServerIncluded; 
 
 	
-	public TrackService(MqServer mqServer, String trackerList, boolean thisServerIncluded){ 
+	public Tracker(MqServer mqServer, String trackerList, boolean thisServerIncluded){ 
 		this.thisServerAddress = mqServer.getServerAddress();
 		this.eventDriver = mqServer.getEventDriver();
 		this.trackerList = trackerList;
 		this.thisServerIncluded = thisServerIncluded; 
 	} 
 	
-	public TrackService(MqServer mqServer, String trackerList){
+	public Tracker(MqServer mqServer, String trackerList){
 		this(mqServer, trackerList, true); 
 	}
 	
 	/**
 	 * Trying to connect to Tracker(reside in MqServer)
 	 */
-	public void start(){
+	public void connect(){
 		if(trackerList == null || trackerList.isEmpty()) return;
 		
 		log.info("Connecting to Tracker(%s)", this.trackerList); 

@@ -13,8 +13,16 @@ import io.zbus.net.Session;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
   
+/**
+ * Publish message to subscribers interested by topic, mainly for message tracing debug.
+ * 
+ * @author Rushmore
+ *
+ */
 public class TraceService implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(TraceService.class);
+	private static final String TOPIC_SET_KEY = "trace_topic_set";
+	
 	private final int traceMaxQueueLength = 100;
 	private final Message[] messages = new Message[traceMaxQueueLength];
 	private Set<Session> sessions = new HashSet<Session>();
@@ -49,9 +57,21 @@ public class TraceService implements Closeable{
 		}
 	}
 	
-	public void subscribe(Session session){
+	public void subscribe(Message message, Session session){
 		sessionLock.lock();
 		try{
+			String topicList = message.getTopic();
+			
+			if(topicList != null && !topicList.trim().isEmpty()){
+				Set<String> topicSet = new HashSet<String>();
+				for(String topic : topicList.split("[ ,;]")){
+					topic = topic.trim();
+					if(topic.equals("")) continue;
+					topicSet.add(topic);
+				}
+				session.attr(TOPIC_SET_KEY, topicSet);
+			}
+			
 			Set<Session> workSession = new HashSet<Session>(sessions);
 			workSession.add(session);
 			sessions = workSession;
@@ -105,12 +125,18 @@ public class TraceService implements Closeable{
 					} catch (InterruptedException e) {
 						break;
 					}  
-					
+					String topic = message.getTopic();
 					message = Message.copyWithoutBody(message); //modify message 
 					for(Session session : sessions){
 						try{
-							message.setStatus(200);
-							session.writeAndFlush(message);
+							Set<String> topicSet = session.attr(TOPIC_SET_KEY); 
+							if(message.getStatus() == null){ 
+								message.setOriginUrl(message.getUrl());
+								message.setStatus(200);
+							}
+							if(topicSet != null && topicSet.contains(topic)){
+								session.writeAndFlush(message);
+							}
 						} catch (Exception e) { 
 							log.error(e.getMessage(), e);
 						}

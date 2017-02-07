@@ -123,6 +123,7 @@ if (!String.prototype.format) {
   };
 }
 
+
 function inherits(ctor, superCtor) {
 	ctor.super_ = superCtor;
 	ctor.prototype = Object.create(superCtor.prototype, {
@@ -177,7 +178,7 @@ function httpEncode(msg) {
 	var encoder = new TextEncoder(encoding);
 	
 	var body = msg.body;  
-	var contentType = "application/octet-stream";
+	var contentType = msg["content-type"];
 	if (body) { 
 		if(body instanceof ArrayBuffer){
 			body = new Uint8Array(body);
@@ -188,7 +189,7 @@ function httpEncode(msg) {
 				body = JSON.stringify(body);
 				contentType = "application/json";
 			} else {
-				contentType = "text/html";
+				contentType = "text/plain";
 			} 
 			body = encoder.encode(body); 
 		}  
@@ -215,6 +216,8 @@ function httpEncode(msg) {
 	headers += line;  
 	for(var key in msg){
 		if(key in nonHeaders) continue;  
+		var val = msg[key];
+		if(typeof val == 'undefined') continue;
 		line = "{0}: {1}\r\n".format(camel2underscore(key), msg[key]);
 		headers += line;
 	}
@@ -238,6 +241,12 @@ function httpEncode(msg) {
 	return buffer; 
 };
 
+function httpEncodeString(msg){
+	var buf = httpEncode(msg);
+	var encoding = msg.encoding;
+	if(!encoding) encoding = "utf8";
+	return new TextDecoder(encoding).decode(buf);
+}
  
 function httpDecode(data){
 	if(typeof data == "string"){
@@ -500,27 +509,30 @@ TrackBroker.prototype.serverUpdate = function(serverAddress) {
             delete trackBroker.brokerMap[serverAddress]
             trackBroker.updateTopicSummary();
             if (trackBroker.onServerUpdated) {
-                trackBroker.onServerUpdated(trackBroker);
+                trackBroker.onServerUpdated(serverAddress);
             }
         });
 
         broker.connect(function (event) {
             trackBroker.brokerMap[serverAddress] = broker;
-            trackBroker.queryServerInfo(broker);
+            trackBroker.queryServerInfo(serverAddress);
         });
     } else {
-        this.queryServerInfo(broker);
+        this.queryServerInfo(serverAddress);
     }
 }
 
-TrackBroker.prototype.queryServerInfo = function(broker){
+TrackBroker.prototype.queryServerInfo = function(serverAddress){
+	var broker = this.brokerMap[serverAddress];
+	if(!broker) return;
+	
 	var trackBroker = this;
 	var msg = {};
     msg.cmd = "info";
     broker.invoke(msg, function (msg) {
         trackBroker.updateTopicSummary(msg.body);
         if (trackBroker.onServerUpdated) {
-            trackBroker.onServerUpdated(trackBroker);
+            trackBroker.onServerUpdated(serverAddress);
         }
     });
 }

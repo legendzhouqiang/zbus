@@ -22,14 +22,37 @@
  */
 package io.zbus.mq;
 
-import static io.zbus.mq.Protocol.*;
+import static io.zbus.mq.Protocol.ACK;
+import static io.zbus.mq.Protocol.APPID;
+import static io.zbus.mq.Protocol.COMMAND;
+import static io.zbus.mq.Protocol.CONSUMER_GROUP;
+import static io.zbus.mq.Protocol.CONSUME_BASE_GROUP;
+import static io.zbus.mq.Protocol.CONSUME_FILTER_TAG;
+import static io.zbus.mq.Protocol.CONSUME_START_MSGID;
+import static io.zbus.mq.Protocol.CONSUME_START_OFFSET;
+import static io.zbus.mq.Protocol.CONSUME_START_TIME;
+import static io.zbus.mq.Protocol.CONSUME_WINDOW;
+import static io.zbus.mq.Protocol.DELAY;
+import static io.zbus.mq.Protocol.ENCODING;
+import static io.zbus.mq.Protocol.EXPIRE;
+import static io.zbus.mq.Protocol.FLAG;
+import static io.zbus.mq.Protocol.ID;
+import static io.zbus.mq.Protocol.OFFSET;
+import static io.zbus.mq.Protocol.ORIGIN_ID;
+import static io.zbus.mq.Protocol.ORIGIN_STATUS;
+import static io.zbus.mq.Protocol.ORIGIN_URL;
+import static io.zbus.mq.Protocol.RECVER;
+import static io.zbus.mq.Protocol.SENDER;
+import static io.zbus.mq.Protocol.SERVER;
+import static io.zbus.mq.Protocol.TAG;
+import static io.zbus.mq.Protocol.TOKEN;
+import static io.zbus.mq.Protocol.TOPIC;
+import static io.zbus.mq.Protocol.TTL;
+import static io.zbus.mq.Protocol.VERSION;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -57,7 +80,9 @@ public class Message {
 	
 	public static final String REMOTE_ADDR      = "remote-addr";
 	public static final String CONTENT_LENGTH   = "content-length";
-	public static final String CONTENT_TYPE     = "content-type";   
+	public static final String CONTENT_TYPE     = "content-type";    
+	public static final String CONTENT_TYPE_BINARY   = "application/octet-stream"; 
+	public static final String CONTENT_TYPE_JSON     = "application/json"; 
 	 
 	private String status; //null: request, otherwise: response
 	private String url = "/";
@@ -165,14 +190,14 @@ public class Message {
 			b = bodyOfHead.getBytes();
 		}
 		return b;
-	}
+	}  
 	
 	public Message setBody(byte[] body) {
 		int len = 0;
 		if( body != null){
 			len = body.length;
 		}
-		this.setHeader(CONTENT_LENGTH, ""+len);
+		this.setHeader(CONTENT_LENGTH, ""+len); 
 		this.body = body;
 		return this;
 	}
@@ -200,44 +225,15 @@ public class Message {
 	public Message setBody(String format, Object ...args) { 
 		this.setBody(String.format(format, args));
 		return this;
-	} 
-	
-	public Message setBody(File file) throws IOException{
-		InputStream in = null;
-		try{
-			in = new FileInputStream(file);
-			if(in.available() > 0){
-				this.body = new byte[in.available()];
-				in.read(this.body);
-			} 
-		}finally{
-			if(in != null){
-				in.close();
-			}
-		}
-		return this;
-	}
-	
-	public void getBodyAsFile(File file) throws IOException{
-		if(this.body == null) return;
-		OutputStream out = null;
-		try{
-			out = new FileOutputStream(file);
-			out.write(this.body);
-		} finally{
-			if(out != null){
-				out.close();
-			}
-		} 
-	}
+	}  
 	
 	public Message setJsonBody(String body){
 		return this.setJsonBody(body.getBytes());
 	}
 	
-	public Message setJsonBody(byte[] body){
-		this.setHeader(CONTENT_TYPE, "application/json");
+	public Message setJsonBody(byte[] body){ 
 		this.setBody(body);
+		this.setHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
 		return this;
 	}
 	

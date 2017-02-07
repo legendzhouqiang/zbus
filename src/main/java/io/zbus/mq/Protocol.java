@@ -78,7 +78,7 @@ public class Protocol {
 	
 	//Security
 	public static final String APPID   				= "appid";
-	public static final String TOKEN   				= "token";
+	public static final String TOKEN   				= "token"; 
 	
 	
 	public static final int FLAG_RPC    	    = 1<<0; 

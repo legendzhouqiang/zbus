@@ -222,9 +222,9 @@ function showTopicSumUpdate(topicSumMap){
 
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(broker){
-		showTopicSumUpdate(broker.topicSumMap);
-		showServerList("#server-list", broker.serverInfoMap);
+	trackBroker.onServerUpdated = function(serverAddress){
+		showTopicSumUpdate(trackBroker.topicSumMap);
+		showServerList("#server-list", trackBroker.serverInfoMap);
 	};
 	trackBroker.connect();
 	 
@@ -233,10 +233,7 @@ $.getJSON('/info',function(serverInfo){
 		$("#track-list").append(
 			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
 		);
-	} 
-	if(serverInfo.trackerList.length==0){
-		
-	}
+	}  
 });    
 
 

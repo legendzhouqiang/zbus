@@ -84,8 +84,12 @@
 
 
 $(document).ready(function(){  
-var trackBroker = null;
+	
+var trackBroker;
+var tracingBrokerMap = {};
+
 var filterServerList = [];
+var traceMessageCount = 50;
 
 function updateServerList(){
 	filterServerList = [];
@@ -168,11 +172,25 @@ function buildServerList(serverList){
 	} 
    	return res;
 }
+
+function onTracingMessage(msg){
+	if(msg.originUrl){ //return back to origin url
+		msg.url = msg.originUrl;
+		delete msg.originUrl;
+		delete msg.status;
+	}
+	var str = httpEncodeString(msg);  
+	if($("#trace-log pre").length > traceMessageCount){
+		$('#trace-log pre:last-child').remove();
+	}
+	$("#trace-log").prepend("<pre>"+ new Date().format("yyyy-MM-dd hh:mm:ss.S") + "\n" + str+"</pre>");
+}
  
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(broker){ 
-		showServerList("#server-list", broker.serverInfoMap);
+	trackBroker.onServerUpdated = function(serverAddress){ 
+		showServerList("#server-list", trackBroker.serverInfoMap);   
+		
 	};
 	trackBroker.connect();
 	 
@@ -181,29 +199,21 @@ $.getJSON('/info',function(serverInfo){
 		$("#track-list").append(
 			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
 		);
-	} 
-	if(serverInfo.trackerList.length==0){ 
-	}
-	
+	}  
 	
 	var broker = new Broker("ws://"+ serverInfo.serverAddress);
 	broker.onMessage(function (msg) {
-		var buf = httpEncode(msg); 
-		var str = new TextDecoder("utf8").decode(buf);
-		if($("#trace-log pre").length > 50){
-			$('#trace-log pre:last-child').remove();
-		}
-		$("#trace-log").prepend("<pre>"+str+"</pre>");
+		onTracingMessage(msg);
     });
 
     broker.connect(function (event) {
         var msg = {};
         msg.cmd = Protocol.TRACE;
+        msg.topic = "MyMQ";
         broker.sendMessage(msg);
     });
-});    
-
-
+    
+});     
 
 });
 
