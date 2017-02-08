@@ -80,19 +80,8 @@ Protocol.FLAG_RPC    	     = 1<<0;
 Protocol.FLAG_EXCLUSIVE      = 1<<1;  
 Protocol.FLAG_DELETE_ON_EXIT = 1<<2; 
 
-
-var messageHandler = {
-    get:function (obj, name, proxyed){
-        if(obj[name] !== undefined)  
-            return obj[name];        
-        return "haha";  
-    }
-};
-
-function Message(){  
-	var msg = new Proxy(this, messageHandler);
-	return msg;
-}  
+ 
+////////////////////////////////////////////////////////////
 
 function hashSize(obj) {
     var size = 0, key;
@@ -109,18 +98,28 @@ function uuid(){
         return v.toString(16);
     });
 }
- 
-//First, checks if it isn't implemented yet.
-if (!String.prototype.format) {
-  String.prototype.format = function() {
+  
+String.prototype.format = function() {
     var args = arguments;
     return this.replace(/{(\d+)}/g, function(match, number) { 
-      return typeof args[number] != 'undefined'
-        ? args[number]
-        : match
-      ;
+      return typeof args[number] != 'undefined' ? args[number] : match;
     });
-  };
+} 
+
+Date.prototype.format = function (fmt) { //author: meizz 
+    var o = {
+        "M+": this.getMonth() + 1, 
+        "d+": this.getDate(), 
+        "h+": this.getHours(), 
+        "m+": this.getMinutes(), 
+        "s+": this.getSeconds(),  
+        "q+": Math.floor((this.getMonth() + 3) / 3),  
+        "S": this.getMilliseconds()  
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
 }
 
 
@@ -339,14 +338,27 @@ function Ticket(reqMsg, callback) {
     reqMsg.id = this.id;
 } 
 
-function MessageClient(address) {
-    this.address = address;
+function MessageClient(serverAddress) { //websocket implementation
+	this.scheme = "ws://";
+    if (serverAddress.startsWith("ws://")) {
+        this.scheme = "ws://";
+        this.serverAddress = serverAddress.substring(this.scheme.length); 
+    } else if (serverAddress.startsWith("wss://")) { 
+        this.scheme = "wss://";
+        this.serverAddress = serverAddress.substring(this.scheme.length);
+    } else {
+        this.serverAddress = serverAddress 
+    } 
+    
     this.autoReconnect = true;
     this.reconnectInterval = 3000;
     this.ticketTable = {}; 
     this.messageHandler = null;
     this.connectedHandler = null;
     this.disconnectedHandler = null;
+}
+MessageClient.prototype.address = function(){
+	return this.scheme + this.serverAddress;
 }
 MessageClient.prototype.onMessage = function (messageHandler) {
 	this.messageHandler = messageHandler;
@@ -369,7 +381,7 @@ MessageClient.prototype.sendMessage = function (msg) {
 
 
 MessageClient.prototype.connect = function (connectedHandler) {
-    console.log("Trying to connect to " + this.address);
+    console.log("Trying to connect to " + this.address());
     if(!connectedHandler){
     	connectedHandler = this.connectedHandler;
     }
@@ -379,10 +391,10 @@ MessageClient.prototype.connect = function (connectedHandler) {
         WebSocket = window.MozWebSocket;
     }
 
-    this.socket = new WebSocket(this.address);
+    this.socket = new WebSocket(this.address());
     var client = this;
     this.socket.onopen = function (event) {
-        console.log("Connected to " + client.address);
+        console.log("Connected to " + client.address());
         if (connectedHandler) {
             connectedHandler(event);
         }  
@@ -450,16 +462,16 @@ var Broker = MessageClient;
 
 
 function TrackBroker(serverAddress) {
-    this.defaultScheme = "ws://";
+	this.scheme = "ws://";
     if (serverAddress.startsWith("ws://")) {
-        this.defaultScheme = "ws://";
-        this.trackerAddress = serverAddress.substring(this.defaultScheme.length); 
+        this.scheme = "ws://";
+        this.serverAddress = serverAddress.substring(this.scheme.length); 
     } else if (serverAddress.startsWith("wss://")) { 
-        this.defaultScheme = "wss://";
-        this.trackerAddress = serverAddress.substring(this.defaultScheme.length);
+        this.scheme = "wss://";
+        this.serverAddress = serverAddress.substring(this.scheme.length);
     } else {
-        this.trackerAddress = serverAddress 
-    }
+        this.serverAddress = serverAddress 
+    } 
      
     this.onServerUpdated = null; 
     this.brokerMap = {};
@@ -468,17 +480,28 @@ function TrackBroker(serverAddress) {
     this.filterServerList = null;
 }
 
+
+TrackBroker.prototype.inFilter = function(address){
+	if(this.filterServerList == null) return true;
+	
+	return this.filterServerList.includes(address);
+}
+
 TrackBroker.prototype.normalizeAddress = function (address) {
-    if (address.startsWith(this.defaultScheme)) {
+    if (address.startsWith(this.scheme)) {
         return address;
     } else {
-        return this.defaultScheme + address;
+        return this.scheme + address;
     }
 } 
 
+TrackBroker.prototype.address = function(){
+	return this.scheme + this.serverAddress;
+}
+
 TrackBroker.prototype.connect = function () { 
-    var broker = new Broker(this.normalizeAddress(this.trackerAddress));
-    this.brokerMap[this.trackerAddress] = broker;
+    var broker = new Broker(this.address());
+    this.brokerMap[this.serverAddress] = broker;
     
     var trackBroker = this;
     broker.onMessage(function (msg) {
@@ -544,8 +567,8 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
     }
     this.topicSumMap = {};
     for (var address in this.serverInfoMap) {
-    	if(this.filterServerList != null){
-    		if(!this.filterServerList.includes(address)) continue;
+    	if(!this.inFilter(address)){
+    		continue;
     	}
     	
         var serverInfo = this.serverInfoMap[address];

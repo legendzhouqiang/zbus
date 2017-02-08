@@ -86,24 +86,57 @@
 $(document).ready(function(){  
 	
 var trackBroker;
-var tracingBrokerMap = {};
-
-var filterServerList = [];
+var tracingBrokerMap = {};  
 var traceMessageCount = 50;
 
-function updateServerList(){
-	filterServerList = [];
+
+function calcFilter(){ 
+	//compute serverList updated
+	var filterServerList = [];
     $("#server-list input.server").each(function(data){
     	var checked = $(this).is(":checked");
     	if(checked){
     		filterServerList.push($(this).val());
     	} 
     });  
-    
-    if(trackBroker){
-    	trackBroker.filterServerList = filterServerList;
-    	trackBroker.updateTopicSummary(); 
-    } 
+    trackBroker.filterServerList = filterServerList; 
+}
+
+function updateMonitor(){   
+	var filterServerList = trackBroker.filterServerList;
+	
+   	for(var serverAddress in trackBroker.serverInfoMap){ 
+   		var serverInfo = trackBroker.serverInfoMap[serverAddress]; 
+   		var broker = tracingBrokerMap[serverAddress]; 
+       	
+   		if(!trackBroker.inFilter(serverAddress)){
+       		if(broker){
+        		var msg = {};
+        	    msg.cmd = Protocol.TRACE; 
+        	    msg.flag = 0; //unsubscribe
+        	    broker.sendMessage(msg); 
+          	}  
+       		continue;
+   		} 
+       	
+       	if(!broker){
+       		var broker = new Broker(serverAddress); 
+       		broker.onMessage(function (msg) {
+       			onTracingMessage(msg);
+       	    });
+
+       	    broker.connect(function (event) {
+       	        var msg = {};
+       	        msg.cmd = Protocol.TRACE; 
+       	        broker.sendMessage(msg);
+       	    });
+       	    tracingBrokerMap[serverAddress] = broker;
+       	} else {
+       		var msg = {};
+    	    msg.cmd = Protocol.TRACE;  
+    	    broker.sendMessage(msg); 
+       	}  
+   	}  
 } 
 
 
@@ -111,13 +144,17 @@ $("#filter-all").change(function() {
 	var checked = $(this).is(":checked");
 	$("#server-list input.server").attr('checked', checked); 
 	
-	updateServerList();
+	calcFilter();
+	updateMonitor();
 });  
 
 $("#server-list input.server").live("change", function() {
 	var checked = $(this).is(":checked");
-    $(this).attr("checked", checked);    
-    updateServerList(); 
+    $(this).attr("checked", checked); 
+    
+    calcFilter();
+    updateMonitor();
+    
 });
 
 $.get('/version',function(data){  
@@ -130,14 +167,15 @@ function buildTopicList(topicMap){
 	keys.sort();
 	
 	for(var i in keys){ 
-		res += "<a href='#' class='topic link label label-primary'>" + keys[i] + "</a>";
+		res += "<a href='#' class='topic link label label-success'>" + keys[i] + "</a>";
 	} 
    	return res;
 }
    
-function showServerList(domId, serverInfoMap){ 
-	$(domId).find("tr:gt(0)").remove();
+function showServerList(){  
+	$("#server-list").find("tr:gt(0)").remove();
 	
+	var serverInfoMap = trackBroker.serverInfoMap;
 	for(var key in serverInfoMap){
 		var serverInfo = serverInfoMap[key];
 		var topicList = buildTopicList(serverInfo.topicMap); 
@@ -147,7 +185,7 @@ function showServerList(domId, serverInfoMap){
 			checked = "";
 		}
 		
-		$(domId).append(
+		$("#server-list").append(
 			"<tr>\
 				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
 				<div class='filter-box'>\
@@ -155,23 +193,13 @@ function showServerList(domId, serverInfoMap){
             	</div></td>\
 				<td>" + serverInfo.serverVersion + "</td>\
 				<td>\
-	                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+	                <span class='badge badge-success'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
 	           	</td>\
 			</tr>"
 		);    
 	} 
 }
-
-function buildServerList(serverList){
-	var res = ""; 
-	serverList.sort();
-	
-	for(var i in serverList){ 
-		var link = "<a class='topic' target='_blank' href='http://" + serverList[i] + "'>" + serverList[i] + "</a>";
-		res += link
-	} 
-   	return res;
-}
+ 
 
 function onTracingMessage(msg){
 	if(msg.originUrl){ //return back to origin url
@@ -185,13 +213,15 @@ function onTracingMessage(msg){
 	}
 	$("#trace-log").prepend("<pre>"+ new Date().format("yyyy-MM-dd hh:mm:ss.S") + "\n" + str+"</pre>");
 }
- 
+
+
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(serverAddress){ 
-		showServerList("#server-list", trackBroker.serverInfoMap);   
-		
+	trackBroker.onServerUpdated = function(serverAddress){  
+		showServerList(); 
+		updateMonitor();
 	};
+	
 	trackBroker.connect();
 	 
 	for(var i in serverInfo.trackerList){
@@ -200,19 +230,6 @@ $.getJSON('/info',function(serverInfo){
 			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
 		);
 	}  
-	
-	var broker = new Broker("ws://"+ serverInfo.serverAddress);
-	broker.onMessage(function (msg) {
-		onTracingMessage(msg);
-    });
-
-    broker.connect(function (event) {
-        var msg = {};
-        msg.cmd = Protocol.TRACE;
-        msg.topic = "MyMQ";
-        broker.sendMessage(msg);
-    });
-    
 });     
 
 });

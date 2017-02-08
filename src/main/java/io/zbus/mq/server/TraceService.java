@@ -58,10 +58,15 @@ public class TraceService implements Closeable{
 	}
 	
 	public void subscribe(Message message, Session session){
+		Integer flag = message.getFlag();
+		if(flag != null && flag == 0){//flag 0 means unsubscribe
+			cleanSession(session);
+			return;
+		}
+		
 		sessionLock.lock();
 		try{
-			String topicList = message.getTopic();
-			
+			String topicList = message.getTopic(); 
 			if(topicList != null && !topicList.trim().isEmpty()){
 				Set<String> topicSet = new HashSet<String>();
 				for(String topic : topicList.split("[ ,;]")){
@@ -133,8 +138,8 @@ public class TraceService implements Closeable{
 							if(message.getStatus() == null){ 
 								message.setOriginUrl(message.getUrl());
 								message.setStatus(200);
-							}
-							if(topicSet != null && topicSet.contains(topic)){
+							} 
+							if(topicSet == null || topicSet.contains(topic)){
 								session.writeAndFlush(message);
 							}
 						} catch (Exception e) { 

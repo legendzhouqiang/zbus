@@ -150,7 +150,7 @@ function buildTopicList(topicMap){
 	keys.sort();
 	
 	for(var i in keys){ 
-		res += "<a href='#' class='topic link label label-primary'>" + keys[i] + "</a>";
+		res += "<a href='#' class='topic link label label-default'>" + keys[i] + "</a>";
 	} 
    	return res;
 }
@@ -175,7 +175,7 @@ function showServerList(domId, serverInfoMap){
             	</div></td>\
 				<td>" + serverInfo.serverVersion + "</td>\
 				<td>\
-	                <span class='badge'>" + dictSize(serverInfo.topicMap) + "</span>" + topicList + "\
+	                <span class='badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
 	           	</td>\
 			</tr>"
 		);    
