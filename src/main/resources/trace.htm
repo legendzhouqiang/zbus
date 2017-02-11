@@ -88,7 +88,7 @@ $(document).ready(function(){
 var trackBroker;
 var tracingBrokerMap = {};  
 var traceMessageCount = 50;
-
+var serverSubTopicMap = {};
 
 function calcFilter(){ 
 	//compute serverList updated
@@ -99,7 +99,34 @@ function calcFilter(){
     		filterServerList.push($(this).val());
     	} 
     });  
-    trackBroker.filterServerList = filterServerList; 
+    trackBroker.filterServerList = filterServerList;  
+
+    $("#server-list span.topic-badge").each(function(key, data){
+    	$(this).siblings().each(function(key, data){
+    		
+    		var toDel = $(this).hasClass("topic-deactive");
+    		var serverAddress = $(this).attr("address");
+    		if(!serverAddress) return;
+    		
+    		var subTopics = serverSubTopicMap[serverAddress];
+    		if(!subTopics){
+    			subTopics = [];
+    			serverSubTopicMap[serverAddress] = subTopics;
+    		}
+    		var topic = $(this).text(); 
+    		
+    		var idx = subTopics.indexOf(topic);
+    		if(toDel){
+    			if(idx >= 0){ 
+    				subTopics.splice(idx, 1);
+    			}
+    		} else {
+    			if(idx < 0){
+    				subTopics.push(topic);
+    			}
+    		} 
+    	});
+    }); 
 }
 
 function updateMonitor(){   
@@ -119,6 +146,7 @@ function updateMonitor(){
        		continue;
    		} 
        	
+   		subTopics = serverSubTopicMap[serverAddress]; 
        	if(!broker){
        		var broker = new Broker(serverAddress); 
        		broker.onMessage(function (msg) {
@@ -128,12 +156,18 @@ function updateMonitor(){
        	    broker.connect(function (event) {
        	        var msg = {};
        	        msg.cmd = Protocol.TRACE; 
+       	        if(subTopics){
+       	        	msg.topic = subTopics.join();
+       	        } 
        	        broker.sendMessage(msg);
        	    });
        	    tracingBrokerMap[serverAddress] = broker;
        	} else {
        		var msg = {};
     	    msg.cmd = Protocol.TRACE;  
+    	    if(subTopics){
+   	        	msg.topic = subTopics.join();
+   	        }
     	    broker.sendMessage(msg); 
        	}  
    	}  
@@ -157,17 +191,35 @@ $("#server-list input.server").live("change", function() {
     
 });
 
+$("#server-list span.topic-list").live("click", function() {
+	$(this).toggleClass("topic-deactive"); 
+	calcFilter();
+	updateMonitor();
+});
+
+$("#server-list span.topic-badge").live("click", function() { 
+	$(this).toggleClass("badge-deactive"); 
+	if($(this).hasClass("badge-deactive")){
+		$(this).siblings().addClass("topic-deactive"); 
+	} else {
+		$(this).siblings().removeClass("topic-deactive");
+	}
+	calcFilter();
+	updateMonitor(); 
+});
+
 $.get('/version',function(data){  
 	$("#version").text(data); 
 }); 
   
-function buildTopicList(topicMap){
+function buildTopicList(serverInfo){
+	var topicMap = serverInfo.topicMap
 	var res = "";
 	var keys = Object.keys(topicMap);
 	keys.sort();
 	
 	for(var i in keys){ 
-		res += "<a href='#' class='topic link label label-success'>" + keys[i] + "</a>";
+		res += "<span address='" + serverInfo.serverAddress + "' class='topic-list topic label label-success'>" + keys[i] + "</span>";
 	} 
    	return res;
 }
@@ -178,7 +230,7 @@ function showServerList(){
 	var serverInfoMap = trackBroker.serverInfoMap;
 	for(var key in serverInfoMap){
 		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo.topicMap); 
+		var topicList = buildTopicList(serverInfo); 
 		var checked ="checked=checked";
 		var filterServerList = trackBroker.filterServerList;
 		if(filterServerList && !filterServerList.includes(key)){
@@ -187,13 +239,15 @@ function showServerList(){
 		
 		$("#server-list").append(
 			"<tr>\
-				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-				<div class='filter-box'>\
-            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-            	</div></td>\
+				<td>\
+					<a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
+					<div class='filter-box'>\
+	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
+	            	</div>\
+            	</td>\
 				<td>" + serverInfo.serverVersion + "</td>\
 				<td>\
-	                <span class='badge badge-success'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
+	                <span class='topic topic-badge label label-success label-as-badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
 	           	</td>\
 			</tr>"
 		);    
