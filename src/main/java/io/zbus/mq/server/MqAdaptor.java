@@ -352,7 +352,41 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setBody(body);
 			sess.write(msg);
 		}
-	}; 
+	};  
+	
+
+	private Message handleTemplateRequest(String prefixPath, String url){
+		Message res = new Message(); 
+		if(!url.startsWith(prefixPath)){
+			res.setStatus(400);
+			res.setBody("Missing file name in URL"); 
+			return res;
+		}
+		url = url.substring(prefixPath.length());   
+		int idx = url.lastIndexOf('?');
+		Map<String, Object> model = null;
+		String fileName = url;
+		if(idx >= 0){
+			fileName = url.substring(0, idx); 
+			String params = url.substring(idx+1);
+			model = FileUtil.parseKeyValuePairs(params);
+		}
+		String body = null;
+		try{
+			body = FileUtil.loadTemplate(fileName, model);
+			if(body == null){
+				res.setStatus(404);
+				body = "404: File (" + fileName +") Not Found";
+			} else {
+				res.setStatus(200); 
+			}
+		} catch (IOException e){
+			res.setStatus(404);
+			body = e.getMessage();
+		}  
+		res.setBody(body); 
+		return res;
+	}
 	
 	private Message handleFileRequest(String prefixPath, String url){
 		Message res = new Message(); 
@@ -362,12 +396,17 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			return res;
 		}
 		url = url.substring(prefixPath.length());   
+		int idx = url.lastIndexOf('?');
+		String fileName = url;
+		if(idx >= 0){
+			fileName = url.substring(0, idx); 
+		}
 		byte[] body = null;
 		try{
-			body = FileUtil.loadFileBytes(url);
+			body = FileUtil.loadFileBytes(fileName);
 			if(body == null){
 				res.setStatus(404);
-				body = ("404: File (" + url +") Not Found").getBytes();
+				body = ("404: File (" + fileName +") Not Found").getBytes();
 			} else {
 				res.setStatus(200); 
 			}
@@ -380,8 +419,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	}
 	
 	private MessageHandler pageHandler = new MessageHandler() {
-		public void handle(Message msg, Session sess) throws IOException {
-			Message res = handleFileRequest("/page/", msg.getUrl());
+		public void handle(Message msg, Session sess) throws IOException { 
+			Message res = handleTemplateRequest("/page/", msg.getUrl());
 			if("200".equals(res.getStatus())){
 				res.setHeader("content-type", "text/html");
 			}

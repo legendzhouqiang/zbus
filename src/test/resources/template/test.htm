@@ -74,8 +74,31 @@
         	</tbody>
         </table>
     </div> 
-</div>    
- 
+</div>   
+
+<div class="row">
+    <div class="col-md-12">
+        <span class="label label-info">Topics</span>
+    </div>
+</div> 
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="topic-list"  class="table table-condensed table-bordered">
+            <tbody>
+            <tr> 
+                <th style="width: 6%">Topic</th> 
+                <th style="width: 1%">Server List</th> 
+	            <th style="width: 8%">Message Depth</th> 
+	            <th style="width: 8%">Message Active</th>
+	            <th style="width: 8%">Message Filter</th>  
+	            <th style="width: 8%">Consumer (Idle / Total)</th> 
+                <th style="width: 8%">Consumer Group</th>  
+            </tr>  
+        	</tbody>
+        </table>
+    </div>
+</div> 
 
 <div id="topic-details">
 	
@@ -85,10 +108,9 @@
  
 <script type="text/javascript"> 
 
+var topic = {{sub}};
 
 $(document).ready(function(){  
-	
-var topic = {{topic}};	
 var trackBroker = null;
 var filterServerList = [];
 
@@ -103,7 +125,8 @@ function updateServerList(){
     
     if(trackBroker){
     	trackBroker.filterServerList = filterServerList;
-    	trackBroker.updateTopicSummary(); 
+    	trackBroker.updateTopicSummary();
+    	showTopicSumUpdate(trackBroker.topicSumMap);
     } 
 } 
 
@@ -173,10 +196,38 @@ function buildServerList(serverList){
 	} 
    	return res;
 }
+
+function showTopicSumUpdate(topicSumMap){
+	$("#topic-list").find("tr:gt(0)").remove();
+	var topics = [];
+	for(var key in topicSumMap){
+		topics.push(key);
+	}
+	topics.sort();
+	for(var i in topics){
+		var topicName = topics[i];
+		var topicSum = topicSumMap[topicName];
+		var serverList = buildServerList(topicSum.serverList);
+		var filterTagList = "";
+		$("#topic-list").append(
+			"<tr id="+topicName+">\
+				<td><a class='link' target='_blank' href='/page/topic.htm'>" +topicName + "</a></td>\
+				<td>"+ serverList + "</td>\
+				<td>"+ topicSum.messageDepth + "</td>\
+				<td>"+ topicSum.messageActive + "</td>\
+				<td>"+ filterTagList + "</td>\
+				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
+				<td>"+ topicSum.consumerGroupCount+ "</td>\
+			</tr>"
+   		); 
+	}  
+} 
  
+
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(serverAddress){ 
+	trackBroker.onServerUpdated = function(serverAddress){
+		showTopicSumUpdate(trackBroker.topicSumMap);
 		showServerList("#server-list", trackBroker.serverInfoMap);
 	};
 	trackBroker.connect();

@@ -28,8 +28,7 @@
             </a> 
         </div>
         <div class="collapse navbar-collapse" id="navbar">
-             <ul class="nav navbar-nav">
-            	<li><a class="link" href="#">Topics</a></li>  
+             <ul class="nav navbar-nav"> 
             	<li><a class="link" href="/page/trace.htm">Trace</a></li>  
             	<li><a class="link" href="#">Topology</a></li> 
             </ul>
@@ -100,6 +99,10 @@
         </table>
     </div>
 </div> 
+
+<div id="topic-details">
+	
+</div>
 </div>
  
  
@@ -207,7 +210,7 @@ function showTopicSumUpdate(topicSumMap){
 		var filterTagList = "";
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
-				<td><a class='link' target='_blank' href='#'>" +topicName + "</a></td>\
+				<td><a class='link' target='_blank' href='/page/topic.htm?topic=" + topicName + "'>" +topicName + "</a></td>\
 				<td>"+ serverList + "</td>\
 				<td>"+ topicSum.messageDepth + "</td>\
 				<td>"+ topicSum.messageActive + "</td>\

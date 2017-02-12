@@ -34,6 +34,9 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class FileUtil { 
 	
@@ -123,6 +126,38 @@ public class FileUtil {
 			}
 		}
 		return writer.toString();
+	}
+	
+	public static String loadTemplate(String resource, Map<String, Object> model) throws IOException {
+		String template = loadFileString(resource);
+		if(model == null) return template; 
+		
+		for(Entry<String, Object> e : model.entrySet()){
+			String key = e.getKey();
+			Object val = e.getValue();
+			
+			key = "\\{\\{"+key+"\\}\\}";
+			if(val instanceof String){
+				val = "\"" + val + "\"";
+			}
+			template = template.replaceAll(key, val.toString()); 
+		}
+		
+		return template;
+	}
+	
+	public static Map<String, Object> parseKeyValuePairs(String params){
+		Map<String, Object> model = new HashMap<String, Object>();
+		String[] kvs = params.split("&&");
+		for(String kv : kvs){
+			kv = kv.trim();
+			String[] bb = kv.split("=");
+			if(bb.length < 2) continue;
+			String key = bb[0].trim();
+			String val = bb[1].trim();
+			model.put(key, val);
+		}
+		return model;
 	}
 	
 	public static byte[] loadFileBytes(String resource) throws IOException {

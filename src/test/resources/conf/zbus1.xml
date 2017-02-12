@@ -6,7 +6,7 @@
 	
 	<trackServerList></trackServerList>   
 	
-	<verbose>false</verbose> 
+	<verbose>true</verbose> 
 	  
 	<sslCertificateFile></sslCertificateFile>
 	<sslPrivateKeyFile></sslPrivateKeyFile>  
