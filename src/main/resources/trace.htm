@@ -47,7 +47,7 @@
   
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-info">Servers</span>
+        <span class="label label-primary">Servers</span>
     </div> 
     <div class="col-md-12">
         <table id="server-list"  class="table table-condensed table-bordered">
@@ -68,7 +68,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-info">Trace Log</span>
+        <span class="label label-primary">Trace Log</span>
     </div> 
     <div class="col-md-12">
     	<div id="trace-log">
@@ -128,7 +128,7 @@ function calcFilter(){
     }); 
 }
 
-function updateMonitor(){   
+function updateTrackInfo(){  
 	var filterServerList = trackBroker.filterServerList;
 	
    	for(var serverAddress in trackBroker.serverInfoMap){ 
@@ -178,7 +178,7 @@ $("#filter-all").change(function() {
 	$("#server-list input.server").attr('checked', checked); 
 	
 	calcFilter();
-	updateMonitor();
+	updateTrackInfo();
 });  
 
 $("#server-list input.server").live("change", function() {
@@ -186,14 +186,14 @@ $("#server-list input.server").live("change", function() {
     $(this).attr("checked", checked); 
     
     calcFilter();
-    updateMonitor();
-    
+    updateTrackInfo(); 
 });
 
 $("#server-list span.topic-list").live("click", function() {
 	$(this).toggleClass("topic-deactive"); 
+	
 	calcFilter();
-	updateMonitor();
+	updateTrackInfo();
 });
 
 $("#server-list span.topic-badge").live("click", function() { 
@@ -204,14 +204,14 @@ $("#server-list span.topic-badge").live("click", function() {
 		$(this).siblings().removeClass("topic-deactive");
 	}
 	calcFilter();
-	updateMonitor(); 
+	updateTrackInfo(); 
 });
 
 $.get('/version',function(data){  
 	$("#version").text(data); 
 }); 
   
-function buildTopicList(serverInfo){
+function serverTopicList(serverInfo){
 	var topicMap = serverInfo.topicMap
 	var res = "";
 	var keys = Object.keys(topicMap);
@@ -223,13 +223,13 @@ function buildTopicList(serverInfo){
    	return res;
 }
    
-function showServerList(){  
+function showServerTable(trackBroker){  
 	$("#server-list").find("tr:gt(0)").remove();
 	
 	var serverInfoMap = trackBroker.serverInfoMap;
 	for(var key in serverInfoMap){
 		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo); 
+		var topicList = serverTopicList(serverInfo); 
 		var checked ="checked=checked";
 		var filterServerList = trackBroker.filterServerList;
 		if(filterServerList && !filterServerList.includes(key)){
@@ -271,8 +271,8 @@ function onTracingMessage(msg){
 $.getJSON('/info',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
 	trackBroker.onServerUpdated = function(serverAddress){  
-		showServerList(); 
-		updateMonitor();
+		showServerTable(trackBroker);  
+		updateTrackInfo();
 	};
 	
 	trackBroker.connect();

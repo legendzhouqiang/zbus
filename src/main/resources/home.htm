@@ -50,14 +50,14 @@
 <div class="row">
     <div class="col-md-12">   
         <div id="track-list" class="table table-condensed">  
-       	 	<span class="label label-info">Trackers</span>
+       	 	<span class="label label-primary">Trackers</span>
         </div> 
     </div>  
 </div>    
   
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-info">Servers</span>
+        <span class="label label-primary">Servers</span>
     </div> 
     <div class="col-md-12">
         <table id="server-list"  class="table table-condensed table-bordered">
@@ -78,7 +78,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-info">Topics</span>
+        <span class="label label-primary">Topics</span>
     </div>
 </div> 
 
@@ -110,10 +110,11 @@
 
 
 $(document).ready(function(){  
+	
 var trackBroker = null;
 var filterServerList = [];
 
-function updateServerList(){
+function updateTrackInfo(){
 	filterServerList = [];
     $("#server-list input.server").each(function(data){
     	var checked = $(this).is(":checked");
@@ -125,109 +126,34 @@ function updateServerList(){
     if(trackBroker){
     	trackBroker.filterServerList = filterServerList;
     	trackBroker.updateTopicSummary();
-    	showTopicSumUpdate(trackBroker.topicSumMap);
+    	showTopicTable(trackBroker.topicSumMap);
     } 
 } 
 
 
 $("#filter-all").change(function() {
 	var checked = $(this).is(":checked");
-	$("#server-list input.server").attr('checked', checked); 
-	
-	updateServerList();
+	$("#server-list input.server").attr('checked', checked);  
+	updateTrackInfo();
 });  
 
 $("#server-list input.server").live("change", function() {
 	var checked = $(this).is(":checked");
     $(this).attr("checked", checked);    
-    updateServerList(); 
+    updateTrackInfo(); 
 });
 
 $.get('/version',function(data){  
 	$("#version").text(data); 
-}); 
-  
-function buildTopicList(topicMap){
-	var res = "";
-	var keys = Object.keys(topicMap);
-	keys.sort();
-	
-	for(var i in keys){ 
-		res += "<a href='#' class='topic link label label-default'>" + keys[i] + "</a>";
-	} 
-   	return res;
-}
-   
-function showServerList(domId, serverInfoMap){ 
-	$(domId).find("tr:gt(0)").remove();
-	
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo.topicMap); 
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.filterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		$(domId).append(
-			"<tr>\
-				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-				<div class='filter-box'>\
-            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-            	</div></td>\
-				<td>" + serverInfo.serverVersion + "</td>\
-				<td>\
-	                <span class='badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
-	           	</td>\
-			</tr>"
-		);    
-	} 
-}
+});  
 
-function buildServerList(serverList){
-	var res = ""; 
-	serverList.sort();
-	
-	for(var i in serverList){ 
-		var link = "<a class='topic' target='_blank' href='http://" + serverList[i] + "'>" + serverList[i] + "</a>";
-		res += link
-	} 
-   	return res;
-}
 
-function showTopicSumUpdate(topicSumMap){
-	$("#topic-list").find("tr:gt(0)").remove();
-	var topics = [];
-	for(var key in topicSumMap){
-		topics.push(key);
-	}
-	topics.sort();
-	for(var i in topics){
-		var topicName = topics[i];
-		var topicSum = topicSumMap[topicName];
-		var serverList = buildServerList(topicSum.serverList);
-		var filterTagList = "";
-		$("#topic-list").append(
-			"<tr id="+topicName+">\
-				<td><a class='link' target='_blank' href='/page/topic.htm?topic=" + topicName + "'>" +topicName + "</a></td>\
-				<td>"+ serverList + "</td>\
-				<td>"+ topicSum.messageDepth + "</td>\
-				<td>"+ topicSum.messageActive + "</td>\
-				<td>"+ filterTagList + "</td>\
-				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
-				<td>"+ topicSum.consumerGroupCount+ "</td>\
-			</tr>"
-   		); 
-	}  
-} 
- 
 
 $.getJSON('/info',function(serverInfo){   
-	trackBroker = new TrackBroker(serverInfo.serverAddress); 
+	trackBroker = new TrackBroker(serverInfo.serverAddress);  
 	trackBroker.onServerUpdated = function(serverAddress){
-		showTopicSumUpdate(trackBroker.topicSumMap);
-		showServerList("#server-list", trackBroker.serverInfoMap);
+		showTopicTable(trackBroker);
+		showServerTable(trackBroker);
 	};
 	trackBroker.connect();
 	 

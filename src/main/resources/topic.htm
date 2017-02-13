@@ -46,40 +46,26 @@
 <div class="nodes container-fluid">   
   
 
-
 <div class="row">
-    <div class="col-md-12">   
-        <div id="track-list" class="table table-condensed">  
-       	 	<span class="label label-info">Trackers</span>
-        </div> 
-    </div>  
-</div>    
-  
-<div class="row">
-    <div class="col-md-12">
-        <span class="label label-info">Servers</span>
+	<div class="col-md-12">
+        <span class="label label-primary">{{topic}} Consumer Groups</span>
     </div> 
     <div class="col-md-12">
-        <table id="server-list"  class="table table-condensed table-bordered">
+        <table id="consumer-group-list"  class="table table-condensed table-bordered">
             <tbody>
             <tr> 
-                <th style="width: 16%">Server Address 
-                <div class="filter-box">
-                	<input id="filter-all" type='checkbox' checked="checked">
-                </div>
-                </th> 
-	            <th style="width: 8%">Version</th> 
-                <th>Topics</th>
+                <th style="width: 6%">Group Name</th>   
+                <th style="width: 8%">Message Active</th> 
+                <th style="width: 8%">Consumer (Idle / Total)</th>  
+	            <th style="width: 8%">Message Filter</th>   
+                <th style="width: 8%">Group Flag</th> 
+                <th style="width: 8%">Server Address</th>  
             </tr>  
         	</tbody>
         </table>
-    </div> 
-</div>    
- 
+    </div>
+</div> 
 
-<div id="topic-details">
-	
-</div>
 </div>
  
  
@@ -88,96 +74,18 @@
 
 $(document).ready(function(){  
 	
-var topic = {{topic}};	
-var trackBroker = null;
-var filterServerList = [];
+var topic = {{topic}};	 
 
-function updateServerList(){
-	filterServerList = [];
-    $("#server-list input.server").each(function(data){
-    	var checked = $(this).is(":checked");
-    	if(checked){
-    		filterServerList.push($(this).val());
-    	} 
-    });  
-    
-    if(trackBroker){
-    	trackBroker.filterServerList = filterServerList;
-    	trackBroker.updateTopicSummary(); 
-    } 
-} 
-
-
-$("#filter-all").change(function() {
-	var checked = $(this).is(":checked");
-	$("#server-list input.server").attr('checked', checked); 
-	
-	updateServerList();
-});  
-
-$("#server-list input.server").live("change", function() {
-	var checked = $(this).is(":checked");
-    $(this).attr("checked", checked);    
-    updateServerList(); 
-});
+var trackBroker = null; 
 
 $.get('/version',function(data){  
 	$("#version").text(data); 
-}); 
-  
-function buildTopicList(topicMap){
-	var res = "";
-	var keys = Object.keys(topicMap);
-	keys.sort();
-	
-	for(var i in keys){ 
-		res += "<a href='#' class='topic link label label-default'>" + keys[i] + "</a>";
-	} 
-   	return res;
-}
-   
-function showServerList(domId, serverInfoMap){ 
-	$(domId).find("tr:gt(0)").remove();
-	
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo.topicMap); 
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.filterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		$(domId).append(
-			"<tr>\
-				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-				<div class='filter-box'>\
-            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-            	</div></td>\
-				<td>" + serverInfo.serverVersion + "</td>\
-				<td>\
-	                <span class='badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
-	           	</td>\
-			</tr>"
-		);    
-	} 
-}
+});   
 
-function buildServerList(serverList){
-	var res = ""; 
-	serverList.sort();
-	
-	for(var i in serverList){ 
-		var link = "<a class='topic' target='_blank' href='http://" + serverList[i] + "'>" + serverList[i] + "</a>";
-		res += link
-	} 
-   	return res;
-}
- 
 $.getJSON('/info',function(serverInfo){   
-	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(serverAddress){ 
-		showServerList("#server-list", trackBroker.serverInfoMap);
+	trackBroker = new TrackBroker(serverInfo.serverAddress);  
+	trackBroker.onServerUpdated = function(serverAddress){  
+	
 	};
 	trackBroker.connect();
 	 
@@ -188,6 +96,7 @@ $.getJSON('/info',function(serverInfo){
 		);
 	}  
 });    
+
 
 
 
