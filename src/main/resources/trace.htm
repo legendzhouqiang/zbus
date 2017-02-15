@@ -2,8 +2,10 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>ZBUS = MQ + RPC</title>
+<title>Trace - zbus</title>
 <script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/js/bootstrap.js"></script>
 <script type="text/javascript" src="/js/base.js"></script>
 <script type="text/javascript" src="/js/zbus.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
@@ -24,7 +26,7 @@
             </button>  
             <a class="navbar-brand" href="/"> 
             	<img src="/img/logo.svg"></img> 
-            	<span>zbus</span>
+            	<span>ZBUS = MQ + RPC</span>
             </a> 
         </div>
         <div class="collapse navbar-collapse" id="navbar">
@@ -68,7 +70,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-primary">Trace Log</span>
+        <span class="label label-primary">Live Log</span>
     </div> 
     <div class="col-md-12">
     	<div id="trace-log">
@@ -175,28 +177,28 @@ function updateTrackInfo(){
 
 $("#filter-all").change(function() {
 	var checked = $(this).is(":checked");
-	$("#server-list input.server").attr('checked', checked); 
+	$("#server-list input.server").prop('checked', checked); 
 	
 	calcFilter();
 	updateTrackInfo();
 });  
 
-$("#server-list input.server").live("change", function() {
+$("#server-list").on("change", "input.server", function() {
 	var checked = $(this).is(":checked");
-    $(this).attr("checked", checked); 
+    $(this).prop("checked", checked); 
     
     calcFilter();
     updateTrackInfo(); 
 });
 
-$("#server-list span.topic-list").live("click", function() {
+$("#server-list").on("click", "span.topic-list", function() {
 	$(this).toggleClass("topic-deactive"); 
 	
 	calcFilter();
 	updateTrackInfo();
 });
 
-$("#server-list span.topic-badge").live("click", function() { 
+$("#server-list").on("click", "span.topic-badge" ,function() { 
 	$(this).toggleClass("badge-deactive"); 
 	if($(this).hasClass("badge-deactive")){
 		$(this).siblings().addClass("topic-deactive"); 

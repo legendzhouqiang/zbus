@@ -4,6 +4,8 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Home - zbus</title>
 <script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/js/bootstrap.js"></script>
 <script type="text/javascript" src="/js/base.js"></script>
 <script type="text/javascript" src="/js/zbus.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.css" type="text/css">
@@ -133,13 +135,15 @@ function updateTrackInfo(){
 
 $("#filter-all").change(function() {
 	var checked = $(this).is(":checked");
-	$("#server-list input.server").attr('checked', checked);  
+	$("#server-list input.server").prop("checked", checked);   
+	
 	updateTrackInfo();
 });  
 
-$("#server-list input.server").live("change", function() {
+$("#server-list").on("change", "input.server", function() {
 	var checked = $(this).is(":checked");
-    $(this).attr("checked", checked);    
+	$(this).prop("checked", checked);  
+   
     updateTrackInfo(); 
 });
 
