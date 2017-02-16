@@ -85,10 +85,10 @@
 </div> 
 
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 table-responsive">
         <table id="topic-list"  class="table table-condensed table-bordered">
             <tbody>
-            <tr> 
+            <tr class="active"> 
                 <th style="width: 6%">Topic</th> 
                 <th style="width: 1%">Server List</th> 
 	            <th style="width: 8%">Message Depth</th> 
@@ -102,9 +102,181 @@
     </div>
 </div> 
 
-<div id="topic-details">
-	
+<div id="topic-modal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+    
+    	<div class="modal-header"> 
+    		<div class="caption">Topic: <span>MyTopic</span></div>  
+    		<div class="close-box"><span class="topic label label-info" data-dismiss="modal" aria-label="Close">x</span></div>
+     	</div>
+	    
+	    <div class="action-list">   
+	      	<span class="action label label-danger">Delete Topic</span>
+	      	<span class="action label label-info">Pause Topic</span>
+	      	<span class="action label label-warning">Empty Topic</span> 
+	    </div>   
+	     
+	     
+	    <div class="topic-server-list">
+		    <div class="col-md-12">
+		        <table id="topic-list"  class="table table-condensed table-bordered">
+		            <tbody>
+		            <tr class="active"> 
+		                <th style="width: 8%">In Server 
+		                <div class="filter-box">
+                			<input type='checkbox' checked="checked">
+                		</div>
+		                </th>  
+			            <th style="width: 8%">Msg Depth</th> 
+			            <th style="width: 8%">Msg Active</th>
+			            <th style="width: 8%">Msg Filter</th>  
+			            <th style="width: 10%">Consumer(Idle/Total)</th> 
+		                <th style="width: 6%">ConsumerGroup</th>  
+		            </tr>  
+		            
+		            <tr> 
+		            	<td><a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	
+		            	</td>	
+		            	
+		            	<td>10235</td>
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>1</td>			
+					</tr>
+					<tr> 
+		            	<td>
+		            		<a class="topic" target="_blank" href="http://192.168.30.1:15556">192.168.30.1:15556</a>
+		            		<div class="filter-box">
+		                		<input type='checkbox' checked="checked">
+		                	</div>
+		            	</td>	
+		            	
+		            	
+		            	<td>33222</td>
+		            	<td>20</td>
+						<td></td>				
+						<td>12 / 12</td>				
+						<td>1</td>			
+					</tr> 
+					
+		        	</tbody>
+		        </table>
+		    </div>
+		</div> 	
+		
+		
+		<div class="action-list">   
+	      	<span class="action label label-danger">Delete Group</span>
+	      	<span class="action label label-info">Pause Group</span>
+	      	<span class="action label label-warning">Empty Group</span>
+	    </div>   
+		<div class="consumer-group-list">
+		    <div class="col-md-12">
+		        <table id="topic-list"  class="table table-condensed table-bordered">
+		            <tbody>
+		            <tr class="active"> 
+		            	<th style="width: 8%">Consumer Group
+			            	<div class="filter-box">
+	                			<input type='checkbox' checked="checked">
+	                		</div>
+		            	</th>  
+			            <th style="width: 8%">Msg Active</th>
+			            <th style="width: 8%">Msg Filter</th>  
+			            <th style="width: 10%">Consumer(Idle/Total)</th> 
+		                <th style="width: 8%">In Server</th>   
+		            </tr>  
+		            
+		            <tr> 
+		            	<td> 
+		            	<span>MyMQ-Group1</span>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	</td>	 
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>
+						<a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	
+		                </td>			
+					</tr>
+					<tr> 
+		            	<td> 
+		            	<span>MyMQ-Group1</span>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	</td>	 
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>
+						<a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	
+		                </td>			
+					</tr>
+					<tr> 
+		            	<td> 
+		            	<span>MyMQ-Group1</span>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	</td>	 
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>
+						<a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	
+		                </td>			
+					</tr>
+					<tr> 
+		            	<td> 
+		            	<span>MyMQ-Group1</span>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	</td>	 
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>
+						<a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	
+		                </td>			
+					</tr>
+					<tr> 
+		            	<td> 
+		            	<span>MyMQ-Group1</span>
+		            	<div class="filter-box">
+		                	<input type='checkbox' checked="checked">
+		                </div>
+		            	</td>	 
+		            	<td>0</td>
+						<td></td>				
+						<td>0 / 0</td>				
+						<td>
+						<a class="topic" target="_blank" href="http://192.168.30.1:15555">192.168.30.1:15555</a>
+		            	
+		                </td>			
+					</tr>
+					 
+		        	</tbody>
+		        </table>
+		    </div>
+		</div> 	 
+    </div>
+  </div>
 </div>
+
+
 </div>
  
  
@@ -169,8 +341,7 @@ $.getJSON('/info',function(serverInfo){
 	}  
 });    
 
-
-
+$("#topic-modal").draggable({ handle:'.modal-header'}); 
 });
 
 

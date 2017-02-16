@@ -38,3 +38,30 @@ textarea.log {
 	color: black;
 	background-color: #777;
 }
+.modal-content{
+	width: 1000px;
+	height: 600px;
+}
+.close-box{
+	float: right; 
+	clear: right;   
+}
+
+.action {
+	margin: 6px;
+	padding: 6px;
+	cursor: pointer;
+} 
+.action-list {
+	margin: 8px; 
+} 
+.modal-header{
+	padding: 10px;
+}
+.caption{
+	margin-left: 6px;
+	display: inline;
+}
+.caption span{
+	font-weight: bolder;
+}

@@ -118,7 +118,7 @@ function showTopicTable(trackBroker){
 		var filterTagList = "";
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
-				<td><a class='link' target='_blank' href='/page/topic.htm?topic=" + topicName + "'>" +topicName + "</a></td>\
+				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a></td>\
 				<td>"+ serverList + "</td>\
 				<td>"+ topicSum.messageDepth + "</td>\
 				<td>"+ topicSum.messageActive + "</td>\
