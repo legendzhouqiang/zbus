@@ -10,6 +10,7 @@ import java.util.Map;
 
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageProcessor;
+import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
@@ -259,9 +260,10 @@ public class RpcProcessor implements MessageProcessor{
 		Response resp = new Response();
 		int status = 200;
 		final String msgId = msg.getId();
+		String encoding = msg.getEncoding();
 		try {
 			Object result = null;
-			Request req = codec.decodeRequest(msg);
+			Request req = codec.decodeRequest(msg); 
 			Request.normalize(req); 
 			if(isBlank(req.getMethod())){
 				result = object2Methods;
@@ -272,13 +274,13 @@ public class RpcProcessor implements MessageProcessor{
 				Class<?>[] targetParamTypes = target.method.getParameterTypes();
 				Object[] invokeParams = new Object[targetParamTypes.length];  
 				Object[] reqParams = req.getParams(); 
-				for(int i=0; i<targetParamTypes.length; i++){ 
-					invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
+				for(int i=0; i<targetParamTypes.length; i++){  
+					//invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
+					invokeParams[i] = JsonUtil.convert(reqParams[i], targetParamTypes[i]);
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
 			} 
-			resp.setResult(result); 
-			resp.setEncoding(msg.getEncoding());
+			resp.setResult(result);  
 				
 		} catch (InvocationTargetException e) { 
 			resp.setError(e.getTargetException());
@@ -288,7 +290,7 @@ public class RpcProcessor implements MessageProcessor{
 			status = 500;
 		} 
 		try{
-			Message res = codec.encodeResponse(resp);
+			Message res = codec.encodeResponse(resp, encoding);
 			res.setId(msgId); 
 			res.setStatus(status);
 			return res;

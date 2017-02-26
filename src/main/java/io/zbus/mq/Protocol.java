@@ -13,7 +13,9 @@ public class Protocol {
 	public static final String PRODUCE       = "produce";   
 	public static final String CONSUME       = "consume";   
 	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC
- 
+	
+	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
+	
 	//Topic control
 	public static final String DECLARE_TOPIC = "declare_topic";  
 	public static final String QUERY_TOPIC   = "query_topic"; 

@@ -125,7 +125,7 @@
 		            <tr class="active"> 
 		                <th style="width: 8%">In Server 
 		                <div id="modal-filter-server" class="filter-box">
-                			<input type='checkbox' checked="checked">
+                			<input class="server" type='checkbox' checked="checked">
                 		</div>
 		                </th>  
 			            <th style="width: 8%">Msg Depth</th> 
@@ -152,7 +152,7 @@
 		            <tr class="active"> 
 		            	<th style="width: 8%">Consumer Group
 			            	<div class="filter-box">
-	                			<input type='checkbox' checked="checked">
+	                			<input class="server" type='checkbox' checked="checked">
 	                		</div>
 		            	</th>  
 			            <th style="width: 8%">Msg Active</th>
@@ -236,10 +236,20 @@ $.getJSON('/info',function(serverInfo){
 $("#topic-modal").draggable({ handle:'.modal-header'}); 
 
 $("#topic-modal").on("show.bs.modal", function(e){ 
+	$(this).find('.modal-content').css({
+        width:'auto', //probably not needed
+        height:'auto', //probably not needed 
+        'max-height':'100%'
+	}); 
+	
+	$("#modal-server-list input.server").prop("checked", true); 
+	$("#modal-group-list input.server").prop("checked", true); 
+	
 	var topic = e.relatedTarget.innerText; 
 	$("#modal-topic").text(topic);
 	showModalServerList(trackBroker, topic);
-	showModalConsumerGroupList(trackBroker, topic);
+	showModalConsumerGroupList(trackBroker, topic); 
+
 });
 
 });

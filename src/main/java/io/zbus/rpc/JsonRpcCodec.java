@@ -21,27 +21,22 @@
  * THE SOFTWARE.
  */
 package io.zbus.rpc;
+ 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.JSONSerializer;
-import com.alibaba.fastjson.serializer.SerializeWriter;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson.util.TypeUtils;
+import java.util.Map;
 
 import io.zbus.mq.Message;
+import io.zbus.util.JsonUtil;
  
 
 public class JsonRpcCodec implements RpcCodec {  
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
-	public Message encodeRequest(Request request) {
-		Message msg = new Message(); 
-		String encoding = request.getEncoding();
+	public Message encodeRequest(Request request, String encoding) {
+		Message msg = new Message();  
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
-		msg.setBody(toJSONBytes(request, encoding,
-				SerializerFeature.WriteMapNullValue,
-				SerializerFeature.WriteClassName));
+		msg.setEncoding(encoding);
+		msg.setBody(JsonUtil.toJSONBytes(request, encoding));
 		return msg;
 	}
 	
@@ -51,22 +46,16 @@ public class JsonRpcCodec implements RpcCodec {
 			encoding = DEFAULT_ENCODING;
 		}
 		String jsonString = msg.getBodyString(encoding);
-		Request req = JSON.parseObject(jsonString, Request.class);
+		Request req = JsonUtil.parseObject(jsonString, Request.class);
 		Request.normalize(req); 
 		return req;
 	}
 
-	public Object convert(Object param, Class<?> targetType) throws ClassNotFoundException {
-		if(targetType.getName().equals("java.lang.Class")){
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			return classLoader.loadClass(param.toString());
-		}
-		return TypeUtils.castToJavaBean(param, targetType);
-	}
 	
-	public Message encodeResponse(Response response) {
-		Message msg = new Message(); 
+	public Message encodeResponse(Response response, String encoding) {
+		Message msg = new Message();  
 		msg.setStatus("200"); 
+		msg.setEncoding(encoding);
 		if(response.getError() != null){
 			Throwable error = response.getError(); 
 			if(error instanceof IllegalArgumentException){
@@ -74,12 +63,9 @@ public class JsonRpcCodec implements RpcCodec {
 			} else {
 				msg.setStatus("500");
 			} 
-		}  
-		String encoding = response.getEncoding();
+		}   
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
-		msg.setBody(toJSONBytes(response, encoding,
-				SerializerFeature.WriteMapNullValue,
-				SerializerFeature.WriteClassName)); 
+		msg.setBody(JsonUtil.toJSONBytes(response, encoding)); 
 		return msg; 
 	}
 	
@@ -92,13 +78,13 @@ public class JsonRpcCodec implements RpcCodec {
 		String jsonString = msg.getBodyString(encoding);
 		Response res = null;
 		try{
-			res = JSON.parseObject(jsonString, Response.class);
+			res = JsonUtil.parseObject(jsonString, Response.class);
 		} catch (Exception e){ //probably error can not be instantiated
 			res = new Response(); 
-			JSONObject json = null;
+			Map<String, Object> json = null;
 			try{
 				jsonString = jsonString.replace("@type", "unknown-class"); //禁止掉实例化
-				json = JSON.parseObject(jsonString); 
+				json = JsonUtil.parseObject(jsonString); 
 			} catch(Exception ex){
 				String prefix = "";
 				if("200".equals(msg.getStatus())){ 
@@ -109,36 +95,15 @@ public class JsonRpcCodec implements RpcCodec {
 			if(json != null){
 				final String stackTrace = Response.KEY_STACK_TRACE;
 				final String error = Response.KEY_ERROR;
-				if(json.containsKey(stackTrace) &&
-						json.get(stackTrace) != null){ 
-					throw new RpcException(json.getString(stackTrace));
+				if(json.containsKey(stackTrace) && json.get(stackTrace) != null){ 
+					throw new RpcException((String)json.get(stackTrace));
 				}
-				if(json.containsKey(error) &&
-						json.get(error) != null){ 
-					throw new RpcException(json.getString(error));
+				if(json.containsKey(error) && json.get(error) != null){ 
+					throw new RpcException((String)json.get(error));
 				}
 				res.setResult(json.get(Response.KEY_RESULT));
 			}
 		} 
 		return res;
 	} 
-	
-	
-	private static final byte[] toJSONBytes(Object object, String charsetName,
-			SerializerFeature... features) {
-		SerializeWriter out = new SerializeWriter();
-
-		try {
-			JSONSerializer serializer = new JSONSerializer(out);
-			for (SerializerFeature feature : features) {
-				serializer.config(feature, true);
-			}
-
-			serializer.write(object);
-
-			return out.toBytes(charsetName);
-		} finally {
-			out.close();
-		}
-	}
 }

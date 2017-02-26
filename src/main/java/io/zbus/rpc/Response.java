@@ -8,14 +8,14 @@ public class Response {
 	public static final String KEY_STACK_TRACE = "stackTrace";
 	public static final String KEY_ERROR = "error";
 	
-	private Object result;  
-	private Throwable error;
-	private String stackTrace; //异常时候一定保证stackTrace设定，判断的逻辑以此为依据
-	private String encoding = "UTF-8";
+	private String stackTrace; //null if no error, otherwise populated with stack trace message
+	private Object result;     //could be null if void method invoked  
+	private Throwable error;   //could be null if error can not be deserialized 
 	
 	public Object getResult() {
 		return result;
 	}
+	
 	public void setResult(Object result) {
 		this.result = result;
 	}
@@ -39,13 +39,8 @@ public class Response {
 	public String getStackTrace() {
 		return stackTrace;
 	}
+	
 	public void setStackTrace(String stackTrace) {
 		this.stackTrace = stackTrace;
-	}
-	public String getEncoding() {
-		return encoding;
-	}
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
 	} 
 }

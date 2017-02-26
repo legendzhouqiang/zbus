@@ -28,6 +28,7 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.net.ResultCallback;
+import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
 import io.zbus.util.logging.LoggerFactory;
 
@@ -69,8 +70,7 @@ public class RpcInvoker{
 		Request request = new Request()
 			.module(module)
 			.method(method)  
-			.params(args)
-			.encoding(encoding);
+			.params(args);
 
 		return invokeSync(resultClass, request);
 	}
@@ -80,19 +80,17 @@ public class RpcInvoker{
 			.module(module)
 			.method(method) 
 			.paramTypes(paramTypes)
-			.params(args)
-			.encoding(encoding);
+			.params(args);
 	
 		return invokeSync(resultClass, request);
 	} 
 	
 	public <T> T invokeSync(Class<T> resultClass, Request request){
 		Response resp = invokeSync(request);
-		try {
-			@SuppressWarnings("unchecked")
-			T res = (T)codec.convert(extractResult(resp), resultClass);
+		try { 
+			T res = (T)JsonUtil.convert(extractResult(resp), resultClass);
 			return res;
-		} catch (ClassNotFoundException e) { 
+		} catch (Exception e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
 	}
@@ -107,8 +105,7 @@ public class RpcInvoker{
 			.module(module)
 			.method(method) 
 			.paramTypes(types)
-			.params(args)
-			.encoding(encoding); 
+			.params(args); 
 		 
 		Response resp = invokeSync(req);
 		return extractResult(resp);
@@ -118,7 +115,7 @@ public class RpcInvoker{
 		Message msgReq= null, msgRes = null;
 		try {
 			long start = System.currentTimeMillis();
-			msgReq = codec.encodeRequest(request); 
+			msgReq = codec.encodeRequest(request, encoding); 
 			if(isVerbose()){
 				log.info("[REQ]: %s", msgReq);
 			} 
@@ -151,11 +148,10 @@ public class RpcInvoker{
 			@Override
 			public void onReturn(Response resp) {  
 				Object netObj = extractResult(resp);
-				try {
-					@SuppressWarnings("unchecked")
-					T target = (T) codec.convert(netObj, clazz);
+				try { 
+					T target = (T) JsonUtil.convert(netObj, clazz);
 					callback.onReturn(target);
-				} catch (ClassNotFoundException e) { 
+				} catch (Exception e) { 
 					throw new RpcException(e.getMessage(), e.getCause());
 				}
 			}
@@ -164,7 +160,7 @@ public class RpcInvoker{
 	
 	public void invokeAsync(Request request, final ResultCallback<Response> callback){ 
 		final long start = System.currentTimeMillis();
-		final Message msgReq = codec.encodeRequest(request); 
+		final Message msgReq = codec.encodeRequest(request, encoding); 
 		if(isVerbose()){
 			log.info("[REQ]: %s", msgReq);
 		}  

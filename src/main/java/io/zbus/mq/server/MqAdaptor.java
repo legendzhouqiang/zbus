@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -22,6 +24,7 @@ import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.net.MessageAdaptor;
 import io.zbus.mq.net.MessageHandler;
 import io.zbus.net.Session;
+import io.zbus.rpc.Request;
 import io.zbus.util.FileUtil;
 import io.zbus.util.JsonUtil;
 import io.zbus.util.logging.Logger;
@@ -57,6 +60,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.PRODUCE, produceHandler); 
 		registerHandler(Protocol.CONSUME, consumeHandler);  
 		registerHandler(Protocol.ROUTE, routeHandler); 
+		registerHandler(Protocol.RPC, rpcHandler);
 		
 		//Topic/ConsumerGroup 
 		registerHandler(Protocol.DECLARE_TOPIC, declareTopicHandler); 
@@ -170,6 +174,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			}
 		}
 	}; 
+	
+	private MessageHandler rpcHandler = new MessageHandler() { 
+		@Override
+		public void handle(final Message msg, final Session sess) throws IOException {  
+			msg.setAck(false);
+			produceHandler.handle(msg, sess);
+		}
+	};
 	
 	private MessageHandler consumeHandler = new MessageHandler() { 
 		@Override
@@ -625,6 +637,55 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	}
     } 
     
+    private void handlUrlRpcMessage(Message msg){
+    	// rpc/<topic>/<method>/<param_1>/../<param_n>[?module=<module>&&<header_ext_kvs>]
+    	String url = msg.getUrl(); 
+    	int idx = url.indexOf('?');
+    	String rest = "";
+    	Map<String, String> kvs = null;
+    	if(idx >= 0){
+    		kvs = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    		rest = url.substring(1, idx);  
+    		String paramString = url.substring(idx+1); 
+    		StringTokenizer st = new StringTokenizer(paramString, "&");
+            while (st.hasMoreTokens()) {
+                String e = st.nextToken();
+                int sep = e.indexOf('=');
+                if (sep >= 0) {
+                	String key = e.substring(0, sep).trim().toLowerCase();
+                	String val = e.substring(sep + 1).trim();  
+                	kvs.put(key, val); 
+                }  
+            }  
+    	} else {
+    		rest = url.substring(1);
+    	}  
+    	
+    	String[] bb = rest.split("/");
+    	if(bb.length < 3){
+    		//ignore invalid 
+    		return;
+    	}
+    	
+    	String topic = bb[1];
+    	String method = bb[2];
+    	msg.setTopic(topic);
+    	Request req = new Request();
+    	req.setMethod(method); 
+    	if(kvs != null && kvs.containsKey("module")){
+    		req.setModule(kvs.get("module"));
+    	}
+    	if(bb.length>3){
+    		Object[] params = new Object[bb.length-3];
+    		for(int i=0;i<params.length;i++){
+    			params[i] = bb[3+i];
+    		}
+    		req.setParams(params); 
+    	} 
+    	
+    	msg.setBody(JsonUtil.toJSONString(req));
+    }
+    
     private void handleUrlMessage(Message msg){ 
     	if(msg.getCommand() != null){
     		return;
@@ -647,7 +708,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	}
     	
     	msg.setCommand(cmd.toLowerCase());
-    	msg.urlToHead(); 
+    	//handle RPC
+    	if(Protocol.RPC.equalsIgnoreCase(cmd) && msg.getBody() == null){ 
+    		handlUrlRpcMessage(msg); 
+    	} else {
+    		msg.urlToHead(); 
+    	}
 	}
     
     private boolean ignoreOnTrace(String cmd){

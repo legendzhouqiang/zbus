@@ -4,8 +4,7 @@ public class Request{
 	private String module = ""; //模块标识
 	private String method;      //远程方法
 	private Object[] params;    //参数列表
-	private String[] paramTypes;
-	private String encoding = "UTF-8";
+	private String[] paramTypes; 
 	
 	public String getModule() {
 		return module;
@@ -30,14 +29,7 @@ public class Request{
 	}
 	public void setParamTypes(String[] paramTypes) {
 		this.paramTypes = paramTypes;
-	}
-	public String getEncoding() {
-		return encoding;
-	}
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
-	}
-
+	} 
 	public Request method(String method){
 		this.method = method;
 		return this;
@@ -49,11 +41,8 @@ public class Request{
 	public Request params(Object... params){
 		this.params = params;
 		return this;
-	}
-	public Request encoding(String encoding){
-		this.encoding = encoding;
-		return this;
-	}
+	} 
+	
 	public Request paramTypes(Class<?>... types){
 		if(types == null) return this;
 		this.paramTypes = new String[types.length];
