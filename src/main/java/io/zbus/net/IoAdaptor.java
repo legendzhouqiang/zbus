@@ -23,17 +23,53 @@
 package io.zbus.net;
 
 import java.io.IOException;
+ 
+ 
 
-
+/**
+ * Session life-cycle events management. This adaptor is very important point to configure user specific behavior.
+ * 
+ * Default implementation from NettyToIoAdaptor(Netty-Impl)
+ * 
+ * @author rushmore (洪磊明)
+ *
+ */
 public interface IoAdaptor{  
-	
+	/**
+	 * Triggered when session created(Netty-Impl as channelActive)
+	 * @param sess Session data
+	 * @throws IOException
+	 */
 	void sessionCreated(Session sess) throws IOException; 
 	
+	/**
+	 * Triggered when session destroyed(Netty-Impl as channelDeactive)
+	 * @param sess
+	 * @throws IOException
+	 */
 	void sessionToDestroy(Session sess) throws IOException; 
 	
+	/**
+	 * Triggered when session get message ready(Netty-Impl as channelRead)
+	 * @param msg
+	 * @param sess
+	 * @throws IOException
+	 */
 	void sessionMessage(Object msg, Session sess) throws IOException; 
 	
+	/**
+	 * Triggered when session encounter error ready(Netty-Impl as exceptionCaught)
+	 * @param e
+	 * @param sess
+	 * @throws Exception
+	 */
 	void sessionError(Throwable e, Session sess) throws Exception;
 	
+	/**
+	 * Triggered when session idled for a defined time period(Netty-Impl as userEventTriggered)
+	 * 
+	 * @param sess
+	 * @throws IOException
+	 */
 	void sessionIdle(Session sess) throws IOException; 
 }

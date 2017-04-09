@@ -32,7 +32,6 @@
         <div class="collapse navbar-collapse" id="navbar">
              <ul class="nav navbar-nav"> 
             	<li><a class="link" href="/page/trace.htm">Trace</a></li>  
-            	<li><a class="link" href="#">Topology</a></li> 
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
@@ -67,7 +66,7 @@
             <tr> 
                 <th style="width: 16%">Server Address 
                 <div class="filter-box">
-                	<input id="filter-all" type='checkbox' checked="checked">
+                	<input id="filter-server" type='checkbox' checked="checked">
                 </div>
                 </th> 
 	            <th style="width: 8%">Version</th> 
@@ -90,10 +89,9 @@
             <tbody>
             <tr class="active"> 
                 <th style="width: 6%">Topic</th> 
-                <th style="width: 1%">Server List</th> 
-	            <th style="width: 8%">Message Depth</th> 
-	            <th style="width: 8%">Message Active</th>
-	            <th style="width: 8%">Message Filter</th>  
+                <th style="width: 1%">In Server</th> 
+	            <th style="width: 8%">Msg Depth</th> 
+	            <th style="width: 8%">Msg Unconsumed</th> 
 	            <th style="width: 8%">Consumer (Idle / Total)</th> 
                 <th style="width: 8%">Consumer Group</th>  
             </tr>  
@@ -107,16 +105,15 @@
     <div class="modal-content">
     
     	<div class="modal-header"> 
-    		<div class="caption">Topic: <span id="modal-topic"></span></div>  
+    		<div class="caption"><span id="modal-topic"></span> 
+    		</div>  
     		<div class="close-box"><span class="topic label label-info" data-dismiss="modal" aria-label="Close">x</span></div>
-     	</div>
-	    
-	    <div class="action-list">   
-	      	<span class="action label label-danger">Delete Topic</span>
-	      	<span class="action label label-info">Pause Topic</span>
-	      	<span class="action label label-warning">Empty Topic</span> 
-	    </div>   
-	     
+     	</div> 
+	     	<div class="action-list">   
+		      	<span class="action label label-danger">Delete Topic</span>
+		      	<span class="action label label-info">Pause Topic</span>
+		      	<span class="action label label-warning">Empty Topic</span> 
+		    </div>   
 	     
 	    <div class="topic-server-list">
 		    <div class="col-md-12">
@@ -124,13 +121,12 @@
 		            <tbody> 
 		            <tr class="active"> 
 		                <th style="width: 8%">In Server 
-		                <div id="modal-filter-server" class="filter-box">
-                			<input class="server" type='checkbox' checked="checked">
+		                <div class="filter-box">
+                			<input id="modal-filter-server"  class="server" type='checkbox' checked="checked">
                 		</div>
 		                </th>  
 			            <th style="width: 8%">Msg Depth</th> 
-			            <th style="width: 8%">Msg Active</th>
-			            <th style="width: 8%">Msg Filter</th>  
+			            <th style="width: 8%">Msg Unconsumed</th>  
 			            <th style="width: 10%">Consumer(Idle/Total)</th> 
 		                <th style="width: 6%">ConsumerGroup</th>  
 		            </tr>    
@@ -152,13 +148,14 @@
 		            <tr class="active"> 
 		            	<th style="width: 8%">Consumer Group
 			            	<div class="filter-box">
-	                			<input class="server" type='checkbox' checked="checked">
+	                			<input id="modal-filter-group" class="group" type='checkbox' checked="checked">
 	                		</div>
 		            	</th>  
-			            <th style="width: 8%">Msg Active</th>
+		            	<th style="width: 4%">Msg Depth</th>
+			            <th style="width: 4%">Msg Unconsumed</th>
 			            <th style="width: 8%">Msg Filter</th>  
-			            <th style="width: 10%">Consumer(Idle/Total)</th> 
-		                <th style="width: 8%">In Server</th>   
+			            <th style="width: 4%">Consumer(Idle/Total)</th> 
+		                <th style="width: 4%">In Server</th>   
 		            </tr>   
 		        	</tbody>
 		        </table>
@@ -197,7 +194,7 @@ function updateTrackInfo(){
 } 
 
 
-$("#filter-all").change(function() {
+$("#filter-server").change(function() {
 	var checked = $(this).is(":checked");
 	$("#server-list input.server").prop("checked", checked);   
 	
@@ -209,7 +206,7 @@ $("#server-list").on("change", "input.server", function() {
 	$(this).prop("checked", checked);  
    
     updateTrackInfo(); 
-});
+}); 
 
 $.get('/version',function(data){  
 	$("#version").text(data); 
@@ -233,6 +230,9 @@ $.getJSON('/info',function(serverInfo){
 	}  
 });    
 
+
+////////////////////modal actions/////////////////////
+
 $("#topic-modal").draggable({ handle:'.modal-header'}); 
 
 $("#topic-modal").on("show.bs.modal", function(e){ 
@@ -251,6 +251,27 @@ $("#topic-modal").on("show.bs.modal", function(e){
 	showModalConsumerGroupList(trackBroker, topic); 
 
 });
+
+
+$("#modal-server-list").on("change", "input.server", function() {
+	var checked = $(this).is(":checked");
+	$(this).prop("checked", checked);   
+});
+
+$("#modal-filter-server").change(function() {
+	var checked = $(this).is(":checked");
+	$("#modal-server-list input.server").prop("checked", checked);    
+});   
+
+$("#modal-group-list").on("change", "input.group", function() {
+	var checked = $(this).is(":checked");
+	$(this).prop("checked", checked);   
+});
+
+$("#modal-filter-group").change(function() {
+	var checked = $(this).is(":checked");
+	$("#modal-group-list input.group").prop("checked", checked);    
+});   
 
 });
 

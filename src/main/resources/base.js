@@ -114,15 +114,13 @@ function showTopicTable(trackBroker){
 	for(var i in topics){
 		var topicName = topics[i];
 		var topicSum = topicSumMap[topicName];
-		var serverList = topicServerList(topicSum.serverList);
-		var filterTagList = "";
+		var serverList = topicServerList(topicSum.serverList); 
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
 				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a></td>\
 				<td>"+ serverList + "</td>\
 				<td>"+ topicSum.messageDepth + "</td>\
 				<td>"+ topicSum.messageActive + "</td>\
-				<td>"+ filterTagList + "</td>\
 				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
 				<td>"+ topicSum.consumerGroupCount+ "</td>\
 			</tr>"
@@ -168,7 +166,6 @@ function showModalServerList(trackBroker, topic){
             	</td>\
 				<td>" + topicInfo.messageCount + "</td>\
 				<td>" + msgActive + "</td>\
-				<td>" + msgFilter + "</td>\
 				<td> (" + idleCount + " / " + idleCount + ") </td>\
 				<td>" + topicInfo.consumerGroupCount + "</td>\
 			</tr>"
@@ -202,9 +199,10 @@ function showModalConsumerGroupList(trackBroker, topic){
 					<td>\
 						<a class='link' href='#'>" + cg.groupName + "</a>\
 						<div class='filter-box'>\
-		            		<input class='server' type='checkbox' "+ checked +" value=''>\
+		            		<input class='group' type='checkbox' "+ checked +" value=''>\
 		            	</div>\
 	            	</td>\
+					<td>" + topicInfo.messageCount + "</td>\
 					<td>" + cg.messageCount + "</td>\
 					<td>" + msgFilter + "</td>\
 					<td> (" + cg.consumerCount + " / " + cg.consumerCount + ") </td>\

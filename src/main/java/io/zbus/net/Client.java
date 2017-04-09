@@ -3,6 +3,18 @@ package io.zbus.net;
 import java.io.Closeable;
 import java.io.IOException;
   
+/**
+ * A TCP client, capable of 
+ * 1) remote invocation of message: messaging pairing, message identification from request to response
+ * 2) configuration of IO events(via IoAdaptor), such as connection creation/destroy/message received
+ *    more API friendly way is using XXHandler such as ConnectedHandler
+ * 3) heartbeat 
+ * 
+ * @author rushmore (洪磊明)
+ *
+ * @param <REQ> Request message type
+ * @param <RES> Response message type
+ */
 public interface Client<REQ, RES> extends Invoker<REQ, RES>, IoAdaptor, Closeable { 
 	
 	void codec(CodecInitializer codecInitializer);

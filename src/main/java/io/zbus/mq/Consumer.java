@@ -99,11 +99,13 @@ public class Consumer extends MqAdmin implements Closeable {
 	public void reply(Message msg) throws IOException {
 		msg.setCommand(Protocol.ROUTE);
 		msg.setAck(false); 
+		//invoke message should be request typed, if not add origin_status header and change it to request type
 		String status = msg.getStatus();
 		if(status != null){
 			msg.setOriginStatus(status); 
 			msg.setStatus(null); //make it as request 
 		} 
+		
 		invokeAsync(msg, null); 
 	} 
 	
