@@ -32,6 +32,7 @@ public class ZbusBroker implements Broker{
 		brokerAddress = brokerAddress.trim();
 		config.setBrokerAddress(brokerAddress); 
 		support = new TrackBroker(config); 
+		
 	}
 	 
 	@Override
@@ -60,28 +61,28 @@ public class ZbusBroker implements Broker{
 	}
  
 	@Override
-	public void setServerSelector(ServerSelector selector) {
-		support.setServerSelector(selector);
+	public void configServerSelector(ServerSelector selector) {
+		support.configServerSelector(selector);
 	}
  
 	@Override
-	public void registerServer(String serverAddress) throws IOException{
-		support.registerServer(serverAddress);
+	public void addServer(String serverAddress) throws IOException{
+		support.addServer(serverAddress);
 	}
  
 	@Override
-	public void unregisterServer(String serverAddress) throws IOException {
-		support.unregisterServer(serverAddress);
+	public void removeServer(String serverAddress) throws IOException {
+		support.removeServer(serverAddress);
 	}
  
 	@Override
-	public void addServerListener(ServerNotifyListener listener) {
-		support.addServerListener(listener);
+	public void addServerNotifyListener(ServerNotifyListener listener) {
+		support.addServerNotifyListener(listener);
 	}
  
 	@Override
-	public void removeServerListener(ServerNotifyListener listener) {
-		support.removeServerListener(listener);
+	public void removeServerNotifyListener(ServerNotifyListener listener) {
+		support.removeServerNotifyListener(listener);
 	}   
 	
 	@Override

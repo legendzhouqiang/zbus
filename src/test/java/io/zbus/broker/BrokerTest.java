@@ -1,26 +1,26 @@
 package io.zbus.broker;
 
 import io.zbus.mq.broker.SingleBroker;
-import io.zbus.mq.broker.SingleBroker.BrokerConnectedHandler;
-import io.zbus.mq.broker.SingleBroker.BrokerDisconnectedHandler;
+import io.zbus.net.Client.ConnectedHandler;
+import io.zbus.net.Client.DisconnectedHandler;
 
 public class BrokerTest {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception { 
-		SingleBroker broker = new SingleBroker("127.0.0.1:15555"); 
+		final SingleBroker broker = new SingleBroker("127.0.0.1:15555"); 
 		
-		broker.onBrokerConnected(new BrokerConnectedHandler() { 
+		broker.onConnected(new ConnectedHandler() { 
 			@Override
-			public void onConnected(SingleBroker broker) { 
+			public void onConnected() { 
 				System.out.println(broker + "connected");
 			}
 		});
 		
-		broker.onBrokerDisconnected(new BrokerDisconnectedHandler() {
+		broker.onDisconnected(new DisconnectedHandler() {
 			
 			@Override
-			public void onDisconnected(SingleBroker broker) { 
+			public void onDisconnected() { 
 				System.out.println(broker + "disconnected");
 			}
 		});

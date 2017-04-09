@@ -190,27 +190,27 @@ public class JvmBroker implements Session, Broker, MessageInvoker {
 	}
 
 	@Override
-	public void setServerSelector(ServerSelector selector) { 
+	public void configServerSelector(ServerSelector selector) { 
 		
 	}
 
 	@Override
-	public void registerServer(String serverAddress) { 
+	public void addServer(String serverAddress) { 
 		
 	}
 
 	@Override
-	public void unregisterServer(String serverAddress) { 
+	public void removeServer(String serverAddress) { 
 		
 	}
 
 	@Override
-	public void addServerListener(ServerNotifyListener listener) { 
+	public void addServerNotifyListener(ServerNotifyListener listener) { 
 		
 	}
 
 	@Override
-	public void removeServerListener(ServerNotifyListener listener) { 
+	public void removeServerNotifyListener(ServerNotifyListener listener) { 
 		
 	} 
 

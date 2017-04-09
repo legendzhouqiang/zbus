@@ -17,8 +17,6 @@ import io.zbus.mq.MqException;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
-import io.zbus.mq.broker.SingleBroker.BrokerConnectedHandler;
-import io.zbus.mq.broker.SingleBroker.BrokerDisconnectedHandler;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
@@ -105,14 +103,14 @@ public class TrackBroker implements Broker {
 		List<String> toRemove = routeTable.updateVotes(trackerInfo);
 		if(!toRemove.isEmpty()){ 
 			for(String serverAddress : toRemove){
-				unregisterServer(serverAddress);
+				removeServer(serverAddress);
 			}
 		}
 		
 		for(String serverAddress : trackerInfo.liveServerList){
 			SingleBroker broker = brokerMap.get(serverAddress);
 			if(broker == null){
-				registerServer(serverAddress);
+				addServer(serverAddress);
 				broker = brokerMap.get(serverAddress);
 			} 
 			try{
@@ -137,7 +135,7 @@ public class TrackBroker implements Broker {
 	}
 	
 	@Override
-	public void registerServer(final String serverAddress) throws IOException {  	
+	public void addServer(final String serverAddress) throws IOException {  	
 		final SingleBroker broker;
 		synchronized (brokerMap) {
 			if(brokerMap.containsKey(serverAddress)){
@@ -147,9 +145,9 @@ public class TrackBroker implements Broker {
 			brokerMap.put(serverAddress, broker);  
 		}    
 		
-		broker.onBrokerConnected(new BrokerConnectedHandler() { 
+		broker.onConnected(new ConnectedHandler() { 
 			@Override
-			public void onConnected(final SingleBroker broker) {
+			public void onConnected() {
 				for(final ServerNotifyListener listener : listeners){
 					eventDriver.getGroup().submit(new Runnable() { 
 						@Override
@@ -161,11 +159,11 @@ public class TrackBroker implements Broker {
 			}
 		});
 		
-		broker.onBrokerDisconnected(new BrokerDisconnectedHandler() { 
+		broker.onDisconnected(new DisconnectedHandler() { 
 			@Override
-			public void onDisconnected(SingleBroker broker) { 
+			public void onDisconnected() { 
 				try {
-					unregisterServer(serverAddress);
+					removeServer(serverAddress);
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -176,7 +174,7 @@ public class TrackBroker implements Broker {
 	} 
 	
 	@Override
-	public void unregisterServer(final String serverAddress) throws IOException { 
+	public void removeServer(final String serverAddress) throws IOException { 
 		final Broker broker;
 		synchronized (brokerMap) { 
 			broker = brokerMap.remove(serverAddress);
@@ -269,17 +267,17 @@ public class TrackBroker implements Broker {
 	}
 
 	@Override
-	public void setServerSelector(ServerSelector selector) {
+	public void configServerSelector(ServerSelector selector) {
 		this.serverSelector = selector;
 	} 
 	
 	@Override
-	public void addServerListener(ServerNotifyListener listener) {
+	public void addServerNotifyListener(ServerNotifyListener listener) {
 		this.listeners.add(listener);
 	}
 
 	@Override
-	public void removeServerListener(ServerNotifyListener listener) {
+	public void removeServerNotifyListener(ServerNotifyListener listener) {
 		this.listeners.remove(listener);
 	} 
 	

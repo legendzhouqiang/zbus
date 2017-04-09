@@ -25,8 +25,8 @@ public class SingleBroker implements Broker, MessageInvoker {
 	private final boolean ownEventDriver;  
 	private EventDriver eventDriver; 
 	
-	private BrokerConnectedHandler brokerConnectedHandler;
-	private BrokerDisconnectedHandler brokerDisconnectedHandler;
+	private ConnectedHandler connectedHandler;
+	private DisconnectedHandler disconnectedHandler;
 	private MessageClient checkingClient;
 	
 	
@@ -59,8 +59,8 @@ public class SingleBroker implements Broker, MessageInvoker {
 		this.checkingClient.onConnected(new ConnectedHandler(){  
 			@Override
 			public void onConnected() throws IOException {
-				if(brokerConnectedHandler != null){
-					brokerConnectedHandler.onConnected(SingleBroker.this);
+				if(connectedHandler != null){
+					connectedHandler.onConnected();
 				}
 			}
 		});
@@ -68,8 +68,8 @@ public class SingleBroker implements Broker, MessageInvoker {
 		this.checkingClient.onDisconnected(new DisconnectedHandler() { 
 			@Override
 			public void onDisconnected() throws IOException { 
-				if(brokerDisconnectedHandler != null){
-					brokerDisconnectedHandler.onDisconnected(SingleBroker.this);
+				if(disconnectedHandler != null){
+					disconnectedHandler.onDisconnected();
 				}
 				checkingClient.ensureConnectedAsync();
 			}
@@ -77,8 +77,7 @@ public class SingleBroker implements Broker, MessageInvoker {
 		
 		checkingClient.ensureConnectedAsync();
 	}
-	
-	@Override
+	 
 	public String brokerAddress() { 
 		return this.config.getBrokerAddress();
 	}
@@ -94,8 +93,7 @@ public class SingleBroker implements Broker, MessageInvoker {
 			eventDriver = null;
 		} 
 	}  
-	 
-	@Override
+	  
 	public MessageInvoker selectForProducer(String topic) throws IOException{ 
 		try {
 			MessageClient client = this.pool.borrowObject(); 
@@ -106,8 +104,7 @@ public class SingleBroker implements Broker, MessageInvoker {
 			throw new MqException(e.getMessage(), e);
 		} 
 	}
-	
-	@Override
+	 
 	public MessageInvoker selectForConsumer(String topic) throws IOException{ 
 		MessageClient client = factory.createObject();
 		client.attr(Protocol.SERVER, factory.getServerAddress());
@@ -128,8 +125,7 @@ public class SingleBroker implements Broker, MessageInvoker {
 		this.pool.returnObject(client); 
 	}
 	
-	
-	@Override
+	 
 	public List<Broker> availableServerList() {
 		return Arrays.asList((Broker)this);
 	} 
@@ -165,47 +161,35 @@ public class SingleBroker implements Broker, MessageInvoker {
 		}
 	}
 	
-	
-	@Override
-	public void setServerSelector(ServerSelector selector) { 
+	 
+	public void configServerSelector(ServerSelector selector) { 
 		//ignore
 	}
-
-	@Override
-	public void registerServer(String serverAddress) throws IOException { 
+ 
+	public void addServer(String serverAddress) throws IOException { 
 		//ignore
 	}
-
-	@Override
-	public void unregisterServer(String serverAddress) throws IOException { 
+ 
+	public void removeServer(String serverAddress) throws IOException { 
 		//ignore
 	}
-
-	@Override
-	public void addServerListener(ServerNotifyListener listener) { 
+ 
+	public void addServerNotifyListener(ServerNotifyListener listener) { 
 		//ignore
 	}
-
-	@Override
-	public void removeServerListener(ServerNotifyListener listener) { 
+ 
+	public void removeServerNotifyListener(ServerNotifyListener listener) { 
 		//ignore
 	}  
 	
-	public void onBrokerConnected(BrokerConnectedHandler brokerConnectedHandler) {
-		this.brokerConnectedHandler = brokerConnectedHandler;
+	public void onConnected(ConnectedHandler connectedHandler) {
+		this.connectedHandler = connectedHandler;
 	}
 	
-	public void onBrokerDisconnected(BrokerDisconnectedHandler brokerDisconnectedHandler) {
-		this.brokerDisconnectedHandler = brokerDisconnectedHandler;
+	public void onDisconnected(DisconnectedHandler disconnectedHandler) {
+		this.disconnectedHandler = disconnectedHandler;
 	}
-	
-	public static interface BrokerConnectedHandler{
-		void onConnected(SingleBroker broker);
-	}
-	
-	public static interface BrokerDisconnectedHandler{
-		void onDisconnected(SingleBroker broker);
-	}
+	 
 }
 
 

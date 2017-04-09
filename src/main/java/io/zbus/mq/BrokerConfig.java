@@ -2,7 +2,7 @@ package io.zbus.mq;
 
 /**
  * Broker configuration
- * 1) brokerAddress, server(tracker) address
+ * 1) brokerAddress, ZbusServer(tracker) address
  * 2) connectionPoolSize, physical connection pool size
  * 3) serverInJvm, JvmBroker configuration
  * 
@@ -43,9 +43,8 @@ public class BrokerConfig implements Cloneable {
 
 	public void setServerInJvm(Object serverInJvm) {
 		this.serverInJvm = serverInJvm;
-	}
+	}  
 
-	
 	@Override
 	public BrokerConfig clone() {
 		try {

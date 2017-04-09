@@ -15,50 +15,108 @@ import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
 
+/**
+ * Broker represents dynamic MessageInvoker(commands to ZbusServer) to ZbusServer or ZbusServer list(HA), capable of
+ * 1) dynamic selection of MessageInvoker for Producer and Consumer components
+ * 2) configuration of ZbusServer selection
+ * 3) add/remove ZbusServer
+ * 4) monitor ZbusServer status change
+ * 
+ * @author rushmore (洪磊明) 
+ */
 public interface Broker extends Closeable {
 
+	/**
+	 * Select MessageInvoker for Producer, selection algorithm decided by ServerSelector.
+	 * Caller has to call releaseInovker.
+	 * 
+	 * @param topic Topic on invocation
+	 * @return 
+	 * @throws IOException
+	 */
 	MessageInvoker selectForProducer(String topic) throws IOException;
 
+	/**
+	 * Select MessageInvoker for Consumer, selection algorithm decided by ServerSelector.
+	 * Caller has to call releaseInovker.
+	 * 
+	 * @param topic Topic on invocation
+	 * @return 
+	 * @throws IOException
+	 */
 	MessageInvoker selectForConsumer(String topic) throws IOException;
 
+	/**
+	 * Release the MessageInvoker
+	 * @param invoker
+	 * @throws IOException
+	 */
 	void releaseInvoker(MessageInvoker invoker) throws IOException;
 
-	List<Broker> availableServerList();
+	/**
+	 * Configure selection algorithm
+	 * 
+	 * @param selector
+	 */
+	void configServerSelector(ServerSelector selector);
+	
+	List<Broker> availableServerList();  
 
-	void setServerSelector(ServerSelector selector);
+	void addServer(String serverAddress) throws IOException;
 
-	void registerServer(String serverAddress) throws IOException;
+	void removeServer(String serverAddress) throws IOException;
 
-	void unregisterServer(String serverAddress) throws IOException;
+	void addServerNotifyListener(ServerNotifyListener listener);
 
-	void addServerListener(ServerNotifyListener listener);
-
-	void removeServerListener(ServerNotifyListener listener);
+	void removeServerNotifyListener(ServerNotifyListener listener);
 	
 	String brokerAddress();
 
-	public static interface ServerSelector {
-		String selectForProducer(RouteTable table, String topic);
-
+	/**
+	 * Server selection algorithm for Producer and Consumer, decision made on RouteTable according
+	 * to topic 
+	 */
+	public static interface ServerSelector { 
+		String selectForProducer(RouteTable table, String topic); 
 		String selectForConsumer(RouteTable table, String topic);
 	}
 
-	public static interface ServerNotifyListener {
-		void onServerJoin(Broker broker);
-
+	/**
+	 * Server status change notification
+	 */
+	public static interface ServerNotifyListener { 
+		void onServerJoin(Broker broker); 
 		void onServerLeave(String serverAddress);
 	}
 
+	/**
+	 *  Route table based on the Topics info across ZbusServers.
+	 *  
+	 *  ServerMap: server address => ServerInfo
+	 *  TopicTable: topic string => list of server contains this topic(TopicInfo details)
+	 *  VoteTable:  topic string => list of server voted this topic
+	 *
+	 */
 	public static class RouteTable {  
-		private Map<String, Set<String>> votesMap = new ConcurrentHashMap<String, Set<String>>();
-		
-		private Map<String, ServerInfo> serverMap = new ConcurrentHashMap<String, ServerInfo>();
+		//Topic ==> ServerAddress list(voted servers)
+		private Map<String, Set<String>> votesTable = new ConcurrentHashMap<String, Set<String>>(); 
+		//Topic ==> Server List(topic span across ZbusServers)
 		private Map<String, List<TopicInfo>> topicTable = new ConcurrentHashMap<String, List<TopicInfo>>(); 
+		//Server Address ==> ServerInfo
+		private Map<String, ServerInfo> serverMap = new ConcurrentHashMap<String, ServerInfo>();
 		
+		/**
+		 * ServerAddress to ServerInfo
+		 * @return
+		 */
 		public Map<String, ServerInfo> serverMap() {
 			return serverMap;
 		}
 
+		/**
+		 * Topic string to ServerList
+		 * @return
+		 */
 		public Map<String, List<TopicInfo>> topicTable() {
 			return topicTable;
 		}
@@ -99,10 +157,10 @@ public interface Broker extends Closeable {
 		}
 		
 		public List<String> updateVotes(TrackerInfo trackerInfo){ 
-			Map<String, Set<String>> votesMapLocal = new ConcurrentHashMap<String, Set<String>>(votesMap);
+			Map<String, Set<String>> votesTableLocal = new ConcurrentHashMap<String, Set<String>>(votesTable);
 			
 			List<String> toRemove = new ArrayList<String>();
-			Iterator<Entry<String, Set<String>>> iter = votesMapLocal.entrySet().iterator();
+			Iterator<Entry<String, Set<String>>> iter = votesTableLocal.entrySet().iterator();
 			while(iter.hasNext()){
 				Entry<String, Set<String>> e = iter.next();
 				
@@ -122,7 +180,7 @@ public interface Broker extends Closeable {
 				serverMapLocal.remove(server);
 			}
 			Map<String, List<TopicInfo>> topicTableLocal = rebuildTable(serverMapLocal); 
-			votesMap = votesMapLocal;
+			votesTable = votesTableLocal;
 			serverMap = serverMapLocal;
 			topicTable = topicTableLocal;
 			

@@ -116,6 +116,7 @@ public class ConsumerService implements Closeable {
 		
 		try {
 			consumerThreadGroup.close();
+			consumerThreadGroupMap.remove(serverAddress);
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);		
 		}
@@ -128,7 +129,7 @@ public class ConsumerService implements Closeable {
 			throw new IllegalArgumentException("MessageHandler and MessageProcessor are both null");
 		}
 		if(this.config.getBroker() == null){
-			throw new IllegalArgumentException("MessageHandler and MessageProcessor are both null");
+			throw new IllegalArgumentException("Missing broker");
 		}
 		
 		int n = config.getThreadPoolSize();
@@ -139,7 +140,7 @@ public class ConsumerService implements Closeable {
 		Broker broker = config.getBroker(); 
 		
 		if(config.isParallelMode()){
-			broker.addServerListener(new ServerNotifyListener() { 
+			broker.addServerNotifyListener(new ServerNotifyListener() { 
 				@Override
 				public void onServerLeave(String serverAddress) { 
 					removeConsumerThreadGroup(serverAddress);
