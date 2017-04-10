@@ -228,6 +228,8 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 				String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
 				log.warn(msg); 
 				Thread.sleep(connectTimeout);
+			} catch (InterruptedException e) {
+				throw e;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				break;
