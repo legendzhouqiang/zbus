@@ -44,12 +44,7 @@ public class MessageClient extends TcpClient<Message, Message> implements Messag
 				//ignore
 			}
 		}
-	} 
-	 
-	@Override
-	public String toString() {
-		return "MessageClient" +  super.toString();
-	}
+	}  
 
 	@Override
 	public void invokeAsync(Message req, final MessageCallback callback) throws IOException {

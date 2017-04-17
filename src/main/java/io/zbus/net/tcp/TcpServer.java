@@ -23,12 +23,12 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
 import io.zbus.net.IoAdaptor;
 import io.zbus.net.Server;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 public class TcpServer implements Server {
 	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 

@@ -14,7 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import io.zbus.mq.ConsumerGroup;
+import io.zbus.kit.FileKit;
+import io.zbus.kit.JsonKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
@@ -25,10 +29,6 @@ import io.zbus.mq.net.MessageAdaptor;
 import io.zbus.mq.net.MessageHandler;
 import io.zbus.net.Session;
 import io.zbus.rpc.Request;
-import io.zbus.util.FileUtil;
-import io.zbus.util.JsonUtil;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
@@ -67,8 +67,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.QUERY_TOPIC, queryTopicHandler);
 		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
 		
-		//Tracker
-		registerHandler(Protocol.TRACK_QUERY, trackQueryHandler); 
+		//Tracker  
 		registerHandler(Protocol.TRACK_PUB, trackPubServerHandler); 
 		registerHandler(Protocol.TRACK_SUB, trackSubHandler); 
 		
@@ -85,14 +84,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.VERSION, versionHandler);
 		registerHandler(Protocol.TRACE, traceHandler);
 		
-		registerHandler(Message.HEARTBEAT, heartbeatHandler);   
-		
-		
-		
-		//TODO backward compatible
-		registerHandler("create_mq", declareTopicHandler);
-		registerHandler("query_mq", queryTopicHandler);
-		registerHandler("remove_mq", removeTopicHandler);
+		registerHandler(Message.HEARTBEAT, heartbeatHandler);    
 		
 	}   
 	
@@ -288,7 +280,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return;
 			}
 			Integer flag = msg.getFlag();   
-    		ConsumerGroup ctrl = new ConsumerGroup(msg);  
+    		ConsumeGroup ctrl = new ConsumeGroup(msg);  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(topic); 
@@ -335,7 +327,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			Message res = new Message();
 			res.setStatus(200); 
 			res.setId(msg.getId()); 
-			res.setJsonBody(JsonUtil.toJSONString(getServerInfo()));  
+			res.setJsonBody(JsonKit.toJSONString(getServerInfo()));  
 			sess.write(res);
 		}
 	};
@@ -357,7 +349,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.setStatus("200");
 			msg.setId(msgId);
 			msg.setHeader("content-type", "text/html");
-			String body = FileUtil.loadFileString("home.htm");
+			String body = FileKit.loadFileString("home.htm");
 			if ("".equals(body)) {
 				body = "<strong>zbus.htm file missing</strong>";
 			}
@@ -381,11 +373,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		if(idx >= 0){
 			fileName = url.substring(0, idx); 
 			String params = url.substring(idx+1);
-			model = FileUtil.parseKeyValuePairs(params);
+			model = FileKit.parseKeyValuePairs(params);
 		}
 		String body = null;
 		try{
-			body = FileUtil.loadTemplate(fileName, model);
+			body = FileKit.loadTemplate(fileName, model);
 			if(body == null){
 				res.setStatus(404);
 				body = "404: File (" + fileName +") Not Found";
@@ -415,7 +407,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 		byte[] body = null;
 		try{
-			body = FileUtil.loadFileBytes(fileName);
+			body = FileKit.loadFileBytes(fileName);
 			if(body == null){
 				res.setStatus(404);
 				body = ("404: File (" + fileName +") Not Found").getBytes();
@@ -485,13 +477,13 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			String json = "";
 			if(msg.getTopic() == null){
 				ServerInfo info = getServerInfo();
-				json = JsonUtil.toJSONString(info.topicMap);
+				json = JsonKit.toJSONString(info.topicMap);
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 
 					return;
 				} else {
-					json = JsonUtil.toJSONString(mq.getTopicInfo());
+					json = JsonKit.toJSONString(mq.getTopicInfo());
 				}
 			}
 
@@ -510,25 +502,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			// just ignore
 		}
 	}; 
-	
-	private MessageHandler trackQueryHandler = new MessageHandler() {
-		
-		@Override
-		public void handle(Message msg, Session session) throws IOException {  
-			Message res = new Message();
-			res.setStatus(200);
-			res.setJsonBody(JsonUtil.toJSONString(trackService.queryTrackerInfo()));
-			ReplyKit.reply(msg, res, session);
-		}
-	};
-	
+	 
 	private MessageHandler trackPubServerHandler = new MessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
 				boolean ack = msg.isAck();
-				ServerEvent event = JsonUtil.parseObject(msg.getBodyString(), ServerEvent.class);   
+				ServerEvent event = JsonKit.parseObject(msg.getBodyString(), ServerEvent.class);   
 				trackService.publish(event); 
 				
 				if(ack){
@@ -595,6 +576,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
    		ServerInfo info = new ServerInfo();
 		info.serverAddress = mqServer.getServerAddress();
 		info.topicMap = table;  
+		info.liveServerList = trackService.queryTrackerInfo().liveServerList;
 		
 		String serverList = config.getTrackServerList();
 		if(serverList == null){
@@ -683,7 +665,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		req.setParams(params); 
     	} 
     	
-    	msg.setBody(JsonUtil.toJSONString(req));
+    	msg.setBody(JsonKit.toJSONString(req));
     }
     
     private void handleUrlMessage(Message msg){ 

@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.kit.JsonKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageProcessor;
-import io.zbus.util.JsonUtil;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 
 public class RpcProcessor implements MessageProcessor{
@@ -276,7 +276,7 @@ public class RpcProcessor implements MessageProcessor{
 				Object[] reqParams = req.getParams(); 
 				for(int i=0; i<targetParamTypes.length; i++){  
 					//invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
-					invokeParams[i] = JsonUtil.convert(reqParams[i], targetParamTypes[i]);
+					invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
 			} 

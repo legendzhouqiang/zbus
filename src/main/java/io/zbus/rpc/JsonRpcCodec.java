@@ -25,8 +25,8 @@ package io.zbus.rpc;
 
 import java.util.Map;
 
+import io.zbus.kit.JsonKit;
 import io.zbus.mq.Message;
-import io.zbus.util.JsonUtil;
  
 
 public class JsonRpcCodec implements RpcCodec {  
@@ -36,7 +36,7 @@ public class JsonRpcCodec implements RpcCodec {
 		Message msg = new Message();  
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
 		msg.setEncoding(encoding);
-		msg.setBody(JsonUtil.toJSONBytes(request, encoding));
+		msg.setBody(JsonKit.toJSONBytes(request, encoding));
 		return msg;
 	}
 	
@@ -46,7 +46,7 @@ public class JsonRpcCodec implements RpcCodec {
 			encoding = DEFAULT_ENCODING;
 		}
 		String jsonString = msg.getBodyString(encoding);
-		Request req = JsonUtil.parseObject(jsonString, Request.class);
+		Request req = JsonKit.parseObject(jsonString, Request.class);
 		Request.normalize(req); 
 		return req;
 	}
@@ -65,7 +65,7 @@ public class JsonRpcCodec implements RpcCodec {
 			} 
 		}   
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
-		msg.setBody(JsonUtil.toJSONBytes(response, encoding)); 
+		msg.setBody(JsonKit.toJSONBytes(response, encoding)); 
 		return msg; 
 	}
 	
@@ -78,13 +78,13 @@ public class JsonRpcCodec implements RpcCodec {
 		String jsonString = msg.getBodyString(encoding);
 		Response res = null;
 		try{
-			res = JsonUtil.parseObject(jsonString, Response.class);
+			res = JsonKit.parseObject(jsonString, Response.class);
 		} catch (Exception e){ //probably error can not be instantiated
 			res = new Response(); 
 			Map<String, Object> json = null;
 			try{
 				jsonString = jsonString.replace("@type", "unknown-class"); //禁止掉实例化
-				json = JsonUtil.parseObject(jsonString); 
+				json = JsonKit.parseObject(jsonString); 
 			} catch(Exception ex){
 				String prefix = "";
 				if("200".equals(msg.getStatus())){ 

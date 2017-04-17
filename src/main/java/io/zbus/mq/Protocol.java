@@ -11,9 +11,8 @@ public class Protocol {
 	//=============================[1] Command Values================================================
 	//MQ Produce/Consume
 	public static final String PRODUCE       = "produce";   
-	public static final String CONSUME       = "consume";   
-	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC
-	
+	public static final String CONSUME       = "consume";  
+	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC 
 	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
 	
 	//Topic control
@@ -32,20 +31,20 @@ public class Protocol {
 	public static final String RESUME_GROUP  = "resume_group";  
 	public static final String EMPTY_GROUP   = "empty_group";   
 	
-	//High Availability (HA)
-	public static final String TRACK_QUERY   = "track_query";   
-	public static final String TRACK_PUB     = "track_pub"; 
-	public static final String TRACK_SUB     = "track_sub";   
-
-
-	public static final String PING          = "ping";    //ping server, returning back server time
-	public static final String INFO          = "info";    //server info 
+	//High Availability (HA) 
+	public static final String TRACK_PUB   = "track_pub"; 
+	public static final String TRACK_SUB   = "track_sub";  
+	
+	public static final String INFO        = "info";       //server info 
+	
 	public static final String TRACE         = "trace";   //trace latest message in server 
 	public static final String VERSION       = "version";
 	public static final String JS            = "js";      //serve javascript file
 	public static final String CSS           = "css";     //serve css file 
 	public static final String IMG           = "img";     //serve image file(SVG)
 	public static final String PAGE          = "page";    //serve image file(SVG)
+	
+	public static final String PING          = "ping";    //ping server, returning back server time
 	
 	
 	//=============================[2] Parameter Values================================================
@@ -55,13 +54,13 @@ public class Protocol {
 	public static final String TAG   	     		= "tag";  
 	public static final String OFFSET        		= "offset";
 	
-	public static final String CONSUMER_GROUP       = "consumer_group";  
-	public static final String CONSUME_BASE_GROUP   = "consume_base_group";  
-	public static final String CONSUME_START_OFFSET = "consume_start_offset";
-	public static final String CONSUME_START_MSGID  = "consume_start_msgid";
-	public static final String CONSUME_START_TIME   = "consume_start_time";  
-	public static final String CONSUME_WINDOW       = "consume_window";  
-	public static final String CONSUME_FILTER_TAG   = "consume_filter_tag";  
+	public static final String CONSUME_GROUP             = "consume_group";  
+	public static final String CONSUME_GROUP_COPY_FROM   = "consume_group_copy_from";  
+	public static final String CONSUME_START_OFFSET      = "consume_start_offset";
+	public static final String CONSUME_START_MSGID       = "consume_start_msgid";
+	public static final String CONSUME_START_TIME        = "consume_start_time";  
+	public static final String CONSUME_WINDOW            = "consume_window";  
+	public static final String CONSUME_FILTER_TAG        = "consume_filter_tag";  
 	
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";
@@ -93,12 +92,18 @@ public class Protocol {
 		public boolean live = true;  
 	}
 	
+	public static class TrackItem {
+		public String serverAddress;  
+		public String serverVersion = VERSION_VALUE;  
+		public Exception error; //current item error encountered
+	}
+	
 	public static class TrackerInfo extends TrackItem{
 		public List<String> liveServerList;
 	}
 	  
-	public static class ServerInfo extends TrackItem{  
-		public List<String> trackerList; 
+	public static class ServerInfo extends TrackerInfo{  
+		public List<String> trackerList;  
 		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	
@@ -109,19 +114,14 @@ public class Protocol {
 		public long messageCount;
 		public int consumerCount;
 		public int consumerGroupCount;
-		public List<ConsumerGroupInfo> consumerGroupList = new ArrayList<ConsumerGroupInfo>();
+		public List<ConsumeGroupInfo> consumerGroupList = new ArrayList<ConsumeGroupInfo>();
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime;  
+		public long lastUpdatedTime;   
 	}  
 	
-	public static class TrackItem {
-		public String serverAddress;  
-		public String serverVersion = VERSION_VALUE;  
-	}
-	
-	public static class ConsumerGroupInfo{ 
+	public static class ConsumeGroupInfo{ 
 		public String topicName;
 		public String groupName;
 		public int flag; 
@@ -131,6 +131,8 @@ public class Protocol {
 		
 		public String creator;
 		public long createdTime;
-		public long lastUpdatedTime;   
+		public long lastUpdatedTime;  
+		
+		public Exception error; //used only for batch operation indication
 	}  
 }

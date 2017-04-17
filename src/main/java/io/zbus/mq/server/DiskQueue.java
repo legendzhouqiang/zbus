@@ -15,17 +15,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import io.zbus.mq.ConsumerGroup;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
-import io.zbus.mq.Protocol.ConsumerGroupInfo;
+import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
 import io.zbus.net.Session;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 
 public class DiskQueue implements MessageQueue{
@@ -67,7 +67,7 @@ public class DiskQueue implements MessageQueue{
         } 
 	}
 	  
-	public void declareConsumerGroup(ConsumerGroup ctrl) throws Exception{
+	public void declareConsumerGroup(ConsumeGroup ctrl) throws Exception{
 		String consumerGroup = ctrl.getGroupName();
 		if(consumerGroup == null){
 			consumerGroup = this.name;
@@ -76,8 +76,8 @@ public class DiskQueue implements MessageQueue{
 		if(group == null){
 			QueueReader copyReader = null;
 			//1) copy reader from base group 
-			if(ctrl.getBaseGroupName() != null){
-				DiskConsumerGroup copyGroup = consumerGroups.get(ctrl.getBaseGroupName());
+			if(ctrl.getGroupCopyFrom() != null){
+				DiskConsumerGroup copyGroup = consumerGroups.get(ctrl.getGroupCopyFrom());
 				if(copyGroup != null){
 					copyReader = copyGroup.reader; 
 				}
@@ -128,7 +128,7 @@ public class DiskQueue implements MessageQueue{
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
-		String consumeGroup = message.getConsumerGroup();
+		String consumeGroup = message.getConsumeGroup();
 		if(consumeGroup == null){
 			consumeGroup = this.name;
 		} 
@@ -333,7 +333,7 @@ public class DiskQueue implements MessageQueue{
 		info.messageCount = remaining(name); 
 		info.consumerCount = consumerCount(name); 
 		info.consumerGroupCount = consumerGroups.size();
-		info.consumerGroupList = new ArrayList<ConsumerGroupInfo>();
+		info.consumerGroupList = new ArrayList<ConsumeGroupInfo>();
 		for(DiskConsumerGroup group : consumerGroups.values()){
 			info.consumerGroupList.add(group.getConsumeGroupInfo());
 		}
@@ -367,8 +367,8 @@ public class DiskQueue implements MessageQueue{
 			reader.close(); 
 		} 
 		
-		public ConsumerGroupInfo getConsumeGroupInfo(){
-			ConsumerGroupInfo info = new ConsumerGroupInfo(); 
+		public ConsumeGroupInfo getConsumeGroupInfo(){
+			ConsumeGroupInfo info = new ConsumeGroupInfo(); 
 			info.consumerCount = pullSessions.size();
 			info.groupName = groupName;
 			info.consumerList = new ArrayList<String>();

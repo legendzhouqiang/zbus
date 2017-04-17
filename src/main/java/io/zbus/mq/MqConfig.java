@@ -1,21 +1,24 @@
 package io.zbus.mq;
- 
+
+import io.zbus.mq.Broker.ServerSelector;
 
 public class MqConfig implements Cloneable { 
 	protected Broker broker;  
-	protected String topic;
+	protected ServerSelector adminServerSelector; //default to null 
+	
 	protected String appid;
-	protected String token; 
-	protected Integer flag;
-	
-	protected int invokeTimeout = 10000;  // 10 s
-	
-	//consume details
-	protected ConsumerGroup consumerGroup; 
-	protected Integer consumeWindow;
-	protected int consumeTimeout = 120000;// 2 minutes
+	protected String token;   
+	protected int invokeTimeout = 10000;  // 10 s 
 	
 	protected boolean verbose = false; 
+	
+	public MqConfig(){
+		
+	}
+	
+	public MqConfig(Broker broker){
+		this.broker = broker;
+	}
 	
 	public Broker getBroker() {
 		return broker;
@@ -24,15 +27,7 @@ public class MqConfig implements Cloneable {
 	public void setBroker(Broker broker) {
 		this.broker = broker;
 	}
-
-	public String getTopic() {
-		return topic;
-	}
-
-	public void setTopic(String topic) {
-		this.topic = topic;
-	} 
-
+ 
 	public boolean isVerbose() {
 		return verbose;
 	}
@@ -55,42 +50,6 @@ public class MqConfig implements Cloneable {
 
 	public void setToken(String token) {
 		this.token = token;
-	}
-
-	public Integer getFlag() {
-		return flag;
-	}
-
-	public void setFlag(Integer flag) {
-		this.flag = flag;
-	}  
-	
-	public ConsumerGroup getConsumerGroup() {
-		return consumerGroup;
-	} 
-	
-	public void setConsumerGroup(ConsumerGroup consumerGroup) {
-		this.consumerGroup = consumerGroup;
-	}  
-	
-	public void setConsumerGroup(String consumerGroup) {
-		this.consumerGroup = new ConsumerGroup(consumerGroup);
-	} 
-
-	public Integer getConsumeWindow() {
-		return consumeWindow;
-	}
-	
-	public void setConsumeWindow(Integer consumeWindow) {
-		this.consumeWindow = consumeWindow;
-	}  
-	
-	public Integer getConsumeTimeout() {
-		return consumeTimeout;
-	}
-
-	public void setConsumeTimeout(Integer consumeTimeout) {
-		this.consumeTimeout = consumeTimeout;
 	} 
 	
 	public int getInvokeTimeout() {
@@ -99,6 +58,14 @@ public class MqConfig implements Cloneable {
 
 	public void setInvokeTimeout(int invokeTimeout) {
 		this.invokeTimeout = invokeTimeout;
+	} 
+	
+	public ServerSelector getAdminServerSelector() {
+		return adminServerSelector;
+	}
+
+	public void setAdminServerSelector(ServerSelector adminServerSelector) {
+		this.adminServerSelector = adminServerSelector;
 	}
 
 	@Override

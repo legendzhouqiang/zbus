@@ -9,8 +9,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 
 public class EventDriver implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(EventDriver.class);

@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.kit.JsonKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
@@ -18,9 +21,6 @@ import io.zbus.net.Client.ConnectedHandler;
 import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
-import io.zbus.util.JsonUtil;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
  
 /**
  * Reporter == (ServerEvent) ==> Tracker ==> (Whole Table) ==> Subscriber
@@ -121,7 +121,7 @@ public class Tracker implements Closeable{
 	private void publishToTracker(MessageClient client, ServerEvent event){ 
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
-		message.setJsonBody(JsonUtil.toJSONString(event));  
+		message.setJsonBody(JsonKit.toJSONString(event));  
 		message.setAck(false); 
 		
 		try {  
@@ -227,7 +227,7 @@ public class Tracker implements Closeable{
 	private Message liveServerListMessage(){
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
-		message.setJsonBody(JsonUtil.toJSONString(queryTrackerInfo()));
+		message.setJsonBody(JsonKit.toJSONString(queryTrackerInfo()));
 		message.setStatus(200);// server to client
 		return message;
 	}

@@ -1,76 +1,87 @@
 package io.zbus.mq;
 
 import java.io.IOException;
+import java.util.List;
 
-public class Producer extends MqAdmin { 
-	protected final Broker broker;
-	public Producer(Broker broker, String topic) { 
-		this.broker = broker;
-		this.topic = topic;
-	}
+import io.zbus.mq.Broker.ServerSelector;
+import io.zbus.mq.Protocol.TopicInfo;
+ 
 
-	public Producer(MqConfig config) {
-		this.broker = config.getBroker();
-		this.topic = config.getTopic();
-		this.flag = config.getFlag();
-		this.appid = config.getAppid();
-		this.token = config.getToken();
-		this.invokeTimeout = config.getInvokeTimeout();
-	}   
+public class Producer extends MqAdmin{  
+	private ServerSelector produceServerSelector;  
+	
+	public Producer(ProducerConfig config){
+		super(config); 
+		
+		this.produceServerSelector = config.getProduceServerSelector();
+		if(this.produceServerSelector == null){
+			this.produceServerSelector = new DefaultProduceServerSelector();
+		} 
+	} 
 	
 	public Message publish(Message msg, int timeout) throws IOException, InterruptedException {
-		fillCommonHeaders(msg);
-		msg.setCommand(Protocol.PRODUCE);
-		
-		return invokeSync(msg, timeout);
-	}
- 
-	public void publishAsync(Message msg, final MessageCallback callback) throws IOException {
-		fillCommonHeaders(msg);
-		msg.setCommand(Protocol.PRODUCE);
-		invokeAsync(msg, callback);
-	} 
+		MqClientPool[] poolArray = broker.selectClient(this.produceServerSelector, msg.getTopic());
+		if(poolArray.length < 1){
+			throw new MqException("Missing MqClient for publishing message: " + msg);
+		}
+		MqClientPool pool = poolArray[0]; 
+		MqClient client = null;
+		try {
+			client = pool.borrowClient();  
+			return configClient(client).produce(msg, timeout);
+		} finally {
+			pool.returnClient(client);
+		} 
+	}   
 	
 	public Message publish(Message msg) throws IOException, InterruptedException {
 		return publish(msg, invokeTimeout);
+	}
+	
+	public void publishAsync(Message msg, MessageCallback callback) throws IOException {
+		MqClientPool[] poolArray = broker.selectClient(this.produceServerSelector, msg.getTopic());
+		if(poolArray.length < 1){
+			throw new MqException("Missing MqClient for publishing message: " + msg);
+		}
+		MqClientPool pool = poolArray[0]; 
+		MqClient client = null;
+		try {
+			client = pool.borrowClient();
+			configClient(client).produceAsync(msg, callback);
+		} finally {
+			pool.returnClient(client);
+		} 
+	}   
+	
+	public ServerSelector getProduceServerSelector() {
+		return produceServerSelector;
+	}
+
+	public void setProduceServerSelector(ServerSelector produceServerSelector) {
+		this.produceServerSelector = produceServerSelector;
+	}
+
+
+
+	public class DefaultProduceServerSelector implements ServerSelector{ 
+		@Override
+		public String[] select(BrokerRouteTable table, String topic) { 
+			int serverCount = table.serverMap().size();
+			if (serverCount == 0) {
+				return null;
+			}
+			List<TopicInfo> topicList = table.topicTable().get(topic);
+			if (topicList == null || topicList.size() == 0) {
+				return new String[]{table.randomServerInfo().serverAddress};
+			}
+			TopicInfo target = topicList.get(0);
+			for (int i = 1; i < topicList.size(); i++) {
+				TopicInfo current = topicList.get(i);
+				if (target.consumerCount < current.consumerCount) { //consumer count decides
+					target = current;
+				}
+			}
+			return new String[]{target.serverAddress};
+		} 
 	} 
-	
-	public void publishAsync(Message msg) throws IOException {
-		publishAsync(msg, null);
-	}  
-	
-	@Override
-	protected Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
-		MessageInvoker invoker = null;
-		try{
-			String topic = req.getTopic();
-			invoker = broker.selectForProducer(topic);
-			if(invoker == null){
-				throw new MqException("Missing MessageInvoker for Topic:"+topic);
-			}
-			return invoker.invokeSync(req, timeout);
-			
-		} finally {
-			if(invoker != null){
-				broker.releaseInvoker(invoker);
-			}
-		}
-	}
-	
-	@Override
-	protected void invokeAsync(Message req, MessageCallback callback) throws IOException {
-		MessageInvoker invoker = null;
-		try{
-			String topic = req.getTopic();
-			invoker = broker.selectForProducer(topic);
-			if(invoker == null){
-				throw new MqException("Missing MessageInvoker for Topic: "+topic);
-			}
-		    invoker.invokeAsync(req, callback);
-		} finally {
-			if(invoker != null){
-				broker.releaseInvoker(invoker);
-			}
-		}
-	}
 }

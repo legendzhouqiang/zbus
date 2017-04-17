@@ -19,6 +19,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.Client;
 import io.zbus.net.CodecInitializer;
 import io.zbus.net.EventDriver;
@@ -27,23 +29,15 @@ import io.zbus.net.ResultCallback;
 import io.zbus.net.Session;
 import io.zbus.net.Sync;
 import io.zbus.net.Sync.Ticket;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 
 public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	private static final Logger log = LoggerFactory.getLogger(TcpClient.class); 
-	
-	protected Bootstrap bootstrap;
-	protected final EventLoopGroup group;  
-	protected SslContext sslCtx;
-	protected ChannelFuture channelFuture; 
-	protected CodecInitializer codecInitializer; 
-	
+	 
 	protected Session session; 
 	protected final String host;
 	protected final int port; 
-	protected int readTimeout = 3000;
+	protected int invokeTimeout = 3000;
 	protected int connectTimeout = 3000; 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);   
 	
@@ -55,6 +49,13 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	protected volatile ErrorHandler errorHandler;
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
+	
+	
+	protected Bootstrap bootstrap;
+	protected final EventLoopGroup group;  
+	protected SslContext sslCtx;
+	protected ChannelFuture channelFuture; 
+	protected CodecInitializer codecInitializer; 
 	
 	private ConcurrentMap<String, Object> attributes = null;
 	
@@ -206,7 +207,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 		synchronized (this) {
 			if(!hasConnected()){ 
 	    		connectAsync();
-	    		activeLatch.await(readTimeout,TimeUnit.MILLISECONDS);
+	    		activeLatch.await(timeout,TimeUnit.MILLISECONDS);
 				
 				if(hasConnected()){ 
 					return;
@@ -239,7 +240,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	
 	public void sendMessage(REQ req) throws IOException, InterruptedException{
 		if(!hasConnected()){
-			connectSync(10000);  
+			connectSync(connectTimeout);  
 			if(!hasConnected()){
 				String msg = String.format("Connection(%s:%d) timeout", host, port); 
 				throw new IOException(msg);
@@ -351,7 +352,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	public void invokeAsync(REQ req, ResultCallback<RES> callback) throws IOException { 
 		Ticket<REQ, RES> ticket = null;
 		if(callback != null){
-			ticket = sync.createTicket(req, readTimeout, callback);
+			ticket = sync.createTicket(req, invokeTimeout, callback);
 		} else { 
 			String id = sync.getRequestId(req);
 			if(id == null){ //if message id missing, set it
@@ -371,7 +372,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 	} 
 	
 	public RES invokeSync(REQ req) throws IOException, InterruptedException {
-		return this.invokeSync(req, this.readTimeout);
+		return this.invokeSync(req, this.invokeTimeout);
 	}
 	 
 	public RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException {
@@ -408,9 +409,17 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
     	log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
 	}  
 	
+	public int getInvokeTimeout() {
+		return invokeTimeout;
+	}
+
+	public void setInvokeTimeout(int invokeTimeout) {
+		this.invokeTimeout = invokeTimeout;
+	}  
+	
 	@Override
 	public String toString() { 
-		return String.format("(connected=%s, remote=%s:%d)", hasConnected(), host, port);
+		return String.format("TcpClient(connected=%s, remote=%s:%d)", hasConnected(), host, port);
 	}
 	 
 }

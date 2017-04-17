@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.net.IoAdaptor;
 import io.zbus.net.Session;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 public class MessageAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);

@@ -24,15 +24,15 @@ package io.zbus.rpc;
 
 import java.io.IOException;
 
+import io.zbus.kit.JsonKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.MessageInvoker;
 import io.zbus.net.ResultCallback;
-import io.zbus.util.JsonUtil;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
-public class RpcInvoker{  
+public class RpcInvoker {  
 	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class); 
 	
 	private MessageInvoker messageInvoker; 
@@ -88,7 +88,7 @@ public class RpcInvoker{
 	public <T> T invokeSync(Class<T> resultClass, Request request){
 		Response resp = invokeSync(request);
 		try { 
-			T res = (T)JsonUtil.convert(extractResult(resp), resultClass);
+			T res = (T)JsonKit.convert(extractResult(resp), resultClass);
 			return res;
 		} catch (Exception e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
@@ -149,7 +149,7 @@ public class RpcInvoker{
 			public void onReturn(Response resp) {  
 				Object netObj = extractResult(resp);
 				try { 
-					T target = (T) JsonUtil.convert(netObj, clazz);
+					T target = (T) JsonKit.convert(netObj, clazz);
 					callback.onReturn(target);
 				} catch (Exception e) { 
 					throw new RpcException(e.getMessage(), e.getCause());

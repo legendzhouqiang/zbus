@@ -1,6 +1,6 @@
 package io.zbus.mq.server;
 
-import static io.zbus.util.ConfigUtil.isBlank;
+import static io.zbus.kit.ConfigKit.isBlank;
 
 import java.io.Closeable;
 import java.io.File;
@@ -13,13 +13,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import io.zbus.kit.ConfigKit;
+import io.zbus.kit.NetKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.net.MessageServer;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
-import io.zbus.util.ConfigUtil;
-import io.zbus.util.NetUtil;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
 
 public class MqServer implements Closeable{ 
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
@@ -63,7 +63,7 @@ public class MqServer implements Closeable{
 		
 		String host = config.serverHost;
 		if("0.0.0.0".equals(host)){
-			host = NetUtil.getLocalIp(config.serverMainIpOrder);
+			host = NetKit.getLocalIp(config.serverMainIpOrder);
 		}
 		serverAddress = host+":"+config.serverPort; 
 		
@@ -152,7 +152,7 @@ public class MqServer implements Closeable{
 
 	public static void main(String[] args) throws Exception {
 		MqServerConfig config = new MqServerConfig(); 
-		String xmlConfigFile = ConfigUtil.option(args, "-conf", "conf/zbus.xml");
+		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/zbus.xml");
 		try{
 			config.loadFromXml(xmlConfigFile); 
 		} catch(Exception ex){ 

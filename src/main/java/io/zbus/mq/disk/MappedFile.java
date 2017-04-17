@@ -10,8 +10,8 @@ import java.nio.channels.FileChannel;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
  
 
 public class MappedFile implements Closeable {   

@@ -21,34 +21,9 @@
  * THE SOFTWARE.
  */
 package io.zbus.mq;
+ 
 
-import static io.zbus.mq.Protocol.ACK;
-import static io.zbus.mq.Protocol.APPID;
-import static io.zbus.mq.Protocol.COMMAND;
-import static io.zbus.mq.Protocol.CONSUMER_GROUP;
-import static io.zbus.mq.Protocol.CONSUME_BASE_GROUP;
-import static io.zbus.mq.Protocol.CONSUME_FILTER_TAG;
-import static io.zbus.mq.Protocol.CONSUME_START_MSGID;
-import static io.zbus.mq.Protocol.CONSUME_START_OFFSET;
-import static io.zbus.mq.Protocol.CONSUME_START_TIME;
-import static io.zbus.mq.Protocol.CONSUME_WINDOW;
-import static io.zbus.mq.Protocol.DELAY;
-import static io.zbus.mq.Protocol.ENCODING;
-import static io.zbus.mq.Protocol.EXPIRE;
-import static io.zbus.mq.Protocol.FLAG;
-import static io.zbus.mq.Protocol.ID;
-import static io.zbus.mq.Protocol.OFFSET;
-import static io.zbus.mq.Protocol.ORIGIN_ID;
-import static io.zbus.mq.Protocol.ORIGIN_STATUS;
-import static io.zbus.mq.Protocol.ORIGIN_URL;
-import static io.zbus.mq.Protocol.RECVER;
-import static io.zbus.mq.Protocol.SENDER;
-import static io.zbus.mq.Protocol.SERVER;
-import static io.zbus.mq.Protocol.TAG;
-import static io.zbus.mq.Protocol.TOKEN;
-import static io.zbus.mq.Protocol.TOPIC;
-import static io.zbus.mq.Protocol.TTL;
-import static io.zbus.mq.Protocol.VERSION;
+import static io.zbus.mq.Protocol.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -69,8 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.zbus.util.logging.Logger;
-import io.zbus.util.logging.LoggerFactory;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 
 public class Message {  
 	private static final Logger log = LoggerFactory.getLogger(Message.class); 
@@ -472,12 +447,12 @@ public class Message {
 		return this;
 	} 
 	
-	public String getConsumerGroup(){
-		String value = this.getHeader(CONSUMER_GROUP);
+	public String getConsumeGroup(){
+		String value = this.getHeader(CONSUME_GROUP);
 		return value;
 	} 
-	public Message setConsumerGroup(String value) {
-		this.setHeader(CONSUMER_GROUP, value);
+	public Message setConsumeGroup(String value) {
+		this.setHeader(CONSUME_GROUP, value);
 		return this;
 	} 
 	public Long getOffset(){
@@ -518,11 +493,11 @@ public class Message {
 		this.setHeader(CONSUME_START_TIME, value);
 		return this;
 	}  
-	public String getConsumeBaseGroup(){
-		return this.getHeader(CONSUME_BASE_GROUP);
+	public String getConsumeGroupCopyFrom(){
+		return this.getHeader(CONSUME_GROUP_COPY_FROM);
 	} 
-	public Message setConsumeBaseGroup(String value) {
-		this.setHeader(CONSUME_BASE_GROUP, value);
+	public Message setConsumeGroupCopyFrom(String value) {
+		this.setHeader(CONSUME_GROUP_COPY_FROM, value);
 		return this;
 	}  
 	
