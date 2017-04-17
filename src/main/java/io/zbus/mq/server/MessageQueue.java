@@ -14,7 +14,7 @@ public interface MessageQueue {
 	
 	void consume(Message message, Session session) throws IOException;   
 	
-	void declareConsumerGroup(ConsumeGroup ctrl) throws Exception;
+	void declareConsumeGroup(ConsumeGroup consumeGroup) throws Exception;
 	
 	long remaining(String consumerGroup);
 	

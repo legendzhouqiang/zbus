@@ -16,26 +16,16 @@ public class Protocol {
 	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
 	
 	//Topic control
-	public static final String DECLARE_TOPIC = "declare_topic";  
-	public static final String QUERY_TOPIC   = "query_topic"; 
-	public static final String REMOVE_TOPIC  = "remove_topic";  
-	public static final String PAUSE_TOPIC   = "pause_topic";  
-	public static final String RESUME_TOPIC  = "resume_topic";  
-	public static final String EMPTY_TOPIC   = "empty_topic";  
-	
-	//ConsumerGroup control
-	public static final String DECLARE_GROUP = "declare_group";  
-	public static final String QUERY_GROUP   = "query_group"; 
-	public static final String REMOVE_GROUP  = "remove_group";  
-	public static final String PAUSE_GROUP   = "pause_group";  
-	public static final String RESUME_GROUP  = "resume_group";  
-	public static final String EMPTY_GROUP   = "empty_group";   
+	public static final String DECLARE = "declare";  
+	public static final String QUERY   = "query"; 
+	public static final String REMOVE  = "remove";  
+	public static final String PAUSE   = "pause";  
+	public static final String RESUME  = "resume";  
+	public static final String EMPTY   = "empty";   
 	
 	//High Availability (HA) 
 	public static final String TRACK_PUB   = "track_pub"; 
 	public static final String TRACK_SUB   = "track_sub";  
-	
-	public static final String INFO        = "info";       //server info 
 	
 	public static final String TRACE         = "trace";   //trace latest message in server 
 	public static final String VERSION       = "version";

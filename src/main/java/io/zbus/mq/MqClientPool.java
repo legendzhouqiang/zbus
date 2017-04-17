@@ -52,7 +52,7 @@ public class MqClientPool implements Closeable {
 	private void monitorServer(String serverAddress){
 		detectClient = new MqClient(serverAddress, eventDriver);
 		try {
-			ServerInfo info = detectClient.queryServerInfo();
+			ServerInfo info = detectClient.queryServer();
 			this.serverAddress = info.serverAddress;
 		} catch (Exception e) {    
 			throw new IllegalStateException(serverAddress + " offline");

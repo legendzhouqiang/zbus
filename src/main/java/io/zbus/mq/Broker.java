@@ -109,7 +109,7 @@ public class Broker implements Closeable {
 		ServerInfo serverInfo = null;
 		try {
 			client = new MqClient(serverAddress, eventDriver);
-			serverInfo = client.queryServerInfo();  
+			serverInfo = client.queryServer();  
 		} catch (InterruptedException e) {
 			return;
 		} finally {
@@ -216,7 +216,7 @@ public class Broker implements Closeable {
 		for(String address : serverAddressList){
 			final MqClient client = new MqClient(address, eventDriver);  
 			try { 
-				ServerInfo info = client.queryServerInfo();
+				ServerInfo info = client.queryServer();
 				addrSet.addAll(info.liveServerList); 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

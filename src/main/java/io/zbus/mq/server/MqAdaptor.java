@@ -63,9 +63,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.RPC, rpcHandler);
 		
 		//Topic/ConsumerGroup 
-		registerHandler(Protocol.DECLARE_TOPIC, declareTopicHandler); 
-		registerHandler(Protocol.QUERY_TOPIC, queryTopicHandler);
-		registerHandler(Protocol.REMOVE_TOPIC, removeTopicHandler); 
+		registerHandler(Protocol.DECLARE, declareHandler); 
+		registerHandler(Protocol.QUERY, queryHandler);
+		registerHandler(Protocol.REMOVE, removeHandler); 
 		
 		//Tracker  
 		registerHandler(Protocol.TRACK_PUB, trackPubServerHandler); 
@@ -79,8 +79,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.IMG, imgHandler);
 		registerHandler("favicon.ico", faviconHandler);
 		registerHandler(Protocol.PAGE, pageHandler);
-		registerHandler(Protocol.PING, pingHandler);
-		registerHandler(Protocol.INFO, infoHandler);
+		registerHandler(Protocol.PING, pingHandler); 
 		registerHandler(Protocol.VERSION, versionHandler);
 		registerHandler(Protocol.TRACE, traceHandler);
 		
@@ -229,7 +228,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler removeTopicHandler = new MessageHandler() {  
+	private MessageHandler removeHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(!auth(msg)){ 
@@ -258,7 +257,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler declareTopicHandler = new MessageHandler() {  
+	private MessageHandler declareHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(!auth(msg)){ 
@@ -280,7 +279,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return;
 			}
 			Integer flag = msg.getFlag();   
-    		ConsumeGroup ctrl = new ConsumeGroup(msg);  
+    		ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(topic); 
@@ -296,14 +295,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	    			mqTable.put(topic, mq);
     			}
     			try {
-					mq.declareConsumerGroup(ctrl); 
+					mq.declareConsumeGroup(consumeGroup); 
 					trackService.publish(); 
 					
 					ReplyKit.reply200(msg, sess);
 					if(newMq){
 						log.info("MQ Created: %s", mq);
 					}   
-					log.info("MQ Declared: %s", ctrl); 
+					log.info("MQ Declared: %s", consumeGroup); 
 				} catch (Exception e) { 
 					log.error(e.getMessage(), e);
 					ReplyKit.reply500(msg, e, sess); //TODO client update to handle 500
@@ -321,16 +320,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			sess.write(res);
 		}
 	};
-	
-	private MessageHandler infoHandler = new MessageHandler() {
-		public void handle(Message msg, Session sess) throws IOException {
-			Message res = new Message();
-			res.setStatus(200); 
-			res.setId(msg.getId()); 
-			res.setJsonBody(JsonKit.toJSONString(getServerInfo()));  
-			sess.write(res);
-		}
-	};
+	 
 	
 	private MessageHandler versionHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
@@ -472,12 +462,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler queryTopicHandler = new MessageHandler() {
+	private MessageHandler queryHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String json = "";
 			if(msg.getTopic() == null){
 				ServerInfo info = getServerInfo();
-				json = JsonKit.toJSONString(info.topicMap);
+				json = JsonKit.toJSONString(info);
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 

@@ -551,7 +551,7 @@ TrackBroker.prototype.queryServerInfo = function(serverAddress){
 	
 	var trackBroker = this;
 	var msg = {};
-    msg.cmd = "info";
+    msg.cmd = "query";
     broker.invoke(msg, function (msg) {
         trackBroker.updateTopicSummary(msg.body);
         if (trackBroker.onServerUpdated) {

@@ -67,7 +67,7 @@ public class DiskQueue implements MessageQueue{
         } 
 	}
 	  
-	public void declareConsumerGroup(ConsumeGroup ctrl) throws Exception{
+	public void declareConsumeGroup(ConsumeGroup ctrl) throws Exception{
 		String consumerGroup = ctrl.getGroupName();
 		if(consumerGroup == null){
 			consumerGroup = this.name;
