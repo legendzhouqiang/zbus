@@ -109,6 +109,14 @@ public class Protocol {
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime;   
+		
+		public ConsumeGroupInfo consumeGroupInfo(String name){
+			if(consumerGroupList == null) return null;
+			for(ConsumeGroupInfo info : consumerGroupList){
+				if(name.equals(info.groupName)) return info;
+			}
+			return null;
+		}
 	}  
 	
 	public static class ConsumeGroupInfo{ 

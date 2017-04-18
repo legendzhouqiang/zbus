@@ -6,7 +6,9 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -16,11 +18,13 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.JsonKit;
+import io.zbus.kit.StringKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
@@ -43,7 +47,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private final TraceService traceService;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
-
+	private Set<String> restUrlCommands = new HashSet<String>(); 
  
 	public MqAdaptor(MqServer mqServer){
 		super(mqServer.getSessionTable());
@@ -54,6 +58,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.mqTable = mqServer.getMqTable();  
 		this.trackService = mqServer.getTracker();
 		this.traceService = mqServer.getTraceService();
+		
+		restUrlCommands.add(Protocol.PRODUCE);
+		restUrlCommands.add(Protocol.CONSUME);
+		restUrlCommands.add(Protocol.DECLARE);
+		restUrlCommands.add(Protocol.QUERY);
+		restUrlCommands.add(Protocol.REMOVE);
+		restUrlCommands.add(Protocol.PAUSE);
+		restUrlCommands.add(Protocol.EMPTY);
 		
 		
 		//Produce/Consume
@@ -91,14 +103,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		final boolean ack = msg.isAck();  
 		String id = msg.getId();
 		String tag = msg.getTag();
-		if(id != null && id.length()>DiskMessage.ID_MAX_LEN){
-			msg.setBody("Message.Id length should <= "+DiskMessage.ID_MAX_LEN);
-			if(ack) ReplyKit.reply400(msg, session);
+		if(id != null && id.length()>DiskMessage.ID_MAX_LEN){ 
+			if(ack) ReplyKit.reply400(msg, session, "Message.Id length should <= "+DiskMessage.ID_MAX_LEN);
 			return false;
 		}
-		if(tag != null && tag.length()>DiskMessage.TAG_MAX_LEN){
-			msg.setBody("Message.Tag length should <= "+DiskMessage.TAG_MAX_LEN);
-			if(ack) ReplyKit.reply400(msg, session);
+		if(tag != null && tag.length()>DiskMessage.TAG_MAX_LEN){ 
+			if(ack) ReplyKit.reply400(msg, session, "Message.Tag length should <= "+DiskMessage.TAG_MAX_LEN);
 			return false;
 		}
 		return true;
@@ -235,15 +245,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				ReplyKit.reply403(msg, sess);
 				return;
 			}
-			String mqName = msg.getHeader("mq_name", "");
-			mqName = mqName.trim();
-			if("".equals(mqName)){
-				msg.setBody("Missing mq_name");
-				ReplyKit.reply400(msg, sess);
+			String topic = msg.getTopic(); 
+			if(StringKit.isEmpty(topic)){ 
+				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
 			}
+			
+			topic = topic.trim();
 			synchronized (mqTable) {
-				MessageQueue mq = mqTable.get(mqName);
+				MessageQueue mq = mqTable.get(topic);
     			if(mq == null){ 
     				ReplyKit.reply404(msg, sess);
     				return;
@@ -251,7 +261,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			//Clear mapped mq
     			//TODO 
     			
-    			mqTable.remove(mqName);  
+    			mqTable.remove(topic);  
     			ReplyKit.reply200(msg, sess);
 			}
 		}
@@ -265,20 +275,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				return;
 			}
     		
-			String topic = msg.getTopic();
-			if(topic == null){ //TODO backward compatible
-				topic = msg.getHeader("mq");
-				if(topic == null){
-					topic = msg.getHeader("mq_name", "");
-				}
-			} 
-			topic = topic.trim();
-			if("".equals(topic)){
-				msg.setBody("Missing topic(alias: mq)");
-				ReplyKit.reply400(msg, sess);
+			String topic = msg.getTopic();  
+			if(StringKit.isEmpty(topic)){ 
+				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
 			}
+			topic = topic.trim();
+			
 			Integer flag = msg.getFlag();   
+			String groupName = msg.getConsumeGroup();
     		ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
@@ -297,15 +302,19 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			try {
 					mq.declareConsumeGroup(consumeGroup); 
 					trackService.publish(); 
-					
-					ReplyKit.reply200(msg, sess);
+					if(groupName == null){
+						ReplyKit.replyJson(msg, sess, mq.getTopicInfo());
+					} else {
+						ConsumeGroupInfo info = mq.getTopicInfo().consumeGroupInfo(groupName);
+						ReplyKit.replyJson(msg, sess, info);
+					} 
 					if(newMq){
 						log.info("MQ Created: %s", mq);
 					}   
 					log.info("MQ Declared: %s", consumeGroup); 
 				} catch (Exception e) { 
 					log.error(e.getMessage(), e);
-					ReplyKit.reply500(msg, e, sess); //TODO client update to handle 500
+					ReplyKit.reply500(msg, e, sess); 
 				} 
     		}
 		}
@@ -462,27 +471,33 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
+	
+	
 	private MessageHandler queryHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
-			String json = "";
+			Object res = null;
 			if(msg.getTopic() == null){
-				ServerInfo info = getServerInfo();
-				json = JsonKit.toJSONString(info);
+				res = getServerInfo(); 
 			} else { 
 				MessageQueue mq = findMQ(msg, sess);
 		    	if(mq == null){ 
+		    		ReplyKit.reply404(msg, sess);
 					return;
-				} else {
-					json = JsonKit.toJSONString(mq.getTopicInfo());
 				}
-			}
-
-			Message data = new Message();
-			data.setStatus("200");
-			data.setId(msg.getId());
-			data.setHeader("content-type", "application/json");
-			data.setBody(json);
-			sess.write(data);
+		    	TopicInfo topicInfo = mq.getTopicInfo();
+				res = topicInfo;
+		    	String group = msg.getConsumeGroup();
+		    	if(group != null && topicInfo.consumerGroupList != null){
+		    		res = topicInfo.consumeGroupInfo(group); 
+		    		if(res == null){
+			    		String hint = String.format("404: ConsumeGroup(%s) Not Found", group);
+			    		ReplyKit.reply404(msg, sess, hint);
+			    		return;
+		    		}
+		    	}
+			} 
+			
+			ReplyKit.replyJson(msg, sess, res); 
 		}
 	}; 
 	
@@ -676,7 +691,28 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	} 
     	idx = cmd.indexOf('/');
     	if(idx > 0){
+    		String topicGroup = cmd.substring(idx+1);
     		cmd = cmd.substring(0, idx);
+    		if(restUrlCommands.contains(cmd)){
+    			String[] bb = topicGroup.split("[/]"); 
+    			int i = -1;
+    			while(++i < bb.length){
+    				if(bb[i].length() == 0) continue; 
+    				String topic = bb[i];
+    				if(msg.getTopic() == null){
+    					msg.setTopic(topic);
+    				}
+    				break;
+    			} 
+    			while(++i < bb.length){
+    				if(bb[i].length() == 0) continue;
+    				String group = bb[i];
+    				if(msg.getConsumeGroup() == null){
+    					msg.setConsumeGroup(group);
+    				}
+    				break;
+    			}  
+    		}
     	}
     	
     	msg.setCommand(cmd.toLowerCase());

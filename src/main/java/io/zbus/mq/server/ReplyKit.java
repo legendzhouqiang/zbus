@@ -2,6 +2,7 @@ package io.zbus.mq.server;
 
 import java.io.IOException;
 
+import io.zbus.kit.JsonKit;
 import io.zbus.mq.Message;
 import io.zbus.net.Session;
 
@@ -25,6 +26,16 @@ public class ReplyKit {
 
 		sess.write(res);
 	}
+	
+	public static void replyJson(Message msg, Session sess, Object object) throws IOException {
+		Message res = new Message();
+		res.setId(msg.getId());
+		res.setTopic(msg.getTopic());
+		res.setStatus(200);
+		res.setJsonBody(JsonKit.toJSONString(object)); 
+
+		sess.write(res);
+	}
 
 	public static void reply404(Message msg, Session sess) throws IOException {
 		Message res = new Message();
@@ -33,6 +44,17 @@ public class ReplyKit {
 		res.setStatus(404);
 		res.setTopic(topic);
 		res.setBody(String.format("404: Topic(%s) Not Found", topic));
+
+		sess.write(res);
+	}
+	
+	public static void reply404(Message msg, Session sess, String hint) throws IOException {
+		Message res = new Message();
+		String topic = msg.getTopic();
+		res.setId(msg.getId());
+		res.setStatus(404);
+		res.setTopic(topic);
+		res.setBody(String.format("404: %s", hint));
 
 		sess.write(res);
 	}
@@ -58,14 +80,14 @@ public class ReplyKit {
 		res.setBody(String.format("403: Topic(%s) Forbbiden", mqName));
 
 		sess.write(res);
-	}
-
-	public static void reply400(Message msg, Session sess) throws IOException {
+	} 
+	
+	public static void reply400(Message msg, Session sess, String hint) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setStatus(400);
 		res.setTopic(msg.getTopic());
-		res.setBody(String.format("400: Bad Format, %s", msg.getBodyString()));
+		res.setBody(String.format("400: Bad Format, %s", hint));
 		sess.write(res);
 	}
 	
