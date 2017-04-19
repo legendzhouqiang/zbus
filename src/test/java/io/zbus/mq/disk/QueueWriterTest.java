@@ -10,7 +10,7 @@ import io.zbus.mq.disk.QueueWriter;
 public class QueueWriterTest {
 	
 	public static void main(String[] args) throws Exception { 
-		Index index = new Index(new File("C:/tmp/StringQueue")); 
+		Index index = new Index(new File("C:/tmp/MyMQ")); 
 		QueueWriter w = new QueueWriter(index);
 		
 		for(int i=0; i<10;i++){

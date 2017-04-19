@@ -269,7 +269,7 @@ function onTracingMessage(msg){
 }
 
 
-$.getJSON('/info',function(serverInfo){   
+$.getJSON('/query',function(serverInfo){   
 	trackBroker = new TrackBroker(serverInfo.serverAddress); 
 	trackBroker.onServerUpdated = function(serverAddress){  
 		showServerTable(trackBroker);  
