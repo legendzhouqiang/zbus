@@ -65,7 +65,7 @@ public class NetKit {
 	private static int matchedIndex(String ip, String[] prefix) {
 		for (int i = 0; i < prefix.length; i++) {
 			String p = prefix[i];
-			if ("*".equals(p)) { // *假定为匹配外网IP
+			if ("*".equals(p)) {
 				if (ip.startsWith("127.") || ip.startsWith("10.") || ip.startsWith("172.") || ip.startsWith("192.")) {
 					continue;
 				}

@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.Message;
+import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.net.Session;
 
@@ -14,17 +15,25 @@ public interface MessageQueue {
 	
 	void consume(Message message, Session session) throws IOException;   
 	
-	void declareConsumeGroup(ConsumeGroup consumeGroup) throws Exception;
+	ConsumeGroupInfo declareConsumeGroup(ConsumeGroup consumeGroup) throws Exception;
 	
-	long remaining(String consumerGroup);
+	void removeConsumeGroup(String groupName) throws IOException; 
 	
-	int consumerCount(String consumerGroup); 
+	void remove() throws IOException;
+	
+	long remaining(String consumeGroup);
+	
+	int consumerCount(String consumeGroup); 
 	
 	void cleanSession(Session sess);
 	
 	void cleanSession();
 	
-	TopicInfo getTopicInfo();
+	TopicInfo topicInfo();
+	
+	long lastUpdateTime();
+	
+	String name();
 	
 	String getCreator();
 
@@ -32,9 +41,5 @@ public interface MessageQueue {
 	
 	int getFlag();
 
-	void setFlag(int value); 
-	
-	long getLastUpdateTime();
-	
-	String getName();
+	void setFlag(int value);  
 }

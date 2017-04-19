@@ -3,6 +3,7 @@ package io.zbus.mq.server;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.JsonKit;
-import io.zbus.kit.StringKit;
+import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
@@ -199,7 +200,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			
 			String topic = sess.attr(Protocol.TOPIC);
 			if(!msg.getTopic().equals(topic)){
-				sess.attr(Protocol.TOPIC, mq.getName()); //mark
+				sess.attr(Protocol.TOPIC, mq.name()); //mark
 				
 				trackService.publish(); 
 			} 
@@ -238,33 +239,47 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
+	private MessageQueue checkMQ(Message msg, Session sess)throws IOException { 
+		if(!auth(msg)){ 
+			ReplyKit.reply403(msg, sess);
+			return null;
+		}
+		String topic = msg.getTopic(); 
+		if(StrKit.isEmpty(topic)){ 
+			ReplyKit.reply400(msg, sess, "Missing topic");
+			return null;
+		} 
+		topic = topic.trim(); 
+		MessageQueue mq = mqTable.get(topic);
+		if(mq == null){ 
+			ReplyKit.reply404(msg, sess);
+			return null;
+		}  
+		return mq;
+	}
+	
 	private MessageHandler removeHandler = new MessageHandler() {  
 		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}
-			String topic = msg.getTopic(); 
-			if(StringKit.isEmpty(topic)){ 
-				ReplyKit.reply400(msg, sess, "Missing topic");
-				return;
-			}
+		public void handle(Message msg, Session sess) throws IOException {  
+			MessageQueue mq = checkMQ(msg, sess);
+			if(mq == null) return; 
 			
-			topic = topic.trim();
-			synchronized (mqTable) {
-				MessageQueue mq = mqTable.get(topic);
-    			if(mq == null){ 
-    				ReplyKit.reply404(msg, sess);
-    				return;
-    			}   
-    			//Clear mapped mq
-    			//TODO 
-    			
-    			mqTable.remove(topic);  
-    			ReplyKit.reply200(msg, sess);
-			}
-		}
+			String groupName = msg.getConsumeGroup();
+			if(groupName != null){
+				try {
+					mq.removeConsumeGroup(groupName);
+					ReplyKit.reply200(msg, sess);
+				} catch (FileNotFoundException e){
+					ReplyKit.reply404(msg, sess, "ConsumeGroup("+groupName + ") Not Found");
+					return;
+				} catch (Exception e){
+					ReplyKit.reply500(msg, sess, e);
+					return;
+				}  
+			} 
+			
+			ReplyKit.reply400(msg, sess, "unimplemented"); 
+		} 
 	};
 	
 	private MessageHandler declareHandler = new MessageHandler() {  
@@ -276,7 +291,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			}
     		
 			String topic = msg.getTopic();  
-			if(StringKit.isEmpty(topic)){ 
+			if(StrKit.isEmpty(topic)){ 
 				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
 			}
@@ -303,9 +318,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					mq.declareConsumeGroup(consumeGroup); 
 					trackService.publish(); 
 					if(groupName == null){
-						ReplyKit.replyJson(msg, sess, mq.getTopicInfo());
+						ReplyKit.replyJson(msg, sess, mq.topicInfo());
 					} else {
-						ConsumeGroupInfo info = mq.getTopicInfo().consumeGroupInfo(groupName);
+						ConsumeGroupInfo info = mq.topicInfo().consumeGroupInfo(groupName);
 						ReplyKit.replyJson(msg, sess, info);
 					} 
 					if(newMq){
@@ -314,7 +329,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					log.info("MQ Declared: %s", consumeGroup); 
 				} catch (Exception e) { 
 					log.error(e.getMessage(), e);
-					ReplyKit.reply500(msg, e, sess); 
+					ReplyKit.reply500(msg, sess, e); 
 				} 
     		}
 		}
@@ -484,7 +499,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		    		ReplyKit.reply404(msg, sess);
 					return;
 				}
-		    	TopicInfo topicInfo = mq.getTopicInfo();
+		    	TopicInfo topicInfo = mq.topicInfo();
 				res = topicInfo;
 		    	String group = msg.getConsumeGroup();
 		    	if(group != null && topicInfo.consumerGroupList != null){
@@ -521,7 +536,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					ReplyKit.reply200(msg, session);
 				}
 			} catch (Exception e) { 
-				ReplyKit.reply500(msg, e, session);
+				ReplyKit.reply500(msg, session, e);
 			} 
 		}
 	};
@@ -574,7 +589,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	String serverAddress = mqServer.getServerAddress();
     	Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
    		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			TopicInfo info = e.getValue().getTopicInfo(); 
+   			TopicInfo info = e.getValue().topicInfo(); 
    			info.serverAddress = serverAddress;
    			table.put(e.getKey(), info);
    		}  

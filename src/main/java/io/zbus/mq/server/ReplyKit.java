@@ -91,7 +91,7 @@ public class ReplyKit {
 		sess.write(res);
 	}
 	
-	public static void reply500(Message msg, Exception ex, Session sess) throws IOException {
+	public static void reply500(Message msg, Session sess, Exception ex) throws IOException {
 		Message res = new Message();
 		res.setId(msg.getId());
 		res.setStatus(500);

@@ -20,7 +20,8 @@ public class MappedFile implements Closeable {
 	protected MappedByteBuffer buffer;  
 	protected FileChannel fileChannel;  
 	
-	private RandomAccessFile diskFile; 
+	private RandomAccessFile randomAccessFile; 
+	private File diskFile;
 	
 	protected void load(File file, int fileSize) throws IOException {  
 		try { 
@@ -31,17 +32,17 @@ public class MappedFile implements Closeable {
 					parent.mkdirs();
 				}  
 			}  
-			
-			diskFile = new RandomAccessFile(file, "rw");
-			fileChannel = diskFile.getChannel();
+			this.diskFile = file;
+			randomAccessFile = new RandomAccessFile(diskFile, "rw");
+			fileChannel = randomAccessFile.getChannel();
 			buffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileSize).load(); 
 			
 			if (fileExits) { 
-				long size = diskFile.length();
+				long size = randomAccessFile.length();
 				if (size < fileSize) {
-					diskFile.setLength(fileSize);
-					diskFile.seek(size);
-					diskFile.write(new byte[(int) (fileSize - size)]);
+					randomAccessFile.setLength(fileSize);
+					randomAccessFile.seek(size);
+					randomAccessFile.write(new byte[(int) (fileSize - size)]);
 				} 
 				loadDefaultData();
 			} else { 
@@ -60,6 +61,11 @@ public class MappedFile implements Closeable {
 	
 	protected void writeDefaultData() throws IOException{
 		
+	} 
+	
+	public void delete() throws IOException{
+		close(); 
+		diskFile.delete();
 	} 
 	
 	@Override
@@ -88,7 +94,7 @@ public class MappedFile implements Closeable {
 		
 		try {	
 			fileChannel.close();
-			diskFile.close();
+			randomAccessFile.close();
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
