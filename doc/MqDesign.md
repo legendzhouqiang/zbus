@@ -23,13 +23,13 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 			   +------------------------------------------------+      |
 			   |               Extension                 to 1024|      |
 			   +------------------------------------------------+      |
-		       |0_baseOffset | endOffset | createdTs | updatedTs|<-----+
+		       |0_createdTs | baseOffset | endOffset | updatedTs|<-----+
 		       +------------------------------------------------+
-		  +--->|1_baseOffset | endOffset | createdTs | updatedTs|        BlockFile 00000000000000000000.zbus
+		  +--->|1_createdTs | baseOffset | endOffset | updatedTs|        BlockFile 00000000000000000000.zbus
 		  |    +------------------------------------------------+      +------->+---------------+                   DiskMessage Format  
 		  |    |                    ...                         |      |        | DiskMessage_0 |                   +----------------+ 
 		  |    +------------------------------------------------+      |        | DiskMessage_1 |                   | Offset        8| 
-		  |    |n_baseOffset | endOffset | createdTs | updatedTs|      |        | DiskMessage_2 |<---+              +----------------+ 
+		  |    |n_createdTs | baseOffset | endOffset | updatedTs|      |        | DiskMessage_2 |<---+              +----------------+ 
 		  |    +------------------------------------------------+      |        |       .       |    |              | Timestamp     8| 
 		  |           |            | [QueueWriter]                     |        |       .       |    |              +----------------+ 
 		  |           +----------- | ----------------------------------+        |       .       |    |              | Id           40| 
