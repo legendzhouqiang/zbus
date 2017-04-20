@@ -128,8 +128,11 @@ public class DiskQueue implements MessageQueue{
 	
 	@Override
 	public void remove() throws IOException { 
-		
-		
+		for(DiskConsumeGroup group : consumeGroups.values()){
+			group.delete();
+		}
+		writer.close();
+		index.delete(); 
 	}
 	
 	@Override
@@ -152,7 +155,7 @@ public class DiskQueue implements MessageQueue{
 		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
 		if(group == null){
 			message.setBody(consumeGroup + " not found");
-			ReplyKit.reply404(message, session);
+			ReplyKit.reply404(message, session, "ConsumeGroup(" + consumeGroup + ") Not Found");
 			return;
 		}   
 		 
@@ -262,7 +265,8 @@ public class DiskQueue implements MessageQueue{
 		} 
 		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
 		if(group == null){
-			throw new IllegalArgumentException(consumeGroup + " not found");
+			return 0;
+			//throw new IllegalArgumentException(consumeGroup + " not found");
 		}   
 		 
 		return index.getMessageCount() - group.reader.getMessageNumber()-1;

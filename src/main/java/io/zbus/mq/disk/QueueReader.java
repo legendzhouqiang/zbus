@@ -97,6 +97,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 				return;
 			}
 			this.blockNumber++;
+			block.close();
 			block = this.index.createReadBlock(this.blockNumber);
 			this.offset = 0;
 		}
@@ -110,6 +111,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 				return null;
 			}
 			this.blockNumber++;
+			block.close();
 			block = this.index.createReadBlock(this.blockNumber);
 			this.offset = 0;
 		}
@@ -206,5 +208,13 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		if(this.blockNumber < o.blockNumber) return -1;
 		if(this.blockNumber > o.blockNumber) return 1;
 		return this.offset-o.offset;
+	}
+	
+	@Override
+	public void close() throws IOException { 
+		super.close();
+		if(block != null){
+			block.close();
+		}
 	}
 } 

@@ -13,22 +13,27 @@ public class QueueWriterPerf {
 		QueueWriter q = new QueueWriter(index);
 		
 		long start = System.currentTimeMillis();
-		
+		int factor = 1000;
 		for(int i=0;i<20000000;i++){
 			DiskMessage data = new DiskMessage();
-			data.body = new byte[102400]; 
+			data.body = new byte[100]; 
 			if(i%100==0){
 				data.tag = String.format("abc.%d", i/100);
 			}
-			q.write(data);
+			DiskMessage[] msg = new DiskMessage[factor];
+			for(int j=0;j<factor;j++){
+				msg[j] = data;
+			}
+			q.write(msg);
 			
 			if((i+1)%1000 == 0){
 				long end = System.currentTimeMillis(); 
-				System.out.format("%.4f M/s %d\n", 1000*data.size()*1000.0/1024.0/1024.0/(end-start),(i+1));
+				System.out.format("%.4f M/s %d\n", 1000*data.size()*1000.0*factor/1024.0/1024.0/(end-start),(i+1));
 				start = System.currentTimeMillis();
 			}
 		}
 		
+		q.close();
 		index.close();
 	}
 	

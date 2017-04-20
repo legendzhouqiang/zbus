@@ -23,6 +23,7 @@ public class IndexTest {
 		
 		System.out.println(message);
 		reader.close();
+		writer.close();
 	}
 	
 }

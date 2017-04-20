@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import io.zbus.kit.FileKit;
+
 /**
  * 
  * 000-- IndexVersion: 4 
@@ -63,6 +65,11 @@ public class Index extends MappedFile {
 		File file = new File(indexDir, this.indexDir.getName() + IndexSuffix);
 		load(file, IndexSize);
 	}  
+	
+	public void delete() throws IOException {
+		super.delete(); 
+		FileKit.deleteFile(indexDir);
+	}
 	/**
 	 * Write endOffset of last block
 	 * 
@@ -161,6 +168,18 @@ public class Index extends MappedFile {
 			buffer.position(MessageCountPos); 
 			long count = messageCount.incrementAndGet();
 			buffer.putLong(count);
+			return count;
+		} finally {
+			lock.unlock();
+		} 
+	}  
+	
+	public long increaseMessageCount(int delta){
+		try {
+			lock.lock();
+			buffer.position(MessageCountPos); 
+			long count = messageCount.getAndAdd(delta);
+			buffer.putLong(count+delta);
 			return count;
 		} finally {
 			lock.unlock();

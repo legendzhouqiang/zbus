@@ -1,10 +1,11 @@
 package io.zbus.mq.disk;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
  
-public class QueueWriter { 
+public class QueueWriter implements Closeable{ 
 	private final Index index;
 	private Block writeBlock;
 	private final Lock writeLock = new ReentrantLock();  
@@ -14,7 +15,9 @@ public class QueueWriter {
 		writeBlock = index.createWriteBlock();
 	}
 	 
-	public void write(DiskMessage data) throws IOException{
+	public void write(DiskMessage... data) throws IOException{
+		if(data.length == 0) return;
+		
 		writeLock.lock();
 		try{ 
 			int count = writeBlock.write(data);
@@ -28,4 +31,11 @@ public class QueueWriter {
 			writeLock.unlock();
 		}
 	} 
+	
+	@Override
+	public void close() throws IOException {  
+		if(writeBlock != null){
+			writeBlock.close();
+		}
+	}
 }

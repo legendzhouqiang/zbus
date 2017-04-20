@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,62 +29,78 @@ class Block implements Closeable {
 		}   
 		
 		this.diskFile = new RandomAccessFile(file,"rw");   
-	}    
+	}   
 	
-	
-	public int write(DiskMessage data) throws IOException{ 
+	public int write(DiskMessage... msg) throws IOException {  
+		int size = 0;
+		for(DiskMessage data : msg){
+			size += data.size();
+		}
 		try{
 			lock.lock();
 			
-			int endOffset = endOffset();
-			if(endOffset >= Index.BlockMaxSize){
+			int start = endOffset(); 
+			if(start >= Index.BlockMaxSize){
 				return 0;
 			}  
-			diskFile.seek(endOffset);
-			diskFile.writeLong(endOffset); 
-			if(data.timestamp == null){
-				diskFile.writeLong(System.currentTimeMillis()); 
-			} else {
-				diskFile.writeLong(data.timestamp);
-			} 
-			byte[] id = new byte[40]; 
-			if(data.id != null){
-				id[0] = (byte)data.id.length();
-				System.arraycopy(data.id.getBytes(), 0, id, 1, id[0]); 
-			} else {
-				id[0] = 0; 
-			}
-			diskFile.write(id); 
-			diskFile.writeLong(data.corrOffset==null? 0 : data.corrOffset);
-			diskFile.writeLong(index.increaseMessageCount()-1); //write message number
-			
-			byte[] tag = new byte[128];
-			if(data.tag != null){
-				tag[0] = (byte)data.tag.length();
-				System.arraycopy(data.tag.getBytes(), 0, tag, 1, tag[0]);
-			} else { 
-				tag[0] = 0; 
-			}
-			diskFile.write(tag); 
-			int size = DiskMessage.BODY_POS + 4;
-			if(data.body != null){
-				diskFile.writeInt(data.body.length);
-				diskFile.write(data.body); 
-				size += data.body.length;
-			} else {
-				diskFile.writeInt(0);  
+			 
+			ByteBuffer buf = ByteBuffer.allocate(size); 
+			long messageNumber = index.getMessageCount();
+			int endOffset = start;
+			for(DiskMessage data : msg){
+				writeToBuffer(data, buf, endOffset, messageNumber++);
+				endOffset += data.size();
 			} 
 			
-			index.writeEndOffset(endOffset+size); 
+			diskFile.seek(start);
+			diskFile.write(buf.array()); 
+			
+			index.writeEndOffset(endOffset); 
+			index.increaseMessageCount(msg.length);
 			
 			index.newDataAvailable.get().countDown();
 			index.newDataAvailable.set(new CountDownLatch(1)); 
+		
 			return size;
 		} finally {
 			lock.unlock();
 		}
 	}
 	
+	private void writeToBuffer(DiskMessage data, ByteBuffer buf, int endOffset, long messageNumber) {  
+		buf.putLong(endOffset);
+		if(data.timestamp == null){
+			buf.putLong(System.currentTimeMillis()); 
+		} else {
+			buf.putLong(data.timestamp);
+		} 
+		byte[] id = new byte[40]; 
+		if(data.id != null){
+			id[0] = (byte)data.id.length();
+			System.arraycopy(data.id.getBytes(), 0, id, 1, id[0]); 
+		} else {
+			id[0] = 0; 
+		}
+		buf.put(id); 
+		buf.putLong(data.corrOffset==null? 0 : data.corrOffset);
+		buf.putLong(messageNumber); //write message number
+		
+		byte[] tag = new byte[128];
+		if(data.tag != null){
+			tag[0] = (byte)data.tag.length();
+			System.arraycopy(data.tag.getBytes(), 0, tag, 1, tag[0]);
+		} else { 
+			tag[0] = 0; 
+		}
+		buf.put(tag);  
+		if(data.body != null){
+			buf.putInt(data.body.length);
+			buf.put(data.body);  
+		} else {
+			buf.putInt(0);  
+		}   
+	}
+	 
 	private DiskMessage readHeadUnsafe(int pos) throws IOException{
     	DiskMessage data = new DiskMessage(); 
 		

@@ -264,11 +264,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			MessageQueue mq = checkMQ(msg, sess);
 			if(mq == null) return; 
 			
+			
 			String groupName = msg.getConsumeGroup();
 			if(groupName != null){
 				try {
 					mq.removeConsumeGroup(groupName);
+					trackService.publish(); 
 					ReplyKit.reply200(msg, sess);
+					return;
 				} catch (FileNotFoundException e){
 					ReplyKit.reply404(msg, sess, "ConsumeGroup("+groupName + ") Not Found");
 					return;
@@ -276,9 +279,15 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					ReplyKit.reply500(msg, sess, e);
 					return;
 				}  
-			} 
-			
-			ReplyKit.reply400(msg, sess, "unimplemented"); 
+			}  
+			mq = mqTable.remove(mq.name());
+			if(mq != null){
+				mq.remove();
+				trackService.publish(); 
+				ReplyKit.reply200(msg, sess);
+			} else {
+				ReplyKit.reply404(msg, sess, "Topic(" + msg.getTopic() + ") Not Found");
+			}
 		} 
 	};
 	

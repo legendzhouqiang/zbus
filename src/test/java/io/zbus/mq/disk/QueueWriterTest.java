@@ -13,13 +13,13 @@ public class QueueWriterTest {
 		Index index = new Index(new File("C:/tmp/MyMQ")); 
 		QueueWriter w = new QueueWriter(index);
 		
-		for(int i=0; i<10;i++){
+		for(int i=0; i<1000000;i++){
 			DiskMessage message = new DiskMessage();
 			message.body = new String("hello"+i).getBytes();
 			w.write(message);
 		}
 		
-		QueueReader r = new QueueReader(index, "MyGroup4");
+		QueueReader r = new QueueReader(index, "MyMQ");
 		while(true){
 			DiskMessage data = r.read();
 			if(data == null) break;
@@ -27,7 +27,8 @@ public class QueueWriterTest {
 		}
 		
 		r.close();
-		index.close();
+		w.close();
+		index.close(); 
 	}
 	
 }
