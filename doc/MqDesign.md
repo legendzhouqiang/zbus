@@ -44,6 +44,8 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 		        | Offset       4|--------------------------------------------------------------------+              +----------------+ 
 		        +---------------+                                                                                   | Body          ?| 
 		        | Tag        128|                                                                                   +----------------+ 
+		        +---------------+                                                                                   
+		        | Flag         4|                                                                                   
 		        +---------------+ 
 		  ^ 
 	      | [QueueReader2] MappedFile                                                                ^ 
@@ -54,7 +56,8 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 	            +---------------+ 
 	            | Tag        128| 
 	            +---------------+ 
-     
+ 		        | Flag         4|                                                                                   
+		        +---------------+     
             
 **Index**
 
