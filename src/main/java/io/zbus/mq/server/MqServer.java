@@ -73,7 +73,7 @@ public class MqServer implements Closeable{
 		    	while(iter.hasNext()){
 		    		Entry<String, MessageQueue> e = iter.next();
 		    		MessageQueue mq = e.getValue(); 
-		    		mq.cleanSession();
+		    		mq.cleanAllSessions();
 		    	}
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 

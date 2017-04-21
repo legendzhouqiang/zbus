@@ -68,7 +68,7 @@ public class DiskQueue implements MessageQueue{
         } 
 	}
 	  
-	public ConsumeGroupInfo declareConsumeGroup(ConsumeGroup ctrl) throws Exception{
+	public ConsumeGroupInfo declareGroup(ConsumeGroup ctrl) throws Exception{
 		String consumeGroup = ctrl.getGroupName();
 		if(consumeGroup == null){
 			consumeGroup = this.name;
@@ -118,7 +118,7 @@ public class DiskQueue implements MessageQueue{
 	}   
 	
 	@Override
-	public void removeConsumeGroup(String groupName) throws IOException {
+	public void removeGroup(String groupName) throws IOException {
 		DiskConsumeGroup group = consumeGroups.remove(groupName); 
 		if(group == null){
 			throw new FileNotFoundException("ConsumeGroup("+groupName+") Not Found"); 
@@ -127,7 +127,7 @@ public class DiskQueue implements MessageQueue{
 	}
 	
 	@Override
-	public void remove() throws IOException { 
+	public void removeTopic() throws IOException { 
 		for(DiskConsumeGroup group : consumeGroups.values()){
 			group.delete();
 		}
@@ -257,8 +257,7 @@ public class DiskQueue implements MessageQueue{
 		} 
 		
 	}
-	
-	@Override
+	 
 	public long remaining(String consumeGroup) { 
 		if(consumeGroup == null){
 			consumeGroup = this.name;
@@ -329,7 +328,7 @@ public class DiskQueue implements MessageQueue{
 		} 
 	}
 	 
-	public void cleanSession() { 
+	public void cleanAllSessions() { 
 		Iterator<Entry<String, DiskConsumeGroup>> iter = consumeGroups.entrySet().iterator();
 		while(iter.hasNext()){
 			DiskConsumeGroup group = iter.next().getValue(); 
@@ -350,13 +349,12 @@ public class DiskQueue implements MessageQueue{
 		info.topicName = name;
 		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
-		info.flag = this.getFlag();
-		info.messageCount = remaining(name); 
-		info.consumerCount = consumerCount(name); 
-		info.consumerGroupCount = consumeGroups.size();
-		info.consumerGroupList = new ArrayList<ConsumeGroupInfo>();
+		info.flag = getFlag();
+		info.messageDepth = remaining(name); 
+		info.consumerCount = consumerCount(name);  
+		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		for(DiskConsumeGroup group : consumeGroups.values()){
-			info.consumerGroupList.add(group.getConsumeGroupInfo());
+			info.consumeGroupList.add(group.getConsumeGroupInfo());
 		}
 		//TODO 
 		return info;

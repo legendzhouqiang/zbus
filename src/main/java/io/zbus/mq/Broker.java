@@ -217,7 +217,7 @@ public class Broker implements Closeable {
 			final MqClient client = new MqClient(address, eventDriver);  
 			try { 
 				ServerInfo info = client.queryServer();
-				addrSet.addAll(info.liveServerList); 
+				addrSet.addAll(info.trackedServerList); 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			} finally {
@@ -275,7 +275,7 @@ public class Broker implements Closeable {
 			}
 		}
 		
-		for(String serverAddress : trackerInfo.liveServerList){
+		for(String serverAddress : trackerInfo.trackedServerList){
 			MqClientPool pool = poolMap.get(serverAddress);
 			if(pool == null){
 				addServer(serverAddress); 

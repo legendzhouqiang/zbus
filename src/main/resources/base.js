@@ -122,7 +122,7 @@ function showTopicTable(trackBroker){
 				<td>"+ topicSum.messageDepth + "</td>\
 				<td>"+ topicSum.messageActive + "</td>\
 				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
-				<td>"+ topicSum.consumerGroupCount+ "</td>\
+				<td>"+ topicSum.consumeGroupCount+ "</td>\
 			</tr>"
    		); 
 	}  
@@ -150,8 +150,8 @@ function showModalServerList(trackBroker, topic){
 		var msgActive = 0;
 		var msgFilter = "";//TODO
 		var idleCount = 0;
-		for(var key in topicInfo.consumerGroupList){
-			var cg = topicInfo.consumerGroupList[key];
+		for(var key in topicInfo.consumeGroupList){
+			var cg = topicInfo.consumeGroupList[key];
 			msgActive += cg.messageCount; 
 			idleCount += cg.consumerCount;
 		}
@@ -164,16 +164,16 @@ function showModalServerList(trackBroker, topic){
 	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
 	            	</div>\
             	</td>\
-				<td>" + topicInfo.messageCount + "</td>\
+				<td>" + topicInfo.messageDepth + "</td>\
 				<td>" + msgActive + "</td>\
 				<td> (" + idleCount + " / " + idleCount + ") </td>\
-				<td>" + topicInfo.consumerGroupCount + "</td>\
+				<td>" + topicInfo.consumeGroupList.length + "</td>\
 			</tr>"
 		);    
 	} 
 }
 
-function showModalConsumerGroupList(trackBroker, topic){  
+function showModalConsumeGroupList(trackBroker, topic){  
 	$("#modal-group-list").find("tr:gt(0)").remove();
 	
 	var serverInfoMap = trackBroker.serverInfoMap;
@@ -192,8 +192,8 @@ function showModalConsumerGroupList(trackBroker, topic){
 		var msgActive = 0;
 		var msgFilter = "";//TODO
 		var idleCount = 0;
-		for(var key in topicInfo.consumerGroupList){
-			var cg = topicInfo.consumerGroupList[key];  
+		for(var key in topicInfo.consumeGroupList){
+			var cg = topicInfo.consumeGroupList[key];  
 			$("#modal-group-list").append(
 				"<tr>\
 					<td>\
@@ -202,7 +202,7 @@ function showModalConsumerGroupList(trackBroker, topic){
 		            		<input class='group' type='checkbox' "+ checked +" value=''>\
 		            	</div>\
 	            	</td>\
-					<td>" + topicInfo.messageCount + "</td>\
+					<td>" + topicInfo.messageDepth + "</td>\
 					<td>" + cg.messageCount + "</td>\
 					<td>" + msgFilter + "</td>\
 					<td> (" + cg.consumerCount + " / " + cg.consumerCount + ") </td>\

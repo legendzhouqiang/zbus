@@ -15,19 +15,17 @@ public interface MessageQueue {
 	
 	void consume(Message message, Session session) throws IOException;   
 	
-	ConsumeGroupInfo declareConsumeGroup(ConsumeGroup consumeGroup) throws Exception;
+	ConsumeGroupInfo declareGroup(ConsumeGroup consumeGroup) throws Exception;
 	
-	void removeConsumeGroup(String groupName) throws IOException; 
+	void removeGroup(String groupName) throws IOException; 
 	
-	void remove() throws IOException;
-	
-	long remaining(String consumeGroup);
+	void removeTopic() throws IOException; 
 	
 	int consumerCount(String consumeGroup); 
 	
 	void cleanSession(Session sess);
 	
-	void cleanSession();
+	void cleanAllSessions();
 	
 	TopicInfo topicInfo();
 	

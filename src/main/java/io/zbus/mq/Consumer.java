@@ -180,8 +180,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				
 				thread.setTopic(topic);
 				thread.setConsumeGroup(consumeGroup);
-				
-				thread.setAppid(appid);
+
 				thread.setToken(token);
 				
 				thread.setConsumeRunner(consumeRunner); 

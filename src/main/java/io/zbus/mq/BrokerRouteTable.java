@@ -88,7 +88,7 @@ public class BrokerRouteTable {
 		while(iter.hasNext()){
 			Entry<String, Set<String>> e = iter.next();
 			
-			if(!trackerInfo.liveServerList.contains(e.getKey())){
+			if(!trackerInfo.trackedServerList.contains(e.getKey())){
 				e.getValue().remove(trackerInfo.serverAddress);
 			} 
 			

@@ -64,18 +64,18 @@ public class Protocol {
 	public static final String TTL      			= "ttl";  
 	public static final String EXPIRE   			= "expire"; 
 	
-	public static final String ORIGIN_ID     		= "origin_id";  //original id, TODO compatible issue: rawid
-	public static final String ORIGIN_URL   		= "origin_url"; //original URL  
+	public static final String ORIGIN_ID     		= "origin_id";     //original id, TODO compatible issue: rawid
+	public static final String ORIGIN_URL   		= "origin_url";    //original URL  
 	public static final String ORIGIN_STATUS 		= "origin_status"; //original Status  TODO compatible issue: reply_code
 	
-	//Security
-	public static final String APPID   				= "appid";
+	//Security 
 	public static final String TOKEN   				= "token"; 
 	
 	
-	public static final int FLAG_RPC    	    = 1<<0; 
-	public static final int FLAG_EXCLUSIVE 	    = 1<<1;  
-	public static final int FLAG_DELETE_ON_EXIT = 1<<2; 
+	public static final int FLAG_PAUSE    	    = 1<<0; 
+	public static final int FLAG_RPC    	    = 1<<1; 
+	public static final int FLAG_EXCLUSIVE 	    = 1<<2;  
+	public static final int FLAG_DELETE_ON_EXIT = 1<<3; 
 	
 	public static class ServerEvent{  
 		public String serverAddress;
@@ -89,7 +89,7 @@ public class Protocol {
 	}
 	
 	public static class TrackerInfo extends TrackItem{
-		public List<String> liveServerList;
+		public List<String> trackedServerList;
 	}
 	  
 	public static class ServerInfo extends TrackerInfo{  
@@ -101,18 +101,17 @@ public class Protocol {
 		public String topicName;
 		public int flag; 
 		
-		public long messageCount;
-		public int consumerCount;
-		public int consumerGroupCount;
-		public List<ConsumeGroupInfo> consumerGroupList = new ArrayList<ConsumeGroupInfo>();
+		public long messageDepth; //message count on disk
+		public int consumerCount; 
+		public List<ConsumeGroupInfo> consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		
 		public String creator;
 		public long createdTime;
 		public long lastUpdatedTime;   
 		
-		public ConsumeGroupInfo consumeGroupInfo(String name){
-			if(consumerGroupList == null) return null;
-			for(ConsumeGroupInfo info : consumerGroupList){
+		public ConsumeGroupInfo consumeGroup(String name){
+			if(consumeGroupList == null) return null;
+			for(ConsumeGroupInfo info : consumeGroupList){
 				if(name.equals(info.groupName)) return info;
 			}
 			return null;

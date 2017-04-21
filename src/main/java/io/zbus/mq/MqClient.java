@@ -10,8 +10,7 @@ import io.zbus.mq.net.MessageClient;
 import io.zbus.net.EventDriver;
  
 
-public class MqClient extends MessageClient{        
-	private String appid;
+public class MqClient extends MessageClient{         
 	private String token;     
 	
 	public MqClient(String serverAddress, final EventDriver driver){
@@ -204,10 +203,7 @@ public class MqClient extends MessageClient{
 	    super.invokeAsync(msg, callback);
 	}
 	
-	private void fillCommonHeaders(Message msg){ 
-		if(msg.getAppid() == null){
-			msg.setAppid(this.appid);
-		}
+	private void fillCommonHeaders(Message msg){  
 		if(msg.getToken() == null){
 			msg.setToken(this.token);
 		}
@@ -228,14 +224,6 @@ public class MqClient extends MessageClient{
 			throw new MqException(msg.getBodyString(), e);
 		}
 	} 
-
-	public String getAppid() {
-		return appid;
-	}
-
-	public void setAppid(String appid) {
-		this.appid = appid;
-	}
 
 	public String getToken() {
 		return token;

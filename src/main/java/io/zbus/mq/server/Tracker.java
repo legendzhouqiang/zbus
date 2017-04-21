@@ -114,7 +114,7 @@ public class Tracker implements Closeable{
 		}
 		TrackerInfo trackerInfo = new TrackerInfo(); 
 		trackerInfo.serverAddress = thisServerAddress;
-		trackerInfo.liveServerList = serverList;
+		trackerInfo.trackedServerList = serverList;
 		return trackerInfo;
 	}  
 	

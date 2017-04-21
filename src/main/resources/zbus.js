@@ -16,7 +16,7 @@ Protocol.PAUSE_TOPIC   = "pause_topic";
 Protocol.RESUME_TOPIC  = "resume_topic";  
 Protocol.EMPTY_TOPIC   = "empty_topic";  
 
-//ConsumerGroup control
+//ConsumeGroup control
 Protocol.DECLARE_GROUP = "declare_group";  
 Protocol.QUERY_GROUP   = "query_group"; 
 Protocol.REMOVE_GROUP  = "remove_group";  
@@ -506,7 +506,7 @@ TrackBroker.prototype.connect = function () {
     var trackBroker = this;
     broker.onMessage(function (msg) {
         var trackInfo = msg.body;
-        var servers = trackInfo.liveServerList;
+        var servers = trackInfo.trackedServerList;
         for (var i in servers) {
         	trackBroker.serverUpdate(servers[i]);
         }
@@ -580,7 +580,7 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
             	'messageDepth': 0,  
             	'messageActive': 0,
             	'messageFilterTags': [],
-            	'consumerGroupCount': 0, 
+            	'consumeGroupCount': 0, 
             	'consumerIdle': 0,
             	'consumerTotal': 0,
             	'serverList': [],
@@ -593,10 +593,10 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
                 this.topicSumMap[topic] = topicSum;
                 topicSum.serverList = [topicInfo.serverAddress];
             }
-            topicSum.messageDepth += topicInfo.messageCount;
+            topicSum.messageDepth += topicInfo.messageDepth;
             topicSum.messageActive += 0; //TODO
             topicSum.messageFilterTags = []; //TODO
-            topicSum.consumerGroupCount += topicInfo.consumerGroupCount;
+            topicSum.consumeGroupCount += topicInfo.consumeGroupList.length;
             topicSum.consumerIdle += topicInfo.consumerCount;
             topicSum.consumerTotal = topicSum.consumerIdle;//TODO
             

@@ -268,7 +268,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			String groupName = msg.getConsumeGroup();
 			if(groupName != null){
 				try {
-					mq.removeConsumeGroup(groupName);
+					mq.removeGroup(groupName);
 					trackService.publish(); 
 					ReplyKit.reply200(msg, sess);
 					return;
@@ -282,7 +282,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			}  
 			mq = mqTable.remove(mq.name());
 			if(mq != null){
-				mq.remove();
+				mq.removeTopic();
 				trackService.publish(); 
 				ReplyKit.reply200(msg, sess);
 			} else {
@@ -324,12 +324,12 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	    			mqTable.put(topic, mq);
     			}
     			try {
-					mq.declareConsumeGroup(consumeGroup); 
+					mq.declareGroup(consumeGroup); 
 					trackService.publish(); 
 					if(groupName == null){
 						ReplyKit.replyJson(msg, sess, mq.topicInfo());
 					} else {
-						ConsumeGroupInfo info = mq.topicInfo().consumeGroupInfo(groupName);
+						ConsumeGroupInfo info = mq.topicInfo().consumeGroup(groupName);
 						ReplyKit.replyJson(msg, sess, info);
 					} 
 					if(newMq){
@@ -511,8 +511,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		    	TopicInfo topicInfo = mq.topicInfo();
 				res = topicInfo;
 		    	String group = msg.getConsumeGroup();
-		    	if(group != null && topicInfo.consumerGroupList != null){
-		    		res = topicInfo.consumeGroupInfo(group); 
+		    	if(group != null && topicInfo.consumeGroupList != null){
+		    		res = topicInfo.consumeGroup(group); 
 		    		if(res == null){
 			    		String hint = String.format("404: ConsumeGroup(%s) Not Found", group);
 			    		ReplyKit.reply404(msg, sess, hint);
@@ -605,7 +605,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
    		ServerInfo info = new ServerInfo();
 		info.serverAddress = mqServer.getServerAddress();
 		info.topicMap = table;  
-		info.liveServerList = trackService.queryTrackerInfo().liveServerList;
+		info.trackedServerList = trackService.queryTrackerInfo().trackedServerList;
 		
 		String serverList = config.getTrackServerList();
 		if(serverList == null){

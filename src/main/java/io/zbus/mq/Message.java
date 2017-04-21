@@ -316,15 +316,7 @@ public class Message {
 	public Message setReceiver(String value) {
 		this.setHeader(RECVER, value);
 		return this;
-	}
-	
-	public String getAppid() {
-		return this.getHeader(APPID);
 	} 
-	public Message setAppid(String value) {
-		this.setHeader(APPID, value);
-		return this;
-	}   
 	
 	public String getToken() {
 		return this.getHeader(TOKEN);

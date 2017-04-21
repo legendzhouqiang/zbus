@@ -93,7 +93,7 @@
 	            <th style="width: 8%">Msg Depth</th> 
 	            <th style="width: 8%">Msg Unconsumed</th> 
 	            <th style="width: 8%">Consumer (Idle / Total)</th> 
-                <th style="width: 8%">Consumer Group</th>  
+                <th style="width: 8%">ConsumeGroup</th>  
             </tr>  
         	</tbody>
         </table>
@@ -128,7 +128,7 @@
 			            <th style="width: 8%">Msg Depth</th> 
 			            <th style="width: 8%">Msg Unconsumed</th>  
 			            <th style="width: 10%">Consumer(Idle/Total)</th> 
-		                <th style="width: 6%">ConsumerGroup</th>  
+		                <th style="width: 6%">ConsumeGroup</th>  
 		            </tr>    
 		        	</tbody>
 		        </table>
@@ -146,7 +146,7 @@
 		        <table id="modal-group-list"  class="table table-condensed table-bordered">
 		            <tbody>
 		            <tr class="active"> 
-		            	<th style="width: 8%">Consumer Group
+		            	<th style="width: 4%">ConsumeGroup
 			            	<div class="filter-box">
 	                			<input id="modal-filter-group" class="group" type='checkbox' checked="checked">
 	                		</div>
@@ -248,7 +248,7 @@ $("#topic-modal").on("show.bs.modal", function(e){
 	var topic = e.relatedTarget.innerText; 
 	$("#modal-topic").text(topic);
 	showModalServerList(trackBroker, topic);
-	showModalConsumerGroupList(trackBroker, topic); 
+	showModalConsumeGroupList(trackBroker, topic); 
 
 });
 

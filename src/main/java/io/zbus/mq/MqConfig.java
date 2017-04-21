@@ -5,8 +5,7 @@ import io.zbus.mq.Broker.ServerSelector;
 public class MqConfig implements Cloneable { 
 	protected Broker broker;  
 	protected ServerSelector adminServerSelector; //default to null 
-	
-	protected String appid;
+	 
 	protected String token;   
 	protected int invokeTimeout = 10000;  // 10 s 
 	
@@ -35,15 +34,7 @@ public class MqConfig implements Cloneable {
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	} 
-	
-	public String getAppid() {
-		return appid;
-	}
-
-	public void setAppid(String appid) {
-		this.appid = appid;
-	}
-
+	 
 	public String getToken() {
 		return token;
 	}

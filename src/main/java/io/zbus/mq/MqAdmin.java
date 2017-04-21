@@ -10,15 +10,13 @@ import io.zbus.mq.Protocol.TopicInfo;
 public class MqAdmin {      
 	protected final Broker broker;
 	protected ServerSelector adminServerSelector;
-	
-	protected String appid;
+	 
 	protected String token; 
 	protected int invokeTimeout = 10000;  // 10 s
 	protected boolean verbose = false;
 	
 	public MqAdmin(MqConfig config){
-		this.broker = config.getBroker();
-		this.appid = config.getAppid();
+		this.broker = config.getBroker(); 
 		this.token = config.getToken();
 		this.invokeTimeout = config.getInvokeTimeout();
 		this.adminServerSelector = config.getAdminServerSelector();
@@ -29,8 +27,7 @@ public class MqAdmin {
 		} 
 	}
 	
-	protected MqClient configClient(MqClient client){
-		client.setAppid(appid);
+	protected MqClient configClient(MqClient client){ 
 		client.setToken(token);
 		client.setInvokeTimeout(invokeTimeout);
 		return client;
