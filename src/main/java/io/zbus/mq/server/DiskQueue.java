@@ -350,13 +350,15 @@ public class DiskQueue implements MessageQueue{
 		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
 		info.flag = getFlag();
-		info.messageDepth = index.getMessageCount(); 
-		info.consumerCount = consumerCount(name);  
+		info.messageDepth = index.getMessageCount();  
+		info.consumerCount = 0;
 		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		for(DiskConsumeGroup group : consumeGroups.values()){
-			info.consumeGroupList.add(group.getConsumeGroupInfo());
-		}
-		//TODO 
+			ConsumeGroupInfo groupInfo = group.getConsumeGroupInfo();
+			info.consumerCount += groupInfo.consumerCount;
+			info.consumeGroupList.add(groupInfo);
+		} 
+		
 		return info;
 	}
 	

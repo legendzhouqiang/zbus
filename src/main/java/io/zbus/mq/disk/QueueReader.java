@@ -150,6 +150,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		int tagLen = tag[0];
 		if(tagLen > 0){
 			this.filterTag = new String(tag, 1, tagLen);
+			this.filterTagParts = this.filterTag.split("[.]");
 		}
 		this.flag = buffer.getInt();
 	}

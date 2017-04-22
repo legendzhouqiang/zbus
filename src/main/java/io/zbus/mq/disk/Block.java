@@ -171,7 +171,7 @@ class Block implements Closeable {
     		if("+".equals(tagPart)){
     			continue;
     		}
-    		if("#".equals(tagPart)){
+    		if("*".equals(tagPart)){
     			return true;
     		}
     		if(targetPart.equals(tagPart)){

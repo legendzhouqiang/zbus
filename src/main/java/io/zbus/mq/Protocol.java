@@ -102,7 +102,7 @@ public class Protocol {
 		public int flag; 
 		
 		public long messageDepth; //message count on disk
-		public int consumerCount; 
+		public int consumerCount; //total consumer count in consumeGroupList
 		public List<ConsumeGroupInfo> consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		
 		public String creator;
