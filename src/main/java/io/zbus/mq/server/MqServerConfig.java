@@ -133,6 +133,7 @@ public class MqServerConfig{
 		
 		String prefix = "//zbus"; 
 		this.serverHost = valueOf(xeval(xpath, doc, prefix, "host"), "0.0.0.0");  
+		this.serverName = valueOf(xeval(xpath, doc, prefix, "serverName"), null);  
 		this.serverPort = valueOf(xeval(xpath, doc, prefix, "port"), 15555);
 		this.storePath = valueOf(xeval(xpath, doc, prefix, "mqStore"), "./store");
 		this.verbose = valueOf(xeval(xpath, doc, prefix, "verbose"), false); 

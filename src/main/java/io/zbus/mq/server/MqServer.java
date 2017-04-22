@@ -66,6 +66,9 @@ public class MqServer implements Closeable{
 			host = NetKit.getLocalIp(config.serverMainIpOrder);
 		}
 		serverAddress = host+":"+config.serverPort; 
+		if(config.serverName != null){
+			serverAddress = config.serverName + ":"+config.serverPort; 
+		}
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  

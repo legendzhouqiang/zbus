@@ -61,12 +61,19 @@ public class NetKit {
 		}
 		return address;
 	}
+	
+	public static boolean isPublicAddress(String ip){
+		if (ip.startsWith("127.") || ip.startsWith("10.") || ip.startsWith("172.") || ip.startsWith("192.")) {
+			return false;
+		}
+		return true;
+	}
 
 	private static int matchedIndex(String ip, String[] prefix) {
 		for (int i = 0; i < prefix.length; i++) {
 			String p = prefix[i];
 			if ("*".equals(p)) {
-				if (ip.startsWith("127.") || ip.startsWith("10.") || ip.startsWith("172.") || ip.startsWith("192.")) {
+				if (!isPublicAddress(ip)) {
 					continue;
 				}
 				return i;

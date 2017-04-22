@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zbus>   
-	<host>0.0.0.0</host> 
+	<host>0.0.0.0</host>  
 	<port>15555</port> 
 	<mqStore>/tmp/zbus</mqStore>
 	
