@@ -573,36 +573,14 @@ TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
     	
         var serverInfo = this.serverInfoMap[address];
 
-        var topicMap = serverInfo.topicMap;
-        for (var topic in topicMap) {
-            if (topic == '@type') continue; //fastjson added
-            var topicSum = { 
-            	'messageDepth': 0,  
-            	'messageActive': 0,
-            	'messageFilterTags': [],
-            	'consumeGroupCount': 0, 
-            	'consumerIdle': 0,
-            	'consumerTotal': 0,
-            	'serverList': [],
-            };
-            
-            var topicInfo = topicMap[topic];
-            if (topic in this.topicSumMap) {
-                topicSum = this.topicSumMap[topic];
+        var serverTopicMap = serverInfo.topicMap;
+        for (var topic in serverTopicMap) {  
+            var serverTopicInfo = serverTopicMap[topic];
+            if (!(topic in this.topicSumMap)){
+                this.topicSumMap[topic] = [serverTopicInfo];
             } else {
-                this.topicSumMap[topic] = topicSum;
-                topicSum.serverList = [topicInfo.serverAddress];
-            }
-            topicSum.messageDepth += topicInfo.messageDepth;
-            topicSum.messageActive += 0; //TODO
-            topicSum.messageFilterTags = []; //TODO
-            topicSum.consumeGroupCount += topicInfo.consumeGroupList.length;
-            topicSum.consumerIdle += topicInfo.consumerCount;
-            topicSum.consumerTotal = topicSum.consumerIdle;//TODO
-            
-            if(!topicSum.serverList.includes(topicInfo.serverAddress)){
-            	topicSum.serverList.push(topicInfo.serverAddress);
-            }
+            	this.topicSumMap[topic].push(serverTopicInfo);
+            } 
         }
     } 
 }   

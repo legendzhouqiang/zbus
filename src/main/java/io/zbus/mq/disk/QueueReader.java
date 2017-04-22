@@ -201,6 +201,10 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	public long getMessageNumber() {
 		return messageNumber;
 	}
+	
+	public long getMessageCount(){
+		return index.getMessageCount() - messageNumber-1;
+	}
 
 	private void writeOffset(){
 		buffer.position(0); 

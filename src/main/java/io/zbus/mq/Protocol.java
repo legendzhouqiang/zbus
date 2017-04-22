@@ -122,6 +122,7 @@ public class Protocol {
 		public String topicName;
 		public String groupName;
 		public int flag; 
+		public String filterTag;
 		public long messageCount;
 		public int consumerCount;
 		public List<String> consumerList = new ArrayList<String>();

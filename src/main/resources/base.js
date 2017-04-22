@@ -19,24 +19,8 @@ function buildTopicList(serverInfo){
 		res += "<span address='" + serverInfo.serverAddress + "' class='topic-list topic label label-success'>" + keys[i] + "</span>";
 	} 
    	return res;
-}
+}  
 
-
-function topicServerList(serverList){
-	var res = ""; 
-	serverList.sort();
-	var len = serverList.length;
-	
-	for(var i in serverList){ 
-		var link = "<div><a class='topic' target='_blank' href='http://" + serverList[i] + "'>" + serverList[i] + "</a>";
-		if(len>1){
-			link += "<span class='label label-info'>"+(parseInt(i)+1)+"</span>";
-		} 
-		link += "<div>";
-		res += link
-	} 
-   	return res;
-}
 
 function showServerTable(trackBroker){ 
 	$("#server-list").find("tr:gt(0)").remove();
@@ -101,10 +85,49 @@ function showServerList(trackBroker){
 		);    
 	} 
 }
+ 
 
+function consumeGroupList(groupList){ 
+	var res = "";
+	for(var i in groupList){ 
+		var group = groupList[i];
+		res += "<tr>";
+		res += "<td>" + group.groupName + "</td>";
+		res += "<td>" + group.messageCount + "</td>";
+		res += "<td>" + group.consumerCount + "</td>";
+		var filterTag = "";
+		if(group.filterTag){
+			filterTag = group.filterTag;
+		}
+		res += "<td>" + filterTag + "</td>";
+		res += "</tr>"
+	} 
+	return res;
+}
+
+function topicServerList(serverList){
+	var res = ""; 
+	serverList.sort(); 
+	for(var i in serverList){ 
+		var topicInfo = serverList[i];
+		var linkAddr = topicInfo.serverAddress;
+		res += "<tr>";
+		//link td
+		res += "<td><a class='topic' target='_blank' href='http://" + linkAddr + "'>" + linkAddr + "</a></td>";
+		
+		//message depth td
+		res += "<td>" + topicInfo.messageDepth + "</td>"; 
+		
+		//consume group td
+		res += "<td> <table class='table-nested cgroup'> " + consumeGroupList(topicInfo.consumeGroupList) + "</table></td>";
+		
+		res += "</tr>"; 
+	} 
+   	return res;
+}
 
 function showTopicTable(trackBroker){ 
-	$("#topic-list").find("tr:gt(0)").remove();
+	$("#topic-list").find("tr:gt(2)").remove();
 	var topicSumMap = trackBroker.topicSumMap;
 	var topics = [];
 	for(var key in topicSumMap){
@@ -114,15 +137,11 @@ function showTopicTable(trackBroker){
 	for(var i in topics){
 		var topicName = topics[i];
 		var topicSum = topicSumMap[topicName];
-		var serverList = topicServerList(topicSum.serverList); 
+		var serverList = topicServerList(topicSum); 
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
 				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a></td>\
-				<td>"+ serverList + "</td>\
-				<td>"+ topicSum.messageDepth + "</td>\
-				<td>"+ topicSum.messageActive + "</td>\
-				<td>"+ topicSum.consumerIdle + " / " + topicSum.consumerTotal + "</td>\
-				<td>"+ topicSum.consumeGroupCount+ "</td>\
+				<td><table class='table-nested sgroup'>"+ serverList + "</table></td>\
 			</tr>"
    		); 
 	}  
@@ -132,84 +151,10 @@ function showTopicTable(trackBroker){
 
 
 function showModalServerList(trackBroker, topic){  
-	$("#modal-server-list").find("tr:gt(0)").remove();
-	
-	var serverInfoMap = trackBroker.serverInfoMap;
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicMap = serverInfo.topicMap; 
-		var topicInfo = topicMap[topic];
-		if(!topicInfo) continue; 
-		
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.modalFilterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		var msgActive = 0;
-		var msgFilter = "";//TODO
-		var idleCount = 0;
-		for(var key in topicInfo.consumeGroupList){
-			var cg = topicInfo.consumeGroupList[key];
-			msgActive += cg.messageCount; 
-			idleCount += cg.consumerCount;
-		}
-		
-		$("#modal-server-list").append(
-			"<tr>\
-				<td>\
-					<a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-					<div class='filter-box'>\
-	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-	            	</div>\
-            	</td>\
-				<td>" + topicInfo.messageDepth + "</td>\
-				<td>" + msgActive + "</td>\
-				<td> (" + idleCount + " / " + idleCount + ") </td>\
-				<td>" + topicInfo.consumeGroupList.length + "</td>\
-			</tr>"
-		);    
-	} 
+	 
 }
 
 function showModalConsumeGroupList(trackBroker, topic){  
-	$("#modal-group-list").find("tr:gt(0)").remove();
-	
-	var serverInfoMap = trackBroker.serverInfoMap;
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicMap = serverInfo.topicMap; 
-		var topicInfo = topicMap[topic];
-		if(!topicInfo) continue; 
-		
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.modalFilterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		var msgActive = 0;
-		var msgFilter = "";//TODO
-		var idleCount = 0;
-		for(var key in topicInfo.consumeGroupList){
-			var cg = topicInfo.consumeGroupList[key];  
-			$("#modal-group-list").append(
-				"<tr>\
-					<td>\
-						<a class='link' href='#'>" + cg.groupName + "</a>\
-						<div class='filter-box'>\
-		            		<input class='group' type='checkbox' "+ checked +" value=''>\
-		            	</div>\
-	            	</td>\
-					<td>" + topicInfo.messageDepth + "</td>\
-					<td>" + cg.messageCount + "</td>\
-					<td>" + msgFilter + "</td>\
-					<td> (" + cg.consumerCount + " / " + cg.consumerCount + ") </td>\
-					<td>" + serverInfo.serverAddress + "</td>\
-				</tr>"
-			);    
-		}
-	} 
+	 
 }
  

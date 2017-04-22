@@ -350,7 +350,7 @@ public class DiskQueue implements MessageQueue{
 		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
 		info.flag = getFlag();
-		info.messageDepth = remaining(name); 
+		info.messageDepth = index.getMessageCount(); 
 		info.consumerCount = consumerCount(name);  
 		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
 		for(DiskConsumeGroup group : consumeGroups.values()){
@@ -392,7 +392,9 @@ public class DiskQueue implements MessageQueue{
 		
 		public ConsumeGroupInfo getConsumeGroupInfo(){
 			ConsumeGroupInfo info = new ConsumeGroupInfo(); 
+			info.filterTag = reader.getFilterTag();
 			info.consumerCount = pullSessions.size();
+			info.messageCount = reader.getMessageCount();
 			info.groupName = groupName;
 			info.consumerList = new ArrayList<String>();
 			for(Session session : pullSessions.values()){
