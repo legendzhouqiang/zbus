@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.NetKit;
+import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.net.MessageServer;
@@ -66,7 +67,7 @@ public class MqServer implements Closeable{
 			host = NetKit.getLocalIp(config.serverMainIpOrder);
 		}
 		serverAddress = host+":"+config.serverPort; 
-		if(config.serverName != null){
+		if(!StrKit.isEmpty(config.serverName)){
 			serverAddress = config.serverName + ":"+config.serverPort; 
 		}
 		
