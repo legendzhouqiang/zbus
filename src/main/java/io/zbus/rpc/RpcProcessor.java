@@ -183,9 +183,13 @@ public class RpcProcessor implements MessageProcessor{
 		String module = req.getModule(); 
 		String method = req.getMethod();
 		String key = module+":"+method+":"+sb.toString();  
+		String key2 = module+":"+method;
 		if(this.methods.containsKey(key)){
 			return this.methods.get(key); 
 		} else { 
+			if(this.methods.containsKey(key2)){
+				return this.methods.get(key2);
+			}
 			String errorMsg = String.format("%s:%s not found, missing moudle settings?", module, method);
 			throw new IllegalArgumentException(errorMsg); 
 		}
