@@ -29,42 +29,52 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
-import io.zbus.mq.MessageInvoker;
+import io.zbus.mq.Producer;
 import io.zbus.net.ResultCallback;
 
 public class RpcInvoker {  
 	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class); 
+	 
+	private final Producer producer;
+	private final String topic;  
+	private String module;  
+	private String encoding = "UTF-8";  
+	private int timeout;
+	private boolean verbose;
 	
-	private MessageInvoker messageInvoker; 
 	private RpcCodec codec; 
-	
-	private String module = ""; 
-	private String encoding = "UTF-8";
-	private int timeout = 10000;  
-	private boolean verbose = false;
-
-	public RpcInvoker(MessageInvoker messageInvoker){
-		this(messageInvoker, new JsonRpcCodec(), null);
-	}
-	
-	public RpcInvoker(MessageInvoker messageInvoker, RpcCodec codec){
-		this(messageInvoker, codec, null);
-	}
-	
-	public RpcInvoker(MessageInvoker messageInvoker, RpcConfig config){
-		this(messageInvoker, new JsonRpcCodec(), config);
-	}
-	
-	public RpcInvoker(MessageInvoker messageInvoker, RpcCodec codec, RpcConfig config){ 
-		this.messageInvoker = messageInvoker; 
-		this.codec = codec;
-		if(config != null){
-			this.module = config.getModule();
-			this.timeout = config.getTimeout(); 
-			this.encoding = config.getEncoding();
-			this.verbose = config.isVerbose();
+ 
+	public RpcInvoker(RpcConfig config){ 
+		this.topic = config.getTopic(); 
+		if(this.topic == null){
+			throw new IllegalArgumentException("Missing topic in config");
 		}
+		
+		this.codec = config.getCodec();
+		if(this.codec == null){
+			this.codec = new JsonRpcCodec(); //default to JsonRpc
+		}
+		this.module = config.getModule(); 
+		this.encoding = config.getEncoding(); 
+		this.timeout = config.getInvokeTimeout();
+		this.verbose = config.isVerbose();
+		
+		this.producer = new Producer(config);
+		
 	}
+	
+	private Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
+		req.setAck(false);
+		req.setTopic(this.topic);
+		return this.producer.publish(req, timeout);
+	}
+ 
+	private void invokeAsync(Message req, MessageCallback callback) throws IOException {
+		req.setAck(false);
+		req.setTopic(this.topic);
+		
+		this.producer.publishAsync(req, callback);
+	} 
 	
 	public <T> T invokeSync(Class<T> resultClass, String method, Object... args){
 		Request request = new Request()
@@ -116,13 +126,13 @@ public class RpcInvoker {
 		try {
 			long start = System.currentTimeMillis();
 			msgReq = codec.encodeRequest(request, encoding); 
-			if(isVerbose()){
+			if(verbose){
 				log.info("[REQ]: %s", msgReq);
 			} 
 			
-			msgRes = messageInvoker.invokeSync(msgReq, this.timeout); 
+			msgRes = invokeSync(msgReq, this.timeout); 
 			
-			if(isVerbose()){
+			if(verbose){
 				long end = System.currentTimeMillis();
 				log.info("[REP]: Time cost=%dms\n%s",(end-start), msgRes);
 			} 
@@ -161,14 +171,14 @@ public class RpcInvoker {
 	public void invokeAsync(Request request, final ResultCallback<Response> callback){ 
 		final long start = System.currentTimeMillis();
 		final Message msgReq = codec.encodeRequest(request, encoding); 
-		if(isVerbose()){
+		if(verbose){
 			log.info("[REQ]: %s", msgReq);
 		}  
 		try {
-			messageInvoker.invokeAsync(msgReq, new MessageCallback() { 
+			invokeAsync(msgReq, new MessageCallback() { 
 				@Override
 				public void onReturn(Message result) { 
-					if(isVerbose()){
+					if(verbose){
 						long end = System.currentTimeMillis();
 						log.info("[REP]: Time cost=%dms\n%s",(end-start), result); 
 					} 
@@ -197,43 +207,5 @@ public class RpcInvoker {
 			}
 		} 
 		return resp.getResult();
-	}
-	
-	public String getEncoding() {
-		return encoding;
-	}
-
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
-	}
-
-	public String getModule() {
-		return module;
-	}
-
-	public void setModule(String module) {
-		this.module = module;
-	}
-	
-	public RpcInvoker module(String module) {
-		this.module = module;
-		return this;
-	}
-
-	public int getTimeout() {
-		return timeout;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
-
-	public boolean isVerbose() {
-		return verbose;
-	}
-
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	} 
-	
 }

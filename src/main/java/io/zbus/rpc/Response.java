@@ -42,5 +42,10 @@ public class Response {
 	
 	public void setStackTrace(String stackTrace) {
 		this.stackTrace = stackTrace;
-	} 
+	}
+
+	@Override
+	public String toString() {
+		return "Response [stackTrace=" + stackTrace + ", result=" + result + ", error=" + error + "]";
+	}  
 }

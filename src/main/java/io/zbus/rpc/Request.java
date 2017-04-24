@@ -1,9 +1,11 @@
 package io.zbus.rpc;
 
+import java.util.Arrays;
+
 public class Request{ 
-	private String module = ""; //模块标识
-	private String method;      //远程方法
-	private Object[] params;    //参数列表
+	private String module = "";  
+	private String method;       
+	private Object[] params;     
 	private String[] paramTypes; 
 	
 	public String getModule() {
@@ -50,8 +52,7 @@ public class Request{
 			this.paramTypes[i]= types[i].getCanonicalName(); 
 		}
 		return this;
-	}
-	
+	} 
 	
 	public static void normalize(Request req){
 		if(req.module == null){
@@ -60,5 +61,10 @@ public class Request{
 		if(req.params == null){
 			req.params = new Object[0];
 		}
-	}  
+	}
+	@Override
+	public String toString() {
+		return "Request [module=" + module + ", method=" + method + ", params=" + Arrays.toString(params)
+				+ ", paramTypes=" + Arrays.toString(paramTypes) + "]";
+	}   
 }

@@ -30,4 +30,5 @@ public interface RpcCodec {
 	Message  encodeResponse(Response response, String encoding); 
 	Request  decodeRequest(Message msg); 
 	Response decodeResponse(Message msg);  
+	<T> T convert(Object value, Class<T> clazz);
 }

@@ -106,4 +106,9 @@ public class JsonRpcCodec implements RpcCodec {
 		} 
 		return res;
 	} 
+	
+	@Override
+	public <T> T convert(Object value, Class<T> clazz) {
+		return JsonKit.convert(value, clazz);
+	}
 }

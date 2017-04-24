@@ -7,8 +7,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.zbus.kit.JsonKit;
+ 
+import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
@@ -23,27 +23,7 @@ public class RpcProcessor implements MessageProcessor{
 	
 	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
 	
-	public RpcProcessor(){
-		
-	}
-	
-	public RpcProcessor(Object... services){
-		addModule(services);
-	}
-	
-	public void codec(RpcCodec codec){
-		this.codec = codec;
-	}
-	
-	static List<Class<?>> getAllInterfaces(Class<?> clazz){
-		List<Class<?>> res = new ArrayList<Class<?>>();
-		while(clazz != null){ 
-			res.addAll(Arrays.asList(clazz.getInterfaces()));
-			clazz = clazz.getSuperclass();
-		}
-		return res;
-	}
-	
+	 
 	public void addModule(Object... services){
 		for(Object obj : services){
 			for(Class<?> intf : getAllInterfaces(obj.getClass())){
@@ -60,7 +40,34 @@ public class RpcProcessor implements MessageProcessor{
 		for(Object service: services){
 			this.initCommandTable(module, service);
 		}
+	} 
+	
+	public void removeModule(Object... services){
+		for(Object obj : services){
+			for(Class<?> intf : getAllInterfaces(obj.getClass())){
+				removeModule(intf.getSimpleName(), obj);
+				removeModule(intf.getCanonicalName(), obj);
+			}
+			removeModule("", obj);
+			removeModule(obj.getClass().getSimpleName(), obj);
+			removeModule(obj.getClass().getName(), obj);
+		}
 	}
+	
+	public void removeModule(String module, Object... services){
+		for(Object service: services){
+			this.removeCommandTable(module, service);
+		}
+	}
+	
+	private static List<Class<?>> getAllInterfaces(Class<?> clazz){
+		List<Class<?>> res = new ArrayList<Class<?>>();
+		while(clazz != null){ 
+			res.addAll(Arrays.asList(clazz.getInterfaces()));
+			clazz = clazz.getSuperclass();
+		}
+		return res;
+	}  
 	
 	private void addMoudleInfo(Object service){
 		String serviceKey = service.getClass().getCanonicalName();
@@ -74,7 +81,7 @@ public class RpcProcessor implements MessageProcessor{
 			modules.add(intf.getCanonicalName()); 
 		}
 		modules.add(service.getClass().getSimpleName()); 
-		modules.add(service.getClass().getCanonicalName());  
+		modules.add(service.getClass().getName());  
 		
 		Method [] methods = service.getClass().getMethods(); 
 		List<RpcMethod> rpcMethods = new ArrayList<RpcMethod>();
@@ -92,10 +99,10 @@ public class RpcProcessor implements MessageProcessor{
 			RpcMethod rpcm = new RpcMethod();
 			rpcm.setModules(modules);
 			rpcm.setName(method);
-			rpcm.setReturnType(m.getReturnType().getCanonicalName());
+			rpcm.setReturnType(m.getReturnType().getName());
 			List<String> paramTypes = new ArrayList<String>();
 			for(Class<?> t : m.getParameterTypes()){
-				paramTypes.add(t.getCanonicalName());
+				paramTypes.add(t.getName());
 			}
 			rpcm.setParamTypes(paramTypes);
 			rpcMethods.add(rpcm);
@@ -103,27 +110,9 @@ public class RpcProcessor implements MessageProcessor{
 	}
 	
 	private void removeMoudleInfo(Object service){
-		String serviceKey = service.getClass().getCanonicalName();
+		String serviceKey = service.getClass().getName();
 		object2Methods.remove(serviceKey);
-	}
-	
-	public void removeModule(Object... services){
-		for(Object obj : services){
-			for(Class<?> intf : getAllInterfaces(obj.getClass())){
-				removeModule(intf.getSimpleName(), obj);
-				removeModule(intf.getCanonicalName(), obj);
-			}
-			removeModule("", obj);
-			removeModule(obj.getClass().getSimpleName(), obj);
-			removeModule(obj.getClass().getCanonicalName(), obj);
-		}
-	}
-	
-	public void removeModule(String module, Object... services){
-		for(Object service: services){
-			this.removeCommandTable(module, service);
-		}
-	}
+	} 
 	
 	private void initCommandTable(String module, Object service){
 		addMoudleInfo(service);
@@ -141,27 +130,18 @@ public class RpcProcessor implements MessageProcessor{
 					if("".equals(method)){
 						method = m.getName();
 					}  
-				}
+				} 
 				
-				String paramMD5 = ""; 
-				Class<?>[] paramTypes = m.getParameterTypes();
-				StringBuilder sb = new StringBuilder();
-				for(int i=0;i<paramTypes.length;i++){ 
-					sb.append(paramTypes[i].getCanonicalName());
-				}
-				paramMD5 = sb.toString();
-				String key = module + ":" + method+":"+paramMD5; 
-				String key2 = module + ":" + method;
-				if(this.methods.containsKey(key)){
-					log.debug(key + " duplicated"); 
-				} else {
-					log.debug("register "+service.getClass().getSimpleName()+"\t" + key);
-					log.debug("register "+service.getClass().getSimpleName()+"\t"  + key2);
-				}
 				m.setAccessible(true);
 				MethodInstance mi = new MethodInstance(m, service);
-				this.methods.put(key, mi);  
-				this.methods.put(key2, mi);  
+				
+				String[] keys = paramSignature(module, m);
+				for(String key : keys){
+					if(this.methods.containsKey(key)){
+						log.debug(key + " overrided"); 
+					}  
+					this.methods.put(key, mi); 
+				} 
 			}  
 		} catch (SecurityException e) {
 			log.error(e.getMessage(), e);
@@ -182,53 +162,53 @@ public class RpcProcessor implements MessageProcessor{
 					if("".equals(method)){
 						method = m.getName();
 					}  
-				}
-				
-				String paramMD5 = ""; 
-				Class<?>[] paramTypes = m.getParameterTypes();
-				StringBuilder sb = new StringBuilder();
-				for(int i=0;i<paramTypes.length;i++){ 
-					sb.append(paramTypes[i].getCanonicalName());
-				}
-				paramMD5 = sb.toString();
-				String key = module + ":" + method+":"+paramMD5; 
-				String key2 = module + ":" + method;
-				this.methods.remove(key);
-				this.methods.remove(key2);
+				} 
+				String[] keys = paramSignature(module, m);
+				for(String key : keys){ 
+					this.methods.remove(key);
+				}  
 			}  
 		} catch (SecurityException e) {
 			log.error(e.getMessage(), e);
 		}   
-	}
+	}  
 	
-	private static boolean isBlank(String value){
-		return (value == null || "".equals(value.trim()));
-	}
-	
-
-	
-	private MethodInstance findMethod(Request req){ 
-		String paramTypesMD5 = "";
+	private MethodInstance matchMethod(Request req){ 
+		StringBuilder sb = new StringBuilder();
 		if(req.getParamTypes() != null){
 			for(String type : req.getParamTypes()){
-				paramTypesMD5 += type;
+				sb.append(type+",");
 			}
 		}
 		String module = req.getModule(); 
 		String method = req.getMethod();
-		String key = module+":"+method+":"+paramTypesMD5;//支持语言多态
-		String key2 = module+":"+method;
+		String key = module+":"+method+":"+sb.toString();  
 		if(this.methods.containsKey(key)){
 			return this.methods.get(key); 
-		} else {  
-			if(this.methods.containsKey(key2)){
-				return this.methods.get(key2); 
-			} else {
-				String errorMsg = String.format("%s:%s not found, module may not set, or wrong", module, method);
-				throw new IllegalArgumentException(errorMsg);
-			}
+		} else { 
+			String errorMsg = String.format("%s:%s not found, missing moudle settings?", module, method);
+			throw new IllegalArgumentException(errorMsg); 
 		}
 	}
+	
+	private String[] paramSignature(String module, Method m){
+		Class<?>[] paramTypes = m.getParameterTypes();
+		StringBuilder sb = new StringBuilder();
+		StringBuilder sb2 = new StringBuilder();
+		for(int i=0;i<paramTypes.length;i++){ 
+			sb.append(paramTypes[i].getSimpleName()+",");
+			sb2.append(paramTypes[i].getName()+",");
+		} 
+		
+		String key = module + ":" + m.getName()+":"+sb.toString(); 
+		String key2 = module + ":" + m.getName()+":"+sb2.toString(); 
+		String key3 = module + ":" + m.getName();
+		if(key.equals(key2)){
+			return new String[]{ key, key3};
+		}
+		return new String[]{ key, key2, key3};
+	}
+	
 	
 	private void checkParamTypes(MethodInstance target, Request req){
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
@@ -265,18 +245,17 @@ public class RpcProcessor implements MessageProcessor{
 			Object result = null;
 			Request req = codec.decodeRequest(msg); 
 			Request.normalize(req); 
-			if(isBlank(req.getMethod())){
+			if(StrKit.isEmpty(req.getMethod())){
 				result = object2Methods;
 			} else {
-				MethodInstance target = findMethod(req);
+				MethodInstance target = matchMethod(req);
 				checkParamTypes(target, req);
 				
 				Class<?>[] targetParamTypes = target.method.getParameterTypes();
 				Object[] invokeParams = new Object[targetParamTypes.length];  
 				Object[] reqParams = req.getParams(); 
-				for(int i=0; i<targetParamTypes.length; i++){  
-					//invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
-					invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);
+				for(int i=0; i<targetParamTypes.length; i++){   
+					invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
 			} 
@@ -300,7 +279,15 @@ public class RpcProcessor implements MessageProcessor{
 		return null; //should not here
 	}
 	
-	class MethodInstance{
+	public RpcCodec getCodec() {
+		return codec;
+	}
+
+	public void setCodec(RpcCodec codec) {
+		this.codec = codec;
+	} 
+	
+	private static class MethodInstance{
 		public Method method;
 		public Object instance;
 		
@@ -309,12 +296,36 @@ public class RpcProcessor implements MessageProcessor{
 			this.instance = instance;
 		} 
 	}
-
-	public RpcCodec getCodec() {
-		return codec;
-	}
-
-	public void setCodec(RpcCodec codec) {
-		this.codec = codec;
+	
+	public static class RpcMethod {
+		private List<String> modules = new ArrayList<String>();
+		private String name;
+		private List<String> paramTypes = new ArrayList<String>();
+		private String returnType;
+		
+		public List<String> getModules() {
+			return modules;
+		}
+		public void setModules(List<String> modules) {
+			this.modules = modules;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public List<String> getParamTypes() {
+			return paramTypes;
+		}
+		public void setParamTypes(List<String> paramTypes) {
+			this.paramTypes = paramTypes;
+		}
+		public String getReturnType() {
+			return returnType;
+		}
+		public void setReturnType(String returnType) {
+			this.returnType = returnType;
+		} 
 	} 
 }

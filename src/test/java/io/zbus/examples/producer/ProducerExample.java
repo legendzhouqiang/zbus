@@ -8,15 +8,16 @@ import io.zbus.mq.ProducerConfig;
 public class ProducerExample {
 
 	public static void main(String[] args) throws Exception { 
-		Broker broker = new Broker("localhost:15555"); 
+		Broker broker = new Broker(); 
+		broker.addServer("zbus.io"); 
 		ProducerConfig config = new ProducerConfig(broker);   
 		
 		Producer p = new Producer(config);
-		p.declareTopic("Topic1"); 
+		p.declareTopic("Hong"); 
 		
 		for(int i=0; i<10000; i++){
 		Message msg = new Message();
-		msg.setTopic("Topic1");
+		msg.setTopic("Hong");
 		msg.setBody("hello world" + System.currentTimeMillis()); 
 		try{
 			Message res = p.publish(msg);
@@ -25,7 +26,7 @@ public class ProducerExample {
 			e.printStackTrace();
 		}
 		
-		Thread.sleep(2000);
+		Thread.sleep(20);
 		}
 		 
 		broker.close();
