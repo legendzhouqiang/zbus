@@ -90,8 +90,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		registerHandler(Protocol.IMG, imgHandler);
 		registerHandler("favicon.ico", faviconHandler);
 		registerHandler(Protocol.PAGE, pageHandler);
-		registerHandler(Protocol.PING, pingHandler); 
-		registerHandler(Protocol.VERSION, versionHandler);
+		registerHandler(Protocol.PING, pingHandler);  
 		registerHandler(Protocol.TRACE, traceHandler);
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);    
@@ -328,16 +327,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			sess.write(res);
 		}
 	};
-	 	
-	private MessageHandler versionHandler = new MessageHandler() {
-		public void handle(Message msg, Session sess) throws IOException {
-			Message res = new Message();
-			res.setStatus(200); 
-			res.setId(msg.getId()); 
-			res.setBody(Protocol.VERSION_VALUE);
-			sess.write(res);
-		}
-	};
+	 	 
 	
 	private MessageHandler homeHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
