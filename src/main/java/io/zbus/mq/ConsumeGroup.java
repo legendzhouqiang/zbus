@@ -3,6 +3,7 @@ package io.zbus.mq;
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
 	private String filterTag; //message in group is filtered
+	private Integer groupFlag;
 	
 	//create group from another group
 	private String groupCopyFrom;
@@ -33,6 +34,7 @@ public class ConsumeGroup implements Cloneable {
 		startTime = msg.getConsumeStartTime();
 		startMsgId = msg.getConsumeStartMsgId();
 		filterTag = msg.getConsumeFilterTag();
+		groupFlag = msg.getConsumeGroupFlag();
 	}
 	
 	public String getGroupCopyFrom() {
@@ -76,14 +78,18 @@ public class ConsumeGroup implements Cloneable {
 	}
 	public void setDeleteOnExit(Boolean deleteOnExit) {
 		this.deleteOnExit = deleteOnExit;
-	}   
-	
+	}  
 	public String getFilterTag() {
 		return filterTag;
-	}
-
+	} 
 	public void setFilterTag(String filterTag) {
 		this.filterTag = filterTag;
+	} 
+	public Integer getGroupFlag() {
+		return groupFlag;
+	} 
+	public void setGroupFlag(Integer groupFlag) {
+		this.groupFlag = groupFlag;
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.JsonKit;
@@ -64,8 +63,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		restUrlCommands.add(Protocol.CONSUME);
 		restUrlCommands.add(Protocol.DECLARE);
 		restUrlCommands.add(Protocol.QUERY);
-		restUrlCommands.add(Protocol.REMOVE);
-		restUrlCommands.add(Protocol.PAUSE);
+		restUrlCommands.add(Protocol.REMOVE); 
 		restUrlCommands.add(Protocol.EMPTY);
 		
 		
@@ -100,21 +98,6 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 	}   
 	
-	private boolean validateMessage(Message msg, Session session) throws IOException{
-		final boolean ack = msg.isAck();  
-		String id = msg.getId();
-		String tag = msg.getTag();
-		if(id != null && id.length()>DiskMessage.ID_MAX_LEN){ 
-			if(ack) ReplyKit.reply400(msg, session, "Message.Id length should <= "+DiskMessage.ID_MAX_LEN);
-			return false;
-		}
-		if(tag != null && tag.length()>DiskMessage.TAG_MAX_LEN){ 
-			if(ack) ReplyKit.reply400(msg, session, "Message.Tag length should <= "+DiskMessage.TAG_MAX_LEN);
-			return false;
-		}
-		return true;
-	}
-	
 	private MessageHandler produceHandler = new MessageHandler() { 
 		@Override
 		public void handle(final Message msg, final Session sess) throws IOException {  
@@ -138,37 +121,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			
 			final boolean ack = msg.isAck();  
 			msg.removeHeader(Protocol.COMMAND);
-			msg.removeHeader(Protocol.ACK); 
-			Long ttl = msg.getTtl();
-			if(ttl != null){
-				try{ 
-					msg.setExpire(System.currentTimeMillis()+ttl); 
-				} catch(IllegalArgumentException e){
-					//ignore
-				}
-			}
-			 
-			Long delay = msg.getDelay();
-			if(delay != null){ 
-				if(delay > 0){
-					timer.schedule(new Runnable() { 
-						@Override
-						public void run() {
-							try {
-								mq.produce(msg, sess); 
-							} catch (IOException e) {
-								log.error(e.getMessage(), e);
-							}  
-						}
-					}, delay, TimeUnit.MILLISECONDS);
-					
-					if(ack){
-						ReplyKit.reply200(msg, sess);
-					}
-					return;
-				} 
-			}  
-			
+			msg.removeHeader(Protocol.ACK);  
 			mq.produce(msg, sess);  
 			
 			if(ack){
@@ -234,52 +187,127 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				target.write(msg);
 			} catch(Exception ex){
 				log.warn("Target(%s) write failed, Ignore", recver); 
-				return; //just ignore
+				return; 
 			}
 		}
-	}; 
+	};  
 	
-	private MessageQueue checkMQ(Message msg, Session sess)throws IOException { 
-		if(!auth(msg)){ 
-			ReplyKit.reply403(msg, sess);
-			return null;
+	private MessageHandler declareHandler = new MessageHandler() {  
+		@Override
+		public void handle(Message msg, Session sess) throws IOException { 
+			String topic = msg.getTopic();  
+			if(StrKit.isEmpty(topic)){ 
+				ReplyKit.reply400(msg, sess, "Missing topic");
+				return;
+			}
+			topic = topic.trim(); 
+			if(!auth(msg)){ 
+				ReplyKit.reply403(msg, sess);
+				return;
+			}   
+			  
+			
+    		MessageQueue mq = null;
+    		synchronized (mqTable) {
+    			mq = mqTable.get(topic);  
+    			if(mq == null){ 
+	    			mq = new DiskQueue(new File(config.storePath, topic));  
+	    			mq.setCreator(sess.getRemoteAddress()); 
+	    			mqTable.put(topic, mq);
+	    			log.info("MQ Created: %s", mq);
+    			}
+    		} 
+			
+			try {
+				Integer flag = msg.getTopicFlag();   
+				if(flag != null){
+					mq.setFlag(flag);
+				}
+				
+				String groupName = msg.getConsumeGroup();
+				ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
+				ConsumeGroupInfo info = mq.declareGroup(consumeGroup); 
+				
+				if(groupName != null){  
+					ReplyKit.replyJson(msg, sess, info);
+					log.info("ConsumeGroup declared: %s", consumeGroup); 
+				} else { 
+					ReplyKit.replyJson(msg, sess, mq.topicInfo());
+				}  
+				
+			} catch (Exception e) { 
+				log.error(e.getMessage(), e);
+				ReplyKit.reply500(msg, sess, e); 
+			} 
+			
+			trackService.publish();  
 		}
-		String topic = msg.getTopic(); 
-		if(StrKit.isEmpty(topic)){ 
-			ReplyKit.reply400(msg, sess, "Missing topic");
-			return null;
-		} 
-		topic = topic.trim(); 
-		MessageQueue mq = mqTable.get(topic);
-		if(mq == null){ 
-			ReplyKit.reply404(msg, sess);
-			return null;
+	};
+	
+	private MessageHandler queryHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException { 
+			if(msg.getTopic() == null){ 
+				ReplyKit.replyJson(msg, sess, getServerInfo()); 
+				return;
+			} 
+			
+			MessageQueue mq = findMQ(msg, sess);
+	    	if(mq == null){ 
+	    		ReplyKit.reply404(msg, sess);
+				return;
+			}
+	    	TopicInfo topicInfo = mq.topicInfo();
+	    	topicInfo.serverAddress = mqServer.getServerAddress(); 
+	    	
+			String group = msg.getConsumeGroup();
+			if(group == null){
+				ReplyKit.replyJson(msg, sess, topicInfo);
+				return;
+			}
+	    	
+			ConsumeGroupInfo groupInfo = topicInfo.consumeGroup(group); 
+	    	if(groupInfo == null){
+	    		String hint = String.format("404: ConsumeGroup(%s) Not Found", group);
+	    		ReplyKit.reply404(msg, sess, hint);
+	    		return;
+	    	}
+	    	ReplyKit.replyJson(msg, sess, groupInfo);  
 		}  
-		return mq;
-	}
+	}; 
 	
 	private MessageHandler removeHandler = new MessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {  
-			MessageQueue mq = checkMQ(msg, sess);
-			if(mq == null) return; 
+			String topic = msg.getTopic(); 
+			if(StrKit.isEmpty(topic)){ 
+				ReplyKit.reply400(msg, sess, "Missing topic");
+				return;
+			} 
+			topic = topic.trim(); 
 			
+			if(!auth(msg)){ 
+				ReplyKit.reply403(msg, sess);
+				return;
+			} 
+			
+			MessageQueue mq = mqTable.get(topic);
+			if(mq == null){ 
+				ReplyKit.reply404(msg, sess);
+				return;
+			}   
 			
 			String groupName = msg.getConsumeGroup();
 			if(groupName != null){
 				try {
 					mq.removeGroup(groupName);
 					trackService.publish(); 
-					ReplyKit.reply200(msg, sess);
-					return;
+					ReplyKit.reply200(msg, sess); 
 				} catch (FileNotFoundException e){
-					ReplyKit.reply404(msg, sess, "ConsumeGroup("+groupName + ") Not Found");
-					return;
-				} catch (Exception e){
-					ReplyKit.reply500(msg, sess, e);
-					return;
+					ReplyKit.reply404(msg, sess, "ConsumeGroup("+groupName + ") Not Found"); 
 				}  
+				return;
 			}  
+			
 			mq = mqTable.remove(mq.name());
 			if(mq != null){
 				mq.removeTopic();
@@ -291,59 +319,6 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		} 
 	};
 	
-	private MessageHandler declareHandler = new MessageHandler() {  
-		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}
-    		
-			String topic = msg.getTopic();  
-			if(StrKit.isEmpty(topic)){ 
-				ReplyKit.reply400(msg, sess, "Missing topic");
-				return;
-			}
-			topic = topic.trim();
-			
-			Integer flag = msg.getFlag();   
-			String groupName = msg.getConsumeGroup();
-    		ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
-    		MessageQueue mq = null;
-    		synchronized (mqTable) {
-    			mq = mqTable.get(topic); 
-    			boolean newMq = false;
-    			if(mq == null){
-    				newMq = true;
-					File mqFile = new File(config.storePath, topic);
-	    			mq = new DiskQueue(mqFile); 
-	    			if(flag != null){
-	    				mq.setFlag(flag);
-	    			}
-	    			mq.setCreator(sess.getRemoteAddress()); 
-	    			mqTable.put(topic, mq);
-    			}
-    			try {
-					mq.declareGroup(consumeGroup); 
-					trackService.publish(); 
-					if(groupName == null){
-						ReplyKit.replyJson(msg, sess, mq.topicInfo());
-					} else {
-						ConsumeGroupInfo info = mq.topicInfo().consumeGroup(groupName);
-						ReplyKit.replyJson(msg, sess, info);
-					} 
-					if(newMq){
-						log.info("MQ Created: %s", mq);
-					}   
-					log.info("MQ Declared: %s", consumeGroup); 
-				} catch (Exception e) { 
-					log.error(e.getMessage(), e);
-					ReplyKit.reply500(msg, sess, e); 
-				} 
-    		}
-		}
-	};   
-	
 	private MessageHandler pingHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
@@ -353,8 +328,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			sess.write(res);
 		}
 	};
-	 
-	
+	 	
 	private MessageHandler versionHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
@@ -381,7 +355,6 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};  
 	
-
 	private Message handleTemplateRequest(String prefixPath, String url){
 		Message res = new Message(); 
 		if(!url.startsWith(prefixPath)){
@@ -493,37 +466,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			} 
 			sess.write(res);
 		}
-	}; 
-	
-	
-	
-	private MessageHandler queryHandler = new MessageHandler() {
-		public void handle(Message msg, Session sess) throws IOException {
-			Object res = null;
-			if(msg.getTopic() == null){
-				res = getServerInfo(); 
-			} else { 
-				MessageQueue mq = findMQ(msg, sess);
-		    	if(mq == null){ 
-		    		ReplyKit.reply404(msg, sess);
-					return;
-				}
-		    	TopicInfo topicInfo = mq.topicInfo();
-				res = topicInfo;
-		    	String group = msg.getConsumeGroup();
-		    	if(group != null && topicInfo.consumeGroupList != null){
-		    		res = topicInfo.consumeGroup(group); 
-		    		if(res == null){
-			    		String hint = String.format("404: ConsumeGroup(%s) Not Found", group);
-			    		ReplyKit.reply404(msg, sess, hint);
-			    		return;
-		    		}
-		    	}
-			} 
-			
-			ReplyKit.replyJson(msg, sess, res); 
-		}
-	}; 
+	};  
 	
 	private MessageHandler heartbeatHandler = new MessageHandler() {
 		@Override
@@ -550,7 +493,6 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	 
-	
 	private MessageHandler trackSubHandler = new MessageHandler() {
 		
 		@Override
@@ -583,8 +525,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		traceService.cleanSession(sess);
 	} 
 	
-	private boolean auth(Message msg){ 
-		//String appid = msg.getAppid();
+	private boolean auth(Message msg){  
 		//String token = msg.getToken(); 
 		//TODO add authentication
 		return true;
@@ -622,7 +563,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		return info;
     }
     
-	public void loadMQ() throws IOException {
+	public void loadDiskQueue() throws IOException {
 		log.info("Loading DiskQueues...");
 		mqTable.clear();
 		
@@ -798,9 +739,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	
     private MessageQueue findMQ(Message msg, Session sess) throws IOException{
 		String topic = msg.getTopic();
-		if(topic == null){ 
-			topic = msg.getHeader("mq"); //TODO backward compatible
+		if(topic == null){
+			ReplyKit.reply400(msg, sess, "Missing topic"); 
+    		return null;
 		}
+		
 		MessageQueue mq = mqTable.get(topic); 
     	if(mq == null){
     		ReplyKit.reply404(msg, sess); 
@@ -808,7 +751,22 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     	} 
     	return mq;
 	}
-     
+
+	private boolean validateMessage(Message msg, Session session) throws IOException{
+		final boolean ack = msg.isAck();  
+		String id = msg.getId();
+		String tag = msg.getTag();
+		if(id != null && id.length()>DiskMessage.ID_MAX_LEN){ 
+			if(ack) ReplyKit.reply400(msg, session, "Message.Id length should <= "+DiskMessage.ID_MAX_LEN);
+			return false;
+		}
+		if(tag != null && tag.length()>DiskMessage.TAG_MAX_LEN){ 
+			if(ack) ReplyKit.reply400(msg, session, "Message.Tag length should <= "+DiskMessage.TAG_MAX_LEN);
+			return false;
+		}
+		return true;
+	}
+    
     public void registerHandler(String command, MessageHandler handler){
     	this.handlerMap.put(command, handler);
     } 

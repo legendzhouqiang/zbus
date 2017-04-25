@@ -58,7 +58,7 @@ public class TraceService implements Closeable{
 	}
 	
 	public void subscribe(Message message, Session session){
-		Integer flag = message.getFlag();
+		Integer flag = message.getTopicFlag();
 		if(flag != null && flag == 0){//flag 0 means unsubscribe
 			cleanSession(session);
 			return;

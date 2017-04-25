@@ -96,7 +96,7 @@ public class MqServer implements Closeable{
 		
 		mqAdaptor.setVerbose(config.verbose);
 		try {
-			mqAdaptor.loadMQ();
+			mqAdaptor.loadDiskQueue();
 		} catch (IOException e) {
 			log.error("LoadMQ error: " + e);
 		}   

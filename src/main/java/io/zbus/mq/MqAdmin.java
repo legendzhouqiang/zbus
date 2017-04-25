@@ -112,45 +112,6 @@ public class MqAdmin {
 		return res;  
 	} 
 	
-	public Object[] pauseTopic(String topic) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
-		 
-		Object[] res = new Object[pools.length];
-		for(int i=0; i<pools.length; i++){
-			MqClientPool pool = pools[i];
-			MqClient client = null;
-			try { 
-				client = pool.borrowClient();
-				configClient(client).pauseTopic(topic);
-			} catch (Exception e) { 
-				res[i] = e;
-			} finally {
-				pool.returnClient(client);
-			}
-		}
-		return res;  
-	} 
-	
-	public Object[] resumeTopic(String topic) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
-		 
-		Object[] res = new Object[pools.length];
-		for(int i=0; i<pools.length; i++){
-			MqClientPool pool = pools[i];
-			MqClient client = null;
-			try { 
-				client = pool.borrowClient();
-				configClient(client).resumeTopic(topic);
-			} catch (Exception e) { 
-				res[i] = e;
-			} finally {
-				pool.returnClient(client);
-			}
-		}
-		return res;  
-	} 
-	
-	
 	public ConsumeGroupInfo[] queryGroup(String topic, String group) throws IOException, InterruptedException {
 		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
 		 
@@ -228,44 +189,7 @@ public class MqAdmin {
 		}
 		return res; 
 	} 
-	
-	public Object[] pauseGroup(String topic, String group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
-		 
-		Object[] res = new Object[pools.length];
-		for(int i=0; i<pools.length; i++){
-			MqClientPool pool = pools[i];
-			MqClient client = null;
-			try { 
-				client = pool.borrowClient();
-				configClient(client).pauseGroup(topic, group);
-			} catch (Exception e) { 
-				res[i] = e;
-			} finally {
-				pool.returnClient(client);
-			}
-		}
-		return res; 
-	} 
-	
-	public Object[] resumeGroup(String topic, String group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
-		 
-		Object[] res = new Object[pools.length];
-		for(int i=0; i<pools.length; i++){
-			MqClientPool pool = pools[i];
-			MqClient client = null;
-			try { 
-				client = pool.borrowClient();
-				configClient(client).resumeGroup(topic, group);
-			} catch (Exception e) { 
-				res[i] = e;
-			} finally {
-				pool.returnClient(client);
-			}
-		}
-		return res; 
-	}  
+	  
 	
 	public ServerSelector getAdminServerSelector() {
 		return adminServerSelector;

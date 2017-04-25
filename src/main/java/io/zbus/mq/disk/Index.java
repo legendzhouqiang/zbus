@@ -50,6 +50,7 @@ public class Index extends MappedFile {
 	private volatile long blockStart = 0;
 	private volatile int flag = 0;
 	private volatile AtomicLong messageCount = new AtomicLong(0);
+	private volatile long createdTime = System.currentTimeMillis();
 	
 	public final AtomicReference<CountDownLatch> newDataAvailable = new AtomicReference<CountDownLatch>(new CountDownLatch(1));;
 
@@ -335,7 +336,7 @@ public class Index extends MappedFile {
 		this.blockStart = buffer.getLong(); 
 		this.flag = buffer.getInt();
 		this.messageCount.set(buffer.getLong());
-		
+		this.createdTime = buffer.getLong();
 		readExt();
 	}
 
@@ -347,6 +348,7 @@ public class Index extends MappedFile {
 		buffer.putLong(this.blockStart);
 		buffer.putInt(this.flag);
 		buffer.putLong(this.messageCount.get());
+		buffer.putLong(System.currentTimeMillis());
 		initExt();
 	}
 
@@ -434,6 +436,10 @@ public class Index extends MappedFile {
 	public String getName() {
 		return name;
 	} 
+	
+	public long getCreatedTime() {
+		return createdTime;
+	}
 
 	public static class Offset {
 		public long baseOffset;

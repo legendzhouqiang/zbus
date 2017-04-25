@@ -159,14 +159,10 @@ $("#server-list").on("change", "input.server", function() {
    
     updateTrackInfo(); 
 }); 
-
-$.get('/version',function(data){  
-	$("#version").text(data); 
-});  
-
-
+ 
 
 $.getJSON('/query',function(serverInfo){   
+	$("#version").text(serverInfo.serverVersion); 
 	trackBroker = new TrackBroker(serverInfo.serverAddress);  
 	trackBroker.onServerUpdated = function(serverAddress){
 		showTopicTable(trackBroker);

@@ -21,6 +21,8 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 			   +------------------------------------------------+      |
 			   | MessageCount                                  8|      |
 			   +------------------------------------------------+      |
+			   | CreatedTime                                   8|      |
+			   +------------------------------------------------+      |
 			   |               Extension                 to 1024|      |
 			   +------------------------------------------------+      |
 		       |0_createdTs | baseOffset | endOffset | updatedTs|<-----+

@@ -18,9 +18,7 @@ public class Protocol {
 	//Topic control
 	public static final String DECLARE = "declare";  
 	public static final String QUERY   = "query"; 
-	public static final String REMOVE  = "remove";  
-	public static final String PAUSE   = "pause";  
-	public static final String RESUME  = "resume";  
+	public static final String REMOVE  = "remove";
 	public static final String EMPTY   = "empty";   
 	
 	//High Availability (HA) 
@@ -40,7 +38,7 @@ public class Protocol {
 	//=============================[2] Parameter Values================================================
 	public static final String COMMAND       		= "cmd";     
 	public static final String TOPIC         		= "topic";
-	public static final String FLAG          		= "flag";
+	public static final String TOPIC_FLAG          	= "topic_flag"; 
 	public static final String TAG   	     		= "tag";  
 	public static final String OFFSET        		= "offset";
 	
@@ -51,6 +49,7 @@ public class Protocol {
 	public static final String CONSUME_START_TIME        = "consume_start_time";  
 	public static final String CONSUME_WINDOW            = "consume_window";  
 	public static final String CONSUME_FILTER_TAG        = "consume_filter_tag";  
+	public static final String CONSUME_GROUP_FLAG        = "consume_group_flag";
 	
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";

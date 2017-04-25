@@ -143,6 +143,7 @@ public class DiskQueue implements MessageQueue{
 
 		data.body = msg.toBytes(); 
 		writer.write(data); 
+		this.lastUpdateTime = System.currentTimeMillis(); 
 		dispatch();
 	}
 
@@ -347,6 +348,7 @@ public class DiskQueue implements MessageQueue{
 	public TopicInfo topicInfo() {
 		TopicInfo info = new TopicInfo(); 
 		info.topicName = name;
+		info.createdTime = index.getCreatedTime();
 		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
 		info.flag = getFlag();
@@ -394,6 +396,7 @@ public class DiskQueue implements MessageQueue{
 		
 		public ConsumeGroupInfo getConsumeGroupInfo(){
 			ConsumeGroupInfo info = new ConsumeGroupInfo(); 
+			info.topicName = reader.getIndexName();
 			info.filterTag = reader.getFilterTag();
 			info.consumerCount = pullSessions.size();
 			info.messageCount = reader.getMessageCount();

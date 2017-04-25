@@ -93,9 +93,14 @@ public class MqClient extends MessageClient{
 	
 	
 	public TopicInfo declareTopic(String topic) throws IOException, InterruptedException{
+		return declareTopic(topic, null);
+	}
+	
+	public TopicInfo declareTopic(String topic, Integer topicFlag) throws IOException, InterruptedException{
 		Message msg = new Message();
 		msg.setCommand(Protocol.DECLARE);
 		msg.setTopic(topic); 
+		msg.setTopicFlag(topicFlag);
 		 
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, TopicInfo.class); 
@@ -111,6 +116,7 @@ public class MqClient extends MessageClient{
 		msg.setConsumeStartMsgId(group.getStartMsgId());
 		msg.setConsumeStartOffset(group.getStartOffset()); 
 		msg.setConsumeStartTime(group.getStartTime());
+		msg.setTopicFlag(group.getGroupFlag());
 		
 		
 		Message res = invokeSync(msg, invokeTimeout);
@@ -130,37 +136,8 @@ public class MqClient extends MessageClient{
 		 
 		Message res = invokeSync(msg, invokeTimeout);
 		checkResult(res);
-	}  
-	
-	
-	public void pauseTopic(String topic) throws IOException, InterruptedException{
-		pauseGroup(topic, null);
-	}
-	
-	public void pauseGroup(String topic, String group) throws IOException, InterruptedException{
-		Message msg = new Message();
-		msg.setCommand(Protocol.PAUSE);
-		msg.setTopic(topic); 
-		msg.setConsumeGroup(group);
-		 
-		Message res = invokeSync(msg, invokeTimeout);
-		checkResult(res);
-	}
-	
-	
-	public void resumeTopic(String topic) throws IOException, InterruptedException{
-		resumeGroup(topic, null);
-	}
-	
-	public void resumeGroup(String topic, String group) throws IOException, InterruptedException{
-		Message msg = new Message();
-		msg.setCommand(Protocol.RESUME);
-		msg.setTopic(topic); 
-		msg.setConsumeGroup(group);
-		 
-		Message res = invokeSync(msg, invokeTimeout);
-		checkResult(res);
-	} 
+	}   
+	 
 	
 	public void emptyTopic(String topic) throws IOException, InterruptedException{
 		emptyGroup(topic, null);

@@ -242,4 +242,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			block.close();
 		}
 	}
+	
+	public String getIndexName(){
+		return this.index.getName();
+	}
 } 

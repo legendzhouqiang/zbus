@@ -457,13 +457,23 @@ public class Message {
 		return this;
 	} 
 	
-	public Integer getFlag(){
-		String value = this.getHeader(FLAG);
+	public Integer getTopicFlag(){
+		String value = this.getHeader(TOPIC_FLAG);
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
-	public Message setFlag(Integer value) {
-		this.setHeader(FLAG, value);
+	public Message setTopicFlag(Integer value) {
+		this.setHeader(TOPIC_FLAG, value);
+		return this;
+	} 
+	
+	public Integer getConsumeGroupFlag(){
+		String value = this.getHeader(CONSUME_GROUP_FLAG);
+		if(value == null) return null;
+		return Integer.valueOf(value);
+	} 
+	public Message setConsumeGroupFlag(Integer value) {
+		this.setHeader(CONSUME_GROUP_FLAG, value);
 		return this;
 	} 
 	
