@@ -211,7 +211,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     			mq = mqTable.get(topic);  
     			if(mq == null){ 
 	    			mq = new DiskQueue(new File(config.storePath, topic));  
-	    			mq.setCreator(sess.getRemoteAddress()); 
+	    			mq.setCreator(msg.getToken()); 
 	    			mqTable.put(topic, mq);
 	    			log.info("MQ Created: %s", mq);
     			}
@@ -231,7 +231,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 					ReplyKit.replyJson(msg, sess, info);
 					log.info("ConsumeGroup declared: %s", consumeGroup); 
 				} else { 
-					ReplyKit.replyJson(msg, sess, mq.topicInfo());
+					TopicInfo topicInfo = mq.topicInfo();
+			    	topicInfo.serverAddress = mqServer.getServerAddress(); 
+					ReplyKit.replyJson(msg, sess, topicInfo);
 				}  
 				
 			} catch (Exception e) { 

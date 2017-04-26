@@ -2,35 +2,22 @@ package io.zbus.mq.disk;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+ 
 
-/**
- * 
- * 000--blockNumber: 8
- * 008--offset: 4 
- * 012--tag: 128
- * 
- * @author Rushmore
- *
- */
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
-	private static final int READER_FILE_SIZE = 256;  
-	private static final int FITER_TAG_POS = 12; 
-	private static final int FLAG_POS = FITER_TAG_POS + 128;  
+	private static final int READER_FILE_SIZE = 1024;  
+	private static final int FITER_TAG_POS = 12;  
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
 	 
 	private long blockNumber;
 	private int offset = 0; 
-	private String filterTag; //max: 127 bytes
-	private int flag = 0;
+	private String filterTag; //max: 127 bytes 
 	
 	private String[] filterTagParts;
 	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
-	
-	private final Lock lock = new ReentrantLock();  
+	  
 	
 	public QueueReader(Index index, String readerGroup) throws IOException{
 		this.index = index; 
@@ -151,8 +138,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		if(tagLen > 0){
 			this.filterTag = new String(tag, 1, tagLen);
 			this.filterTagParts = this.filterTag.split("[.]");
-		}
-		this.flag = buffer.getInt();
+		} 
 	}
 	
 	@Override
@@ -164,9 +150,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		
 		//write tag
 		buffer.position(FITER_TAG_POS);
-		buffer.put((byte)0); //tag default to null
-		buffer.position(FLAG_POS);
-		buffer.putInt(this.flag);
+		buffer.put((byte)0); //tag default to null 
 	}   
 	 
 	public int getOffset() {
@@ -211,22 +195,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		buffer.position(0); 
 		buffer.putLong(blockNumber); 
 		buffer.putInt(offset);
-	}
-	
-	public int getFlag() {
-		return flag;
-	}
-	
-	public void setFlag(int value){
-		lock.lock();
-		try{   
-			this.flag = value;
-			buffer.position(FLAG_POS);
-			buffer.putInt(value);
-		} finally {
-			lock.unlock();
-		}  
-	}
+	} 
 
 	@Override
 	public int compareTo(QueueReader o) { 

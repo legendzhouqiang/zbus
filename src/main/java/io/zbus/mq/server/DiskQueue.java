@@ -94,10 +94,17 @@ public class DiskQueue implements MessageQueue{
 				//3) consume from the very beginning
 				group = new DiskConsumeGroup(this.index, consumeGroup);  
 			}   
+			String creator = ctrl.getCreator();
+			if(creator != null){
+				group.reader.setCreator(ctrl.getCreator());
+			}
 			consumeGroups.put(consumeGroup, group); 
-		}
-		
+		} 
 		group.reader.setFilterTag(ctrl.getFilterTag());
+		Integer groupFlag = ctrl.getGroupFlag();
+		if(groupFlag != null){
+			group.reader.setFlag(groupFlag);
+		}
 		
 		if(ctrl.getStartOffset() != null){
 			boolean seekOk = group.reader.seek(ctrl.getStartOffset(), ctrl.getStartMsgId());
@@ -274,12 +281,12 @@ public class DiskQueue implements MessageQueue{
 	
 	@Override
 	public String getCreator() {
-		return index.getExt(0);
+		return index.getCreator();
 	}
 
 	@Override
 	public void setCreator(String value) { 
-		index.setExt(0, value);
+		index.setCreator(value);
 	} 
 	
 	@Override
@@ -398,6 +405,10 @@ public class DiskQueue implements MessageQueue{
 			ConsumeGroupInfo info = new ConsumeGroupInfo(); 
 			info.topicName = reader.getIndexName();
 			info.filterTag = reader.getFilterTag();
+			info.creator = reader.getCreator();
+			info.flag = reader.getFlag();
+			info.createdTime = reader.getCreatedTime();
+			info.lastUpdatedTime = reader.getUpdatedTime();
 			info.consumerCount = pullSessions.size();
 			info.messageCount = reader.getMessageCount();
 			info.groupName = groupName;

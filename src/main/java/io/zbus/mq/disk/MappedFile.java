@@ -9,6 +9,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -17,13 +19,36 @@ import io.zbus.kit.logging.LoggerFactory;
 public class MappedFile implements Closeable {   
 	private static final Logger log = LoggerFactory.getLogger(MappedFile.class); 
 	
+	public static final int HeadSize = 1024; 
+	
+	protected static final int CreatorPos = 512-128; //creator max length 127(another 1 byte for length)
+	protected static final int CreatedTimePos = CreatorPos-8;
+	protected static final int UpdatedTimePos = CreatorPos-16;
+	protected static final int FlagPos = CreatorPos-20;
+	
+	protected volatile int flag;
+	protected volatile long createdTime = System.currentTimeMillis();
+	protected volatile long updatedTime = System.currentTimeMillis(); 
+	protected volatile String creator; //max length 127
+	
+	// Extension
+	protected static final int ExtItemSize = 128;
+	protected static final int ExtItemCount = 4;
+	protected static final int ExtOffset = HeadSize - ExtItemSize * ExtItemCount; 
+	protected String[] extentions = new String[ExtItemCount];
+	
 	protected MappedByteBuffer buffer;  
-	protected FileChannel fileChannel;  
+	protected FileChannel fileChannel; 
+	protected Lock lock = new ReentrantLock();
 	
 	private RandomAccessFile randomAccessFile; 
 	private File diskFile;
 	
-	protected void load(File file, int fileSize) throws IOException {  
+	
+	protected void load(File file, int fileSize) throws IOException {
+		if(fileSize < 1024){
+			throw new IllegalArgumentException("fileSize should >= 1024");
+		}
 		try { 
 			boolean fileExits = file.exists();
 			if(!fileExits){
@@ -44,9 +69,41 @@ public class MappedFile implements Closeable {
 					randomAccessFile.seek(size);
 					randomAccessFile.write(new byte[(int) (fileSize - size)]);
 				} 
+				
+				buffer.position(CreatorPos); 
+				byte len = buffer.get();
+				if(len <= 0){
+					creator = null;
+				} else {
+					byte[] data = new byte[127];
+					buffer.get(data);
+					creator = new String(data, 0, len);
+				}
+				buffer.position(CreatedTimePos); 
+				createdTime = buffer.getLong();
+				buffer.position(UpdatedTimePos);
+				updatedTime = buffer.getLong();
+				buffer.position(FlagPos);
+				flag = buffer.getInt();
+				
+				readExt();
+				
 				loadDefaultData();
 			} else { 
-				writeDefaultData();
+				
+				buffer.position(CreatorPos); 
+				buffer.put((byte)0); 
+				
+				buffer.position(CreatedTimePos); 
+				buffer.putLong(createdTime);
+				buffer.position(UpdatedTimePos);
+				buffer.putLong(updatedTime);
+				buffer.position(FlagPos);
+				buffer.putInt(flag);
+				
+				initExt();
+				
+				writeDefaultData(); 
 			}
 			 
 		} catch (Exception e) {
@@ -98,5 +155,124 @@ public class MappedFile implements Closeable {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
+	}  
+
+	public int getFlag() {
+		return flag;
+	}
+
+	public void setFlag(int value) {
+		flag = value;
+		try {
+			lock.lock();
+			buffer.position(FlagPos);
+			buffer.putInt(flag);
+		} finally {
+			lock.unlock();
+		}
 	} 
+	
+	public long getCreatedTime() {
+		return createdTime;
+	}
+	
+	public long getUpdatedTime() {
+		return updatedTime;
+	}
+
+	public void setUpdatedTime(long value) {
+		updatedTime = value;
+		try {
+			lock.lock();
+			buffer.position(UpdatedTimePos);
+			buffer.putLong(updatedTime);
+		} finally {
+			lock.unlock();
+		}
+	} 
+	
+	public String getCreator() {
+		return creator;
+	}
+
+	public void setCreator(String value) {
+		if(value != null && value.length() > 127){
+			throw new IllegalArgumentException("Creator("+value+") length should < 127");
+		}
+		this.creator = value;
+		try {
+			lock.lock();
+			buffer.position(CreatorPos); 
+			if(creator == null){
+				this.buffer.put((byte)0);
+			} else {
+				buffer.put((byte)creator.length());
+				buffer.put(creator.getBytes());
+			}
+		} finally {
+			lock.unlock();
+		}
+	} 
+	
+	private void initExt() {
+		for (int i = 0; i < ExtItemCount; i++) {
+			setExt(i, null);
+		}
+	}
+
+	private void readExt() throws IOException {
+		for (int i = 0; i < ExtItemCount; i++) {
+			readExtByIndex(i);
+		}
+	}
+
+	private void readExtByIndex(int idx) throws IOException {
+		this.buffer.position(ExtOffset + ExtItemSize * idx);
+		int len = buffer.get();
+		if (len <= 0) {
+			this.extentions[idx] = null;
+			return;
+		}
+		if (len > ExtItemSize - 1) {
+			throw new IOException("length of extension field invalid, too long");
+		}
+		byte[] bb = new byte[len];
+		this.buffer.get(bb);
+		this.extentions[idx] = new String(bb);
+	}
+
+	public void setExt(int idx, String value) {
+		if (idx < 0) {
+			throw new IllegalArgumentException("idx must >=0");
+		}
+		if (idx >= ExtItemCount) {
+			throw new IllegalArgumentException("idx must <" + ExtItemCount);
+		}
+		try {
+			lock.lock();
+			this.extentions[idx] = value;
+			this.buffer.position(ExtOffset + ExtItemSize * idx);
+			if (value == null) {
+				this.buffer.put((byte) 0);
+				return;
+			}
+			if (value.length() > ExtItemSize - 1) {
+				throw new IllegalArgumentException(value + " too long");
+			}
+			this.buffer.put((byte) value.length());
+			this.buffer.put(value.getBytes());
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public String getExt(int idx) {
+		if (idx < 0) {
+			throw new IllegalArgumentException("idx must >=0");
+		}
+		if (idx >= ExtItemCount) {
+			throw new IllegalArgumentException("idx must <" + ExtItemCount);
+		}
+		return this.extentions[idx];
+	}
 }

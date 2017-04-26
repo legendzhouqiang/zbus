@@ -4,6 +4,7 @@ public class ConsumeGroup implements Cloneable {
 	private String groupName;
 	private String filterTag; //message in group is filtered
 	private Integer groupFlag;
+	private String creator;
 	
 	//create group from another group
 	private String groupCopyFrom;
@@ -35,6 +36,7 @@ public class ConsumeGroup implements Cloneable {
 		startMsgId = msg.getConsumeStartMsgId();
 		filterTag = msg.getConsumeFilterTag();
 		groupFlag = msg.getConsumeGroupFlag();
+		creator = msg.getToken(); //token as creator
 	}
 	
 	public String getGroupCopyFrom() {
@@ -90,6 +92,12 @@ public class ConsumeGroup implements Cloneable {
 	} 
 	public void setGroupFlag(Integer groupFlag) {
 		this.groupFlag = groupFlag;
+	} 
+	public String getCreator() {
+		return creator;
+	} 
+	public void setCreator(String creator) {
+		this.creator = creator;
 	}
 
 	@Override

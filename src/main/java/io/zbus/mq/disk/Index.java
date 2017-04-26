@@ -5,23 +5,9 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.zbus.kit.FileKit;
-
-/**
- * 
- * 000-- IndexVersion: 4 
- * 004-- BlockCount: 4
- * 008-- BlockStart: 8
- * 016-- Flag: 4
- * 020-- MessageCount: 8 
- * 
- * 
- * @author Rushmore
- *
- */
+ 
 public class Index extends MappedFile {
 	public static final int IndexVersion  = 0x01;
 	public static final String IndexSuffix = ".idx";
@@ -33,32 +19,20 @@ public class Index extends MappedFile {
 	public static final long BlockMaxSize = 64 * 1024 * 1024; // default to 64M
 	
 
-	private static final int OffsetSize = 28;
-	private static final int IndexHeadSize = 1024;
-	private static final int IndexSize = IndexHeadSize + BlockMaxCount * OffsetSize;
+	private static final int OffsetSize = 28; 
+	private static final int IndexSize = HeadSize + BlockMaxCount * OffsetSize;
 
-	private static final int BlockCountPos = 4; 
-	private static final int FlagPos = 16;
-	private static final int MessageCountPos = 20;
-	
-	// Extension
-	private static final int ExtItemSize = 128;
-	private static final int ExtItemCount = 4;
-	private static final int ExtOffset = IndexHeadSize - ExtItemSize * ExtItemCount; 
+	private static final int BlockCountPos = 4;  
+	private static final int MessageCountPos = 20; 
 	
 	private volatile int blockCount = 0;
-	private volatile long blockStart = 0;
-	private volatile int flag = 0;
-	private volatile AtomicLong messageCount = new AtomicLong(0);
-	private volatile long createdTime = System.currentTimeMillis();
+	private volatile long blockStart = 0; 
+	private volatile AtomicLong messageCount = new AtomicLong(0); 
 	
 	public final AtomicReference<CountDownLatch> newDataAvailable = new AtomicReference<CountDownLatch>(new CountDownLatch(1));;
 
-	private File indexDir;
-	private Lock lock = new ReentrantLock();
-	private final String name;
-
-	private String[] extentions = new String[ExtItemCount];
+	private File indexDir; 
+	private final String name; 
 
 	public Index(File dir) throws IOException {
 		this.indexDir = dir;
@@ -215,7 +189,7 @@ public class Index extends MappedFile {
 	}
 	
 	private int blockPosition(long blockNumber){ 
-		return (int)(IndexHeadSize + (blockNumber%BlockMaxCount)*OffsetSize);
+		return (int)(HeadSize + (blockNumber%BlockMaxCount)*OffsetSize);
 	}
 	
 	public int currentWriteOffset() throws IOException{
@@ -333,11 +307,9 @@ public class Index extends MappedFile {
 			throw new IllegalStateException("IndexVersion NOT matched");
 		} 
 		this.blockCount = buffer.getInt(); 
-		this.blockStart = buffer.getLong(); 
-		this.flag = buffer.getInt();
+		this.blockStart = buffer.getLong();  
 		this.messageCount.set(buffer.getLong());
-		this.createdTime = buffer.getLong();
-		readExt();
+		this.createdTime = buffer.getLong(); 
 	}
 
 	@Override
@@ -345,90 +317,11 @@ public class Index extends MappedFile {
 		buffer.position(0);
 		buffer.putInt(IndexVersion);
 		buffer.putInt(blockCount);
-		buffer.putLong(this.blockStart);
-		buffer.putInt(this.flag);
+		buffer.putLong(this.blockStart); 
 		buffer.putLong(this.messageCount.get());
-		buffer.putLong(System.currentTimeMillis());
-		initExt();
-	}
-
-	private void initExt() {
-		for (int i = 0; i < ExtItemCount; i++) {
-			setExt(i, null);
-		}
-	}
-
-	private void readExt() throws IOException {
-		for (int i = 0; i < ExtItemCount; i++) {
-			readExtByIndex(i);
-		}
-	}
-
-	private void readExtByIndex(int idx) throws IOException {
-		this.buffer.position(ExtOffset + ExtItemSize * idx);
-		int len = buffer.get();
-		if (len <= 0) {
-			this.extentions[idx] = null;
-			return;
-		}
-		if (len > ExtItemSize - 1) {
-			throw new IOException("length of extension field invalid, too long");
-		}
-		byte[] bb = new byte[len];
-		this.buffer.get(bb);
-		this.extentions[idx] = new String(bb);
-	}
-
-	public void setExt(int idx, String value) {
-		if (idx < 0) {
-			throw new IllegalArgumentException("idx must >=0");
-		}
-		if (idx >= ExtItemCount) {
-			throw new IllegalArgumentException("idx must <" + ExtItemCount);
-		}
-		try {
-			lock.lock();
-			this.extentions[idx] = value;
-			this.buffer.position(ExtOffset + ExtItemSize * idx);
-			if (value == null) {
-				this.buffer.put((byte) 0);
-				return;
-			}
-			if (value.length() > ExtItemSize - 1) {
-				throw new IllegalArgumentException(value + " too long");
-			}
-			this.buffer.put((byte) value.length());
-			this.buffer.put(value.getBytes());
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	public String getExt(int idx) {
-		if (idx < 0) {
-			throw new IllegalArgumentException("idx must >=0");
-		}
-		if (idx >= ExtItemCount) {
-			throw new IllegalArgumentException("idx must <" + ExtItemCount);
-		}
-		return this.extentions[idx];
-	}
-
-	public int getFlag() {
-		return flag;
-	}
-
-	public void setFlag(int flag) {
-		this.flag = flag;
-		try {
-			lock.lock();
-			this.buffer.position(FlagPos);
-			this.buffer.putInt(this.flag);
-		} finally {
-			lock.unlock();
-		}
+		buffer.putLong(System.currentTimeMillis()); 
 	} 
-	
+	  
 	public long getMessageCount(){
 		return this.messageCount.get();
 	}
@@ -436,11 +329,7 @@ public class Index extends MappedFile {
 	public String getName() {
 		return name;
 	} 
-	
-	public long getCreatedTime() {
-		return createdTime;
-	}
-
+	 
 	public static class Offset {
 		public long baseOffset;
 		public long createdTime;
