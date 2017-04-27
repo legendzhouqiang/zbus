@@ -36,7 +36,7 @@ public class MqServer implements Closeable{
 	private MessageServer httpServer;
 	private MqAdaptor mqAdaptor;  
 	private Tracker tracker;
-	private TraceService traceService;
+	private MessageTracer messageTracer;
 	
 	public MqServer(){
 		this(new MqServerConfig());
@@ -82,8 +82,8 @@ public class MqServer implements Closeable{
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		  
-		traceService = new TraceService();
-		tracker = new Tracker(this, config.getTrackServerList(), true);//TODO configure 
+		messageTracer = new MessageTracer();
+		tracker = new Tracker(this, true);//TODO configure 
 		//trackService should be ahead of mqAdaptor to initialize
 		mqAdaptor = new MqAdaptor(this);   
 	} 
@@ -92,7 +92,7 @@ public class MqServer implements Closeable{
 		log.info("zbus starting...");
 		long start = System.currentTimeMillis(); 
 		
-		traceService.start();
+		messageTracer.start();
 		
 		mqAdaptor.setVerbose(config.verbose);
 		try {
@@ -100,7 +100,10 @@ public class MqServer implements Closeable{
 		} catch (IOException e) {
 			log.error("LoadMQ error: " + e);
 		}   
-		tracker.connect();
+		String trackerList = config.getTrackServerList();
+		if(!StrKit.isEmpty(trackerList)){ //tracker try to join upstream Tracker.
+			tracker.joinUpstream(trackerList);
+		}
 		
 		httpServer = new MessageServer(eventDriver);   
 		httpServer.start(config.serverHost, config.serverPort, mqAdaptor);  
@@ -150,8 +153,8 @@ public class MqServer implements Closeable{
 		return tracker;
 	}
 	
-	public TraceService getTraceService() {
-		return traceService;
+	public MessageTracer getTraceService() {
+		return messageTracer;
 	}
 
 	public static void main(String[] args) throws Exception {

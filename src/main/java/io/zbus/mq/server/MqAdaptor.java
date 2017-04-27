@@ -43,8 +43,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
-	private final Tracker trackService;
-	private final TraceService traceService;
+	private final Tracker tracker;
+	private final MessageTracer traceService;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 	private Set<String> restUrlCommands = new HashSet<String>(); 
@@ -56,7 +56,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
-		this.trackService = mqServer.getTracker();
+		this.tracker = mqServer.getTracker();
 		this.traceService = mqServer.getTraceService();
 		
 		restUrlCommands.add(Protocol.PRODUCE);
@@ -154,7 +154,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(!msg.getTopic().equals(topic)){
 				sess.attr(Protocol.TOPIC, mq.name()); //mark
 				
-				trackService.publish(); 
+				tracker.myServerChanged(); 
 			} 
 		}
 	}; 
@@ -241,7 +241,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 				ReplyKit.reply500(msg, sess, e); 
 			} 
 			
-			trackService.publish();  
+			tracker.myServerChanged();  
 		}
 	};
 	
@@ -301,7 +301,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			if(groupName != null){
 				try {
 					mq.removeGroup(groupName);
-					trackService.publish(); 
+					tracker.myServerChanged(); 
 					ReplyKit.reply200(msg, sess); 
 				} catch (FileNotFoundException e){
 					ReplyKit.reply404(msg, sess, "ConsumeGroup("+groupName + ") Not Found"); 
@@ -312,7 +312,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			mq = mqTable.remove(mq.name());
 			if(mq != null){
 				mq.removeTopic();
-				trackService.publish(); 
+				tracker.myServerChanged(); 
 				ReplyKit.reply200(msg, sess);
 			} else {
 				ReplyKit.reply404(msg, sess, "Topic(" + msg.getTopic() + ") Not Found");
@@ -474,7 +474,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			try{
 				boolean ack = msg.isAck();
 				ServerEvent event = JsonKit.parseObject(msg.getBodyString(), ServerEvent.class);   
-				trackService.publish(event); 
+				tracker.onDownstreamChanged(event); 
 				
 				if(ack){
 					ReplyKit.reply200(msg, session);
@@ -489,7 +489,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			trackService.subscribe(msg, session);
+			tracker.subscribe(msg, session);
 		}
 	}; 
 	
@@ -509,11 +509,11 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			MessageQueue mq = mqTable.get(topic); 
 			if(mq != null){
 				mq.cleanSession(sess); 
-				trackService.publish();
+				tracker.myServerChanged();
 			}
 		}
 		
-		trackService.cleanSession(sess); 
+		tracker.cleanSession(sess); 
 		traceService.cleanSession(sess);
 	} 
 	
@@ -538,7 +538,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
    		ServerInfo info = new ServerInfo();
 		info.serverAddress = mqServer.getServerAddress();
 		info.topicMap = table;  
-		info.trackedServerList = trackService.queryTrackerInfo().trackedServerList;
+		info.trackedServerList = tracker.trackerInfo().trackedServerList;
 		
 		String serverList = config.getTrackServerList();
 		if(serverList == null){

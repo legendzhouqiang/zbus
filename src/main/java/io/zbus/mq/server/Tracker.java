@@ -22,45 +22,46 @@ import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
  
-/**
- * Reporter == (ServerEvent) ==> Tracker ==> (Whole Table) ==> Subscriber
- * 
- * @author Rushmore
- *
- */
+
 public class Tracker implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(Tracker.class);  
+	 
+	private Map<String, MessageClient> downstreamTrackers = new ConcurrentHashMap<String, MessageClient>();  
+	private Map<String, MessageClient> healthyUpstreamTrackers = new ConcurrentHashMap<String, MessageClient>();
+	private List<MessageClient> upstreamTrackers = new ArrayList<MessageClient>(); 
 	
-	private final String trackerList; 
-	private Map<String, MessageClient> reporterMap = new ConcurrentHashMap<String, MessageClient>();  
 	private Set<Session> subscribers = new HashSet<Session>();
-	
-	private Map<String, MessageClient> healthyTrackerMap = new ConcurrentHashMap<String, MessageClient>();
-	private List<MessageClient> allTrackerList = new ArrayList<MessageClient>(); 
 	
 	private EventDriver eventDriver; 
 	private final String thisServerAddress;
 	private boolean thisServerIncluded; 
 
 	
-	public Tracker(MqServer mqServer, String trackerList, boolean thisServerIncluded){ 
+	public Tracker(MqServer mqServer, boolean thisServerIncluded){ 
 		this.thisServerAddress = mqServer.getServerAddress();
-		this.eventDriver = mqServer.getEventDriver();
-		this.trackerList = trackerList;
+		this.eventDriver = mqServer.getEventDriver(); 
 		this.thisServerIncluded = thisServerIncluded; 
 	} 
 	
-	public Tracker(MqServer mqServer, String trackerList){
-		this(mqServer, trackerList, true); 
-	}
+	public Tracker(MqServer mqServer){
+		this(mqServer, true); 
+	} 
+
+	public TrackerInfo trackerInfo(){  
+		List<String> serverList = new ArrayList<String>(this.downstreamTrackers.keySet()); 
+		if(thisServerIncluded){
+			serverList.add(thisServerAddress);
+		}
+		TrackerInfo trackerInfo = new TrackerInfo(); 
+		trackerInfo.serverAddress = thisServerAddress;
+		trackerInfo.trackedServerList = serverList;
+		return trackerInfo;
+	}  
 	
-	/**
-	 * Trying to connect to Tracker(reside in MqServer)
-	 */
-	public void connect(){
+	public void joinUpstream(String trackerList){
 		if(trackerList == null || trackerList.isEmpty()) return;
 		
-		log.info("Connecting to Tracker(%s)", this.trackerList); 
+		log.info("Connecting to Tracker(%s)", trackerList); 
 		String[] blocks = trackerList.split("[;]");
     	for(String block : blocks){
     		final String serverAddress = block.trim();
@@ -71,7 +72,7 @@ public class Tracker implements Closeable{
 				@Override
 				public void onDisconnected() throws IOException { 
 					log.warn("Disconnected from Tracker(%s)", serverAddress);
-					healthyTrackerMap.remove(serverAddress);
+					healthyUpstreamTrackers.remove(serverAddress);
     				client.ensureConnectedAsync(); 
     			}  
 			});
@@ -80,45 +81,20 @@ public class Tracker implements Closeable{
     			@Override
     			public void onConnected() throws IOException { 
     				log.info("Connected to Tracker(%s)", serverAddress);
-    				healthyTrackerMap.put(serverAddress, client);
+    				healthyUpstreamTrackers.put(serverAddress, client);
     				ServerEvent event = new ServerEvent();
     				event.serverAddress = thisServerAddress;
     				event.live = true;
-    				publishToTracker(client, event);
+    				notifyUpstream(client, event);
     			}
 			});
-    		allTrackerList.add(client);
+    		upstreamTrackers.add(client);
     		client.ensureConnectedAsync();
     	}  
 	}
+
 	
-	@Override
-	public void close() throws IOException {
-		for(MessageClient client : allTrackerList){
-			client.close();
-		}
-		allTrackerList.clear();
-		for(MessageClient client : reporterMap.values()){
-			client.close();
-		}
-		reporterMap.clear();
-		
-		subscribers.clear(); //No need to close
-	}
-	 
-	
-	public TrackerInfo queryTrackerInfo(){  
-		List<String> serverList = new ArrayList<String>(this.reporterMap.keySet()); 
-		if(thisServerIncluded){
-			serverList.add(thisServerAddress);
-		}
-		TrackerInfo trackerInfo = new TrackerInfo(); 
-		trackerInfo.serverAddress = thisServerAddress;
-		trackerInfo.trackedServerList = serverList;
-		return trackerInfo;
-	}  
-	
-	private void publishToTracker(MessageClient client, ServerEvent event){ 
+	private void notifyUpstream(MessageClient client, ServerEvent event){ 
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
 		message.setJsonBody(JsonKit.toJSONString(event));  
@@ -132,27 +108,20 @@ public class Tracker implements Closeable{
 	} 
 	
 	
-	public void publish(final ServerEvent event){  
+	public void onDownstreamChanged(final ServerEvent event){  
 		final String serverAddress = event.serverAddress;
 		if(thisServerAddress.equals(serverAddress)){//thisServer changes 
-			for(MessageClient tracker : healthyTrackerMap.values()){
-				try{
-					publishToTracker(tracker, event);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			}  
-			publishToSubscribers();  
+			//just ignore
 			return;
 		}   
 		
-		if(event.live && !reporterMap.containsKey(serverAddress)){ //new reporter
+		if(event.live && !downstreamTrackers.containsKey(serverAddress)){ //new downstream tracker
 			final MessageClient client = new MessageClient(serverAddress, eventDriver);  
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
 					log.warn("Server(%s) lost of tracking", serverAddress);
-					reporterMap.remove(serverAddress);  
+					downstreamTrackers.remove(serverAddress);  
 					publishToSubscribers();   
     			}  
 			});
@@ -161,12 +130,12 @@ public class Tracker implements Closeable{
     			@Override
     			public void onConnected() throws IOException { 
     				log.info("Server(%s) in track", serverAddress);
-    				reporterMap.put(serverAddress, client);  
+    				downstreamTrackers.put(serverAddress, client);  
 					publishToSubscribers();   
     			}
 			});
     		try{
-    			reporterMap.put(serverAddress, client);
+    			downstreamTrackers.put(serverAddress, client);
     			client.connectAsync();  //TODO handle failed connections
     		}catch (Exception e) {
 				log.error(e.getMessage(), e); 
@@ -176,10 +145,10 @@ public class Tracker implements Closeable{
 		}
 		
 		if(!event.live){ //server down
-			MessageClient reporter = reporterMap.remove(serverAddress);
-			if(reporter != null){
+			MessageClient downstreamTracker = downstreamTrackers.remove(serverAddress);
+			if(downstreamTracker != null){
 				try {
-					reporter.close();
+					downstreamTracker.close();
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -189,32 +158,37 @@ public class Tracker implements Closeable{
 		publishToSubscribers();  
 	}
 	
-	public void publish() {
+	public void myServerChanged() {
 		ServerEvent event = new ServerEvent();
 		event.serverAddress = thisServerAddress;
 		event.live = true;
-		publish(event);
+		
+		for(MessageClient tracker : healthyUpstreamTrackers.values()){
+			try{
+				notifyUpstream(tracker, event);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}  
+		publishToSubscribers();   
 	}
 	 
 	 
 	public void subscribe(Message msg, Session session){
 		subscribers.add(session);  
 		
-		Message message = liveServerListMessage();
+		Message message = trackerInfoPubMessage();
 		try {  
 			session.writeAndFlush(message);
 		} catch (Exception ex) { 
 			log.error(ex.getMessage(), ex);
 		}   
 	}  
-	
-	/**
-	 *  publish all available server list to subscriber
-	 */
-	private void publishToSubscribers(){
+	 
+	public void publishToSubscribers(){
 		if(subscribers.isEmpty()) return;
 		
-		Message message = liveServerListMessage();
+		Message message = trackerInfoPubMessage();
 		for(Session session : subscribers){
 			try{
 				session.writeAndFlush(message);
@@ -224,10 +198,11 @@ public class Tracker implements Closeable{
 			}
 		}
 	} 
-	private Message liveServerListMessage(){
+	
+	private Message trackerInfoPubMessage(){
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
-		message.setJsonBody(JsonKit.toJSONString(queryTrackerInfo()));
+		message.setJsonBody(JsonKit.toJSONString(trackerInfo()));
 		message.setStatus(200);// server to client
 		return message;
 	}
@@ -236,5 +211,18 @@ public class Tracker implements Closeable{
 		if(subscribers.contains(session)){
 			subscribers.remove(session);
 		}
-	}
+	} 
+	
+	@Override
+	public void close() throws IOException {
+		for(MessageClient client : upstreamTrackers){
+			client.close();
+		}
+		upstreamTrackers.clear();
+		for(MessageClient client : downstreamTrackers.values()){
+			client.close();
+		}
+		downstreamTrackers.clear(); 
+		subscribers.clear(); //No need to close
+	} 
 }

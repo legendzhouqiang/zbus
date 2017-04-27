@@ -12,15 +12,10 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.net.Session;
-  
-/**
- * Publish message to subscribers interested by topic, mainly for message tracing debug.
- * 
- * @author Rushmore
- *
- */
-public class TraceService implements Closeable{
-	private static final Logger log = LoggerFactory.getLogger(TraceService.class);
+
+
+public class MessageTracer implements Closeable{
+	private static final Logger log = LoggerFactory.getLogger(MessageTracer.class);
 	private static final String TOPIC_SET_KEY = "trace_topic_set";
 	
 	private final int traceMaxQueueLength = 100;
@@ -35,7 +30,7 @@ public class TraceService implements Closeable{
     
     private Thread thread;
     
-    public TraceService(){
+    public MessageTracer(){
     	lock = new ReentrantLock();
     	sessionLock = new ReentrantLock();
     	notEmpty = lock.newCondition(); 
