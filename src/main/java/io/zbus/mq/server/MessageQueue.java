@@ -25,7 +25,7 @@ public interface MessageQueue {
 	
 	void cleanSession(Session sess);
 	
-	void cleanAllSessions();
+	void cleanInactiveSessions();
 	
 	TopicInfo topicInfo();
 	

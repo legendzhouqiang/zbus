@@ -76,6 +76,44 @@ public class Protocol {
 	public static final int FLAG_EXCLUSIVE 	    = 1<<2;  
 	public static final int FLAG_DELETE_ON_EXIT = 1<<3; 
 	
+	public static class ServerAddress{
+		public String serverAddress;
+		public boolean sslEnabled;
+		
+		@Override
+		public String toString() {
+			return sslEnabled? "(secured)"+serverAddress : serverAddress;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((serverAddress == null) ? 0 : serverAddress.hashCode());
+			result = prime * result + (sslEnabled ? 1231 : 1237);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ServerAddress other = (ServerAddress) obj;
+			if (serverAddress == null) {
+				if (other.serverAddress != null)
+					return false;
+			} else if (!serverAddress.equals(other.serverAddress))
+				return false;
+			if (sslEnabled != other.sslEnabled)
+				return false;
+			return true;
+		}  
+	}
+	
 	public static class ServerEvent{  
 		public String serverAddress;
 		public boolean live = true;  
@@ -91,7 +129,7 @@ public class Protocol {
 		public List<String> trackedServerList;
 	}
 	  
-	public static class ServerInfo extends TrackerInfo{  
+	public static class ServerInfo extends TrackerInfo{   
 		public List<String> trackerList;  
 		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();  
 	}

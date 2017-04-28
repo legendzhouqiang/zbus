@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,6 +40,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class FileKit { 
+	
+	public static InputStream inputStream(String filePath){
+		File file = new File(filePath);
+		if(file.exists()){
+			try {
+				return new FileInputStream(file);
+			} catch (FileNotFoundException e) {
+				return null;
+			}
+		} 
+		return FileKit.class.getClassLoader().getResourceAsStream(filePath);
+	}
 	
 	public static InputStream loadFile(String resource, Class<?> clazz) {
 		ClassLoader classLoader = null;

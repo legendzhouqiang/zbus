@@ -108,7 +108,7 @@ public class Tracker implements Closeable{
 	} 
 	
 	
-	public void onDownstreamChanged(final ServerEvent event){  
+	public void onDownstreamNotified(final ServerEvent event){  
 		final String serverAddress = event.serverAddress;
 		if(thisServerAddress.equals(serverAddress)){//thisServer changes 
 			//just ignore
@@ -207,7 +207,7 @@ public class Tracker implements Closeable{
 		return message;
 	}
 	
-	public void cleanSession(Session session){
+	public void cleanSubscriberSession(Session session){
 		if(subscribers.contains(session)){
 			subscribers.remove(session);
 		}

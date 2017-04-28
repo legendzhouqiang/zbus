@@ -336,7 +336,7 @@ public class DiskQueue implements MessageQueue{
 		} 
 	}
 	 
-	public void cleanAllSessions() { 
+	public void cleanInactiveSessions() { 
 		Iterator<Entry<String, DiskConsumeGroup>> iter = consumeGroups.entrySet().iterator();
 		while(iter.hasNext()){
 			DiskConsumeGroup group = iter.next().getValue(); 

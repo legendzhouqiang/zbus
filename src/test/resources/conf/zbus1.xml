@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zbus>   
 	<host>0.0.0.0</host>  
-	<port>15555</port> 
-	<mqStore>/tmp/zbus</mqStore>
+	<port>15555</port>  
+	<serverName></serverName> <!-- Public IP/Domain name -->
 	
-	<trackServerList></trackServerList>   
+	<mqStore>/tmp/zbus</mqStore> 
 	
-	<verbose>false</verbose> 
-	  
+	<sslCertFile>ssl/zbus.crt</sslCertFile>
+	<sslKeyFile>ssl/zbus.key</sslKeyFile>  
+	
+	<trackerList>
+		<server>
+			<address>localhost:15556</address>
+			<sslCertFile>ssl/zbus.crt</sslCertFile>
+		</server> 
+		<server>
+			<address>localhost:15557</address>
+			<sslCertFile>ssl/zbus.crt</sslCertFile>
+		</server> 
+	</trackerList>   
+	
+	
+	<verbose>false</verbose>  
 	<sslCertificateFile></sslCertificateFile>
 	<sslPrivateKeyFile></sslPrivateKeyFile>  
 </zbus>

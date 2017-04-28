@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +24,6 @@ import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.ServerEvent;
-import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.net.MessageAdaptor;
@@ -57,7 +54,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
 		this.tracker = mqServer.getTracker();
-		this.traceService = mqServer.getTraceService();
+		this.traceService = mqServer.getMessageTracer();
 		
 		restUrlCommands.add(Protocol.PRODUCE);
 		restUrlCommands.add(Protocol.CONSUME);
@@ -247,8 +244,8 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	
 	private MessageHandler queryHandler = new MessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException { 
-			if(msg.getTopic() == null){ 
-				ReplyKit.replyJson(msg, sess, getServerInfo()); 
+			if(msg.getTopic() == null){  
+				ReplyKit.replyJson(msg, sess, mqServer.serverInfo()); 
 				return;
 			} 
 			
@@ -474,7 +471,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			try{
 				boolean ack = msg.isAck();
 				ServerEvent event = JsonKit.parseObject(msg.getBodyString(), ServerEvent.class);   
-				tracker.onDownstreamChanged(event); 
+				tracker.onDownstreamNotified(event); 
 				
 				if(ack){
 					ReplyKit.reply200(msg, session);
@@ -513,7 +510,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			}
 		}
 		
-		tracker.cleanSession(sess); 
+		tracker.cleanSubscriberSession(sess); 
 		traceService.cleanSession(sess);
 	} 
 	
@@ -527,33 +524,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		this.verbose = verbose;
 	}  
      
-    public ServerInfo getServerInfo(){
-    	String serverAddress = mqServer.getServerAddress();
-    	Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
-   		for(Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()){
-   			TopicInfo info = e.getValue().topicInfo(); 
-   			info.serverAddress = serverAddress;
-   			table.put(e.getKey(), info);
-   		}  
-   		ServerInfo info = new ServerInfo();
-		info.serverAddress = mqServer.getServerAddress();
-		info.topicMap = table;  
-		info.trackedServerList = tracker.trackerInfo().trackedServerList;
-		
-		String serverList = config.getTrackServerList();
-		if(serverList == null){
-			serverList = "";
-		}
-		serverList = serverList.trim();
-		
-		info.trackerList = new ArrayList<String>();
-		for(String s : serverList.split("[;, ]")){
-			s = s.trim();
-			if("".equals(s)) continue;
-			info.trackerList.add(s);
-		}
-		return info;
-    }
+   
     
 	public void loadDiskQueue() throws IOException {
 		log.info("Loading DiskQueues...");
