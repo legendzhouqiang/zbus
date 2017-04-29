@@ -1,18 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Message Test</title>
-<script type="text/javascript" src="https://localhost:15555/js/zbus.js"></script> 
+<script type="text/javascript" src="./zbus.js"></script> 
 </head>
 <body>   
 	<script type="text/javascript"> 
-	var trackerAddress = {
+	var serverAddress = {
 		address: "localhost:15555",
 		sslEnabled: true
 	};
-	var broker = new Broker(trackerAddress); 
-	
+	var broker = new Broker(); 
+
+	broker.addTracker(serverAddress);
 	
 	</script>
 </body>

@@ -167,7 +167,7 @@ public class MqServer implements Closeable{
 		}
 		ServerInfo info = new ServerInfo(); 
 		info.serverAddress = serverAddress;
-		info.topicMap = table;
+		info.topicTable = table;
 		info.trackerList = config.getTrackerList();
 		info.trackedServerList = tracker.trackerInfo().trackedServerList;
  

@@ -143,7 +143,7 @@ public class Protocol {
 	  
 	public static class ServerInfo extends TrackerInfo{   
 		public List<ServerAddress> trackerList;  
-		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();  
+		public Map<String, TopicInfo> topicTable = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	
 	public static class TopicInfo extends TrackItem{ 

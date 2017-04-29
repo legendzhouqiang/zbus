@@ -112,7 +112,7 @@ public class BrokerRouteTable {
 	private Map<String, List<TopicInfo>> rebuildTopicTable(Map<ServerAddress, ServerInfo> serverMapLocal) {
 		Map<String, List<TopicInfo>> table = new ConcurrentHashMap<String, List<TopicInfo>>();
 		for (ServerInfo serverInfo : serverMapLocal.values()) {
-			for (TopicInfo topicInfo : serverInfo.topicMap.values()) {
+			for (TopicInfo topicInfo : serverInfo.topicTable.values()) {
 				List<TopicInfo> topicServerList = table.get(topicInfo.topicName);
 				if (topicServerList == null) {
 					topicServerList = new ArrayList<TopicInfo>();

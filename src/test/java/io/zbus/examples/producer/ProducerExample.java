@@ -8,8 +8,8 @@ import io.zbus.mq.ProducerConfig;
 public class ProducerExample {
 
 	public static void main(String[] args) throws Exception { 
-		Broker broker = new Broker(); 
-		broker.addServer("zbus.io"); 
+		Broker broker = new Broker("conf/broker.xml");   
+		
 		ProducerConfig config = new ProducerConfig(broker);   
 		
 		Producer p = new Producer(config);

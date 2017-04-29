@@ -444,138 +444,136 @@ MessageClient.prototype.close = function(){
 	this.socket.close();
 }
 
-
-var Broker = MessageClient;
-
-
-function TrackBroker(serverAddress) {
-	this.scheme = "ws://";
-    if (serverAddress.startsWith("ws://")) {
-        this.scheme = "ws://";
-        this.serverAddress = serverAddress.substring(this.scheme.length); 
-    } else if (serverAddress.startsWith("wss://")) { 
-        this.scheme = "wss://";
-        this.serverAddress = serverAddress.substring(this.scheme.length);
-    } else {
-        this.serverAddress = serverAddress 
-    } 
-     
-    this.onServerUpdated = null; 
-    this.brokerMap = {};
-    this.serverInfoMap = {};
-    this.topicSumMap = {}
-    this.filterServerList = null;
-}
-
-
-TrackBroker.prototype.inFilter = function(address){
-	if(this.filterServerList == null) return true;
-	
-	return this.filterServerList.includes(address);
-}
-
-TrackBroker.prototype.normalizeAddress = function (address) {
-    if (address.startsWith(this.scheme)) {
-        return address;
-    } else {
-        return this.scheme + address;
-    }
-} 
-
-TrackBroker.prototype.address = function(){
-	return this.scheme + this.serverAddress;
-}
-
-TrackBroker.prototype.connect = function () { 
-    var broker = new Broker(this.address());
-    this.brokerMap[this.serverAddress] = broker;
-    
-    var trackBroker = this;
-    broker.onMessage(function (msg) {
-        var trackInfo = msg.body;
-        var servers = trackInfo.trackedServerList;
-        for (var i in servers) {
-        	trackBroker.serverUpdate(servers[i]);
-        }
-    });
-
-    broker.connect(function (event) {
-        var msg = {};
-        msg.cmd = Protocol.TRACK_SUB;
-        broker.sendMessage(msg);
-    });
-} 
- 
-TrackBroker.prototype.serverUpdate = function(serverAddress) {
-    var broker = this.brokerMap[serverAddress];
-    var trackBroker = this;
-    if (broker == null) {
-        broker = new Broker(this.normalizeAddress(serverAddress));
-
-        broker.onDisconnected(function (event) {
-            console.log("Disconnected from " + serverAddress);
-            broker.close();
-            delete trackBroker.serverInfoMap[serverAddress];
-            delete trackBroker.brokerMap[serverAddress]
-            trackBroker.updateTopicSummary();
-            if (trackBroker.onServerUpdated) {
-                trackBroker.onServerUpdated(serverAddress);
-            }
-        });
-
-        broker.connect(function (event) {
-            trackBroker.brokerMap[serverAddress] = broker;
-            trackBroker.queryServerInfo(serverAddress);
-        });
-    } else {
-        this.queryServerInfo(serverAddress);
-    }
-}
-
-TrackBroker.prototype.queryServerInfo = function(serverAddress){
-	var broker = this.brokerMap[serverAddress];
-	if(!broker) return;
-	
-	var trackBroker = this;
+MessageClient.prototype.queryServer = function(callback){ 
 	var msg = {};
     msg.cmd = "query";
-    broker.invoke(msg, function (msg) {
-        trackBroker.updateTopicSummary(msg.body);
-        if (trackBroker.onServerUpdated) {
-            trackBroker.onServerUpdated(serverAddress);
+    this.invoke(msg, function (msg) {
+    	    callback(msg.body); 
+    });
+}
+
+var MqClient = MessageClient;
+ 
+function fullAddress(serverAddress){
+	var scheme = "ws://"
+	if(serverAddress.sslEnabled){
+		scheme = "wss://" 
+	}
+	return scheme + serverAddress.address;
+}
+
+function BrokerRouteTable() {
+    this.serverTable = {}; //Server Address ==> ServerInfo
+    this.topicTable = {};  //Topic ==> Server List(topic span across ZbusServers)
+    this.votesTable = {};  //Server Address ==> Voted tracker list
+}
+
+BrokerRouteTable.prototype.updateTracker = function (trackerInfo) {
+
+}
+
+BrokerRouteTable.prototype.updateServer = function (serverInfo) {
+    this.rebuildTopicTable(serverInfo);
+}
+
+BrokerRouteTable.prototype.removeServer = function (serverAddress) {
+    console.log("remove: " + serverAddress);
+}
+  
+BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
+    if (serverInfo) {
+        var fullAddr = fullAddress(serverInfo.serverAddress);
+        this.serverTable[fullAddr] = serverInfo;
+    }
+    this.topicTable = {};
+    for (var fullAddr in this.serverTable) {
+        var serverInfo = this.serverTable[fullAddr];
+
+        var serverTopicTable = serverInfo.topicTable;
+        for (var topic in serverTopicTable) {
+            var serverTopicInfo = serverTopicTable[topic];
+            if (!(topic in this.topicTable)) {
+                this.topicTable[topic] = [serverTopicInfo];
+            } else {
+                this.topicTable[topic].push(serverTopicInfo);
+            }
         }
+    }
+}
+
+
+function Broker(trackerAddress) {  
+	this.trackerSubscribers = {};
+
+    this.clientTable = {};
+    this.routeTable = new BrokerRouteTable();
+    this.onServerUpdated = null;
+    
+    if(trackerAddress){
+    	    this.addTracker(trackerAddress);
+    }
+}
+ 
+
+Broker.prototype.addServer = function(serverAddress) { 
+	var fullAddr = fullAddress(serverAddress);
+	var client = this.clientTable[fullAddr];
+    var broker = this;
+    
+    if (client != null) {
+        client.queryServer(function (serverInfo) {
+            broker.routeTable.updateServer(serverInfo);
+        });
+        return;
+    } 
+
+    client = new MqClient(fullAddr);
+
+    	client.onDisconnected(function (event) {
+        console.log("Disconnected from " + fullAddr);
+        client.close(); 
+        delete broker.clientTable[fullAddr]
+
+        broker.routeTable.removeServer(serverAddress); 
+    });
+
+    client.connect(function (event) {
+        broker.clientTable[fullAddr] = client;
+        client.queryServer(function(serverInfo) {
+            broker.routeTable.updateServer(serverInfo);
+        }); 
+    });  
+}
+
+Broker.prototype.addTracker = function (trackerAddress) {
+    var fullAddr = fullAddress(trackerAddress);
+    if (fullAddr in this.trackerSubscribers) {
+        return;
+    }
+    var client = new MessageClient(fullAddr);
+    this.trackerSubscribers[fullAddr] = client;
+
+    var broker = this;
+
+    client.onMessage(function (msg) {
+        var trackerInfo = msg.body;
+        console.log(trackerInfo);
+        var serverAddressList = trackerInfo.trackedServerList;
+        for (var i in serverAddressList) {
+            broker.addServer(serverAddressList[i]);
+        }
+    });
+
+    client.connect(function (event) {
+        var msg = {};
+        msg.cmd = Protocol.TRACK_SUB;
+        client.sendMessage(msg);
     });
 }
 
 
-TrackBroker.prototype.updateTopicSummary = function (serverInfo) {
-    if (serverInfo) {
-        this.serverInfoMap[serverInfo.serverAddress] = serverInfo;
-    }
-    this.topicSumMap = {};
-    for (var address in this.serverInfoMap) {
-    	if(!this.inFilter(address)){
-    		continue;
-    	}
-    	
-        var serverInfo = this.serverInfoMap[address];
 
-        var serverTopicMap = serverInfo.topicMap;
-        for (var topic in serverTopicMap) {  
-            var serverTopicInfo = serverTopicMap[topic];
-            if (!(topic in this.topicSumMap)){
-                this.topicSumMap[topic] = [serverTopicInfo];
-            } else {
-            	this.topicSumMap[topic].push(serverTopicInfo);
-            } 
-        }
-    } 
-}   
-
-
-
-
-
+//////////////////////////////////////////////////////////
 
 function MqAdmin(broker, topic){
 	this.broker = broker;

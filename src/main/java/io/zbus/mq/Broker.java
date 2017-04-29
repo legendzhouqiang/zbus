@@ -28,19 +28,17 @@ public class Broker implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Broker.class);
 	
 	private Map<ServerAddress, MqClientPool> poolTable = new ConcurrentHashMap<ServerAddress, MqClientPool>();   
-	private BrokerRouteTable routeTable = new BrokerRouteTable();
+	private BrokerRouteTable routeTable = new BrokerRouteTable(); 
+	private Map<ServerAddress, MessageClient> trackerSubscribers = new ConcurrentHashMap<ServerAddress, MessageClient>(); 
+	
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver;  
-	private final int clientPoolSize;
-	private List<ServerAddress> trackerList;
-	
-	private Map<ServerAddress, MessageClient> trackSubscribers = new ConcurrentHashMap<ServerAddress, MessageClient>(); 
+	private final int clientPoolSize; 
+	private Map<String, String> sslCertFileTable;
+	private String defaultSslCertFile;
 	
 	private CountDownLatch ready = new CountDownLatch(1);
 	private boolean waitCheck = true;
-	
-	private Map<String, String> sslCertFileTable;
-	private String defaultSslCertFile;
 	
 	public Broker(){
 		this(new BrokerConfig());
@@ -52,12 +50,11 @@ public class Broker implements Closeable {
 	
 	public Broker(BrokerConfig config){
 		this.eventDriver = new EventDriver(); 
-		this.clientPoolSize = config.getClientPoolSize(); 
-		this.trackerList = config.getTrackerList();
+		this.clientPoolSize = config.getClientPoolSize();  
 		this.sslCertFileTable = config.getSslCertFileTable();
-		this.defaultSslCertFile = config.getDefaultSslCertFile();
+		this.defaultSslCertFile = config.getDefaultSslCertFile(); 
 		
-		List<ServerAddress> serverList = config.getServerList();
+		List<ServerAddress> trackerList = config.getTrackerList();
 		
 		int totalServerCount = queryServerCount(trackerList);
 		if(totalServerCount > 1){
@@ -67,6 +64,8 @@ public class Broker implements Closeable {
 			subscribeToTracker(serverAddress); 
 		}  
 		
+		
+		List<ServerAddress> serverList = config.getServerList();
 		for(ServerAddress serverAddress : serverList){
 			try {
 				addServer(serverAddress);
@@ -117,14 +116,11 @@ public class Broker implements Closeable {
 	public void addTracker(String trackerAddress, String certPath){
 		ServerAddress serverAddress = new ServerAddress(trackerAddress);
 		serverAddress.sslEnabled = certPath != null;
-		
-		if(!trackerList.contains(serverAddress)){
-			trackerList.add(serverAddress);
-		}
 		if(certPath != null){
 			sslCertFileTable.put(serverAddress.address, certPath);
 		} 
-		subscribeToTracker(serverAddress); 
+		
+		addTracker(serverAddress);
 	} 
 	
 	public void addTracker(String trackerAddress){
@@ -132,7 +128,10 @@ public class Broker implements Closeable {
 	} 
 	
 	public void addTracker(ServerAddress trackerAddress){
-		subscribeToTracker(trackerAddress); 
+		if(trackerSubscribers.containsKey(trackerAddress)){
+			return;
+		} 
+		subscribeToTracker(trackerAddress);  
 	}
 	
 	public void addServer(String address) throws IOException { 
@@ -251,10 +250,10 @@ public class Broker implements Closeable {
 	
 	@Override
 	public void close() throws IOException {
-		for(MessageClient client : trackSubscribers.values()){
+		for(MessageClient client : trackerSubscribers.values()){
 			client.close();
 		}
-		trackSubscribers.clear();
+		trackerSubscribers.clear();
 		synchronized (poolTable) {
 			for(MqClientPool pool : poolTable.values()){ 
 				pool.close();
@@ -328,7 +327,7 @@ public class Broker implements Closeable {
 		});
 		
 		client.ensureConnectedAsync();
-		trackSubscribers.put(serverAddress, client); 
+		trackerSubscribers.put(serverAddress, client); 
 	}
 	
 	private void onTrackInfoUpdate(TrackerInfo trackerInfo) throws IOException {
