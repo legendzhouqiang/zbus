@@ -4,10 +4,11 @@ import io.zbus.mq.Broker;
 
 public class TrackBrokerConfigExample {
  
-	public static void main(String[] args) throws Exception {	
-		Broker broker = new Broker("localhost:15555");   
-		//will connect to all servers tracked by server: localhost:15555
+	public static void main(String[] args) throws Exception {	 
+		Broker broker = new Broker();  
+		broker.addTracker("localhost:15555", "ssl/zbus.crt");
 		
+		//will connect to all servers tracked by server: localhost:15555 
 		broker.close();
 	}
 

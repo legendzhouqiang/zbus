@@ -14,6 +14,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.mq.net.MessageClient;
@@ -26,53 +27,49 @@ import io.zbus.net.Session;
 public class Tracker implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(Tracker.class);  
 	 
-	private Map<String, MessageClient> downstreamTrackers = new ConcurrentHashMap<String, MessageClient>();  
-	private Map<String, MessageClient> healthyUpstreamTrackers = new ConcurrentHashMap<String, MessageClient>();
+	private Map<ServerAddress, MessageClient> downstreamTrackers = new ConcurrentHashMap<ServerAddress, MessageClient>();  
+	private Map<ServerAddress, MessageClient> healthyUpstreamTrackers = new ConcurrentHashMap<ServerAddress, MessageClient>();
 	private List<MessageClient> upstreamTrackers = new ArrayList<MessageClient>(); 
 	
 	private Set<Session> subscribers = new HashSet<Session>();
 	
 	private EventDriver eventDriver; 
-	private final String thisServerAddress;
-	private boolean thisServerIncluded; 
+	private final ServerAddress myServerAddress;
+	private boolean myServerInTrack; 
+	
+	private Map<String, String> sslCertFileTable;
 
 	
-	public Tracker(MqServer mqServer, boolean thisServerIncluded){ 
-		this.thisServerAddress = mqServer.getServerAddress();
-		this.eventDriver = mqServer.getEventDriver(); 
-		this.thisServerIncluded = thisServerIncluded; 
+	public Tracker(ServerAddress myServerAddress, EventDriver eventDriver, 
+			Map<String, String> sslCertFileTable, boolean myServerInTrack){ 
+		this.myServerAddress = myServerAddress;
+		this.eventDriver = eventDriver.duplicate(); 
+		this.myServerInTrack = myServerInTrack; 
+		this.sslCertFileTable = sslCertFileTable;
 	} 
-	
-	public Tracker(MqServer mqServer){
-		this(mqServer, true); 
-	} 
-
+	 
 	public TrackerInfo trackerInfo(){  
-		List<String> serverList = new ArrayList<String>(this.downstreamTrackers.keySet()); 
-		if(thisServerIncluded){
-			serverList.add(thisServerAddress);
+		List<ServerAddress> serverList = new ArrayList<ServerAddress>(this.downstreamTrackers.keySet()); 
+		if(myServerInTrack){
+			serverList.add(myServerAddress);
 		}
 		TrackerInfo trackerInfo = new TrackerInfo(); 
-		trackerInfo.serverAddress = thisServerAddress;
+		trackerInfo.serverAddress = myServerAddress;
 		trackerInfo.trackedServerList = serverList;
 		return trackerInfo;
 	}  
 	
-	public void joinUpstream(String trackerList){
-		if(trackerList == null || trackerList.isEmpty()) return;
+	public void joinUpstream(List<ServerAddress> trackerList){
+		if(trackerList == null || trackerList.isEmpty()) return; 
 		
-		log.info("Connecting to Tracker(%s)", trackerList); 
-		String[] blocks = trackerList.split("[;]");
-    	for(String block : blocks){
-    		final String serverAddress = block.trim();
-    		if(serverAddress.equals("")) continue;
-    		 
-    		final MessageClient client = new MessageClient(serverAddress, eventDriver);  
+    	for(final ServerAddress trackerAddress : trackerList){  
+    		log.info("Connecting to Tracker(%s)", trackerAddress.toString());  
+    		final MessageClient client = connectToServer(trackerAddress);  
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
-					log.warn("Disconnected from Tracker(%s)", serverAddress);
-					healthyUpstreamTrackers.remove(serverAddress);
+					log.warn("Disconnected from Tracker(%s)", trackerAddress.address);
+					healthyUpstreamTrackers.remove(trackerAddress);
     				client.ensureConnectedAsync(); 
     			}  
 			});
@@ -80,10 +77,10 @@ public class Tracker implements Closeable{
     		client.onConnected(new ConnectedHandler() {
     			@Override
     			public void onConnected() throws IOException { 
-    				log.info("Connected to Tracker(%s)", serverAddress);
-    				healthyUpstreamTrackers.put(serverAddress, client);
+    				log.info("Connected to Tracker(%s)", trackerAddress.address);
+    				healthyUpstreamTrackers.put(trackerAddress, client);
     				ServerEvent event = new ServerEvent();
-    				event.serverAddress = thisServerAddress;
+    				event.serverAddress = myServerAddress;
     				event.live = true;
     				notifyUpstream(client, event);
     			}
@@ -92,7 +89,16 @@ public class Tracker implements Closeable{
     		client.ensureConnectedAsync();
     	}  
 	}
-
+	
+	private MessageClient connectToServer(ServerAddress serverAddress){
+		EventDriver driver = eventDriver.duplicate(); //duplicated, no need to close
+		String certPath = sslCertFileTable.get(serverAddress.address);
+		if(certPath != null){
+			driver.setClientSslContext(certPath);
+		}
+		final MessageClient client = new MessageClient(serverAddress.address, driver);  
+		return client;
+	}
 	
 	private void notifyUpstream(MessageClient client, ServerEvent event){ 
 		Message message = new Message();  
@@ -109,14 +115,13 @@ public class Tracker implements Closeable{
 	
 	
 	public void onDownstreamNotified(final ServerEvent event){  
-		final String serverAddress = event.serverAddress;
-		if(thisServerAddress.equals(serverAddress)){//thisServer changes 
-			//just ignore
+		final ServerAddress serverAddress = event.serverAddress;
+		if(myServerAddress.equals(serverAddress)){//myServer changes, just ignore
 			return;
 		}   
 		
 		if(event.live && !downstreamTrackers.containsKey(serverAddress)){ //new downstream tracker
-			final MessageClient client = new MessageClient(serverAddress, eventDriver);  
+			final MessageClient client = connectToServer(serverAddress);  
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
@@ -160,7 +165,7 @@ public class Tracker implements Closeable{
 	
 	public void myServerChanged() {
 		ServerEvent event = new ServerEvent();
-		event.serverAddress = thisServerAddress;
+		event.serverAddress = myServerAddress;
 		event.live = true;
 		
 		for(MessageClient tracker : healthyUpstreamTrackers.values()){
@@ -224,5 +229,7 @@ public class Tracker implements Closeable{
 		}
 		downstreamTrackers.clear(); 
 		subscribers.clear(); //No need to close
+		
+		eventDriver.close(); //duplicated, ok to close
 	} 
 }

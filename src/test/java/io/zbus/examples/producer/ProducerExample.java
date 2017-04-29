@@ -22,7 +22,7 @@ public class ProducerExample {
 		try{
 			Message res = p.publish(msg);
 			System.out.println(res); 
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		

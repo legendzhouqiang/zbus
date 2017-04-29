@@ -10,7 +10,9 @@ import io.zbus.rpc.RpcInvoker;
 public class RpcInvokerAsync {
 
 	public static void main(String[] args) throws Exception { 
-		Broker broker = new Broker("localhost:15555"); 
+		Broker broker = new Broker(); 
+		broker.addTracker("localhost:15555", "ssl/zbus.crt");
+		
 		RpcConfig config = new RpcConfig(broker);  
 		config.setTopic("MyRpc"); 
 		

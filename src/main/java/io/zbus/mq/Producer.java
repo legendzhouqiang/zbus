@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import io.zbus.mq.Broker.ServerSelector;
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.TopicInfo;
  
 
@@ -65,14 +66,14 @@ public class Producer extends MqAdmin{
 
 	public class DefaultProduceServerSelector implements ServerSelector{ 
 		@Override
-		public String[] select(BrokerRouteTable table, String topic) { 
-			int serverCount = table.serverMap().size();
+		public ServerAddress[] select(BrokerRouteTable table, String topic) { 
+			int serverCount = table.serverTable().size();
 			if (serverCount == 0) {
 				return null;
 			}
 			List<TopicInfo> topicList = table.topicTable().get(topic);
 			if (topicList == null || topicList.size() == 0) {
-				return new String[]{table.randomServerInfo().serverAddress};
+				return new ServerAddress[]{table.randomServerInfo().serverAddress};
 			}
 			TopicInfo target = topicList.get(0);
 			for (int i = 1; i < topicList.size(); i++) {
@@ -81,7 +82,7 @@ public class Producer extends MqAdmin{
 					target = current;
 				}
 			}
-			return new String[]{target.serverAddress};
+			return new ServerAddress[]{target.serverAddress};
 		} 
 	} 
 }

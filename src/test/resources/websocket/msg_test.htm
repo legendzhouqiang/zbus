@@ -3,14 +3,14 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Message Test</title>
-<script type="text/javascript" src="http://localhost:15555/js/zbus.js"></script> 
+<script type="text/javascript" src="https://localhost:15555/js/zbus.js"></script> 
 </head>
 <body>   
 	<script type="text/javascript"> 
-	var broker = new Broker("ws://localhost:15555");
+	var broker = new Broker("wss://localhost:15555");
     broker.connect(function(event){
         var msg = {}
-        msg.cmd = "track_query";
+        msg.cmd = "query";
         broker.invoke(msg, function(data){ 
             console.log(data.body);
         });

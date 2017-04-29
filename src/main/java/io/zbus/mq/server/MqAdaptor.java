@@ -661,7 +661,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
-		msg.setServer(mqServer.getServerAddress()); 
+		msg.setServer(mqServer.getServerAddress().address); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
 		if(msg.getId() == null){
 			msg.setId(UUID.randomUUID().toString());

@@ -27,19 +27,6 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 public class ConfigKit {    
 	
 	public static String option(Properties props, String opt, String defaultValue){
@@ -103,6 +90,7 @@ public class ConfigKit {
 	public static String value(Properties props, String name){
 		return value(props, name, "");
 	}
+	
 	public static Set<String> valueSet(Properties props, String name){ 
 		return split(value(props, name));
 	} 
@@ -121,43 +109,18 @@ public class ConfigKit {
 	}
 	
 	public static String valueOf(String value, String defaultValue){
-		if(value == null) return defaultValue;
+		if(StrKit.isEmpty(value)) return defaultValue;
 		return value.trim();
 	}
+	
 	public static int valueOf(String value, int defaultValue){
-		if(value == null) return defaultValue;
+		if(StrKit.isEmpty(value)) return defaultValue;
 		return Integer.valueOf(value);
 	}
+	
 	public static boolean valueOf(String value, boolean defaultValue){
-		if(value == null) return defaultValue;
+		if(StrKit.isEmpty(value)) return defaultValue;
 		return Boolean.valueOf(value);
-	} 
-	
-	public static boolean isBlank(String value){
-		return value == null || value.trim().equals("");
-	}
-	
-	public static String xeval(XPath xpath, Object item, String prefix, String key) throws XPathExpressionException{
-		return xpath.evaluate(prefix + "/" + key,  item);
-	}
-	
-	public static Properties loadFromXmlNode(String xmlFile, String prefix) throws Exception{
-		XPath xpath = XPathFactory.newInstance().newXPath();   
-		InputSource source = new InputSource(xmlFile);  
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document doc = db.parse(source); 
-		 
-		XPathExpression expr = xpath.compile(prefix+"/*");
-		NodeList list = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-		Properties props = new Properties();
-		if(list != null && list.getLength()> 0){ 
-			for (int i = 0; i < list.getLength(); i++) {
-			    Node node = list.item(i);  
-			    props.setProperty(node.getNodeName(), node.getTextContent());
-			}
-		}  
-		return props;
-	}
+	}   
 	
 }

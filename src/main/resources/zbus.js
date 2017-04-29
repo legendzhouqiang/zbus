@@ -1,5 +1,5 @@
-function Protocol(){ 
-}
+function Protocol(){}
+
 Protocol.VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 
 /////////////////////////Command Values/////////////////////////
@@ -8,28 +8,15 @@ Protocol.PRODUCE       = "produce";
 Protocol.CONSUME       = "consume";   
 Protocol.ROUTE         = "route";     //route back message to sender, designed for RPC
 
-//Topic control
-Protocol.DECLARE_TOPIC = "declare_topic";  
-Protocol.QUERY_TOPIC   = "query_topic"; 
-Protocol.REMOVE_TOPIC  = "remove_topic";  
-Protocol.PAUSE_TOPIC   = "pause_topic";  
-Protocol.RESUME_TOPIC  = "resume_topic";  
-Protocol.EMPTY_TOPIC   = "empty_topic";  
+//Topic/ConsumeGroup control
+Protocol.DECLAREC = "declare";  
+Protocol.QUERY    = "query"; 
+Protocol.REMOVE   = "remove";    
+Protocol.EMPTY    = "empty";   
 
-//ConsumeGroup control
-Protocol.DECLARE_GROUP = "declare_group";  
-Protocol.QUERY_GROUP   = "query_group"; 
-Protocol.REMOVE_GROUP  = "remove_group";  
-Protocol.PAUSE_GROUP   = "pause_group";  
-Protocol.RESUME_GROUP  = "resume_group";  
-Protocol.EMPTY_GROUP   = "empty_group";  
- 
-
-//High Availability (HA)
-Protocol.TRACK_QUERY      = "track_query";  
-Protocol.TRACK_PUB_TOPIC  = "track_pub_topic"; 
-Protocol.TRACK_PUB_SERVER = "track_pub_server"; 
-Protocol.TRACK_SUB        = "track_sub";   
+//High Availability (HA) 
+Protocol.TRACK_PUB  = "track_pub"; 
+Protocol.TRACK_SUB  = "track_sub";   
 
 //Simple HTTP server command
 Protocol.PING          = "ping"; //ping server, returning back server time
@@ -598,7 +585,7 @@ function MqAdmin(broker, topic){
 
 MqAdmin.prototype.declareTopic = function(callback){ 
     var msg = {};
-    msg.cmd = Protocol.DECLARE_TOPIC; 
+    msg.cmd = Protocol.DECLARE; 
     msg.topic = this.topic; 
     msg.flag = this.flag; 
     

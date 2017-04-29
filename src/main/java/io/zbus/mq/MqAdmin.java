@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker.ServerSelector;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.TopicInfo;
  
 
@@ -201,8 +202,8 @@ public class MqAdmin {
 
 	public static class DefaultAdminSelector implements ServerSelector{ 
 		@Override
-		public String[] select(BrokerRouteTable table, String topic) { 
-			return table.serverMap().keySet().toArray(new String[0]); 
+		public ServerAddress[] select(BrokerRouteTable table, String topic) { 
+			return table.serverTable().keySet().toArray(new ServerAddress[0]); 
 		} 
 	}
 }

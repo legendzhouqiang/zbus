@@ -3,6 +3,7 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.ClientFactory;
@@ -13,44 +14,38 @@ public class MqClientPool implements Closeable {
 	private Pool<MqClient> pool; 
 	private MqClientFactory factory; 
 	 
-	private String serverAddress;
+	private ServerAddress serverAddress;
 	private final int clientPoolSize;
-	private EventDriver eventDriver; 
-	private final boolean ownEventDriver; 
-	
+	private EventDriver eventDriver;  
 	private MqClient detectClient;
 	private DisconnectedHandler disconnected;
 	
 	
-	public MqClientPool(String serverAddress, int clientPoolSize, EventDriver eventDriver){  
+	public MqClientPool(String serverAddress, int clientPoolSize, EventDriver eventDriver){   
 		this.clientPoolSize = clientPoolSize;
-		this.eventDriver = eventDriver; 
-		this.ownEventDriver = false; 
+		if(eventDriver != null){
+			this.eventDriver = eventDriver.duplicate();
+		} else {
+			this.eventDriver = new EventDriver();
+		}
+		this.serverAddress = new ServerAddress(serverAddress, this.eventDriver.isSslEnabled());
 		
 		this.factory = new MqClientFactory(serverAddress, eventDriver);
 		this.pool = new Pool<MqClient>(factory, this.clientPoolSize); 
 		
-		monitorServer(serverAddress);
+		monitorServer(this.serverAddress);
 	}
 	
 	public MqClientPool(String serverAddress, int clientPoolSize){
-		this.serverAddress = serverAddress;
-		this.clientPoolSize = clientPoolSize;
-		this.eventDriver = new EventDriver(); 
-		this.ownEventDriver = true; 
-		
-		this.factory = new MqClientFactory(serverAddress, eventDriver);
-		this.pool = new Pool<MqClient>(factory, this.clientPoolSize); 
-		
-		monitorServer(serverAddress);
+		this(serverAddress, clientPoolSize, null);
 	}
 	
 	public MqClientPool(String serverAddress){
 		this(serverAddress, 64);
 	} 
 	
-	private void monitorServer(String serverAddress){
-		detectClient = new MqClient(serverAddress, eventDriver);
+	private void monitorServer(ServerAddress serverAddress){
+		detectClient = new MqClient(serverAddress.address, eventDriver);
 		try {
 			ServerInfo info = detectClient.queryServer();
 			this.serverAddress = info.serverAddress;
@@ -92,18 +87,18 @@ public class MqClientPool implements Closeable {
 		return factory.createObject();
 	}
 	
-	public String serverAddress(){
+	public ServerAddress serverAddress(){
 		return serverAddress;
 	}  
 	
 	@Override
 	public void close() throws IOException {
-		this.pool.close(); 
-		detectClient.close();
-		
-		if(ownEventDriver){
+		if(this.pool != null){
+			this.pool.close(); 
+			detectClient.close(); 
 			eventDriver.close(); 
-		}
+			this.pool = null;
+		} 
 	}
 	
 	private static class MqClientFactory extends ClientFactory<Message, Message, MqClient>{ 

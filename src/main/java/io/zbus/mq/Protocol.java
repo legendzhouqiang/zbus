@@ -77,19 +77,31 @@ public class Protocol {
 	public static final int FLAG_DELETE_ON_EXIT = 1<<3; 
 	
 	public static class ServerAddress{
-		public String serverAddress;
+		public String address;
 		public boolean sslEnabled;
+		
+		public ServerAddress(){
+			
+		}
+		public ServerAddress(String address){
+			this.address = address;
+		}
+		
+		public ServerAddress(String address, boolean sslEnabled) {
+			this.address = address;
+			this.sslEnabled = sslEnabled;
+		}
 		
 		@Override
 		public String toString() {
-			return sslEnabled? "(secured)"+serverAddress : serverAddress;
+			return sslEnabled? "[SSL]"+address : address;
 		}
 
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((serverAddress == null) ? 0 : serverAddress.hashCode());
+			result = prime * result + ((address == null) ? 0 : address.hashCode());
 			result = prime * result + (sslEnabled ? 1231 : 1237);
 			return result;
 		}
@@ -103,34 +115,34 @@ public class Protocol {
 			if (getClass() != obj.getClass())
 				return false;
 			ServerAddress other = (ServerAddress) obj;
-			if (serverAddress == null) {
-				if (other.serverAddress != null)
+			if (address == null) {
+				if (other.address != null)
 					return false;
-			} else if (!serverAddress.equals(other.serverAddress))
+			} else if (!address.equals(other.address))
 				return false;
 			if (sslEnabled != other.sslEnabled)
 				return false;
 			return true;
 		}  
-	}
+	}  
 	
 	public static class ServerEvent{  
-		public String serverAddress;
+		public ServerAddress serverAddress;
 		public boolean live = true;  
 	}
 	
 	public static class TrackItem {
-		public String serverAddress;  
+		public ServerAddress serverAddress;  
 		public String serverVersion = VERSION_VALUE;  
 		public Exception error; //current item error encountered
 	}
 	
 	public static class TrackerInfo extends TrackItem{
-		public List<String> trackedServerList;
+		public List<ServerAddress> trackedServerList;
 	}
 	  
 	public static class ServerInfo extends TrackerInfo{   
-		public List<String> trackerList;  
+		public List<ServerAddress> trackerList;  
 		public Map<String, TopicInfo> topicMap = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	

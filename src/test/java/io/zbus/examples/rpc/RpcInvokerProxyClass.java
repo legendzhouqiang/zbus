@@ -7,8 +7,10 @@ import io.zbus.rpc.RpcFactory;
 
 public class RpcInvokerProxyClass {
 
-	public static void main(String[] args) throws Exception { 
-		Broker broker = new Broker("localhost:15555"); 
+	public static void main(String[] args) throws Exception {  
+		Broker broker = new Broker();  
+		broker.addServer("localhost:15555", "ssl/zbus.crt");
+		
 		RpcConfig config = new RpcConfig(broker);  
 		config.setTopic("MyRpc"); 
 		

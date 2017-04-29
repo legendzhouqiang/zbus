@@ -78,7 +78,7 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 		onConnected(new ConnectedHandler() { 
 			@Override
 			public void onConnected() throws IOException {
-				String msg = String.format("Connection(%s:%d) OK", host, port);
+				String msg = String.format("Connection(%s) OK", serverAddress());
 				log.info(msg);
 			}
 		});
@@ -86,14 +86,14 @@ public class TcpClient<REQ, RES> implements Client<REQ, RES> {
 		onDisconnected(new DisconnectedHandler() { 
 			@Override
 			public void onDisconnected() throws IOException {
-				log.warn("Disconnected from(%s:%d)", host, port);
+				log.warn("Disconnected from(%s)", serverAddress());
 				ensureConnectedAsync();//automatically reconnect by default
 			}
 		});
 	}  
-	 
-	public String getConnectedServerAddress(){
-		return host+":"+port;
+	  
+	private String serverAddress(){
+		return String.format("%s%s:%d", sslCtx==null? "" : "[SSL]", host, port);
 	}
 
 	private void init(){

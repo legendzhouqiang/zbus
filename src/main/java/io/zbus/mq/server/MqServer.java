@@ -1,11 +1,8 @@
 package io.zbus.mq.server;
-
-import static io.zbus.kit.ConfigKit.isBlank;
+ 
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,6 +17,7 @@ import io.zbus.kit.NetKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.net.MessageServer;
@@ -34,7 +32,7 @@ public class MqServer implements Closeable{
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config;   
-	private String serverAddress = "";    
+	private ServerAddress serverAddress;    
 	private EventDriver eventDriver; 
 	
 	private MessageServer messageServer;
@@ -46,44 +44,36 @@ public class MqServer implements Closeable{
 		this(new MqServerConfig());
 	}
 	
+	public MqServer(String configFile){
+		this(new MqServerConfig(configFile));
+	}
+	
 	public MqServer(MqServerConfig config){  
-		this.config = config;   
+		this.config = config.clone();   
 		this.eventDriver = new EventDriver();  
 		
-		if(eventDriver.getSslContext() == null){
-			if (!isBlank(config.sslCertificateFile) && !isBlank(config.sslPrivateKeyFile)){ 
-				InputStream certStream = getClass().getClassLoader().getResourceAsStream(config.sslCertificateFile);
-				InputStream privateKeyStream = getClass().getClassLoader().getResourceAsStream(config.sslPrivateKeyFile);
-				if(certStream == null){
-					log.warn("Certificate File: " + config.sslCertificateFile + " not exists");
+		if (config.sslEnabled){
+			if(!StrKit.isEmpty(config.sslCertFile) && !StrKit.isEmpty(config.sslKeyFile)){  
+				try{
+					eventDriver.setServerSslContext(config.sslCertFile, config.sslKeyFile);
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("SSL disabled: " + e.getMessage());
 				}
-				if(privateKeyStream == null){
-					log.warn("PrivateKey File: " + config.sslPrivateKeyFile + " not exists");
-				}
-				if(certStream != null && privateKeyStream != null){
-					eventDriver.setServerSslContext(certStream, privateKeyStream);
-					try {
-						certStream.close();
-					} catch (IOException e) {
-						//ignore
-					}
-					try {
-						privateKeyStream.close();
-					} catch (IOException e) {
-						//ignore
-					} 
-				}
+			} else {
+				log.warn("SSL disabled, since SSL certificate file and private file not configured properly");
 			}
 		}
 		
 		String host = config.serverHost;
 		if("0.0.0.0".equals(host)){
-			host = NetKit.getLocalIp(config.serverMainIpOrder);
+			host = NetKit.getLocalIp();
 		}
-		serverAddress = host+":"+config.serverPort; 
+		String address = host+":"+config.serverPort;
 		if(!StrKit.isEmpty(config.serverName)){
-			serverAddress = config.serverName + ":"+config.serverPort; 
-		}
+			address = config.serverName + ":"+config.serverPort; 
+		} 
+		serverAddress = new ServerAddress(address, eventDriver.isSslEnabled()); 
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -97,7 +87,8 @@ public class MqServer implements Closeable{
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		  
 		messageTracer = new MessageTracer();
-		tracker = new Tracker(this, true); //TODO configure whether this server in track or not
+		tracker = new Tracker(serverAddress, eventDriver, config.sslCertFileTable, !config.trackerModeOnly);
+		
 		mqAdaptor = new MqAdaptor(this);   
 	} 
 	
@@ -113,16 +104,14 @@ public class MqServer implements Closeable{
 		} catch (IOException e) {
 			log.error("Load Message Queue Error: " + e);
 		}   
-		String trackerList = config.getTrackServerList();
-		if(!StrKit.isEmpty(trackerList)){ //tracker try to join upstream Tracker.
-			tracker.joinUpstream(trackerList);
-		}
+		 
+		tracker.joinUpstream(config.getTrackerList());
 		
 		messageServer = new MessageServer(eventDriver);   
 		messageServer.start(config.serverHost, config.serverPort, mqAdaptor);  
 		 
 		long end = System.currentTimeMillis();
-		log.info("Zbus started sucessfully in %d ms", (end-start)); 
+		log.info("Zbus(%s) started sucessfully in %d ms", serverAddress, (end-start)); 
 	}
 	 
 	@Override
@@ -145,7 +134,7 @@ public class MqServer implements Closeable{
 		return sessionTable;
 	}  
 
-	public String getServerAddress() {
+	public ServerAddress getServerAddress() {
 		return serverAddress;
 	}  
 
@@ -179,38 +168,25 @@ public class MqServer implements Closeable{
 		ServerInfo info = new ServerInfo(); 
 		info.serverAddress = serverAddress;
 		info.topicMap = table;
+		info.trackerList = config.getTrackerList();
 		info.trackedServerList = tracker.trackerInfo().trackedServerList;
-
-		String serverList = config.getTrackServerList();
-		if (serverList == null) {
-			serverList = "";
-		}
-		serverList = serverList.trim();
-
-		info.trackerList = new ArrayList<String>();
-		for (String s : serverList.split("[;, ]")) {
-			s = s.trim();
-			if ("".equals(s))
-				continue;
-			info.trackerList.add(s);
-		}
+ 
 		return info;
 	}
 
-	public static void main(String[] args) throws Exception {
-		MqServerConfig config = new MqServerConfig(); 
-		String xmlConfigFile = ConfigKit.option(args, "-conf", "conf/zbus.xml");
+	public static void main(String[] args) throws Exception { 
+		String configFile = ConfigKit.option(args, "-conf", "conf/zbus.xml"); 
+		
+		final MqServer server;
 		try{
-			config.loadFromXml(xmlConfigFile); 
-		} catch(Exception ex){ 
-			String message = xmlConfigFile + " config error encountered\n" + ex.getMessage();
-			System.err.println(message);
-			log.warn(message); 
+			server = new MqServer(configFile);
+			server.start(); 
+		} catch (Exception e) { 
+			e.printStackTrace(System.err);
+			log.warn(e.getMessage(), e); 
 			return;
 		} 
 		
-		final MqServer server = new MqServer(config);
-		server.start(); 
 		Runtime.getRuntime().addShutdownHook(new Thread(){ 
 			public void run() { 
 				try { 

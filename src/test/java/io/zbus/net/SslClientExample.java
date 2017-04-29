@@ -7,7 +7,7 @@ public class SslClientExample {
  
 	public static void main(String[] args) throws Exception, InterruptedException { 
 		EventDriver driver = new EventDriver(); 
-		driver.setClientSslContext("ssl/zbus.crt");  
+		driver.setClientSslContext("ssl/zbus.crt");   
 		
 		MessageClient client = new MessageClient("localhost:15555", driver);
 

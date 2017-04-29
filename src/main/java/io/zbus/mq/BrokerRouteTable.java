@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
@@ -16,102 +17,99 @@ import io.zbus.mq.Protocol.TrackerInfo;
 /**
  *  Route table based on the Topics info across ZbusServers.
  *  
- *  ServerMap: server address => ServerInfo
- *  TopicTable: topic string => list of server contains this topic(TopicInfo details)
- *  VoteTable:  topic string => list of server voted this topic
+ *  ServerTable: server address => ServerInfo
+ *  TopicTable : topic string => list of server contains this topic(TopicInfo details)
+ *  VoteTable  : topic string => list of server voted this topic
  *
  */
 public class BrokerRouteTable {  
-	//Topic ==> ServerAddress list(voted servers)
-	private Map<String, Set<String>> votesTable = new ConcurrentHashMap<String, Set<String>>(); 
+	//Server Address ==> Voted tracker list(
+	private Map<ServerAddress, Set<ServerAddress>> votesTable = new ConcurrentHashMap<ServerAddress, Set<ServerAddress>>(); 
 	//Topic ==> Server List(topic span across ZbusServers)
 	private Map<String, List<TopicInfo>> topicTable = new ConcurrentHashMap<String, List<TopicInfo>>(); 
 	//Server Address ==> ServerInfo
-	private Map<String, ServerInfo> serverMap = new ConcurrentHashMap<String, ServerInfo>();
-	
-	/**
-	 * ServerAddress to ServerInfo
-	 * @return
-	 */
-	public Map<String, ServerInfo> serverMap() {
-		return serverMap;
+	private Map<ServerAddress, ServerInfo> serverTable = new ConcurrentHashMap<ServerAddress, ServerInfo>();
+	 
+	public Map<ServerAddress, ServerInfo> serverTable() {
+		return serverTable;
 	}
-
-	/**
-	 * Topic string to ServerList
-	 * @return
-	 */
+ 
 	public Map<String, List<TopicInfo>> topicTable() {
 		return topicTable;
 	}
 
-	public ServerInfo serverInfo(String serverAddress) {
-		return serverMap.get(serverAddress);
+	public ServerInfo serverInfo(ServerAddress serverAddress) {
+		return serverTable.get(serverAddress);
 	}
 
 	public ServerInfo randomServerInfo() {
-		if (serverMap.isEmpty())
+		if (serverTable.isEmpty())
 			return null;
 
-		List<ServerInfo> servers = new ArrayList<ServerInfo>(serverMap.values());
-		return servers.get(new Random().nextInt(servers.size()));
+		List<ServerInfo> servers = new ArrayList<ServerInfo>(serverTable.values());
+		Random r = new Random();
+		r.setSeed(System.currentTimeMillis());
+		return servers.get(r.nextInt(servers.size()));
 	}
 	
-	public void removeServer(String serverAddress){
-		Map<String, ServerInfo> serverMapLocal = new ConcurrentHashMap<String, ServerInfo>(serverMap);
-		ServerInfo serverInfo = serverMapLocal.remove(serverAddress);
+	public void removeServer(ServerAddress serverAddress){
+		Map<ServerAddress, ServerInfo> serverTableLocal = new ConcurrentHashMap<ServerAddress, ServerInfo>(serverTable);
+		ServerInfo serverInfo = serverTableLocal.remove(serverAddress);
 		if(serverInfo == null) return;
 		
-		Map<String, List<TopicInfo>> topicTableLocal = rebuildTable(serverMapLocal); 
-		serverMap = serverMapLocal;
+		Map<String, List<TopicInfo>> topicTableLocal = rebuildTopicTable(serverTableLocal); 
+		serverTable = serverTableLocal;
 		topicTable = topicTableLocal;
 	}
 
-	public void update(ServerInfo serverInfo) { 
-		Map<String, ServerInfo> serverMapLocal = new ConcurrentHashMap<String, ServerInfo>(serverMap);
-		serverMapLocal.put(serverInfo.serverAddress, serverInfo);
+	public void updateServer(ServerInfo serverInfo) { 
+		Map<ServerAddress, ServerInfo> serverTableLocal = new ConcurrentHashMap<ServerAddress, ServerInfo>(serverTable);
+		serverTableLocal.put(serverInfo.serverAddress, serverInfo);
 		
-		Map<String, List<TopicInfo>> topicTableLocal = rebuildTable(serverMapLocal); 
-		serverMap = serverMapLocal;
+		Map<String, List<TopicInfo>> topicTableLocal = rebuildTopicTable(serverTableLocal); 
+		serverTable = serverTableLocal;
 		topicTable = topicTableLocal;
-	} 
+	}  
 	
-	private boolean canRemove(Set<String> votes){
-		return votes.isEmpty();
-	}
 	
-	public List<String> updateVotes(TrackerInfo trackerInfo){ 
-		Map<String, Set<String>> votesTableLocal = new ConcurrentHashMap<String, Set<String>>(votesTable);
+	public List<ServerAddress> updateTrackerInfo(TrackerInfo trackerInfo){ 
+		Map<ServerAddress, Set<ServerAddress>> votesTableLocal = new ConcurrentHashMap<ServerAddress, Set<ServerAddress>>(votesTable);
 		
-		List<String> toRemove = new ArrayList<String>();
-		Iterator<Entry<String, Set<String>>> iter = votesTableLocal.entrySet().iterator();
+		List<ServerAddress> toRemove = new ArrayList<ServerAddress>();
+		Iterator<Entry<ServerAddress, Set<ServerAddress>>> iter = votesTableLocal.entrySet().iterator();
 		while(iter.hasNext()){
-			Entry<String, Set<String>> e = iter.next();
-			
-			if(!trackerInfo.trackedServerList.contains(e.getKey())){
-				e.getValue().remove(trackerInfo.serverAddress);
+			Entry<ServerAddress, Set<ServerAddress>> e = iter.next();
+			ServerAddress serverAddress = e.getKey();
+			Set<ServerAddress> votedTrackerList = e.getValue(); 
+			 
+			if(!trackerInfo.trackedServerList.contains(serverAddress)){ 
+				votedTrackerList.remove(trackerInfo.serverAddress);
 			} 
 			
-			if(canRemove(e.getValue())){
+			if(canRemove(votedTrackerList)){
 				iter.remove();
-				toRemove.add(e.getKey());
+				toRemove.add(serverAddress);
 			}
 		} 
 		if(toRemove.isEmpty()) return toRemove;
 		
-		Map<String, ServerInfo> serverMapLocal = new ConcurrentHashMap<String, ServerInfo>(serverMap); 
-		for(String server : toRemove){
-			serverMapLocal.remove(server);
+		Map<ServerAddress, ServerInfo> serverTableLocal = new ConcurrentHashMap<ServerAddress, ServerInfo>(serverTable); 
+		for(ServerAddress server : toRemove){
+			serverTableLocal.remove(server);
 		}
-		Map<String, List<TopicInfo>> topicTableLocal = rebuildTable(serverMapLocal); 
+		Map<String, List<TopicInfo>> topicTableLocal = rebuildTopicTable(serverTableLocal); 
 		votesTable = votesTableLocal;
-		serverMap = serverMapLocal;
+		serverTable = serverTableLocal;
 		topicTable = topicTableLocal;
 		
 		return toRemove; 
 	}
+	
+	private boolean canRemove(Set<ServerAddress> votes){
+		return votes.isEmpty();
+	}
 
-	private Map<String, List<TopicInfo>> rebuildTable(Map<String, ServerInfo> serverMapLocal) {
+	private Map<String, List<TopicInfo>> rebuildTopicTable(Map<ServerAddress, ServerInfo> serverMapLocal) {
 		Map<String, List<TopicInfo>> table = new ConcurrentHashMap<String, List<TopicInfo>>();
 		for (ServerInfo serverInfo : serverMapLocal.values()) {
 			for (TopicInfo topicInfo : serverInfo.topicMap.values()) {

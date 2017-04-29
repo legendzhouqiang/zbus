@@ -57,10 +57,8 @@ public class EventDriver implements Closeable {
 		this.sslContext = driver.sslContext;
 	}
 
-	public EventDriver duplicateWithClientSsl(String certPath){ 
-		EventDriver dup = new EventDriver(this);
-		dup.setClientSslContext(certPath);
-		return dup;
+	public EventDriver duplicate(){ 
+		return new EventDriver(this); 
 	}
 	
 	public EventLoopGroup getBossGroup() {
@@ -104,7 +102,7 @@ public class EventDriver implements Closeable {
 	public void setServerSslContext(String certStreamPath, String privateKeyPath) { 
 		InputStream certStream = FileKit.inputStream(certStreamPath);
 		if(certStream == null){
-			throw new IllegalArgumentException(certStreamPath + " not exits");
+			throw new IllegalArgumentException("Certification file(" + certStreamPath + ") not exists");
 		}
 		InputStream privateKeyStream = FileKit.inputStream(privateKeyPath);
 		if(privateKeyStream == null){
@@ -113,7 +111,7 @@ public class EventDriver implements Closeable {
 			} catch (IOException e) {
 				//ignore
 			}
-			throw new IllegalArgumentException(privateKeyPath + " not exits"); 
+			throw new IllegalArgumentException("PrivateKey file(" + privateKeyPath + ") not exists"); 
 		}
 		
 		setServerSslContext(certStream, privateKeyStream);
@@ -142,7 +140,7 @@ public class EventDriver implements Closeable {
 	public void setClientSslContext(String certStreamPath) { 
 		InputStream certStream = FileKit.inputStream(certStreamPath);
 		if(certStream == null){
-			throw new IllegalArgumentException(certStreamPath + " not exits");
+			throw new IllegalArgumentException("Certification file(" +certStreamPath + ") not exists");
 		}
 		
 		setClientSslContext(certStream);

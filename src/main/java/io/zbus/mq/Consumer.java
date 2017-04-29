@@ -12,7 +12,8 @@ import java.util.concurrent.TimeUnit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker.ServerNotifyListener;
-import io.zbus.mq.Broker.ServerSelector; 
+import io.zbus.mq.Broker.ServerSelector;
+import io.zbus.mq.Protocol.ServerAddress; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class);  
@@ -31,7 +32,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	
 	private boolean started;
 	
-	private Map<String, ConsumeThreadGroup> consumeThreadGroupMap = new ConcurrentHashMap<String, ConsumeThreadGroup>(); 
+	private Map<ServerAddress, ConsumeThreadGroup> consumeThreadGroupMap = new ConcurrentHashMap<ServerAddress, ConsumeThreadGroup>(); 
 
 	public Consumer(ConsumerConfig config) {
 		super(config); 
@@ -79,7 +80,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		broker.addServerNotifyListener(new ServerNotifyListener() { 
 			@Override
-			public void onServerLeave(String serverAddress) { 
+			public void onServerLeave(ServerAddress serverAddress) { 
 				ConsumeThreadGroup group = consumeThreadGroupMap.remove(serverAddress);
 				if(group != null){
 					try {
@@ -213,8 +214,8 @@ public class Consumer extends MqAdmin implements Closeable {
 	
 	public static class DefaultConsumeServerSelector implements ServerSelector{ 
 		@Override
-		public String[] select(BrokerRouteTable table, String topic) { 
-			return table.serverMap().keySet().toArray(new String[0]); 
+		public ServerAddress[] select(BrokerRouteTable table, String topic) { 
+			return table.serverTable().keySet().toArray(new ServerAddress[0]); 
 		} 
 	}  
 }

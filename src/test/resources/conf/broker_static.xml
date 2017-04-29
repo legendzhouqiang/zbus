@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus>    
+	<defaultSslCertFile>ssl/zbus.crt</defaultSslCertFile>   
+	<clientPoolSize>32</clientPoolSize> 
+	
+	<serverList>
+		<serverAddress>
+			<address>localhost:15555</address>  
+			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
+		</serverAddress> 
+		<serverAddress>
+			<address>localhost:15556</address>  
+			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
+		</serverAddress>   
+	</serverList>    
+	  
+</zbus>
+
