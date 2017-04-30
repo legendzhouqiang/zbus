@@ -12,7 +12,7 @@ IF "%1" == "" (
 	SET MAIN_OPTS=-conf %1 
 ) 
 
-SET LIB_OPTS=%ZBUS_HOME%/lib/*;%ZBUS_HOME%/classes;%ZBUS_HOME%/*;
+SET LIB_OPTS=%ZBUS_HOME%/lib/*;%ZBUS_HOME%/classes;%ZBUS_HOME%/*;%ZBUS_HOME%/conf;
 IF NOT EXIST "%JAVA_HOME%" (
     SET JAVA=java
 ) ELSE (
