@@ -4,10 +4,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
@@ -38,14 +42,38 @@ public class Tracker implements Closeable{
 	private boolean myServerInTrack; 
 	
 	private Map<String, String> sslCertFileTable;
+	
+	protected volatile ScheduledExecutorService heartbeator = Executors.newSingleThreadScheduledExecutor();
 
 	
 	public Tracker(ServerAddress myServerAddress, EventDriver eventDriver, 
-			Map<String, String> sslCertFileTable, boolean myServerInTrack){ 
+			Map<String, String> sslCertFileTable, boolean myServerInTrack, long trackReportIntervalMs){ 
 		this.myServerAddress = myServerAddress;
 		this.eventDriver = eventDriver.duplicate(); 
 		this.myServerInTrack = myServerInTrack; 
 		this.sslCertFileTable = sslCertFileTable;
+		
+		this.heartbeator.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				try {
+					Iterator<MessageClient> iter = upstreamTrackers.iterator();
+					while(iter.hasNext()){
+						MessageClient client = iter.next();
+						try{
+							ServerEvent event = new ServerEvent();
+		    				event.serverAddress = Tracker.this.myServerAddress;
+		    				event.live = true;
+		    				
+		    				notifyUpstream(client, event);
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					} 
+				} catch (Exception e) {
+					log.warn(e.getMessage(), e);
+				}
+			}
+		}, trackReportIntervalMs, trackReportIntervalMs, TimeUnit.MILLISECONDS);
 	} 
 	 
 	public TrackerInfo trackerInfo(){  
@@ -69,7 +97,12 @@ public class Tracker implements Closeable{
 				@Override
 				public void onDisconnected() throws IOException { 
 					log.warn("Disconnected from Tracker(%s)", trackerAddress.address);
-					healthyUpstreamTrackers.remove(trackerAddress);
+					healthyUpstreamTrackers.remove(trackerAddress); 
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						return;
+					}
     				client.ensureConnectedAsync(); 
     			}  
 			});
@@ -92,9 +125,11 @@ public class Tracker implements Closeable{
 	
 	private MessageClient connectToServer(ServerAddress serverAddress){
 		EventDriver driver = eventDriver.duplicate(); //duplicated, no need to close
-		String certPath = sslCertFileTable.get(serverAddress.address);
-		if(certPath != null){
-			driver.setClientSslContext(certPath);
+		if(serverAddress.sslEnabled){
+			String certPath = sslCertFileTable.get(serverAddress.address);
+			if(certPath != null){
+				driver.setClientSslContext(certPath);
+			}
 		}
 		final MessageClient client = new MessageClient(serverAddress.address, driver);  
 		return client;
@@ -220,6 +255,7 @@ public class Tracker implements Closeable{
 	
 	@Override
 	public void close() throws IOException {
+		this.heartbeator.shutdown();
 		for(MessageClient client : upstreamTrackers){
 			client.close();
 		}

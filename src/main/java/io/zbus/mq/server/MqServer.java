@@ -87,7 +87,8 @@ public class MqServer implements Closeable{
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS); 
 		  
 		messageTracer = new MessageTracer();
-		tracker = new Tracker(serverAddress, eventDriver, config.sslCertFileTable, !config.trackerModeOnly);
+		tracker = new Tracker(serverAddress, eventDriver, config.sslCertFileTable, 
+				!config.trackerModeOnly, config.trackReportInterval);
 		
 		mqAdaptor = new MqAdaptor(this);   
 	} 

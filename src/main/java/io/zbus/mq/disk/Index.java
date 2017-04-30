@@ -23,7 +23,7 @@ public class Index extends MappedFile {
 	private static final int IndexSize = HeadSize + BlockMaxCount * OffsetSize;
 
 	private static final int BlockCountPos = 4;  
-	private static final int MessageCountPos = 20; 
+	private static final int MessageCountPos = 16; 
 	
 	private volatile int blockCount = 0;
 	private volatile long blockStart = 0; 
@@ -308,8 +308,7 @@ public class Index extends MappedFile {
 		} 
 		this.blockCount = buffer.getInt(); 
 		this.blockStart = buffer.getLong();  
-		this.messageCount.set(buffer.getLong());
-		this.createdTime = buffer.getLong(); 
+		this.messageCount.set(buffer.getLong()); 
 	}
 
 	@Override
@@ -319,7 +318,6 @@ public class Index extends MappedFile {
 		buffer.putInt(blockCount);
 		buffer.putLong(this.blockStart); 
 		buffer.putLong(this.messageCount.get());
-		buffer.putLong(System.currentTimeMillis()); 
 	} 
 	  
 	public long getMessageCount(){

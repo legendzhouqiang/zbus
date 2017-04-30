@@ -97,14 +97,14 @@ public class MessageAdaptor implements IoAdaptor{
 	}
  
 	@Override
-	public void sessionError(Throwable e, Session sess) throws Exception {
-		log.info("Session Error: " + e);
+	public void sessionError(Throwable e, Session sess) throws Exception { 
+		log.info("Session Error: " + sess, e);
 		cleanSession(sess);
 	} 
 
 	@Override
 	public void sessionIdle(Session sess) throws IOException { 
-		log.info("Session Idle Remove: " + sess);
+		log.info("Session Idled: " + sess);
 		cleanSession(sess);
 	}
 	

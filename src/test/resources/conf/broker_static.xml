@@ -6,11 +6,11 @@
 	<serverList>
 		<serverAddress>
 			<address>localhost:15555</address>  
-			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
+			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress> 
 		<serverAddress>
 			<address>localhost:15556</address>  
-			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
+			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress>   
 	</serverList>    
 	  

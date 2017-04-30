@@ -84,7 +84,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				ConsumeThreadGroup group = consumeThreadGroupMap.remove(serverAddress);
 				if(group != null){
 					try {
-						log.info("Server(" + serverAddress + ") left, clear consumeThreads connecting to  it");
+						log.info("Server(" + serverAddress + ") left, clear consumeThreads connecting to it");
 						group.close();
 					} catch (IOException e) {
 						log.error(e.getMessage(), e);

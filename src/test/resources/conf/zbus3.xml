@@ -6,7 +6,7 @@
 	
 	<defaultSslCertFile>ssl/zbus.crt</defaultSslCertFile> 
 	
-	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
+	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
 
 	<storePath>/tmp/zbus3</storePath> 
 	<verbose>false</verbose>   
@@ -15,7 +15,7 @@
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15555</address>  
-			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
+			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress>   
 	</trackerList>  
 	

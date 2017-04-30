@@ -85,91 +85,23 @@
 
 $(document).ready(function(){  
 	
-var trackBroker;
-var tracingBrokerMap = {};  
-var traceMessageCount = 50;
-var serverSubTopicMap = {};
+var broker = null;
+var filterServerList = null;
 
 function calcFilter(){ 
-	//compute serverList updated
-	var filterServerList = [];
+	filterServerList = [];
     $("#server-list input.server").each(function(data){
     	var checked = $(this).is(":checked");
     	if(checked){
     		filterServerList.push($(this).val());
     	} 
-    });  
-    trackBroker.filterServerList = filterServerList;  
-
-    $("#server-list span.topic-badge").each(function(key, data){
-    	$(this).siblings().each(function(key, data){
-    		
-    		var toDel = $(this).hasClass("topic-deactive");
-    		var serverAddress = $(this).attr("address");
-    		if(!serverAddress) return;
-    		
-    		var subTopics = serverSubTopicMap[serverAddress];
-    		if(!subTopics){
-    			subTopics = [];
-    			serverSubTopicMap[serverAddress] = subTopics;
-    		}
-    		var topic = $(this).text(); 
-    		
-    		var idx = subTopics.indexOf(topic);
-    		if(toDel){
-    			if(idx >= 0){ 
-    				subTopics.splice(idx, 1);
-    			}
-    		} else {
-    			if(idx < 0){
-    				subTopics.push(topic);
-    			}
-    		} 
-    	});
-    }); 
+    });   
 }
 
-function updateTrackInfo(){  
-	var filterServerList = trackBroker.filterServerList;
-	
-   	for(var serverAddress in trackBroker.serverInfoMap){ 
-   		var serverInfo = trackBroker.serverInfoMap[serverAddress]; 
-   		var broker = tracingBrokerMap[serverAddress]; 
-       	
-   		if(!trackBroker.inFilter(serverAddress)){
-       		if(broker){
-        		var msg = {};
-        	    msg.cmd = Protocol.TRACE; 
-        	    msg.flag = 0; //unsubscribe
-        	    broker.sendMessage(msg); 
-          	}  
-       		continue;
-   		} 
-       	
-   		subTopics = serverSubTopicMap[serverAddress]; 
-       	if(!broker){
-       		var broker = new Broker(serverAddress); 
-       		broker.onMessage(function (msg) {
-       			onTracingMessage(msg);
-       	    });
-
-       	    broker.connect(function (event) {
-       	        var msg = {};
-       	        msg.cmd = Protocol.TRACE; 
-       	        if(subTopics){
-       	        	msg.topic = subTopics.join();
-       	        } 
-       	        broker.sendMessage(msg);
-       	    });
-       	    tracingBrokerMap[serverAddress] = broker;
-       	} else {
-       		var msg = {};
-    	    msg.cmd = Protocol.TRACE;  
-    	    if(subTopics){
-   	        	msg.topic = subTopics.join();
-   	        }
-    	    broker.sendMessage(msg); 
-       	}  
+function updateTrackerInfo(){    
+	var serverInfoTable = broker.routeTable.serverTable;
+   	for(var serverAddress in serverInfoTable){ 
+   		var serverInfo = serverInfoTable[serverAddress];   
    	}  
 } 
 
@@ -179,7 +111,7 @@ $("#filter-all").change(function() {
 	$("#server-list input.server").prop('checked', checked); 
 	
 	calcFilter();
-	updateTrackInfo();
+	updateTrackerInfo();
 });  
 
 $("#server-list").on("change", "input.server", function() {
@@ -187,14 +119,14 @@ $("#server-list").on("change", "input.server", function() {
     $(this).prop("checked", checked); 
     
     calcFilter();
-    updateTrackInfo(); 
+    updateTrackerInfo(); 
 });
 
 $("#server-list").on("click", "span.topic-list", function() {
 	$(this).toggleClass("topic-deactive"); 
 	
 	calcFilter();
-	updateTrackInfo();
+	updateTrackerInfo();
 });
 
 $("#server-list").on("click", "span.topic-badge" ,function() { 
@@ -205,56 +137,10 @@ $("#server-list").on("click", "span.topic-badge" ,function() {
 		$(this).siblings().removeClass("topic-deactive");
 	}
 	calcFilter();
-	updateTrackInfo(); 
+	updateTrackerInfo(); 
 });
-
-$.get('/version',function(data){  
-	$("#version").text(data); 
-}); 
-  
-function serverTopicList(serverInfo){
-	var topicMap = serverInfo.topicMap
-	var res = "";
-	var keys = Object.keys(topicMap);
-	keys.sort();
-	
-	for(var i in keys){ 
-		res += "<span address='" + serverInfo.serverAddress + "' class='topic-list topic label label-success'>" + keys[i] + "</span>";
-	} 
-   	return res;
-}
-   
-function showServerTable(trackBroker){  
-	$("#server-list").find("tr:gt(0)").remove();
-	
-	var serverInfoMap = trackBroker.serverInfoMap;
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicList = serverTopicList(serverInfo); 
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.filterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		$("#server-list").append(
-			"<tr>\
-				<td>\
-					<a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-					<div class='filter-box'>\
-	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-	            	</div>\
-            	</td>\
-				<td>" + serverInfo.serverVersion + "</td>\
-				<td>\
-	                <span class='topic topic-badge label label-success label-as-badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
-	           	</td>\
-			</tr>"
-		);    
-	} 
-}
  
-
+   
 function onTracingMessage(msg){
 	if(msg.originUrl){ //return back to origin url
 		msg.url = msg.originUrl;
@@ -269,22 +155,25 @@ function onTracingMessage(msg){
 }
 
 
+
 $.getJSON('/query',function(serverInfo){   
-	trackBroker = new TrackBroker(serverInfo.serverAddress); 
-	trackBroker.onServerUpdated = function(serverAddress){  
-		showServerTable(trackBroker);  
-		updateTrackInfo();
+	$("#version").text(serverInfo.serverVersion); 
+	var trackerAddress = serverInfo.serverAddress;
+	broker = new Broker();   
+	broker.onServerUpdated = function(serverInfo){
+		showServerTable(broker.routeTable.serverTable, filterServerList, trackerAddress); 
 	};
-	
-	trackBroker.connect();
+	broker.addTracker(trackerAddress); 
 	 
 	for(var i in serverInfo.trackerList){
-		var address = serverInfo.trackerList[i]; 
+		var serverAddress = serverInfo.trackerList[i]; 
+		var serverFullAddr = httpFullAddress(serverAddress);
 		$("#track-list").append(
-			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
+			"<a class='link' target='_blank' href='" +serverFullAddr + "'>" + serverAddress.address + "</a>"
 		);
 	}  
 });     
+
 
 });
 

@@ -21,8 +21,14 @@ function serverTopicList(topicTable){
 function showServerTable(serverInfoTable, filterServerList, trackerAddress){ 
 	$("#server-list").find("tr:gt(0)").remove();
 	 
+	var serverList = [];
 	for(var key in serverInfoTable){
-		var serverInfo = serverInfoTable[key];
+		serverList.push(key);
+	}
+	serverList.sort();
+	for(var i in serverList){
+		var server = serverList[i];
+		var serverInfo = serverInfoTable[server];
 		var topicList = serverTopicList(serverInfo.topicTable); 
 		var checked ="checked=checked"; 
 		if(filterServerList && !filterServerList.includes(key)){
@@ -68,8 +74,8 @@ function consumeGroupList(groupList){
 }
 
 function topicServerList(topicInfoList, filterServerList){
-	var res = ""; 
-	topicInfoList.sort(); 
+	var res = "";  
+	topicInfoList.sort(function(a,b){return a.serverAddress.address >= b.serverAddress.address;}); 
 	for(var i in topicInfoList){ 
 		var topicInfo = topicInfoList[i];
 		var linkAddr = topicInfo.serverAddress; 

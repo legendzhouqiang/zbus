@@ -37,7 +37,7 @@ Protocol.FLAG     = "flag";
 Protocol.TAG   	  = "tag";  
 Protocol.OFFSET   = "offset";
 
-Protocol.CONSUMER_GROUP       = "consumer_group";  
+Protocol.CONSUME_GROUP        = "consume_group";  
 Protocol.CONSUME_BASE_GROUP   = "consume_base_group";  
 Protocol.CONSUME_START_OFFSET = "consume_start_offset";
 Protocol.CONSUME_START_MSGID  = "consume_start_msgid";
@@ -57,8 +57,7 @@ Protocol.EXPIRE   = "expire";
 Protocol.ORIGIN_ID     = "origin_id";   
 Protocol.ORIGIN_URL    = "origin_url";  
 Protocol.ORIGIN_STATUS = "origin_status";  
-
-Protocol.APPID   = "appid";
+ 
 Protocol.TOKEN   = "token";
 
 

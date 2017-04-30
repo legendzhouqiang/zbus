@@ -6,7 +6,7 @@
 	
 	<defaultSslCertFile>ssl/zbus.crt</defaultSslCertFile> 
 	
-	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
+	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
 
 	<storePath>/tmp/zbus</storePath> 
 	<verbose>false</verbose>   

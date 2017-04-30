@@ -41,8 +41,8 @@ public class MqServerConfig implements Cloneable {
 	public String storePath = "/tmp/zbus";  
 	public String serverName = serverHost+":"+serverPort;
 	
-	public long cleanMqInterval = 3000; 
-	public long trackReportInterval = 5000;  
+	public long cleanMqInterval = 3000;       //3 seconds
+	public long trackReportInterval = 30000;  //30 seconds
 	
 	public MqServerConfig(){ }
 	
