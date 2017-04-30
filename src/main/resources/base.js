@@ -1,91 +1,53 @@
-function serverTopicList(topicMap){
+function httpFullAddress(serverAddress){
+	var scheme = "http://"
+	if(serverAddress.sslEnabled){
+		scheme = "https://" 
+	}
+	return scheme + serverAddress.address;
+}
+
+function serverTopicList(topicTable){
 	var res = "";
-	var keys = Object.keys(topicMap);
+	var keys = Object.keys(topicTable);
 	keys.sort();
 	
 	for(var i in keys){ 
 		res += "<a href='#' class='topic link label label-info'>" + keys[i] + "</a>";
 	} 
    	return res;
-}
-
-function buildTopicList(serverInfo){
-	var topicMap = serverInfo.topicMap
-	var res = "";
-	var keys = Object.keys(topicMap);
-	keys.sort();
-	
-	for(var i in keys){ 
-		res += "<span address='" + serverInfo.serverAddress + "' class='topic-list topic label label-success'>" + keys[i] + "</span>";
-	} 
-   	return res;
-}  
+} 
 
 
-function showServerTable(trackBroker){ 
+function showServerTable(serverInfoTable, filterServerList, trackerAddress){ 
 	$("#server-list").find("tr:gt(0)").remove();
-	
-	var serverInfoMap = trackBroker.serverInfoMap;
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicList = serverTopicList(serverInfo.topicMap); 
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.filterServerList;
+	 
+	for(var key in serverInfoTable){
+		var serverInfo = serverInfoTable[key];
+		var topicList = serverTopicList(serverInfo.topicTable); 
+		var checked ="checked=checked"; 
 		if(filterServerList && !filterServerList.includes(key)){
 			checked = "";
 		}
 		var tag = "";
-		if(serverInfo.serverAddress == trackBroker.serverAddress){
+		if(trackerAddress && serverInfo.serverAddress.address == trackerAddress.address){
 			tag = "<span>*</span>";
 		}
+		var fullAddr = httpFullAddress(serverInfo.serverAddress); 
 		$("#server-list").append(
 			"<tr>\
-				<td><a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
+				<td><a class='link' target='_blank' href='" + fullAddr + "'>" + serverInfo.serverAddress.address + "</a>\
 					"+ tag + "<div class='filter-box'>\
-	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
+	            		<input class='server' type='checkbox' "+ checked +" value='"+fullAddr + "'>\
 	            	</div>\
             	</td>\
 				<td>" + serverInfo.serverVersion + "</td>\
 				<td>\
-	                <span class='badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
+	                <span class='badge'>" + hashSize(serverInfo.topicTable) + "</span>" + topicList + "\
 	           	</td>\
 			</tr>"
 		);    
 	} 
-} 
-
-
-
-function showServerList(trackBroker){  
-	$("#server-list").find("tr:gt(0)").remove();
-	
-	var serverInfoMap = trackBroker.serverInfoMap;
-	for(var key in serverInfoMap){
-		var serverInfo = serverInfoMap[key];
-		var topicList = buildTopicList(serverInfo); 
-		var checked ="checked=checked";
-		var filterServerList = trackBroker.filterServerList;
-		if(filterServerList && !filterServerList.includes(key)){
-			checked = "";
-		}
-		
-		$("#server-list").append(
-			"<tr>\
-				<td>\
-					<a class='link' target='_blank' href='http://"+serverInfo.serverAddress + "'>" + serverInfo.serverAddress + "</a>\
-					<div class='filter-box'>\
-	            		<input class='server' type='checkbox' "+ checked +" value='"+serverInfo.serverAddress + "'>\
-	            	</div>\
-            	</td>\
-				<td>" + serverInfo.serverVersion + "</td>\
-				<td>\
-	                <span class='topic topic-badge label label-success label-as-badge'>" + hashSize(serverInfo.topicMap) + "</span>" + topicList + "\
-	           	</td>\
-			</tr>"
-		);    
-	} 
-}
- 
+}  
 
 function consumeGroupList(groupList){ 
 	var res = "";
@@ -105,15 +67,20 @@ function consumeGroupList(groupList){
 	return res;
 }
 
-function topicServerList(serverList){
+function topicServerList(topicInfoList, filterServerList){
 	var res = ""; 
-	serverList.sort(); 
-	for(var i in serverList){ 
-		var topicInfo = serverList[i];
-		var linkAddr = topicInfo.serverAddress;
+	topicInfoList.sort(); 
+	for(var i in topicInfoList){ 
+		var topicInfo = topicInfoList[i];
+		var linkAddr = topicInfo.serverAddress; 
+		var linkFullAddr = httpFullAddress(linkAddr);
+		
+		if(filterServerList && !filterServerList.includes(linkFullAddr)){
+			continue;
+		}
 		res += "<tr>";
 		//link td
-		res += "<td><a class='topic' target='_blank' href='http://" + linkAddr + "'>" + linkAddr + "</a></td>";
+		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a></td>";
 		
 		//message depth td
 		res += "<td>" + topicInfo.messageDepth + "</td>"; 
@@ -126,18 +93,18 @@ function topicServerList(serverList){
    	return res;
 }
 
-function showTopicTable(trackBroker){ 
-	$("#topic-list").find("tr:gt(2)").remove();
-	var topicSumMap = trackBroker.topicSumMap;
+function showTopicTable(topicTable, filterServerList){ 
+	$("#topic-list").find("tr:gt(2)").remove(); 
 	var topics = [];
-	for(var key in topicSumMap){
+	for(var key in topicTable){
 		topics.push(key);
 	}
 	topics.sort();
 	for(var i in topics){
 		var topicName = topics[i];
-		var topicSum = topicSumMap[topicName];
-		var serverList = topicServerList(topicSum); 
+		var topicInfoList = topicTable[topicName];
+		var serverList = topicServerList(topicInfoList, filterServerList); 
+		if(!serverList) continue;
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
 				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a></td>\
@@ -145,16 +112,4 @@ function showTopicTable(trackBroker){
 			</tr>"
    		); 
 	}  
-} 
-
-
-
-
-function showModalServerList(trackBroker, topic){  
-	 
-}
-
-function showModalConsumeGroupList(trackBroker, topic){  
-	 
-}
- 
+}  

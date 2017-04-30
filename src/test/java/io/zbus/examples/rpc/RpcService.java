@@ -14,8 +14,9 @@ public class RpcService {
 		processor.addModule(new InterfaceExampleImpl()); 
 		
 		
-		Broker broker = new Broker();
-		broker.addTracker("localhost:15555", "ssl/zbus.crt");
+		Broker broker = new Broker("conf/broker.xml");
+		//Broker broker = new Broker(); 
+		//broker.addTracker("localhost:15555", "ssl/zbus.crt");
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
 		config.setTopic("MyRpc");

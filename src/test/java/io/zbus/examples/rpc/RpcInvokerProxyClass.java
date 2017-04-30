@@ -8,14 +8,22 @@ import io.zbus.rpc.RpcFactory;
 public class RpcInvokerProxyClass {
 
 	public static void main(String[] args) throws Exception {  
-		Broker broker = new Broker();  
-		broker.addServer("localhost:15555", "ssl/zbus.crt");
+		Broker broker = new Broker("conf/broker.xml");
+		//Broker broker = new Broker(); 
+		//broker.addTracker("localhost:15555", "ssl/zbus.crt");
 		
 		RpcConfig config = new RpcConfig(broker);  
 		config.setTopic("MyRpc"); 
 		
 		InterfaceExample api = RpcFactory.getService(InterfaceExample.class, config);
-		RpcTestCases.testDynamicProxy(api);
+		for(int i=0;i<10000;i++){
+			try{
+				RpcTestCases.testDynamicProxy(api);
+			} catch (Exception e) {
+				e.printStackTrace(); 
+			} 
+			Thread.sleep(2000);
+		}
 		
 		broker.close(); 
 	}

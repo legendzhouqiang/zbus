@@ -17,11 +17,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 			   +------------------------------------------------+
 			   | BlockStart                                    8| -----+
 			   +------------------------------------------------+      |
-			   | Flag                                          4|      |
-			   +------------------------------------------------+      |
 			   | MessageCount                                  8|      |
-			   +------------------------------------------------+      |
-			   | CreatedTime                                   8|      |
 			   +------------------------------------------------+      |
 			   |               Extension                 to 1024|      |
 			   +------------------------------------------------+      |
@@ -46,8 +42,6 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 		        | Offset       4|--------------------------------------------------------------------+              +----------------+ 
 		        +---------------+                                                                                   | Body          ?| 
 		        | Tag        128|                                                                                   +----------------+ 
-		        +---------------+                                                                                   
-		        | Flag         4|                                                                                   
 		        +---------------+ 
 		  ^ 
 	      | [QueueReader2] MappedFile                                                                ^ 
@@ -57,9 +51,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 	            | Offset       4|--------------------------------------------------------------------+ 
 	            +---------------+ 
 	            | Tag        128| 
-	            +---------------+ 
- 		        | Flag         4|                                                                                   
-		        +---------------+     
+	            +---------------+  
             
 **Index**
 

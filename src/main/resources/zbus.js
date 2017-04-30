@@ -468,8 +468,44 @@ function BrokerRouteTable() {
     this.votesTable = {};  //Server Address ==> Voted tracker list
 }
 
-BrokerRouteTable.prototype.updateTracker = function (trackerInfo) {
+BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
+    var trackedServerList = trackerInfo.trackedServerList;
+    var trackerFullAddr = fullAddress(trackerInfo.serverAddress); 
+    for (var i in trackedServerList) {
+        var fullAddr = fullAddress(trackedServerList[i]);
+        var votedTrackerSet = this.votesTable[fullAddr];
+        if (!votedTrackerSet) {
+            votedTrackerSet = new Set();
+            this.votesTable[fullAddr] = votedTrackerSet;
+        }
+        votedTrackerSet.add(trackerFullAddr);
+    }
 
+    var toRemove = [];
+    for (var fullAddr in this.votesTable) {
+        var votedByThisTracker = false;
+        for (var i in trackedServerList) {
+            var trackedFullAddr = fullAddress(trackedServerList[i]);
+            if (fullAddr == trackedFullAddr) {
+                votedByThisTracker = true;
+                break;
+            }
+        }
+        var votedTrackerSet = this.votesTable[fullAddr];
+        if (votedTrackerSet.has(trackerFullAddr) && !votedByThisTracker) {
+            votedTrackerSet.delete(trackedFullAddr);
+        }
+        if (this.canRemove(votedTrackerSet)) {
+            toRemove.push(fullAddr);
+        }
+    }
+    for (var i in toRemove) {
+        var fullAddr = toRemove[i];
+        delete this.serverTable[fullAddr];
+    }
+    this.rebuildTopicTable();
+
+    return toRemove; 
 }
 
 BrokerRouteTable.prototype.updateServer = function (serverInfo) {
@@ -477,9 +513,18 @@ BrokerRouteTable.prototype.updateServer = function (serverInfo) {
 }
 
 BrokerRouteTable.prototype.removeServer = function (serverAddress) {
-    console.log("remove: " + serverAddress);
+    var fullAddr = fullAddress(serverAddress);
+    var votedTrackerSet = this.votesTable[fullAddr];
+    if (this.canRemove(votedTrackerSet)) {
+        delete this.serverTable[fullAddr];
+        this.rebuildTopicTable();
+    } 
 }
   
+BrokerRouteTable.prototype.canRemove = function (votedTrackerSet) {
+    return !votedTrackerSet ||votedTrackerSet.size == 0;
+}
+
 BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
     if (serverInfo) {
         var fullAddr = fullAddress(serverInfo.serverAddress);
@@ -503,17 +548,18 @@ BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
 
 
 function Broker(trackerAddress) {  
-	this.trackerSubscribers = {};
-
+	this.trackerSubscribers = {}; 
     this.clientTable = {};
     this.routeTable = new BrokerRouteTable();
+
+    this.onServerJoin = null;
+    this.onServerLeave = null;
     this.onServerUpdated = null;
     
     if(trackerAddress){
     	    this.addTracker(trackerAddress);
     }
-}
- 
+} 
 
 Broker.prototype.addServer = function(serverAddress) { 
 	var fullAddr = fullAddress(serverAddress);
@@ -523,6 +569,9 @@ Broker.prototype.addServer = function(serverAddress) {
     if (client != null) {
         client.queryServer(function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
+            if (broker.onServerUpdated != null) {
+                broker.onServerUpdated(serverInfo);
+            }
         });
         return;
     } 
@@ -532,15 +581,28 @@ Broker.prototype.addServer = function(serverAddress) {
     	client.onDisconnected(function (event) {
         console.log("Disconnected from " + fullAddr);
         client.close(); 
-        delete broker.clientTable[fullAddr]
+        delete broker.clientTable[fullAddr] 
+        broker.routeTable.removeServer(serverAddress);
 
-        broker.routeTable.removeServer(serverAddress); 
+        if (broker.onServerLeave != null) {
+            broker.onServerLeave(serverAddress);
+        }
+
+        if (broker.onServerUpdated != null) {
+            broker.onServerUpdated();
+        }
     });
 
     client.connect(function (event) {
         broker.clientTable[fullAddr] = client;
         client.queryServer(function(serverInfo) {
             broker.routeTable.updateServer(serverInfo);
+            if (broker.onServerJoin != null) {
+                broker.onServerJoin(serverInfo);
+            }
+            if (broker.onServerUpdated != null) {
+                broker.onServerUpdated(serverInfo);
+            }
         }); 
     });  
 }
@@ -556,9 +618,9 @@ Broker.prototype.addTracker = function (trackerAddress) {
     var broker = this;
 
     client.onMessage(function (msg) {
-        var trackerInfo = msg.body;
-        console.log(trackerInfo);
+        var trackerInfo = msg.body; 
         var serverAddressList = trackerInfo.trackedServerList;
+        broker.routeTable.updateVotes(trackerInfo);
         for (var i in serverAddressList) {
             broker.addServer(serverAddressList[i]);
         }

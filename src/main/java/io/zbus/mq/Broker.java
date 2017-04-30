@@ -331,7 +331,7 @@ public class Broker implements Closeable {
 	}
 	
 	private void onTrackInfoUpdate(TrackerInfo trackerInfo) throws IOException {
-		List<ServerAddress> toRemove = routeTable.updateTrackerInfo(trackerInfo);
+		List<ServerAddress> toRemove = routeTable.updateVotes(trackerInfo);
 		if(!toRemove.isEmpty()){ 
 			for(ServerAddress serverAddress : toRemove){
 				removeServer(serverAddress);

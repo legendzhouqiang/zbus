@@ -1,6 +1,7 @@
 package io.zbus.mq;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ import io.zbus.mq.Protocol.TrackerInfo;
  *
  */
 public class BrokerRouteTable {  
-	//Server Address ==> Voted tracker list(
+	//Server Address ==> Voted tracker list
 	private Map<ServerAddress, Set<ServerAddress>> votesTable = new ConcurrentHashMap<ServerAddress, Set<ServerAddress>>(); 
 	//Topic ==> Server List(topic span across ZbusServers)
 	private Map<String, List<TopicInfo>> topicTable = new ConcurrentHashMap<String, List<TopicInfo>>(); 
@@ -72,25 +73,34 @@ public class BrokerRouteTable {
 	}  
 	
 	
-	public List<ServerAddress> updateTrackerInfo(TrackerInfo trackerInfo){ 
+	public List<ServerAddress> updateVotes(TrackerInfo trackerInfo){ 
 		Map<ServerAddress, Set<ServerAddress>> votesTableLocal = new ConcurrentHashMap<ServerAddress, Set<ServerAddress>>(votesTable);
+		for(ServerAddress serverAddress : trackerInfo.trackedServerList){
+			Set<ServerAddress> votedTrackerSet = votesTableLocal.get(serverAddress);
+			if(votedTrackerSet == null){
+				votedTrackerSet = new HashSet<ServerAddress>();
+				votesTableLocal.put(serverAddress, votedTrackerSet);
+			}
+			votedTrackerSet.add(trackerInfo.serverAddress);
+		}
 		
-		List<ServerAddress> toRemove = new ArrayList<ServerAddress>();
+		List<ServerAddress> toRemove = new ArrayList<ServerAddress>(); 
 		Iterator<Entry<ServerAddress, Set<ServerAddress>>> iter = votesTableLocal.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<ServerAddress, Set<ServerAddress>> e = iter.next();
 			ServerAddress serverAddress = e.getKey();
-			Set<ServerAddress> votedTrackerList = e.getValue(); 
+			Set<ServerAddress> votedTrackerSet = e.getValue(); 
 			 
 			if(!trackerInfo.trackedServerList.contains(serverAddress)){ 
-				votedTrackerList.remove(trackerInfo.serverAddress);
+				votedTrackerSet.remove(trackerInfo.serverAddress);
 			} 
 			
-			if(canRemove(votedTrackerList)){
+			if(canRemove(votedTrackerSet)){
 				iter.remove();
 				toRemove.add(serverAddress);
 			}
 		} 
+		votesTable = votesTableLocal;
 		if(toRemove.isEmpty()) return toRemove;
 		
 		Map<ServerAddress, ServerInfo> serverTableLocal = new ConcurrentHashMap<ServerAddress, ServerInfo>(serverTable); 
@@ -98,7 +108,7 @@ public class BrokerRouteTable {
 			serverTableLocal.remove(server);
 		}
 		Map<String, List<TopicInfo>> topicTableLocal = rebuildTopicTable(serverTableLocal); 
-		votesTable = votesTableLocal;
+		
 		serverTable = serverTableLocal;
 		topicTable = topicTableLocal;
 		

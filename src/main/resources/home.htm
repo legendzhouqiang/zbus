@@ -126,10 +126,10 @@
 
 $(document).ready(function(){  
 	
-var trackBroker = null;
-var filterServerList = [];
+var broker = null;
+var filterServerList = null;
 
-function updateTrackInfo(){
+function updateTrackerInfo(){
 	filterServerList = [];
     $("#server-list input.server").each(function(data){
     	var checked = $(this).is(":checked");
@@ -138,10 +138,8 @@ function updateTrackInfo(){
     	} 
     });  
     
-    if(trackBroker){
-    	trackBroker.filterServerList = filterServerList;
-    	trackBroker.updateTopicSummary();
-    	showTopicTable(trackBroker);
+    if(broker){  
+    	showTopicTable(broker.routeTable.topicTable, filterServerList);
     } 
 } 
 
@@ -150,76 +148,36 @@ $("#filter-server").change(function() {
 	var checked = $(this).is(":checked");
 	$("#server-list input.server").prop("checked", checked);   
 	
-	updateTrackInfo();
+	updateTrackerInfo();
 });  
 
 $("#server-list").on("change", "input.server", function() {
 	var checked = $(this).is(":checked");
 	$(this).prop("checked", checked);  
    
-    updateTrackInfo(); 
+    updateTrackerInfo(); 
 }); 
- 
+  
 
 $.getJSON('/query',function(serverInfo){   
 	$("#version").text(serverInfo.serverVersion); 
-	trackBroker = new TrackBroker(serverInfo.serverAddress);  
-	trackBroker.onServerUpdated = function(serverAddress){
-		showTopicTable(trackBroker);
-		showServerTable(trackBroker);
+	var trackerAddress = serverInfo.serverAddress;
+	broker = new Broker();   
+	broker.onServerUpdated = function(serverInfo){
+		showServerTable(broker.routeTable.serverTable, filterServerList, trackerAddress);
+		showTopicTable(broker.routeTable.topicTable, filterServerList); 
 	};
-	trackBroker.connect();
+	broker.addTracker(trackerAddress); 
 	 
 	for(var i in serverInfo.trackerList){
-		var address = serverInfo.trackerList[i]; 
+		var serverAddress = serverInfo.trackerList[i]; 
+		var serverFullAddr = httpFullAddress(serverAddress);
 		$("#track-list").append(
-			"<a class='link' target='_blank' href='http://" +address + "'>" + address + "</a>"
+			"<a class='link' target='_blank' href='" +serverFullAddr + "'>" + serverAddress.address + "</a>"
 		);
 	}  
 });    
 
-
-////////////////////modal actions/////////////////////
-
-$("#topic-modal").draggable({ handle:'.modal-header'}); 
-
-$("#topic-modal").on("show.bs.modal", function(e){ 
-	$(this).find('.modal-content').css({
-        width:'auto', //probably not needed
-        height:'auto', //probably not needed 
-        'max-height':'100%'
-	}); 
-	
-	$("#modal-server-list input.server").prop("checked", true); 
-	$("#modal-group-list input.server").prop("checked", true); 
-	
-	var topic = e.relatedTarget.innerText; 
-	$("#modal-topic").text(topic);
-	showModalServerList(trackBroker, topic);
-	showModalConsumeGroupList(trackBroker, topic); 
-
-});
-
-
-$("#modal-server-list").on("change", "input.server", function() {
-	var checked = $(this).is(":checked");
-	$(this).prop("checked", checked);   
-});
-
-$("#modal-filter-server").change(function() {
-	var checked = $(this).is(":checked");
-	$("#modal-server-list input.server").prop("checked", checked);    
-});   
-
-$("#modal-group-list").on("change", "input.group", function() {
-	var checked = $(this).is(":checked");
-	$(this).prop("checked", checked);   
-});
-
-$("#modal-filter-group").change(function() {
-	var checked = $(this).is(":checked");
-	$("#modal-group-list input.group").prop("checked", checked);    
-});   
 
 });
 
