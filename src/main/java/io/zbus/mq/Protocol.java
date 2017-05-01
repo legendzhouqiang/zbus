@@ -57,11 +57,7 @@ public class Protocol {
 	
 	public static final String SERVER   			= "server";  
 	public static final String ACK      			= "ack";	  
-	public static final String ENCODING 			= "encoding";
-	
-	public static final String DELAY    			= "delay";
-	public static final String TTL      			= "ttl";  
-	public static final String EXPIRE   			= "expire"; 
+	public static final String ENCODING 			= "encoding"; 
 	
 	public static final String ORIGIN_ID     		= "origin_id";     //original id, TODO compatible issue: rawid
 	public static final String ORIGIN_URL   		= "origin_url";    //original URL  

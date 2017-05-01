@@ -1,72 +1,64 @@
-function Protocol(){}
+var __NODEJS__ = typeof module !== 'undefined' && module.exports;
+
+function Protocol() { }
 
 Protocol.VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 
 /////////////////////////Command Values/////////////////////////
 //MQ Produce/Consume
-Protocol.PRODUCE       = "produce";   
-Protocol.CONSUME       = "consume";   
-Protocol.ROUTE         = "route";     //route back message to sender, designed for RPC
+Protocol.PRODUCE = "produce";
+Protocol.CONSUME = "consume";
+Protocol.RPC = "rpc";
+Protocol.ROUTE = "route";     //route back message to sender, designed for RPC
 
 //Topic/ConsumeGroup control
-Protocol.DECLAREC = "declare";  
-Protocol.QUERY    = "query"; 
-Protocol.REMOVE   = "remove";    
-Protocol.EMPTY    = "empty";   
+Protocol.DECLAREC = "declare";
+Protocol.QUERY = "query";
+Protocol.REMOVE = "remove";
+Protocol.EMPTY = "empty";
 
-//High Availability (HA) 
-Protocol.TRACK_PUB  = "track_pub"; 
-Protocol.TRACK_SUB  = "track_sub";   
+//Tracker
+Protocol.TRACK_PUB = "track_pub";
+Protocol.TRACK_SUB = "track_sub";
 
-//Simple HTTP server command
-Protocol.PING          = "ping"; //ping server, returning back server time
-Protocol.INFO          = "info"; //server info 
-Protocol.TRACE         = "trace";   
-Protocol.VERSION       = "version";
-Protocol.JS            = "js";   //serve javascript file
-Protocol.CSS           = "css";  //serve css file 
-Protocol.IMG           = "img";  //serve image file(SVG)
-Protocol.PAGE          = "page";  //serve image file(SVG) 
+Protocol.COMMAND = "cmd";
+Protocol.TOPIC = "topic";
+Protocol.TOPIC_FLAG = "topic_flag";
+Protocol.TAG = "tag";
+Protocol.OFFSET = "offset";
 
-
-/////////////////////////HTTP header extension/////////////////////////
-//== Serialize/Deserialize
-Protocol.COMMAND  = "cmd";     
-Protocol.TOPIC    = "topic";
-Protocol.FLAG     = "flag";
-Protocol.TAG   	  = "tag";  
-Protocol.OFFSET   = "offset";
-
-Protocol.CONSUME_GROUP        = "consume_group";  
-Protocol.CONSUME_BASE_GROUP   = "consume_base_group";  
+Protocol.CONSUME_GROUP = "consume_group";
+Protocol.CONSUME_GROUP_COPY_FROM = "consume_group_copy_from";
 Protocol.CONSUME_START_OFFSET = "consume_start_offset";
-Protocol.CONSUME_START_MSGID  = "consume_start_msgid";
-Protocol.CONSUME_START_TIME   = "consume_start_time";  
-Protocol.CONSUME_WINDOW       = "consume_window";  
-Protocol.CONSUME_FILTER_TAG   = "consume_filter_tag";   
+Protocol.CONSUME_START_MSGID = "consume_start_msgid";
+Protocol.CONSUME_START_TIME = "consume_start_time";
+Protocol.CONSUME_WINDOW = "consume_window";
+Protocol.CONSUME_FILTER_TAG = "consume_filter_tag";
+Protocol.CONSUME_GROUP_FLAG = "consume_group_flag";
 
-Protocol.SENDER   = "sender"; 
-Protocol.RECVER   = "recver";
-Protocol.ID       = "id";	   
-Protocol.SERVER   = "server";  
-Protocol.ACK      = "ack";	  
+Protocol.SENDER = "sender";
+Protocol.RECVER = "recver";
+Protocol.ID = "id";
+
+Protocol.SERVER = "server";
+Protocol.ACK = "ack";
 Protocol.ENCODING = "encoding";
-Protocol.DELAY    = "delay";
-Protocol.TTL      = "ttl";  
-Protocol.EXPIRE   = "expire"; 
-Protocol.ORIGIN_ID     = "origin_id";   
-Protocol.ORIGIN_URL    = "origin_url";  
-Protocol.ORIGIN_STATUS = "origin_status";  
- 
-Protocol.TOKEN   = "token";
+
+Protocol.ORIGIN_ID = "origin_id";     //original id, TODO compatible issue: rawid
+Protocol.ORIGIN_URL = "origin_url";    //original URL  
+Protocol.ORIGIN_STATUS = "origin_status"; //original Status  TODO compatible issue: reply_code
+
+//Security 
+Protocol.TOKEN = "token";
 
 
-/////////////////////////Flag values/////////////////////////
-Protocol.FLAG_RPC    	     = 1<<0; 
-Protocol.FLAG_EXCLUSIVE      = 1<<1;  
-Protocol.FLAG_DELETE_ON_EXIT = 1<<2; 
+/////////////////////////Flag values/////////////////////////	
+Protocol.FLAG_PAUSE = 1 << 0;
+Protocol.FLAG_RPC = 1 << 1;
+Protocol.FLAG_EXCLUSIVE = 1 << 2;
+Protocol.FLAG_DELETE_ON_EXIT = 1 << 3;
 
- 
+
 ////////////////////////////////////////////////////////////
 
 function hashSize(obj) {
@@ -77,243 +69,243 @@ function hashSize(obj) {
     return size;
 }
 
-function uuid(){
+function uuid() {
     //http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
-  
-String.prototype.format = function() {
+
+String.prototype.format = function () {
     var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) { 
-      return typeof args[number] != 'undefined' ? args[number] : match;
+    return this.replace(/{(\d+)}/g, function (match, number) {
+        return typeof args[number] != 'undefined' ? args[number] : match;
     });
-} 
+}
 
 Date.prototype.format = function (fmt) { //author: meizz 
     var o = {
-        "M+": this.getMonth() + 1, 
-        "d+": this.getDate(), 
-        "h+": this.getHours(), 
-        "m+": this.getMinutes(), 
-        "s+": this.getSeconds(),  
-        "q+": Math.floor((this.getMonth() + 3) / 3),  
-        "S": this.getMilliseconds()  
+        "M+": this.getMonth() + 1,
+        "d+": this.getDate(),
+        "h+": this.getHours(),
+        "m+": this.getMinutes(),
+        "s+": this.getSeconds(),
+        "q+": Math.floor((this.getMonth() + 3) / 3),
+        "S": this.getMilliseconds()
     };
     if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
     for (var k in o)
-    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
     return fmt;
 }
 
 
 function inherits(ctor, superCtor) {
-	ctor.super_ = superCtor;
-	ctor.prototype = Object.create(superCtor.prototype, {
-		constructor : {
-			value : ctor,
-			enumerable : false,
-			writable : true,
-			configurable : true
-		}
-	});
+    ctor.super_ = superCtor;
+    ctor.prototype = Object.create(superCtor.prototype, {
+        constructor: {
+            value: ctor,
+            enumerable: false,
+            writable: true,
+            configurable: true
+        }
+    });
 };
 
 var HttpStatus = {
     "200": "OK",
     "201": "Created",
     "202": "Accepted",
-    "204": "No Content", 
-    "206": "Partial Content", 
+    "204": "No Content",
+    "206": "Partial Content",
     "301": "Moved Permanently",
-    "304": "Not Modified", 
-    "400": "Bad Request", 
-    "401": "Unauthorized", 
+    "304": "Not Modified",
+    "400": "Bad Request",
+    "401": "Unauthorized",
     "403": "Forbidden",
-    "404": "Not Found", 
-    "405": "Method Not Allowed", 
+    "404": "Not Found",
+    "405": "Method Not Allowed",
     "416": "Requested Range Not Satisfiable",
-    "500": "Internal Server Error" 
+    "500": "Internal Server Error"
 };
 
-function camel2underscore(key){
-	return key.replace(/\.?([A-Z])/g, function (x,y){return "_" + y.toLowerCase()}).replace(/^_/, "");
+function camel2underscore(key) {
+    return key.replace(/\.?([A-Z])/g, function (x, y) { return "_" + y.toLowerCase() }).replace(/^_/, "");
 }
 
-function underscore2camel(key){
-	return key.replace(/_([a-z])/g, function (g) { return g[1].toUpperCase(); });
+function underscore2camel(key) {
+    return key.replace(/_([a-z])/g, function (g) { return g[1].toUpperCase(); });
 }
 
 /** 
- * msg.encoding = "utf8"; //encoding on message body
- * msg.body can be 
- * 1) ArrayBuffer, Uint8Array, Init8Array to binary data
- * 2) string value
- * 3) otherwise, JSON converted inside
- * 
- * @param msg
- * @returns ArrayBuffer
- */
+    * msg.encoding = "utf8"; //encoding on message body
+    * msg.body can be 
+    * 1) ArrayBuffer, Uint8Array, Init8Array to binary data
+    * 2) string value
+    * 3) otherwise, JSON converted inside
+    * 
+    * @param msg
+    * @returns ArrayBuffer
+    */
 function httpEncode(msg) {
-	var headers = "";
-	var encoding = msg.encoding;
-	if(!encoding) encoding = "utf8";
-	var encoder = new TextEncoder(encoding);
-	
-	var body = msg.body;  
-	var contentType = msg["content-type"];
-	if (body) { 
-		if(body instanceof ArrayBuffer){
-			body = new Uint8Array(body);
-		} else if(body instanceof Uint8Array || body instanceof Int8Array){
-			//no need to handel
-		} else { 
-			if (typeof body != 'string') {
-				body = JSON.stringify(body);
-				contentType = "application/json";
-			} else {
-				contentType = "text/plain";
-			} 
-			body = encoder.encode(body); 
-		}  
-	} else {
-	    body = new Uint8Array(0);
-	}
-	msg["content-length"] = body.byteLength;
-	msg["content-type"] = contentType;
-	
-	var nonHeaders = {'status': true, 'method': true, 'url': true, 'body': true}
-	var line = ""
-	if(msg.status){
-		var desc = HttpStatus[msg.status]; 
-    	if(!desc) desc = "Unknown Status";
-		line = "HTTP/1.1 {0} {1}\r\n".format(msg.status, desc); 
-	} else {
-		var method = msg.method;
-		if(!method) method = "GET";
-		var url = msg.url;
-		if(!url) url = "/";
-		line = "{0} {1} HTTP/1.1\r\n".format(method, url);  
-	}
+    var headers = "";
+    var encoding = msg.encoding;
+    if (!encoding) encoding = "utf8";
+    var encoder = new TextEncoder(encoding);
 
-	headers += line;  
-	for(var key in msg){
-		if(key in nonHeaders) continue;  
-		var val = msg[key];
-		if(typeof val == 'undefined') continue;
-		line = "{0}: {1}\r\n".format(camel2underscore(key), msg[key]);
-		headers += line;
-	}
-	headers += "\r\n";
+    var body = msg.body;
+    var contentType = msg["content-type"];
+    if (body) {
+        if (body instanceof ArrayBuffer) {
+            body = new Uint8Array(body);
+        } else if (body instanceof Uint8Array || body instanceof Int8Array) {
+            //no need to handel
+        } else {
+            if (typeof body != 'string') {
+                body = JSON.stringify(body);
+                contentType = "application/json";
+            } else {
+                contentType = "text/plain";
+            }
+            body = encoder.encode(body);
+        }
+    } else {
+        body = new Uint8Array(0);
+    }
+    msg["content-length"] = body.byteLength;
+    msg["content-type"] = contentType;
 
-	delete msg["content-length"]; //clear
-	delete msg["content-type"]
-     
-	var headerBuffer = encoder.encode(headers); 
-	var headerLen = headerBuffer.byteLength;
-	//merge header and body
-	var buffer = new ArrayBuffer(headerBuffer.byteLength + body.byteLength);
-	var view = new Uint8Array(buffer); 
-	for(var i=0;i<headerBuffer.byteLength;i++){
-		view[i] = headerBuffer[i];
-	}
-	
-	for(var i=0;i<body.byteLength;i++){
-		view[headerLen+i] = body[i];
-	}
-	return buffer; 
+    var nonHeaders = { 'status': true, 'method': true, 'url': true, 'body': true }
+    var line = ""
+    if (msg.status) {
+        var desc = HttpStatus[msg.status];
+        if (!desc) desc = "Unknown Status";
+        line = "HTTP/1.1 {0} {1}\r\n".format(msg.status, desc);
+    } else {
+        var method = msg.method;
+        if (!method) method = "GET";
+        var url = msg.url;
+        if (!url) url = "/";
+        line = "{0} {1} HTTP/1.1\r\n".format(method, url);
+    }
+
+    headers += line;
+    for (var key in msg) {
+        if (key in nonHeaders) continue;
+        var val = msg[key];
+        if (typeof val == 'undefined') continue;
+        line = "{0}: {1}\r\n".format(camel2underscore(key), msg[key]);
+        headers += line;
+    }
+    headers += "\r\n";
+
+    delete msg["content-length"]; //clear
+    delete msg["content-type"]
+
+    var headerBuffer = encoder.encode(headers);
+    var headerLen = headerBuffer.byteLength;
+    //merge header and body
+    var buffer = new ArrayBuffer(headerBuffer.byteLength + body.byteLength);
+    var view = new Uint8Array(buffer);
+    for (var i = 0; i < headerBuffer.byteLength; i++) {
+        view[i] = headerBuffer[i];
+    }
+
+    for (var i = 0; i < body.byteLength; i++) {
+        view[headerLen + i] = body[i];
+    }
+    return buffer;
 };
 
-function httpEncodeString(msg){
-	var buf = httpEncode(msg);
-	var encoding = msg.encoding;
-	if(!encoding) encoding = "utf8";
-	return new TextDecoder(encoding).decode(buf);
+function httpEncodeString(msg) {
+    var buf = httpEncode(msg);
+    var encoding = msg.encoding;
+    if (!encoding) encoding = "utf8";
+    return new TextDecoder(encoding).decode(buf);
 }
- 
-function httpDecode(data){
-	if(typeof data == "string"){
-		data = new TextEncoder("utf8").encode(data);
-	} else if (data instanceof Uint8Array || data instanceof Int8Array){
-		//ignore
-	} else if (data instanceof ArrayBuffer) {
-		data = new Uint8Array(data);
-	} else {
-		//not support type
-		return null;
-	}
-	var i = 0, pos = -1; 
-	var CR = 13, NL = 10;
-	while(i+3<data.byteLength){
-		if(data[i]==CR && data[i+1]==NL && data[i+2]==CR && data[i+3]==NL){
-			pos = i; 
-			break;
-		}
-		i++;
-	} 
-	if(pos == -1) return null;
-	
-	var str = new TextDecoder("utf8").decode(data.slice(0, pos));
-	
-	var blocks = str.split("\r\n");
-	var lines = [];
-	for(var i in blocks){
-		var line = blocks[i];
-		if(line == '') continue;
-		lines.push(line);
-	}
-	
-	var msg = {};
-	//parse first line 
-	var bb = lines[0].split(" "); 
-	if(bb[0].toUpperCase().startsWith("HTTP")){
-		msg.status = bb[1];  
-	} else {
-		msg.method = bb[0];
-		msg.url = bb[1];
-	}
-	var typeKey = "content-type";
-	var typeVal = "text/html";
-	var lenKey = "content-length";
-	var lenVal = 0;
-	
-	for(var i=1;i<lines.length;i++){
-		var line = lines[i]; 
-		var p = line.indexOf(":");
-		if(p == -1) continue;
-		var key = line.substring(0, p).trim().toLowerCase();
-		var val = line.substring(p+1).trim(); 
-		if(key == lenKey){
-			lenVal = parseInt(val);
-			continue;
-		} 
-		if(key == typeKey){
-			typeVal = val;
-			continue;
-		}
-		
-		key = underscore2camel(key);
-		msg[key] = val;
-	} 
-	if(pos+4+lenVal > data.byteLength){
-		return null;
-	}
-	var encoding = msg.encoding;
-	if(!encoding) encoding = "utf8";
-	var decoder = new TextDecoder(encoding);
-	var bodyData = data.slice(pos+4);
-	if(typeVal == "text/html"){
-		msg.body = decoder.decode(bodyData);
-	} else if(typeVal == "application/json"){
-		msg.body = JSON.parse(decoder.decode(bodyData));
-	} else {
-		msg.body = bodyData.buffer;
-	} 
-	
-	return msg;	 
-} 
+
+function httpDecode(data) {
+    if (typeof data == "string") {
+        data = new TextEncoder("utf8").encode(data);
+    } else if (data instanceof Uint8Array || data instanceof Int8Array) {
+        //ignore
+    } else if (data instanceof ArrayBuffer) {
+        data = new Uint8Array(data);
+    } else {
+        //not support type
+        return null;
+    }
+    var i = 0, pos = -1;
+    var CR = 13, NL = 10;
+    while (i + 3 < data.byteLength) {
+        if (data[i] == CR && data[i + 1] == NL && data[i + 2] == CR && data[i + 3] == NL) {
+            pos = i;
+            break;
+        }
+        i++;
+    }
+    if (pos == -1) return null;
+
+    var str = new TextDecoder("utf8").decode(data.slice(0, pos));
+
+    var blocks = str.split("\r\n");
+    var lines = [];
+    for (var i in blocks) {
+        var line = blocks[i];
+        if (line == '') continue;
+        lines.push(line);
+    }
+
+    var msg = {};
+    //parse first line 
+    var bb = lines[0].split(" ");
+    if (bb[0].toUpperCase().startsWith("HTTP")) {
+        msg.status = bb[1];
+    } else {
+        msg.method = bb[0];
+        msg.url = bb[1];
+    }
+    var typeKey = "content-type";
+    var typeVal = "text/html";
+    var lenKey = "content-length";
+    var lenVal = 0;
+
+    for (var i = 1; i < lines.length; i++) {
+        var line = lines[i];
+        var p = line.indexOf(":");
+        if (p == -1) continue;
+        var key = line.substring(0, p).trim().toLowerCase();
+        var val = line.substring(p + 1).trim();
+        if (key == lenKey) {
+            lenVal = parseInt(val);
+            continue;
+        }
+        if (key == typeKey) {
+            typeVal = val;
+            continue;
+        }
+
+        key = underscore2camel(key);
+        msg[key] = val;
+    }
+    if (pos + 4 + lenVal > data.byteLength) {
+        return null;
+    }
+    var encoding = msg.encoding;
+    if (!encoding) encoding = "utf8";
+    var decoder = new TextDecoder(encoding);
+    var bodyData = data.slice(pos + 4);
+    if (typeVal == "text/html") {
+        msg.body = decoder.decode(bodyData);
+    } else if (typeVal == "application/json") {
+        msg.body = JSON.parse(decoder.decode(bodyData));
+    } else {
+        msg.body = bodyData.buffer;
+    }
+
+    return msg;
+}
 
 
 function Ticket(reqMsg, callback) {
@@ -322,45 +314,145 @@ function Ticket(reqMsg, callback) {
     this.response = null;
     this.callback = callback;
     reqMsg.id = this.id;
-} 
+}
 
+
+if (__NODEJS__) {
+    var Events = require('events');
+    var Buffer = require("buffer").Buffer;
+    var Socket = require("net");
+}
+
+//websocket available
 function MessageClient(serverAddress) { //websocket implementation
-	this.scheme = "ws://";
+    this.scheme = "ws://";
     if (serverAddress.startsWith("ws://")) {
         this.scheme = "ws://";
-        this.serverAddress = serverAddress.substring(this.scheme.length); 
-    } else if (serverAddress.startsWith("wss://")) { 
+        this.serverAddress = serverAddress.substring(this.scheme.length);
+    } else if (serverAddress.startsWith("wss://")) {
         this.scheme = "wss://";
         this.serverAddress = serverAddress.substring(this.scheme.length);
     } else {
-        this.serverAddress = serverAddress 
-    } 
-    
+        this.serverAddress = serverAddress
+    }
+
     this.autoReconnect = true;
     this.reconnectInterval = 3000;
-    this.ticketTable = {}; 
+    this.ticketTable = {};
     this.messageHandler = null;
     this.connectedHandler = null;
     this.disconnectedHandler = null;
 }
-MessageClient.prototype.address = function(){
-	return this.scheme + this.serverAddress;
+
+function MessageClientNode(address) {
+    if (__NODEJS__) {
+        Events.EventEmitter.call(this);
+    }
+
+    var p = address.indexOf(':');
+    if (p == -1) {
+        this.serverHost = address.trim();
+        this.serverPort = 15555;
+    } else {
+        this.serverHost = address.substring(0, p).trim();
+        this.serverPort = parseInt(address.substring(p + 1).trim());
+    }
+    this.autoReconnect = true;
+    this.reconnectInterval = 3000;
+    this.socket = null;
+    this.ticketTable = {}; 
+}
+
+if (__NODEJS__) {
+    inherits(MessageClientNode, Events.EventEmitter);
+}
+
+
+MessageClientNode.prototype.connect = function (connectedCallback) {
+    console.log("Trying to connect: " + this.serverHost + ":" + this.serverPort);
+    this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort });
+    var clientReadBuf = this.readBuf;
+    var clientTicketTable = this.ticketTable;
+
+    var client = this;
+    this.socket.on("connect", function () {
+        console.log("MessageClient connected: " + client.serverHost + ":" + client.serverPort);
+        connectedCallback();
+        client.heartbeatInterval = setInterval(function () {
+            var msg = new Message();
+            msg.setCmd(Message.HEARTBEAT);
+            client.invoke(msg);
+        }, 300 * 1000);
+    });
+
+
+    this.socket.on("error", function (error) {
+        client.emit("error", error);
+    });
+
+    this.socket.on("close", function () {
+        clearInterval(client.heartbeatInterval);
+        client.socket.destroy();
+        client.socket = null;
+
+        if (client.autoReconnect) {
+            console.log("Trying to recconnect: " + client.serverHost + ":" + client.serverPort);
+            setTimeout(function () {
+                client.connect(connectedCallback);
+            }, client.reconnectInterval);
+        }
+    });
+
+
+    client.on("error", function (error) {
+        console.log(error);
+    });
+
+    this.socket.on("data", function (data) {
+        clientReadBuf.put(data);
+        var tempBuf = clientReadBuf.duplicate();
+        tempBuf.flip();
+
+        while (true) {
+            var msg = Message.decode(tempBuf);
+            if (msg == null) break;
+            var msgid = msg.getId();
+            var ticket = clientTicketTable[msgid];
+            if (ticket) {
+                ticket.response = msg;
+                if (ticket.callback) {
+                    ticket.callback(msg);
+                }
+                delete clientTicketTable[msgid];
+            }
+        }
+        if (tempBuf.position > 0) {
+            clientReadBuf.move(tempBuf.position);
+        }
+    });
+};
+ 
+
+
+
+MessageClient.prototype.address = function () {
+    return this.scheme + this.serverAddress;
 }
 MessageClient.prototype.onMessage = function (messageHandler) {
-	this.messageHandler = messageHandler;
+    this.messageHandler = messageHandler;
 }
 MessageClient.prototype.onConnected = function (connectedHandler) {
-	this.connectedHandler = connectedHandler;
+    this.connectedHandler = connectedHandler;
 }
 MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
-	this.disconnectedHandler = disconnectedHandler;
+    this.disconnectedHandler = disconnectedHandler;
 }
 
 MessageClient.prototype.sendMessage = function (msg) {
     if (this.socket.readyState != WebSocket.OPEN) {
         console.log("socket is not open, invalid");
         return;
-    } 
+    }
     var buf = httpEncode(msg);
     this.socket.send(buf);
 };
@@ -368,10 +460,10 @@ MessageClient.prototype.sendMessage = function (msg) {
 
 MessageClient.prototype.connect = function (connectedHandler) {
     console.log("Trying to connect to " + this.address());
-    if(!connectedHandler){
-    	connectedHandler = this.connectedHandler;
+    if (!connectedHandler) {
+        connectedHandler = this.connectedHandler;
     }
-    
+
     var WebSocket = window.WebSocket;
     if (!WebSocket) {
         WebSocket = window.MozWebSocket;
@@ -383,19 +475,19 @@ MessageClient.prototype.connect = function (connectedHandler) {
         console.log("Connected to " + client.address());
         if (connectedHandler) {
             connectedHandler(event);
-        }  
+        }
         client.heartbeatInterval = setInterval(function () {
             var msg = {};
             msg.cmd = "heartbeat";
             client.invoke(msg);
-        }, 30*1000);
+        }, 30 * 1000);
     };
 
     this.socket.onclose = function (event) {
-    	if(client.disconnectedHandler){
-    		client.disconnectedHandler(event);
-    		return;
-    	}
+        if (client.disconnectedHandler) {
+            client.disconnectedHandler(event);
+            return;
+        }
         clearInterval(client.heartbeatInterval);
         setTimeout(function () {
             try { client.connect(connectedHandler); } catch (e) { }//ignore
@@ -412,17 +504,17 @@ MessageClient.prototype.connect = function (connectedHandler) {
                 ticket.callback(msg);
             }
             delete client.ticketTable[msgid];
-        } else if(client.messageHandler){
-        	client.messageHandler(msg);
+        } else if (client.messageHandler) {
+            client.messageHandler(msg);
         } else {
-        	console.log("Warn: drop message\n" + msg.toString());
+            console.log("Warn: drop message\n" + msg.toString());
         }
     }
 
     this.socket.onerror = function (data) {
         console.log("Error: " + data);
     }
-} 
+}
 
 MessageClient.prototype.invoke = function (msg, callback) {
     if (this.socket.readyState != WebSocket.OPEN) {
@@ -437,28 +529,36 @@ MessageClient.prototype.invoke = function (msg, callback) {
     this.socket.send(buf);
 };
 
-MessageClient.prototype.close = function(){
-	clearInterval(this.heartbeatInterval);
-	this.socket.onclose = function () {}
-	this.socket.close();
+MessageClient.prototype.close = function () {
+    clearInterval(this.heartbeatInterval);
+    this.socket.onclose = function () { }
+    this.socket.close();
 }
 
-MessageClient.prototype.queryServer = function(callback){ 
-	var msg = {};
+
+
+function MqClient(serverAddress) {
+    MessageClient.call(this, serverAddress);
+}
+inherits(MqClient, MessageClient)
+
+MqClient.prototype.queryServer = function (callback) {
+    var msg = {};
     msg.cmd = "query";
     this.invoke(msg, function (msg) {
-    	    callback(msg.body); 
+        callback(msg.body);
     });
 }
 
-var MqClient = MessageClient;
- 
-function fullAddress(serverAddress){
-	var scheme = "ws://"
-	if(serverAddress.sslEnabled){
-		scheme = "wss://" 
-	}
-	return scheme + serverAddress.address;
+
+
+
+function fullAddress(serverAddress) {
+    var scheme = "ws://"
+    if (serverAddress.sslEnabled) {
+        scheme = "wss://"
+    }
+    return scheme + serverAddress.address;
 }
 
 function BrokerRouteTable() {
@@ -469,7 +569,7 @@ function BrokerRouteTable() {
 
 BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
     var trackedServerList = trackerInfo.trackedServerList;
-    var trackerFullAddr = fullAddress(trackerInfo.serverAddress); 
+    var trackerFullAddr = fullAddress(trackerInfo.serverAddress);
     for (var i in trackedServerList) {
         var fullAddr = fullAddress(trackedServerList[i]);
         var votedTrackerSet = this.votesTable[fullAddr];
@@ -504,7 +604,7 @@ BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
     }
     this.rebuildTopicTable();
 
-    return toRemove; 
+    return toRemove;
 }
 
 BrokerRouteTable.prototype.updateServer = function (serverInfo) {
@@ -517,11 +617,11 @@ BrokerRouteTable.prototype.removeServer = function (serverAddress) {
     if (this.canRemove(votedTrackerSet)) {
         delete this.serverTable[fullAddr];
         this.rebuildTopicTable();
-    } 
+    }
 }
-  
+
 BrokerRouteTable.prototype.canRemove = function (votedTrackerSet) {
-    return !votedTrackerSet ||votedTrackerSet.size == 0;
+    return !votedTrackerSet || votedTrackerSet.size == 0;
 }
 
 BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
@@ -546,25 +646,25 @@ BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
 }
 
 
-function Broker(trackerAddress) {  
-	this.trackerSubscribers = {}; 
+function Broker(trackerAddress) {
+    this.trackerSubscribers = {};
     this.clientTable = {};
     this.routeTable = new BrokerRouteTable();
 
     this.onServerJoin = null;
     this.onServerLeave = null;
     this.onServerUpdated = null;
-    
-    if(trackerAddress){
-    	    this.addTracker(trackerAddress);
-    }
-} 
 
-Broker.prototype.addServer = function(serverAddress) { 
-	var fullAddr = fullAddress(serverAddress);
-	var client = this.clientTable[fullAddr];
+    if (trackerAddress) {
+        this.addTracker(trackerAddress);
+    }
+}
+
+Broker.prototype.addServer = function (serverAddress) {
+    var fullAddr = fullAddress(serverAddress);
+    var client = this.clientTable[fullAddr];
     var broker = this;
-    
+
     if (client != null) {
         client.queryServer(function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
@@ -573,14 +673,14 @@ Broker.prototype.addServer = function(serverAddress) {
             }
         });
         return;
-    } 
+    }
 
     client = new MqClient(fullAddr);
 
-    	client.onDisconnected(function (event) {
+    client.onDisconnected(function (event) {
         console.log("Disconnected from " + fullAddr);
-        client.close(); 
-        delete broker.clientTable[fullAddr] 
+        client.close();
+        delete broker.clientTable[fullAddr]
         broker.routeTable.removeServer(serverAddress);
 
         if (broker.onServerLeave != null) {
@@ -594,7 +694,7 @@ Broker.prototype.addServer = function(serverAddress) {
 
     client.connect(function (event) {
         broker.clientTable[fullAddr] = client;
-        client.queryServer(function(serverInfo) {
+        client.queryServer(function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerJoin != null) {
                 broker.onServerJoin(serverInfo);
@@ -602,8 +702,8 @@ Broker.prototype.addServer = function(serverAddress) {
             if (broker.onServerUpdated != null) {
                 broker.onServerUpdated(serverInfo);
             }
-        }); 
-    });  
+        });
+    });
 }
 
 Broker.prototype.addTracker = function (trackerAddress) {
@@ -617,7 +717,7 @@ Broker.prototype.addTracker = function (trackerAddress) {
     var broker = this;
 
     client.onMessage(function (msg) {
-        var trackerInfo = msg.body; 
+        var trackerInfo = msg.body;
         var serverAddressList = trackerInfo.trackedServerList;
         broker.routeTable.updateVotes(trackerInfo);
         for (var i in serverAddressList) {
@@ -636,84 +736,93 @@ Broker.prototype.addTracker = function (trackerAddress) {
 
 //////////////////////////////////////////////////////////
 
-function MqAdmin(broker, topic){
-	this.broker = broker;
-	this.topic = topic; 
-	this.flag = 0;
-} 
+function MqAdmin(broker, topic) {
+    this.broker = broker;
+    this.topic = topic;
+    this.flag = 0;
+}
 
-MqAdmin.prototype.declareTopic = function(callback){ 
+MqAdmin.prototype.declareTopic = function (callback) {
     var msg = {};
-    msg.cmd = Protocol.DECLARE; 
-    msg.topic = this.topic; 
-    msg.flag = this.flag; 
-    
+    msg.cmd = Protocol.DECLARE;
+    msg.topic = this.topic;
+    msg.flag = this.flag;
+
     this.broker.invoke(msg, callback);
 };
 
 
-function Producer(broker, topic){
-	MqAdmin.call(this, broker, topic); 
+function Producer(broker, topic) {
+    MqAdmin.call(this, broker, topic);
 }
 
 
 inherits(Producer, MqAdmin)
 
-Producer.prototype.publish = function(msg, callback){
+Producer.prototype.publish = function (msg, callback) {
     msg.cmd = Protocol.PRODUCE;
     msg.topic = this.topic;
     this.broker.invoke(msg, callback);
 };
 
 
-function Consumer(broker, topic){
-	MqAdmin.call(this, broker, topic); 
+function Consumer(broker, topic) {
+    MqAdmin.call(this, broker, topic);
 }
 
 inherits(Consumer, MqAdmin);
 
-Consumer.prototype.take = function(callback){
+Consumer.prototype.take = function (callback) {
     var msg = {};
     msg.cmd = Protocol.CONSUME;
-    msg.topic = this.topic;  
+    msg.topic = this.topic;
 
     var consumer = this;
-    this.broker.invoke(msg, function(res){
-        if(res.status == 404){
-            consumer.declareTopic(function(res){ 
-            	if(res.status == 200){
-            		console.log(consumer.topic + " created");
-            	}
+    this.broker.invoke(msg, function (res) {
+        if (res.status == 404) {
+            consumer.declareTopic(function (res) {
+                if (res.status == 200) {
+                    console.log(consumer.topic + " created");
+                }
                 consumer.take(callback);
             });
             return;
-        } 
-        if(res.status == 200){
-        	var originUrl = res.originUrl
-        	var id = res.originId;
-        	
-        	delete res.originUrl
-        	delete res.originId 
-        	if(typeof originUrl == "undefined"){
-        		originUrl = "/";
-        	}  
-        	
-        	res.id = id;  
-        	res.url = originUrl; 
-        	try{  
+        }
+        if (res.status == 200) {
+            var originUrl = res.originUrl
+            var id = res.originId;
+
+            delete res.originUrl
+            delete res.originId
+            if (typeof originUrl == "undefined") {
+                originUrl = "/";
+            }
+
+            res.id = id;
+            res.url = originUrl;
+            try {
                 callback(res);
-            } catch (error){
+            } catch (error) {
                 console.log(error);
             }
-        } 
+        }
         return consumer.take(callback);
     });
 };
 
-Consumer.prototype.route = function(msg){
+Consumer.prototype.route = function (msg) {
     msg.cmd = Protocol.Route;
     msg.ack = false;
     this.broker.invoke(msg);
-}; 
+};
 
 
+
+if (__NODEJS__) {
+    module.exports.Protocol = Protocol;
+    module.exports.MessageClient = MessageClientNode;
+    module.exports.BrokerRouteTable = BrokerRouteTable;
+    module.exports.Broker = Broker; 
+}
+
+ 
