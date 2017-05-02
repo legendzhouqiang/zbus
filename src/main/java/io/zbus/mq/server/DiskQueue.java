@@ -227,19 +227,7 @@ public class DiskQueue implements MessageQueue{
 					log.error("data read from queue can not be serialized back to Message type");
 					break;
 				}
-				msg.setOffset(data.offset);
-				
-				Long expire = msg.getExpire();
-				if(expire != null){
-					try{ 
-						if(expire < System.currentTimeMillis()){ 
-							log.info("Remove expired message: \n" + msg); //remove message
-							continue; //expired message
-						}
-					} catch(Exception e){
-						//expired
-					}
-				} 
+				msg.setOffset(data.offset); 
 				
 				pull = group.pullQ.poll();  
 			} 

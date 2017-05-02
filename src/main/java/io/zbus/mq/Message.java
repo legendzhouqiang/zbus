@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.zbus.kit.logging.Logger;
@@ -375,39 +374,7 @@ public class Message {
 	public Message setEncoding(String encoding) {
 		this.setHeader(ENCODING, encoding);
 		return this;
-	}
-	
-	public Long getDelay() {
-		String value = this.getHeader(DELAY);
-		if(value == null) return null;
-		return Long.valueOf(value);
-	}  
-	
-	public Message setDelay(long time, TimeUnit unit) { 
-		this.setHeader(DELAY, unit.toMillis(time));
-		return this;
 	} 
-	
-	public Long getTtl() {
-		String value = this.getHeader(TTL);
-		if(value == null) return null;
-		return Long.valueOf(value); 
-	} 
-	public Message setTtl(long time, TimeUnit unit) { 
-		this.setHeader(TTL, unit.toMillis(time));
-		return this;
-	} 
-	
-	public Long getExpire() {
-		String value = this.getHeader(EXPIRE);
-		if(value == null) return null;
-		return Long.valueOf(value);
-	}  
-	
-	public Message setExpire(long millis) { 
-		this.setHeader(EXPIRE, millis+"");
-		return this;
-	}  
 	
 	public String getId() {
 		return this.getHeader(ID);

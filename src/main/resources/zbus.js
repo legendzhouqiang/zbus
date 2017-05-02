@@ -322,18 +322,31 @@ if (__NODEJS__) {
     var Buffer = require("buffer").Buffer;
     var Socket = require("net");
 }
+function fullAddress(serverAddress) {
+    var scheme = "ws://"
+    if (serverAddress.sslEnabled) {
+        scheme = "wss://"
+    }
+    return scheme + serverAddress.address;
+}
 
 //websocket available
-function MessageClient(serverAddress) { //websocket implementation
-    this.scheme = "ws://";
-    if (serverAddress.startsWith("ws://")) {
-        this.scheme = "ws://";
-        this.serverAddress = serverAddress.substring(this.scheme.length);
-    } else if (serverAddress.startsWith("wss://")) {
-        this.scheme = "wss://";
-        this.serverAddress = serverAddress.substring(this.scheme.length);
+function MessageClient(serverAddress, certFile) { //websocket implementation
+    if (__NODEJS__) {
+        Events.EventEmitter.call(this);
+    }
+
+    this.serverAddress = serverAddress;
+    this.certFile = certFile;
+
+    var address = serverAddress.address;
+    var p = address.indexOf(':');
+    if (p == -1) {
+        this.serverHost = address.trim();
+        this.serverPort = 80;
     } else {
-        this.serverAddress = serverAddress
+        this.serverHost = address.substring(0, p).trim();
+        this.serverPort = parseInt(address.substring(p + 1).trim());
     }
 
     this.autoReconnect = true;
@@ -341,34 +354,17 @@ function MessageClient(serverAddress) { //websocket implementation
     this.ticketTable = {};
     this.messageHandler = null;
     this.connectedHandler = null;
-    this.disconnectedHandler = null;
+    this.disconnectedHandler = null; 
+
+    this.readBuf = null;
 }
-
-function MessageClientNode(address) {
-    if (__NODEJS__) {
-        Events.EventEmitter.call(this);
-    }
-
-    var p = address.indexOf(':');
-    if (p == -1) {
-        this.serverHost = address.trim();
-        this.serverPort = 15555;
-    } else {
-        this.serverHost = address.substring(0, p).trim();
-        this.serverPort = parseInt(address.substring(p + 1).trim());
-    }
-    this.autoReconnect = true;
-    this.reconnectInterval = 3000;
-    this.socket = null;
-    this.ticketTable = {}; 
-}
-
+ 
 if (__NODEJS__) {
-    inherits(MessageClientNode, Events.EventEmitter);
-}
 
+inherits(MessageClient, Events.EventEmitter);
 
-MessageClientNode.prototype.connect = function (connectedCallback) {
+MessageClient.prototype.connect = function (connectedHandler) {
+
     console.log("Trying to connect: " + this.serverHost + ":" + this.serverPort);
     this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort });
     var clientReadBuf = this.readBuf;
@@ -377,7 +373,10 @@ MessageClientNode.prototype.connect = function (connectedCallback) {
     var client = this;
     this.socket.on("connect", function () {
         console.log("MessageClient connected: " + client.serverHost + ":" + client.serverPort);
-        connectedCallback();
+        if (connectedHandler) {
+            connectedHandler();
+        }
+       
         client.heartbeatInterval = setInterval(function () {
             var msg = new Message();
             msg.setCmd(Message.HEARTBEAT);
@@ -398,7 +397,7 @@ MessageClientNode.prototype.connect = function (connectedCallback) {
         if (client.autoReconnect) {
             console.log("Trying to recconnect: " + client.serverHost + ":" + client.serverPort);
             setTimeout(function () {
-                client.connect(connectedCallback);
+                client.connect(connectedHandler);
             }, client.reconnectInterval);
         }
     });
@@ -409,12 +408,10 @@ MessageClientNode.prototype.connect = function (connectedCallback) {
     });
 
     this.socket.on("data", function (data) {
-        clientReadBuf.put(data);
-        var tempBuf = clientReadBuf.duplicate();
-        tempBuf.flip();
+        clientReadBuf = data;
 
         while (true) {
-            var msg = Message.decode(tempBuf);
+            var msg = httpDecode(clientReadBuf);
             if (msg == null) break;
             var msgid = msg.getId();
             var ticket = clientTicketTable[msgid];
@@ -425,37 +422,12 @@ MessageClientNode.prototype.connect = function (connectedCallback) {
                 }
                 delete clientTicketTable[msgid];
             }
-        }
-        if (tempBuf.position > 0) {
-            clientReadBuf.move(tempBuf.position);
-        }
+        } 
     });
 };
- 
 
+} else { 
 
-
-MessageClient.prototype.address = function () {
-    return this.scheme + this.serverAddress;
-}
-MessageClient.prototype.onMessage = function (messageHandler) {
-    this.messageHandler = messageHandler;
-}
-MessageClient.prototype.onConnected = function (connectedHandler) {
-    this.connectedHandler = connectedHandler;
-}
-MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
-    this.disconnectedHandler = disconnectedHandler;
-}
-
-MessageClient.prototype.sendMessage = function (msg) {
-    if (this.socket.readyState != WebSocket.OPEN) {
-        console.log("socket is not open, invalid");
-        return;
-    }
-    var buf = httpEncode(msg);
-    this.socket.send(buf);
-};
 
 
 MessageClient.prototype.connect = function (connectedHandler) {
@@ -516,6 +488,33 @@ MessageClient.prototype.connect = function (connectedHandler) {
     }
 }
 
+}
+
+MessageClient.prototype.sendMessage = function (msg) {
+    if (this.socket.readyState != WebSocket.OPEN) {
+        console.log("socket is not open, invalid");
+        return;
+    }
+    var buf = httpEncode(msg);
+    this.socket.send(buf);
+};
+
+MessageClient.prototype.address = function () {
+    return fullAddress(this.serverAddress);
+}
+
+MessageClient.prototype.onMessage = function (messageHandler) {
+    this.messageHandler = messageHandler;
+}
+
+MessageClient.prototype.onConnected = function (connectedHandler) {
+    this.connectedHandler = connectedHandler;
+}
+
+MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
+    this.disconnectedHandler = disconnectedHandler;
+}
+
 MessageClient.prototype.invoke = function (msg, callback) {
     if (this.socket.readyState != WebSocket.OPEN) {
         console.log("socket is not open, invalid");
@@ -537,8 +536,8 @@ MessageClient.prototype.close = function () {
 
 
 
-function MqClient(serverAddress) {
-    MessageClient.call(this, serverAddress);
+function MqClient(serverAddress, certFile) {
+    MessageClient.call(this, serverAddress, certFile);
 }
 inherits(MqClient, MessageClient)
 
@@ -548,17 +547,6 @@ MqClient.prototype.queryServer = function (callback) {
     this.invoke(msg, function (msg) {
         callback(msg.body);
     });
-}
-
-
-
-
-function fullAddress(serverAddress) {
-    var scheme = "ws://"
-    if (serverAddress.sslEnabled) {
-        scheme = "wss://"
-    }
-    return scheme + serverAddress.address;
 }
 
 function BrokerRouteTable() {
@@ -650,6 +638,8 @@ function Broker(trackerAddress) {
     this.trackerSubscribers = {};
     this.clientTable = {};
     this.routeTable = new BrokerRouteTable();
+    this.sslCertFileTable = {};
+    this.defaultSslCertFile = null;
 
     this.onServerJoin = null;
     this.onServerLeave = null;
@@ -660,8 +650,14 @@ function Broker(trackerAddress) {
     }
 }
 
-Broker.prototype.addServer = function (serverAddress) {
+//serverAddress = {address: xxx, sslEnabled: true/false }
+//certFile = /ssl/zbus.crt,  file path
+Broker.prototype.addServer = function (serverAddress, certFile) {
     var fullAddr = fullAddress(serverAddress);
+    if (certFile) {
+        this.sslCertFileTable[serverAddress.address] = certFile;
+    }
+
     var client = this.clientTable[fullAddr];
     var broker = this;
 
@@ -674,8 +670,9 @@ Broker.prototype.addServer = function (serverAddress) {
         });
         return;
     }
+   
 
-    client = new MqClient(fullAddr);
+    client = this._createClient(serverAddress, certFile);
 
     client.onDisconnected(function (event) {
         console.log("Disconnected from " + fullAddr);
@@ -706,12 +703,16 @@ Broker.prototype.addServer = function (serverAddress) {
     });
 }
 
-Broker.prototype.addTracker = function (trackerAddress) {
+Broker.prototype.addTracker = function (trackerAddress, certFile) {
     var fullAddr = fullAddress(trackerAddress);
+    if (certFile) {
+        this.sslCertFileTable[trackerAddress.address] = certFile;
+    }
+
     if (fullAddr in this.trackerSubscribers) {
         return;
     }
-    var client = new MessageClient(fullAddr);
+    var client = this._createClient(trackerAddress, certFile);
     this.trackerSubscribers[fullAddr] = client;
 
     var broker = this;
@@ -730,6 +731,21 @@ Broker.prototype.addTracker = function (trackerAddress) {
         msg.cmd = Protocol.TRACK_SUB;
         client.sendMessage(msg);
     });
+}
+
+Broker.prototype._createClient = function (serverAddress, certFile) {
+    if (serverAddress.sslEnabled) {
+        if (!certFile) {
+            certFile = this.sslCertFileTable[serverAddress.address];
+        }
+        if (!certFile) {
+            certFile = this.defaultSslCertFile;
+        }
+        if (!certFile) {
+            throw new "Missing certificate file for Server: " + serverAddress.address;
+        }
+    }
+    return new MqClient(serverAddress, certFile);
 }
 
 
@@ -820,7 +836,7 @@ Consumer.prototype.route = function (msg) {
 
 if (__NODEJS__) {
     module.exports.Protocol = Protocol;
-    module.exports.MessageClient = MessageClientNode;
+    module.exports.MessageClient = MessageClient;
     module.exports.BrokerRouteTable = BrokerRouteTable;
     module.exports.Broker = Broker; 
 }

@@ -12,9 +12,11 @@
 		address: "localhost:15555",
 		sslEnabled: false
 	};
+	
 	var broker = new Broker(); 
 
 	broker.addTracker(serverAddress);
+	
 	broker.onServerJoin = function (serverInfo) {
 	    console.log("serverJoined:");
 	    console.log(serverInfo);
