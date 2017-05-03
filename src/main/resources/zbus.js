@@ -1,5 +1,3 @@
-var __NODEJS__ = typeof module !== 'undefined' && module.exports;
-
 function Protocol() { }
 
 Protocol.VERSION_VALUE = "0.8.0";       //start from 0.8.0 
@@ -100,18 +98,13 @@ Date.prototype.format = function (fmt) { //author: meizz
     return fmt;
 }
 
+function camel2underscore(key) {
+    return key.replace(/\.?([A-Z])/g, function (x, y) { return "_" + y.toLowerCase() }).replace(/^_/, "");
+}
 
-function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor;
-    ctor.prototype = Object.create(superCtor.prototype, {
-        constructor: {
-            value: ctor,
-            enumerable: false,
-            writable: true,
-            configurable: true
-        }
-    });
-};
+function underscore2camel(key) {
+    return key.replace(/_([a-z])/g, function (g) { return g[1].toUpperCase(); });
+} 
 
 var HttpStatus = {
     "200": "OK",
@@ -130,13 +123,54 @@ var HttpStatus = {
     "500": "Internal Server Error"
 };
 
-function camel2underscore(key) {
-    return key.replace(/\.?([A-Z])/g, function (x, y) { return "_" + y.toLowerCase() }).replace(/^_/, "");
-}
 
-function underscore2camel(key) {
-    return key.replace(/_([a-z])/g, function (g) { return g[1].toUpperCase(); });
-}
+var __NODEJS__ = typeof module !== 'undefined' && module.exports;
+
+if (__NODEJS__) {
+    var Events = require('events');
+    var Buffer = require("buffer").Buffer;
+    var Socket = require("net");
+    var inherits = require("util").inherits;
+    
+    function string2Uint8Array(str, encoding) {
+        var buf = Buffer.from(str, encoding); 
+        var data = new Uint8Array(buf.length);
+        for (var i = 0; i < buf.length; ++i) {
+            data[i] = buf[i];
+        }
+        return data;
+	}
+
+    function uint8Array2String(data, encoding) {
+        var buf = Buffer.from(data);
+		return buf.toString(encoding);
+	} 
+    
+} else {
+	
+	function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor;
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	        constructor: {
+	            value: ctor,
+	            enumerable: false,
+	            writable: true,
+	            configurable: true
+	        }
+	    });
+	};
+	
+	
+	function string2Uint8Array(str, encoding) {
+	    var encoder = new TextEncoder(encoding);
+	    return encoder.encode(str);
+	}
+
+	function uint8Array2String(buf, encoding) {
+	    var decoder = new TextDecoder(encoding);
+	    return decoder.decode(buf);
+	} 
+} 
 
 /** 
     * msg.encoding = "utf8"; //encoding on message body
@@ -151,8 +185,7 @@ function underscore2camel(key) {
 function httpEncode(msg) {
     var headers = "";
     var encoding = msg.encoding;
-    if (!encoding) encoding = "utf8";
-    var encoder = new TextEncoder(encoding);
+    if (!encoding) encoding = "utf8"; 
 
     var body = msg.body;
     var contentType = msg["content-type"];
@@ -168,7 +201,7 @@ function httpEncode(msg) {
             } else {
                 contentType = "text/plain";
             }
-            body = encoder.encode(body);
+            body = string2Uint8Array(body, encoding);
         }
     } else {
         body = new Uint8Array(0);
@@ -203,31 +236,24 @@ function httpEncode(msg) {
     delete msg["content-length"]; //clear
     delete msg["content-type"]
 
-    var headerBuffer = encoder.encode(headers);
+    var headerBuffer = string2Uint8Array(headers, encoding);
     var headerLen = headerBuffer.byteLength;
     //merge header and body
-    var buffer = new ArrayBuffer(headerBuffer.byteLength + body.byteLength);
-    var view = new Uint8Array(buffer);
+    var buffer = new Uint8Array(headerBuffer.byteLength + body.byteLength);  
     for (var i = 0; i < headerBuffer.byteLength; i++) {
-        view[i] = headerBuffer[i];
+        buffer[i] = headerBuffer[i];
     }
 
     for (var i = 0; i < body.byteLength; i++) {
-        view[headerLen + i] = body[i];
+        buffer[headerLen + i] = body[i];
     }
     return buffer;
 };
-
-function httpEncodeString(msg) {
-    var buf = httpEncode(msg);
-    var encoding = msg.encoding;
-    if (!encoding) encoding = "utf8";
-    return new TextDecoder(encoding).decode(buf);
-}
-
+ 
 function httpDecode(data) {
+    var encoding = "utf8";
     if (typeof data == "string") {
-        data = new TextEncoder("utf8").encode(data);
+        data = string2Uint8Array(data, encoding);
     } else if (data instanceof Uint8Array || data instanceof Int8Array) {
         //ignore
     } else if (data instanceof ArrayBuffer) {
@@ -247,7 +273,7 @@ function httpDecode(data) {
     }
     if (pos == -1) return null;
 
-    var str = new TextDecoder("utf8").decode(data.slice(0, pos));
+    var str = uint8Array2String(data.slice(0, pos), encoding);
 
     var blocks = str.split("\r\n");
     var lines = [];
@@ -293,15 +319,15 @@ function httpDecode(data) {
         return null;
     }
     var encoding = msg.encoding;
-    if (!encoding) encoding = "utf8";
-    var decoder = new TextDecoder(encoding);
+    if (!encoding) encoding = "utf8"; 
     var bodyData = data.slice(pos + 4);
     if (typeVal == "text/html") {
-        msg.body = decoder.decode(bodyData);
+        msg.body = uint8Array2String(bodyData, encoding);
     } else if (typeVal == "application/json") {
-        msg.body = JSON.parse(decoder.decode(bodyData));
+        var bodyString = uint8Array2String(bodyData, encoding);
+        msg.body = JSON.parse(bodyString);
     } else {
-        msg.body = bodyData.buffer;
+        msg.body = bodyData;
     }
 
     return msg;
@@ -314,14 +340,8 @@ function Ticket(reqMsg, callback) {
     this.response = null;
     this.callback = callback;
     reqMsg.id = this.id;
-}
+} 
 
-
-if (__NODEJS__) {
-    var Events = require('events');
-    var Buffer = require("buffer").Buffer;
-    var Socket = require("net");
-}
 function fullAddress(serverAddress) {
     var scheme = "ws://"
     if (serverAddress.sslEnabled) {
@@ -360,7 +380,7 @@ function MessageClient(serverAddress, certFile) { //websocket implementation
 }
  
 if (__NODEJS__) {
-
+	
 inherits(MessageClient, Events.EventEmitter);
 
 MessageClient.prototype.connect = function (connectedHandler) {
@@ -378,8 +398,8 @@ MessageClient.prototype.connect = function (connectedHandler) {
         }
        
         client.heartbeatInterval = setInterval(function () {
-            var msg = new Message();
-            msg.setCmd(Message.HEARTBEAT);
+            var msg = {};
+            msg.cmd = 'heartbeat';
             client.invoke(msg);
         }, 300 * 1000);
     });
@@ -408,12 +428,11 @@ MessageClient.prototype.connect = function (connectedHandler) {
     });
 
     this.socket.on("data", function (data) {
-        clientReadBuf = data;
-
+        clientReadBuf = data; 
         while (true) {
             var msg = httpDecode(clientReadBuf);
             if (msg == null) break;
-            var msgid = msg.getId();
+            var msgid = msg.id;
             var ticket = clientTicketTable[msgid];
             if (ticket) {
                 ticket.response = msg;
@@ -426,10 +445,19 @@ MessageClient.prototype.connect = function (connectedHandler) {
     });
 };
 
+MessageClient.prototype.invoke = function (msg, callback) {
+    if (callback) {
+        var ticket = new Ticket(msg, callback);
+        this.ticketTable[ticket.id] = ticket;
+    }
+    var buf = httpEncode(msg); 
+    this.socket.write(Buffer.from(buf));
+};
+
+
 } else { 
-
-
-
+//WebSocket
+	
 MessageClient.prototype.connect = function (connectedHandler) {
     console.log("Trying to connect to " + this.address());
     if (!connectedHandler) {
@@ -488,17 +516,29 @@ MessageClient.prototype.connect = function (connectedHandler) {
     }
 }
 
-}
-
-MessageClient.prototype.sendMessage = function (msg) {
+MessageClient.prototype.invoke = function (msg, callback) {
     if (this.socket.readyState != WebSocket.OPEN) {
         console.log("socket is not open, invalid");
         return;
     }
+    if (callback) {
+        var ticket = new Ticket(msg, callback);
+        this.ticketTable[ticket.id] = ticket;
+    }
+
     var buf = httpEncode(msg);
     this.socket.send(buf);
 };
 
+//End of __NODEJS___
+}
+
+
+
+MessageClient.prototype.sendMessage = function (msg) {
+    this.invoke(msg);
+}
+ 
 MessageClient.prototype.address = function () {
     return fullAddress(this.serverAddress);
 }
@@ -515,24 +555,14 @@ MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
     this.disconnectedHandler = disconnectedHandler;
 }
 
-MessageClient.prototype.invoke = function (msg, callback) {
-    if (this.socket.readyState != WebSocket.OPEN) {
-        console.log("socket is not open, invalid");
-        return;
-    }
-    if (callback) {
-        var ticket = new Ticket(msg, callback);
-        this.ticketTable[ticket.id] = ticket;
-    }
-    var buf = httpEncode(msg);
-    this.socket.send(buf);
-};
-
 MessageClient.prototype.close = function () {
     clearInterval(this.heartbeatInterval);
     this.socket.onclose = function () { }
     this.socket.close();
 }
+
+
+
 
 
 
@@ -548,6 +578,7 @@ MqClient.prototype.queryServer = function (callback) {
         callback(msg.body);
     });
 }
+
 
 function BrokerRouteTable() {
     this.serverTable = {}; //Server Address ==> ServerInfo
