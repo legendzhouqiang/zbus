@@ -350,16 +350,40 @@ function fullAddress(serverAddress) {
     return scheme + serverAddress.address;
 }
 
+
+function normalizeAddress(serverAddress, certFile) {
+    if (typeof (serverAddress) == 'string') {
+        var sslEnabled = false;
+        if (certFile) sslEnabled = true;
+
+        serverAddress = serverAddress.trim();
+        if (serverAddress.startsWith("ws://")) {
+            serverAddress = serverAddress.substring(5);
+        }
+        if (serverAddress.startsWith("wss://")) {
+            serverAddress = serverAddress.substring(6);
+            sslEnabled = true;
+        }
+
+        serverAddress = {
+            address: serverAddress,
+            sslEnabled: sslEnabled,
+        }; 
+    }
+    return serverAddress;
+
+}
+
 //websocket available
 function MessageClient(serverAddress, certFile) { //websocket implementation
     if (__NODEJS__) {
         Events.EventEmitter.call(this);
     }
-
+    serverAddress = normalizeAddress(serverAddress, certFile);
     this.serverAddress = serverAddress;
     this.certFile = certFile;
 
-    var address = serverAddress.address;
+    var address = this.serverAddress.address;
     var p = address.indexOf(':');
     if (p == -1) {
         this.serverHost = address.trim();
@@ -378,7 +402,9 @@ function MessageClient(serverAddress, certFile) { //websocket implementation
 
     this.readBuf = null;
 }
- 
+
+
+
 if (__NODEJS__) {
 	
 inherits(MessageClient, Events.EventEmitter);
@@ -454,6 +480,11 @@ MessageClient.prototype.invoke = function (msg, callback) {
     this.socket.write(Buffer.from(buf));
 };
 
+MessageClient.prototype.close = function () {
+    clearInterval(this.heartbeatInterval); 
+    this.socket.close();
+}
+
 
 } else { 
 //WebSocket
@@ -506,9 +537,7 @@ MessageClient.prototype.connect = function (connectedHandler) {
             delete client.ticketTable[msgid];
         } else if (client.messageHandler) {
             client.messageHandler(msg);
-        } else {
-            console.log("Warn: drop message\n" + msg.toString());
-        }
+        }  
     }
 
     this.socket.onerror = function (data) {
@@ -529,6 +558,12 @@ MessageClient.prototype.invoke = function (msg, callback) {
     var buf = httpEncode(msg);
     this.socket.send(buf);
 };
+
+MessageClient.prototype.close = function () {
+    clearInterval(this.heartbeatInterval);
+    this.socket.onclose = function () { }
+    this.socket.close();
+}
 
 //End of __NODEJS___
 }
@@ -554,30 +589,46 @@ MessageClient.prototype.onConnected = function (connectedHandler) {
 MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
     this.disconnectedHandler = disconnectedHandler;
 }
-
-MessageClient.prototype.close = function () {
-    clearInterval(this.heartbeatInterval);
-    this.socket.onclose = function () { }
-    this.socket.close();
-}
-
-
-
-
+ 
 
 
 function MqClient(serverAddress, certFile) {
     MessageClient.call(this, serverAddress, certFile);
+    this.token = null;
 }
-inherits(MqClient, MessageClient)
+inherits(MqClient, MessageClient) 
 
-MqClient.prototype.queryServer = function (callback) {
-    var msg = {};
-    msg.cmd = "query";
-    this.invoke(msg, function (msg) {
-        callback(msg.body);
-    });
+MqClient.prototype._invoke = function (cmd, msg, callback) {
+    if (typeof (msg) == 'string') msg = { topic: msg };  //assume to be topic
+    if (!msg) msg = {}; 
+
+    if (this.token) msg.token = this.token;
+    msg.cmd = cmd;
+    var cb;
+    if (callback) { cb = function (msg) { callback(msg.body); } }
+    this.invoke(msg, cb);
 }
+
+MqClient.prototype.query = function (msg, callback) { 
+    this._invoke(Protocol.QUERY, msg, callback);
+} 
+
+MqClient.prototype.produce = function (msg, callback) {
+    this._invoke(Protocol.PRODUCE, msg, callback); 
+}
+
+MqClient.prototype.consume = function (msg, callback) { 
+    this._invoke(Protocol.CONSUME, msg, callback);
+}
+
+MqClient.prototype.declare = function (msg, callback) { 
+    this._invoke(Protocol.DECLAREC, msg, callback);
+}
+
+MqClient.prototype.remove = function (msg, callback) {  
+    this._invoke(Protocol.REMOVE, msg, callback);
+} 
+
 
 
 function BrokerRouteTable() {
@@ -684,6 +735,8 @@ function Broker(trackerAddress) {
 //serverAddress = {address: xxx, sslEnabled: true/false }
 //certFile = /ssl/zbus.crt,  file path
 Broker.prototype.addServer = function (serverAddress, certFile) {
+    serverAddress = normalizeAddress(serverAddress, certFile);
+
     var fullAddr = fullAddress(serverAddress);
     if (certFile) {
         this.sslCertFileTable[serverAddress.address] = certFile;
@@ -693,7 +746,7 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
     var broker = this;
 
     if (client != null) {
-        client.queryServer(function (serverInfo) {
+        client.query({}, function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerUpdated != null) {
                 broker.onServerUpdated(serverInfo);
@@ -722,7 +775,7 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
 
     client.connect(function (event) {
         broker.clientTable[fullAddr] = client;
-        client.queryServer(function (serverInfo) {
+        client.query({}, function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerJoin != null) {
                 broker.onServerJoin(serverInfo);
@@ -735,6 +788,7 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
 }
 
 Broker.prototype.addTracker = function (trackerAddress, certFile) {
+    trackerAddress = normalizeAddress(trackerAddress, certFile);
     var fullAddr = fullAddress(trackerAddress);
     if (certFile) {
         this.sslCertFileTable[trackerAddress.address] = certFile;
