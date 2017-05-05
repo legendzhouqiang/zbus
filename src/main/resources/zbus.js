@@ -127,49 +127,51 @@ var HttpStatus = {
 var __NODEJS__ = typeof module !== 'undefined' && module.exports;
 
 if (__NODEJS__) {
-    var Events = require('events');
-    var Buffer = require("buffer").Buffer;
-    var Socket = require("net");
-    var inherits = require("util").inherits;
-    
-    function string2Uint8Array(str, encoding) {
-        var buf = Buffer.from(str, encoding); 
-        var data = new Uint8Array(buf.length);
-        for (var i = 0; i < buf.length; ++i) {
-            data[i] = buf[i];
-        }
-        return data;
-	}
 
-    function uint8Array2String(data, encoding) {
-        var buf = Buffer.from(data);
-		return buf.toString(encoding);
-	} 
+var Events = require('events');
+var Buffer = require("buffer").Buffer;
+var Socket = require("net");
+var inherits = require("util").inherits;
     
-} else {
-	
-	function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor;
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	        constructor: {
-	            value: ctor,
-	            enumerable: false,
-	            writable: true,
-	            configurable: true
-	        }
-	    });
-	};
-	
-	
-	function string2Uint8Array(str, encoding) {
-	    var encoder = new TextEncoder(encoding);
-	    return encoder.encode(str);
-	}
+function string2Uint8Array(str, encoding) {
+    var buf = Buffer.from(str, encoding); 
+    var data = new Uint8Array(buf.length);
+    for (var i = 0; i < buf.length; ++i) {
+        data[i] = buf[i];
+    }
+    return data;
+}
 
-	function uint8Array2String(buf, encoding) {
-	    var decoder = new TextDecoder(encoding);
-	    return decoder.decode(buf);
-	} 
+function uint8Array2String(data, encoding) {
+    var buf = Buffer.from(data);
+	return buf.toString(encoding);
+} 
+    
+} else { //WebSocket
+	
+function inherits(ctor, superCtor) {
+	ctor.super_ = superCtor;
+	ctor.prototype = Object.create(superCtor.prototype, {
+	    constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	    }
+	});
+};
+	
+	
+function string2Uint8Array(str, encoding) {
+	var encoder = new TextEncoder(encoding);
+	return encoder.encode(str);
+}
+
+function uint8Array2String(buf, encoding) {
+	var decoder = new TextDecoder(encoding);
+	return decoder.decode(buf);
+}
+
 } 
 
 /** 
@@ -293,7 +295,7 @@ function httpDecode(data) {
         msg.url = bb[1];
     }
     var typeKey = "content-type";
-    var typeVal = "text/html";
+    var typeVal = "text/plain";
     var lenKey = "content-length";
     var lenVal = 0;
 
@@ -321,7 +323,7 @@ function httpDecode(data) {
     var encoding = msg.encoding;
     if (!encoding) encoding = "utf8"; 
     var bodyData = data.slice(pos + 4);
-    if (typeVal == "text/html") {
+    if (typeVal == "text/html" || typeVal == "text/plain") {
         msg.body = uint8Array2String(bodyData, encoding);
     } else if (typeVal == "application/json") {
         var bodyString = uint8Array2String(bodyData, encoding);
@@ -342,7 +344,19 @@ function Ticket(reqMsg, callback) {
     reqMsg.id = this.id;
 } 
 
-function fullAddress(serverAddress) {
+if (__NODEJS__) {
+
+function addressKey(serverAddress) {
+    var scheme = ""
+    if (serverAddress.sslEnabled) {
+        scheme = "[SSL]"
+    }
+    return scheme + serverAddress.address;
+}
+
+} else { //WebSocket
+
+function addressKey(serverAddress) {
     var scheme = "ws://"
     if (serverAddress.sslEnabled) {
         scheme = "wss://"
@@ -350,6 +364,7 @@ function fullAddress(serverAddress) {
     return scheme + serverAddress.address;
 }
 
+} //endof __NODEJS__ test
 
 function normalizeAddress(serverAddress, certFile) {
     if (typeof (serverAddress) == 'string') {
@@ -370,12 +385,10 @@ function normalizeAddress(serverAddress, certFile) {
             sslEnabled: sslEnabled,
         }; 
     }
-    return serverAddress;
-
+    return serverAddress; 
 }
-
-//websocket available
-function MessageClient(serverAddress, certFile) { //websocket implementation
+ 
+function MessageClient(serverAddress, certFile) { 
     if (__NODEJS__) {
         Events.EventEmitter.call(this);
     }
@@ -396,9 +409,9 @@ function MessageClient(serverAddress, certFile) { //websocket implementation
     this.autoReconnect = true;
     this.reconnectInterval = 3000;
     this.ticketTable = {};
-    this.messageHandler = null;
-    this.connectedHandler = null;
-    this.disconnectedHandler = null; 
+    this.onMessage = null;
+    this.onConnected = null;
+    this.onDisconnected = null; 
 
     this.readBuf = null;
 }
@@ -483,8 +496,7 @@ MessageClient.prototype.invoke = function (msg, callback) {
 MessageClient.prototype.close = function () {
     clearInterval(this.heartbeatInterval); 
     this.socket.close();
-}
-
+} 
 
 } else { 
 //WebSocket
@@ -492,7 +504,7 @@ MessageClient.prototype.close = function () {
 MessageClient.prototype.connect = function (connectedHandler) {
     console.log("Trying to connect to " + this.address());
     if (!connectedHandler) {
-        connectedHandler = this.connectedHandler;
+        connectedHandler = this.onConnected;
     }
 
     var WebSocket = window.WebSocket;
@@ -515,8 +527,8 @@ MessageClient.prototype.connect = function (connectedHandler) {
     };
 
     this.socket.onclose = function (event) {
-        if (client.disconnectedHandler) {
-            client.disconnectedHandler(event);
+        if (client.onDisconnected) {
+            client.onDisconnected(event);
             return;
         }
         clearInterval(client.heartbeatInterval);
@@ -535,8 +547,8 @@ MessageClient.prototype.connect = function (connectedHandler) {
                 ticket.callback(msg);
             }
             delete client.ticketTable[msgid];
-        } else if (client.messageHandler) {
-            client.messageHandler(msg);
+        } else if (client.onMessage) {
+            client.onMessage(msg);
         }  
     }
 
@@ -546,9 +558,8 @@ MessageClient.prototype.connect = function (connectedHandler) {
 }
 
 MessageClient.prototype.invoke = function (msg, callback) {
-    if (this.socket.readyState != WebSocket.OPEN) {
-        console.log("socket is not open, invalid");
-        return;
+    if (!this.socket || this.socket.readyState != WebSocket.OPEN) {
+        throw "socket is not open, invalid"; 
     }
     if (callback) {
         var ticket = new Ticket(msg, callback);
@@ -564,9 +575,8 @@ MessageClient.prototype.close = function () {
     this.socket.onclose = function () { }
     this.socket.close();
 }
-
-//End of __NODEJS___
-}
+ 
+}//End of __NODEJS___
 
 
 
@@ -575,21 +585,8 @@ MessageClient.prototype.sendMessage = function (msg) {
 }
  
 MessageClient.prototype.address = function () {
-    return fullAddress(this.serverAddress);
-}
-
-MessageClient.prototype.onMessage = function (messageHandler) {
-    this.messageHandler = messageHandler;
-}
-
-MessageClient.prototype.onConnected = function (connectedHandler) {
-    this.connectedHandler = connectedHandler;
-}
-
-MessageClient.prototype.onDisconnected = function (disconnectedHandler) {
-    this.disconnectedHandler = disconnectedHandler;
-}
- 
+    return addressKey(this.serverAddress);
+} 
 
 
 function MqClient(serverAddress, certFile) {
@@ -639,9 +636,9 @@ function BrokerRouteTable() {
 
 BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
     var trackedServerList = trackerInfo.trackedServerList;
-    var trackerFullAddr = fullAddress(trackerInfo.serverAddress);
+    var trackerFullAddr = addressKey(trackerInfo.serverAddress);
     for (var i in trackedServerList) {
-        var fullAddr = fullAddress(trackedServerList[i]);
+        var fullAddr = addressKey(trackedServerList[i]);
         var votedTrackerSet = this.votesTable[fullAddr];
         if (!votedTrackerSet) {
             votedTrackerSet = new Set();
@@ -654,7 +651,7 @@ BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
     for (var fullAddr in this.votesTable) {
         var votedByThisTracker = false;
         for (var i in trackedServerList) {
-            var trackedFullAddr = fullAddress(trackedServerList[i]);
+            var trackedFullAddr = addressKey(trackedServerList[i]);
             if (fullAddr == trackedFullAddr) {
                 votedByThisTracker = true;
                 break;
@@ -682,7 +679,7 @@ BrokerRouteTable.prototype.updateServer = function (serverInfo) {
 }
 
 BrokerRouteTable.prototype.removeServer = function (serverAddress) {
-    var fullAddr = fullAddress(serverAddress);
+    var fullAddr = addressKey(serverAddress);
     var votedTrackerSet = this.votesTable[fullAddr];
     if (this.canRemove(votedTrackerSet)) {
         delete this.serverTable[fullAddr];
@@ -696,7 +693,7 @@ BrokerRouteTable.prototype.canRemove = function (votedTrackerSet) {
 
 BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
     if (serverInfo) {
-        var fullAddr = fullAddress(serverInfo.serverAddress);
+        var fullAddr = addressKey(serverInfo.serverAddress);
         this.serverTable[fullAddr] = serverInfo;
     }
     this.topicTable = {};
@@ -735,9 +732,8 @@ function Broker(trackerAddress) {
 //serverAddress = {address: xxx, sslEnabled: true/false }
 //certFile = /ssl/zbus.crt,  file path
 Broker.prototype.addServer = function (serverAddress, certFile) {
-    serverAddress = normalizeAddress(serverAddress, certFile);
-
-    var fullAddr = fullAddress(serverAddress);
+    serverAddress = normalizeAddress(serverAddress, certFile); 
+    var fullAddr = addressKey(serverAddress);
     if (certFile) {
         this.sslCertFileTable[serverAddress.address] = certFile;
     }
@@ -748,68 +744,54 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
     if (client != null) {
         client.query({}, function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
-            if (broker.onServerUpdated != null) {
-                broker.onServerUpdated(serverInfo);
-            }
+            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo); 
         });
         return;
-    }
-   
+    } 
 
-    client = this._createClient(serverAddress, certFile);
-
-    client.onDisconnected(function (event) {
+    client = this._createClient(serverAddress, certFile); 
+    client.onDisconnected = function (event) {
         console.log("Disconnected from " + fullAddr);
         client.close();
-        delete broker.clientTable[fullAddr]
+        delete broker.clientTable[fullAddr];
         broker.routeTable.removeServer(serverAddress);
 
-        if (broker.onServerLeave != null) {
-            broker.onServerLeave(serverAddress);
-        }
-
-        if (broker.onServerUpdated != null) {
-            broker.onServerUpdated();
-        }
-    });
+        if (broker.onServerLeave) broker.onServerLeave(serverAddress); 
+        if (broker.onServerUpdated) broker.onServerUpdated();
+    }
 
     client.connect(function (event) {
         broker.clientTable[fullAddr] = client;
         client.query({}, function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
-            if (broker.onServerJoin != null) {
-                broker.onServerJoin(serverInfo);
-            }
-            if (broker.onServerUpdated != null) {
-                broker.onServerUpdated(serverInfo);
-            }
+            if (broker.onServerJoin) broker.onServerJoin(serverInfo); 
+            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo); 
         });
     });
 }
 
 Broker.prototype.addTracker = function (trackerAddress, certFile) {
     trackerAddress = normalizeAddress(trackerAddress, certFile);
-    var fullAddr = fullAddress(trackerAddress);
+    var fullAddr = addressKey(trackerAddress);
     if (certFile) {
         this.sslCertFileTable[trackerAddress.address] = certFile;
     }
 
-    if (fullAddr in this.trackerSubscribers) {
-        return;
-    }
+    if (fullAddr in this.trackerSubscribers) return;
+
     var client = this._createClient(trackerAddress, certFile);
     this.trackerSubscribers[fullAddr] = client;
 
     var broker = this;
 
-    client.onMessage(function (msg) {
+    client.onMessage = function (msg) {
         var trackerInfo = msg.body;
         var serverAddressList = trackerInfo.trackedServerList;
         broker.routeTable.updateVotes(trackerInfo);
         for (var i in serverAddressList) {
             broker.addServer(serverAddressList[i]);
         }
-    });
+    }
 
     client.connect(function (event) {
         var msg = {};
@@ -833,39 +815,52 @@ Broker.prototype._createClient = function (serverAddress, certFile) {
     return new MqClient(serverAddress, certFile);
 }
 
+Broker.prototype.select = function (serverSelector, topic) {
+    keys = serverSelector.select(this.routeTable, topic);
+    var clients = [];
+    for (var i in keys) {
+        var key = keys[i];
+        if (key in this.clientTable) {
+            clients.push(this.clientTable[key]);
+        }
+    }
+    return clients;
+}
 
-
-//////////////////////////////////////////////////////////
-
-function MqAdmin(broker, topic) {
+////////////////////////////////////////////////////////// 
+function MqAdmin(broker) {
     this.broker = broker;
-    this.topic = topic;
-    this.flag = 0;
+    this.adminServerSelector = function (routeTable, topic) {
+        return Object.keys(routeTable.serverTable);
+    }
 }
 
-MqAdmin.prototype.declareTopic = function (callback) {
-    var msg = {};
-    msg.cmd = Protocol.DECLARE;
-    msg.topic = this.topic;
-    msg.flag = this.flag;
+MqAdmin.prototype.declare = function (msg, callback) {
+    var clients = this.broker.select(this.adminServerSelector, topic);
 
-    this.broker.invoke(msg, callback);
-};
-
-
-function Producer(broker, topic) {
-    MqAdmin.call(this, broker, topic);
+    var promises = [];
+    for (var i in clients) {
+        var client = clients[i];
+        var promise = new Promise(function (resolve, reject) {
+            client.declare(msg, function (msg) {
+                resolve(msg.body);
+            })
+        });
+        promises.push(promise);
+    }
+    Promise.all(promises).then(function (values) {
+        callback(values);
+    });
 }
 
+function Producer(broker) {
+    MqAdmin.call(this, broker);
+}
 
 inherits(Producer, MqAdmin)
 
-Producer.prototype.publish = function (msg, callback) {
-    msg.cmd = Protocol.PRODUCE;
-    msg.topic = this.topic;
-    this.broker.invoke(msg, callback);
-};
-
+Producer.prototype.publish = function (msg, callback) { 
+}
 
 function Consumer(broker, topic) {
     MqAdmin.call(this, broker, topic);
@@ -909,21 +904,24 @@ Consumer.prototype.take = function (callback) {
         }
         return consumer.take(callback);
     });
-};
+}
 
 Consumer.prototype.route = function (msg) {
     msg.cmd = Protocol.Route;
     msg.ack = false;
     this.broker.invoke(msg);
-};
+}
 
 
 
 if (__NODEJS__) {
     module.exports.Protocol = Protocol;
     module.exports.MessageClient = MessageClient;
+    module.exports.MqClient = MqClient;
     module.exports.BrokerRouteTable = BrokerRouteTable;
-    module.exports.Broker = Broker; 
+    module.exports.Broker = Broker;
+    module.exports.Producer = Producer;
+    module.exports.Consumer = Consumer;
 }
 
  
