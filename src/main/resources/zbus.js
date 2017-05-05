@@ -10,7 +10,7 @@ Protocol.RPC = "rpc";
 Protocol.ROUTE = "route";     //route back message to sender, designed for RPC
 
 //Topic/ConsumeGroup control
-Protocol.DECLAREC = "declare";
+Protocol.DECLARE = "declare";
 Protocol.QUERY = "query";
 Protocol.REMOVE = "remove";
 Protocol.EMPTY = "empty";
@@ -66,6 +66,10 @@ function hashSize(obj) {
     }
     return size;
 }
+function randomKey (obj) {
+    var keys = Object.keys(obj)
+    return keys[keys.length * Math.random() << 0];
+};
 
 function uuid() {
     //http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
@@ -608,7 +612,8 @@ MqClient.prototype._invoke = function (cmd, msg, callback) {
 
 MqClient.prototype.query = function (msg, callback) { 
     this._invoke(Protocol.QUERY, msg, callback);
-} 
+}
+ 
 
 MqClient.prototype.produce = function (msg, callback) {
     this._invoke(Protocol.PRODUCE, msg, callback); 
@@ -619,12 +624,15 @@ MqClient.prototype.consume = function (msg, callback) {
 }
 
 MqClient.prototype.declare = function (msg, callback) { 
-    this._invoke(Protocol.DECLAREC, msg, callback);
+    this._invoke(Protocol.DECLARE, msg, callback);
 }
 
 MqClient.prototype.remove = function (msg, callback) {  
     this._invoke(Protocol.REMOVE, msg, callback);
-} 
+}
+MqClient.prototype.empty = function (msg, callback) {
+    this._invoke(Protocol.EMPTY, msg, callback);
+}
 
 
 
@@ -724,23 +732,41 @@ function Broker(trackerAddress) {
     this.onServerLeave = null;
     this.onServerUpdated = null;
 
+    this.readyServerRequired = 0;
+    this.readyTriggered = false;
+    this.onReady = null;
+    this.readyTimeout = 3000;//3 seconds
+
     if (trackerAddress) {
         this.addTracker(trackerAddress);
+    } 
+}
+
+Broker.prototype.ready = function (readyHandler) {
+    this.onReady = readyHandler;
+    if (this.readyTriggered) {
+        if(this.onReady) this.onReady();
     }
 }
 
 //serverAddress = {address: xxx, sslEnabled: true/false }
 //certFile = /ssl/zbus.crt,  file path
 Broker.prototype.addServer = function (serverAddress, certFile) {
-    serverAddress = normalizeAddress(serverAddress, certFile); 
+    serverAddress = normalizeAddress(serverAddress, certFile);
+    var broker = this;
+    setTimeout(function () {
+        if (!broker.readyTriggered) {
+            if (broker.onReady) broker.onReady();
+            broker.readyTriggered = true;
+        }
+    }, this.readyTimeout);
+
     var fullAddr = addressKey(serverAddress);
     if (certFile) {
         this.sslCertFileTable[serverAddress.address] = certFile;
     }
 
-    var client = this.clientTable[fullAddr];
-    var broker = this;
-
+    var client = this.clientTable[fullAddr]; 
     if (client != null) {
         client.query({}, function (serverInfo) {
             broker.routeTable.updateServer(serverInfo);
@@ -760,12 +786,19 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
         if (broker.onServerUpdated) broker.onServerUpdated();
     }
 
-    client.connect(function (event) {
-        broker.clientTable[fullAddr] = client;
+    client.connect(function (event) { 
         client.query({}, function (serverInfo) {
+            broker.clientTable[addressKey(serverInfo.serverAddress)] = client;
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerJoin) broker.onServerJoin(serverInfo); 
-            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo); 
+            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo);
+            broker.readyServerRequired--;
+            if (broker.readyServerRequired <= 0) {
+                if (!broker.readyTriggered){
+                    if(broker.onReady) broker.onReady();
+                    broker.readyTriggered = true;
+                }
+            }
         });
     });
 }
@@ -788,6 +821,7 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
         var trackerInfo = msg.body;
         var serverAddressList = trackerInfo.trackedServerList;
         broker.routeTable.updateVotes(trackerInfo);
+        broker.readyServerRequired += serverAddressList.length;
         for (var i in serverAddressList) {
             broker.addServer(serverAddressList[i]);
         }
@@ -816,7 +850,7 @@ Broker.prototype._createClient = function (serverAddress, certFile) {
 }
 
 Broker.prototype.select = function (serverSelector, topic) {
-    keys = serverSelector.select(this.routeTable, topic);
+    keys = serverSelector(this.routeTable, topic);
     var clients = [];
     for (var i in keys) {
         var key = keys[i];
@@ -835,55 +869,91 @@ function MqAdmin(broker) {
     }
 }
 
-MqAdmin.prototype.declare = function (msg, callback) {
-    var clients = this.broker.select(this.adminServerSelector, topic);
-
+MqAdmin.prototype._invoke = function (func, msg, serverSelector, callback) {
+    if (typeof (msg) == 'string') {
+        msg = { topic: msg };
+    } 
+    var clients = this.broker.select(serverSelector, msg.topic);
+    if (clients.length == 1) {
+        clients[0][func](msg, callback);
+        return;
+    }
     var promises = [];
     for (var i in clients) {
         var client = clients[i];
         var promise = new Promise(function (resolve, reject) {
-            client.declare(msg, function (msg) {
-                resolve(msg.body);
+            client[func](msg, function (msg) {
+                resolve(msg);
             })
         });
         promises.push(promise);
     }
     Promise.all(promises).then(function (values) {
-        callback(values);
+        if(callback) callback(values);
     });
 }
 
+MqAdmin.prototype.declare = function (msg, callback) { 
+    this._invoke(Protocol.DECLARE, msg, this.adminServerSelector, callback);
+}
+MqAdmin.prototype.query = function (msg, callback) {
+    this._invoke(Protocol.QUERY, msg, this.adminServerSelector, callback);
+}
+MqAdmin.prototype.remove = function (msg, callback) {
+    this._invoke(Protocol.REMOVE, msg, this.adminServerSelector, callback);
+}
+MqAdmin.prototype.empty = function (msg, callback) {
+    this._invoke(Protocol.EMPTY, msg, this.adminServerSelector, callback);
+}
+ 
+
 function Producer(broker) {
     MqAdmin.call(this, broker);
-}
-
+    this.produceServerSelector = function (routeTable, topic) {
+        if (hashSize(routeTable.serverTable) == 0) return [];
+        var topicList = routeTable.topicTable[topic];
+        if (!topicList || topicList.length == 0) { 
+            return [randomKey(routeTable.serverTable)]; //random select
+        }
+        var target = topicList[0];
+        for (var i = 1; i < topicList.length; i++) {
+            var current = topicList[i];
+            if (target.consumerCount < current.consumerCount) {
+                target = current;
+            }
+        }
+        return [addressKey(target.serverAddress)];
+    }
+} 
 inherits(Producer, MqAdmin)
 
-Producer.prototype.publish = function (msg, callback) { 
-}
+Producer.prototype.publish = function (msg, callback) {
+    this._invoke(Protocol.PRODUCE, msg, this.produceServerSelector, callback);
+} 
 
-function Consumer(broker, topic) {
-    MqAdmin.call(this, broker, topic);
-}
 
+function Consumer(broker) {
+    MqAdmin.call(this, broker); 
+    this.consumeServerSelector = function (routeTable, topic) {
+        return Object.keys(routeTable.serverTable);
+    }
+    this.onMessage = null;
+} 
 inherits(Consumer, MqAdmin);
 
-Consumer.prototype.take = function (callback) {
-    var msg = {};
-    msg.cmd = Protocol.CONSUME;
-    msg.topic = this.topic;
 
+Consumer.prototype.consume = function(client, consumeCtrl) {
+    //client.onConnected
+    //client.onDisconnected
     var consumer = this;
-    this.broker.invoke(msg, function (res) {
+    function consumeCallback(consumeCtrl, res) {
         if (res.status == 404) {
-            consumer.declareTopic(function (res) {
-                if (res.status == 200) {
-                    console.log(consumer.topic + " created");
-                }
-                consumer.take(callback);
+            client.declare(consumeCtrl, function (res) {
+                client.consume(consumeCtrl, consumeCallback);
             });
             return;
         }
+
         if (res.status == 200) {
             var originUrl = res.originUrl
             var id = res.originId;
@@ -897,21 +967,31 @@ Consumer.prototype.take = function (callback) {
             res.id = id;
             res.url = originUrl;
             try {
-                callback(res);
+                if (consumer.onMessage) consumer.onMessage(res);
+                client.consume(consumeCtrl, consumeCallback);
             } catch (error) {
                 console.log(error);
             }
+
+        } else {
+            throw (res.status +":"+ res.body)
         }
-        return consumer.take(callback);
-    });
+    }
+
+    client.consume(consumeCtrl, function (res) {
+        consumeCallback(res);
+    }) 
 }
 
-Consumer.prototype.route = function (msg) {
-    msg.cmd = Protocol.Route;
-    msg.ack = false;
-    this.broker.invoke(msg);
-}
+Consumer.prototype.start = function () {
+    this.broker.onServerJoin = function () {
 
+    }
+    this.broker.onServerLeave = function () {
+
+    }
+} 
+ 
 
 
 if (__NODEJS__) {
