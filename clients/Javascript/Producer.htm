@@ -13,9 +13,9 @@
     broker.ready(function () {
         var p = new Producer(broker);
         var topic = "hong6";
-        //p.declare(topic, function (data) {
-        //    console.log(data);
-        //}); 
+        p.declare(topic, function (data) {
+            console.log(data);
+        }); 
         var count = 0;
         function produce() {
             var req = { topic: topic, body: 'published from javascript '+count++ };

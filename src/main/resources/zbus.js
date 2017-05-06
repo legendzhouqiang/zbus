@@ -70,6 +70,14 @@ function randomKey (obj) {
     var keys = Object.keys(obj)
     return keys[keys.length * Math.random() << 0];
 };
+function clone(obj) {
+    if (null == obj || "object" != typeof obj) return obj;
+    var copy = obj.constructor();
+    for (var attr in obj) {
+        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+    }
+    return copy;
+}
 
 function uuid() {
     //http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
@@ -629,7 +637,11 @@ MqClient.prototype.produce = function (msg, callback) {
 
 MqClient.prototype.consume = function (msg, callback) { 
     this._invoke(Protocol.CONSUME, msg, callback);
-} 
+}
+MqClient.prototype.route = function (msg, callback) {
+    msg.ack = false;
+    this._invoke(Protocol.ROUTE, msg, callback);
+}
 
 
 
@@ -760,8 +772,10 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
     var broker = this;
     setTimeout(function () {
         if (!broker.readyTriggered) {
-            if (broker.onReady) broker.onReady();
             broker.readyTriggered = true;
+            if (broker.onReady) {
+                try{ broker.onReady(); } catch (e) { console.log(e); } 
+            } 
         }
     }, this.readyTimeout);
 
@@ -804,9 +818,11 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
             if (broker.onServerUpdated) broker.onServerUpdated(serverInfo);
             broker.readyServerRequired--;
             if (broker.readyServerRequired <= 0) {
-                if (!broker.readyTriggered){
-                    if(broker.onReady) broker.onReady();
-                    broker.readyTriggered = true;
+                if (!broker.readyTriggered) {
+                    broker.readyTriggered = true; 
+                    if (broker.onReady) {
+                        try { broker.onReady(); } catch (e) { console.log(e); }
+                    }
                 }
             }
         });
@@ -1045,8 +1061,100 @@ Consumer.prototype.consume = function(client, consumeCtrl) {
             consumeCallback(consumeCtrl,res);
         }) 
     })
+}
+
+
+function RpcInvoker(broker, topic, ctrl) { 
+    this.broker = broker;
+    this.prodcuer = new Producer(broker); 
+    if (ctrl) {
+        this.ctrl = clone(ctrl);
+        this.ctrl.topic = topic;
+    } else {
+        this.ctrl = { topic: topic }
+    } 
+    var invoker = this;
+
+    return new Proxy(this, {
+        get: function (target, name) {
+            return name in target ? target[name] : invoker._proxyMethod(name);
+        }
+    });
 } 
 
+RpcInvoker.prototype._proxyMethod = function (method) {
+    var invoker = this;
+    return function () { 
+        var callback;
+        if(arguments.length > 0){ 
+            var callback = arguments[arguments.length - 1];
+            if (typeof (callback) != 'function') {
+                callback = null;
+            }
+        }
+        var len = arguments.length;
+        if (callback) len--;
+        var params = [];
+        for (var i = 0; i < len; i++) {
+            params.push(arguments[i]);
+        }
+        req = {
+            method: method,
+            params: params,
+        }  
+        invoker._invokeMethod(req, callback);
+    }
+}
+
+RpcInvoker.prototype._invokeMethod = function (req, callback) {
+    var msg = clone(this.ctrl);
+    msg.body = JSON.stringify(req);
+    msg.ack = false;
+    this.prodcuer.publish(msg, function (msg) {
+        if (callback) {
+            if (msg.status != "200") {
+                throw msg.body;
+            }
+            res = JSON.parse(msg.body);
+            if (res.stackTrace) {
+                throw res.stackTrace;
+            }
+            callback(res.result);
+        }
+    });
+}
+
+//{ method: xxx, params:[], module: xxx]
+RpcInvoker.prototype.invoke = function(){ 
+    if (arguments.length < 1) {
+        throw "Missing request parameter";
+    }
+    var req = arguments[0];
+    var callback = arguments[arguments.length - 1];
+    if (typeof (callback) != 'function') {
+        callback = null;
+    }
+
+    if (typeof (req) == 'string') { 
+        var params = [];
+        var len = arguments.length;
+        if (callback) len--;
+        for (var i = 1; i < len; i++) {
+            params.push(arguments[i]);
+        }
+        req = {
+            method: req,
+            params: params,
+        }
+    }
+
+    this._invokeMethod(req, callback);
+}
+
+
+function RpcProcessor() {
+
+}
 
 if (__NODEJS__) {
     module.exports.Protocol = Protocol;
@@ -1056,6 +1164,7 @@ if (__NODEJS__) {
     module.exports.Broker = Broker;
     module.exports.Producer = Producer;
     module.exports.Consumer = Consumer;
+    module.exports.RpcInvoker = RpcInvoker;
 }
 
  
