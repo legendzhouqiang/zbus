@@ -640,6 +640,10 @@ MqClient.prototype.consume = function (msg, callback) {
 }
 MqClient.prototype.route = function (msg, callback) {
     msg.ack = false;
+    if (msg.status) {
+        msg.originStatus = msg.status;
+        delete msg.status;
+    }
     this._invoke(Protocol.ROUTE, msg, callback);
 }
 
@@ -1153,9 +1157,73 @@ RpcInvoker.prototype.invoke = function(){
 
 
 function RpcProcessor() {
+    this.methodTable = {}
 
+    var processor = this;
+    this.onMessage = function (msg, client) {  
+        var resMsg = {
+            id: msg.id,
+            recver: msg.sender,
+            topic: msg.topic 
+        };
+
+        try {
+            var res = {};
+            var req = JSON.parse(msg.body);
+            var key = processor._generateKey(req.module, req.method);
+            if (key in processor.methodTable) {
+                var m = processor.methodTable[key];
+                try{
+                    res.result = m.method.apply(m.target, req.params);
+                    res.error = null;
+                    res.stackTrace = null;
+                } catch (e) {
+                    res.error = e;
+                    res.stackTrace = '' + e;
+                }
+                resMsg.status = 200;
+                resMsg.body = JSON.stringify(res);
+            } else {
+                resMsg.status = 404;
+                resMsg.body = "Missing method: " + key;
+            }
+        } catch (e) {
+            resMsg.status = 500;
+            resMsg.body = '' + e;
+        } finally { 
+            if (!resMsg.status) resMsg.status = 200;
+            try { client.route(resMsg); } catch (e) { }
+        }
+    }
 }
 
+RpcProcessor.prototype._generateKey = function(moduleName, methodName){
+    if (moduleName) return moduleName + ":" + methodName;
+    return ":" + methodName;
+}
+
+RpcProcessor.prototype.addModule = function (serviceObj, moduleName) {
+    if (typeof (serviceObj) == 'function') {
+        var func = serviceObj;
+        var key = this._generateKey(moduleName, func.name);
+        if (key in this.methodTable) {
+            console.log("WARN: " + key + " already exists, will be overriden");
+        }
+        this.methodTable[key] = { method: func, target: null};
+        return;
+    }
+
+    for (var name in serviceObj) {
+        var func = serviceObj[name];
+        if (typeof (func) != 'function') continue;
+        var key = this._generateKey(moduleName, name);
+        if (key in this.methodTable) {
+            console.log("WARN: " + key + " already exists, will be overriden");
+        }
+        this.methodTable[key] = { method: func, target: serviceObj };
+    }
+}
+  
 if (__NODEJS__) {
     module.exports.Protocol = Protocol;
     module.exports.MessageClient = MessageClient;
@@ -1165,6 +1233,7 @@ if (__NODEJS__) {
     module.exports.Producer = Producer;
     module.exports.Consumer = Consumer;
     module.exports.RpcInvoker = RpcInvoker;
+    module.exports.RpcProcessor = RpcProcessor;
 }
 
  
