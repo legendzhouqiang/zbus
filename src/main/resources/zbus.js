@@ -418,9 +418,7 @@ function MessageClient(serverAddress, certFile) {
     this.onDisconnected = null; 
 
     this.readBuf = null;
-}
-
-
+} 
 
 if (__NODEJS__) {
 	
@@ -599,21 +597,31 @@ function MqClient(serverAddress, certFile) {
 }
 inherits(MqClient, MessageClient) 
 
-MqClient.prototype._invoke = function (cmd, msg, callback) {
-    if (typeof (msg) == 'string') msg = { topic: msg };  //assume to be topic
-    if (!msg) msg = {}; 
-
-    if (this.token) msg.token = this.token;
-    msg.cmd = cmd;
-    var cb;
-    if (callback) { cb = function (msg) { callback(msg.body); } }
-    this.invoke(msg, cb);
+MqClient.prototype.fork = function () {
+    return new MqClient(this.serverAddress, this.certFile);
 }
 
+MqClient.prototype._invoke = function (cmd, msg, callback) {
+    if (typeof (msg) == 'string') msg = { topic: msg };  //assume to be topic
+    if (!msg) msg = {};
+
+    if (this.token) msg.token = this.token;
+    msg.cmd = cmd; 
+    this.invoke(msg, callback);
+}
+ 
 MqClient.prototype.query = function (msg, callback) { 
     this._invoke(Protocol.QUERY, msg, callback);
 }
- 
+MqClient.prototype.declare = function (msg, callback) {
+    this._invoke(Protocol.DECLARE, msg, callback);
+} 
+MqClient.prototype.remove = function (msg, callback) {
+    this._invoke(Protocol.REMOVE, msg, callback);
+}
+MqClient.prototype.empty = function (msg, callback) {
+    this._invoke(Protocol.EMPTY, msg, callback);
+}
 
 MqClient.prototype.produce = function (msg, callback) {
     this._invoke(Protocol.PRODUCE, msg, callback); 
@@ -621,18 +629,7 @@ MqClient.prototype.produce = function (msg, callback) {
 
 MqClient.prototype.consume = function (msg, callback) { 
     this._invoke(Protocol.CONSUME, msg, callback);
-}
-
-MqClient.prototype.declare = function (msg, callback) { 
-    this._invoke(Protocol.DECLARE, msg, callback);
-}
-
-MqClient.prototype.remove = function (msg, callback) {  
-    this._invoke(Protocol.REMOVE, msg, callback);
-}
-MqClient.prototype.empty = function (msg, callback) {
-    this._invoke(Protocol.EMPTY, msg, callback);
-}
+} 
 
 
 
@@ -676,6 +673,7 @@ BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
     for (var i in toRemove) {
         var fullAddr = toRemove[i];
         delete this.serverTable[fullAddr];
+        delete this.votesTable[fullAddr];
     }
     this.rebuildTopicTable();
 
@@ -687,10 +685,16 @@ BrokerRouteTable.prototype.updateServer = function (serverInfo) {
 }
 
 BrokerRouteTable.prototype.removeServer = function (serverAddress) {
-    var fullAddr = addressKey(serverAddress);
-    var votedTrackerSet = this.votesTable[fullAddr];
+    var downAddr = addressKey(serverAddress);
+    for (var addr in this.votesTable) {
+        var votedTrackerSet = this.votesTable[addr];
+        votedTrackerSet.clear(downAddr)
+    }
+
+    var votedTrackerSet = this.votesTable[downAddr];
     if (this.canRemove(votedTrackerSet)) {
-        delete this.serverTable[fullAddr];
+        delete this.serverTable[downAddr];
+        delete this.votesTable[downAddr];
         this.rebuildTopicTable();
     }
 }
@@ -768,7 +772,9 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
 
     var client = this.clientTable[fullAddr]; 
     if (client != null) {
-        client.query({}, function (serverInfo) {
+        client.query({}, function (msg) {
+            if (msg.status != 200) return;
+            serverInfo = msg.body;
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerUpdated) broker.onServerUpdated(serverInfo); 
         });
@@ -787,7 +793,11 @@ Broker.prototype.addServer = function (serverAddress, certFile) {
     }
 
     client.connect(function (event) { 
-        client.query({}, function (serverInfo) {
+        client.query({}, function (msg) {
+            if (msg.status != 200) return;
+
+            serverInfo = msg.body;
+
             broker.clientTable[addressKey(serverInfo.serverAddress)] = client;
             broker.routeTable.updateServer(serverInfo);
             if (broker.onServerJoin) broker.onServerJoin(serverInfo); 
@@ -874,6 +884,7 @@ MqAdmin.prototype._invoke = function (func, msg, serverSelector, callback) {
         msg = { topic: msg };
     } 
     var clients = this.broker.select(serverSelector, msg.topic);
+    if (clients.length < 1) return;
     if (clients.length == 1) {
         clients[0][func](msg, callback);
         return;
@@ -931,67 +942,110 @@ Producer.prototype.publish = function (msg, callback) {
     this._invoke(Protocol.PRODUCE, msg, this.produceServerSelector, callback);
 } 
 
-
-function Consumer(broker) {
+ 
+function Consumer(broker, consumeCtrl) {
     MqAdmin.call(this, broker); 
     this.consumeServerSelector = function (routeTable, topic) {
         return Object.keys(routeTable.serverTable);
     }
+    this.mqClientCount = 1;
     this.onMessage = null;
+    if (typeof consumeCtrl == 'string') {
+        consumeCtrl = {topic: consumeCtrl}
+    }
+    this.consumeCtrl = consumeCtrl;
+
+    this.consumeClientTable = {}; //addressKey => list of MqClient consuming
 } 
 inherits(Consumer, MqAdmin);
 
+Consumer.prototype.consumeToServer = function (clientInBrokerTable) {
+    var addr = addressKey(clientInBrokerTable.serverAddress);
+    if (addr in this.consumeClientTable) return; 
 
-Consumer.prototype.consume = function(client, consumeCtrl) {
-    //client.onConnected
-    //client.onDisconnected
+    var consumingClients = [];
     var consumer = this;
-    function consumeCallback(consumeCtrl, res) {
-        if (res.status == 404) {
-            client.declare(consumeCtrl, function (res) {
-                client.consume(consumeCtrl, consumeCallback);
-            });
-            return;
-        }
-
-        if (res.status == 200) {
-            var originUrl = res.originUrl
-            var id = res.originId;
-
-            delete res.originUrl
-            delete res.originId
-            if (typeof originUrl == "undefined") {
-                originUrl = "/";
-            }
-
-            res.id = id;
-            res.url = originUrl;
-            try {
-                if (consumer.onMessage) consumer.onMessage(res);
-                client.consume(consumeCtrl, consumeCallback);
-            } catch (error) {
-                console.log(error);
-            }
-
-        } else {
-            throw (res.status +":"+ res.body)
-        }
+    for (var i = 0; i < this.mqClientCount; i++) {
+        var consumeClient = clientInBrokerTable.fork();
+        consumingClients.push(consumeClient);
+        consumer.consume(consumeClient, consumer.consumeCtrl); 
     }
+    this.consumeClientTable[addr] = consumingClients; 
+}
 
-    client.consume(consumeCtrl, function (res) {
-        consumeCallback(res);
-    }) 
+Consumer.prototype.leaveServer = function (serverAddress) {
+    var addr = addressKey(serverAddress);
+    var consumingClients = this.consumeClientTable[addr];
+    if (!consumingClients) return;
+    for (var i in consumingClients) {
+        var client = consumingClients[i];
+        client.close();
+    }
+    delete this.consumeClientTable[addr]; 
 }
 
 Consumer.prototype.start = function () {
-    this.broker.onServerJoin = function () {
-
+    var clientTable = this.broker.clientTable;
+    for (var addr in clientTable) {
+        var client = clientTable[addr];
+        this.consumeToServer(client)
     }
-    this.broker.onServerLeave = function () {
-
+    var consumer = this;
+    this.broker.onServerJoin = function (serverInfo) {
+        var addr = addressKey(serverInfo.serverAddress);
+        var client = consumer.broker.clientTable[addr];
+        if (!client) {
+            console.log("WARN: " + addr + " not found in broker clientTable");
+            return;
+        }
+        consumer.consumeToServer(client);
     }
+    this.broker.onServerLeave = function (serverAddress) {
+        consumer.leaveServer(serverAddress);
+    }
+}
+
+
+Consumer.prototype.consume = function(client, consumeCtrl) { 
+    var onMessage = this.onMessage;
+    function consumeCallback(consumeCtrl, res) {
+        if (res.status == 404) {
+            client.declare(consumeCtrl, function (res) {
+                if (res.status != 200) {
+                    console.log("declare error: " + res);
+                    return;
+                }
+                client.consume(consumeCtrl, function (res) {
+                    consumeCallback(consumeCtrl, res);
+                })
+            });
+            return;
+        }
+         
+        var originUrl = res.originUrl
+        var id = res.originId; 
+        delete res.originUrl
+        delete res.originId
+        if (typeof originUrl == "undefined") originUrl = "/";  
+        res.id = id;
+        res.url = originUrl;
+
+        if (onMessage) {
+            try{
+                onMessage(res, client);
+            } finally {
+                client.consume(consumeCtrl, function (res) {
+                    consumeCallback(consumeCtrl, res);
+                })
+            } 
+        } 
+    }
+    client.connect(function(){
+        client.consume(consumeCtrl, function (res) {
+            consumeCallback(consumeCtrl,res);
+        }) 
+    })
 } 
- 
 
 
 if (__NODEJS__) {

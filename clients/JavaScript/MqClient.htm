@@ -8,12 +8,16 @@
 
 <script>
     var client = new MqClient("localhost:15555");
+    
     client.connect(function () {
         client.declare("hong");
         client.consume("hong", function (data) {
             console.log(data);
         })
-        client.produce({ topic: "hong", body: "hello from javascript" });
+
+        client.produce({ topic: "hong", body: "hello from javascript" }, function (data) {
+            console.log(data);
+        }); 
     })
 
 </script>
