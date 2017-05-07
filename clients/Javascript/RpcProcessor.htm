@@ -4,22 +4,5 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>RpcProcessor Example</title> 
 <script type="text/javascript" src="../../src/main/resources/zbus.js"></script>   
-<script type="text/javascript" src="./MyService.js"></script> 
-</head><body>
-<script> 
-
-    function myplus(a, b) {
-        return a + b;
-    }  
-    
-    var rpc = new RpcProcessor();
-    rpc.addModule(myplus); //method example
-    rpc.addModule(new MyService()); //object example
-
-    var broker = new Broker();
-    broker.addTracker("localhost:15555");
-    var c = new Consumer(broker, "MyRpc");
-    c.onMessage = rpc.onMessage;
-    c.start();
-
-</script></body></html>
+<script type="text/javascript" src="./RpcProcessor.js"></script> 
+</head><body></body></html>

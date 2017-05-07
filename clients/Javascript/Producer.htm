@@ -3,31 +3,6 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Producer Example</title> 
-<script type="text/javascript" src="../../src/main/resources/zbus.js"></script>   
-</head><body>
-<script> 
-
-    var broker = new Broker();
-    broker.addTracker("localhost:15555");
-
-    broker.ready(function () {
-        var p = new Producer(broker);
-        var topic = "hong6";
-        p.declare(topic, function (data) {
-            console.log(data);
-        }); 
-        var count = 0;
-        function produce() {
-            var req = { topic: topic, body: 'published from javascript '+count++ };
-            p.publish(req, function (msg) {
-                console.log(msg);
-            })
-            setTimeout(function () {
-                produce();
-            }, 3000)
-        }
-
-        produce();
-    })
-
-</script></body></html>
+<script type="text/javascript" src="../../src/main/resources/zbus.js"></script>  
+<script type="text/javascript" src="./Producer.js"></script>  
+</head><body></body></html>

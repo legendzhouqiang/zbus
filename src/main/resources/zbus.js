@@ -332,9 +332,12 @@ function httpDecode(data) {
     if (pos + 4 + lenVal > data.byteLength) {
         return null;
     }
+    //mark consumed Length
+    data.consumedLength = pos + 4 + lenVal;
+
     var encoding = msg.encoding;
     if (!encoding) encoding = "utf8"; 
-    var bodyData = data.slice(pos + 4);
+    var bodyData = data.slice(pos + 4, pos + 4 + lenVal);
     if (typeVal == "text/html" || typeVal == "text/plain") {
         msg.body = uint8Array2String(bodyData, encoding);
     } else if (typeVal == "application/json") {
@@ -425,19 +428,16 @@ function MessageClient(serverAddress, certFile) {
     this.onConnected = null;
     this.onDisconnected = null; 
 
-    this.readBuf = null;
+    this.readBuf = new Uint8Array(0); //only used when NODEJS 
 } 
 
 if (__NODEJS__) {
 	
 inherits(MessageClient, Events.EventEmitter);
 
-MessageClient.prototype.connect = function (connectedHandler) {
-
+MessageClient.prototype.connect = function (connectedHandler) { 
     console.log("Trying to connect: " + this.serverHost + ":" + this.serverPort);
-    this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort });
-    var clientReadBuf = this.readBuf;
-    var clientTicketTable = this.ticketTable;
+    this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort }); 
 
     var client = this;
     this.socket.on("connect", function () {
@@ -451,17 +451,20 @@ MessageClient.prototype.connect = function (connectedHandler) {
             msg.cmd = 'heartbeat';
             client.invoke(msg);
         }, 300 * 1000);
-    });
-
+    }); 
 
     this.socket.on("error", function (error) {
         client.emit("error", error);
     });
 
     this.socket.on("close", function () {
-        clearInterval(client.heartbeatInterval);
         client.socket.destroy();
-        client.socket = null;
+        clearInterval(client.heartbeatInterval);
+
+        if (client.onDisconnected) {
+            client.onDisconnected();
+            return;
+        }  
 
         if (client.autoReconnect) {
             console.log("Trying to recconnect: " + client.serverHost + ":" + client.serverPort);
@@ -471,24 +474,48 @@ MessageClient.prototype.connect = function (connectedHandler) {
         }
     });
 
-
     client.on("error", function (error) {
         console.log(error);
     });
 
-    this.socket.on("data", function (data) {
-        clientReadBuf = data; 
+    this.socket.on("data", function (data) { 
+        var encoding = "utf8";
+        if (typeof data == "string") {
+            data = string2Uint8Array(data, encoding);
+        } else if (data instanceof Uint8Array || data instanceof Int8Array) {
+            //ignore
+        } else if (data instanceof ArrayBuffer) {
+            data = new Uint8Array(data);
+        } else {
+            throw "Invalid data type: " + data;
+        }
+        //concate data
+        var bufLen = client.readBuf.byteLength;
+        var readBuf = new Uint8Array(bufLen + data.byteLength);
+        for (var i = 0; i < bufLen; i++) {
+            readBuf[i] = client.readBuf[i];
+        }
+        for (var i = 0; i < data.byteLength; i++) {
+            readBuf[i + bufLen] = data[i];
+        }
+        client.readBuf = readBuf;
+
         while (true) {
-            var msg = httpDecode(clientReadBuf);
+            if (client.readBuf.consumedLength) {
+                client.readBuf = client.readBuf.slice(client.readBuf.consumedLength);
+            }
+            var msg = httpDecode(client.readBuf);
             if (msg == null) break;
             var msgid = msg.id;
-            var ticket = clientTicketTable[msgid];
+            var ticket = client.ticketTable[msgid];
             if (ticket) {
                 ticket.response = msg;
                 if (ticket.callback) {
                     ticket.callback(msg);
                 }
-                delete clientTicketTable[msgid];
+                delete client.ticketTable[msgid];
+            } else if (client.onMessage) {
+                client.onMessage(msg);
             }
         } 
     });
@@ -504,8 +531,10 @@ MessageClient.prototype.invoke = function (msg, callback) {
 };
 
 MessageClient.prototype.close = function () {
-    clearInterval(this.heartbeatInterval); 
-    this.socket.close();
+    if (this.socket.destroyed) return;
+    clearInterval(this.heartbeatInterval);
+    this.socket.removeAllListeners("close");
+    this.socket.destroy();
 } 
 
 } else { 
@@ -537,14 +566,16 @@ MessageClient.prototype.connect = function (connectedHandler) {
     };
 
     this.socket.onclose = function (event) {
+        clearInterval(client.heartbeatInterval);
         if (client.onDisconnected) {
-            client.onDisconnected(event);
+            client.onDisconnected();
             return;
         }
-        clearInterval(client.heartbeatInterval);
-        setTimeout(function () {
-            try { client.connect(connectedHandler); } catch (e) { }//ignore
-        }, client.reconnectInterval);
+        if (client.autoReconnect) {
+            setTimeout(function () {
+                try { client.connect(connectedHandler); } catch (e) { }//ignore
+            }, client.reconnectInterval);
+        }
     };
 
     this.socket.onmessage = function (event) {

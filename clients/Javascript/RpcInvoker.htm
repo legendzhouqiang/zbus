@@ -4,32 +4,5 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>RpcInvoker Example</title> 
 <script type="text/javascript" src="../../src/main/resources/zbus.js"></script>   
-</head><body>
-<script> 
-
-    var broker = new Broker();
-    broker.addTracker("localhost:15555");
-
-    var rpc = new RpcInvoker(broker, "MyRpc");
-
-    broker.ready(function () {  
-
-        rpc.invoke({ method: 'plus', params: [1, 2] }, function (res) {
-            console.log(res);
-        })
-
-        rpc.invoke('plus', 1, 2, function (res) {
-            console.log(res);
-        })
-
-        rpc.plus(1, 2, function (res) {
-            console.log(res);
-        })
-
-        rpc.testEncoding(function (res) {
-            console.log(res);
-        })
-
-    })
-
-</script></body></html>
+<script type="text/javascript" src="./RpcInvoker.js"></script> 
+</head><body></body></html>

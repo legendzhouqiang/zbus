@@ -1,25 +1,8 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
-<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<head><meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>MqClient Example</title> 
 <script type="text/javascript" src="../../src/main/resources/zbus.js"></script>  
-</head><body>   
-
-<script>
-    var client = new MqClient("localhost:15555");
-    
-    client.connect(function () {
-        client.declare("hong");
-        client.consume("hong", function (data) {
-            console.log(data);
-        })
-
-        client.produce({ topic: "hong", body: "hello from javascript" }, function (data) {
-            console.log(data);
-        }); 
-    })
-
-</script>
-
+<script type="text/javascript" src="./MqClient.js"></script> 
+</head><body>    
 </body></html>
