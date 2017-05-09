@@ -1,6 +1,6 @@
 #encoding=utf8  
 import uuid, socket
-import time 
+import time, json
 import logging.config, os 
 
 class Protocol: pass 
@@ -60,9 +60,7 @@ Protocol.FLAG_EXCLUSIVE = 1 << 2
 Protocol.FLAG_DELETE_ON_EXIT = 1 << 3
 
 
-###################################################################################
-
-    
+###################################################################################   
 try:
     log_file = 'log.conf'   
     if os.path.exists(log_file):
@@ -96,11 +94,14 @@ class Message(dict):
     }
     reserved_keys = set(['status', 'method', 'url', 'body'])
     
-    def __init__(self):
+    def __init__(self, opt = None):
         self.status = None
         self.method = 'GET'
         self.url = '/'
         self.body = None
+        if opt and isinstance(opt, dict):
+            for k in opt:
+                self[k] = opt[k]
         
     def __getattr__(self, name):
         if name in self:
@@ -114,46 +115,67 @@ class Message(dict):
     def __delattr__(self, name):
         if name in self:
             del self[name] 
+            
+    def __getitem__(self, key):
+        if key not in self:
+            return None
+        return dict.__getitem__(self, key)
 
 
 def msg_encode(msg):
-    res = ""
+    if not isinstance(msg, dict):
+        raise ValueError('%s must be dict type'%msg)
+    if not isinstance(msg, Message):
+        msg = Message(msg)
+     
+    res = bytearray() 
     if msg.status is not None:
         desc = Message.http_status.get('%s'%msg.status)
-        if desc is None: desc = "Unknown Status"
-        res = "HTTP/1.1 %s %s\r\n"%(msg.status, desc)
+        if desc is None: desc = b"Unknown Status"
+        res += bytes("HTTP/1.1 %s %s\r\n"%(msg.status, desc), 'utf8')  
     else:
-        res = "%s %s HTTP/1.1\r\n"%(msg.method, msg.url) 
+        res += bytes("%s %s HTTP/1.1\r\n"%(msg.method, msg.url), 'utf8') 
         
     body_len = 0
     if msg.body is not None:
         body_len = len(msg.body) 
+        if not isinstance(msg.body, (bytes, bytearray)):
+            if not msg['content-type']:
+                msg['content-type'] = 'text/plain'
         
     for k in msg:
         if k.lower() in Message.reserved_keys: continue
-        res += '%s: %s\r\n'%(k,msg[k])
+        res += bytes('%s: %s\r\n'%(k,msg[k]), 'utf8')
     len_key = 'content-length'
     if len_key not in msg:
-        res += '%s: %s\r\n'%(len_key, body_len)
+        res += bytes('%s: %s\r\n'%(len_key, body_len), 'utf8')
     
-    res += '\r\n'
+    res += bytes('\r\n', 'utf8')
+    
+    body_encoding = 'utf8'
+    if msg.encoding:
+        body_encoding = msg.encoding
     if msg.body is not None:
-        res += msg.body    
+        if isinstance(msg.body, (bytes, bytearray)):
+            res += msg.body
+        else:
+            res += bytes(str(msg.body), body_encoding)
     return res
+
 
  
 def find_header_end(buf, start=0):
     i = start
     end = len(buf)
     while i+3<end:
-        if buf[i]=='\r' and buf[i+1]=='\n' and buf[i+2]=='\r' and buf[i+3]=='\n':
+        if buf[i]==13 and buf[i+1]==10 and buf[i+2]==13 and buf[i+3]==10:
             return i+3
         i += 1
     return -1 
      
 def decode_headers(buf):
     msg = Message()
-    buf = str(buf)
+    buf = buf.decode('utf8')
     lines = buf.splitlines() 
     meta = lines[0]
     blocks = meta.split()
@@ -195,18 +217,28 @@ def msg_decode(buf, start=0):
         return (None, start)
     
     msg.body = buf[p: p+body_len]
+    content_type = msg['content-type']
+    encoding = 'utf8'
+    if msg.encoding: encoding = msg.encoding
+    if content_type:
+        if str(content_type).startswith('text') or str(content_type) == 'application/json': 
+            msg.body = msg.body.decode(encoding) 
+            
     return (msg,p+body_len) 
 
        
         
 class MessageClient(object):
     log = logging.getLogger(__name__)
-    def __init__(self, host='localhost', port=15555): 
+    def __init__(self, address='localhost:15555'): 
         self.pid = os.getpid()
-        self.host = host
-        self.port = port;
+        bb = address.split(':')
+        self.host = bb[0]
+        self.port = 80
+        if(len(bb)>1): 
+            self.port = int(bb[1]);
         
-        self.read_buf = ''  
+        self.read_buf = bytearray() 
         self.sock = None  
         self.id = uuid.uuid4()
         self.auto_reconnect = True
@@ -220,11 +252,11 @@ class MessageClient(object):
         if self.sock is not None:
             self.sock.close()
             self.sock = None
-            self.read_buf = ''
+            self.read_buf = bytearray()
             
     def connect_if_need(self):
         if self.sock is None: 
-            self.read_buf = ''
+            self.read_buf = bytearray()
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect( (self.host, self.port) )
             self.log.info('Connected to (%s:%s)'%(self.host, self.port))
@@ -236,7 +268,7 @@ class MessageClient(object):
             self.read_buf = ''
         while self.sock is None:
             try:
-                self.read_buf = ''
+                self.read_buf = bytearray() 
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.log.debug('Trying reconnect to (%s:%s)'%(self.host, self.port))
                 self.sock.connect( (self.host, self.port) )  
@@ -249,10 +281,9 @@ class MessageClient(object):
                     raise e
     def mark_msg(self, msg):
         if msg.id: #msg got id, do nothing
-
             return
         self.msg_id_match = str(uuid.uuid4())
-        msg.set_id(self.msg_id_match)
+        msg.id = self.msg_id_match
     
     def invoke(self, msg, timeout=10):  
         self.send(msg, timeout)
@@ -262,7 +293,7 @@ class MessageClient(object):
         self.connect_if_need() 
         self.mark_msg(msg)
         self.log.debug('Request: %s'%msg)
-        self.sock.sendall(str(msg))  
+        self.sock.sendall(msg_encode(msg))  
         
     def recv(self, timeout=10):
         if self.msg_id_match in self.result_table:
@@ -282,7 +313,6 @@ class MessageClient(object):
                 
                 self.read_buf = self.read_buf[idx:] 
                 if self.msg_cb: #using msg callback
-
                     self.msg_cb(msg)
                     continue
                 
@@ -291,15 +321,108 @@ class MessageClient(object):
                     continue 
                 self.log.debug('Result: %s'%msg) 
                 return msg         
-            
-            
-msg = Message()
-msg.topic = "hong"
-msg.token = "xxx"
-msg.url = '/produce'  
-msg.body = 'hong leiming'
 
-value = msg_encode(msg)
-print (value)
-res,p = msg_decode(value)
-print (msg_encode(res))
+
+class MqClient(MessageClient):
+    def __init__(self, address='localhost:15555'):
+        MessageClient.__init__(self, address)
+        self.token = None
+    
+    def _invoke_void(self, cmd, msg, timeout=3):    
+        msg.cmd = cmd
+        msg.token = self.token
+        
+        res = self.invoke(msg, timeout)
+        if res.status != "200":
+            encoding = res.encoding
+            if not encoding: encoding = 'utf8'
+            raise Exception(res.body.decode(encoding))
+    
+    def _invoke_json(self, cmd, msg, timeout=3):    
+        msg.cmd = cmd
+        msg.token = self.token
+        
+        res = self.invoke(msg, timeout)
+        if res.status != "200":
+            encoding = res.encoding
+            if not encoding: encoding = 'utf8'
+            raise Exception(res.body.decode(encoding))
+        return json.loads(res.body, encoding=res.encoding) 
+    
+    def query_server(self, timeout=3):
+        return self._invoke_json(Protocol.QUERY, Message(), timeout)
+    
+    def query_topic(self, topic, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        return self._invoke_json(Protocol.QUERY, msg, timeout)    
+    
+    def query_group(self, topic, group, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        msg.consume_group = group
+        return self._invoke_json(Protocol.QUERY, msg, timeout)     
+         
+    def declare_topic(self, topic, topic_flag=None, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        if topic_flag:
+            msg.topic_flag = topic_flag
+        return self._invoke_json(Protocol.DECLARE, msg, timeout)  
+     
+    def declare_group(self, topic, group, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        msg.consume_group = group
+        return self._invoke_json(Protocol.DECLARE, msg, timeout) 
+    
+    def remove_topic(self, topic, timeout=3):
+        msg = Message();
+        msg.topic = topic  
+        self._invoke_void(Protocol.REMOVE, msg, timeout)   
+        
+    def remove_group(self, topic, group, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        msg.consume_group = group 
+        self._invoke_void(Protocol.REMOVE, msg, timeout)      
+    
+    def empty_topic(self, topic, timeout=3):
+        msg = Message();
+        msg.topic = topic  
+        self._invoke_void(Protocol.EMPTY, msg, timeout)   
+        
+    def empty_group(self, topic, group, timeout=3):
+        msg = Message();
+        msg.topic = topic
+        msg.consume_group = group 
+        self._invoke_void(Protocol.EMPTY, msg, timeout)            
+
+class BrokerRouteTable:
+    pass            
+
+class Broker:
+    def __init__(self):
+        pass
+    
+    def add_tracker(self, tracker_address, cert_file=None):
+        pass
+    
+    def add_server(self, server_address, cert_file=None):
+        pass
+ 
+class Producer:
+    pass
+
+class Consumer:
+    pass
+
+class RpcInvoker:
+    pass
+
+class RpcProcessor:
+    pass 
+            
+__all__ = [
+    Message, MessageClient, MqClient, Broker, Producer, Consumer, RpcInvoker, RpcProcessor
+]    
