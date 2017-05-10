@@ -4,61 +4,61 @@ import time, json
 import logging.config, os 
 import threading
 
-class Protocol: pass 
-Protocol.VERSION_VALUE = "0.8.0"       #start from 0.8.0 
-#############Command Values############
-#MQ Produce/Consume
-Protocol.PRODUCE = "produce"
-Protocol.CONSUME = "consume"
-Protocol.RPC = "rpc"
-Protocol.ROUTE = "route"     #route back message to sender, designed for RPC
-
-#Topic/ConsumeGroup control
-Protocol.DECLARE = "declare"
-Protocol.QUERY = "query"
-Protocol.REMOVE = "remove"
-Protocol.EMPTY = "empty"
-
-#Tracker
-Protocol.TRACK_PUB = "track_pub"
-Protocol.TRACK_SUB = "track_sub"
-
-Protocol.COMMAND = "cmd"
-Protocol.TOPIC = "topic";
-Protocol.TOPIC_FLAG = "topic_flag"
-Protocol.TAG = "tag"
-Protocol.OFFSET = "offset"
-
-Protocol.CONSUME_GROUP = "consume_group"
-Protocol.CONSUME_GROUP_COPY_FROM = "consume_group_copy_from"
-Protocol.CONSUME_START_OFFSET = "consume_start_offset"
-Protocol.CONSUME_START_MSGID = "consume_start_msgid"
-Protocol.CONSUME_START_TIME = "consume_start_time"
-Protocol.CONSUME_WINDOW = "consume_window"
-Protocol.CONSUME_FILTER_TAG = "consume_filter_tag"
-Protocol.CONSUME_GROUP_FLAG = "consume_group_flag"
-
-Protocol.SENDER = "sender"
-Protocol.RECVER = "recver"
-Protocol.ID = "id"
-
-Protocol.SERVER = "server"
-Protocol.ACK = "ack"
-Protocol.ENCODING = "encoding"
-
-Protocol.ORIGIN_ID = "origin_id"         #original id, TODO compatible issue: rawid
-Protocol.ORIGIN_URL = "origin_url"       #original URL  
-Protocol.ORIGIN_STATUS = "origin_status" #original Status  TODO compatible issue: reply_code
-
-#Security 
-Protocol.TOKEN = "token"
-
-
-############Flag values############    
-Protocol.FLAG_PAUSE = 1 << 0
-Protocol.FLAG_RPC = 1 << 1
-Protocol.FLAG_EXCLUSIVE = 1 << 2
-Protocol.FLAG_DELETE_ON_EXIT = 1 << 3
+class Protocol:  
+    VERSION_VALUE = "0.8.0"       #start from 0.8.0 
+    #############Command Values############
+    #MQ Produce/Consume
+    PRODUCE = "produce"
+    CONSUME = "consume"
+    RPC = "rpc"
+    ROUTE = "route"     #route back message to sender, designed for RPC
+    
+    #Topic/ConsumeGroup control
+    DECLARE = "declare"
+    QUERY = "query"
+    REMOVE = "remove"
+    EMPTY = "empty"
+    
+    #Tracker
+    TRACK_PUB = "track_pub"
+    TRACK_SUB = "track_sub"
+    
+    COMMAND = "cmd"
+    TOPIC = "topic";
+    TOPIC_FLAG = "topic_flag"
+    TAG = "tag"
+    OFFSET = "offset"
+    
+    CONSUME_GROUP = "consume_group"
+    CONSUME_GROUP_COPY_FROM = "consume_group_copy_from"
+    CONSUME_START_OFFSET = "consume_start_offset"
+    CONSUME_START_MSGID = "consume_start_msgid"
+    CONSUME_START_TIME = "consume_start_time"
+    CONSUME_WINDOW = "consume_window"
+    CONSUME_FILTER_TAG = "consume_filter_tag"
+    CONSUME_GROUP_FLAG = "consume_group_flag"
+    
+    SENDER = "sender"
+    RECVER = "recver"
+    ID = "id"
+    
+    SERVER = "server"
+    ACK = "ack"
+    ENCODING = "encoding"
+    
+    ORIGIN_ID = "origin_id"         #original id, TODO compatible issue: rawid
+    ORIGIN_URL = "origin_url"       #original URL  
+    ORIGIN_STATUS = "origin_status" #original Status  TODO compatible issue: reply_code
+    
+    #Security 
+    TOKEN = "token"
+    
+    
+    ############Flag values############    
+    FLAG_PAUSE = 1 << 0
+    FLAG_RPC = 1 << 1
+    FLAG_EXCLUSIVE = 1 << 2
+    FLAG_DELETE_ON_EXIT = 1 << 3
 
 
 ###################################################################################   
@@ -248,80 +248,68 @@ class MessageClient(object):
         self.id = uuid.uuid4()
         self.auto_reconnect = True
         self.reconnect_interval = 3 #3 seconds
-
-        self.msg_id_match = ''
-        self.result_table = {} 
-        self.msg_cb = None
+        
+        self.result_table = {}  
+        
+        self.on_connected = None
+        self.on_disconnected = None
+        self.on_message = None
     
     def close(self):
         if self.sock: 
             with self.lock:  
-                self._close()
-            
-    def connect_if_need(self):
-        if self.sock is None:  
-            with self.lock: 
-                self._connect_if_need()
-                
-    def reconnect(self):
-        if self.sock is not None:
-            self.close()
-            
-        while self.sock is None:
-            try:
-                self.connect_if_need()
-            except socket.error as e:
-                self.sock = None
-                if self.auto_reconnect:
-                    time.sleep(self.reconnect_interval)
-                else:
-                    raise e
-                
-    def mark_msg(self, msg):
-        if msg.id: #msg got id, do nothing
-            self.msg_id_match = msg.id
-            return
-        self.msg_id_match = str(uuid.uuid4())
-        msg.id = self.msg_id_match
+                self._close()  
+
     
     def invoke(self, msg, timeout=10): 
         with self.lock:  
-            self._send(msg, timeout)
-            return self._recv(timeout)
+            msgid = self._send(msg, timeout)
+            return self._recv(msgid, timeout)
     
     def send(self, msg, timeout=3):
         with self.lock:
-            self._send(msg, timeout) 
+            return self._send(msg, timeout) 
      
-    def recv(self, timeout=3):
+    def recv(self, msgid=None, timeout=3):
         with self.lock:
-            return self._recv(timeout)   
-    
-    def _close(self):
-        if self.sock:  
-            self.sock.close()
-            self.sock = None
-            self.read_buf = bytearray() 
+            return self._recv(msgid, timeout)   
+     
 
-    def _connect_if_need(self): 
-        if self.sock is None:
-            self.read_buf = bytearray()
+    def connect(self):  
+        with self.lock:
+            if self.sock:
+                self.sock.close()
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.log.debug('Trying connect to (%s:%s)'%(self.host, self.port))
+            self.log.info('Trying connect to (%s:%s)'%(self.host, self.port))
             self.sock.connect( (self.host, self.port) )
             self.log.info('Connected to (%s:%s)'%(self.host, self.port)) 
+            
+        if self.on_connected:
+            self.on_connected()
+        
+        self.read_buf = bytearray() 
     
     def _send(self, msg, timeout=10):
-        self.mark_msg(msg)
-        self.log.debug('Request: %s'%msg)  
-        self._connect_if_need()
-        self.sock.sendall(msg_encode(msg))   
-    
-    def _recv(self, timeout=3):
-        if self.msg_id_match in self.result_table:
-            return self.result_table[self.msg_id_match]  
+        msgid = msg.id
+        if not msgid:
+            msgid = msg.id = str(uuid.uuid4())
         
-        self._connect_if_need()
+        self.log.debug('Request: %s'%msg)  
+        #self._connect_if_need()
+        self.sock.sendall(msg_encode(msg))  
+        return msgid 
+    
+    def _recv(self, msgid=None, timeout=3):
+        if not msgid and len(self.result_table)>0:
+            try:
+                self.result_table.popitem()[1]
+            except:
+                pass
+            
+        if msgid in self.result_table:
+            return self.result_table[msgid]  
+        
+        #self._connect_if_need()
         self.sock.settimeout(timeout)    
         while True: 
             buf = self.sock.recv(1024)   
@@ -334,17 +322,55 @@ class MessageClient(object):
                         self.read_buf = self.read_buf[idx:]
                     break
                 
-                self.read_buf = self.read_buf[idx:] 
-                if self.msg_cb: #using msg callback
-                    self.msg_cb(msg)
-                    continue
+                self.read_buf = self.read_buf[idx:]   
                 
-                if self.msg_id_match and msg.id != self.msg_id_match:
-                    self.result_table[msg.id] = msg
-                    continue 
+                if msgid:
+                    if msg.id != msgid:
+                        self.result_table[msg.id] = msg
+                        continue 
+                
                 self.log.debug('Result: %s'%msg) 
-                return msg    
-        
+                return msg   
+    
+    def _close(self):
+        if self.sock:  
+            self.sock.close()
+            self.sock = None
+            self.read_buf = bytearray() 
+    
+    def start(self, recv_timeout=3):  
+        def serve(): 
+            while True: 
+                try: 
+                    self.connect()
+                    break
+                except socket.error as e:
+                    self.log.warn(e) 
+                    time.sleep(self.reconnect_interval)
+                    
+            while True: 
+                try: 
+                    msg = self.recv(None, recv_timeout)
+                    if msg and self.on_message:
+                        self.on_message(msg)
+                except socket.timeout:
+                    continue
+                except socket.error as e:
+                    self.log.warn(e)
+                    if self.on_disconnected:
+                        self.on_disconnected()
+                    while True:
+                        try:
+                            self.connect()
+                            break
+                        except Exception as e:
+                            self.log.warn(e)
+                            self.sock = None
+                            time.sleep(self.reconnect_interval)
+                
+        self._thread = threading.Thread(target=serve)  
+        self._thread.start()
+
 
 class MqClient(MessageClient):
     def __init__(self, address='localhost:15555'):
