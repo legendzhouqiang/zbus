@@ -2,6 +2,7 @@
 import uuid, socket
 import time, json
 import logging.config, os 
+import threading
 
 class Protocol: pass 
 Protocol.VERSION_VALUE = "0.8.0"       #start from 0.8.0 
@@ -95,9 +96,6 @@ class Message(dict):
     reserved_keys = set(['status', 'method', 'url', 'body'])
     
     def __init__(self, opt = None):
-        self.status = None
-        self.method = 'GET'
-        self.url = '/'
         self.body = None
         if opt and isinstance(opt, dict):
             for k in opt:
@@ -134,7 +132,13 @@ def msg_encode(msg):
         if desc is None: desc = b"Unknown Status"
         res += bytes("HTTP/1.1 %s %s\r\n"%(msg.status, desc), 'utf8')  
     else:
-        res += bytes("%s %s HTTP/1.1\r\n"%(msg.method, msg.url), 'utf8') 
+        m = msg.method
+        if not m: 
+            m = 'GET'
+        url = msg.url
+        if not url:
+            url = '/'
+        res += bytes("%s %s HTTP/1.1\r\n"%(m, url), 'utf8') 
         
     body_len = 0
     if msg.body is not None:
@@ -145,6 +149,7 @@ def msg_encode(msg):
         
     for k in msg:
         if k.lower() in Message.reserved_keys: continue
+        if msg[k] is None: continue
         res += bytes('%s: %s\r\n'%(k,msg[k]), 'utf8')
     len_key = 'content-length'
     if len_key not in msg:
@@ -230,8 +235,8 @@ def msg_decode(buf, start=0):
         
 class MessageClient(object):
     log = logging.getLogger(__name__)
-    def __init__(self, address='localhost:15555'): 
-        self.pid = os.getpid()
+    def __init__(self, address='localhost:15555'):  
+        self.lock = threading.Lock()
         bb = address.split(':')
         self.host = bb[0]
         self.port = 80
@@ -249,59 +254,77 @@ class MessageClient(object):
         self.msg_cb = None
     
     def close(self):
-        if self.sock is not None:
-            self.sock.close()
-            self.sock = None
-            self.read_buf = bytearray()
+        if self.sock: 
+            with self.lock:  
+                self._close()
             
     def connect_if_need(self):
-        if self.sock is None: 
-            self.read_buf = bytearray()
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect( (self.host, self.port) )
-            self.log.info('Connected to (%s:%s)'%(self.host, self.port))
-
+        if self.sock is None:  
+            with self.lock: 
+                self._connect_if_need()
+                
     def reconnect(self):
         if self.sock is not None:
-            self.sock.close()
-            self.sock = None
-            self.read_buf = ''
+            self.close()
+            
         while self.sock is None:
             try:
-                self.read_buf = bytearray() 
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.log.debug('Trying reconnect to (%s:%s)'%(self.host, self.port))
-                self.sock.connect( (self.host, self.port) )  
-                self.log.debug('Connected to (%s:%s)'%(self.host, self.port))
+                self.connect_if_need()
             except socket.error as e:
                 self.sock = None
                 if self.auto_reconnect:
                     time.sleep(self.reconnect_interval)
                 else:
                     raise e
+                
     def mark_msg(self, msg):
         if msg.id: #msg got id, do nothing
+            self.msg_id_match = msg.id
             return
         self.msg_id_match = str(uuid.uuid4())
         msg.id = self.msg_id_match
     
-    def invoke(self, msg, timeout=10):  
-        self.send(msg, timeout)
-        return self.recv(timeout)
+    def invoke(self, msg, timeout=10): 
+        with self.lock:  
+            self._send(msg, timeout)
+            return self._recv(timeout)
     
-    def send(self, msg, timeout=10):
-        self.connect_if_need() 
+    def send(self, msg, timeout=3):
+        with self.lock:
+            self._send(msg, timeout) 
+     
+    def recv(self, timeout=3):
+        with self.lock:
+            return self._recv(timeout)   
+    
+    def _close(self):
+        if self.sock:  
+            self.sock.close()
+            self.sock = None
+            self.read_buf = bytearray() 
+
+    def _connect_if_need(self): 
+        if self.sock is None:
+            self.read_buf = bytearray()
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.log.debug('Trying connect to (%s:%s)'%(self.host, self.port))
+            self.sock.connect( (self.host, self.port) )
+            self.log.info('Connected to (%s:%s)'%(self.host, self.port)) 
+    
+    def _send(self, msg, timeout=10):
         self.mark_msg(msg)
-        self.log.debug('Request: %s'%msg)
-        self.sock.sendall(msg_encode(msg))  
-        
-    def recv(self, timeout=10):
+        self.log.debug('Request: %s'%msg)  
+        self._connect_if_need()
+        self.sock.sendall(msg_encode(msg))   
+    
+    def _recv(self, timeout=3):
         if self.msg_id_match in self.result_table:
-            return self.result_table[self.msg_id_match]
-        self.connect_if_need()
-        self.sock.settimeout(timeout)  
+            return self.result_table[self.msg_id_match]  
+        
+        self._connect_if_need()
+        self.sock.settimeout(timeout)    
         while True: 
-            buf = self.sock.recv(1024)  
+            buf = self.sock.recv(1024)   
             self.read_buf += buf
             idx = 0
             while True:
@@ -320,8 +343,8 @@ class MessageClient(object):
                     self.result_table[msg.id] = msg
                     continue 
                 self.log.debug('Result: %s'%msg) 
-                return msg         
-
+                return msg    
+        
 
 class MqClient(MessageClient):
     def __init__(self, address='localhost:15555'):
@@ -348,6 +371,22 @@ class MqClient(MessageClient):
             if not encoding: encoding = 'utf8'
             raise Exception(res.body.decode(encoding))
         return json.loads(res.body, encoding=res.encoding) 
+    
+    
+    def produce(self, msg, timeout=3):
+        self._invoke_void(Protocol.PRODUCE, msg, timeout)
+        
+    def consume(self, topic, ctrl=None, timeout=3):
+        msg = Message()
+        msg.topic = topic
+        msg.token = self.token 
+        if isinstance(ctrl, str):
+            msg.consume_group = ctrl
+        if isinstance(ctrl, (dict, Message)):
+            for k in ctrl:
+                msg[k] = ctrl[k]
+        msg.cmd = Protocol.CONSUME 
+        return self.invoke(msg, timeout)
     
     def query_server(self, timeout=3):
         return self._invoke_json(Protocol.QUERY, Message(), timeout)
@@ -422,7 +461,7 @@ class RpcInvoker:
 
 class RpcProcessor:
     pass 
-            
+          
 __all__ = [
     Message, MessageClient, MqClient, Broker, Producer, Consumer, RpcInvoker, RpcProcessor
 ]    
