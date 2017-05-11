@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import io.zbus.kit.logging.Logger;
@@ -33,7 +34,7 @@ public class DiskQueue implements MessageQueue{
 	private static final Logger log = LoggerFactory.getLogger(DiskQueue.class); 
 	protected final Index index;    
 	
-	protected Map<String, DiskConsumeGroup> consumeGroups = new ConcurrentHashMap<String, DiskConsumeGroup>(); 
+	protected Map<String, DiskConsumeGroup> consumeGroups = new ConcurrentSkipListMap<String, DiskConsumeGroup>(String.CASE_INSENSITIVE_ORDER); 
 	protected long lastUpdateTime = System.currentTimeMillis(); 
 	
 	private final String name; 

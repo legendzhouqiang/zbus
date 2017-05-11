@@ -6,7 +6,7 @@
 
 var broker = new Broker();
 broker.addTracker("localhost:15555");  
-var rpc = new RpcInvoker(broker, "MyRpc");
+var rpc = new RpcInvoker(broker, "myrpc");
 
 
 broker.ready(function () {   

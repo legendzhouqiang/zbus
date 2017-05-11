@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,7 @@ public class MqServer implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(MqServer.class); 
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
-	private final Map<String, MessageQueue> mqTable = new ConcurrentHashMap<String, MessageQueue>();
+	private final Map<String, MessageQueue> mqTable = new ConcurrentSkipListMap<String, MessageQueue>(String.CASE_INSENSITIVE_ORDER);
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config;   
