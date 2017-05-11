@@ -359,7 +359,7 @@ class MessageClient(object):
                     self.log.warn(e)
                     if self.on_disconnected:
                         self.on_disconnected()
-                    while True:
+                    while self.auto_reconnect:
                         try:
                             self.connect()
                             break
