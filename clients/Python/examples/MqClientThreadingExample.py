@@ -1,6 +1,7 @@
 from zbus import MqClient, Message
 import time, threading
 client = MqClient("localhost:15555")
+client.connect()
 
 def test():
     while True:

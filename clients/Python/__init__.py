@@ -1,1 +1,2 @@
-from zbus import  Message, MessageClient, MqClient, Broker, Producer, Consumer, RpcInvoker, RpcProcessor
+from zbus import Message, MessageClient, MqClientPool, MqClient
+from zbus import Broker, Producer, Consumer, RpcInvoker, RpcProcessor

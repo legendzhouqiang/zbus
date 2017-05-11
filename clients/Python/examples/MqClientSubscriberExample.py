@@ -1,9 +1,12 @@
 from zbus import MqClient, Message  
+import json
 
 client = MqClient("localhost:15555")
 
 def on_message(msg):
-    print(msg) 
+    serverInfo = json.loads(msg.body, encoding=msg.encoding) 
+    
+    print(serverInfo) 
 
 def on_connected():
     msg = Message()

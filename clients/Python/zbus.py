@@ -1,9 +1,10 @@
 #encoding=utf8  
-import uuid, socket
-import time, json
+import uuid, time, json
 import logging.config, os 
-import threading
-
+import threading 
+import socket, ssl 
+import queue as Queue
+    
 class Protocol:  
     VERSION_VALUE = "0.8.0"       #start from 0.8.0 
     #############Command Values############
@@ -231,29 +232,59 @@ def msg_decode(buf, start=0):
             
     return (msg,p+body_len) 
 
-       
-        
+
+def normalize_address(address):       
+    sslEnabled = False
+    if isinstance(address, dict): 
+        if 'address' not in address:
+            raise TypeError('missing address in dictionary')
+        if 'sslEnabled' not in address:
+            raise TypeError('missing sslEnabled in dictionary')
+        addr_string = address['address']
+        sslEnabled = address['sslEnabled']
+    else:
+        addr_string = address
+    
+    return {'address': addr_string,
+            'sslEnabled': sslEnabled
+    }
+
+def address_key(address): 
+    if address['sslEnabled']:
+        return '[SSL]%s'%address['address']
+    return address['address']
+            
 class MessageClient(object):
     log = logging.getLogger(__name__)
-    def __init__(self, address='localhost:15555'):  
-        self.lock = threading.Lock()
-        bb = address.split(':')
+    
+    def __init__(self, address='localhost:15555', ssl_cert_file=None):  
+        self.server_address = normalize_address(address)
+            
+        self.ssl_cert_file = ssl_cert_file    
+        
+        bb = self.server_address['address'].split(':')
         self.host = bb[0]
         self.port = 80
         if(len(bb)>1): 
-            self.port = int(bb[1]);
+            self.port = int(bb[1]);  
         
         self.read_buf = bytearray() 
         self.sock = None  
-        self.id = uuid.uuid4()
+        self.pid = os.getpid()
         self.auto_reconnect = True
         self.reconnect_interval = 3 #3 seconds
         
         self.result_table = {}  
         
+        self.lock = threading.Lock()
         self.on_connected = None
         self.on_disconnected = None
         self.on_message = None
+    
+    def _address(self):
+        if self.server_address['sslEnabled']:
+            return '[SSL]%s'%self.server_address['address']
+        return self.server_address['address']
     
     def close(self):
         if self.sock: 
@@ -280,9 +311,14 @@ class MessageClient(object):
             if self.sock:
                 self.sock.close()
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.log.info('Trying connect to (%s:%s)'%(self.host, self.port))
+            if self.server_address['sslEnabled']:
+                self.sock = ssl.wrap_socket(self.sock, 
+                                            ca_certs=self.ssl_cert_file, 
+                                            cert_reqs=ssl.CERT_REQUIRED)
+                
+            self.log.info('Trying connect to (%s)'%(self._address()))
             self.sock.connect( (self.host, self.port) )
-            self.log.info('Connected to (%s:%s)'%(self.host, self.port)) 
+            self.log.info('Connected to (%s)'%(self._address())) 
             
         if self.on_connected:
             self.on_connected()
@@ -373,8 +409,8 @@ class MessageClient(object):
 
 
 class MqClient(MessageClient):
-    def __init__(self, address='localhost:15555'):
-        MessageClient.__init__(self, address)
+    def __init__(self, address='localhost:15555', ssl_cert_file=None):
+        MessageClient.__init__(self, address, ssl_cert_file)
         self.token = None
     
     def _invoke_void(self, cmd, msg, timeout=3):    
@@ -412,69 +448,125 @@ class MqClient(MessageClient):
             for k in ctrl:
                 msg[k] = ctrl[k]
         msg.cmd = Protocol.CONSUME 
-        return self.invoke(msg, timeout)
+        return self.invoke(msg, timeout) 
     
-    def query_server(self, timeout=3):
-        return self._invoke_json(Protocol.QUERY, Message(), timeout)
-    
-    def query_topic(self, topic, timeout=3):
-        msg = Message();
-        msg.topic = topic
-        return self._invoke_json(Protocol.QUERY, msg, timeout)    
-    
-    def query_group(self, topic, group, timeout=3):
+    def query(self, topic=None, group=None, timeout=3):
         msg = Message();
         msg.topic = topic
         msg.consume_group = group
         return self._invoke_json(Protocol.QUERY, msg, timeout)     
          
-    def declare_topic(self, topic, topic_flag=None, timeout=3):
+    def declare(self, topic, group=None, options=None, timeout=3):
         msg = Message();
-        msg.topic = topic
-        if topic_flag:
-            msg.topic_flag = topic_flag
-        return self._invoke_json(Protocol.DECLARE, msg, timeout)  
-     
-    def declare_group(self, topic, group, timeout=3):
-        msg = Message();
-        msg.topic = topic
-        msg.consume_group = group
-        return self._invoke_json(Protocol.DECLARE, msg, timeout) 
-    
-    def remove_topic(self, topic, timeout=3):
-        msg = Message();
-        msg.topic = topic  
-        self._invoke_void(Protocol.REMOVE, msg, timeout)   
+        msg.topic = topic 
+        if isinstance(options, dict):
+            for k in options:
+                msg[k] = options[k]
+                
+        return self._invoke_json(Protocol.DECLARE, msg, timeout)    
         
-    def remove_group(self, topic, group, timeout=3):
+    def remove(self, topic, group=None, timeout=3):
         msg = Message();
         msg.topic = topic
         msg.consume_group = group 
-        self._invoke_void(Protocol.REMOVE, msg, timeout)      
-    
-    def empty_topic(self, topic, timeout=3):
-        msg = Message();
-        msg.topic = topic  
-        self._invoke_void(Protocol.EMPTY, msg, timeout)   
+        self._invoke_void(Protocol.REMOVE, msg, timeout)    
         
-    def empty_group(self, topic, group, timeout=3):
+    def empty(self, topic, group=None, timeout=3):
         msg = Message();
         msg.topic = topic
         msg.consume_group = group 
         self._invoke_void(Protocol.EMPTY, msg, timeout)            
 
+
+
+class MqClientPool:
+    log = logging.getLogger(__name__)
+    def __init__(self, server_address='localhost:15555', ssl_cert_file=None,  maxsize=50, timeout=10):   
+        self.client_class = MqClient
+        self.server_address = normalize_address(server_address)
+        
+        self.maxsize = maxsize
+        self.timeout = timeout
+        self.ssl_cert_file = ssl_cert_file 
+        self.reset()
+    
+    def make_client(self):
+        client = MqClient(self.server_address, self.ssl_cert_file)  
+        self.clients.append(client)
+        self.log.debug('New client created %s', client)
+        return client
+    
+    def _check_pid(self):
+        if self.pid != os.getpid():
+            with self._check_lock:
+                if self.pid == os.getpid(): 
+                    return
+                self.log.debug('new process, pid changed')
+                self.destroy()
+                self.reset()
+                    
+    def reset(self):
+        self.pid = os.getpid() 
+        self._check_lock = threading.Lock()
+        
+        self.client_pool = Queue.LifoQueue(self.maxsize)
+        while True:
+            try:
+                self.client_pool.put_nowait(None)
+            except Queue.Full:
+                break 
+        self.clients = []
+        
+    
+    def borrow_client(self):  
+        self._check_pid()
+        client = None
+        try:
+            client = self.client_pool.get(block=True, timeout=self.timeout)
+        except Queue.Empty: 
+            raise Exception('No client available')
+        if client is None:
+            client = self.make_client()
+        return client 
+    
+    def return_client(self, client):
+        self._check_pid()
+        if client.pid != self.pid:
+            return 
+        if not isinstance(client, (tuple, list)):
+            client = [client]
+        for c in client:
+            try:
+                self.client_pool.put_nowait(c)
+            except Queue.Full: 
+                pass
+            
+    def close(self):
+        for client in self.clients:
+            client.close()
+            
+
 class BrokerRouteTable:
     pass            
 
+
 class Broker:
     def __init__(self):
-        pass
+        self.route_table = BrokerRouteTable()
+        self.ssl_cert_file_table = {}
+        self.tracker_subscribers = {}
+        
     
     def add_tracker(self, tracker_address, cert_file=None):
         pass
     
     def add_server(self, server_address, cert_file=None):
-        pass
+        server_address = normalize_address(server_address)
+        if cert_file:
+            key = server_address['address'] 
+            self.ssl_cert_file_table[key] = cert_file
+        
+         
  
 class Producer:
     pass
@@ -489,5 +581,6 @@ class RpcProcessor:
     pass 
           
 __all__ = [
-    Message, MessageClient, MqClient, Broker, Producer, Consumer, RpcInvoker, RpcProcessor
+    Message, MessageClient, MqClient, MqClientPool, 
+    Broker, Producer, Consumer, RpcInvoker, RpcProcessor
 ]    
