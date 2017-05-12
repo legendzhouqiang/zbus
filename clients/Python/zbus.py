@@ -280,16 +280,15 @@ class MessageClient(object):
         self.on_connected = None
         self.on_disconnected = None
         self.on_message = None
+        self.manually_closed = False
+     
     
-    def _address(self):
-        if self.server_address['sslEnabled']:
-            return '[SSL]%s'%self.server_address['address']
-        return self.server_address['address']
-    
-    def close(self):
-        if self.sock: 
-            with self.lock:  
-                self._close()  
+    def close(self): 
+        self.manually_closed = True
+        self.auto_reconnect = False
+        self.on_disconnected = None
+        self.sock.close() 
+        self.read_buf = bytearray() 
 
     
     def invoke(self, msg, timeout=10): 
@@ -300,25 +299,28 @@ class MessageClient(object):
     def send(self, msg, timeout=3):
         with self.lock:
             return self._send(msg, timeout) 
+        
+    def heartbeat(self):
+        msg = Message()
+        msg.cmd = 'heartbeat'
+        self.send(msg)
      
     def recv(self, msgid=None, timeout=3):
         with self.lock:
             return self._recv(msgid, timeout)   
      
 
-    def connect(self):  
-        with self.lock:
-            if self.sock:
-                self.sock.close()
+    def connect(self):   
+        with self.lock: 
+            self.manually_closed = False
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.server_address['sslEnabled']:
-                self.sock = ssl.wrap_socket(self.sock, 
-                                            ca_certs=self.ssl_cert_file, 
-                                            cert_reqs=ssl.CERT_REQUIRED)
+                self.sock = ssl.wrap_socket(self.sock,  ca_certs=self.ssl_cert_file, cert_reqs=ssl.CERT_REQUIRED)
                 
-            self.log.info('Trying connect to (%s)'%(self._address()))
+            address = address_key(self.server_address)
+            self.log.info('Trying connect to (%s)'%address)
             self.sock.connect( (self.host, self.port) )
-            self.log.info('Connected to (%s)'%(self._address())) 
+            self.log.info('Connected to (%s)'%address) 
             
         if self.on_connected:
             self.on_connected()
@@ -330,8 +332,7 @@ class MessageClient(object):
         if not msgid:
             msgid = msg.id = str(uuid.uuid4())
         
-        self.log.debug('Request: %s'%msg)  
-        #self._connect_if_need()
+        self.log.debug('Request: %s'%msg)   
         self.sock.sendall(msg_encode(msg))  
         return msgid 
     
@@ -345,10 +346,12 @@ class MessageClient(object):
         if msgid in self.result_table:
             return self.result_table[msgid]  
         
-        #self._connect_if_need()
         self.sock.settimeout(timeout)    
         while True: 
             buf = self.sock.recv(1024)   
+            #!!! when remote socket idle closed, could return empty, fixed by raising exception!!!
+            if buf == None or len(buf) == 0: 
+                raise socket.error('remote server socket status error, possible idle closed')
             self.read_buf += buf
             idx = 0
             while True:
@@ -368,11 +371,6 @@ class MessageClient(object):
                 self.log.debug('Result: %s'%msg) 
                 return msg   
     
-    def _close(self):
-        if self.sock:  
-            self.sock.close()
-            self.sock = None
-            self.read_buf = bytearray() 
     
     def start(self, recv_timeout=3):  
         def serve(): 
@@ -384,24 +382,32 @@ class MessageClient(object):
                     self.log.warn(e) 
                     time.sleep(self.reconnect_interval)
                     
-            while True: 
+            while True:  
                 try: 
-                    msg = self.recv(None, recv_timeout)
+                    msg = self.recv(None, recv_timeout) 
                     if msg and self.on_message:
                         self.on_message(msg)
-                except socket.timeout:
+                except socket.timeout as e:
+                    try:
+                        self.heartbeat() #after timeout send heartbeat
+                    except Exception as e: 
+                        pass
                     continue
-                except socket.error as e:
+                except socket.error as e: 
+                    if self.manually_closed: break
+                    
                     self.log.warn(e)
                     if self.on_disconnected:
                         self.on_disconnected()
+                    if not self.auto_reconnect:
+                        break
                     while self.auto_reconnect:
                         try:
+                            self.sock.close()
                             self.connect()
                             break
                         except Exception as e:
-                            self.log.warn(e)
-                            self.sock = None
+                            self.log.warn(e) 
                             time.sleep(self.reconnect_interval)
                 
         self._thread = threading.Thread(target=serve)  
@@ -481,17 +487,35 @@ class MqClient(MessageClient):
 
 class MqClientPool:
     log = logging.getLogger(__name__)
-    def __init__(self, server_address='localhost:15555', ssl_cert_file=None,  maxsize=50, timeout=10):   
-        self.client_class = MqClient
+    def __init__(self, server_address='localhost:15555', ssl_cert_file=None, maxsize=50, timeout=3):   
         self.server_address = normalize_address(server_address)
         
         self.maxsize = maxsize
         self.timeout = timeout
         self.ssl_cert_file = ssl_cert_file 
         self.reset()
+        self.on_connected = None
+        self.on_disconnected = None 
+        
+    def start(self): 
+        self.detect_client = MqClient(self.server_address, self.ssl_cert_file)  
+        def pool_connected():
+            if self.on_connected:
+                info = self.detect_client.query()
+                self.server_address = info['serverAddress']
+                self.on_connected(info)
+        def pool_disconnected():
+            if self.on_disconnected:
+                self.on_disconnected(self.server_address)
+                
+        self.detect_client.on_connected = pool_connected
+        self.detect_client.on_disconnected = pool_disconnected
+        self.detect_client.start()
+        
     
     def make_client(self):
         client = MqClient(self.server_address, self.ssl_cert_file)  
+        client.connect()
         self.clients.append(client)
         self.log.debug('New client created %s', client)
         return client
@@ -542,16 +566,27 @@ class MqClientPool:
                 pass
             
     def close(self):
+        if hasattr(self, 'detect_client'):
+            self.detect_client.close()
         for client in self.clients:
             client.close()
             
 
 class BrokerRouteTable:
-    pass            
+    def update_votes(self, tracker_info):
+        print(tracker_info)
+        
+    def update_server(self, server_info):  
+        print(server_info)    
+        
+    def remove_server(self, server_address):  
+        print(server_address)     
 
 
 class Broker:
+    log = logging.getLogger(__name__)
     def __init__(self):
+        self.pool_table = {}
         self.route_table = BrokerRouteTable()
         self.ssl_cert_file_table = {}
         self.tracker_subscribers = {}
@@ -560,12 +595,33 @@ class Broker:
     def add_tracker(self, tracker_address, cert_file=None):
         pass
     
+    
     def add_server(self, server_address, cert_file=None):
         server_address = normalize_address(server_address)
         if cert_file:
             key = server_address['address'] 
             self.ssl_cert_file_table[key] = cert_file
         
+        pool = MqClientPool(server_address, cert_file)
+        
+        def server_connected(server_info): 
+            self.log.info('server connected: %s'%server_info)
+            key = address_key(pool.server_address)
+            self.pool_table[key] = pool 
+            self.route_table.update_server(server_info)
+            
+        def server_disconnected(server_address):
+            self.log.info('server disconnected: %s'%server_address)
+            self.route_table.remove_server(server_address)
+            key = address_key(server_address)
+            if key in self.pool_table:
+                pool = self.pool_table[key]
+                #del self.pool_table[key]
+                #pool.close()
+                
+        pool.on_connected = server_connected
+        pool.on_disconnected = server_disconnected
+        pool.start()
          
  
 class Producer:

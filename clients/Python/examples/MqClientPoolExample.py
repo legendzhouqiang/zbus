@@ -1,9 +1,14 @@
 from zbus import MqClientPool, Message
 
 pool = MqClientPool("localhost:15555")
+def on_connected():
+    print(pool.server_address)
 
-client = pool.borrow_client()
-client.connect()
+pool.on_connected = on_connected
+pool.start()
+
+
+client = pool.borrow_client() 
 
 msg = Message()
 msg.topic = 'hong'
