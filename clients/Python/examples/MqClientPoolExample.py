@@ -1,8 +1,8 @@
 from zbus import MqClientPool, Message
 
 pool = MqClientPool("localhost:15555")
-def on_connected():
-    print(pool.server_address)
+def on_connected(server_info):
+    print(server_info)
 
 pool.on_connected = on_connected
 pool.start()

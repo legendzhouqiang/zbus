@@ -14,8 +14,4 @@ broker.onServerLeave = function (data) {
     console.log("ServerLeft:");
     console.log(data);
 }
-
-broker.onServerUpdated = function (data) {
-    console.log("ServerUpdated:");
-    console.log(data);
-}
+ 

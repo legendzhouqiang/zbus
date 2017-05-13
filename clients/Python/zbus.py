@@ -3,7 +3,7 @@ import uuid, time, json
 import logging.config, os 
 import threading 
 import socket, ssl 
-import queue as Queue
+import queue as Queue 
     
 class Protocol:  
     VERSION_VALUE = "0.8.0"       #start from 0.8.0 
@@ -112,8 +112,7 @@ class Message(dict):
         self[name] = value
 
     def __delattr__(self, name):
-        if name in self:
-            del self[name] 
+        self.pop(name, None) 
             
     def __getitem__(self, key):
         if key not in self:
@@ -229,40 +228,58 @@ def msg_decode(buf, start=0):
     if content_type:
         if str(content_type).startswith('text') or str(content_type) == 'application/json': 
             msg.body = msg.body.decode(encoding) 
-            
+        if str(content_type) == 'application/json':
+            try:
+                msg.body = json.loads(msg.body, encoding=msg.ecoding)   
+            except: 
+                pass
     return (msg,p+body_len) 
 
 
-def normalize_address(address):       
-    sslEnabled = False
-    if isinstance(address, dict): 
-        if 'address' not in address:
-            raise TypeError('missing address in dictionary')
-        if 'sslEnabled' not in address:
-            raise TypeError('missing sslEnabled in dictionary')
-        addr_string = address['address']
-        sslEnabled = address['sslEnabled']
-    else:
-        addr_string = address
-    
-    return {'address': addr_string,
-            'sslEnabled': sslEnabled
-    }
-
-def address_key(address): 
-    if address['sslEnabled']:
-        return '[SSL]%s'%address['address']
-    return address['address']
+class ServerAddress:
+    def __init__(self, address, ssl_enabled=False): 
+        if isinstance(address, str): 
+            self.address = address
+            self.ssl_enabled = ssl_enabled
+        elif isinstance(address, dict): 
+            if 'address' not in address:
+                raise TypeError('missing address in dictionary')
+            if 'sslEnabled' not in address: # camel style from java/js
+                raise TypeError('missing sslEnabled in dictionary')
             
+            self.address = address['address']
+            self.ssl_enabled = address['sslEnabled']
+        elif isinstance(address, ServerAddress):
+            self.address = address.address
+            self.ssl_enabled = address.ssl_enabled
+        else:
+            raise TypeError(address + " address not support")
+    
+    def __key(self):
+        if self.ssl_enabled:
+            return '[SSL]%s'%self.address
+        return self.address
+    
+    def __hash__(self):
+        return hash(self.address)
+    
+    def __eq__(self, other):
+        return self.address == other.address and self.ssl_enabled == other.ssl_enabled
+    def __str__(self):
+        return self.__key()
+    def __repr__(self):
+        return self.__str__() 
+    
+    
 class MessageClient(object):
     log = logging.getLogger(__name__)
     
     def __init__(self, address='localhost:15555', ssl_cert_file=None):  
-        self.server_address = normalize_address(address)
+        self.server_address = ServerAddress(address)
             
         self.ssl_cert_file = ssl_cert_file    
         
-        bb = self.server_address['address'].split(':')
+        bb = self.server_address.address.split(':')
         self.host = bb[0]
         self.port = 80
         if(len(bb)>1): 
@@ -314,13 +331,12 @@ class MessageClient(object):
         with self.lock: 
             self.manually_closed = False
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if self.server_address['sslEnabled']:
+            if self.server_address.ssl_enabled:
                 self.sock = ssl.wrap_socket(self.sock,  ca_certs=self.ssl_cert_file, cert_reqs=ssl.CERT_REQUIRED)
-                
-            address = address_key(self.server_address)
-            self.log.info('Trying connect to (%s)'%address)
+                 
+            self.log.info('Trying connect to (%s)'%self.server_address)
             self.sock.connect( (self.host, self.port) )
-            self.log.info('Connected to (%s)'%address) 
+            self.log.info('Connected to (%s)'%self.server_address) 
             
         if self.on_connected:
             self.on_connected()
@@ -389,7 +405,7 @@ class MessageClient(object):
                         self.on_message(msg)
                 except socket.timeout as e:
                     try:
-                        self.heartbeat() #after timeout send heartbeat
+                        self.heartbeat() #TODO use another thread to heartbeat
                     except Exception as e: 
                         pass
                     continue
@@ -406,7 +422,7 @@ class MessageClient(object):
                             self.sock.close()
                             self.connect()
                             break
-                        except Exception as e:
+                        except socket.error as e:
                             self.log.warn(e) 
                             time.sleep(self.reconnect_interval)
                 
@@ -438,7 +454,7 @@ class MqClient(MessageClient):
             encoding = res.encoding
             if not encoding: encoding = 'utf8'
             raise Exception(res.body.decode(encoding))
-        return json.loads(res.body, encoding=res.encoding) 
+        return res.body
     
     
     def produce(self, msg, timeout=3):
@@ -488,22 +504,23 @@ class MqClient(MessageClient):
 class MqClientPool:
     log = logging.getLogger(__name__)
     def __init__(self, server_address='localhost:15555', ssl_cert_file=None, maxsize=50, timeout=3):   
-        self.server_address = normalize_address(server_address)
+        self.server_address = ServerAddress(server_address)
         
         self.maxsize = maxsize
         self.timeout = timeout
         self.ssl_cert_file = ssl_cert_file 
         self.reset()
         self.on_connected = None
-        self.on_disconnected = None 
+        self.on_disconnected = None
+        self.detect_client = None
         
     def start(self): 
         self.detect_client = MqClient(self.server_address, self.ssl_cert_file)  
         def pool_connected():
             if self.on_connected:
-                info = self.detect_client.query()
-                self.server_address = info['serverAddress']
-                self.on_connected(info)
+                server_info = self.detect_client.query()
+                self.server_address = ServerAddress(server_info['serverAddress'])
+                self.on_connected(server_info)
         def pool_disconnected():
             if self.on_disconnected:
                 self.on_disconnected(self.server_address)
@@ -566,23 +583,103 @@ class MqClientPool:
                 pass
             
     def close(self):
-        if hasattr(self, 'detect_client'):
+        if self.detect_client:
             self.detect_client.close()
+            self.detect_client = None
         for client in self.clients:
             client.close()
             
+ 
 
 class BrokerRouteTable:
-    def update_votes(self, tracker_info):
-        print(tracker_info)
+    def __init__(self):
+        self.topic_table = {}
+        self.server_table = {}
+        self.votes_table = {}
         
+    def update_votes(self, tracker_info):
+        votes_table_local = dict(self.votes_table)
+        tracker_addr = ServerAddress(tracker_info['serverAddress'])
+        
+        tracked_server_set = set()
+        for server_address in tracker_info['trackedServerList']:
+            server_address = ServerAddress(server_address)
+            tracked_server_set.add(server_address)
+            
+        for server_address in tracked_server_set: 
+            if server_address not in votes_table_local:
+                voted_trackers = set()
+                voted_trackers.add(tracker_addr)
+                votes_table_local[server_address] = voted_trackers
+            else:
+                voted_trackers = votes_table_local[server_address]
+                voted_trackers.add(tracker_addr)
+        
+        to_remove = []
+        for server_address in votes_table_local:
+            voted_trackers = votes_table_local[server_address]  
+            if tracker_addr in voted_trackers and server_address not in tracked_server_set:
+                voted_trackers.remove(tracker_addr)
+            if self.can_remove(voted_trackers):
+                to_remove.append(server_address)
+        
+        self.votes_table = votes_table_local
+        if len(to_remove) < 1: return to_remove
+        
+        for server_address in to_remove:
+            self.server_table.pop(server_address, None)  
+        self._rebuild_table()
+            
+        return to_remove
+
+    
+    def can_remove(self, tracker_set):
+        return len(tracker_set) < 1
+    
     def update_server(self, server_info):  
-        print(server_info)    
+        self._rebuild_table(server_info)
         
     def remove_server(self, server_address):  
-        print(server_address)     
+        server_address = ServerAddress(server_address)  
+        self.server_table.pop(server_address, None) 
+        self._rebuild_table() 
+        
+    def _rebuild_table(self, server_info=None):
+        if server_info:
+            server_address = ServerAddress(server_info['serverAddress'])   
+            self.server_table[server_address] = server_info
+        
+        topic_table = {}
+        for key in self.server_table:
+            server_info = self.server_table[key]
+            server_topic_table = server_info['topicTable']
+            for topic_name in server_topic_table:
+                topic = server_topic_table[topic_name] 
+                if topic_name not in topic_table: 
+                    topic_table[topic_name] = [topic]
+                else:
+                    topic_table[topic_name].append(topic)
+        
+        self.topic_table = topic_table
 
+class CountDownLatch(object):
+    def __init__(self, count=1):
+        self.count = count
+        self.lock = threading.Condition()
 
+    def count_down(self):
+        self.lock.acquire()
+        self.count -= 1
+        if self.count <= 0:
+            self.lock.notifyAll()
+        self.lock.release()
+
+    def wait(self, timeout=3):
+        self.lock.acquire()
+        while self.count > 0:
+            self.lock.wait(timeout)
+        self.lock.release()
+        
 class Broker:
     log = logging.getLogger(__name__)
     def __init__(self):
@@ -590,40 +687,95 @@ class Broker:
         self.route_table = BrokerRouteTable()
         self.ssl_cert_file_table = {}
         self.tracker_subscribers = {}
-        
+        self.notifiers = {}
     
     def add_tracker(self, tracker_address, cert_file=None):
-        pass
-    
-    
-    def add_server(self, server_address, cert_file=None):
-        server_address = normalize_address(server_address)
-        if cert_file:
-            key = server_address['address'] 
-            self.ssl_cert_file_table[key] = cert_file
+        tracker_address = ServerAddress(tracker_address) 
+        if tracker_address in self.tracker_subscribers: return 
+        if cert_file: self.ssl_cert_file_table[tracker_address.address] = cert_file
         
-        pool = MqClientPool(server_address, cert_file)
+        notify = self.notifiers[tracker_address] = CountDownLatch(1)
         
-        def server_connected(server_info): 
-            self.log.info('server connected: %s'%server_info)
-            key = address_key(pool.server_address)
-            self.pool_table[key] = pool 
-            self.route_table.update_server(server_info)
+        client = MqClient(tracker_address, cert_file)
+        self.tracker_subscribers[tracker_address] = client
+        
+        def tracker_connected():
+            msg = Message()
+            msg.cmd =Protocol.TRACK_SUB 
+            client.send(msg) 
             
-        def server_disconnected(server_address):
-            self.log.info('server disconnected: %s'%server_address)
-            self.route_table.remove_server(server_address)
-            key = address_key(server_address)
-            if key in self.pool_table:
-                pool = self.pool_table[key]
-                #del self.pool_table[key]
-                #pool.close()
+        def on_message(msg):
+            if msg.status != '200':
+                self.log.error(msg)
+                return
+            
+            tracker_info = msg.body 
+            tracked_server_list = tracker_info['trackedServerList']
+             
+            notify.count = len(tracked_server_list)
+            
+            for server_address in tracked_server_list:
+                server_address = ServerAddress(server_address)
+                self.add_server(server_address, None, notify) #if already exists, no add happens
+            
+            to_remove = self.route_table.update_votes(tracker_info)
+            for server_address in to_remove:
+                pool = self.pool_table.pop(server_address, None)  
+                if pool: 
+                    self.log.info('%s left'%server_address)
+                    pool.close()
+                
+        client.on_connected = tracker_connected
+        client.on_message = on_message 
+        client.start()
+        
+        notify.wait()
+        
+        
+        
+    
+    def add_server(self, server_address, cert_file=None, notify=None):
+        server_address = ServerAddress(server_address)
+        if server_address in self.pool_table: return
+        
+        if cert_file: 
+            self.ssl_cert_file_table[server_address.address] = cert_file
+        
+        self.log.info('%s joined'%server_address)
+        pool = MqClientPool(server_address, cert_file)
+        self.pool_table[pool.server_address] = pool 
+        
+        sync_wait = False
+        if not notify:
+            sync_wait = True
+            notify = CountDownLatch(1)
+            
+        def server_connected(server_info):   
+            self.route_table.update_server(server_info) 
+            notify.count_down()
+            
+        def server_disconnected(server_address): 
+            self.route_table.remove_server(server_address)   
                 
         pool.on_connected = server_connected
         pool.on_disconnected = server_disconnected
         pool.start()
-         
- 
+        
+        if sync_wait: notify.wait()
+        
+    
+    def close(self):
+        for address in self.tracker_subscribers:
+            client = self.tracker_subscribers[address]
+            client.close()
+        self.tracker_subscribers.clear()
+        
+        for key in self.pool_table:
+            pool = self.pool_table[key]
+            pool.close()
+        self.pool_table.clear()
+        
+        
 class Producer:
     pass
 
@@ -637,6 +789,6 @@ class RpcProcessor:
     pass 
           
 __all__ = [
-    Message, MessageClient, MqClient, MqClientPool, 
+    Message, MessageClient, MqClient, MqClientPool, ServerAddress,
     Broker, Producer, Consumer, RpcInvoker, RpcProcessor
 ]    
