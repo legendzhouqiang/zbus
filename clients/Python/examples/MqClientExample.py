@@ -1,25 +1,18 @@
-from zbus import MqClient
+from zbus import MqClient, Message
 
 client = MqClient("localhost:15555")
-client.connect()
+client.connect()  
 
 
-res = client.declare('hong')
-print (res)  
- 
-res = client.query()
-print (res) 
- 
-res = client.query('hong')
-print (res) 
+client.declare('hong')
 
-res = client.query('hong', 'hong')
-print (res) 
+msg = Message()
+msg.topic = 'hong'
+msg.body = 'hello world'
 
-res = client.declare('hong')
-print (res) 
+res = client.produce(msg)
+print(res)
 
-#client.remove('hong')
 
 
 client.close()
