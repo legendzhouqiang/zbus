@@ -141,11 +141,15 @@ def msg_encode(msg):
         res += bytes("%s %s HTTP/1.1\r\n"%(m, url), 'utf8') 
         
     body_len = 0
-    if msg.body is not None:
-        body_len = len(msg.body) 
-        if not isinstance(msg.body, (bytes, bytearray)):
-            if not msg['content-type']:
-                msg['content-type'] = 'text/plain'
+    if msg.body:
+        if not isinstance(msg.body, (bytes, bytearray)) and not msg['content-type']:
+            msg['content-type'] = 'text/plain'
+                
+        if not isinstance(msg.body, (bytes, bytearray, str)):
+            msg.body = json.dumps(msg.body).encode(msg.encoding or 'utf8')
+            msg['content-type'] = 'application/json'
+            
+        body_len = len(msg.body)  
         
     for k in msg:
         if k.lower() in Message.reserved_keys: continue
@@ -156,15 +160,13 @@ def msg_encode(msg):
         res += bytes('%s: %s\r\n'%(len_key, body_len), 'utf8')
     
     res += bytes('\r\n', 'utf8')
-    
-    body_encoding = 'utf8'
-    if msg.encoding:
-        body_encoding = msg.encoding
-    if msg.body is not None:
+     
+     
+    if msg.body:
         if isinstance(msg.body, (bytes, bytearray)):
             res += msg.body
         else:
-            res += bytes(str(msg.body), body_encoding)
+            res += bytes(str(msg.body), msg.encoding or 'utf8')
     return res
 
 
@@ -222,15 +224,13 @@ def msg_decode(buf, start=0):
         return (None, start)
     
     msg.body = buf[p: p+body_len]
-    content_type = msg['content-type']
-    encoding = 'utf8'
-    if msg.encoding: encoding = msg.encoding
+    content_type = msg['content-type'] 
     if content_type:
         if str(content_type).startswith('text') or str(content_type) == 'application/json': 
-            msg.body = msg.body.decode(encoding) 
+            msg.body = msg.body.decode(msg.ecoding or 'utf8') 
         if str(content_type) == 'application/json':
             try:
-                msg.body = json.loads(msg.body, encoding=msg.ecoding)   
+                msg.body = json.loads(msg.body, encoding=msg.ecoding or 'utf8')   
             except: 
                 pass
     return (msg,p+body_len) 
@@ -967,13 +967,66 @@ class Consumer(MqAdmin):
             self.start_consume_thread_group(pool)  
 
 class RpcInvoker:
-    pass
+    def __init__(self, broker, topic=None, timeout=3, selector=None, token=None): 
+        self.producer = Producer(broker)
+        self.producer.token = token
+        
+        self.topic = topic
+        self.timeout = timeout
+        self.server_selector = selector 
+       
+    def __getattr__(self, name):
+        rpc = RpcInvoker(broker=self.broker, topic=self.topic, timeout=self.timeout, 
+                         selector=self.server_selector, token=self.producer.token)  
+        rpc.method = name; 
+        return rpc
+    
+    def invoke(self, method, params=None, module='', topic=None, selector=None):
+        topic = topic or self.topic
+        if not topic:
+            raise Exception("missing topic")
+        selector = selector or self.server_selector
+        req = {
+            'method': method,
+            'params': params,
+            'module': module,
+        }
+        
+        msg = Message()
+        msg.topic = topic
+        msg.ack = False #RPC ack must set to False to wait return
+        msg.body = req 
+        
+        msg_res = self.producer.publish(msg, timeout=self.timeout, selector=selector)
+        
+        if isinstance(msg_res.body, bytearray):
+            msg_res.body = msg_res.body.decode(msg_res.encoding or 'utf8')
+            msg_res.body = json.loads(msg_res.body)
+            
+        if msg_res.status != '200':
+            error_text = 'unknown error' 
+            res = msg_res.body
+            if 'stackTrace' in res: error_text = res['stackTrace']
+            elif 'error' in res: error_text = res['error']  
+            error_msg = '=========RPC Context=========\nTopic(%s)-Module(%s)-Method(%s)\n=========Message Dump========\n%s'%(topic, module, method, msg)
+            raise Exception('%s\n%s'%(error_text, error_msg))
+        
+        res = msg_res.body 
+        if res and 'result' in res:
+            return res['result']
+         
 
+def Remote( _id = None ):
+    def func(fn):
+        fn.remote_id = _id or fn.__name__ 
+        return fn
+    return func 
 class RpcProcessor:
-    pass 
+    pass
+        
           
 __all__ = [
     Message, MessageClient, MqClient, MqClientPool, ServerAddress,
-    Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor,
+    Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor, Remote,
     ConsumeThread
 ]    
