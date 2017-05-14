@@ -1,5 +1,5 @@
 #encoding=utf8  
-import uuid, time, json, random
+import uuid, time, json, random, inspect
 import logging.config, os 
 import threading 
 import socket, ssl 
@@ -480,9 +480,16 @@ class MqClient(MessageClient):
     def remove(self, topic, group=None, options=None, timeout=3):
         return self.invoke_object(Protocol.REMOVE, topic, group=group, options=options, timeout=timeout)  
         
-    def empty(self,  topic, group=None, options=None, timeout=3):
+    def empty(self, topic, group=None, options=None, timeout=3):
         return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout)       
 
+    def route(self, msg, timeout=3):
+        msg.cmd = Protocol.ROUTE
+        if msg.status:
+            msg.origin_status = msg.status
+            msg.status = None
+            
+        self.send(msg, timeout)    
 
 
 class MqClientPool:
@@ -875,6 +882,13 @@ class ConsumeThread(threading.Thread):
             self.client.declare(self.msg_ctrl, timeout=self.consume_timeout)
             return self.take()
         if res.status == '200':
+            res.id = res.origin_id
+            del res.origin_id
+            if res.origin_url:
+                res.url = res.origin_url
+                res.status = None
+                del res.origin_url
+                
             return res
         raise Exception(res.body)
     
@@ -897,6 +911,7 @@ class ConsumeThread(threading.Thread):
         
 
 class ConsumeThreadGroup:
+    log = logging.getLogger(__name__)
     def __init__(self, pool, msg_ctrl, on_message=None, connection_count=1, timeout=3): 
         self.pool = pool
         self.msg_ctrl = msg_ctrl 
@@ -920,6 +935,7 @@ class ConsumeThreadGroup:
             thread.close()
     
 class Consumer(MqAdmin):
+    log = logging.getLogger(__name__)
     def __init__(self, broker, msg_ctrl, on_message=None, connection_count=1, selector=None, timeout=3):
         MqAdmin.__init__(self, broker) 
         def consume_selecotr(route_table, msg):
@@ -967,6 +983,7 @@ class Consumer(MqAdmin):
             self.start_consume_thread_group(pool)  
 
 class RpcInvoker:
+    log = logging.getLogger(__name__)
     def __init__(self, broker=None, topic=None, module=None, method=None, timeout=3, selector=None, token=None, producer=None): 
         self.producer = producer or Producer(broker)
         self.producer.token = token
@@ -1023,11 +1040,97 @@ def Remote( _id = None ):
     def func(fn):
         fn.remote_id = _id or fn.__name__ 
         return fn
-    return func 
-class RpcProcessor:
-    pass
+    return func  
+
+class RpcProcessor: 
+    log = logging.getLogger(__name__)
+    def __init__(self, *args): 
+        self.methods = {} 
+        for arg in args: 
+            self.add_module(arg)
+    
+    def add_module(self, service, module=''):
+        if inspect.isclass(service):
+            service = service()
+            
+        methods = inspect.getmembers(service, predicate=inspect.ismethod)
+        for method in methods: 
+            method_name = method[0]
+             
+            if hasattr(method[1], 'remote_id'):
+                method_name = getattr(method[1], 'remote_id')
+            
+            key = '%s:%s'%(module,method_name)
+            if key in self.methods:
+                self.log.warn('%s duplicated'%key)
+            self.methods[key] = (method[1], inspect.getargspec(method[1]))
+    
+    def _get_value(self,req, name, default=None):
+        if name not in req: return default
+        return req[name] or default
+    
+    def handle_request(self, msg, client):    
+        error = None
+        result = None 
+        status = '200' 
+        try:
+            if isinstance(msg.body, (bytes, bytearray)): 
+                msg.body = msg.body.decode(msg.encoding or 'utf8')
+            
+            if isinstance(msg.body,str):
+                msg.body = json.loads(msg.body) 
+            req = msg.body 
+            
+        except Exception as e: 
+            status = '400'
+            error = Exception('json format error: %s'%str(e))
+            
+        if not error:
+            try: 
+                method = req['method']
+                module = self._get_value(req, 'module', '') 
+                params = self._get_value(req, 'params', [])  
+                
+            except Exception as e:
+                status = '400'
+                error = Exception('parameter error: %s'%str(e))
         
+        if not error:
+            key = '%s:%s'%(module,method)
+            if key not in self.methods:
+                status = '404'
+                error = Exception('%s method not found'%key) 
+            else:
+                method_info = self.methods[key]
+                method = method_info[0] 
+        
+        if not error:
+            try:
+                result = method(*params)
+            except Exception as e:
+                error = e  
+        
+        if error: 
+            result = {'error': str(error), 'stackTrace': str(error)} 
+        else:
+            result = {'result': result, 'error': None, 'stackTrace': None}
           
+        try:
+            res = Message()
+            res.status = status
+            res.encoding = msg.encoding
+            res.body = result
+            
+            res.recver = msg.sender
+            res.id = msg.id 
+            
+            client.route(res)
+        except e:
+            self.log.error(e) 
+    
+    def __call__(self, *args, **kv_args): 
+        return self.handle_request(*args)  
+         
 __all__ = [
     Message, MessageClient, MqClient, MqClientPool, ServerAddress,
     Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor, Remote,

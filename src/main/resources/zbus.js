@@ -1150,7 +1150,12 @@ RpcInvoker.prototype._invokeMethod = function (req, callback) {
             if (msg.status != "200") {
                 throw msg.body;
             }
-            res = JSON.parse(msg.body);
+            if(typeof(msg.body) == 'string'){
+            	res = JSON.parse(msg.body);
+            } else {
+            	res = msg.body;
+            } 
+            
             if (res.stackTrace) {
                 throw res.stackTrace;
             }
