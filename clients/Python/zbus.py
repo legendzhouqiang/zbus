@@ -1,5 +1,5 @@
 #encoding=utf8  
-import uuid, time, json
+import uuid, time, json, random
 import logging.config, os 
 import threading 
 import socket, ssl 
@@ -445,8 +445,15 @@ class MqClient(MessageClient):
         MessageClient.__init__(self, address, ssl_cert_file)
         self.token = None
      
-    def invoke_cmd(self, cmd, topic, group=None, options=None, timeout=3):
-        msg = build_msg(cmd, topic, group=group, options=options)
+    def invoke_cmd(self, cmd, topic_or_msg, group=None, options=None, timeout=3):
+        if isinstance(topic_or_msg, Message):
+            msg = topic_or_msg
+            msg.cmd = cmd
+            if not msg.consume_group:
+                msg.consume_group = group 
+        else:
+            msg = build_msg(cmd, topic_or_msg, group=group, options=options)
+            
         if not msg.token:
             msg.token = self.token
         return self.invoke(msg, timeout=timeout)   
@@ -513,8 +520,7 @@ class MqClientPool:
     
     def make_client(self):
         client = MqClient(self.server_address, self.ssl_cert_file)  
-        client.connect()
-        self.clients.append(client)
+        client.connect() 
         self.log.debug('New client created %s', client)
         return client
     
@@ -549,6 +555,7 @@ class MqClientPool:
             raise Exception('No client available')
         if client is None:
             client = self.make_client()
+            self.clients.append(client)
         return client 
     
     def return_client(self, client):
@@ -669,6 +676,9 @@ class Broker:
         self.ssl_cert_file_table = {}
         self.tracker_subscribers = {}
         self.notifiers = {}
+        
+        self.on_server_join = None
+        self.on_server_leave = None 
     
     def add_tracker(self, tracker_address, cert_file=None):
         tracker_address = ServerAddress(tracker_address) 
@@ -732,9 +742,13 @@ class Broker:
         def server_connected(server_info):   
             self.route_table.update_server(server_info) 
             notify.count_down()
+            if self.on_server_join:
+                self.on_server_join(pool)
             
         def server_disconnected(server_address): 
             self.route_table.remove_server(server_address)   
+            if self.on_server_leave:
+                self.on_server_leave(server_address)
                 
         pool.on_connected = server_connected
         pool.on_disconnected = server_disconnected
@@ -767,7 +781,7 @@ class MqAdmin:
     def __init__(self, broker): 
         self.broker = broker
         def admin_selector(route_table, msg):
-            return list(route_table.server_table)
+            return list(route_table.server_table.keys())
         self.admin_selector = admin_selector 
         self.token = None
      
@@ -800,11 +814,157 @@ class MqAdmin:
         return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout, selector=selector)
     
     
-class Producer:
-    pass
+class Producer(MqAdmin):
+    def __init__(self, broker):
+        MqAdmin.__init__(self, broker)
+        random.seed(int(time.time()))
+        def produce_selecotr(route_table, msg):
+            server_table = route_table.server_table
+            topic_table = route_table.topic_table 
+            if len(server_table) < 1: 
+                raise Exception('missing MqServer for topic:%s'%msg.topic)
+            
+            if msg.topic not in topic_table:
+                return [random.choice(server_table.keys())]
+            topic_server_list = topic_table[msg.topic]
+            target = topic_server_list[0]
+            for server_topic in topic_server_list:
+                if target['consumerCount'] < server_topic['consumerCount']:
+                    target = server_topic
+            return [ServerAddress(target['serverAddress'])] 
+        
+        self.produce_selector = produce_selecotr
+    
+    def publish(self, msg, timeout=3, selector=None):
+        msg.cmd = Protocol.PRODUCE
+        if not msg.token:
+            msg.token = self.token
+        pools = self.broker.select(selector or self.produce_selector, msg)
+        res = []
+        for pool in pools:
+            client = None
+            try:
+                client = pool.borrow_client() 
+                res_i = client.invoke(msg, timeout=timeout)
+                res.append(res_i)
+            finally:
+                if client:
+                    pool.return_client(client)
+        if len(res) == 1:
+            return res[0]
+        return res   
 
-class Consumer:
-    pass
+
+class ConsumeThread(threading.Thread):
+    log = logging.getLogger(__name__)
+    def __init__(self, client,  msg_ctrl, on_message=None, timeout=3):
+        threading.Thread.__init__(self)
+        self.client = client 
+        self.msg_ctrl = msg_ctrl
+        if isinstance(msg_ctrl, str):
+            msg = Message()
+            msg.topic = msg_ctrl
+            self.msg_ctrl = msg
+        
+        self.consume_timeout = timeout 
+        self.on_message = on_message
+    
+    def take(self):
+        res = self.client.consume(self.msg_ctrl, timeout=self.consume_timeout)
+        if res.status == '404':
+            self.client.declare(self.msg_ctrl, timeout=self.consume_timeout)
+            return self.take()
+        if res.status == '200':
+            return res
+        raise Exception(res.body)
+    
+    def run(self):
+        if not self.on_message:
+            raise Exception("missing consume_handler")
+        while True:
+            try:
+                msg = self.take()
+                if not msg: 
+                    continue
+                self.on_message(msg, self.client)
+            except socket.timeout:
+                continue
+            except Exception as e:
+                self.log.error(e)
+                break
+    def close(self):
+        self.client.close()
+        
+
+class ConsumeThreadGroup:
+    def __init__(self, pool, msg_ctrl, on_message=None, connection_count=1, timeout=3): 
+        self.pool = pool
+        self.msg_ctrl = msg_ctrl 
+        self.on_message = on_message
+        self.connection_count = connection_count
+        self.consume_timeout = timeout 
+        
+        self.consume_threads = []
+    def start(self):
+        for _ in range(self.connection_count):
+            client = self.pool.make_client()
+            thread = ConsumeThread(client, self.msg_ctrl,
+                                   on_message=self.on_message,
+                                   timeout=self.consume_timeout)
+            
+            self.consume_threads.append(thread)
+            thread.start()
+    
+    def close(self):
+        for thread in self.consume_threads:
+            thread.close()
+    
+class Consumer(MqAdmin):
+    def __init__(self, broker, msg_ctrl, on_message=None, connection_count=1, selector=None, timeout=3):
+        MqAdmin.__init__(self, broker) 
+        def consume_selecotr(route_table, msg):
+            return list(route_table.server_table.keys()) 
+        self.consume_selector = selector or consume_selecotr
+        
+        self.connection_count = 1
+        self.msg_ctrl = msg_ctrl 
+        if isinstance(msg_ctrl, str):
+            msg = Message()
+            msg.topic = msg_ctrl
+            self.msg_ctrl = msg
+        
+        self.consume_timeout = timeout 
+        self.on_message = on_message
+        
+        self.consume_thread_groups = {} 
+        
+    
+    def start_consume_thread_group(self, pool): 
+        if pool.server_address in self.consume_thread_groups: return 
+        
+        consume_thread_group = ConsumeThreadGroup(pool, self.msg_ctrl, 
+                        on_message=self.on_message, 
+                        connection_count=self.connection_count,
+                        timeout=self.consume_timeout)
+        
+        self.consume_thread_groups[pool.server_address] = consume_thread_group
+        consume_thread_group.start()  
+        
+    def start(self):
+        def on_server_join(pool):
+            self.start_consume_thread_group(pool)  
+        
+        def on_server_leave(server_address):
+            consume_thread_group = self.consume_thread_groups.pop(server_address, None)
+            if consume_thread_group:
+                consume_thread_group.close()
+                
+        self.broker.on_server_join = on_server_join
+        self.broker.on_server_leave = on_server_leave 
+        
+        pools = self.broker.select(self.consume_selector, self.msg_ctrl)
+        for pool in pools:
+            self.start_consume_thread_group(pool)  
 
 class RpcInvoker:
     pass
@@ -814,5 +974,6 @@ class RpcProcessor:
           
 __all__ = [
     Message, MessageClient, MqClient, MqClientPool, ServerAddress,
-    Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor
+    Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor,
+    ConsumeThread
 ]    
