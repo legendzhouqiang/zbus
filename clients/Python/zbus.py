@@ -430,53 +430,51 @@ class MessageClient(object):
         self._thread.start()
 
 
+def build_msg(cmd, topic, group=None, options=None):
+        msg = Message(); 
+        msg.cmd = cmd
+        msg.topic = topic 
+        msg.consume_group = group 
+        if isinstance(options, dict):
+            for k in options:
+                msg[k] = options[k] 
+        return msg
+
 class MqClient(MessageClient):
     def __init__(self, address='localhost:15555', ssl_cert_file=None):
         MessageClient.__init__(self, address, ssl_cert_file)
         self.token = None
+     
+    def invoke_cmd(self, cmd, topic, group=None, options=None, timeout=3):
+        msg = build_msg(cmd, topic, group=group, options=options)
+        if not msg.token:
+            msg.token = self.token
+        return self.invoke(msg, timeout=timeout)   
     
-    def invoke(self, cmd, topic, group=None, options=None, timeout=3):
-        msg = Message(); 
-        msg.cmd = cmd
-        msg.topic = topic 
-        msg.consume_group = group
-        msg.token = self.token
-        if isinstance(options, dict):
-            for k in options:
-                msg[k] = options[k] 
-        return super(MqClient, self).invoke(msg, timeout) 
-    
-    def invoke_void(self, cmd, topic, group=None, options=None, timeout=3): 
-        res = self.invoke(cmd, topic, group, options, timeout)
-        if res.status != "200": 
-            raise Exception(res.body.decode(res.encoding or 'utf8'))
-    
-    
-    def invoke_json(self, cmd, topic, group=None, options=None, timeout=3):
-        res = self.invoke(cmd, topic, group, options, timeout)
-        if res.status != "200": 
-            raise Exception(res.body.decode(res.encoding or 'utf8'))
+    def invoke_object(self, cmd, topic, group=None, options=None, timeout=3): 
+        res = self.invoke_cmd(cmd, topic, group=group, options=options, timeout=timeout) 
+        if res.status != '200': #not throw exception, for batch operations' convenience
+            return {'error': res.body.decode(res.encoding or 'utf8')}
         return res.body
-    
     
     def produce(self, msg, timeout=3):
         msg.cmd = Protocol.PRODUCE
-        return super(MqClient, self).invoke(msg, timeout)
+        return self.invoke(msg, timeout)
         
     def consume(self, topic, group=None, options=None, timeout=3): 
-        return self.invoke(Protocol.CONSUME, topic, group, options, timeout) 
+        return self.invoke_cmd(Protocol.CONSUME, topic, group=group, options=options, timeout=timeout) 
     
     def query(self, topic=None, group=None, options=None, timeout=3): 
-        return self.invoke_json(Protocol.QUERY, topic, group, options, timeout)     
+        return self.invoke_object(Protocol.QUERY, topic, group=group, options=options, timeout=timeout) 
          
     def declare(self, topic, group=None, options=None, timeout=3):
-        return self.invoke_json(Protocol.DECLARE, topic, group, options, timeout)     
+        return self.invoke_object(Protocol.DECLARE, topic, group=group, options=options, timeout=timeout)    
         
     def remove(self, topic, group=None, options=None, timeout=3):
-        self.invoke_void(Protocol.REMOVE, topic, group, options, timeout)    
+        return self.invoke_object(Protocol.REMOVE, topic, group=group, options=options, timeout=timeout)  
         
     def empty(self,  topic, group=None, options=None, timeout=3):
-        self.invoke_void(Protocol.EMPTY, topic, group, options, timeout)          
+        return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout)       
 
 
 
@@ -497,7 +495,11 @@ class MqClientPool:
         self.detect_client = MqClient(self.server_address, self.ssl_cert_file)  
         def pool_connected():
             if self.on_connected:
-                server_info = self.detect_client.query()
+                server_info = self.detect_client.query() 
+                if server_info['error']:
+                    self.log.error(server_info['error'])
+                    return
+                
                 self.server_address = ServerAddress(server_info['serverAddress'])
                 self.on_connected(server_info)
         def pool_disconnected():
@@ -708,9 +710,7 @@ class Broker:
         client.on_message = on_message 
         client.start()
         
-        notify.wait()
-        
-        
+        notify.wait() 
         
     
     def add_server(self, server_address, cert_file=None, notify=None):
@@ -768,23 +768,37 @@ class MqAdmin:
         self.broker = broker
         def admin_selector(route_table, msg):
             return list(route_table.server_table)
-        self.admin_selector = admin_selector
+        self.admin_selector = admin_selector 
+        self.token = None
+     
     
-    def declare(self, topic, group=None, options=None, timeout=3):
-        pools = self.admin_selector(self.broker.route_table, topic)
+    def invoke_object(self, cmd, topic, group=None, options=None, timeout=3, selector=None):
+        msg = build_msg(cmd, topic, group=group, options=options) 
+        pools = self.broker.select(selector or self.admin_selector, msg)
         res = []
         for pool in pools:
             client = None
             try:
-                client = pool.borrow_client()
-                res_i = client.declare(topic, group, options, timeout)
+                client = pool.borrow_client() 
+                res_i = client.invoke_object(cmd, topic, group=group, options=options, timeout=timeout)
                 res.append(res_i)
             finally:
                 if client:
                     pool.return_client(client)
-        return res
-    def query(self, topic=None, group=None, timeout=3):
-        pass
+        return res    
+    
+    def declare(self, topic, group=None, options=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.DECLARE, topic, group=group, options=options, timeout=timeout, selector=selector)
+    
+    def query(self, topic, group=None, options=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.QUERY, topic, group=group, options=options, timeout=timeout, selector=selector)
+    
+    def remove(self, topic, group=None, options=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.REMOVE, topic, group=group, options=options, timeout=timeout, selector=selector)
+    
+    def empty(self, topic, group=None, options=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout, selector=selector)
+    
     
 class Producer:
     pass
@@ -800,5 +814,5 @@ class RpcProcessor:
           
 __all__ = [
     Message, MessageClient, MqClient, MqClientPool, ServerAddress,
-    Broker, Producer, Consumer, RpcInvoker, RpcProcessor
+    Broker, MqAdmin, Producer, Consumer, RpcInvoker, RpcProcessor
 ]    
