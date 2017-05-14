@@ -967,27 +967,28 @@ class Consumer(MqAdmin):
             self.start_consume_thread_group(pool)  
 
 class RpcInvoker:
-    def __init__(self, broker, topic=None, timeout=3, selector=None, token=None): 
-        self.producer = Producer(broker)
+    def __init__(self, broker=None, topic=None, module=None, method=None, timeout=3, selector=None, token=None, producer=None): 
+        self.producer = producer or Producer(broker)
         self.producer.token = token
         
         self.topic = topic
         self.timeout = timeout
         self.server_selector = selector 
+        
+        self.method = method
+        self.module = module
        
     def __getattr__(self, name):
-        rpc = RpcInvoker(broker=self.broker, topic=self.topic, timeout=self.timeout, 
-                         selector=self.server_selector, token=self.producer.token)  
-        rpc.method = name; 
-        return rpc
+        return RpcInvoker(method=name, topic=self.topic, module=self.module, 
+                        producer=self.producer, timeout=self.timeout, selector=self.server_selector)   
     
-    def invoke(self, method, params=None, module='', topic=None, selector=None):
+    def invoke(self, method=None, params=None, module='', topic=None, selector=None):
         topic = topic or self.topic
-        if not topic:
-            raise Exception("missing topic")
+        if not topic:  raise Exception("missing topic")
+        
         selector = selector or self.server_selector
         req = {
-            'method': method,
+            'method': method or self.method,
             'params': params,
             'module': module,
         }
@@ -999,7 +1000,7 @@ class RpcInvoker:
         
         msg_res = self.producer.publish(msg, timeout=self.timeout, selector=selector)
         
-        if isinstance(msg_res.body, bytearray):
+        if isinstance(msg_res.body, bytearray): 
             msg_res.body = msg_res.body.decode(msg_res.encoding or 'utf8')
             msg_res.body = json.loads(msg_res.body)
             
@@ -1014,7 +1015,9 @@ class RpcInvoker:
         res = msg_res.body 
         if res and 'result' in res:
             return res['result']
-         
+        
+    def __call__(self, *args, **kv_args): 
+        return self.invoke(params=args, **kv_args)  
 
 def Remote( _id = None ):
     def func(fn):
