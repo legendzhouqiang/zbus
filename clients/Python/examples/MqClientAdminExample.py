@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from zbus import MqClient
 
 client = MqClient("localhost:15555")

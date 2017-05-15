@@ -20,6 +20,8 @@ class MyService(object):
         return u'中文' 
 
 
+import sys
+sys.path.append("../")
 from zbus import Broker, Consumer, RpcProcessor 
 
 p = RpcProcessor() 

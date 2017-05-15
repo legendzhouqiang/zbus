@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from zbus import Broker, MqAdmin, Message
  
 broker = Broker()

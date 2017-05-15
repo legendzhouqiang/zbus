@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from zbus import Broker, Consumer
  
 broker = Broker()

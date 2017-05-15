@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from zbus import Broker, Producer, Message
  
 broker = Broker()
