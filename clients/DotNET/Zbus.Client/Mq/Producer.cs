@@ -1,6 +1,5 @@
 ﻿using System;
-
-using Zbus.Client.Net.Http;
+ 
 using Zbus.Client.Broker;
 using System.Threading;
 using System.Threading.Tasks;

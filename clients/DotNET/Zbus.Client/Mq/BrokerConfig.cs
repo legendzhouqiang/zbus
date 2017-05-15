@@ -1,6 +1,6 @@
 ﻿
 using Zbus.Client.Net;
-namespace Zbus.Client.Broker
+namespace Zbus.Client.Mq
 {
    public class BrokerConfig
    {

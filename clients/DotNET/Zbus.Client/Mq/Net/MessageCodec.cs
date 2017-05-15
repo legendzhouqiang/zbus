@@ -1,22 +1,23 @@
 ﻿using System;
+using Zbus.Client.Net;
 
-namespace Zbus.Client.Net.Http
+namespace Zbus.Client.Mq.Net
 {
    public class MessageCodec : ICodec
    {
-      public object Decode(IoBuffer buf)
+      public object Decode(ByteBuffer buf)
       {
          return Message.Decode(buf);
       }
 
-      public IoBuffer Encode(object obj)
+      public ByteBuffer Encode(object obj)
       {
          if(!(obj is Message))
          {
             throw new ArgumentException("Message type required for: " + obj);
          }
          Message msg = obj as Message;
-         IoBuffer buf = new IoBuffer();
+         ByteBuffer buf = new ByteBuffer();
          msg.Encode(buf);
          buf.Flip();
 

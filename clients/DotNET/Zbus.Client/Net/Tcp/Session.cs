@@ -13,7 +13,7 @@ namespace Zbus.Client.Net.Tcp
       private TcpClient tcpClient;
       private ICodec codecRead;
       private ICodec codecWrite;
-      private IoBuffer readBuf = new IoBuffer(); 
+      private ByteBuffer readBuf = new ByteBuffer(); 
 
       private readonly string id = Guid.NewGuid().ToString();
       private IDictionary<string, object> attributes = null;
@@ -107,7 +107,7 @@ namespace Zbus.Client.Net.Tcp
       {
          Stream.WriteTimeout = timeout;
 
-         IoBuffer buf = this.codecWrite.Encode(msg); 
+         ByteBuffer buf = this.codecWrite.Encode(msg); 
          Stream.Write(buf.Data, 0, buf.Limit);
       }
 
@@ -123,7 +123,7 @@ namespace Zbus.Client.Net.Tcp
          byte[] buf = new byte[4096];
          while (true)
          {
-            IoBuffer tempBuf = this.readBuf.Duplicate();
+            ByteBuffer tempBuf = this.readBuf.Duplicate();
             tempBuf.Flip(); //to read mode
             object msg = codecRead.Decode(tempBuf);
             if (msg != null)

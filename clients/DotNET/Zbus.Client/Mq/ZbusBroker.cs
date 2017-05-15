@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Zbus.Client.Net.Http;
+using Zbus.Client.Mq;
+using Zbus.Client.Mq.Net;
 
-namespace Zbus.Client.Broker
+namespace Zbus.Client.Mq
 {
    public class ZbusBroker : IBroker
    { 

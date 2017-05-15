@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zbus.Client.Broker;
 using Zbus.Client.Mq;
-using Zbus.Client.Net.Http;
+using Zbus.Client.Mq.Net;
 using Zbus.Client.Rpc;
 
 namespace Zbus.Client.Examples

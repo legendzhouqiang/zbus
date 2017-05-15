@@ -11,13 +11,13 @@ namespace Zbus.Client.Net
       /// </summary>
       /// <param name="msg">domain object to serialize on wire</param>
       /// <returns>IoBuffer ready to read, encoder should be responsible to flip IoBuffer</returns>
-      IoBuffer Encode(object msg);
+      ByteBuffer Encode(object msg);
       
       /// <summary>
       /// Decode the buffer to domain object 
       /// </summary>
-      /// <param name="buf">IoBuffer read from</param>
+      /// <param name="buf">ByteBuffer read from</param>
       /// <returns>Decoded object or null if no ready</returns>
-      object Decode(IoBuffer buf);
+      object Decode(ByteBuffer buf);
    }
 }

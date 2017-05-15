@@ -1,11 +1,9 @@
 ﻿using NUnit.Framework;
 using Ploeh.AutoFixture;
-using FluentAssertions;
-using Zbus.Client.Net; 
 
 namespace Zbus.Client.Test.Net.Http
-{ 
-   public class Message_Tests
+{
+    public class Message_Tests
    {
       private IFixture fixture;
       [SetUp]

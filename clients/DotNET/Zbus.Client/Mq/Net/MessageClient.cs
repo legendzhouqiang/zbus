@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Zbus.Client.Net;
 using Zbus.Client.Net.Tcp;
 
-namespace Zbus.Client.Net.Http
+namespace Zbus.Client.Mq.Net
 {
      
    public interface IMessageInvoker : IInvoker<Message, Message>, IDisposable

@@ -5,7 +5,7 @@ using Zbus.Client.Net;
 
 namespace Zbus.Client.Test.Net
 { 
-   public class IoBuffer_Tests
+   public class ByteBuffer_Tests
    {
       private IFixture fixture;
       [SetUp]
@@ -19,7 +19,7 @@ namespace Zbus.Client.Test.Net
       public void Test_IoBuffer_Size_From0([Range(0,0)]int size)
       {
          //Arrange   
-         IoBuffer buf = new IoBuffer(size);
+         ByteBuffer buf = new ByteBuffer(size);
 
          //Act 
 
@@ -31,7 +31,7 @@ namespace Zbus.Client.Test.Net
       public void Test_IoBuffer_Size([Random(0, 1024*1024*10, 10)]int size)
       {
          //Arrange   
-         IoBuffer buf = new IoBuffer(size);
+         ByteBuffer buf = new ByteBuffer(size);
 
          //Act 
 
@@ -44,11 +44,11 @@ namespace Zbus.Client.Test.Net
       public void Test_Duplicate([Random(0, 1024 * 1024 * 10, 10)]int size)
       {
          //Arrange   
-         IoBuffer buf = new IoBuffer(size);
+         ByteBuffer buf = new ByteBuffer(size);
          buf.Put(new byte[size / 2]);
 
          //Act 
-         IoBuffer buf2 = buf.Duplicate();
+         ByteBuffer buf2 = buf.Duplicate();
 
          //Assert
          buf2.ShouldBeEquivalentTo(buf);

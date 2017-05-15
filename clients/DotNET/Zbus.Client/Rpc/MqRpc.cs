@@ -4,8 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Zbus.Client.Broker;
 using Zbus.Client.Mq;
-using Zbus.Client.Net;
-using Zbus.Client.Net.Http;
+using Zbus.Client.Net; 
 
 namespace Zbus.Client.Rpc
 { 

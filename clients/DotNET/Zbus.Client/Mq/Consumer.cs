@@ -3,11 +3,11 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
-using Zbus.Client.Net.Http;
 using Zbus.Client.Broker;
 using log4net;
 using System.Threading.Tasks;
 using Zbus.Client.Net;
+using Zbus.Client.Mq.Net;
 
 namespace Zbus.Client.Mq
 { 

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using Zbus.Client.Net;
 
-namespace Zbus.Client.Net.Http
+namespace Zbus.Client.Mq
 { 
    public class Message : IId
    {
@@ -225,7 +226,7 @@ namespace Zbus.Client.Net.Http
 
       #endregion
 
-      public void Encode(IoBuffer buf)
+      public void Encode(ByteBuffer buf)
       {
          buf.Put("{0}\r\n", this.meta);
          foreach (KeyValuePair<string, string> e in this.head)
@@ -247,7 +248,7 @@ namespace Zbus.Client.Net.Http
          }
       }
 
-      private static int FindHeaderEnd(IoBuffer buf)
+      private static int FindHeaderEnd(ByteBuffer buf)
       {
          int i = buf.Position;
          byte[] data = buf.Data;
@@ -281,7 +282,7 @@ namespace Zbus.Client.Net.Http
          return msg;
       }
 
-      public static Message Decode(IoBuffer buf)
+      public static Message Decode(ByteBuffer buf)
       {
          int idx = FindHeaderEnd(buf);
          int headLen = idx - buf.Position + 1;
@@ -309,7 +310,7 @@ namespace Zbus.Client.Net.Http
 
       public override string ToString()
       {
-         IoBuffer buf = new IoBuffer();
+         ByteBuffer buf = new ByteBuffer();
          Encode(buf);
          return buf.ToString();
       }

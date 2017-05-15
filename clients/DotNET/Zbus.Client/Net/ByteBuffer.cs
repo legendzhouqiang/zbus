@@ -5,10 +5,10 @@ using System.IO;
 namespace Zbus.Client.Net
 {
    /// <summary>
-   /// IoBuffer to manipulate auto-expansible binary array data.
+   /// ByteBuffer to manipulate auto-expansible binary array data.
    /// functionality similiar to Java's ByteBuffer
    /// </summary>
-   public class IoBuffer
+   public class ByteBuffer
    {
       /// <summary>
       /// Current read/write position of buffer
@@ -32,12 +32,12 @@ namespace Zbus.Client.Net
       /// <summary>
       /// Create default IoBuffer with size 256
       /// </summary>
-      public IoBuffer() : this(256) { }
+      public ByteBuffer() : this(256) { }
       /// <summary>
       /// Create IoBuffer from byte array, No copy.
       /// </summary>
       /// <param name="data">byte array consumed to be part of the IoBuffer</param>
-      public IoBuffer(byte[] data)
+      public ByteBuffer(byte[] data)
       {
          Data = data;
          Limit = Capacity = data.Length; 
@@ -48,7 +48,7 @@ namespace Zbus.Client.Net
       /// Create empty IoBuffer with specified capacity.
       /// </summary>
       /// <param name="capacity">IoBuffer capacity</param>
-      public IoBuffer(int capacity) : this(new byte[capacity])
+      public ByteBuffer(int capacity) : this(new byte[capacity])
       {
 
       }
@@ -57,9 +57,9 @@ namespace Zbus.Client.Net
       /// Duplicate the IoBuffer, No copy of the underlying data array.
       /// </summary>
       /// <returns>IoBuffer duplicated, all indice are reset</returns>
-      public IoBuffer Duplicate()
+      public ByteBuffer Duplicate()
       {
-         IoBuffer buf = new IoBuffer(Data);
+         ByteBuffer buf = new ByteBuffer(Data);
          buf.Capacity = Capacity;
          buf.Limit = Limit;
          buf.mark = -1;

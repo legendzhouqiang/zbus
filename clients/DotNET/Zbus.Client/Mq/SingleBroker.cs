@@ -2,10 +2,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Zbus.Client.Mq;
+using Zbus.Client.Mq.Net;
 using Zbus.Client.Net;
-using Zbus.Client.Net.Http;
 
-namespace Zbus.Client.Broker
+namespace Zbus.Client.Mq
 {
    public class SingleBroker : IBroker
    {  

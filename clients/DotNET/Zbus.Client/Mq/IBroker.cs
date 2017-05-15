@@ -1,7 +1,7 @@
-﻿using System; 
-using Zbus.Client.Net.Http;
+﻿using System;
+using Zbus.Client.Mq.Net;
 
-namespace Zbus.Client.Broker
+namespace Zbus.Client.Mq
 {
    public class ClientHint
    {
