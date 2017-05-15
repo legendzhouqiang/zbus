@@ -7,18 +7,18 @@ using Api.Example;
 using Zbus.Client.Mq;
 
 namespace Zbus.Client.Test.Rpc
-{ 
-   public class Rpc_Tests
-   {  
-      [SetUp]
-      public void Setup()
-      { 
-      }
+{
+    public class Rpc_Tests
+    {
+        [SetUp]
+        public void Setup()
+        {
+        }
 
-      [TearDown]
-      public void Teardown()
-      { 
-      } 
-         
-   }
+        [TearDown]
+        public void Teardown()
+        {
+        }
+
+    }
 }

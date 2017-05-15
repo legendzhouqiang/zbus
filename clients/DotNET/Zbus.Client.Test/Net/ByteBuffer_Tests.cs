@@ -1,57 +1,57 @@
 ﻿using NUnit.Framework;
 using Ploeh.AutoFixture;
 using FluentAssertions;
-using Zbus.Client.Net; 
+using Zbus.Client.Net;
 
 namespace Zbus.Client.Test.Net
-{ 
-   public class ByteBuffer_Tests
-   {
-      private IFixture fixture;
-      [SetUp]
-      public void TestSetup()
-      {
-         fixture = new Fixture();
-      }
+{
+    public class ByteBuffer_Tests
+    {
+        private IFixture fixture;
+        [SetUp]
+        public void TestSetup()
+        {
+            fixture = new Fixture();
+        }
 
 
-      [Test]
-      public void Test_IoBuffer_Size_From0([Range(0,0)]int size)
-      {
-         //Arrange   
-         ByteBuffer buf = new ByteBuffer(size);
+        [Test]
+        public void Test_IoBuffer_Size_From0([Range(0, 0)]int size)
+        {
+            //Arrange   
+            ByteBuffer buf = new ByteBuffer(size);
 
-         //Act 
+            //Act 
 
-         //Assert
-         buf.Capacity.Should().Be(size);
-      }
+            //Assert
+            buf.Capacity.Should().Be(size);
+        }
 
-      [Test]
-      public void Test_IoBuffer_Size([Random(0, 1024*1024*10, 10)]int size)
-      {
-         //Arrange   
-         ByteBuffer buf = new ByteBuffer(size);
+        [Test]
+        public void Test_IoBuffer_Size([Random(0, 1024 * 1024 * 10, 10)]int size)
+        {
+            //Arrange   
+            ByteBuffer buf = new ByteBuffer(size);
 
-         //Act 
+            //Act 
 
-         //Assert
-         buf.Capacity.Should().Be(size);
-      }
+            //Assert
+            buf.Capacity.Should().Be(size);
+        }
 
 
-      [Test]
-      public void Test_Duplicate([Random(0, 1024 * 1024 * 10, 10)]int size)
-      {
-         //Arrange   
-         ByteBuffer buf = new ByteBuffer(size);
-         buf.Put(new byte[size / 2]);
+        [Test]
+        public void Test_Duplicate([Random(0, 1024 * 1024 * 10, 10)]int size)
+        {
+            //Arrange   
+            ByteBuffer buf = new ByteBuffer(size);
+            buf.Put(new byte[size / 2]);
 
-         //Act 
-         ByteBuffer buf2 = buf.Duplicate();
+            //Act 
+            ByteBuffer buf2 = buf.Duplicate();
 
-         //Assert
-         buf2.ShouldBeEquivalentTo(buf);
-      } 
-   }
+            //Assert
+            buf2.ShouldBeEquivalentTo(buf);
+        }
+    }
 }

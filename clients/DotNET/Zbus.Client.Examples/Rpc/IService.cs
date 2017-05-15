@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Api.Example
 {
-   public interface IService
-   {
-      string Echo(string msg);
+    public interface IService
+    {
+        string Echo(string msg);
 
-      Task<string> GetStringAsync();
+        Task<string> GetStringAsync();
 
-      void Ignore();
+        void Ignore();
 
-      void NoReturn();
+        void NoReturn();
 
-      int Plus(int a, int b);
+        int Plus(int a, int b);
 
-      Task<int> PlusAsync(int a, int b);
+        Task<int> PlusAsync(int a, int b);
 
-      void ThrowException();
-   }
+        void ThrowException();
+    }
 }

@@ -10,12 +10,12 @@ namespace Zbus.Client.Rpc
     /// 
     /// </summary>
     public class Response
-   {
-      public dynamic Result { get; set; }
-      /// <summary>
-      /// With value indicates Error returned, otherwise No error, check Result, it is a json value(empty included)
-      /// </summary>
-      public string StackTrace { get; set; }
-      public Exception Error { get; set; }
-   }  
+    {
+        public dynamic Result { get; set; }
+        /// <summary>
+        /// With value indicates Error returned, otherwise No error, check Result, it is a json value(empty included)
+        /// </summary>
+        public string StackTrace { get; set; }
+        public Exception Error { get; set; }
+    }
 }

@@ -9,11 +9,11 @@
     /// 
     /// </summary>
     public class Request
-   {
-      public string Method { get; set; }
-      public object[] Params { get; set; }
+    {
+        public string Method { get; set; }
+        public object[] Params { get; set; }
 
-      public string ServiceId { get; set; } //optional
-      public string Module { get; set; }//optional 
-   } 
+        public string ServiceId { get; set; } //optional
+        public string Module { get; set; }//optional 
+    }
 }
