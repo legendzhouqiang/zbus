@@ -1,10 +1,18 @@
 #encoding=utf8  
 import uuid, time, json, random, inspect
-import logging.config, os 
-import threading 
-import socket, ssl 
-import queue as Queue 
-    
+import logging.config, os, sys, importlib
+import threading, socket, ssl 
+
+#support both python2 and python3
+if sys.version_info[0] < 3:
+    Queue = importlib.import_module('Queue')
+    def _bytes(buf, encoding='utf8'):
+        return buf.encode(encoding)
+else:
+    Queue = importlib.import_module('queue')
+    def _bytes(buf, encoding='utf8'):
+        return bytes(buf, encoding)
+        
 class Protocol:  
     VERSION_VALUE = "0.8.0"       #start from 0.8.0 
     #############Command Values############
@@ -130,7 +138,7 @@ def msg_encode(msg):
     if msg.status is not None:
         desc = Message.http_status.get('%s'%msg.status)
         if desc is None: desc = b"Unknown Status"
-        res += bytes("HTTP/1.1 %s %s\r\n"%(msg.status, desc), 'utf8')  
+        res += _bytes("HTTP/1.1 %s %s\r\n"%(msg.status, desc), 'utf8')  
     else:
         m = msg.method
         if not m: 
@@ -138,7 +146,7 @@ def msg_encode(msg):
         url = msg.url
         if not url:
             url = '/'
-        res += bytes("%s %s HTTP/1.1\r\n"%(m, url), 'utf8') 
+        res += _bytes("%s %s HTTP/1.1\r\n"%(m, url), 'utf8') 
         
     body_len = 0
     if msg.body:
@@ -154,19 +162,19 @@ def msg_encode(msg):
     for k in msg:
         if k.lower() in Message.reserved_keys: continue
         if msg[k] is None: continue
-        res += bytes('%s: %s\r\n'%(k,msg[k]), 'utf8')
+        res += _bytes('%s: %s\r\n'%(k,msg[k]), 'utf8')
     len_key = 'content-length'
     if len_key not in msg:
-        res += bytes('%s: %s\r\n'%(len_key, body_len), 'utf8')
+        res += _bytes('%s: %s\r\n'%(len_key, body_len), 'utf8')
     
-    res += bytes('\r\n', 'utf8')
+    res += _bytes('\r\n', 'utf8')
      
      
     if msg.body:
         if isinstance(msg.body, (bytes, bytearray)):
             res += msg.body
         else:
-            res += bytes(str(msg.body), msg.encoding or 'utf8')
+            res += _bytes(str(msg.body), msg.encoding or 'utf8')
     return res
 
 
@@ -227,7 +235,7 @@ def msg_decode(buf, start=0):
     content_type = msg['content-type'] 
     if content_type:
         if str(content_type).startswith('text') or str(content_type) == 'application/json': 
-            msg.body = msg.body.decode(msg.ecoding or 'utf8') 
+            msg.body = str(msg.body.decode(msg.ecoding or 'utf8'))
         if str(content_type) == 'application/json':
             try:
                 msg.body = json.loads(msg.body, encoding=msg.ecoding or 'utf8')   
@@ -1075,15 +1083,16 @@ class RpcProcessor:
         status = '200' 
         try:
             if isinstance(msg.body, (bytes, bytearray)): 
-                msg.body = msg.body.decode(msg.encoding or 'utf8')
+                msg.body = str(msg.body.decode(msg.encoding or 'utf8'))
             
-            if isinstance(msg.body,str):
+            if isinstance(msg.body, str):
                 msg.body = json.loads(msg.body) 
+            
             req = msg.body 
             
         except Exception as e: 
             status = '400'
-            error = Exception('json format error: %s'%str(e))
+            error = e
             
         if not error:
             try: 
@@ -1093,7 +1102,7 @@ class RpcProcessor:
                 
             except Exception as e:
                 status = '400'
-                error = Exception('parameter error: %s'%str(e))
+                error = e
         
         if not error:
             key = '%s:%s'%(module,method)
@@ -1111,6 +1120,7 @@ class RpcProcessor:
                 error = e  
         
         if error: 
+            self.log.warn(error)
             result = {'error': str(error), 'stackTrace': str(error)} 
         else:
             result = {'result': result, 'error': None, 'stackTrace': None}
