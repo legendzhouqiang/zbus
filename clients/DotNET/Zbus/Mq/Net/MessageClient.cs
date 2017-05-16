@@ -5,12 +5,8 @@ using Zbus.Net.Tcp;
 
 namespace Zbus.Mq.Net
 {
-     
-   public interface IMessageInvoker : IInvoker<Message, Message>, IDisposable
-   { 
-   }
-
-   public class MessageClient : Client<Message>, IMessageInvoker
+   
+   public class MessageClient : Client<Message>
    {
       public MessageClient(): base(new MessageCodec())
       { 

@@ -71,28 +71,18 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Mq\BrokerConfig.cs" />
-    <Compile Include="Mq\BrokerException.cs" />
-    <Compile Include="Mq\IBroker.cs" />
-    <Compile Include="Mq\SingleBroker.cs" />
-    <Compile Include="Mq\ZbusBroker.cs" />
-    <Compile Include="Mq\Consumer.cs" />
     <Compile Include="Mq\Protocol.cs" />
-    <Compile Include="Mq\MqBase.cs" />
-    <Compile Include="Mq\Producer.cs" />
     <Compile Include="Mq\Message.cs" />
     <Compile Include="Mq\Net\MessageClient.cs" />
     <Compile Include="Mq\Net\MessageCodec.cs" />
     <Compile Include="Net\IClient.cs" />
     <Compile Include="Net\Pool.cs" />
     <Compile Include="Net\ICodec.cs" />
-    <Compile Include="Net\IInvoker.cs" />
     <Compile Include="Net\ByteBuffer.cs" />
     <Compile Include="Net\ISession.cs" />
     <Compile Include="Net\Tcp\Client.cs" />
     <Compile Include="Net\Tcp\Session.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rpc\MqRpc.cs" />
     <Compile Include="Rpc\Request.cs" />
     <Compile Include="Rpc\Response.cs" />
     <Compile Include="Rpc\Remote.cs" />
