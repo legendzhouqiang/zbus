@@ -75,13 +75,10 @@
     <Compile Include="Mq\Message.cs" />
     <Compile Include="Mq\Net\MessageClient.cs" />
     <Compile Include="Mq\Net\MessageCodec.cs" />
-    <Compile Include="Net\IClient.cs" />
     <Compile Include="Net\Pool.cs" />
     <Compile Include="Net\ICodec.cs" />
     <Compile Include="Net\ByteBuffer.cs" />
-    <Compile Include="Net\ISession.cs" />
-    <Compile Include="Net\Tcp\Client.cs" />
-    <Compile Include="Net\Tcp\Session.cs" />
+    <Compile Include="Net\Client.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc\Request.cs" />
     <Compile Include="Rpc\Response.cs" />

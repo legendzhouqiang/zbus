@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Zbus.Examples.ConsumerExample</StartupObject>
+    <StartupObject>Zbus.Examples.MessageClientExample</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mq\MessageClientExample.cs" />
     <Compile Include="Mq\ProducerExample.cs" />
     <Compile Include="Mq\ConsumerExample.cs" />
     <Compile Include="Program.cs" />
