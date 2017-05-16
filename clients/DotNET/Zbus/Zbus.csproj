@@ -74,7 +74,6 @@
     <Compile Include="Mq\Protocol.cs" />
     <Compile Include="Mq\Message.cs" />
     <Compile Include="Mq\Net\MessageClient.cs" />
-    <Compile Include="Mq\Net\MessageCodec.cs" />
     <Compile Include="Net\Pool.cs" />
     <Compile Include="Net\ICodec.cs" />
     <Compile Include="Net\ByteBuffer.cs" />

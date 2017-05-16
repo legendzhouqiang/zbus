@@ -11,9 +11,11 @@ namespace Zbus.Examples
             MessageClient client = new MessageClient("localhost:15555");
             client.Connect();
 
+            Message msg = new Message
+            {
+                Url = "/",
+            };
 
-            Message msg = new Message();
-            msg.Url = "/";
             Message res = client.Invoke(msg);
             Console.WriteLine(res);
 

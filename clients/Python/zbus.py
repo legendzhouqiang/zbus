@@ -192,7 +192,7 @@ def decode_headers(buf):
     msg = Message()
     buf = buf.decode('utf8')
     lines = buf.splitlines() 
-    meta = lines[0]
+    meta = lines[0].upper()
     blocks = meta.split()
     if meta.startswith('HTTP'):
         msg.status = blocks[1] 

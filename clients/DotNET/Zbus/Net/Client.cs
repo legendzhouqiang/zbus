@@ -12,7 +12,7 @@ namespace Zbus.Net
     /// <summary>
     /// Identity interface to track message match for asynchroneous invocation.
     /// </summary>
-    public interface IId
+    public interface Id
     {
         /// <summary>
         /// Identity string
@@ -20,7 +20,7 @@ namespace Zbus.Net
         string Id { get; set; }
     }
 
-    public class Client<REQ, RES> : IDisposable  where REQ : IId where RES : IId
+    public class Client<REQ, RES> : IDisposable  where REQ : Id where RES : Id
     { 
         private readonly TcpClient tcpClient;
         private ICodec codecRead;
@@ -32,14 +32,15 @@ namespace Zbus.Net
         public Client(string serverAddress, ICodec codecRead, ICodec codecWrite)
         {
             this.serverAddress = serverAddress;
-            tcpClient = new TcpClient();
-            tcpClient.NoDelay = true;
+            this.tcpClient = new TcpClient();
+            this.tcpClient.NoDelay = true;
             this.codecRead = codecRead;
             this.codecWrite = codecWrite;
         }
 
 
-        public Client(string serverAddress, ICodec codec) : this(serverAddress, codec, codec)
+        public Client(string serverAddress, ICodec codec) 
+            : this(serverAddress, codec, codec)
         {
         }
 
@@ -58,35 +59,7 @@ namespace Zbus.Net
                 port = int.Parse(bb[1]);
             }
             this.tcpClient.Connect(host, port);
-        }
-
-        public bool Active
-        {
-            get
-            {
-                return this.tcpClient != null && this.tcpClient.Connected;
-            }
-        }
-        public string LocalAddress
-        {
-            get
-            {
-                return ((IPEndPoint)tcpClient.Client.LocalEndPoint).Address.ToString();
-            }
-        }
-
-        public string RemoteAddress
-        {
-            get
-            {
-                return ((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address.ToString();
-            }
-        }
-
-        private NetworkStream Stream
-        {
-            get { return this.tcpClient.GetStream(); }
-        }
+        } 
 
         public RES Invoke(REQ req, int timeout = 3000)
         {
@@ -153,10 +126,22 @@ namespace Zbus.Net
                 this.tcpClient.Close();
             }
         }
+
+        public bool Connected
+        {
+            get
+            {
+                return this.tcpClient != null && this.tcpClient.Connected;
+            }
+        }
+        private NetworkStream Stream
+        {
+            get { return this.tcpClient.GetStream(); }
+        }
     }
 
 
-    public class Client<T> : Client<T, T> where T : IId
+    public class Client<T> : Client<T, T> where T : Id
     {
        public Client(string serverAddress, ICodec codec) : base(serverAddress, codec) { }
     }

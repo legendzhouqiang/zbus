@@ -6,27 +6,12 @@ using Zbus.Net;
 
 namespace Zbus.Mq
 {
-    public class Message : IId
+    public class Message : Id
     {
-        public static readonly string REMOTE_ADDR = "remote-addr";
-        public static readonly string HEARTBEAT = "heartbeat";
+        private string url = "/";
+        private string status;
+        private string method = "GET";
 
-        public static readonly string CMD = "cmd";
-        public static readonly string BROKER = "broker";
-        public static readonly string TOPIC = "topic";
-        public static readonly string SENDER = "sender";
-        public static readonly string RECVER = "recver";
-        public static readonly string MQ = "mq";
-        public static readonly string ID = "id";
-        public static readonly string APPID = "appid";
-        public static readonly string TOKEN = "token";
-        public static readonly string ACK = "ack";
-        public static readonly string ENCODING = "encoding"; //body encoding
-        public static readonly string ORIGIN_URL = "origin_url";
-        public static readonly string ORIGIN_STATUS = "reply_code";
-        public static readonly string ORIGIN_ID = "rawid";
-
-        private Meta meta = new Meta("");
         private IDictionary<string, string> head = new Dictionary<string, string>();
         private byte[] body;
 
@@ -96,114 +81,93 @@ namespace Zbus.Mq
 
         #region AUX_GET_SET
 
-        public String Mq
+        public String Topic
         {
-            get { return GetHead(MQ); }
-            set { SetHead(MQ, value); }
+            get { return GetHead(Protocol.TOPIC); }
+            set { SetHead(Protocol.TOPIC, value); }
         }
 
         public String Cmd
         {
-            get { return GetHead(CMD); }
-            set { SetHead(CMD, value); }
+            get { return GetHead(Protocol.COMMAND); }
+            set { SetHead(Protocol.COMMAND, value); }
         }
 
         public String Id
         {
-            get { return GetHead(ID); }
-            set { SetHead(ID, value); }
-        }
-
-        public String AppId
-        {
-            get { return GetHead(APPID); }
-            set { SetHead(APPID, value); }
-        }
+            get { return GetHead(Protocol.ID); }
+            set { SetHead(Protocol.ID, value); }
+        } 
 
         public String Token
         {
-            get { return GetHead(TOKEN); }
-            set { SetHead(TOKEN, value); }
+            get { return GetHead(Protocol.TOKEN); }
+            set { SetHead(Protocol.TOKEN, value); }
         }
 
         public String Sender
         {
-            get { return GetHead(SENDER); }
-            set { SetHead(SENDER, value); }
+            get { return GetHead(Protocol.SENDER); }
+            set { SetHead(Protocol.SENDER, value); }
         }
 
         public String Recver
         {
-            get { return GetHead(RECVER); }
-            set { SetHead(RECVER, value); }
-        }
-        public String Topic
-        {
-            get { return GetHead(TOPIC); }
-            set { SetHead(TOPIC, value); }
-        }
-
+            get { return GetHead(Protocol.RECVER); }
+            set { SetHead(Protocol.RECVER, value); }
+        } 
         public String Encoding
         {
-            get { return GetHead(ENCODING); }
-            set { SetHead(ENCODING, value); }
+            get { return GetHead(Protocol.ENCODING); }
+            set { SetHead(Protocol.ENCODING, value); }
         }
 
         public String OriginUrl
         {
-            get { return GetHead(ORIGIN_URL); }
-            set { SetHead(ORIGIN_URL, value); }
+            get { return GetHead(Protocol.ORIGIN_URL); }
+            set { SetHead(Protocol.ORIGIN_URL, value); }
         }
 
         public String OriginStatus
         {
-            get { return GetHead(ORIGIN_STATUS); }
-            set { SetHead(ORIGIN_STATUS, value); }
+            get { return GetHead(Protocol.ORIGIN_STATUS); }
+            set { SetHead(Protocol.ORIGIN_STATUS, value); }
         }
 
         public String OriginId
         {
-            get { return GetHead(ORIGIN_ID); }
-            set { SetHead(ORIGIN_ID, value); }
+            get { return GetHead(Protocol.ORIGIN_ID); }
+            set { SetHead(Protocol.ORIGIN_ID, value); }
         }
 
         public bool Ack
         {
             get
             {
-                string ack = GetHead(ACK);
+                string ack = GetHead(Protocol.ACK);
                 return (ack == null) || "1".Equals(ack); //default to true 
             }
-            set { SetHead(ACK, value ? "1" : "0"); }
-        }
+            set { SetHead(Protocol.ACK, value ? "1" : "0"); }
+        } 
 
         public string Url
         {
-            get { return this.meta.Url; }
-            set
-            {
-                this.meta.Url = value;
-                this.meta.Status = null;
-            }
-        }
-
-        public string RequestPath
-        {
-            get { return this.meta.RequestPath; }
-            set { this.meta.RequestPath = value; }
-        }
-
-        public IDictionary<string, string> RequestParams
-        {
-            get { return this.meta.RequestParams; }
-            set { this.meta.RequestParams = value; }
+            get { return this.url; }
+            set { this.url = value; }
         }
 
         public string Status
         {
-            get { return this.meta.Status; }
-            set { this.meta.Status = value; }
+            get { return this.status; }
+            set { this.status = value; }
         }
+
+        public string Method
+        {
+            get { return this.method; }
+            set { this.method = value; }
+        }
+
 
         public byte[] Body
         {
@@ -228,7 +192,29 @@ namespace Zbus.Mq
 
         public void Encode(ByteBuffer buf)
         {
-            buf.Put("{0}\r\n", this.meta);
+            if(this.status != null)
+            {
+                string desc = "Unknow status";
+                if (HttpStatusTable.ContainsKey(this.status))
+                {
+                    desc = HttpStatusTable[this.status];
+                }
+                buf.Put("HTTP/1.1 {0} {1}\r\n", this.status, desc);
+            }
+            else
+            {
+                string method = this.method;
+                if(method == null)
+                {
+                    method = "GET";
+                }
+                string url = this.url;
+                if(url == null)
+                {
+                    url = "/";
+                }
+                buf.Put("{0} {1} HTTP/1.1\r\n", method, url);
+            } 
             foreach (KeyValuePair<string, string> e in this.head)
             {
                 buf.Put("{0}: {1}\r\n", e.Key, e.Value);
@@ -268,7 +254,22 @@ namespace Zbus.Mq
         {
             Message msg = new Message();
             string[] lines = Regex.Split(header, "\r\n");
-            msg.meta = new Meta(lines[0]);
+            string meta = lines[0].Trim();
+            string[] blocks = meta.Split(' ');
+            string test = blocks[0].ToUpper();
+            if (test.StartsWith("HTTP"))
+            {
+                msg.status = blocks[1]; 
+            }
+            else
+            {
+                msg.method = blocks[0];
+                if (blocks.Length > 1)
+                {
+                    msg.url = blocks[1];
+                }
+            } 
+
             for (int i = 1; i < lines.Length; i++)
             {
                 string line = lines[i];
@@ -326,200 +327,25 @@ namespace Zbus.Mq
             if (body == null) return null;
             return encoding.GetString(body);
         }
-    }
 
-    class Meta
-    {
-        static readonly HashSet<string> httpMethod = new HashSet<string>();
-        static IDictionary<string, string> httpStatus = new Dictionary<string, string>();
-        static Meta()
+        private static IDictionary<string, string> HttpStatusTable = new Dictionary<string, string>();
+        static Message()
         {
-            httpMethod.Add("GET");
-            httpMethod.Add("POST");
-            httpMethod.Add("HEAD");
-            httpMethod.Add("PUT");
-            httpMethod.Add("DELETE");
-            httpMethod.Add("OPTIONS");
-
-            httpStatus.Add("200", "OK");
-            httpStatus.Add("201", "Created");
-            httpStatus.Add("202", "Accepted");
-            httpStatus.Add("204", "No Content");
-            httpStatus.Add("206", "Partial Content");
-            httpStatus.Add("301", "Moved Permanently");
-            httpStatus.Add("304", "Not Modified");
-            httpStatus.Add("400", "Bad Request");
-            httpStatus.Add("401", "Unauthorized");
-            httpStatus.Add("403", "Forbidden");
-            httpStatus.Add("404", "Not Found");
-            httpStatus.Add("405", "Method Not Allowed");
-            httpStatus.Add("416", "Requested Range Not Satisfiable");
-            httpStatus.Add("500", "Internal Server Error");
+            HttpStatusTable.Add("200", "OK");
+            HttpStatusTable.Add("201", "Created");
+            HttpStatusTable.Add("202", "Accepted");
+            HttpStatusTable.Add("204", "No Content");
+            HttpStatusTable.Add("206", "Partial Content");
+            HttpStatusTable.Add("301", "Moved Permanently");
+            HttpStatusTable.Add("304", "Not Modified");
+            HttpStatusTable.Add("400", "Bad Request");
+            HttpStatusTable.Add("401", "Unauthorized");
+            HttpStatusTable.Add("403", "Forbidden");
+            HttpStatusTable.Add("404", "Not Found");
+            HttpStatusTable.Add("405", "Method Not Allowed");
+            HttpStatusTable.Add("416", "Requested Range Not Satisfiable");
+            HttpStatusTable.Add("500", "Internal Server Error");
         }
 
-        public string Method { get; set; }
-        public string Status { get; set; }
-        public string Url
-        {
-            get
-            {
-                return _url;
-            }
-            set
-            {
-                _url = value;
-                Status = null;
-            }
-        }
-        public string RequestPath
-        {
-            get
-            {
-                return _path;
-            }
-            set
-            {
-                this._path = value;
-                CalcUrl();
-            }
-        }
-
-        public IDictionary<string, string> RequestParams
-        {
-            get
-            {
-                return _requestParams;
-            }
-            set
-            {
-                this._requestParams = value;
-                CalcUrl();
-            }
-        }
-
-        private string _url;
-        private string _path;
-        private IDictionary<string, string> _requestParams;
-        public string GetParam(string key)
-        {
-            return GetParam(key, null);
-        }
-
-        public string GetParam(string key, string defaultValue)
-        {
-            if (this._requestParams == null)
-                return defaultValue;
-            string value;
-            this._requestParams.TryGetValue(key, out value);
-            if (value == null)
-                value = defaultValue;
-            return value;
-        }
-
-        public void SetParam(string key, string val)
-        {
-            if (this._requestParams == null)
-            {
-                this._requestParams = new Dictionary<string, string>();
-            }
-            this._requestParams[key] = val;
-            CalcUrl();
-        }
-
-
-
-        public Meta(string meta)
-        {
-            this._url = "/";
-            this.Method = "GET";
-            if (meta == null || meta.Trim().Equals("")) return;
-            string[] blocks = meta.Split(' ');
-            string method = blocks[0];
-            if (!httpMethod.Contains(method))
-            {
-                this.Status = blocks[1];
-                return;
-            }
-            this.Method = method;
-            this.DecodeUrl(blocks[1]);
-        }
-
-        public override string ToString()
-        {
-            if (this.Status != null)
-            {
-                string desc = null;
-                httpStatus.TryGetValue(this.Status, out desc);
-                if (desc == null)
-                {
-                    desc = "Unknown Status";
-                }
-                return string.Format("HTTP/1.1 {0} {1}", this.Status, desc);
-            }
-            else
-            {
-                return string.Format("{0} {1} HTTP/1.1", this.Method, this.Url);
-            }
-        }
-
-        private void CalcUrl()
-        {
-            StringBuilder sb = new StringBuilder();
-            if (_path != null)
-            {
-                sb.Append(_path);
-            }
-            if (_requestParams != null)
-            {
-                sb.Append("?");
-                var iter = _requestParams.GetEnumerator();
-                bool first = true;
-                while (iter.MoveNext())
-                {
-                    if (!first)
-                    {
-                        sb.Append("&&");
-                    }
-                    else
-                    {
-                        first = false;
-                    }
-
-                    sb.Append(iter.Current.Key + "=" + iter.Current.Value);
-                }
-            }
-            this.Url = sb.ToString();
-
-        }
-
-        public void DecodeUrl(string url)
-        {
-            this._url = url;
-
-            int idx = url.IndexOf('?');
-            if (idx < 0)
-            {
-                this._path = url;
-            }
-            else
-            {
-                this._path = url.Substring(0, idx);
-            }
-            if (this._path[0] == '/')
-            {
-                this._path = this._path.Substring(1);
-            }
-
-            if (idx < 0) return;
-            string args = url.Substring(idx + 1);
-            this._requestParams = new Dictionary<string, string>();
-            string[] blocks = args.Split('&');
-            foreach (string kv in blocks)
-            {
-                string[] kvb = kv.Split("=".ToCharArray(), 2);
-                this._requestParams[kvb[0].Trim()] = kvb[1].Trim();
-            }
-        }
-
-    }
+    } 
 }
