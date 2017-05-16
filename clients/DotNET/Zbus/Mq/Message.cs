@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using Zbus.Net; 
+using Zbus.Mq.Net;
 
 namespace Zbus.Mq
 {
@@ -85,6 +85,12 @@ namespace Zbus.Mq
         {
             get { return GetHead(Protocol.TOPIC); }
             set { SetHead(Protocol.TOPIC, value); }
+        }
+
+        public String ConsumeGroup
+        {
+            get { return GetHead(Protocol.CONSUME_GROUP); }
+            set { SetHead(Protocol.CONSUME_GROUP, value); }
         }
 
         public String Cmd

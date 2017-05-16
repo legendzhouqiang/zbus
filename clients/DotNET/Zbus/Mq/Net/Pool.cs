@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Zbus.Net
+namespace Zbus.Mq.Net
 {
 
     public interface IPoolable : IDisposable

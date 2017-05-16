@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
 using Ploeh.AutoFixture;
-using FluentAssertions;
-using Zbus.Net;
+using FluentAssertions; 
+using Zbus.Mq.Net;
+
 
 namespace Zbus.Test.Net
 {
