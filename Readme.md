@@ -10,7 +10,7 @@ zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, ligh
 - Simple HTTP-alike control protocol(Browser direct control), easy to extend clients.
 - TCP/HTTP/WebSocket, all in one single port, including monitor, capable of DMZ deployment.
 - Multiple platforms support, JAVA/.NET/JavaScript/Python/C_C++/GO/PHP... 
-- Extremely light-weighted(<400K)
+- Extremely light-weighted(<400K + a very few dependencies like netty.jar)
 
  
 ##2. Architecture
