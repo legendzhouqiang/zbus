@@ -1,220 +1,197 @@
-# Gist of zbus project: ZBUS = MQ + RPC 
+#ZBUS = MQ + RPC  
 
- Do **NOT** use **master** in production, still under heavy refinement.
+zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, lightweighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
 
-## Project QQ Group: 467741880  
-## [Released Version-7.2.1](http://git.oschina.net/rushmore/zbus/tree/7.2.1/ "") 
+##1. Features
 
-## Monitoring
+- Fast Message Queue in persisted mode, capable of Unicast, Multicast and Broadcast messaging modes.
+- Language agnostic RPC support out of box.
+- High Availability inside, easy to add more servers.
+- Simple HTTP-alike control protocol, extremely easy to extend clients.
+- TCP/HTTP/WebSocket, all in one single port, including monitor.
+- Multiple platforms support, Java/Javascript/C#/Python/C_C++/GO/PHP... 
+
+ 
+##2. Architecture
+
+
+![Archit](https://git.oschina.net/uploads/images/2017/0517/183402_0efce626_7458.png "Archit")
+
+Producer = Broker = Consumer
+
+
+![MQ](https://git.oschina.net/uploads/images/2017/0517/183644_a160de3b_7458.png "MQ")
+
+
+ 
+###2.1 Topic
+
+ 
+###2.2 ConsumeGroup
+
+ConsumeGroup plays an important role of MQ in zbus. It is mainly designed to support different messaging models in applications.
+
+Regarding to a topic, no matter how many consume-groups exists, there is only one copy of messages queue storing messages received from Producer(s), Consumer(s) can read the message out from topic via a single consume-group or multiple ones, Consumers and consume-groups combination helps to build different messaging models, typically including Unicast, Broadcast, and Multicast.
+
+- Unicast -- Consumers share only one consume-group, message in topic is designed to be consumed by only one consumer
+- Broadcast -- Consumers use privately owned consume-group, message in topic is then consumed by every consumer
+- Multicast -- Multiple groups of Consumers, in each group, consumers share one same consume-group.
+
+ 
+###2.3 MqClient
+
+MqClient is a TCP based client to control topic and consume-group in MqServer:
+
+- produce message to MqServer as Producer role
+- consume message from MqServer as Consumer role
+
+- declare create/update topic and consume-group, capable of change consuming policy
+- query topic and consume-group
+- remove topic and consume-group 
+- empty topic and consume-group
+
+ 
+###2.4 MqServer
+
+
+ 
+###2.5 Broker
+
+Producer-Broker-Consumer PBC model is the high level view of a Messaging Queue system.
+Broker refers to a MQ server, however, from the client point of view, Broker in client is an abstraction 
+of connection(pooling) to MqServer(s).
+
+Broker manages a set of MqClientPools each of which connects to a MqServer in group, and all ,
+creating the RouteTable of topics. 
+
+Broker also detects the connectivity of remote MqServers, removes the dead ones.
+
+Broker can work in dynamic or static way
+- dynamic, configure with tracker address(or list of trackers)
+- static, just manual call addServer.
+
+Broker defers the MqServer selection algorithm to Producer and Consumer, both of which could be configured
+with special selection algorithm.
+
+ 
+**BrokerRouteTable**
+
+	serverTable: serverAddressKey => ServerInfo
+	topicTable: topicName => [TopicInfo List]
+	votesTable: serverAddressKey => [Voted TrackerServer List]
+
+	+ updateVotes(trackerInfo)
+		trackerInfo = {
+			serverAddress: {address: xx, sslEnabled: xxx}
+			trackedServerList: [{address: xx1, sslEnabled: xxx},{address: xx2, sslEnabled: xxx}]
+		}
+		
+		1. for each trackedServer in trackedServerlist:
+			  add(no changes if exists) vote with trackerAddress
+		2. for each server in votesTable: //remove server not in this tracker's tracking list
+			  votedTrackerSet = votesTable[server] 
+			  if server not in trackerInfo.trackedServerList:
+					votedTrackerSet.remove(trackerAddress)
+		3. rebuild topicTable
+	
+		+ addServer(serverInfo)
+			rebuild topicTable after added of serverInfo
+		+ removeServer(serverAddress)
+			rebuild topicTable after removal of serverInfo
+ 
+
+
+##3. Protocol
+
+*Common headers*
+
+	cmd: <cmd>
+	topic: <topic> 
+	token: [token]
+
+**prodcue**
+	
+	cmd: produce
+	tag: [tag]    //tag of message, used for consume-group filter
+	body: [body]
+
+**consume**
+	
+	cmd: consume
+	consume_group: [group_name]
+	consume_window: [window_size] //default to null, means 1
+
+**declare**
+
+	cmd: declare
+	consume_group: [consume-group name] //short name=> group
+	
+	topic_mask:    [topic mask value]    
+	group_mask:    [consume-group mask value]
+	group_filter:  [message filter for group] //filter on message's tag
+	
+	//locate the group's start point
+	group_start_copy:   [consume-group name] //copy from
+	group_start_time:   [consume-group start time]
+	group_start_offset: [consume-group start offset]
+	group_start_msgid:  [consume-group start offset's msgid] //validate for offset value
+
+
+**query**
+
+	cmd: query
+	topic: [topic] //if not set, result is the server info
+	consume_group: [consume-group]
+
+**remove**
+	
+	cmd: remove
+	consume_group: [consume-group] //if not set, remove whole topic including groups belonging to the topic
+
+**empty**
+	
+	cmd: empty
+	consume_group: [consume-group] //if not set, empty whole topic including groups belonging to the topic
+
+
+To be browser friendly, URL request and parameters are parsed if header key-value not populated, however,
+header key-value always take precedence over URL parse result.
+
+	URL Pattern: /<cmd>/[topic]/[group]/[?k=v list]
+	
+	/produce/topic
+	/consume/topic/[group]
+	/declare/topic/[group]
+	/remove/topic/[group] 
+	/empty/topic/[group]
+	
+	/query/[topic]/[group]  * topic can be optional in order to query whole server
+	
+	/track_sub
+	/track_pub
+	
+	/rpc/topic/method/arg1/arg2.../[?module=xxx&&appid=xxx&&token=xxx]  *exception: rpc not follow 
+
+
+Exampels:
+
+	http://localhost:15555/consume/MyTopic  consume one message from topic=MyTopic, consume-group default to same name as topic name
+	http://localhost:15555/consume/MyTopic/group1   consume one message from group1 in MyTopic
+	http://localhost:15555/declare/MyTopic   declare a topic named MyTopic, consume-group with same MyTopic should be created as well.
+	http://localhost:15555/declare/MyTopic/group1   declare a topic named MyTopic, and consume-group named group1.
+	http://localhost:15555/declare/MyTopic/group1?group_filter=abc&&group_mask=16   same as above, but with consume-group filter set to abc, consume-group mask set to 16
+	http://localhost:15555/query/MyTopic  query topic info named MyTopic
+	http://localhost:15555/query/MyTopic/group1  query consume-group info named group1 in MyTopic
+	http://localhost:15555/remove/MyTopic  remove topic named MyTopic, which will remove all the consume-groups included
+	http://localhost:15555/remove/MyTopic/group1  remove consume-group named group1 in MyTopic
+	
+	http://localhost:15555/rpc/myrpc/plus/1/2  invoke remote method plus with parameter 1 and 2, remote service registered as myrpc topic
+
+
+
+  
+
+##4. Monitoring
 
 ![zbus](http://git.oschina.net/uploads/images/2017/0206/110227_60952f04_7458.png "zbus")	 
-
-##API
-	MqConfig
-		+ broker
-		+ topic
-		+ appid
-		+ token
-		+ consumeGroup
-		+ consumeWindow
-		+ consumeTimeout
-		+ filterTag
-	
-	MqAdmin
-		+ declareTopic()
-		+ queryTopic()
-		+ removeTopic()
-	
-	Producer
-		+ publish(msg)
-	
-	Consumer
-		+ take()
-		+ route(msg)
-	
-	ConsumerServiceConfig : MqConfig
-		+ messageHandler
-		+ messagePrefetchCount
-		+ parallelFactor
-	
-	ConsumerService
-		+ onMessage(msgHandler)
-		+ start()
-		+ pause()
-		+ close()
- 	
-	Broker
-		+ selectForProducer(topic: String)
-		+ selectForConsumer(topic: String)
-		+ release(clients: MessageClient)
-	
-	ZbusBroker: Broker
-		- SingleBroker: Broker
-		- MultiBroker: Broker
-		- TrackBroker: Broker
-	JvmBroker: Broker
-
-## Package
-	
-	io.zbus.mq.{Broker},{Producer},{Consumer},{Message}
-	io.zbus.mq.broker.*
-	io.zbus.mq.disk.*
-	io.zbus.mq.server.*
-	io.zbus.mq.tracker.*
-	
-	io.zbus.rpc.{Request},{Response},{RpcInvoker},{RpcProccessor},{RpcFactory}
-	
-	io.zbus.net -- net abstraction
-	io.zbus.kit -- useful tools including pool
-
-##MQ Model
-	Topic   |||||||||||||||||||||| <-- Produce Write
-	                   ^-------ConsumeGroup1              (reader group1)
-	                       ^-------ConsumeGroup2          (reader group2)
-	               ^-------ConsumeGroup3                  (reader group3)
-
-Unified model for unicast, multicast, broadcast messaging style
-		
-## Protocol
-
-* HTTP format compatible, but TCP based. 
-* Control via HTTP header extension.
-
-**Gist of HTTP Format**
-
-	Request/Responose\r\n -- First line to distinguish between request and response message type, e.g. GET /(request), 200 OK(response)
-	(Key: Value\r\n)*     -- lines for key-value pairs
-	\r\n                  -- Separate Header and Body
-	Body                  -- Body binary, length controlled by 'Content-Length: {number}' key-value in header
-
-
-MqServer uses a HTTP header extension key called 'cmd' to distinguish job requested from clients.
-
-**Commands Support**
-
-	cmd=produce -- produce message(s) to MqServer
-	cmd=consume -- consume message(s) from MqServer
-	cmd=declare_topic -- create or update a topic with consume group details.
-	cmd=query_topic -- query topic details
-	cmd=remove_topic -- remove topic
-	cmd=ping -- ping test, return server's time to response
-	cmd=route -- route message back to a producer, designed for RPC
-
-**Commond Headers**
-
-	[R]cmd={string}
-	[R]id={string, max:39}
-	[R]topic={string}
-	[O]appid={string}
-	[O]token={string}
-
-**cmd = produce**
-
-	[O]tag={string, max:127}
-	[O]ack={boolean}
-	
-	[O]body={binary}
-
-**cmd = consume**
-
-	[O]consume_group={string}
-	[O]consume_window={number}
-
-**cmd = declare_mq**
-
-	[O]flag={integer} -- flag set to MQ
-	
-	[O]consume_group={string} -- default to MQ name, consume_group to create or update
-	[O]consume_base_group={string} -- default to null, consume_group copy reader status from base_group
-	[O]consume_start_offset={long} -- default to null, start_offset gets high priority over start_time
-	[O]consume_start_msgid={string, max:39} -- default to null, extra field to locate start_offset
-	[O]consume_start_time={long} -- default to null, located to first message with timestamp>start_time
-	[O]consume_filter_tag={string, max:127} -- default to null, dot to define layers, such as abc.xyz, abc.*, abc.#, abc.#.xyz
-	
-	Priority: offset > time > base_group
-
-**cmd = query_mq**
-
-	[O]consume_group={string}
-
-**cmd = remove_mq**
-
-	[O]consume_group={string}
-
-**cmd = route**
-
-	[R]recver={string} -- route back message to a specified producer
-
-**HTTP URL Access**
-
-Url parse rule: 1) requestPath trimmed of / => cmd, 2)key-value extracted to override header if missing.
-
-	/produce/?topic=MyTopic
-	/consume/?topic=MyTopic&&consume_group=xxxxx
-	/declare_mq/?topic=MyTopic
-	/query_mq/?topic=MyTopic
-	/remove_mq/?topic=MyTopic
-	/route/?topic=MyTopic&&recver=xxxxx
-	
-	/ping
  
-##RPC Protocol
-
-	Request{
-		+ module: String
-		+ method: String
-		+ args: String[]
-	}
-
-	Response{
-		+ result: Object
-		+ stackTrace: String
-		+ error: Throwable
-	}
- 
- 
-##Monitor
-
-	Topic:
-	- Topic Name, Flag, ConsumeGroups, MQ Disk, LastActivity, InnerReplyQueue
-	- Create, Pause, Resume, Remove Topic
-	
-	ConsumeGroup:
-	- Remaining MessageCount, MessageSize
-	- Pull Session List
-	- Create Pause Resume, Remove ConsumeGroup
-	
-	Trace Message:
-	- Latest Messge Passing Through
-	- Search Message By Offset + MsgId
-	- Search Message By TimeRange + MsgId
-	
-	Security:
-	- Create/Update/Remove Appid + Token
-	- Assign/Remove Appid + Token => MQ
-	
-	Extra:
-	- Grey out node, Weight on node
- 
-##Tracker
-
-	Topic Details: broker, topic, flag, consumeGroups, DiskInfo
-	ConsumeGroup: name, activeConsumerCount, remainingMsgCount
-	
-	topic => broker list
-	broker => topic list
-	
-	/pub
-	/sub
-
-
-##Security
-AppId + Token
-
-
-##Service Bus
-- Java/.NET/C_C++/JS/Python api support
-- Micro-Service oriented
-- zbus-msmq
-- zbus-kcxp
-- zbus-webservice
