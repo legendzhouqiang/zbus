@@ -8,7 +8,7 @@ zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, ligh
 - Language agnostic RPC support out of box.
 - High Availability inside, easy to add more servers.
 - Simple HTTP-alike control protocol, extremely easy to extend clients.
-- TCP/HTTP/WebSocket, all in one single port, including monitor.
+- TCP/HTTP/WebSocket, all in one single port, including monitor, capable of DMZ deployment.
 - Multiple platforms support, Java/Javascript/C#/Python/C_C++/GO/PHP... 
 
  
