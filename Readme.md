@@ -1,15 +1,16 @@
 #ZBUS = MQ + RPC  
 
-zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, lightweighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
+zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, light-weighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
 
 ##1. Features
 
 - Fast Message Queue in persisted mode, capable of Unicast, Multicast and Broadcast messaging modes.
 - Language agnostic RPC support out of box.
 - High Availability inside, easy to add more servers.
-- Simple HTTP-alike control protocol(Browser direct control), extremely easy to extend clients.
+- Simple HTTP-alike control protocol(Browser direct control), easy to extend clients.
 - TCP/HTTP/WebSocket, all in one single port, including monitor, capable of DMZ deployment.
-- Multiple platforms support, Java/Javascript/C#/Python/C_C++/GO/PHP... 
+- Multiple platforms support, JAVA/.NET/JavaScript/Python/C_C++/GO/PHP... 
+- Extremely light-weighted(<400K)
 
  
 ##2. Architecture
