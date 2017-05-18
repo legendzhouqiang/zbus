@@ -6,7 +6,9 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using Zbus.Mq; 
+using System.Threading;
+using System.Threading.Tasks;
+using Zbus.Mq;
 
 namespace Zbus.Mq.Net
 {
@@ -56,8 +58,8 @@ namespace Zbus.Mq.Net
             : this(serverAddress, codec, codec, certFile)
         {
         }
-
-        public void Connect()
+        
+        public async Task ConnectAsync()
         {
             string[] bb = this.serverAddress.Address.Trim().Split(':');
             string host;
@@ -71,7 +73,7 @@ namespace Zbus.Mq.Net
                 host = bb[0];
                 port = int.Parse(bb[1]);
             }
-            this.tcpClient.Connect(host, port);
+            await this.tcpClient.ConnectAsync(host, port);
             this.stream = this.tcpClient.GetStream();
 
             if (this.serverAddress.SslEnabled)
@@ -97,11 +99,15 @@ namespace Zbus.Mq.Net
             }
             Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
             return false;
-        }
+        } 
 
-        public RES Invoke(REQ req, int timeout = 3000)
+        public async Task<RES> InvokeAsync(REQ req)
         {
-            Send(req, timeout);
+            return await InvokeAsync(req, CancellationToken.None);
+        }
+        public async Task<RES> InvokeAsync(REQ req, CancellationToken token)
+        {
+            await SendAsync(req, token);
             string reqId = req.Id;
             RES res;
             while (true)
@@ -113,29 +119,34 @@ namespace Zbus.Mq.Net
                     return res;
                 }
 
-                res = Recv(timeout);
+                res = await RecvAsync(token);
                 if (res.Id == reqId) return res;
 
                 resultTable[res.Id] = res;
             }
         }
 
-        public void Send(REQ req, int timeout = 3000)
+        public async Task SendAsync(REQ req)
+        {
+            await SendAsync(req, CancellationToken.None);
+        }
+        public async Task SendAsync(REQ req, CancellationToken token)
         {
             if (req.Id == null)
             {
                 req.Id = Guid.NewGuid().ToString();
             }
-            stream.WriteTimeout = timeout;
             ByteBuffer buf = this.codecWrite.Encode(req);
-            stream.Write(buf.Data, 0, buf.Limit);
-            stream.Flush();
+            await stream.WriteAsync(buf.Data, 0, buf.Limit, token);
+            await stream.FlushAsync(token);
         }
 
-        public RES Recv(int timeout = 3000)
+        public async Task<RES> RecvAsync()
         {
-            stream.ReadTimeout = timeout;
-
+            return await RecvAsync(CancellationToken.None);
+        }
+        public async Task<RES> RecvAsync(CancellationToken token)
+        {  
             byte[] buf = new byte[4096];
             while (true)
             {
@@ -148,7 +159,7 @@ namespace Zbus.Mq.Net
                     RES res = (RES)msg;
                     return res;
                 }
-                int n = stream.Read(buf, 0, buf.Length);
+                int n = await stream.ReadAsync(buf, 0, buf.Length, token);
                 this.readBuf.Put(buf, 0, n);
             }
         }

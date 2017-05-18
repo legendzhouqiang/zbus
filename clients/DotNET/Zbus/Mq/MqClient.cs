@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Zbus.Mq.Net;
 
@@ -17,11 +18,14 @@ namespace Zbus.Mq
         {
         }
 
-        private T InvokeObject<T>(Message msg, int timeout = 3000) where T: ErrorInfo, new()
+        private async Task<T> InvokeObjectAsync<T>(Message msg, CancellationToken? token = null) where T: ErrorInfo, new()
         {
             msg.Token = this.Token;
-
-            Message res = this.Invoke(msg, timeout);
+            if (token == null)
+            {
+                token = CancellationToken.None;
+            }
+            Message res = await this.InvokeAsync(msg, token.Value);
             if (res.Status != "200")
             {
                 T info = new T();
@@ -31,26 +35,26 @@ namespace Zbus.Mq
             return ConvertKit.DeserializeObject<T>(res.BodyString);
         }
 
-        public ServerInfo QueryServer(int timeout=3000)
+        public async Task<ServerInfo> QueryServerAsync(CancellationToken? token = null)
         {
             Message msg = new Message
             {
                 Cmd = Protocol.QUERY,
             }; 
-            return InvokeObject<ServerInfo>(msg, timeout);
+            return await InvokeObjectAsync<ServerInfo>(msg, token);
         }
 
-        public TopicInfo QueryTopic(string topic, int timeout = 3000)
+        public async Task<TopicInfo> QueryTopicAsync(string topic, CancellationToken? token = null)
         {
             Message msg = new Message
             {
                 Cmd = Protocol.QUERY,
                 Topic = topic,
             };
-            return InvokeObject<TopicInfo>(msg, timeout);
+            return await InvokeObjectAsync<TopicInfo>(msg, token);
         }
 
-        public ConsumeGroupInfo QueryGroup(string topic, string group, int timeout = 3000)
+        public async Task<ConsumeGroupInfo> QueryGroupAsync(string topic, string group, CancellationToken? token = null)
         {
             Message msg = new Message
             {
@@ -59,10 +63,10 @@ namespace Zbus.Mq
                 ConsumeGroup = group,
            
             };
-            return InvokeObject<ConsumeGroupInfo>(msg, timeout);
+            return await InvokeObjectAsync<ConsumeGroupInfo>(msg, token);
         }
 
-        public TopicInfo DeclareTopic(string topic, int? topicMask=null, int timeout = 3000)
+        public async Task<TopicInfo> DeclareTopicAsync(string topic, int? topicMask =null, CancellationToken? token = null)
         {
             Message msg = new Message
             {
@@ -70,7 +74,7 @@ namespace Zbus.Mq
                 Topic = topic, 
                 TopicMask = topicMask,
             };
-            return InvokeObject<TopicInfo>(msg, timeout);
+            return await InvokeObjectAsync<TopicInfo>(msg, token);
         }
     }
 }

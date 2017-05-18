@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mq\MqClientCancelExample.cs" />
     <Compile Include="Mq\MqClientExample.cs" />
     <Compile Include="Mq\ProducerExample.cs" />
     <Compile Include="Mq\ConsumerExample.cs" />
