@@ -53,7 +53,7 @@ public class MessageTracer implements Closeable{
 	}
 	
 	public void subscribe(Message message, Session session){
-		Integer flag = message.getTopicFlag();
+		Integer flag = message.getTopicMask();
 		if(flag != null && flag == 0){//flag 0 means unsubscribe
 			cleanSession(session);
 			return;

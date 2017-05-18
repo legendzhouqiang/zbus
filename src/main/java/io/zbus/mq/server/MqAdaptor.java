@@ -108,7 +108,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			final MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
-			if((mq.getFlag()&Protocol.FLAG_RPC) != 0){ 
+			if((mq.getMask()&Protocol.MASK_RPC) != 0){ 
 				if(mq.consumerCount(null) == 0){ //default consumerGroup
 					ReplyKit.reply502(msg, sess);
 					return;
@@ -215,9 +215,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		} 
 			
 			try {
-				Integer flag = msg.getTopicFlag();   
+				Integer flag = msg.getTopicMask();   
 				if(flag != null){
-					mq.setFlag(flag);
+					mq.setMask(flag);
 				}
 				
 				String groupName = msg.getConsumeGroup();

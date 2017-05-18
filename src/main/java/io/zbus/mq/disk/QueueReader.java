@@ -6,16 +6,16 @@ import java.io.IOException;
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private static final int READER_FILE_SIZE = 1024;  
-	private static final int FITER_TAG_POS = 12;  
+	private static final int FITER_POS = 12;  
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
 	 
 	private long blockNumber;
 	private int offset = 0; 
-	private String filterTag; //max: 127 bytes 
+	private String filter; //max: 127 bytes, filter on Messsage's tag
 	
-	private String[] filterTagParts;
+	private String[] filterParts;
 	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
 	  
 	
@@ -94,7 +94,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		this.messageNumber = data.messageNumber - 1;  
 	}
 	
-	private DiskMessage readUnsafe(String[] tagParts) throws IOException{
+	private DiskMessage readUnsafe(String[] filterParts) throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
 			if(index.overflow(blockNumber+1)){
 				return null;
@@ -104,14 +104,14 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			block = this.index.createReadBlock(this.blockNumber);
 			this.offset = 0;
 		}
-		DiskMessage data = block.readByTag(offset, tagParts);
+		DiskMessage data = block.readByFilter(offset, filterParts);
 		this.offset += data.bytesScanned;
 		this.messageNumber = data.messageNumber; 
 		
 		writeOffset();  
 		
 		if(!data.valid){
-			return readUnsafe(tagParts);
+			return readUnsafe(filterParts);
 		}
 		return data;
 	} 
@@ -119,7 +119,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	public DiskMessage read() throws IOException{
 		lock.lock();
 		try{  
-			return readUnsafe(filterTagParts);
+			return readUnsafe(filterParts);
 		} finally {
 			lock.unlock();
 		} 
@@ -136,8 +136,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		buffer.get(tag);
 		int tagLen = tag[0];
 		if(tagLen > 0){
-			this.filterTag = new String(tag, 1, tagLen);
-			this.filterTagParts = this.filterTag.split("[.]");
+			this.filter = new String(tag, 1, tagLen);
+			this.filterParts = this.filter.split("[.]");
 		} 
 	}
 	
@@ -149,7 +149,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		writeOffset();
 		
 		//write tag
-		buffer.position(FITER_TAG_POS);
+		buffer.position(FITER_POS);
 		buffer.put((byte)0); //tag default to null 
 	}   
 	 
@@ -157,26 +157,26 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		return offset;
 	}  
 
-	public String getFilterTag() {
-		return filterTag;
+	public String getFilter() {
+		return filter;
 	} 
 
-	public void setFilterTag(String filterTag) {
+	public void setFilter(String filter) {
 		lock.lock();
 		try{  
-			this.filterTag = filterTag;
+			this.filter = filter;
 			int len = 0;
-			if(filterTag != null){
-				len = filterTag.length();
-				buffer.position(FITER_TAG_POS);
+			if(filter != null){
+				len = filter.length();
+				buffer.position(FITER_POS);
 				buffer.put((byte)len); 
-				buffer.put(this.filterTag.getBytes());
+				buffer.put(this.filter.getBytes());
 				
-				filterTagParts = this.filterTag.split("[.]");
+				filterParts = this.filter.split("[.]");
 			} else { //clear
-				buffer.position(FITER_TAG_POS);
+				buffer.position(FITER_POS);
 				buffer.put((byte)0); 
-				filterTagParts = null;
+				filterParts = null;
 			}
 		} finally {
 			lock.unlock();

@@ -37,7 +37,7 @@ public interface MessageQueue {
 
 	void setCreator(String value); 
 	
-	int getFlag();
+	int getMask();
 
-	void setFlag(int value);  
+	void setMask(int value);  
 }

@@ -50,7 +50,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 	            +---------------+                                                                    | 
 	            | Offset       4|--------------------------------------------------------------------+ 
 	            +---------------+ 
-	            | Tag        128| 
+	            | Filter     128| 
 	            +---------------+  
             
 **Index**
@@ -81,7 +81,7 @@ DiskMessage's tag is employed to filter on reading message, which is useful for 
 
 * **BlockNumber**, the slot number in Index
 * **Offset**, the next read offset in the block
-* **Tag**, filter tag of reading, default to null
+* **Filter**, filter on message's tag to read, default to null
 
 **QueueWriter**
 

@@ -78,8 +78,8 @@ public class DiskQueue implements MessageQueue{
 		if(group == null){
 			QueueReader copyReader = null;
 			//1) copy reader from base group 
-			if(ctrl.getGroupCopyFrom() != null){
-				DiskConsumeGroup copyGroup = consumeGroups.get(ctrl.getGroupCopyFrom());
+			if(ctrl.getStartCopy() != null){
+				DiskConsumeGroup copyGroup = consumeGroups.get(ctrl.getStartCopy());
 				if(copyGroup != null){
 					copyReader = copyGroup.reader; 
 				}
@@ -101,10 +101,10 @@ public class DiskQueue implements MessageQueue{
 			}
 			consumeGroups.put(consumeGroup, group); 
 		} 
-		group.reader.setFilterTag(ctrl.getFilterTag());
+		group.reader.setFilter(ctrl.getFilterTag());
 		Integer groupFlag = ctrl.getGroupFlag();
 		if(groupFlag != null){
-			group.reader.setFlag(groupFlag);
+			group.reader.setMask(groupFlag);
 		}
 		
 		if(ctrl.getStartOffset() != null){
@@ -279,12 +279,12 @@ public class DiskQueue implements MessageQueue{
 	} 
 	
 	@Override
-	public int getFlag() {
-		return index.getFlag();
+	public int getMask() {
+		return index.getMask();
 	}
 	@Override
-	public void setFlag(int value) {
-		index.setFlag(value);
+	public void setMask(int value) {
+		index.setMask(value);
 	}
 	@Override
 	public long lastUpdateTime() { 
@@ -347,7 +347,7 @@ public class DiskQueue implements MessageQueue{
 		info.createdTime = index.getCreatedTime();
 		info.lastUpdatedTime = lastUpdateTime;
 		info.creator = getCreator();
-		info.flag = getFlag();
+		info.mask = getMask();
 		info.messageDepth = index.getMessageCount();  
 		info.consumerCount = 0;
 		info.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
@@ -393,9 +393,9 @@ public class DiskQueue implements MessageQueue{
 		public ConsumeGroupInfo getConsumeGroupInfo(){
 			ConsumeGroupInfo info = new ConsumeGroupInfo(); 
 			info.topicName = reader.getIndexName();
-			info.filterTag = reader.getFilterTag();
+			info.filter = reader.getFilter();
 			info.creator = reader.getCreator();
-			info.flag = reader.getFlag();
+			info.mask = reader.getMask();
 			info.createdTime = reader.getCreatedTime();
 			info.lastUpdatedTime = reader.getUpdatedTime();
 			info.consumerCount = pullSessions.size();

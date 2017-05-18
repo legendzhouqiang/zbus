@@ -7,7 +7,7 @@ public class ConsumeGroup implements Cloneable {
 	private String creator;
 	
 	//create group from another group
-	private String groupCopyFrom;
+	private String startCopy;
 	
 	//create group start from offset, msgId to check valid
 	private Long startOffset;
@@ -30,20 +30,20 @@ public class ConsumeGroup implements Cloneable {
 	
 	public ConsumeGroup(Message msg){ 
 		groupName = msg.getConsumeGroup();
-		groupCopyFrom = msg.getConsumeGroupCopyFrom();
-		startOffset = msg.getConsumeStartOffset();
-		startTime = msg.getConsumeStartTime();
-		startMsgId = msg.getConsumeStartMsgId();
-		filterTag = msg.getConsumeFilterTag();
-		groupFlag = msg.getConsumeGroupFlag();
+		startCopy = msg.getGroupStartCopy();
+		startOffset = msg.getGroupStartOffset();
+		startTime = msg.getGroupStartTime();
+		startMsgId = msg.getGroupStartMsgId();
+		filterTag = msg.getGroupFilter();
+		groupFlag = msg.getGroupMask();
 		creator = msg.getToken(); //token as creator
 	}
 	
-	public String getGroupCopyFrom() {
-		return groupCopyFrom;
+	public String getStartCopy() {
+		return startCopy;
 	}
-	public void setGroupCopyFrom(String groupCopyFrom) {
-		this.groupCopyFrom = groupCopyFrom;
+	public void setStartCopy(String groupName) {
+		this.startCopy = groupName;
 	}
 	public String getGroupName() {
 		return groupName;

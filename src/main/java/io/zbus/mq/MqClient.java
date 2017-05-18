@@ -42,7 +42,7 @@ public class MqClient extends MessageClient{
 		
 		if(ctrl != null){
 			msg.setConsumeGroup(ctrl.getGroupName()); 
-			msg.setConsumeFilterTag(ctrl.getFilterTag());
+			msg.setGroupFilter(ctrl.getFilterTag());
 			msg.setConsumeWindow(ctrl.getWindow());
 		} 
 		
@@ -100,7 +100,7 @@ public class MqClient extends MessageClient{
 		Message msg = new Message();
 		msg.setCommand(Protocol.DECLARE);
 		msg.setTopic(topic); 
-		msg.setTopicFlag(topicFlag);
+		msg.setTopicMask(topicFlag);
 		 
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, TopicInfo.class); 
@@ -111,12 +111,12 @@ public class MqClient extends MessageClient{
 		msg.setCommand(Protocol.DECLARE);
 		msg.setTopic(topic);
 		msg.setConsumeGroup(group.getGroupName());
-		msg.setConsumeGroupCopyFrom(group.getGroupCopyFrom());
-		msg.setConsumeFilterTag(group.getFilterTag());
-		msg.setConsumeStartMsgId(group.getStartMsgId());
-		msg.setConsumeStartOffset(group.getStartOffset()); 
-		msg.setConsumeStartTime(group.getStartTime());
-		msg.setTopicFlag(group.getGroupFlag());
+		msg.setGroupStartCopy(group.getStartCopy());
+		msg.setGroupFilter(group.getFilterTag());
+		msg.setGroupStartMsgId(group.getStartMsgId());
+		msg.setGroupStartOffset(group.getStartOffset()); 
+		msg.setGroupStartTime(group.getStartTime());
+		msg.setTopicMask(group.getGroupFlag());
 		
 		
 		Message res = invokeSync(msg, invokeTimeout);

@@ -24,9 +24,9 @@ public class MappedFile implements Closeable {
 	protected static final int CreatorPos = 512-128; //creator max length 127(another 1 byte for length)
 	protected static final int CreatedTimePos = CreatorPos-8;
 	protected static final int UpdatedTimePos = CreatorPos-16;
-	protected static final int FlagPos = CreatorPos-20;
+	protected static final int MaskPos = CreatorPos-20;
 	
-	protected volatile int flag;
+	protected volatile int mask;
 	protected volatile long createdTime = System.currentTimeMillis();
 	protected volatile long updatedTime = System.currentTimeMillis(); 
 	protected volatile String creator; //max length 127
@@ -83,8 +83,8 @@ public class MappedFile implements Closeable {
 				createdTime = buffer.getLong();
 				buffer.position(UpdatedTimePos);
 				updatedTime = buffer.getLong();
-				buffer.position(FlagPos);
-				flag = buffer.getInt();
+				buffer.position(MaskPos);
+				mask = buffer.getInt();
 				
 				readExt();
 				
@@ -98,8 +98,8 @@ public class MappedFile implements Closeable {
 				buffer.putLong(createdTime);
 				buffer.position(UpdatedTimePos);
 				buffer.putLong(updatedTime);
-				buffer.position(FlagPos);
-				buffer.putInt(flag);
+				buffer.position(MaskPos);
+				buffer.putInt(mask);
 				
 				initExt();
 				
@@ -157,16 +157,16 @@ public class MappedFile implements Closeable {
 		}
 	}  
 
-	public int getFlag() {
-		return flag;
+	public int getMask() {
+		return mask;
 	}
 
-	public void setFlag(int value) {
-		flag = value;
+	public void setMask(int value) {
+		mask = value;
 		try {
 			lock.lock();
-			buffer.position(FlagPos);
-			buffer.putInt(flag);
+			buffer.position(MaskPos);
+			buffer.putInt(mask);
 		} finally {
 			lock.unlock();
 		}

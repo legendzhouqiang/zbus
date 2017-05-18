@@ -34,18 +34,18 @@ class Protocol:
     
     COMMAND = "cmd"
     TOPIC = "topic";
-    TOPIC_FLAG = "topic_flag"
+    TOPIC_MASK = "topic_mask"
     TAG = "tag"
     OFFSET = "offset"
     
     CONSUME_GROUP = "consume_group"
-    CONSUME_GROUP_COPY_FROM = "consume_group_copy_from"
-    CONSUME_START_OFFSET = "consume_start_offset"
-    CONSUME_START_MSGID = "consume_start_msgid"
-    CONSUME_START_TIME = "consume_start_time"
+    GROUP_START_COPY = "group_start_copy"
+    GROUP_START_OFFSET = "group_start_offset"
+    GROUP_START_MSGID = "group_start_msgid"
+    GROUP_START_TIME = "group_start_time" 
+    GROUP_FILTER = "group_filter"
+    GROUP_MASK = "group_mask"
     CONSUME_WINDOW = "consume_window"
-    CONSUME_FILTER_TAG = "consume_filter_tag"
-    CONSUME_GROUP_FLAG = "consume_group_flag"
     
     SENDER = "sender"
     RECVER = "recver"
@@ -64,10 +64,10 @@ class Protocol:
     
     
     ############Flag values############    
-    FLAG_PAUSE = 1 << 0
-    FLAG_RPC = 1 << 1
-    FLAG_EXCLUSIVE = 1 << 2
-    FLAG_DELETE_ON_EXIT = 1 << 3
+    MASK_PAUSE = 1 << 0
+    MASK_RPC = 1 << 1
+    MASK_EXCLUSIVE = 1 << 2
+    MASK_DELETE_ON_EXIT = 1 << 3
 
 
 ###################################################################################   

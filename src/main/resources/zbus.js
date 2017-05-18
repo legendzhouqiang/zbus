@@ -3,6 +3,7 @@ function Protocol() { }
 Protocol.VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 
 /////////////////////////Command Values/////////////////////////
+//!!!Javascript message control: xxx_yyy = xxx-yyy (underscore equals dash), both support
 //MQ Produce/Consume
 Protocol.PRODUCE = "produce";
 Protocol.CONSUME = "consume";
@@ -21,18 +22,18 @@ Protocol.TRACK_SUB = "track_sub";
 
 Protocol.COMMAND = "cmd";
 Protocol.TOPIC = "topic";
-Protocol.TOPIC_FLAG = "topic_flag";
+Protocol.TOPIC_MASK = "topic_mask";
 Protocol.TAG = "tag";
 Protocol.OFFSET = "offset";
 
 Protocol.CONSUME_GROUP = "consume_group";
-Protocol.CONSUME_GROUP_COPY_FROM = "consume_group_copy_from";
-Protocol.CONSUME_START_OFFSET = "consume_start_offset";
-Protocol.CONSUME_START_MSGID = "consume_start_msgid";
-Protocol.CONSUME_START_TIME = "consume_start_time";
-Protocol.CONSUME_WINDOW = "consume_window";
-Protocol.CONSUME_FILTER_TAG = "consume_filter_tag";
-Protocol.CONSUME_GROUP_FLAG = "consume_group_flag";
+Protocol.GROUP_START_COPY = "group_start_copy";
+Protocol.GROUP_START_OFFSET = "group_start_offset";
+Protocol.GROUP_START_MSGID = "group_start_msgid";
+Protocol.GROUP_START_TIME = "group_start_time";
+Protocol.GROUP_WINDOW = "consume_window";
+Protocol.GROUP_FILTER_TAG = "group_filter";
+Protocol.GROUP_MASK = "group_mask";
 
 Protocol.SENDER = "sender";
 Protocol.RECVER = "recver";
@@ -51,10 +52,10 @@ Protocol.TOKEN = "token";
 
 
 /////////////////////////Flag values/////////////////////////	
-Protocol.FLAG_PAUSE = 1 << 0;
-Protocol.FLAG_RPC = 1 << 1;
-Protocol.FLAG_EXCLUSIVE = 1 << 2;
-Protocol.FLAG_DELETE_ON_EXIT = 1 << 3;
+Protocol.MASK_PAUSE = 1 << 0;
+Protocol.MASK_RPC = 1 << 1;
+Protocol.MASK_EXCLUSIVE = 1 << 2;
+Protocol.MASK_DELETE_ON_EXIT = 1 << 3;
 
 
 ////////////////////////////////////////////////////////////
@@ -207,7 +208,7 @@ function httpEncode(msg) {
         if (body instanceof ArrayBuffer) {
             body = new Uint8Array(body);
         } else if (body instanceof Uint8Array || body instanceof Int8Array) {
-            //no need to handel
+            //no need to handle
         } else {
             if (typeof body != 'string') {
                 body = JSON.stringify(body);

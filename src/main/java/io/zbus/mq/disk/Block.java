@@ -182,10 +182,10 @@ class Block implements Closeable {
     	return targetParts.length == tagParts.length;
     }
     
-    public DiskMessage readByTag(int pos, String[] tagParts) throws IOException{ 
+    public DiskMessage readByFilter(int pos, String[] filterParts) throws IOException{ 
     	try{
 			lock.lock(); 
-			if(tagParts == null){
+			if(filterParts == null){
 				return readFullyUnsafe(pos);
 			}
 			
@@ -196,7 +196,7 @@ class Block implements Closeable {
 				messageCount = data.messageNumber;
 				int size = diskFile.readInt();
 				bytesScanned += data.bytesScanned+4+size; 
-				if(!isMatched(tagParts, data.tag)){ 
+				if(!isMatched(filterParts, data.tag)){ 
 					int n = diskFile.skipBytes(size);
 					if( n != size){
 						throw new IllegalStateException("DiskMessage format error: " + data.offset);

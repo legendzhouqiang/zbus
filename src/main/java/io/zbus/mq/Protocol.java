@@ -38,18 +38,18 @@ public class Protocol {
 	//=============================[2] Parameter Values================================================
 	public static final String COMMAND       		= "cmd";     
 	public static final String TOPIC         		= "topic";
-	public static final String TOPIC_FLAG          	= "topic_flag"; 
+	public static final String TOPIC_MASK          	= "topic_mask"; 
 	public static final String TAG   	     		= "tag";  
 	public static final String OFFSET        		= "offset";
 	
-	public static final String CONSUME_GROUP             = "consume_group";  
-	public static final String CONSUME_GROUP_COPY_FROM   = "consume_group_copy_from";  
-	public static final String CONSUME_START_OFFSET      = "consume_start_offset";
-	public static final String CONSUME_START_MSGID       = "consume_start_msgid";
-	public static final String CONSUME_START_TIME        = "consume_start_time";  
-	public static final String CONSUME_WINDOW            = "consume_window";  
-	public static final String CONSUME_FILTER_TAG        = "consume_filter_tag";  
-	public static final String CONSUME_GROUP_FLAG        = "consume_group_flag";
+	public static final String CONSUME_GROUP        = "consume_group";  
+	public static final String GROUP_START_COPY     = "group_start_copy";  
+	public static final String GROUP_START_OFFSET   = "group_start_offset";
+	public static final String GROUP_START_MSGID    = "group_start_msgid";
+	public static final String GROUP_START_TIME     = "group_start_time";   
+	public static final String GROUP_FILTER         = "group_filter";  
+	public static final String GROUP_MASK           = "group_mask"; 
+	public static final String CONSUME_WINDOW       = "consume_window";  
 	
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";
@@ -67,10 +67,10 @@ public class Protocol {
 	public static final String TOKEN   				= "token"; 
 	
 	
-	public static final int FLAG_PAUSE    	    = 1<<0; 
-	public static final int FLAG_RPC    	    = 1<<1; 
-	public static final int FLAG_EXCLUSIVE 	    = 1<<2;  
-	public static final int FLAG_DELETE_ON_EXIT = 1<<3; 
+	public static final int MASK_PAUSE    	    = 1<<0; 
+	public static final int MASK_RPC    	    = 1<<1; 
+	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
+	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
 	
 	public static class ServerAddress{
 		public String address;
@@ -144,7 +144,7 @@ public class Protocol {
 	
 	public static class TopicInfo extends TrackItem{ 
 		public String topicName;
-		public int flag; 
+		public int mask; 
 		
 		public long messageDepth; //message count on disk
 		public int consumerCount; //total consumer count in consumeGroupList
@@ -166,8 +166,8 @@ public class Protocol {
 	public static class ConsumeGroupInfo{ 
 		public String topicName;
 		public String groupName;
-		public int flag; 
-		public String filterTag;
+		public int mask; 
+		public String filter;
 		public long messageCount;
 		public int consumerCount;
 		public List<String> consumerList = new ArrayList<String>();

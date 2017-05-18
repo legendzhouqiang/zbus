@@ -62,12 +62,8 @@ function consumeGroupList(groupList){
 		res += "<tr>";
 		res += "<td>" + group.groupName + "</td>";
 		res += "<td>" + group.messageCount + "</td>";
-		res += "<td>" + group.consumerCount + "</td>";
-		var filterTag = "";
-		if(group.filterTag){
-			filterTag = group.filterTag;
-		}
-		res += "<td>" + filterTag + "</td>";
+		res += "<td>" + group.consumerCount + "</td>"; 
+		res += "<td>" + (group.filter || "") + "</td>";
 		res += "</tr>"
 	} 
 	return res;

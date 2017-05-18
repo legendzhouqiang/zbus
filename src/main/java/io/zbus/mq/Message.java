@@ -424,58 +424,58 @@ public class Message {
 		return this;
 	} 
 	
-	public Integer getTopicFlag(){
-		String value = this.getHeader(TOPIC_FLAG);
+	public Integer getTopicMask(){
+		String value = this.getHeader(TOPIC_MASK);
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
-	public Message setTopicFlag(Integer value) {
-		this.setHeader(TOPIC_FLAG, value);
+	public Message setTopicMask(Integer value) {
+		this.setHeader(TOPIC_MASK, value);
 		return this;
 	} 
 	
-	public Integer getConsumeGroupFlag(){
-		String value = this.getHeader(CONSUME_GROUP_FLAG);
+	public Integer getGroupMask(){
+		String value = this.getHeader(GROUP_MASK);
 		if(value == null) return null;
 		return Integer.valueOf(value);
 	} 
-	public Message setConsumeGroupFlag(Integer value) {
-		this.setHeader(CONSUME_GROUP_FLAG, value);
+	public Message setGroupMask(Integer value) {
+		this.setHeader(GROUP_MASK, value);
 		return this;
 	} 
 	
-	public Long getConsumeStartOffset(){
-		String value = this.getHeader(CONSUME_START_OFFSET);
+	public Long getGroupStartOffset(){
+		String value = this.getHeader(GROUP_START_OFFSET);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	} 
-	public Message setConsumeStartOffset(Long value) {
-		this.setHeader(CONSUME_START_OFFSET, value);
+	public Message setGroupStartOffset(Long value) {
+		this.setHeader(GROUP_START_OFFSET, value);
 		return this;
 	}   
-	public Long getConsumeStartTime(){
-		String value = this.getHeader(CONSUME_START_TIME);
+	public Long getGroupStartTime(){
+		String value = this.getHeader(GROUP_START_TIME);
 		if(value == null) return null;
 		return Long.valueOf(value);
 	} 
-	public Message setConsumeStartTime(Long value) {
-		this.setHeader(CONSUME_START_TIME, value);
+	public Message setGroupStartTime(Long value) {
+		this.setHeader(GROUP_START_TIME, value);
 		return this;
 	}  
-	public String getConsumeGroupCopyFrom(){
-		return this.getHeader(CONSUME_GROUP_COPY_FROM);
+	public String getGroupStartCopy(){
+		return this.getHeader(GROUP_START_COPY);
 	} 
-	public Message setConsumeGroupCopyFrom(String value) {
-		this.setHeader(CONSUME_GROUP_COPY_FROM, value);
+	public Message setGroupStartCopy(String value) {
+		this.setHeader(GROUP_START_COPY, value);
 		return this;
 	}  
 	
-	public String getConsumeStartMsgId(){
-		String value = this.getHeader(CONSUME_START_MSGID);
+	public String getGroupStartMsgId(){
+		String value = this.getHeader(GROUP_START_MSGID);
 		return value;
 	} 
-	public Message setConsumeStartMsgId(String mq) {
-		this.setHeader(CONSUME_START_MSGID, mq);
+	public Message setGroupStartMsgId(String mq) {
+		this.setHeader(GROUP_START_MSGID, mq);
 		return this;
 	} 
 	
@@ -489,12 +489,12 @@ public class Message {
 		this.setHeader(CONSUME_WINDOW, value);
 		return this;
 	}  
-	public String getConsumeFilterTag() {
-		return getHeader(CONSUME_FILTER_TAG);
+	public String getGroupFilter() {
+		return getHeader(GROUP_FILTER);
 	} 
 	
-	public Message setConsumeFilterTag(String topic) {
-		this.setHeader(CONSUME_FILTER_TAG, topic);
+	public Message setGroupFilter(String value) {
+		this.setHeader(GROUP_FILTER, value);
 		return this;
 	}    
 	
