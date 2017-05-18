@@ -15,12 +15,14 @@ namespace Zbus.Mq
         private IDictionary<string, string> head = new Dictionary<string, string>();
         private byte[] body;
 
-        public string GetHead(string key)
-        {
-            return GetHead(key, null);
+        public T? GetHead<T>(string key, T? defaultValue=null) where T: struct
+        { 
+            string s = GetHead(key);
+            if (s == null) return defaultValue;
+            return (T)Convert.ChangeType(s, typeof(T)); 
         }
 
-        public string GetHead(string key, string defaultValue)
+        public string GetHead(string key, string defaultValue = null)
         {
             string val = null;
             this.head.TryGetValue(key, out val);
@@ -31,9 +33,9 @@ namespace Zbus.Mq
             return val;
         }
 
-        public void SetHead(string key, string val)
+        public void SetHead(string key, object val)
         {
-            this.head[key] = val;
+            this.head[key] = (string)Convert.ChangeType(val, typeof(string));
         }
 
         public void RemoveHead(string key)
@@ -81,66 +83,105 @@ namespace Zbus.Mq
 
         #region AUX_GET_SET
 
-        public String Topic
+        public string Topic
         {
             get { return GetHead(Protocol.TOPIC); }
             set { SetHead(Protocol.TOPIC, value); }
         }
 
-        public String ConsumeGroup
+        public string ConsumeGroup
         {
             get { return GetHead(Protocol.CONSUME_GROUP); }
             set { SetHead(Protocol.CONSUME_GROUP, value); }
         }
+        public string GroupStartCopy
+        {
+            get { return GetHead(Protocol.GROUP_START_COPY); }
+            set { SetHead(Protocol.GROUP_START_COPY, value); }
+        }
+        public long? GroupStartOffset
+        {
+            get { return GetHead<long>(Protocol.GROUP_START_OFFSET); }
+            set { SetHead(Protocol.GROUP_START_OFFSET, value); }
+        }
 
-        public String Cmd
+        public string GroupStartMsgid
+        {
+            get { return GetHead(Protocol.GROUP_START_MSGID); }
+            set { SetHead(Protocol.GROUP_START_MSGID, value); }
+        }
+        public long? GroupStartTime
+        {
+            get { return GetHead<long>(Protocol.GROUP_START_TIME); }
+            set { SetHead(Protocol.GROUP_START_TIME, value); }
+        }
+
+        public string GroupFilter
+        {
+            get { return GetHead(Protocol.GROUP_FILTER); }
+            set { SetHead(Protocol.GROUP_FILTER, value); }
+        }
+
+        public int? GroupMask
+        {
+            get { return GetHead<int>(Protocol.GROUP_MASK); }
+            set { SetHead(Protocol.GROUP_MASK, value); }
+        }
+
+        public int? TopicMask
+        {
+            get { return GetHead<int>(Protocol.TOPIC_MASK); }
+            set { SetHead(Protocol.TOPIC_MASK, value); }
+        }
+
+        public string Cmd
         {
             get { return GetHead(Protocol.COMMAND); }
             set { SetHead(Protocol.COMMAND, value); }
         }
 
-        public String Id
+        public string Id
         {
             get { return GetHead(Protocol.ID); }
             set { SetHead(Protocol.ID, value); }
         } 
 
-        public String Token
+        public string Token
         {
             get { return GetHead(Protocol.TOKEN); }
             set { SetHead(Protocol.TOKEN, value); }
         }
 
-        public String Sender
+        public string Sender
         {
             get { return GetHead(Protocol.SENDER); }
             set { SetHead(Protocol.SENDER, value); }
         }
 
-        public String Recver
+        public string Recver
         {
             get { return GetHead(Protocol.RECVER); }
             set { SetHead(Protocol.RECVER, value); }
         } 
-        public String Encoding
+        public string Encoding
         {
             get { return GetHead(Protocol.ENCODING); }
             set { SetHead(Protocol.ENCODING, value); }
         }
 
-        public String OriginUrl
+        public string OriginUrl
         {
             get { return GetHead(Protocol.ORIGIN_URL); }
             set { SetHead(Protocol.ORIGIN_URL, value); }
         }
 
-        public String OriginStatus
+        public string OriginStatus
         {
             get { return GetHead(Protocol.ORIGIN_STATUS); }
             set { SetHead(Protocol.ORIGIN_STATUS, value); }
         }
 
-        public String OriginId
+        public string OriginId
         {
             get { return GetHead(Protocol.ORIGIN_ID); }
             set { SetHead(Protocol.ORIGIN_ID, value); }

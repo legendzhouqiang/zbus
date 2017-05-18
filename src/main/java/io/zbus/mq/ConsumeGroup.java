@@ -2,8 +2,8 @@ package io.zbus.mq;
 
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
-	private String filterTag; //message in group is filtered
-	private Integer groupFlag;
+	private String filter; //message in group is filtered
+	private Integer mask;
 	private String creator;
 	
 	//create group from another group
@@ -34,8 +34,8 @@ public class ConsumeGroup implements Cloneable {
 		startOffset = msg.getGroupStartOffset();
 		startTime = msg.getGroupStartTime();
 		startMsgId = msg.getGroupStartMsgId();
-		filterTag = msg.getGroupFilter();
-		groupFlag = msg.getGroupMask();
+		filter = msg.getGroupFilter();
+		mask = msg.getGroupMask();
 		creator = msg.getToken(); //token as creator
 	}
 	
@@ -82,16 +82,16 @@ public class ConsumeGroup implements Cloneable {
 		this.deleteOnExit = deleteOnExit;
 	}  
 	public String getFilterTag() {
-		return filterTag;
+		return filter;
 	} 
 	public void setFilterTag(String filterTag) {
-		this.filterTag = filterTag;
+		this.filter = filterTag;
 	} 
 	public Integer getGroupFlag() {
-		return groupFlag;
+		return mask;
 	} 
 	public void setGroupFlag(Integer groupFlag) {
-		this.groupFlag = groupFlag;
+		this.mask = groupFlag;
 	} 
 	public String getCreator() {
 		return creator;

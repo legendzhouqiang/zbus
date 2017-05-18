@@ -75,6 +75,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mq\ConsumeGroup.cs" />
     <Compile Include="Mq\MqClient.cs" />
     <Compile Include="Mq\Protocol.cs" />
     <Compile Include="Mq\Message.cs" />

@@ -96,11 +96,11 @@ public class MqClient extends MessageClient{
 		return declareTopic(topic, null);
 	}
 	
-	public TopicInfo declareTopic(String topic, Integer topicFlag) throws IOException, InterruptedException{
+	public TopicInfo declareTopic(String topic, Integer topicMask) throws IOException, InterruptedException{
 		Message msg = new Message();
 		msg.setCommand(Protocol.DECLARE);
 		msg.setTopic(topic); 
-		msg.setTopicMask(topicFlag);
+		msg.setTopicMask(topicMask);
 		 
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, TopicInfo.class); 

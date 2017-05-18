@@ -30,18 +30,18 @@ namespace Zbus.Mq
         //=============================[2] Parameter Values================================================
         public static readonly string COMMAND = "cmd";
         public static readonly string TOPIC = "topic";
-        public static readonly string TOPIC_FLAG = "topic_flag";
+        public static readonly string TOPIC_MASK = "topic_mask";
         public static readonly string TAG = "tag";
         public static readonly string OFFSET = "offset";
 
         public static readonly string CONSUME_GROUP = "consume_group";
-        public static readonly string CONSUME_GROUP_COPY_FROM = "consume_group_copy_from";
-        public static readonly string CONSUME_START_OFFSET = "consume_start_offset";
-        public static readonly string CONSUME_START_MSGID = "consume_start_msgid";
-        public static readonly string CONSUME_START_TIME = "consume_start_time";
+        public static readonly string GROUP_START_COPY = "group_start_copy";
+        public static readonly string GROUP_START_OFFSET = "group_start_offset";
+        public static readonly string GROUP_START_MSGID = "group_start_msgid";
+        public static readonly string GROUP_START_TIME = "group_start_time"; 
+        public static readonly string GROUP_FILTER = "group_filter";
+        public static readonly string GROUP_MASK = "group_mask";
         public static readonly string CONSUME_WINDOW = "consume_window";
-        public static readonly string CONSUME_FILTER_TAG = "consume_filter_tag";
-        public static readonly string CONSUME_GROUP_FLAG = "consume_group_flag";
 
         public static readonly string SENDER = "sender";
         public static readonly string RECVER = "recver";
@@ -59,10 +59,10 @@ namespace Zbus.Mq
         public static readonly string TOKEN = "token";
 
 
-        public static readonly int FLAG_PAUSE = 1 << 0;
-        public static readonly int FLAG_RPC = 1 << 1;
-        public static readonly int FLAG_EXCLUSIVE = 1 << 2;
-        public static readonly int FLAG_DELETE_ON_EXIT = 1 << 3;
+        public static readonly int MASK_PAUSE = 1 << 0;
+        public static readonly int MASK_RPC = 1 << 1;
+        public static readonly int MASK_EXCLUSIVE = 1 << 2;
+        public static readonly int MASK_DELETE_ON_EXIT = 1 << 3;
     } 
 
     public class ServerAddress
@@ -113,34 +113,34 @@ namespace Zbus.Mq
     public class ServerInfo : TrackerInfo
     {
         public List<ServerAddress> TrackerList { get; set; }
-        public IDictionary<String, TopicInfo> TopicTable { get; set; }
+        public IDictionary<string, TopicInfo> TopicTable { get; set; }
     }
 
     public class TopicInfo : TrackItem
     {
         public string TopicName { get; set; }
-        public int Flag { get; set; }
+        public int Mask { get; set; }
 
         public long MessageDepth { get; set; } //message count on disk
         public int ConsumerCount { get; set; } //total consumer count in consumeGroupList
         public List<ConsumeGroupInfo> ConsumeGroupList { get; set; }
 
-        public String Creator { get; set; }
+        public string Creator { get; set; }
         public long CreatedTime { get; set; }
         public long LastUpdatedTime { get; set; } 
     }
 
     public class ConsumeGroupInfo : ErrorInfo
     {
-        public String TopicName { get; set; }
-        public String GroupName { get; set; }
-        public int Flag { get; set; }
-        public String FilterTag { get; set; }
+        public string TopicName { get; set; }
+        public string GroupName { get; set; }
+        public int Mask { get; set; }
+        public string Filter { get; set; }
         public long MessageCount { get; set; }
         public int ConsumerCount { get; set; }
-        public List<String> ConsumerList { get; set; }
+        public List<string> ConsumerList { get; set; }
 
-        public String Creator { get; set; }
+        public string Creator { get; set; }
         public long CreatedTime { get; set; }
         public long LastUpdatedTime { get; set; }
     }

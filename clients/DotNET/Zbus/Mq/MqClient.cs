@@ -60,6 +60,17 @@ namespace Zbus.Mq
            
             };
             return InvokeObject<ConsumeGroupInfo>(msg, timeout);
-        } 
+        }
+
+        public TopicInfo DeclareTopic(string topic, int? topicMask=null, int timeout = 3000)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.DECLARE,
+                Topic = topic, 
+                TopicMask = topicMask,
+            };
+            return InvokeObject<TopicInfo>(msg, timeout);
+        }
     }
 }
