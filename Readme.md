@@ -1,6 +1,6 @@
 #ZBUS = MQ + RPC  
 
-zbus strives to make Message Queue(MQ) and Remote Procedure Call(RPC) fast, light-weighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
+Zbus strives to make Message Queue and Remote Procedure Call fast, light-weighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
 
 **QQ Discussion: 467741880**  
 Star this project if you like zbus:)
