@@ -1,9 +1,9 @@
-#encoding=utf8 
+#encoding=utf8
 
 '''
 MyService is just a simple Python object
-''' 
-class MyService(object):  
+'''
+class MyService(object):
     def getString(self, ping):
         return ping
      
@@ -16,17 +16,17 @@ class MyService(object):
     def plus(self, a, b): 
         return int(a) + int(b) 
     
-    def testEncoding(self): 
-        return u'中文' 
+    def testEncoding(self):
+        return u'中文'
 
 
 import sys
 sys.path.append("../")
 from zbus import Broker, Consumer, RpcProcessor 
 
-p = RpcProcessor() 
+p = RpcProcessor()
 p.add_module(MyService) #could be class or object
- 
+
 
 broker = Broker()
 broker.add_tracker('localhost:15555') 

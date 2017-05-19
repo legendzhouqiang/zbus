@@ -8,24 +8,37 @@ namespace Zbus.Mq
 {
     public class Message : Id
     {
-        private string url = "/";
-        private string status;
-        private string method = "GET";
+        public string Url { get; set; }
+        public string Status { get; set; }
+        public string Method { get; set; } 
+        public IDictionary<string, string> Headers { get; private set; }
+        public byte[] Body { get; private set; }
 
-        private IDictionary<string, string> head = new Dictionary<string, string>();
-        private byte[] body;
+        public Message()
+        {
+            Headers = new Dictionary<string, string>();
+            Url = "/";
+            Method = "GET";
+            SetCommonHeaders();
+        }
+         
+        private void SetCommonHeaders()
+        {
+            SetHeader("connection", "Keep-Alive");
+            Version = Protocol.VERSION_VALUE; 
+        }
 
-        public T? GetHead<T>(string key, T? defaultValue=null) where T: struct
+        public T? GetHeader<T>(string key, T? defaultValue=null) where T: struct
         { 
-            string s = GetHead(key);
+            string s = GetHeader(key);
             if (s == null) return defaultValue;
             return (T)Convert.ChangeType(s, typeof(T)); 
         }
 
-        public string GetHead(string key, string defaultValue = null)
+        public string GetHeader(string key, string defaultValue = null)
         {
             string val = null;
-            this.head.TryGetValue(key, out val);
+            this.Headers.TryGetValue(key, out val);
             if (val == null)
             {
                 val = defaultValue;
@@ -33,366 +46,187 @@ namespace Zbus.Mq
             return val;
         }
 
-        public void SetHead(string key, object val)
+        public void SetHeader(string key, object val)
         {
-            this.head[key] = (string)Convert.ChangeType(val, typeof(string));
+            this.Headers[key] = (string)Convert.ChangeType(val, typeof(string));
         }
 
-        public void RemoveHead(string key)
+        public void RemoveHeader(string key)
         {
-            this.head.Remove(key);
+            this.Headers.Remove(key);
         }
-
-        public void SetBody(byte[] body)
+         
+        public string GetBody(System.Text.Encoding encoding = null)
         {
-            this.body = body;
-            int bodyLen = 0;
-            if (this.body != null)
+            if (Body == null) return null;
+            if (encoding == null)
             {
-                bodyLen = this.body.Length;
+                encoding = System.Text.Encoding.UTF8;
             }
-            this.SetHead("content-length", string.Format("{0}", bodyLen));
+            return encoding.GetString(Body);
         }
 
-        public void SetJsonBody(string body, System.Text.Encoding encoding)
+        public void SetBody(byte[] body, Encoding encoding = null)
         {
-            this.SetBody(body, encoding);
-            this.SetHead("content-type", "application/json");
-        }
-
-        public void SetJsonBody(string body)
-        {
-            SetJsonBody(body, System.Text.Encoding.Default);
-        }
-
-        public void SetBody(string body, System.Text.Encoding encoding)
-        {
+            this.Body = body;
+            int bodyLen = 0;
+            if (this.Body != null)
+            {
+                bodyLen = this.Body.Length;
+            }
+            if(encoding == null)
+            {
+                encoding = System.Text.Encoding.UTF8;
+            }
             Encoding = encoding.WebName;
-            SetBody(encoding.GetBytes(body));
+            this.SetHeader("content-length", string.Format("{0}", bodyLen));
         }
 
-        public void SetBody(string body)
-        {
-            SetBody(body, System.Text.Encoding.Default);
+        public void SetBody(string body, Encoding encoding = null)
+        { 
+            SetBody(encoding.GetBytes(body), encoding);
         }
-
+         
         public void SetBody(string format, params object[] args)
         {
             SetBody(string.Format(format, args));
+        }
+
+        public void SetJsonBody(string body, Encoding encoding = null)
+        {
+            this.SetBody(body, encoding);
+            this.SetHeader("content-type", "application/json");
         }
 
         #region AUX_GET_SET
 
         public string Topic
         {
-            get { return GetHead(Protocol.TOPIC); }
-            set { SetHead(Protocol.TOPIC, value); }
+            get { return GetHeader(Protocol.TOPIC); }
+            set { SetHeader(Protocol.TOPIC, value); }
         }
 
         public string ConsumeGroup
         {
-            get { return GetHead(Protocol.CONSUME_GROUP); }
-            set { SetHead(Protocol.CONSUME_GROUP, value); }
+            get { return GetHeader(Protocol.CONSUME_GROUP); }
+            set { SetHeader(Protocol.CONSUME_GROUP, value); }
         }
         public string GroupStartCopy
         {
-            get { return GetHead(Protocol.GROUP_START_COPY); }
-            set { SetHead(Protocol.GROUP_START_COPY, value); }
+            get { return GetHeader(Protocol.GROUP_START_COPY); }
+            set { SetHeader(Protocol.GROUP_START_COPY, value); }
         }
         public long? GroupStartOffset
         {
-            get { return GetHead<long>(Protocol.GROUP_START_OFFSET); }
-            set { SetHead(Protocol.GROUP_START_OFFSET, value); }
+            get { return GetHeader<long>(Protocol.GROUP_START_OFFSET); }
+            set { SetHeader(Protocol.GROUP_START_OFFSET, value); }
         }
 
         public string GroupStartMsgid
         {
-            get { return GetHead(Protocol.GROUP_START_MSGID); }
-            set { SetHead(Protocol.GROUP_START_MSGID, value); }
+            get { return GetHeader(Protocol.GROUP_START_MSGID); }
+            set { SetHeader(Protocol.GROUP_START_MSGID, value); }
         }
         public long? GroupStartTime
         {
-            get { return GetHead<long>(Protocol.GROUP_START_TIME); }
-            set { SetHead(Protocol.GROUP_START_TIME, value); }
+            get { return GetHeader<long>(Protocol.GROUP_START_TIME); }
+            set { SetHeader(Protocol.GROUP_START_TIME, value); }
         }
 
         public string GroupFilter
         {
-            get { return GetHead(Protocol.GROUP_FILTER); }
-            set { SetHead(Protocol.GROUP_FILTER, value); }
+            get { return GetHeader(Protocol.GROUP_FILTER); }
+            set { SetHeader(Protocol.GROUP_FILTER, value); }
         }
 
         public int? GroupMask
         {
-            get { return GetHead<int>(Protocol.GROUP_MASK); }
-            set { SetHead(Protocol.GROUP_MASK, value); }
+            get { return GetHeader<int>(Protocol.GROUP_MASK); }
+            set { SetHeader(Protocol.GROUP_MASK, value); }
         }
 
         public int? TopicMask
         {
-            get { return GetHead<int>(Protocol.TOPIC_MASK); }
-            set { SetHead(Protocol.TOPIC_MASK, value); }
+            get { return GetHeader<int>(Protocol.TOPIC_MASK); }
+            set { SetHeader(Protocol.TOPIC_MASK, value); }
         }
 
         public string Cmd
         {
-            get { return GetHead(Protocol.COMMAND); }
-            set { SetHead(Protocol.COMMAND, value); }
+            get { return GetHeader(Protocol.COMMAND); }
+            set { SetHeader(Protocol.COMMAND, value); }
         }
 
         public string Id
         {
-            get { return GetHead(Protocol.ID); }
-            set { SetHead(Protocol.ID, value); }
+            get { return GetHeader(Protocol.ID); }
+            set { SetHeader(Protocol.ID, value); }
         } 
 
         public string Token
         {
-            get { return GetHead(Protocol.TOKEN); }
-            set { SetHead(Protocol.TOKEN, value); }
+            get { return GetHeader(Protocol.TOKEN); }
+            set { SetHeader(Protocol.TOKEN, value); }
         }
 
         public string Sender
         {
-            get { return GetHead(Protocol.SENDER); }
-            set { SetHead(Protocol.SENDER, value); }
+            get { return GetHeader(Protocol.SENDER); }
+            set { SetHeader(Protocol.SENDER, value); }
         }
 
         public string Recver
         {
-            get { return GetHead(Protocol.RECVER); }
-            set { SetHead(Protocol.RECVER, value); }
+            get { return GetHeader(Protocol.RECVER); }
+            set { SetHeader(Protocol.RECVER, value); }
         } 
         public string Encoding
         {
-            get { return GetHead(Protocol.ENCODING); }
-            set { SetHead(Protocol.ENCODING, value); }
+            get { return GetHeader(Protocol.ENCODING); }
+            set { SetHeader(Protocol.ENCODING, value); }
         }
 
         public string OriginUrl
         {
-            get { return GetHead(Protocol.ORIGIN_URL); }
-            set { SetHead(Protocol.ORIGIN_URL, value); }
+            get { return GetHeader(Protocol.ORIGIN_URL); }
+            set { SetHeader(Protocol.ORIGIN_URL, value); }
         }
 
         public string OriginStatus
         {
-            get { return GetHead(Protocol.ORIGIN_STATUS); }
-            set { SetHead(Protocol.ORIGIN_STATUS, value); }
+            get { return GetHeader(Protocol.ORIGIN_STATUS); }
+            set { SetHeader(Protocol.ORIGIN_STATUS, value); }
         }
 
         public string OriginId
         {
-            get { return GetHead(Protocol.ORIGIN_ID); }
-            set { SetHead(Protocol.ORIGIN_ID, value); }
+            get { return GetHeader(Protocol.ORIGIN_ID); }
+            set { SetHeader(Protocol.ORIGIN_ID, value); }
         }
 
         public bool Ack
         {
             get
             {
-                string ack = GetHead(Protocol.ACK);
+                string ack = GetHeader(Protocol.ACK);
                 return (ack == null) || "1".Equals(ack); //default to true 
             }
-            set { SetHead(Protocol.ACK, value ? "1" : "0"); }
+            set { SetHeader(Protocol.ACK, value ? "1" : "0"); }
+        }
+
+        public string Version
+        {
+            get { return GetHeader(Protocol.VERSION); }
+            set { SetHeader(Protocol.VERSION, value); }
         } 
-
-        public string Url
-        {
-            get { return this.url; }
-            set { this.url = value; }
-        }
-
-        public string Status
-        {
-            get { return this.status; }
-            set { this.status = value; }
-        }
-
-        public string Method
-        {
-            get { return this.method; }
-            set { this.method = value; }
-        }
-
-
-        public byte[] Body
-        {
-            get { return body; }
-            set { SetBody(value); }
-        }
 
         public string BodyString
         {
             get { return GetBody(); }
             set { SetBody(value); }
         }
-
-        public string BodyJson
-        {
-            get { return GetBody(); }
-            set { SetJsonBody(value); }
-        }
-
+       
 
         #endregion
-
-        public void Encode(ByteBuffer buf)
-        {
-            if(this.status != null)
-            {
-                string desc = "Unknow status";
-                if (HttpStatusTable.ContainsKey(this.status))
-                {
-                    desc = HttpStatusTable[this.status];
-                }
-                buf.Put("HTTP/1.1 {0} {1}\r\n", this.status, desc);
-            }
-            else
-            {
-                string method = this.method;
-                if(method == null)
-                {
-                    method = "GET";
-                }
-                string url = this.url;
-                if(url == null)
-                {
-                    url = "/";
-                }
-                buf.Put("{0} {1} HTTP/1.1\r\n", method, url);
-            } 
-            foreach (KeyValuePair<string, string> e in this.head)
-            {
-                buf.Put("{0}: {1}\r\n", e.Key, e.Value);
-            }
-            string lenKey = "content-length";
-            if (!this.head.ContainsKey(lenKey))
-            {
-                int bodyLen = this.body == null ? 0 : this.body.Length;
-                buf.Put("{0}: {1}\r\n", lenKey, bodyLen);
-            }
-
-            buf.Put("\r\n");
-
-            if (this.body != null)
-            {
-                buf.Put(this.body);
-            }
-        }
-
-        private static int FindHeaderEnd(ByteBuffer buf)
-        {
-            int i = buf.Position;
-            byte[] data = buf.Data;
-            while (i + 3 < buf.Limit)
-            {
-                if (data[i] == '\r' && data[i + 1] == '\n' && data[i + 2] == '\r' && data[i + 3] == '\n')
-                {
-                    return i + 3;
-                }
-                i++;
-            }
-            return -1;
-
-        }
-
-        public static Message DecodeHeader(string header)
-        {
-            Message msg = new Message();
-            string[] lines = Regex.Split(header, "\r\n");
-            string meta = lines[0].Trim();
-            string[] blocks = meta.Split(' ');
-            string test = blocks[0].ToUpper();
-            if (test.StartsWith("HTTP"))
-            {
-                msg.status = blocks[1]; 
-            }
-            else
-            {
-                msg.method = blocks[0];
-                if (blocks.Length > 1)
-                {
-                    msg.url = blocks[1];
-                }
-            } 
-
-            for (int i = 1; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                int idx = line.IndexOf(':');
-                if (idx < 0) continue; //ignore
-                string key = line.Substring(0, idx).Trim().ToLower(); //key to lower case
-                string val = line.Substring(idx + 1).Trim();
-                msg.SetHead(key, val);
-            }
-
-            return msg;
-        }
-
-        public static Message Decode(ByteBuffer buf)
-        {
-            int idx = FindHeaderEnd(buf);
-            int headLen = idx - buf.Position + 1;
-            if (idx < 0) return null;
-
-            string header = System.Text.Encoding.Default.GetString(buf.Data, buf.Position, headLen);
-
-            Message msg = DecodeHeader(header);
-            string bodyLenString = msg.GetHead("content-length");
-            if (bodyLenString == null)
-            {
-                buf.Drain(headLen);
-                return msg;
-            }
-            int bodyLen = int.Parse(bodyLenString);
-            if (buf.Remaining() < headLen + bodyLen)
-            {
-                return null;
-            }
-            buf.Drain(headLen);
-            byte[] body = buf.Get(bodyLen);
-            msg.SetBody(body);
-            return msg;
-        }
-
-        public override string ToString()
-        {
-            ByteBuffer buf = new ByteBuffer();
-            Encode(buf);
-            return buf.ToString();
-        }
-
-        public string GetBody()
-        {
-            if (body == null) return null;
-            return System.Text.Encoding.Default.GetString(body);
-        }
-
-        public string GetBody(System.Text.Encoding encoding)
-        {
-            if (body == null) return null;
-            return encoding.GetString(body);
-        }
-
-        private static IDictionary<string, string> HttpStatusTable = new Dictionary<string, string>();
-        static Message()
-        {
-            HttpStatusTable.Add("200", "OK");
-            HttpStatusTable.Add("201", "Created");
-            HttpStatusTable.Add("202", "Accepted");
-            HttpStatusTable.Add("204", "No Content");
-            HttpStatusTable.Add("206", "Partial Content");
-            HttpStatusTable.Add("301", "Moved Permanently");
-            HttpStatusTable.Add("304", "Not Modified");
-            HttpStatusTable.Add("400", "Bad Request");
-            HttpStatusTable.Add("401", "Unauthorized");
-            HttpStatusTable.Add("403", "Forbidden");
-            HttpStatusTable.Add("404", "Not Found");
-            HttpStatusTable.Add("405", "Method Not Allowed");
-            HttpStatusTable.Add("416", "Requested Range Not Satisfiable");
-            HttpStatusTable.Add("500", "Internal Server Error");
-        }
-
     } 
 }
