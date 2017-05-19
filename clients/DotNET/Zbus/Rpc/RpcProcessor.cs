@@ -211,7 +211,7 @@ namespace Zbus.Rpc
                 {
                     if (args[i].GetType() != pinfo[i].ParameterType)
                     {
-                        args[i] = ConvertKit.Convert(args[i], pinfo[i].ParameterType);
+                        args[i] = JsonKit.Convert(args[i], pinfo[i].ParameterType);
                     }
                 }
 

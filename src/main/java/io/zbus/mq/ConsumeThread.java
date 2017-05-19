@@ -20,9 +20,7 @@ public class ConsumeThread extends Thread implements Closeable{
 	
 	protected ExecutorService consumeRunner;
 	protected ConsumeHandler consumeHandler;
-	
-	private ConsumeCtrl consumeCtrl;  
-	
+	 
 	 
 	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
 		this.client = client;
@@ -49,11 +47,7 @@ public class ConsumeThread extends Thread implements Closeable{
 		if(this.consumeGroup == null){
 			this.consumeGroup = new ConsumeGroup();
 			consumeGroup.setGroupName(this.topic);
-		}
-		this.consumeCtrl = new ConsumeCtrl();
-		this.consumeCtrl.setGroupName(consumeGroup.getGroupName());
-		this.consumeCtrl.setFilterTag(consumeGroup.getFilterTag()); 
-		this.consumeCtrl.setWindow(consumeWindow);
+		} 
 		
 		this.client.setInvokeTimeout(consumeTimeout);  
 		this.client.setToken(token);
@@ -65,7 +59,7 @@ public class ConsumeThread extends Thread implements Closeable{
 	public Message take() throws IOException, InterruptedException {  
 		Message res = null;
 		try {  
-			res = client.consume(topic, consumeCtrl); 
+			res = client.consume(topic, this.consumeGroup.getGroupName(), this.getConsumeWindow()); 
 			if (res == null) return res; 
 			String status = res.getStatus();
 			if ("404".equals(status)) {

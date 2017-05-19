@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Zbus.Mq
 { 
 
-    public static class ConvertKit
+    public static class JsonKit
     {
         public static JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {

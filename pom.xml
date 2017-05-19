@@ -47,13 +47,13 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.1.6.Final</version>
+			<version>4.1.11.Final</version>
 		</dependency>  
 
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.24</version>
+			<version>1.2.32</version>
 			<scope>provided</scope>
 		</dependency> 
 

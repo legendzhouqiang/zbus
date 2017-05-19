@@ -2,23 +2,16 @@ package io.zbus.mq;
 
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
-	private String filter; //message in group is filtered
-	private Integer mask;
-	private String creator;
+	private String filter;     //filter on message'tag
+	private Integer mask;   
 	
-	//create group from another group
-	private String startCopy;
-	
-	//create group start from offset, msgId to check valid
+	private String startCopy;  //create group from another group 
 	private Long startOffset;
-	private String startMsgId;
+	private String startMsgId; //create group start from offset, msgId to check valid
+	private Long startTime;    //create group start from time
 	
-	//create group start from time
-	private Long startTime;
-	
-	//group features
-	private Boolean exclusive;
-	private Boolean deleteOnExit; 
+	//only used in server side, TODO
+	private String creator;
 	
 	public ConsumeGroup(){
 		
@@ -69,29 +62,17 @@ public class ConsumeGroup implements Cloneable {
 	public void setStartTime(Long startTime) {
 		this.startTime = startTime;
 	}
-	public Boolean getExclusive() {
-		return exclusive;
-	}
-	public void setExclusive(Boolean exclusive) {
-		this.exclusive = exclusive;
-	}
-	public Boolean getDeleteOnExit() {
-		return deleteOnExit;
-	}
-	public void setDeleteOnExit(Boolean deleteOnExit) {
-		this.deleteOnExit = deleteOnExit;
-	}  
-	public String getFilterTag() {
+	public String getFilter() {
 		return filter;
 	} 
-	public void setFilterTag(String filterTag) {
-		this.filter = filterTag;
+	public void setFilter(String filter) {
+		this.filter = filter;
 	} 
-	public Integer getGroupFlag() {
+	public Integer getMask() {
 		return mask;
 	} 
-	public void setGroupFlag(Integer groupFlag) {
-		this.mask = groupFlag;
+	public void setMask(Integer mask) {
+		this.mask = mask;
 	} 
 	public String getCreator() {
 		return creator;

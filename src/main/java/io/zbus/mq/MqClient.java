@@ -32,19 +32,19 @@ public class MqClient extends MessageClient{
 	}
 	
 	public Message consume(String topic) throws IOException, InterruptedException{
-		return consume(topic, null);
+		return consume(topic, null, null);
 	}
 	
-	public Message consume(String topic, ConsumeCtrl ctrl) throws IOException, InterruptedException {
+	public Message consume(String topic, String group) throws IOException, InterruptedException {
+		return consume(topic, group, null);
+	}
+	
+	public Message consume(String topic, String group, Integer window) throws IOException, InterruptedException {
 		Message msg = new Message();
 		msg.setCommand(Protocol.CONSUME);
-		msg.setTopic(topic);
-		
-		if(ctrl != null){
-			msg.setConsumeGroup(ctrl.getGroupName()); 
-			msg.setGroupFilter(ctrl.getFilterTag());
-			msg.setConsumeWindow(ctrl.getWindow());
-		} 
+		msg.setTopic(topic); 
+		msg.setConsumeGroup(group);  
+		msg.setConsumeWindow(window); 
 		
 		Message res = invokeSync(msg, invokeTimeout);
 		if (res == null) return res;
@@ -112,11 +112,11 @@ public class MqClient extends MessageClient{
 		msg.setTopic(topic);
 		msg.setConsumeGroup(group.getGroupName());
 		msg.setGroupStartCopy(group.getStartCopy());
-		msg.setGroupFilter(group.getFilterTag());
+		msg.setGroupFilter(group.getFilter());
 		msg.setGroupStartMsgId(group.getStartMsgId());
 		msg.setGroupStartOffset(group.getStartOffset()); 
 		msg.setGroupStartTime(group.getStartTime());
-		msg.setTopicMask(group.getGroupFlag());
+		msg.setTopicMask(group.getMask());
 		
 		
 		Message res = invokeSync(msg, invokeTimeout);

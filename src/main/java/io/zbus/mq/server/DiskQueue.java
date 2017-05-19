@@ -101,8 +101,8 @@ public class DiskQueue implements MessageQueue{
 			}
 			consumeGroups.put(consumeGroup, group); 
 		} 
-		group.reader.setFilter(ctrl.getFilterTag());
-		Integer groupFlag = ctrl.getGroupFlag();
+		group.reader.setFilter(ctrl.getFilter());
+		Integer groupFlag = ctrl.getMask();
 		if(groupFlag != null){
 			group.reader.setMask(groupFlag);
 		}

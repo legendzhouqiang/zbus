@@ -16,38 +16,25 @@ namespace Zbus.Mq
         public MqClient(ServerAddress serverAddress, string certFile = null)
             : base(serverAddress, certFile)
         {
+        } 
+
+        public async Task ProduceAsync(Message msg, CancellationToken? token = null)
+        {
+            msg.Cmd = Protocol.PRODUCE;
+            await CheckedInvokeAsync(msg, token);
         }
 
-        private async Task<T> InvokeObjectAsync<T>(Message msg, CancellationToken? token = null) where T: ErrorInfo, new()
+        public async Task<Message> ConsumeAsync(string topic, string group = null, int? window=null, CancellationToken? token = null)
         {
-            msg.Token = this.Token;
-            if (token == null)
+            Message msg = new Message
             {
-                token = CancellationToken.None;
-            }
-            Message res = await this.InvokeAsync(msg, token.Value);
-            if (res.Status != "200")
-            {
-                T info = new T();
-                info.Error = res.BodyString;
-                return info;
-            }
-            return ConvertKit.DeserializeObject<T>(res.BodyString);
+                Topic = topic,
+                ConsumeGroup = group,
+                Token = Token,
+            };
+            return await InvokeAsync(msg, token); 
         }
 
-        private async Task CheckedInvokeAsync(Message msg, CancellationToken? token = null)
-        {
-            msg.Token = this.Token;
-            if (token == null)
-            {
-                token = CancellationToken.None;
-            }
-            Message res = await this.InvokeAsync(msg, token.Value);
-            if (res.Status != "200")
-            {
-                throw new MqException(res.BodyString);
-            }  
-        }
 
         public async Task<ServerInfo> QueryServerAsync(CancellationToken? token = null)
         {
@@ -153,6 +140,37 @@ namespace Zbus.Mq
                 ConsumeGroup = group,
             };
             await CheckedInvokeAsync(msg, token);
+        }
+
+        private async Task<T> InvokeObjectAsync<T>(Message msg, CancellationToken? token = null) where T : ErrorInfo, new()
+        {
+            msg.Token = this.Token;
+            if (token == null)
+            {
+                token = CancellationToken.None;
+            }
+            Message res = await this.InvokeAsync(msg, token.Value);
+            if (res.Status != "200")
+            {
+                T info = new T();
+                info.Error = res.BodyString;
+                return info;
+            }
+            return JsonKit.DeserializeObject<T>(res.BodyString);
+        }
+
+        private async Task CheckedInvokeAsync(Message msg, CancellationToken? token = null)
+        {
+            msg.Token = this.Token;
+            if (token == null)
+            {
+                token = CancellationToken.None;
+            }
+            Message res = await this.InvokeAsync(msg, token.Value);
+            if (res.Status != "200")
+            {
+                throw new MqException(res.BodyString);
+            }
         }
     }
 

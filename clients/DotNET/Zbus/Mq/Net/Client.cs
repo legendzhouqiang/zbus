@@ -100,12 +100,8 @@ namespace Zbus.Mq.Net
             Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
             return false;
         } 
-
-        public async Task<RES> InvokeAsync(REQ req)
-        {
-            return await InvokeAsync(req, CancellationToken.None);
-        }
-        public async Task<RES> InvokeAsync(REQ req, CancellationToken token)
+         
+        public async Task<RES> InvokeAsync(REQ req, CancellationToken? token=null)
         {
             await SendAsync(req, token);
             string reqId = req.Id;
@@ -125,28 +121,28 @@ namespace Zbus.Mq.Net
                 resultTable[res.Id] = res;
             }
         }
-
-        public async Task SendAsync(REQ req)
+         
+        public async Task SendAsync(REQ req, CancellationToken? token=null)
         {
-            await SendAsync(req, CancellationToken.None);
-        }
-        public async Task SendAsync(REQ req, CancellationToken token)
-        {
+            if(token == null)
+            {
+                token = CancellationToken.None;
+            }
             if (req.Id == null)
             {
                 req.Id = Guid.NewGuid().ToString();
             }
             ByteBuffer buf = this.codecWrite.Encode(req);
-            await stream.WriteAsync(buf.Data, 0, buf.Limit, token);
-            await stream.FlushAsync(token);
+            await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value);
+            await stream.FlushAsync(token.Value);
         }
-
-        public async Task<RES> RecvAsync()
+         
+        public async Task<RES> RecvAsync(CancellationToken? token=null)
         {
-            return await RecvAsync(CancellationToken.None);
-        }
-        public async Task<RES> RecvAsync(CancellationToken token)
-        {  
+            if (token == null)
+            {
+                token = CancellationToken.None;
+            }
             byte[] buf = new byte[4096];
             while (true)
             {
@@ -159,7 +155,7 @@ namespace Zbus.Mq.Net
                     RES res = (RES)msg;
                     return res;
                 }
-                int n = await stream.ReadAsync(buf, 0, buf.Length, token);
+                int n = await stream.ReadAsync(buf, 0, buf.Length, token.Value);
                 this.readBuf.Put(buf, 0, n);
             }
         }
