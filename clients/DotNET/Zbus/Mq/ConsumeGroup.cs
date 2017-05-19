@@ -13,8 +13,15 @@ namespace Zbus.Mq
         public string StartCopy { get; set; }//create group from another group 
         public long? StartOffset { get; set; }//create group start from offset, msgId to check valid
         public string StartMsgId { get; set; } 
-        public long? StartTime { get; set; }//create group start from time
-        public bool? Exclusive { get; set; } //group features
-        public bool? DeleteOnExit { get; set; }
+        public long? StartTime { get; set; }//create group start from time 
+
+        public ConsumeGroup()
+        {
+
+        }
+        public ConsumeGroup(string groupName)
+        {
+            this.GroupName = groupName;
+        }
     }
 }

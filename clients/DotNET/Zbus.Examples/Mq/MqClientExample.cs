@@ -20,9 +20,8 @@ namespace Zbus.Examples
         {
             MqClient client = new MqClient("zbus.io");
             await client.ConnectAsync();
-             
-            var res = await client.DeclareTopicAsync("hong7");
-            Console.WriteLine(res.TopicName); 
+        
+            await client.DeclareGroupAsync("hong7", "hong77");
         }
     }
 }

@@ -51,9 +51,9 @@ namespace Zbus.Mq
         public static readonly string ACK = "ack";
         public static readonly string ENCODING = "encoding";
 
-        public static readonly string ORIGIN_ID = "origin_id";     //original id, TODO compatible issue: rawid
-        public static readonly string ORIGIN_URL = "origin_url";    //original URL  
-        public static readonly string ORIGIN_STATUS = "origin_status"; //original Status  TODO compatible issue: reply_code
+        public static readonly string ORIGIN_ID = "origin_id";      
+        public static readonly string ORIGIN_URL = "origin_url";     
+        public static readonly string ORIGIN_STATUS = "origin_status";  
 
         //Security 
         public static readonly string TOKEN = "token";

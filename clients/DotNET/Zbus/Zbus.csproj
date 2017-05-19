@@ -84,6 +84,7 @@
     <Compile Include="Mq\Net\ICodec.cs" />
     <Compile Include="Mq\Net\Client.cs" />
     <Compile Include="Mq\Kit.cs" />
+    <Compile Include="Mq\MqException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc\Request.cs" />
     <Compile Include="Rpc\Response.cs" />

@@ -35,6 +35,20 @@ namespace Zbus.Mq
             return ConvertKit.DeserializeObject<T>(res.BodyString);
         }
 
+        private async Task CheckedInvokeAsync(Message msg, CancellationToken? token = null)
+        {
+            msg.Token = this.Token;
+            if (token == null)
+            {
+                token = CancellationToken.None;
+            }
+            Message res = await this.InvokeAsync(msg, token.Value);
+            if (res.Status != "200")
+            {
+                throw new MqException(res.BodyString);
+            }  
+        }
+
         public async Task<ServerInfo> QueryServerAsync(CancellationToken? token = null)
         {
             Message msg = new Message
@@ -75,6 +89,70 @@ namespace Zbus.Mq
                 TopicMask = topicMask,
             };
             return await InvokeObjectAsync<TopicInfo>(msg, token);
+        }
+
+        public async Task<ConsumeGroupInfo> DeclareGroupAsync(string topic, string group, CancellationToken? token = null)
+        {
+            return await DeclareGroupAsync(topic, new ConsumeGroup(group), token);
+        }
+
+        public async Task<ConsumeGroupInfo> DeclareGroupAsync(string topic, ConsumeGroup group, CancellationToken? token = null)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.DECLARE,
+                Topic = topic,
+                ConsumeGroup = group.GroupName,
+                GroupFilter = group.Filter,
+                GroupMask = group.Mask,
+                GroupStartCopy = group.StartCopy,
+                GroupStartMsgid = group.StartMsgId,
+                GroupStartOffset = group.StartOffset,
+                GroupStartTime = group.StartTime,
+            };
+            return await InvokeObjectAsync<ConsumeGroupInfo>(msg, token);
+        }
+
+        public async Task RemoveTopicAsync(string topic, CancellationToken? token = null)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.REMOVE,
+                Topic = topic,
+            };
+            await CheckedInvokeAsync(msg, token);
+        }
+
+        public async Task RemoveGroupAsync(string topic, string group, CancellationToken? token = null)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.REMOVE,
+                Topic = topic,
+                ConsumeGroup = group,
+            };
+            await CheckedInvokeAsync(msg, token);
+        }
+
+        public async Task EmptyTopicAsync(string topic, CancellationToken? token = null)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.EMPTY,
+                Topic = topic,
+            };
+            await CheckedInvokeAsync(msg, token);
+        }
+
+        public async Task EmptyGroupAsync(string topic, string group, CancellationToken? token = null)
+        {
+            Message msg = new Message
+            {
+                Cmd = Protocol.EMPTY,
+                Topic = topic,
+                ConsumeGroup = group,
+            };
+            await CheckedInvokeAsync(msg, token);
         }
     }
 }

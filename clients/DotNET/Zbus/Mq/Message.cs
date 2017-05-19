@@ -21,11 +21,26 @@ namespace Zbus.Mq
             Method = "GET";
             SetCommonHeaders();
         }
-         
         private void SetCommonHeaders()
         {
             SetHeader("connection", "Keep-Alive");
-            Version = Protocol.VERSION_VALUE; 
+            Version = Protocol.VERSION_VALUE;
+        }
+
+        public string this[string key]
+        {
+            get
+            {
+                if (Headers.ContainsKey(key))
+                {
+                    return Headers[key];
+                }
+                return null;
+            }
+            set
+            {
+                Headers[key] = value;
+            }
         }
 
         public T? GetHeader<T>(string key, T? defaultValue=null) where T: struct
@@ -56,16 +71,36 @@ namespace Zbus.Mq
             this.Headers.Remove(key);
         }
          
-        public string GetBody(System.Text.Encoding encoding = null)
+        private System.Text.Encoding GetEncoding(System.Text.Encoding encoding = null)
         {
-            if (Body == null) return null;
+            if (Encoding != null) //use header encoding first!
+            {
+                try
+                {
+                    encoding = System.Text.Encoding.GetEncoding(Encoding);
+                }
+                catch
+                {
+                    //ignore 
+                }
+            }
             if (encoding == null)
             {
                 encoding = System.Text.Encoding.UTF8;
             }
-            return encoding.GetString(Body);
+            return encoding;
+        }
+        public string GetBody(System.Text.Encoding encoding = null)
+        {
+            if (Body == null) return null; 
+            return GetEncoding(encoding).GetString(Body);
         }
 
+        /// <summary>
+        /// Header encoding > parameter encoding
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="encoding">If Encoding is set in header, the parameter will take no effect, use header's encoding first</param>
         public void SetBody(byte[] body, Encoding encoding = null)
         {
             this.Body = body;
@@ -74,10 +109,8 @@ namespace Zbus.Mq
             {
                 bodyLen = this.Body.Length;
             }
-            if(encoding == null)
-            {
-                encoding = System.Text.Encoding.UTF8;
-            }
+
+            encoding = GetEncoding(encoding);
             Encoding = encoding.WebName;
             this.SetHeader("content-length", string.Format("{0}", bodyLen));
         }

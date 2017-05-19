@@ -6,7 +6,22 @@ using System.Threading.Tasks;
 namespace Zbus.Mq.Net
 {
     public class MessageCodec : ICodec
-    { 
+    {  
+        public ByteBuffer Encode(object obj)
+        {
+            if (!(obj is Message))
+            {
+                throw new ArgumentException("Message type required for: " + obj);
+            }
+            Message msg = obj as Message;
+            ByteBuffer buf = new ByteBuffer();
+            Encode(buf, msg);
+
+            buf.Flip();
+
+            return buf;
+        }
+
         public object Decode(ByteBuffer buf)
         {
             int idx = FindHeaderEnd(buf);
@@ -16,7 +31,7 @@ namespace Zbus.Mq.Net
             string header = System.Text.Encoding.Default.GetString(buf.Data, buf.Position, headLen);
 
             Message msg = DecodeHeader(header);
-            string bodyLenString = msg.GetHeader("content-length");
+            string bodyLenString = msg["content-length"];
             if (bodyLenString == null)
             {
                 buf.Drain(headLen);
@@ -32,21 +47,6 @@ namespace Zbus.Mq.Net
             msg.SetBody(body);
             return msg;
         }
-
-        public ByteBuffer Encode(object obj)
-        {
-            if (!(obj is Message))
-            {
-                throw new ArgumentException("Message type required for: " + obj);
-            }
-            Message msg = obj as Message;
-            ByteBuffer buf = new ByteBuffer();
-            Encode(buf, msg);
-
-            buf.Flip();
-
-            return buf;
-        } 
 
         public void Encode(ByteBuffer buf, Message msg)
         {
