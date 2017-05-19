@@ -9,8 +9,8 @@ namespace Zbus.Mq
     public class MqClient : MessageClient
     {
         public string Token { get; set; } 
-        public MqClient(string serverAddress, string certFile = null)
-            : base(serverAddress, certFile)
+        public MqClient(string serverAddress)
+            : base(serverAddress)
         {
         }
         public MqClient(ServerAddress serverAddress, string certFile = null)
@@ -153,6 +153,34 @@ namespace Zbus.Mq
                 ConsumeGroup = group,
             };
             await CheckedInvokeAsync(msg, token);
+        }
+    }
+
+    public class MqClientPool : Pool<MqClient>
+    {
+        private readonly ServerAddress serverAddress;
+        private readonly string certFile;
+        public MqClientPool(string serverAddress)
+        {
+            this.serverAddress = new ServerAddress(serverAddress);
+        }
+        public MqClientPool(ServerAddress serverAddress, string certFile = null)
+        {
+            this.serverAddress = serverAddress;
+            this.certFile = certFile;
+
+            ObjectActive = IsClientActive;
+            ObjectFactory = ClientFacotry;
+        }
+
+        private bool IsClientActive(MqClient client)
+        {
+            return client.Connected;
+        }
+
+        private MqClient ClientFacotry()
+        {
+            return new MqClient(this.serverAddress, this.certFile);
         }
     }
 }

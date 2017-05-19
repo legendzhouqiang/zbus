@@ -167,13 +167,13 @@ namespace Zbus.Mq.Net
 
     public class MessageClient : Client<Message>
     {
-        public MessageClient(string serverAddress, string certFile = null)
-            : base(serverAddress, new MessageCodec(), certFile)
+        public MessageClient(string serverAddress)
+            : base(serverAddress, new MessageCodec())
         {
         }
         public MessageClient(ServerAddress serverAddress, string certFile = null)
             : base(serverAddress, new MessageCodec(), certFile)
         {
         }
-    }
+    } 
 }

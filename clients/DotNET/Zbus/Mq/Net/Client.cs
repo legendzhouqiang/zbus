@@ -49,13 +49,13 @@ namespace Zbus.Mq.Net
             this.codecWrite = codecWrite;
             this.certFile = certFile;
         }
-        public Client(string serverAddress, ICodec codecRead, ICodec codecWrite, string certFile = null) :
-            this(new ServerAddress(serverAddress), codecRead, codecWrite, certFile)
+        public Client(string serverAddress, ICodec codecRead, ICodec codecWrite) :
+            this(new ServerAddress(serverAddress), codecRead, codecWrite)
         {
 
         }
-        public Client(string serverAddress, ICodec codec, string certFile = null)
-            : this(serverAddress, codec, codec, certFile)
+        public Client(string serverAddress, ICodec codec)
+            : this(serverAddress, codec, codec)
         {
         }
         
@@ -188,8 +188,8 @@ namespace Zbus.Mq.Net
 
     public class Client<T> : Client<T, T> where T : Id
     {
-        public Client(string serverAddress, ICodec codec, string certFile = null) 
-            : base(serverAddress, codec, certFile) { }
+        public Client(string serverAddress, ICodec codec) 
+            : base(serverAddress, codec) { }
         public Client(ServerAddress serverAddress, ICodec codec, string certFile = null)
             : base(serverAddress, codec, codec, certFile) { }
     }

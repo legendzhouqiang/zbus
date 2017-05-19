@@ -4,19 +4,13 @@ using System.Threading;
 
 namespace Zbus.Mq.Net
 {
-
-    public interface IPoolable : IDisposable
-    {
-        bool Active { get; }
-    }
-
-    public class Pool<T> : IDisposable
-       where T : IPoolable
+     
+    public class Pool<T> : IDisposable where T : IDisposable
     {
         public int MaxCount
         {
             get { return maxCount; }
-            set { maxCount = value; }
+            set { maxCount =  value; }
         }
 
         public int Count
@@ -24,12 +18,20 @@ namespace Zbus.Mq.Net
             get { return count; }
         }
 
-        public Func<T> Generator { get; set; }
-        private ConcurrentBag<T> bag = new ConcurrentBag<T>();
-        private AutoResetEvent notFullEvent = new AutoResetEvent(false);
+        public Func<T> ObjectFactory { get; set; }
+        public Func<T,bool> ObjectActive { get; set; }
+
+        private readonly ConcurrentBag<T> bag = new ConcurrentBag<T>();
+        private readonly AutoResetEvent notFullEvent = new AutoResetEvent(false);
         private int maxCount = 32;
         private int count = 0;
 
+
+        private bool Active(T value)
+        {
+            if (ObjectActive == null) return true;
+            return ObjectActive(value);
+        }
 
         public T Borrow()
         {
@@ -37,7 +39,7 @@ namespace Zbus.Mq.Net
             bool ok = bag.TryTake(out value);
             if (ok)
             {
-                if (value.Active)
+                if (Active(value))
                 {
                     return value;
                 }
@@ -49,7 +51,7 @@ namespace Zbus.Mq.Net
             }
             if (count < maxCount)
             {
-                value = Generator();
+                value = ObjectFactory();
                 Interlocked.Increment(ref count);
                 return value;
             }
@@ -61,7 +63,7 @@ namespace Zbus.Mq.Net
 
         public void Return(T value)
         {
-            if (!value.Active)
+            if (!Active(value))
             {
                 HandleInactive(value);
             }
@@ -74,7 +76,7 @@ namespace Zbus.Mq.Net
 
         private void HandleInactive(T value)
         {
-            if (!value.Active)
+            if (!Active(value))
             {
                 value.Dispose();
                 Interlocked.Decrement(ref count);
