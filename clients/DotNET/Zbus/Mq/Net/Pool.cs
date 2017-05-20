@@ -74,6 +74,11 @@ namespace Zbus.Mq.Net
             }
         }
 
+        public T Create()
+        {
+            return ObjectFactory();
+        }
+
         private void HandleInactive(T value)
         {
             if (!Active(value))

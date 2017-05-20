@@ -47,9 +47,7 @@ public class ConsumeThread extends Thread implements Closeable{
 		if(this.consumeGroup == null){
 			this.consumeGroup = new ConsumeGroup();
 			consumeGroup.setGroupName(this.topic);
-		} 
-		
-		this.client.setInvokeTimeout(consumeTimeout);  
+		}  
 		this.client.setToken(token);
 		this.client.setInvokeTimeout(consumeTimeout);
 		

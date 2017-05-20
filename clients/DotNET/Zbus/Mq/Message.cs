@@ -63,6 +63,7 @@ namespace Zbus.Mq
 
         public void SetHeader(string key, object val)
         {
+            if (val == null) return;
             this.Headers[key] = (string)Convert.ChangeType(val, typeof(string));
         }
 
@@ -143,6 +144,11 @@ namespace Zbus.Mq
         {
             get { return GetHeader(Protocol.CONSUME_GROUP); }
             set { SetHeader(Protocol.CONSUME_GROUP, value); }
+        }
+        public int? ConsumeWindow
+        {
+            get { return GetHeader<int>(Protocol.CONSUME_WINDOW); }
+            set { SetHeader(Protocol.CONSUME_WINDOW, value); }
         }
         public string GroupStartCopy
         {

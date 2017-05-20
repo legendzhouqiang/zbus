@@ -25,7 +25,7 @@ namespace Zbus.Mq.Net
     } 
     
 
-    public class Client<REQ, RES> : IDisposable where REQ : Id where RES : Id
+    public class Client<REQ, RES> : IDisposable where REQ : Id where RES : class, Id
     {
         public bool AllowSelfSignedCertficate { get; set; }
         private readonly TcpClient tcpClient;
@@ -61,6 +61,8 @@ namespace Zbus.Mq.Net
         
         public async Task ConnectAsync()
         {
+            if (this.tcpClient.Connected) return;
+
             string[] bb = this.serverAddress.Address.Trim().Split(':');
             string host;
             int port = 80;
@@ -87,7 +89,7 @@ namespace Zbus.Mq.Net
                     new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
                 sslStream.AuthenticateAsClient(this.serverAddress.Address);
                 this.stream = sslStream;
-            }
+            } 
         }
 
         bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -116,6 +118,8 @@ namespace Zbus.Mq.Net
                 }
 
                 res = await RecvAsync(token);
+                if (res == null) return null;
+
                 if (res.Id == reqId) return res;
 
                 resultTable[res.Id] = res;
@@ -124,6 +128,10 @@ namespace Zbus.Mq.Net
          
         public async Task SendAsync(REQ req, CancellationToken? token=null)
         {
+            if (!this.tcpClient.Connected)
+            {
+                await ConnectAsync();
+            }
             if(token == null)
             {
                 token = CancellationToken.None;
@@ -133,12 +141,17 @@ namespace Zbus.Mq.Net
                 req.Id = Guid.NewGuid().ToString();
             }
             ByteBuffer buf = this.codecWrite.Encode(req);
-            await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value);
-            await stream.FlushAsync(token.Value);
+            await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value).ConfigureAwait(false);
+            await stream.FlushAsync(token.Value).ConfigureAwait(false);
         }
          
         public async Task<RES> RecvAsync(CancellationToken? token=null)
         {
+            if (!this.tcpClient.Connected)
+            {
+                await ConnectAsync();
+            }
+
             if (token == null)
             {
                 token = CancellationToken.None;
@@ -155,7 +168,11 @@ namespace Zbus.Mq.Net
                     RES res = (RES)msg;
                     return res;
                 }
-                int n = await stream.ReadAsync(buf, 0, buf.Length, token.Value);
+                int n = await stream.ReadAsync(buf, 0, buf.Length, token.Value).ConfigureAwait(false);
+                if(n <= 0)
+                {
+                    return (RES)null;
+                }
                 this.readBuf.Put(buf, 0, n);
             }
         }
@@ -164,11 +181,11 @@ namespace Zbus.Mq.Net
         {
             if (stream != null)
             {
-                stream.Close();
+                stream.Close(); 
             }
             if (this.tcpClient != null)
             {
-                this.tcpClient.Close();
+                this.tcpClient.Close(); 
             }
         }
 
@@ -182,7 +199,7 @@ namespace Zbus.Mq.Net
     }
 
 
-    public class Client<T> : Client<T, T> where T : Id
+    public class Client<T> : Client<T, T> where T : class, Id
     {
         public Client(string serverAddress, ICodec codec) 
             : base(serverAddress, codec) { }

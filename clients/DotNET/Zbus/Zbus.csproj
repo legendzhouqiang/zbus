@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mq\ConsumeGroup.cs" />
+    <Compile Include="Mq\ConsumeThread.cs" />
     <Compile Include="Mq\MqClient.cs" />
     <Compile Include="Mq\Protocol.cs" />
     <Compile Include="Mq\Message.cs" />

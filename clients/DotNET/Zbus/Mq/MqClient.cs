@@ -28,8 +28,10 @@ namespace Zbus.Mq
         {
             Message msg = new Message
             {
+                Cmd = Protocol.CONSUME,
                 Topic = topic,
                 ConsumeGroup = group,
+                ConsumeWindow = window,
                 Token = Token,
             };
             return await InvokeAsync(msg, token); 
