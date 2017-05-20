@@ -144,7 +144,7 @@ namespace Zbus.Mq
             await CheckedInvokeAsync(msg, token);
         }
 
-        private async Task<T> InvokeObjectAsync<T>(Message msg, CancellationToken? token = null) where T : ErrorInfo, new()
+        public async Task<T> InvokeObjectAsync<T>(Message msg, CancellationToken? token = null) where T : ErrorInfo, new()
         {
             msg.Token = this.Token;
             if (token == null)
@@ -161,7 +161,7 @@ namespace Zbus.Mq
             return JsonKit.DeserializeObject<T>(res.BodyString);
         }
 
-        private async Task CheckedInvokeAsync(Message msg, CancellationToken? token = null)
+        public async Task CheckedInvokeAsync(Message msg, CancellationToken? token = null)
         {
             msg.Token = this.Token;
             if (token == null)

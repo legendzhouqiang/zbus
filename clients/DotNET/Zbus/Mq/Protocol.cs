@@ -91,6 +91,27 @@ namespace Zbus.Mq
                 this.SslEnabled = (bool)dict["sslEnabled"];
             }
         }
+
+        public override int GetHashCode()
+        {
+            int prime = 31;
+            int result = 1;
+            result = prime * result + ((Address == null) ? 0 : Address.GetHashCode());
+            result = prime * result + (SslEnabled ? 1231 : 1237);
+            return result;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (obj == null) return false;
+            if(obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+            ServerAddress other = (ServerAddress)obj;
+            return other.Address == this.Address && other.SslEnabled == this.SslEnabled;
+        } 
     }
 
     public class ErrorInfo

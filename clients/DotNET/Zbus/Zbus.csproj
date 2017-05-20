@@ -75,6 +75,8 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mq\BrokerRouteTable.cs" />
+    <Compile Include="Mq\Broker.cs" />
     <Compile Include="Mq\ConsumeGroup.cs" />
     <Compile Include="Mq\ConsumeThread.cs" />
     <Compile Include="Mq\MqClient.cs" />
