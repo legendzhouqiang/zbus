@@ -111,7 +111,16 @@ namespace Zbus.Mq
             }
             ServerAddress other = (ServerAddress)obj;
             return other.Address == this.Address && other.SslEnabled == this.SslEnabled;
-        } 
+        }
+
+        public override string ToString()
+        {
+            if (SslEnabled)
+            {
+                return "[SSL]" + Address;
+            }
+            return Address;
+        }
     }
 
     public class ErrorInfo

@@ -11,16 +11,17 @@ namespace Zbus.Examples
 
         static void Main(string[] args)
         {
-            Test().Wait(); 
+            Test().Wait();
 
+            Console.WriteLine("done");
             Console.ReadKey();
         }
 
         static async Task Test()
         {
-            MqClient client = new MqClient("zbus.io");
-            await client.ConnectAsync();
-        
+            MqClient client = new MqClient("localhost:15555"); 
+            await client.ConnectAsync();  
+
             await client.DeclareGroupAsync("hong7", "hong77");
         }
     }

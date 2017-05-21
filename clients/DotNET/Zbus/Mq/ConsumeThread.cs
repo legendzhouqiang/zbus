@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -16,7 +17,7 @@ namespace Zbus.Mq
         public Func<MqClient> ClientFactory { get; set; }
         public Action<Message, MqClient> MessageHandler { get; set; }
         public int ThreadCount { get; set; }
-        public bool MessageHandleInPool { get; set; }
+        public bool RunInPool { get; set; }
         public int ConsumeTimeout { get; set; }
         public int? ConsumeWindow { get; set; } 
 
@@ -34,7 +35,7 @@ namespace Zbus.Mq
             ConsumeTimeout = 10000; //10s 
             Topic = topic;
             ConsumeGroup = group==null? new ConsumeGroup(topic): group;
-            MessageHandleInPool = false;
+            RunInPool = false;
             ThreadCount = 1; 
         }
 
@@ -86,7 +87,7 @@ namespace Zbus.Mq
                             {
                                 msg = await TakeAsync(client, cts.Token);
                                 if (msg == null) continue;
-                                if (MessageHandleInPool)
+                                if (RunInPool)
                                 {
                                     await Task.Run(() =>
                                     {
@@ -97,16 +98,14 @@ namespace Zbus.Mq
                                 {
                                     MessageHandler(msg, client);
                                 }
-                            }
-                            catch (SocketException e)
-                            {
-                                Console.WriteLine(e);
-                                log.Error(e);
-                                Thread.Sleep(3000);
-                            }
+                            } 
                             catch (Exception e)
-                            {
-                                Console.WriteLine(e);
+                            { 
+                                if (e is SocketException || e is IOException)
+                                {
+                                    client.Dispose();
+                                    Thread.Sleep(3000);
+                                }  
                                 log.Error(e);
                             }
                         }

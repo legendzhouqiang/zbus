@@ -195,7 +195,7 @@ namespace Zbus.Mq
 
         private bool IsClientActive(MqClient client)
         {
-            return client.Connected;
+            return client.Active;
         }
 
         private MqClient ClientFacotry()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net; 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -22,13 +23,13 @@ namespace Zbus.Mq.Net
         /// Identity string
         /// </summary>
         string Id { get; set; }
-    } 
-    
+    }
 
-    public class Client<REQ, RES> : IDisposable where REQ : Id where RES : class, Id
+
+    public class Client<REQ, RES> : IDisposable where REQ : Id where RES : Id
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(Client<REQ, RES>));
         public bool AllowSelfSignedCertficate { get; set; }
-        private readonly TcpClient tcpClient;
         private ICodec codecRead;
         private ICodec codecWrite;
 
@@ -38,13 +39,13 @@ namespace Zbus.Mq.Net
         private ByteBuffer readBuf = new ByteBuffer();
         private IDictionary<string, RES> resultTable = new ConcurrentDictionary<string, RES>();
 
+        private TcpClient tcpClient;
         private Stream stream;
+        private SemaphoreSlim locker = new SemaphoreSlim(1);
 
         public Client(ServerAddress serverAddress, ICodec codecRead, ICodec codecWrite, string certFile = null)
         {
             this.serverAddress = serverAddress;
-            this.tcpClient = new TcpClient();
-            this.tcpClient.NoDelay = true;
             this.codecRead = codecRead;
             this.codecWrite = codecWrite;
             this.certFile = certFile;
@@ -57,12 +58,27 @@ namespace Zbus.Mq.Net
         public Client(string serverAddress, ICodec codec)
             : this(serverAddress, codec, codec)
         {
-        }
-        
+        } 
+
         public async Task ConnectAsync()
         {
-            if (this.tcpClient.Connected) return;
+            if (Active) return;
+            try
+            {
+                await locker.WaitAsync();
+                await ConnectUnsafeAsync();
+            }
+            finally
+            {
+                locker.Release();
+            }
+            //If no error connected event triggered
+            Connected?.Invoke(); 
+        }
 
+        private async Task ConnectUnsafeAsync()
+        {
+            if (Active) return; 
             string[] bb = this.serverAddress.Address.Trim().Split(':');
             string host;
             int port = 80;
@@ -75,8 +91,13 @@ namespace Zbus.Mq.Net
                 host = bb[0];
                 port = int.Parse(bb[1]);
             }
+            this.tcpClient = new TcpClient();
+            this.tcpClient.NoDelay = true;
+            log.Debug("Trying connect to " + serverAddress);
             await this.tcpClient.ConnectAsync(host, port);
-            this.stream = this.tcpClient.GetStream();
+            log.Debug("Connected to " + serverAddress); 
+
+            this.stream = this.tcpClient.GetStream(); 
 
             if (this.serverAddress.SslEnabled)
             {
@@ -86,53 +107,68 @@ namespace Zbus.Mq.Net
                 }
                 X509Certificate cert = X509Certificate.CreateFromCertFile(this.certFile);
                 SslStream sslStream = new SslStream(this.stream, false,
-                    new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+                    new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        if (AllowSelfSignedCertficate) return true;
+                        if (sslPolicyErrors == SslPolicyErrors.None)
+                        {
+                            return true;
+                        }
+                        Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
+                        return false;
+                    }),
+                    null);
+
                 sslStream.AuthenticateAsClient(this.serverAddress.Address);
                 this.stream = sslStream;
+            }  
+        }
+
+        public async Task<RES> InvokeAsync(REQ req, CancellationToken? token = null)
+        {
+            try
+            {
+                await locker.WaitAsync();
+
+                await SendUnsafeAsync(req, token);
+                string reqId = req.Id;
+                RES res;
+                while (true)
+                {
+                    if (resultTable.ContainsKey(reqId))
+                    {
+                        res = resultTable[reqId];
+                        resultTable.Remove(reqId);
+                        return res;
+                    }
+
+                    res = await RecvUnsafeAsync(token);
+                    if (res.Id == reqId) return res; 
+                    resultTable[res.Id] = res;
+                }
+            }
+            finally
+            {
+                locker.Release();
             } 
         }
 
-        bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        public async Task SendAsync(REQ req, CancellationToken? token = null)
         {
-            if (AllowSelfSignedCertficate) return true;
-            if (sslPolicyErrors == SslPolicyErrors.None)
+            try
             {
-                return true;
+                await locker.WaitAsync();
+                await SendUnsafeAsync(req, token);
             }
-            Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
-            return false;
-        } 
-         
-        public async Task<RES> InvokeAsync(REQ req, CancellationToken? token=null)
-        {
-            await SendAsync(req, token);
-            string reqId = req.Id;
-            RES res;
-            while (true)
+            finally
             {
-                if (resultTable.ContainsKey(reqId))
-                {
-                    res = resultTable[reqId];
-                    resultTable.Remove(reqId);
-                    return res;
-                }
-
-                res = await RecvAsync(token);
-                if (res == null) return null;
-
-                if (res.Id == reqId) return res;
-
-                resultTable[res.Id] = res;
+                locker.Release();
             }
         }
-         
-        public async Task SendAsync(REQ req, CancellationToken? token=null)
-        {
-            if (!this.tcpClient.Connected)
-            {
-                await ConnectAsync();
-            }
-            if(token == null)
+
+        private async Task SendUnsafeAsync(REQ req, CancellationToken? token = null)
+        { 
+            if (token == null)
             {
                 token = CancellationToken.None;
             }
@@ -144,14 +180,22 @@ namespace Zbus.Mq.Net
             await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value).ConfigureAwait(false);
             await stream.FlushAsync(token.Value).ConfigureAwait(false);
         }
-         
-        public async Task<RES> RecvAsync(CancellationToken? token=null)
-        {
-            if (!this.tcpClient.Connected)
-            {
-                await ConnectAsync();
-            }
 
+        public async Task<RES> RecvAsync(CancellationToken? token = null)
+        {
+            try
+            {
+                await locker.WaitAsync();
+                return await RecvUnsafeAsync(token);
+            }
+            finally
+            {
+                locker.Release();
+            }
+        }
+
+        private async Task<RES> RecvUnsafeAsync(CancellationToken? token = null)
+        { 
             if (token == null)
             {
                 token = CancellationToken.None;
@@ -169,39 +213,89 @@ namespace Zbus.Mq.Net
                     return res;
                 }
                 int n = await stream.ReadAsync(buf, 0, buf.Length, token.Value).ConfigureAwait(false);
-                if(n <= 0)
+                if (n <= 0)
                 {
-                    return (RES)null;
+                    throw new IOException("End of stream, probably closed by remote server");
                 }
                 this.readBuf.Put(buf, 0, n);
             }
-        }
+        } 
 
         public void Dispose()
-        {
+        { 
             if (stream != null)
             {
-                stream.Close(); 
+                stream.Close();
             }
             if (this.tcpClient != null)
             {
-                this.tcpClient.Close(); 
+                this.tcpClient.Close();
             }
         }
 
-        public bool Connected
+        public bool Active
         {
             get
             {
-                return this.tcpClient != null && this.tcpClient.Connected;
+                return this.tcpClient != null && this.tcpClient.Client != null && this.tcpClient.Connected;
             }
         }
+
+        public event Action Connected;
+        public event Action Disconnected;
+        public event Action<RES> MessageReceived;
+        private Thread recvThread;
+        private CancellationTokenSource cts = new CancellationTokenSource();
+
+        public void Start()
+        {
+            lock (this)
+            {
+                if (this.recvThread != null) return;
+            }
+
+            this.recvThread = new Thread(async () =>
+            { 
+                bool connectRequired = Active;
+                while (!cts.IsCancellationRequested)
+                {
+                    try
+                    {
+                        if (connectRequired)
+                        {
+                            await ConnectAsync();
+                        }
+                        RES res = await RecvAsync(cts.Token);
+                        MessageReceived?.Invoke(res);
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is SocketException || e is IOException)
+                        {
+                            Dispose();
+                            connectRequired = true;
+                            Disconnected?.Invoke();
+                            Thread.Sleep(3000);
+                        }
+                        log.Error(e);
+                    }
+                }
+            });
+            this.recvThread.Start();
+        }
+
+        public void Stop()
+        {
+            this.cts.Cancel();
+            this.Dispose();
+        }
+
     }
 
 
-    public class Client<T> : Client<T, T> where T : class, Id
+    public class Client<T> : Client<T, T> where T : Id
     {
-        public Client(string serverAddress, ICodec codec) 
+        public Client(string serverAddress, ICodec codec)
             : base(serverAddress, codec) { }
         public Client(ServerAddress serverAddress, ICodec codec, string certFile = null)
             : base(serverAddress, codec, codec, certFile) { }

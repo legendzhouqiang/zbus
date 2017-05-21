@@ -19,7 +19,7 @@ namespace Zbus.Examples
                 {
                     return new MqClient("localhost:15555");
                 },
-                ThreadCount = 2,
+                ThreadCount = 1,
             };
 
             thread.Start();

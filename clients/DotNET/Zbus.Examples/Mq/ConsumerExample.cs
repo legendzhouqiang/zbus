@@ -11,7 +11,7 @@ namespace Zbus.Examples
             MqClient client = new MqClient("localhost:15555");
             await client.ConnectAsync();
 
-            Message msg = await client.ConsumeAsync("hong2");
+            Message msg = await client.ConsumeAsync("hong5");
             Console.WriteLine(msg.Headers); 
         }
         static void Main(string[] args)
