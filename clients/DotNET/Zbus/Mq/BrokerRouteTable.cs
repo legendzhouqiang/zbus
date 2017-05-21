@@ -20,19 +20,26 @@ namespace Zbus.Mq
             ServerTable = new ConcurrentDictionary<ServerAddress, ServerInfo>();
         }
 
-        public void UpdateServer(ServerInfo serverInfo)
-        {
-            Console.WriteLine("Updated:" + JsonKit.SerializeObject(serverInfo));
-        }
-        public void RemoveServer(ServerAddress serverAddress)
-        {
-            Console.WriteLine("Removed:" + JsonKit.SerializeObject(serverAddress));
-        }
-
         public IList<ServerAddress> UpdateVotes(TrackerInfo trackerInfo)
         {
             Console.WriteLine("TrackerUpdated:" + JsonKit.SerializeObject(trackerInfo));
             return new List<ServerAddress>();
         }
+
+        public void UpdateServer(ServerInfo serverInfo)
+        {
+            ServerTable[serverInfo.ServerAddress] = serverInfo; 
+            Console.WriteLine("Updated:" + JsonKit.SerializeObject(serverInfo));
+        }
+
+        public void RemoveServer(ServerAddress serverAddress)
+        {
+            if (ServerTable.ContainsKey(serverAddress))
+            {
+                ServerTable.Remove(serverAddress);
+            }
+
+            Console.WriteLine("Removed:" + JsonKit.SerializeObject(serverAddress));
+        } 
     }
 }

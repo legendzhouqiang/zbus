@@ -17,17 +17,24 @@ namespace Zbus.Mq
         public string DefaultSslCertFile { get; set; } 
         public event Action<MqClientPool> ServerJoin;
         public event Action<ServerAddress> ServerLeave;
+        public BrokerRouteTable RouteTable { get; private set; }
 
         private IDictionary<ServerAddress, MqClientPool> poolTable = new ConcurrentDictionary<ServerAddress, MqClientPool>();
         private IDictionary<ServerAddress, MqClient> trackerSubscribers = new ConcurrentDictionary<ServerAddress, MqClient>();
-        private BrokerRouteTable routeTable = new BrokerRouteTable();
+        
 
         private IDictionary<string, string> sslCertFileTable = new ConcurrentDictionary<string, string>();
 
-        public void AddTracker(ServerAddress trackerAddress, string certFile = null)
+        public Broker()
+        {
+            RouteTable = new BrokerRouteTable();
+        }
+        public void AddTracker(ServerAddress trackerAddress, string certFile = null, int waitTime=3000)
         {
             MqClient client = new MqClient(trackerAddress, certFile);
             trackerSubscribers[trackerAddress] = client;
+            CountdownEvent countDown = new CountdownEvent(1);
+            bool firstTime = true;
             client.Connected += async () =>
             {
                 Message msg = new Message
@@ -44,12 +51,22 @@ namespace Zbus.Mq
                     return;
                 }
                 TrackerInfo trackerInfo = JsonKit.DeserializeObject<TrackerInfo>(msg.BodyString);
+                if (firstTime)
+                {
+                    countDown.AddCount(trackerInfo.TrackedServerList.Count - 1);
+                    firstTime = false;
+                }
+                else
+                {
+                    countDown = null;
+                } 
+                
                 foreach(ServerAddress serverAddress in trackerInfo.TrackedServerList)
                 {
-                    AddServer(serverAddress);
+                    AddServer(serverAddress, null, countDown);
                 }
 
-                IList<ServerAddress> toRemove = routeTable.UpdateVotes(trackerInfo); 
+                IList<ServerAddress> toRemove = RouteTable.UpdateVotes(trackerInfo); 
                 foreach(ServerAddress serverAddress in toRemove)
                 {
                     if (poolTable.ContainsKey(serverAddress))
@@ -69,13 +86,16 @@ namespace Zbus.Mq
                     }
                 } 
             };
-            client.Start();  
+            client.Start();
+
+            countDown.Wait(waitTime);
+            countDown.Dispose(); 
         }
         public void AddTracker(string trackerAddress, string certFile = null)
         {
             AddTracker(new ServerAddress(trackerAddress), certFile);
         }
-        public void AddServer(ServerAddress serverAddress, string certFile = null)
+        public void AddServer(ServerAddress serverAddress, string certFile = null, CountdownEvent countDown = null)
         {
             certFile = GetCertFile(serverAddress, certFile);
 
@@ -87,13 +107,16 @@ namespace Zbus.Mq
 
             pool.Connected += (serverInfo) =>
             {
-                routeTable.UpdateServer(serverInfo);
-
+                RouteTable.UpdateServer(serverInfo);
+                if(countDown != null)
+                {
+                    countDown.Signal();
+                }
                 ServerJoin?.Invoke(pool);
             };
             pool.Disconnected += (remoteServerAddr) =>
             {
-                routeTable.RemoveServer(remoteServerAddr);
+                RouteTable.RemoveServer(remoteServerAddr);
                 ServerLeave?.Invoke(remoteServerAddr); 
 
                 poolTable.Remove(pool.ServerAddress);
@@ -103,7 +126,7 @@ namespace Zbus.Mq
             poolTable[pool.ServerAddress] = pool;
         }
 
-        public void AddServer(string serverAddress, string certFile = null)
+        public void AddServer(string serverAddress, string certFile = null, CountdownEvent countDown = null)
         {
             AddServer(new ServerAddress(serverAddress), certFile);
         }
