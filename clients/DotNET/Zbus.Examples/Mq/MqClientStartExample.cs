@@ -23,21 +23,20 @@ namespace Zbus.Examples
             {
                 Console.WriteLine(JsonKit.SerializeObject(msg)); 
             };
-            client.Connected += () =>
+            client.Connected += async() =>
             {
                 Console.WriteLine("connected");
+                Message req = new Message
+                {
+                    Cmd = Protocol.TRACK_SUB,
+                };
+                await client.SendAsync(req);
             }; 
             client.Disconnected += () =>
             {
                 Console.WriteLine("disconnected");
-            };
-            await client.ConnectAsync();
-            client.Start();
-            Message req = new Message
-            {
-                Cmd = Protocol.TRACK_SUB,
-            };
-            await client.SendAsync(req);
+            }; 
+            client.Start();  
         }
     }
 }

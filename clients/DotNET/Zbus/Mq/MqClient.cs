@@ -178,19 +178,55 @@ namespace Zbus.Mq
 
     public class MqClientPool : Pool<MqClient>
     {
-        private readonly ServerAddress serverAddress;
+        public event Action<ServerInfo> Connected;
+        public event Action<ServerAddress> Disconnected; 
+        public ServerAddress ServerAddress { get; private set; }
+
         private readonly string certFile;
-        public MqClientPool(string serverAddress)
-        {
-            this.serverAddress = new ServerAddress(serverAddress);
+        private MqClient monitorClient;
+        public MqClientPool(string serverAddress) : this(new ServerAddress(serverAddress))
+        { 
         }
         public MqClientPool(ServerAddress serverAddress, string certFile = null)
         {
-            this.serverAddress = serverAddress;
+            this.ServerAddress = serverAddress;
             this.certFile = certFile;
 
             ObjectActive = IsClientActive;
-            ObjectFactory = ClientFacotry;
+            ObjectFactory = ClientFacotry; 
+        }  
+
+        public void StartMonitor()
+        {
+            lock (this)
+            {
+                if (monitorClient != null) return;
+            }
+            monitorClient = ObjectFactory();   
+
+            monitorClient.Connected += async() =>
+            {
+                ServerInfo serverInfo = await monitorClient.QueryServerAsync();
+                ServerAddress = new ServerAddress(serverInfo.ServerAddress);
+                Connected?.Invoke(serverInfo); 
+            };
+
+            monitorClient.Disconnected += () =>
+            {
+                Disconnected?.Invoke(ServerAddress);
+            }; 
+            monitorClient.Start();
+        }
+
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if(monitorClient != null)
+            {
+                monitorClient.Stop();
+            }
         }
 
         private bool IsClientActive(MqClient client)
@@ -200,7 +236,7 @@ namespace Zbus.Mq
 
         private MqClient ClientFacotry()
         {
-            return new MqClient(this.serverAddress, this.certFile);
+            return new MqClient(this.ServerAddress, this.certFile);
         }
     }
 }

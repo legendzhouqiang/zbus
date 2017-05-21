@@ -88,7 +88,7 @@ namespace Zbus.Mq.Net
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (T value in bag)
             {

@@ -65,7 +65,8 @@ namespace Zbus.Mq.Net
             if (Active) return;
             try
             {
-                await locker.WaitAsync();
+                await locker.WaitAsync(); 
+                if (Active) return;
                 await ConnectUnsafeAsync();
             }
             finally
@@ -74,58 +75,14 @@ namespace Zbus.Mq.Net
             }
             //If no error connected event triggered
             Connected?.Invoke(); 
-        }
-
-        private async Task ConnectUnsafeAsync()
-        {
-            if (Active) return; 
-            string[] bb = this.serverAddress.Address.Trim().Split(':');
-            string host;
-            int port = 80;
-            if (bb.Length < 2)
-            {
-                host = bb[0];
-            }
-            else
-            {
-                host = bb[0];
-                port = int.Parse(bb[1]);
-            }
-            this.tcpClient = new TcpClient();
-            this.tcpClient.NoDelay = true;
-            log.Debug("Trying connect to " + serverAddress);
-            await this.tcpClient.ConnectAsync(host, port);
-            log.Debug("Connected to " + serverAddress); 
-
-            this.stream = this.tcpClient.GetStream(); 
-
-            if (this.serverAddress.SslEnabled)
-            {
-                if (this.certFile == null)
-                {
-                    throw new ArgumentException("Missing certificate file");
-                }
-                X509Certificate cert = X509Certificate.CreateFromCertFile(this.certFile);
-                SslStream sslStream = new SslStream(this.stream, false,
-                    new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
-                    {
-                        if (AllowSelfSignedCertficate) return true;
-                        if (sslPolicyErrors == SslPolicyErrors.None)
-                        {
-                            return true;
-                        }
-                        Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
-                        return false;
-                    }),
-                    null);
-
-                sslStream.AuthenticateAsClient(this.serverAddress.Address);
-                this.stream = sslStream;
-            }  
-        }
+        } 
 
         public async Task<RES> InvokeAsync(REQ req, CancellationToken? token = null)
         {
+            if (!Active)
+            {
+                await ConnectAsync();
+            }
             try
             {
                 await locker.WaitAsync();
@@ -155,6 +112,10 @@ namespace Zbus.Mq.Net
 
         public async Task SendAsync(REQ req, CancellationToken? token = null)
         {
+            if (!Active)
+            {
+                await ConnectAsync();
+            }
             try
             {
                 await locker.WaitAsync();
@@ -163,6 +124,70 @@ namespace Zbus.Mq.Net
             finally
             {
                 locker.Release();
+            }
+        }
+        public async Task<RES> RecvAsync(CancellationToken? token = null)
+        {
+            if (!Active)
+            {
+                await ConnectAsync();
+            }
+            try
+            {
+                await locker.WaitAsync();
+                return await RecvUnsafeAsync(token);
+            }
+            finally
+            {
+                locker.Release();
+            }
+        }
+
+        private async Task ConnectUnsafeAsync()
+        {
+            if (Active) return;
+            string[] bb = this.serverAddress.Address.Trim().Split(':');
+            string host;
+            int port = 80;
+            if (bb.Length < 2)
+            {
+                host = bb[0];
+            }
+            else
+            {
+                host = bb[0];
+                port = int.Parse(bb[1]);
+            }
+            this.tcpClient = new TcpClient();
+            this.tcpClient.NoDelay = true;
+            log.Debug("Trying connect to " + serverAddress);
+            await this.tcpClient.ConnectAsync(host, port);
+            log.Debug("Connected to " + serverAddress);
+
+            this.stream = this.tcpClient.GetStream();
+
+            if (this.serverAddress.SslEnabled)
+            {
+                if (this.certFile == null)
+                {
+                    throw new ArgumentException("Missing certificate file");
+                }
+                X509Certificate cert = X509Certificate.CreateFromCertFile(this.certFile);
+                SslStream sslStream = new SslStream(this.stream, false,
+                    new RemoteCertificateValidationCallback((object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        if (AllowSelfSignedCertficate) return true;
+                        if (sslPolicyErrors == SslPolicyErrors.None)
+                        {
+                            return true;
+                        }
+                        Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
+                        return false;
+                    }),
+                    null);
+
+                sslStream.AuthenticateAsClient(this.serverAddress.Address);
+                this.stream = sslStream;
             }
         }
 
@@ -179,20 +204,8 @@ namespace Zbus.Mq.Net
             ByteBuffer buf = this.codecWrite.Encode(req);
             await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value).ConfigureAwait(false);
             await stream.FlushAsync(token.Value).ConfigureAwait(false);
-        }
+        } 
 
-        public async Task<RES> RecvAsync(CancellationToken? token = null)
-        {
-            try
-            {
-                await locker.WaitAsync();
-                return await RecvUnsafeAsync(token);
-            }
-            finally
-            {
-                locker.Release();
-            }
-        }
 
         private async Task<RES> RecvUnsafeAsync(CancellationToken? token = null)
         { 
@@ -255,25 +268,19 @@ namespace Zbus.Mq.Net
             }
 
             this.recvThread = new Thread(async () =>
-            { 
-                bool connectRequired = Active;
+            {  
                 while (!cts.IsCancellationRequested)
                 {
                     try
-                    {
-                        if (connectRequired)
-                        {
-                            await ConnectAsync();
-                        }
+                    { 
                         RES res = await RecvAsync(cts.Token);
                         MessageReceived?.Invoke(res);
                     }
                     catch (Exception e)
                     {
                         if (e is SocketException || e is IOException)
-                        {
-                            Dispose();
-                            connectRequired = true;
+                        { 
+                            Dispose(); 
                             Disconnected?.Invoke();
                             Thread.Sleep(3000);
                         }

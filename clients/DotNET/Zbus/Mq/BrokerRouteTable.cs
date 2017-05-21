@@ -22,16 +22,17 @@ namespace Zbus.Mq
 
         public void UpdateServer(ServerInfo serverInfo)
         {
-
+            Console.WriteLine("Updated:" + JsonKit.SerializeObject(serverInfo));
         }
         public void RemoveServer(ServerAddress serverAddress)
         {
-
+            Console.WriteLine("Removed:" + JsonKit.SerializeObject(serverAddress));
         }
 
-        public void UpdateVotes(TrackerInfo trackerInfo)
+        public IList<ServerAddress> UpdateVotes(TrackerInfo trackerInfo)
         {
-
+            Console.WriteLine("TrackerUpdated:" + JsonKit.SerializeObject(trackerInfo));
+            return new List<ServerAddress>();
         }
     }
 }

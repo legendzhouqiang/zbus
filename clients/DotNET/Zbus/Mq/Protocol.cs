@@ -92,6 +92,12 @@ namespace Zbus.Mq
             }
         }
 
+        public ServerAddress(ServerAddress serverAddress)
+        {
+            this.Address = serverAddress.Address;
+            this.SslEnabled = serverAddress.SslEnabled;
+        }
+
         public override int GetHashCode()
         {
             int prime = 31;
