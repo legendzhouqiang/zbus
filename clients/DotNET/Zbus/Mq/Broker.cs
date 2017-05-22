@@ -26,10 +26,18 @@ namespace Zbus.Mq
 
         private IDictionary<string, string> sslCertFileTable = new ConcurrentDictionary<string, string>();
 
-        public Broker()
+        public Broker(string trackerServerList=null)
         {
             RouteTable = new BrokerRouteTable();
             PoolTable = new ConcurrentDictionary<ServerAddress, MqClientPool>();
+            if(trackerServerList != null)
+            {
+                string[] bb = trackerServerList.Split(new char[] { ';', ',', ' ' });
+                foreach(string trackerAddress in bb)
+                {
+                    AddTracker(trackerAddress);
+                }
+            }
         }
 
 
@@ -86,18 +94,14 @@ namespace Zbus.Mq
                     if (addCount > 0)
                     {
                         countDown.AddCount();
-                    } 
-                    firstTime = false;
-                }
-                else
-                {
-                    countDown = null;
+                    }  
                 } 
                 
                 foreach(ServerAddress serverAddress in trackerInfo.TrackedServerList)
                 {
-                    AddServer(serverAddress, null, countDown);
+                    AddServer(serverAddress, null, firstTime? countDown : null);
                 }
+                firstTime = false;
 
                 IList<ServerAddress> toRemove = RouteTable.UpdateVotes(trackerInfo); 
                 foreach(ServerAddress serverAddress in toRemove)
@@ -119,8 +123,7 @@ namespace Zbus.Mq
                     }
                 } 
             };
-            client.Start();
-
+            client.Start(); 
             countDown.Wait(waitTime);
             countDown.Dispose(); 
         }

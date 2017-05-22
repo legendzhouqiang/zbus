@@ -13,6 +13,11 @@ namespace Api.Example
             return msg;
         }
 
+        public string TestEncoding()
+        {
+            return "中文";
+        }
+
         public Task<string> GetStringAsync()
         {
             return Task.Run(() =>

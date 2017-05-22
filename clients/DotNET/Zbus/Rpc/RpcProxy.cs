@@ -7,15 +7,7 @@ using System.Threading.Tasks;
 using Zbus.Mq;
 
 namespace Zbus.Rpc
-{
-    public class RpcFactory
-    {
-        public static T Create<T>(RpcInvoker rpc)
-        {
-            return new RpcProxy<T>(rpc).Create();
-        }
-    } 
-
+{ 
     public class RpcProxy<T> : RealProxy
     {  
         private RpcInvoker rpcInvoker;

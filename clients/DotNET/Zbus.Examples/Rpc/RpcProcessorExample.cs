@@ -1,7 +1,5 @@
 ﻿using Api.Example;
-using log4net;
 using System;
-using System.Threading.Tasks;
 using Zbus.Mq;
 using Zbus.Rpc;
 
@@ -12,14 +10,12 @@ namespace Zbus.Examples
         static void Main(string[] args)
         { 
             RpcProcessor p = new RpcProcessor();
-            p.AddModule<MyService>();
+            p.AddModule<MyService>(); //Simple?
 
 
-            Broker broker = new Broker();
-            broker.AddTracker("localhost:15555");
-
+            Broker broker = new Broker("localhost:15555"); //Capable of HA failover, test it!
             Consumer c = new Consumer(broker, "MyRpc");
-            c.MessageReceived += p.MessageHandler;
+            c.MessageReceived += p.MessageHandler; //Set processor as message handler
             c.Start();
 
             Console.WriteLine("done");

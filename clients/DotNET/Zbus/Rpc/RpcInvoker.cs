@@ -134,6 +134,11 @@ namespace Zbus.Rpc
 
             return true;
         }
+
+        public T CreateProxy<T>()
+        {
+            return new RpcProxy<T>(this).Create();
+        }
     } 
 
 }
