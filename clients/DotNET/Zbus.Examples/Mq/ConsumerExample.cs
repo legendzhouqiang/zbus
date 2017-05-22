@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Threading.Tasks;
 using Zbus.Mq;
 
@@ -6,8 +7,11 @@ namespace Zbus.Examples
 {
     class ConsumerExample
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(ConsumerExample));
         static void Main(string[] args)
         {
+            log.Info("begin test");
+
             Broker broker = new Broker();
             broker.AddTracker("localhost:15555");
 
