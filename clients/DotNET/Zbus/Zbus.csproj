@@ -97,7 +97,7 @@
     <Compile Include="Rpc\RpcInvoker.cs" />
     <Compile Include="Rpc\RpcProcessor.cs" />
     <Compile Include="Rpc\RpcException.cs" />
-    <Compile Include="Rpc\RpcProxy.cs" />
+    <Compile Include="Rpc\RpcFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

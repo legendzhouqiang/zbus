@@ -6,25 +6,44 @@ using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Proxies;
 using System.Threading.Tasks;
+using Zbus.Mq;
 
 namespace Zbus.Rpc
 {
-    public abstract class RpcProxy<T> : RealProxy
+    public class RpcFactory
     {
-        public string Module { get; set; } = "";
-        public string Encoding { get; set; } = "UTF-8";
-
-        public RpcProxy() : base(typeof(T))
+        public static T Create<T>(RpcInvoker rpc)
         {
-
+            return new RpcProxy<T>(rpc).Create();
         }
+    }
+
+    public class RpcProxy<T> : RealProxy
+    {  
+        private RpcInvoker rpcInvoker;
+
+        public RpcProxy(RpcInvoker rpcInvoker) : base(typeof(T))
+        {
+            this.rpcInvoker = rpcInvoker;
+        } 
 
         public T Create()
         {
             return (T)GetTransparentProxy();
         }
 
-        protected abstract Response Invoke(Type realReturnType, Request request);
+        protected Response Invoke(Type realReturnType, Request request)
+        {
+            Response res = rpcInvoker.InvokeAsync(request).Result; 
+            if (res.Result == null) return res;
+            if (realReturnType == typeof(void)) return res;
+
+            if (realReturnType != res.Result.GetType() && !typeof(Task).IsAssignableFrom(realReturnType))
+            {
+                res.Result = JsonKit.Convert(res.Result, realReturnType);
+            }
+            return res;
+        }
 
         public dynamic Request(Type realReturnType, Request request)
         {
@@ -60,7 +79,7 @@ namespace Zbus.Rpc
                 {
                     Method = methodName,
                     Params = args,
-                    Module = this.Module,
+                    Module = rpcInvoker.Module,
                 };
 
                 Type returnType = method.ReturnType;
