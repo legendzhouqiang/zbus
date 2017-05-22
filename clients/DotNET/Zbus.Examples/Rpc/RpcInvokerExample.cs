@@ -15,23 +15,23 @@ namespace Zbus.Examples
         }
 
         static void Main(string[] args)
-        {
-            Broker broker = new Broker("localhost:15555");
+        { 
+            using (Broker broker = new Broker("localhost:15555"))
+            { 
+                RpcInvoker rpc = new RpcInvoker(broker, "MyRpc"); 
+                //Way 1) Raw invocation
+                var res = rpc.InvokeAsync<int>("plus", 1, 2).Result;
+                Console.WriteLine(res);
 
-            RpcInvoker rpc = new RpcInvoker(broker, "MyRpc");
+                //Way 2) Dynamic Object
+                dynamic rpc2 = rpc;                          //RpcInvoker is also a dynamic object
+                var res2 = rpc2.plus(1, 2);                  //Magic!!! just like javascript
+                Console.WriteLine(res2);
 
-            //Way 1) Raw invocation
-            var res = rpc.InvokeAsync<int>("plus", 1, 2).Result;
-            Console.WriteLine(res);
-
-            //Way 2) Dynamic Object
-            dynamic rpc2 = rpc;                          //RpcInvoker is also a dynamic object
-            var res2 = rpc2.plus(1, 2);                  //Magic!!! just like javascript
-            Console.WriteLine(res2);
-
-            //Way 3) Strong typed class proxy
-            IService svc = rpc.CreateProxy<IService>();  //Create a proxy class, strongly invocation
-            Test(svc).Wait(); 
+                //Way 3) Strong typed class proxy
+                IService svc = rpc.CreateProxy<IService>();  //Create a proxy class, strongly invocation
+                Test(svc).Wait(); 
+            }
 
             Console.WriteLine("done");
             Console.ReadKey();

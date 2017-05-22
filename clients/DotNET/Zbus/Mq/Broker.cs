@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Zbus.Mq
 {
     public delegate ServerAddress[] ServerSelector(BrokerRouteTable routeTable, Message msg);
-    public class Broker
+    public class Broker : IDisposable
     { 
         private static readonly ILog log = LogManager.GetLogger(typeof(Broker));
 
@@ -26,10 +26,11 @@ namespace Zbus.Mq
 
         private IDictionary<string, string> sslCertFileTable = new ConcurrentDictionary<string, string>();
 
-        public Broker(string trackerServerList=null)
+        public Broker(string trackerServerList=null, int clientPoolSize=32)
         {
             RouteTable = new BrokerRouteTable();
             PoolTable = new ConcurrentDictionary<ServerAddress, MqClientPool>();
+            ClientPoolSize = clientPoolSize;
             if(trackerServerList != null)
             {
                 string[] bb = trackerServerList.Split(new char[] { ';', ',', ' ' });
@@ -179,6 +180,20 @@ namespace Zbus.Mq
                 return sslCertFileTable[serverAddress.Address];
             }
             return DefaultSslCertFile;
+        }
+
+        public void Dispose()
+        {
+            foreach(var kv in trackerSubscribers)
+            {
+                kv.Value.Dispose();
+            }
+            trackerSubscribers.Clear();
+            foreach(var kv in PoolTable)
+            {
+                kv.Value.Dispose();
+            }
+            PoolTable.Clear();
         }
     }
 }

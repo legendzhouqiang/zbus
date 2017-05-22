@@ -1,5 +1,6 @@
 ﻿using Api.Example;
 using System;
+using System.Threading;
 using Zbus.Mq;
 using Zbus.Rpc;
 
@@ -13,13 +14,16 @@ namespace Zbus.Examples
             p.AddModule<MyService>(); //Simple?
 
 
-            Broker broker = new Broker("localhost:15555"); //Capable of HA failover, test it!
+            Broker broker = new Broker("localhost:15555"); //Capable of HA failover, test it! 
+
             Consumer c = new Consumer(broker, "MyRpc");
+            c.ConnectionCount = 2; 
             c.MessageReceived += p.MessageHandler; //Set processor as message handler
             c.Start();
 
             Console.WriteLine("done");
             Console.ReadKey();
+            Thread.Sleep(1000000000);
         }
     }
 }
