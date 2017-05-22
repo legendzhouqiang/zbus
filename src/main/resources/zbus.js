@@ -1206,7 +1206,10 @@ function RpcProcessor() {
 
         try {
             var res = {};
-            var req = JSON.parse(msg.body);
+            var req = msg.body;
+            if(typeof(req) == 'string'){
+            	req = JSON.parse(req);
+            }
             var key = processor._generateKey(req.module, req.method);
             if (key in processor.methodTable) {
                 var m = processor.methodTable[key];
