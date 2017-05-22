@@ -63,6 +63,8 @@ namespace Zbus.Mq.Net
 
         public void Return(T value)
         {
+            if (value == null) return;
+
             if (!Active(value))
             {
                 HandleInactive(value);

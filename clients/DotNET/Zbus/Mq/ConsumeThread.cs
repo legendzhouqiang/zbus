@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace Zbus.Mq
 {
-    public class ConsumeThread
+    public class ConsumeThread : IDisposable
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(ConsumeThread));
 
         public Func<MqClient> ClientFactory { get; set; }
-        public Action<Message, MqClient> MessageHandler { get; set; }
-        public int ThreadCount { get; set; }
+        public event Action<Message, MqClient> MessageRecevied;
+        public int ConnectionCount { get; set; }
         public bool RunInPool { get; set; }
         public int ConsumeTimeout { get; set; }
         public int? ConsumeWindow { get; set; } 
@@ -36,7 +36,7 @@ namespace Zbus.Mq
             Topic = topic;
             ConsumeGroup = group==null? new ConsumeGroup(topic): group;
             RunInPool = false;
-            ThreadCount = 1; 
+            ConnectionCount = 1; 
         }
 
         private async Task<Message> TakeAsync(MqClient client, CancellationToken? token=null)
@@ -58,9 +58,9 @@ namespace Zbus.Mq
 
         public void Start()
         {
-            if (MessageHandler == null)
+            if (MessageRecevied == null)
             {
-                throw new InvalidOperationException("Missing MessageHandler");
+                throw new InvalidOperationException("Missing MessageReceived handler");
             }
             if (ClientFactory == null)
             {
@@ -71,8 +71,8 @@ namespace Zbus.Mq
             {
                 if (this.consumeThreadList != null) return;
             }
-            this.consumeThreadList = new Thread[ThreadCount];
-            this.clients = new MqClient[ThreadCount];
+            this.consumeThreadList = new Thread[ConnectionCount];
+            this.clients = new MqClient[ConnectionCount];
 
             for(int i = 0; i < this.consumeThreadList.Length; i++)
             {
@@ -91,12 +91,12 @@ namespace Zbus.Mq
                                 {
                                     await Task.Run(() =>
                                     {
-                                        MessageHandler(msg, client);
+                                        MessageRecevied?.Invoke(msg, client);
                                     });
                                 }
                                 else
                                 {
-                                    MessageHandler(msg, client);
+                                    MessageRecevied?.Invoke(msg, client);
                                 }
                             } 
                             catch (Exception e)
@@ -118,7 +118,7 @@ namespace Zbus.Mq
             }
         }
 
-        public void Stop()
+        public void Dispose()
         {  
             cts.Cancel();
             for (int i = 0; i < this.clients.Length; i++)

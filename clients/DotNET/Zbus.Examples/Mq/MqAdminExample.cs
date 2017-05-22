@@ -4,27 +4,27 @@ using Zbus.Mq;
 
 namespace Zbus.Examples
 {
-    class ProducerExample
+    class MqAdminExample
     {
         static async Task Test()
         {
             Broker broker = new Broker();
             broker.AddTracker("localhost:15555");
 
-            Producer p = new Producer(broker);
-            Message msg = new Message
+            MqAdmin admin = new MqAdmin(broker);
+            await admin.DeclareTopicAsync("hong8");
+
+            ServerInfo[] infoArray = await admin.QueryServerAsync();
+            foreach(ServerInfo info in infoArray)
             {
-                Topic = "hong",
-                BodyString = "From Zbus.NET",
-            };
-            await p.ProduceAsync(msg);
+                Console.WriteLine(info.ServerAddress);
+            }
 
             Console.WriteLine("done");
         }
-
         static void Main(string[] args)
         {
-            Test().Wait();
+            Test().Wait(); 
             Console.ReadKey();
         }
     }

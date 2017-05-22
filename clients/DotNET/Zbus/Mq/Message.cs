@@ -118,6 +118,10 @@ namespace Zbus.Mq
 
         public void SetBody(string body, Encoding encoding = null)
         { 
+            if(encoding == null)
+            {
+                encoding = System.Text.Encoding.UTF8;
+            }
             SetBody(encoding.GetBytes(body), encoding);
         }
          

@@ -6,17 +6,18 @@ namespace Zbus.Examples
 {
     class ConsumerExample
     {
-        static async Task Test()
-        {
-            MqClient client = new MqClient("localhost:15555");
-            await client.ConnectAsync();
-
-            Message msg = await client.ConsumeAsync("hong5");
-            Console.WriteLine(msg.Headers); 
-        }
         static void Main(string[] args)
         {
-            Test().Wait();
+            Broker broker = new Broker();
+            broker.AddTracker("localhost:15555");
+
+            Consumer c = new Consumer(broker, "MyTopic");
+            c.MessageReceived += (msg, client) => {
+                Console.WriteLine(msg);
+            };
+            c.Start();
+
+            Console.WriteLine("done");
             Console.ReadKey();
         }
     }

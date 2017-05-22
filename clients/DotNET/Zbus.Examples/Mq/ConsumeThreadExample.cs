@@ -10,16 +10,17 @@ namespace Zbus.Examples
         static void Main(string[] args)
         { 
             ConsumeThread thread = new ConsumeThread("hong")
-            {
-                MessageHandler = (msg, client) =>
-                {
-                    Console.WriteLine(JsonKit.SerializeObject(msg));
-                },
+            { 
                 ClientFactory = () =>
                 {
                     return new MqClient("localhost:15555");
                 },
-                ThreadCount = 1,
+                ConnectionCount = 1,
+            };
+
+            thread.MessageRecevied += (msg, client) =>
+            {
+                Console.WriteLine(JsonKit.SerializeObject(msg));
             };
 
             thread.Start();

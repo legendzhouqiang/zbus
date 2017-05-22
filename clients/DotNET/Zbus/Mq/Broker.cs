@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Zbus.Mq
 {
+    public delegate ServerAddress[] ServerSelector(BrokerRouteTable routeTable, Message msg);
     public class Broker
     { 
         private static readonly ILog log = LogManager.GetLogger(typeof(Broker));
@@ -17,9 +18,9 @@ namespace Zbus.Mq
         public string DefaultSslCertFile { get; set; } 
         public event Action<MqClientPool> ServerJoin;
         public event Action<ServerAddress> ServerLeave;
-        public BrokerRouteTable RouteTable { get; private set; }
+        public BrokerRouteTable RouteTable { get; private set; }   
+        public IDictionary<ServerAddress, MqClientPool> PoolTable { get; private set; }
 
-        private IDictionary<ServerAddress, MqClientPool> poolTable = new ConcurrentDictionary<ServerAddress, MqClientPool>();
         private IDictionary<ServerAddress, MqClient> trackerSubscribers = new ConcurrentDictionary<ServerAddress, MqClient>();
         
 
@@ -28,7 +29,35 @@ namespace Zbus.Mq
         public Broker()
         {
             RouteTable = new BrokerRouteTable();
+            PoolTable = new ConcurrentDictionary<ServerAddress, MqClientPool>();
         }
+
+
+        public MqClientPool[] Select(ServerSelector selector, Message msg)
+        {
+            ServerAddress[] addressArray = selector(RouteTable, msg);
+            if (addressArray == null) return new MqClientPool[0];
+
+            MqClientPool[] res = new MqClientPool[addressArray.Length];
+            bool shrink = false;
+            for(int i=0;i < addressArray.Length; i++)
+            {
+                ServerAddress address = addressArray[i];
+                if (PoolTable.ContainsKey(address))
+                {
+                    res[i] = PoolTable[address];
+                } 
+                else
+                {
+                    res[i] = null;
+                    shrink = true;
+                }
+            }
+            if (!shrink) return res;
+
+            return res.Where<MqClientPool>(e => e != null).ToArray<MqClientPool>(); 
+        }
+
         public void AddTracker(ServerAddress trackerAddress, string certFile = null, int waitTime=3000)
         {
             MqClient client = new MqClient(trackerAddress, certFile);
@@ -53,7 +82,11 @@ namespace Zbus.Mq
                 TrackerInfo trackerInfo = JsonKit.DeserializeObject<TrackerInfo>(msg.BodyString);
                 if (firstTime)
                 {
-                    countDown.AddCount(trackerInfo.TrackedServerList.Count - 1);
+                    int addCount = trackerInfo.TrackedServerList.Count - 1;
+                    if (addCount > 0)
+                    {
+                        countDown.AddCount();
+                    } 
                     firstTime = false;
                 }
                 else
@@ -69,11 +102,11 @@ namespace Zbus.Mq
                 IList<ServerAddress> toRemove = RouteTable.UpdateVotes(trackerInfo); 
                 foreach(ServerAddress serverAddress in toRemove)
                 {
-                    if (poolTable.ContainsKey(serverAddress))
+                    if (PoolTable.ContainsKey(serverAddress))
                     {
                         log.Info(serverAddress + ", left");
-                        MqClientPool pool = poolTable[serverAddress];
-                        poolTable.Remove(serverAddress);
+                        MqClientPool pool = PoolTable[serverAddress];
+                        PoolTable.Remove(serverAddress);
                         try
                         {
                             ServerLeave?.Invoke(serverAddress);
@@ -119,11 +152,11 @@ namespace Zbus.Mq
                 RouteTable.RemoveServer(remoteServerAddr);
                 ServerLeave?.Invoke(remoteServerAddr); 
 
-                poolTable.Remove(pool.ServerAddress);
+                PoolTable.Remove(pool.ServerAddress);
                 pool.Dispose(); 
             };
             pool.StartMonitor();
-            poolTable[pool.ServerAddress] = pool;
+            PoolTable[pool.ServerAddress] = pool;
         }
 
         public void AddServer(string serverAddress, string certFile = null, CountdownEvent countDown = null)
