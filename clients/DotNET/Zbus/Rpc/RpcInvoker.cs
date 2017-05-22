@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,7 +9,7 @@ using Zbus.Mq;
 
 namespace Zbus.Rpc
 {
-    public class RpcInvoker
+    public class RpcInvoker : DynamicObject
     {
         public Broker Broker { get; set; }  
 
@@ -100,8 +101,39 @@ namespace Zbus.Rpc
         public async Task<T> InvokeAsync<T>(string method, params object[] args)
         {
             return (T)await InvokeAsync(typeof(T), method, args);
-        } 
-    }
+        }
 
+
+
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            string method = binder.Name;
+            Request req = new Request
+            {
+                Method = method,
+                Params = args,
+            };
+
+            try
+            {
+                Response resp = this.InvokeAsync(req).Result;
+                if (resp.StackTrace != null)
+                {
+                    if (resp.Error != null)
+                    {
+                        throw resp.Error;
+                    }
+                    throw new RpcException(resp.StackTrace);
+                }
+                result = JsonKit.Convert(resp.Result, binder.ReturnType);
+            }
+            catch (Exception e)
+            {
+                throw new RpcException(e.Message, e);
+            }
+
+            return true;
+        }
+    } 
 
 }

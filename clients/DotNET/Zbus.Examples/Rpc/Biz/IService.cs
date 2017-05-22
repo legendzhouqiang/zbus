@@ -12,8 +12,6 @@ namespace Api.Example
 
         Task<string> GetStringAsync();
 
-        void Ignore();
-
         void NoReturn();
 
         int Plus(int a, int b);

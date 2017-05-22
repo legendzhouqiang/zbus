@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
@@ -16,7 +14,7 @@ namespace Zbus.Rpc
         {
             return new RpcProxy<T>(rpc).Create();
         }
-    }
+    } 
 
     public class RpcProxy<T> : RealProxy
     {  
