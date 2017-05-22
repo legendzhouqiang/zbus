@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
 using Ploeh.AutoFixture;
-
+using FluentAssertions;
 namespace Zbus.Mq.Test
 {
-    public class Message_Tests
+    public class MqClient_Tests
     {
         private IFixture fixture;
         [SetUp]
@@ -14,13 +14,16 @@ namespace Zbus.Mq.Test
 
 
         [Test]
-        public void Test_Message()
+        public void MqClientConnect_Close()
         {
             //Arrange    
+            MqClient client = new MqClient("localhost:15555");
+            client.ConnectAsync().Wait();
 
             //Act 
-
+            client.Dispose();
             //Assert 
+            client.Active.Should().BeFalse();
         }
 
     }

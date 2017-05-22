@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace Zbus.Test.Rpc
+namespace Zbus.Rpc.Test
 {
     public class Rpc_Tests
     {

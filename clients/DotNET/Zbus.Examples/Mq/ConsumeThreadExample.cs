@@ -20,10 +20,10 @@ namespace Zbus.Examples
 
             thread.MessageRecevied += (msg, client) =>
             {
-                Console.WriteLine(JsonKit.SerializeObject(msg));
+                Console.WriteLine(msg);
             };
 
-            thread.Start();
+            thread.Start(); 
 
 
             Console.WriteLine("done");

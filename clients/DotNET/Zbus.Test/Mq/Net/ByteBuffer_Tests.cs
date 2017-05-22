@@ -4,7 +4,7 @@ using FluentAssertions;
 using Zbus.Mq.Net;
 
 
-namespace Zbus.Test.Net
+namespace Zbus.Mq.Net.Test
 {
     public class ByteBuffer_Tests
     {

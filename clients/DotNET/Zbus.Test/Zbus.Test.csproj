@@ -67,8 +67,10 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Mq\MqClient_Tests.cs" />
+    <Compile Include="Mq\Broker_Tests.cs" />
     <Compile Include="Mq\Message_Tests.cs" />
-    <Compile Include="Net\ByteBuffer_Tests.cs" />
+    <Compile Include="Mq\Net\ByteBuffer_Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc\Rpc_Tests.cs" />
   </ItemGroup>
