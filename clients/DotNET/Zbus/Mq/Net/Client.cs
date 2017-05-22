@@ -118,7 +118,7 @@ namespace Zbus.Mq.Net
             }
             try
             {
-                await locker.WaitAsync();
+                await locker.WaitAsync(); 
                 await SendUnsafeAsync(req, token);
             }
             finally
@@ -135,7 +135,7 @@ namespace Zbus.Mq.Net
             try
             {
                 await locker.WaitAsync();
-                return await RecvUnsafeAsync(token);
+                return await RecvUnsafeAsync(token); 
             }
             finally
             {
@@ -201,6 +201,10 @@ namespace Zbus.Mq.Net
             {
                 req.Id = Guid.NewGuid().ToString();
             }
+            if (log.IsDebugEnabled)
+            {
+                log.Debug("Sending:\n" + req);
+            } 
             ByteBuffer buf = this.codecWrite.Encode(req);
             await stream.WriteAsync(buf.Data, 0, buf.Limit, token.Value).ConfigureAwait(false);
             await stream.FlushAsync(token.Value).ConfigureAwait(false);
@@ -222,7 +226,11 @@ namespace Zbus.Mq.Net
                 if (msg != null)
                 {
                     this.readBuf.Move(tempBuf.Position);
-                    RES res = (RES)msg;
+                    RES res = (RES)msg; 
+                    if (log.IsDebugEnabled)
+                    {
+                        log.Debug("Recevied:\n" + res);
+                    }
                     return res;
                 }
                 int n = await stream.ReadAsync(buf, 0, buf.Length, token.Value).ConfigureAwait(false);
