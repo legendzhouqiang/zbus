@@ -16,7 +16,7 @@ namespace Zbus.Examples
 
             dynamic rpc = new RpcInvoker(broker, "MyRpc");
 
-            var res = rpc.plus(1, 2); //magic!!! 
+            var res = rpc.plus(1, 2); //magic!!!, just like javascript 
             Console.WriteLine(res);
 
 
