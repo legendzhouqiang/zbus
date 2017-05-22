@@ -101,28 +101,23 @@ namespace Zbus.Mq
         /// Header encoding > parameter encoding
         /// </summary>
         /// <param name="body"></param>
-        /// <param name="encoding">If Encoding is set in header, the parameter will take no effect, use header's encoding first</param>
-        public void SetBody(byte[] body, Encoding encoding = null)
+        /// <param name="encodingName"></param>
+        public void SetBody(byte[] body, string encodingName = null)
         {
             this.Body = body;
             int bodyLen = 0;
             if (this.Body != null)
             {
                 bodyLen = this.Body.Length;
-            }
-
-            encoding = GetEncoding(encoding);
-            Encoding = encoding.WebName;
+            } 
+            Encoding = encodingName;
             this.SetHeader("content-length", string.Format("{0}", bodyLen));
         }
 
         public void SetBody(string body, Encoding encoding = null)
-        { 
-            if(encoding == null)
-            {
-                encoding = System.Text.Encoding.UTF8;
-            }
-            SetBody(encoding.GetBytes(body), encoding);
+        {
+            encoding = GetEncoding(encoding);
+            SetBody(encoding.GetBytes(body), encoding.WebName);
         }
          
         public void SetBody(string format, params object[] args)
@@ -268,8 +263,25 @@ namespace Zbus.Mq
             get { return GetBody(); }
             set { SetBody(value); }
         }
-       
 
         #endregion
+
+        public override string ToString()
+        {
+            ByteBuffer buf = new MessageCodec().Encode(this);
+            System.Text.Encoding encoding = System.Text.Encoding.UTF8;
+            if(Encoding != null)
+            {
+                try
+                { 
+                    encoding = System.Text.Encoding.GetEncoding(Encoding);
+                }
+                catch
+                {
+                    //ignore
+                }
+            }
+            return encoding.GetString(buf.Data, 0, buf.Limit);
+        }
     } 
 }

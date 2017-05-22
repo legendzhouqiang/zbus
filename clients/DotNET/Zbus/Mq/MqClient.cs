@@ -24,6 +24,17 @@ namespace Zbus.Mq
             await CheckedInvokeAsync(msg, token);
         }
 
+        public async Task RouteAsync(Message msg, CancellationToken? token = null)
+        {
+            msg.Cmd = Protocol.ROUTE;
+            if(msg.Status != null)
+            {
+                msg.OriginStatus = msg.Status;
+                msg.Status = null; 
+            }
+            await SendAsync(msg, token);
+        }
+
         public async Task<Message> ConsumeAsync(string topic, string group = null, int? window=null, CancellationToken? token = null)
         {
             Message msg = new Message

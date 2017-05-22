@@ -51,6 +51,14 @@ namespace Zbus.Mq
 
             if(res.Status == "200")
             {
+                res.Id = res.OriginId;
+                res.RemoveHeader(Protocol.ORIGIN_ID);
+                if (res.OriginUrl != null)
+                {
+                    res.Url = res.OriginUrl;
+                    res.Status = null;
+                    res.RemoveHeader(Protocol.ORIGIN_URL);
+                }
                 return res;
             }
             throw new MqException(res.BodyString); 
@@ -87,6 +95,7 @@ namespace Zbus.Mq
                             {
                                 msg = await TakeAsync(client, cts.Token);
                                 if (msg == null) continue;
+
                                 if (RunInPool)
                                 {
                                     await Task.Run(() =>

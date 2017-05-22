@@ -82,6 +82,7 @@ namespace Zbus.Mq
                     try
                     {
                         var thread = consumeThreadTable[serverAddress];
+                        consumeThreadTable.Remove(serverAddress);
                         thread.Dispose();
                     }
                     catch(Exception e)

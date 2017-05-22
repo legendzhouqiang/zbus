@@ -46,7 +46,7 @@ namespace Zbus.Mq
             };
         } 
 
-        public async Task ProduceAsync(Message msg, CancellationToken? token = null, ServerSelector selector = null)
+        public async Task<Message> ProduceAsync(Message msg, CancellationToken? token = null, ServerSelector selector = null)
         {
             msg.Cmd = Protocol.PRODUCE; 
             if(msg.Token == null)
@@ -68,7 +68,7 @@ namespace Zbus.Mq
             try
             {
                 client = pool.Borrow();
-                await client.CheckedInvokeAsync(msg, token);
+                return await client.InvokeAsync(msg, token);
             } 
             finally
             {

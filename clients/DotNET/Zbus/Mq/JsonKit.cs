@@ -10,7 +10,7 @@ namespace Zbus.Mq
         public static JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            TypeNameHandling = TypeNameHandling.Objects,
+            //TypeNameHandling = TypeNameHandling.Objects,
         };
 
         public static string SerializeObject(object value)

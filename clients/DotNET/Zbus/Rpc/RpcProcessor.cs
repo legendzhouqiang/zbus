@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -9,6 +10,8 @@ namespace Zbus.Rpc
 
     public class RpcProcessor
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(RpcProcessor));
+
         public Encoding Encoding { get; set; } = Encoding.UTF8;
 
         private Dictionary<string, MethodInstance> methods = new Dictionary<string, MethodInstance>();
@@ -25,6 +28,19 @@ namespace Zbus.Rpc
             {
                 AddModule(module, instance);
             }
+        }
+
+        public void AddModule<T>()
+        {
+            Type t = typeof(T);
+            object instance = t.GetConstructors()[0].Invoke(new object[0]);
+            AddModule(instance);
+        }
+
+        public void AddModule(Type t)
+        { 
+            object instance = t.GetConstructors()[0].Invoke(new object[0]);
+            AddModule(instance);
         }
 
         public void AddModule(object service)
@@ -172,7 +188,61 @@ namespace Zbus.Rpc
             return null;
         }
 
-        public async Task<Response> Process(Request request)
+        public void MessageHandler(Message msg, MqClient client)
+        {
+            Message msgRes = new Message
+            {
+                Status = "200",
+                Recver = msg.Sender,
+                Id = msg.Id
+            };
+
+            Response response = null;
+            try
+            {
+                string encodingName = msg.Encoding;
+                Encoding encoding = this.Encoding;
+                if (encodingName != null)
+                {
+                    encoding = Encoding.GetEncoding(encodingName);
+                }
+
+                Request request = JsonKit.DeserializeObject<Request>(msg.GetBody(encoding));
+                response = ProcessAsync(request).Result;
+            }
+            catch (Exception e)
+            {
+                response = new Response
+                {
+                    Error = e
+                };
+            }
+
+            if (response.Error != null)
+            {
+                response.StackTrace = "" + response.Error;
+                if (response.Error is RpcException)
+                {
+                    msgRes.Status = "" + ((RpcException)response.Error).Status;
+                }
+                else
+                {
+                    msgRes.Status = "500";
+                }
+            }
+
+            try
+            {
+                msgRes.SetJsonBody(JsonKit.SerializeObject(response), this.Encoding); 
+                Task task = client.RouteAsync(msgRes);
+            }
+            catch (Exception e)
+            {
+                log.Error(e);
+            }
+        }
+
+        public async Task<Response> ProcessAsync(Request request)
         {
             Response response = new Response();
             string module = request.Module == null ? "" : request.Module;
@@ -254,6 +324,27 @@ namespace Zbus.Rpc
                 this.Method = method;
                 this.Instance = instance;
             }
+        }
+    }
+
+    public class Remote : Attribute
+    {
+        public string Id { get; set; }
+        public bool Exclude { get; set; }
+
+        public Remote()
+        {
+            Id = null;
+        }
+
+        public Remote(string id)
+        {
+            this.Id = id;
+        }
+
+        public Remote(bool exclude)
+        {
+            this.Exclude = exclude;
         }
     }
 }
