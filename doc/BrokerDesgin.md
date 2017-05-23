@@ -39,3 +39,35 @@ ServerAddress => Voted Tracker list, MqServer's votes get down to some extent(de
 **BrokerRouteTable.removeServer**
 
 **BrokerRouteTable.updateVotes**
+
+
+
+
+
+
+###------------------------------Tracker Algorithm-----------------------------
+
+	ServerInfo:
+		+ ServerAddress: { Address:String, SslEnabled:Boolean }
+		+ ServerVersion: String
+		+ TopicTable: { TopicName=>TopicInfo }
+	
+	TrackerInfo:
+		+ TrackedServerList: [ServerAddress]
+		+ TopicTable:{ TopicName=>{ServerAddress=>TopicInfo} }
+	
+	Algorithm MergeTrackerInfo(trackerInfo[0], trackerInfo[1]...): TrackerInfo
+	-- 1. Calculate LiveServerList[ServerAddress] based on votes.
+		Count on ServerAddress on every trackerInfo[i]
+		Keep ServerAddres's count>=#ActiveAccoun
+	
+	-- 2. Merge TopicTable based on TopicName and ServerAddress (If conflicts: trackerInfo1>trackerInfo2...)
+		NewTopicTable = { TopicName=>{ServerAddress=>TopicInfo} }
+		For Each trackerInfo in [trackerInfo[0], trackerInfo[1]...]
+		Merge trackerInfo.TopicTable to NewTopicTable (If entry exists no overwrite)
+	
+	-- 3. Remove dead Server entries
+		For Each ToicName in NewTopicTable:
+		TopicServerTable = NewTopicTable[TopicName]
+		Remove entry in TopicServerTable if entry's ServerAddress NOT in LiveServerList
+		Remove entry in NewTopicTable, if entry's TopicServerTable is empty.
