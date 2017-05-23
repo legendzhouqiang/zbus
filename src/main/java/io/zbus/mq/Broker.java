@@ -148,8 +148,7 @@ public class Broker implements Closeable {
 	}
 	 
 	public void addServer(final ServerAddress serverAddress) throws IOException {  
-		MqClient client = null;
-		MqClientPool pool = null;
+		MqClient client = null; 
 		ServerInfo serverInfo = null;
 		try { 
 			client = connectToServer(serverAddress);
@@ -162,25 +161,30 @@ public class Broker implements Closeable {
 				client.close();
 			}
 		}	
-		final ServerAddress realServerAddress = serverInfo.serverAddress;
+		 
+		addServer(serverInfo);
+	}  
+	
+	public void addServer(final ServerInfo serverInfo) throws IOException {   
+		MqClientPool pool = null;  
+		final ServerAddress serverAddress = serverInfo.serverAddress;
 		synchronized (poolTable) {
-			pool = poolTable.get(realServerAddress);
+			pool = poolTable.get(serverAddress);
 			if(pool != null) return; 
 			 
 			try{
-				pool = createMqClientPool(realServerAddress, serverAddress);
+				pool = createMqClientPool(serverAddress, serverAddress);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				return;
-			}
-			poolTable.put(realServerAddress, pool);  
+			} 
 			poolTable.put(serverAddress, pool); 
 			
 			
 			pool.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
-					removeServer(realServerAddress);
+					removeServer(serverAddress);
 				}
 			});  
 		}   
