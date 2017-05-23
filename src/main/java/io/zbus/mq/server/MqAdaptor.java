@@ -78,6 +78,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		//Tracker  
 		registerHandler(Protocol.TRACK_PUB, trackPubServerHandler); 
 		registerHandler(Protocol.TRACK_SUB, trackSubHandler); 
+		registerHandler(Protocol.TRACKER, trackerHandler); 
+		
+		registerHandler(Protocol.SERVER, serverHandler); 
 		
 		
 		//Monitor/Management
@@ -490,6 +493,20 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
+	private MessageHandler trackerHandler = new MessageHandler() {
+		
+		@Override
+		public void handle(Message msg, Session session) throws IOException { 
+			ReplyKit.replyJson(msg, session, tracker.trackerInfo()); 
+		}
+	}; 
+	
+	private MessageHandler serverHandler = new MessageHandler() {
+		public void handle(Message msg, Session sess) throws IOException { 
+			ReplyKit.replyJson(msg, sess, mqServer.serverInfo());  
+		}
+	};
+	
 	private MessageHandler traceHandler = new MessageHandler() {
 		
 		@Override
@@ -661,7 +678,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     public void sessionMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
     	msg.setSender(sess.id());
-		msg.setServer(mqServer.getServerAddress().address); 
+		msg.setHost(mqServer.getServerAddress().address); 
 		msg.setRemoteAddr(sess.getRemoteAddress());
 		if(msg.getId() == null){
 			msg.setId(UUID.randomUUID().toString());

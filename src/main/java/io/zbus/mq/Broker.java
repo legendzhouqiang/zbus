@@ -269,7 +269,7 @@ public class Broker implements Closeable {
 		for(ServerAddress serverAddress : serverAddressList){ 
 			final MqClient client = connectToServer(serverAddress);
 			try { 
-				ServerInfo info = client.queryServer();
+				TrackerInfo info = client.queryTracker();
 				addrSet.addAll(info.trackedServerList); 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
