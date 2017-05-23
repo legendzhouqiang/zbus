@@ -293,11 +293,11 @@ public class Message {
 		return this;
 	}   
 	
-	public String getServer(){
-		return this.getHeader(SERVER);
+	public String getHost(){
+		return this.getHeader(HOST);
 	}  
-	public void setServer(String value){
-		this.setHeader(SERVER, value);
+	public void setHost(String value){
+		this.setHeader(HOST, value);
 	} 
 	
 	public String getSender() {

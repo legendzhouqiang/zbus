@@ -6,6 +6,7 @@ import io.zbus.kit.JsonKit;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.mq.net.MessageClient;
 import io.zbus.net.EventDriver;
  
@@ -63,9 +64,17 @@ public class MqClient extends MessageClient{
 		return res;
 	}  
 	
+	public TrackerInfo queryTracker() throws IOException, InterruptedException{
+		Message msg = new Message();
+		msg.setCommand(Protocol.TRACKER); 
+		  
+		Message res = invokeSync(msg, invokeTimeout);
+		return parseResult(res, TrackerInfo.class); 
+	}
+	
 	public ServerInfo queryServer() throws IOException, InterruptedException{
 		Message msg = new Message();
-		msg.setCommand(Protocol.QUERY); 
+		msg.setCommand(Protocol.SERVER); 
 		  
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, ServerInfo.class); 

@@ -24,6 +24,8 @@ public class Protocol {
 	//High Availability (HA) 
 	public static final String TRACK_PUB   = "track_pub"; 
 	public static final String TRACK_SUB   = "track_sub";  
+	public static final String TRACKER     = "tracker";  
+	public static final String SERVER      = "server";  
 	
 	public static final String TRACE         = "trace";   //trace latest message in server 
 	public static final String VERSION       = "version";
@@ -55,13 +57,13 @@ public class Protocol {
 	public static final String RECVER   			= "recver";
 	public static final String ID      				= "id";	   
 	
-	public static final String SERVER   			= "server";  
+	public static final String HOST   			    = "host";  
 	public static final String ACK      			= "ack";	  
 	public static final String ENCODING 			= "encoding"; 
 	
-	public static final String ORIGIN_ID     		= "origin_id";     //original id, TODO compatible issue: rawid
-	public static final String ORIGIN_URL   		= "origin_url";    //original URL  
-	public static final String ORIGIN_STATUS 		= "origin_status"; //original Status  TODO compatible issue: reply_code
+	public static final String ORIGIN_ID     		= "origin_id";
+	public static final String ORIGIN_URL   		= "origin_url";
+	public static final String ORIGIN_STATUS 		= "origin_status";
 	
 	//Security 
 	public static final String TOKEN   				= "token"; 
@@ -123,9 +125,11 @@ public class Protocol {
 	}  
 	
 	public static class ServerEvent{  
-		public ServerAddress serverAddress;
+		//public ServerAddress serverAddress;
+		public ServerInfo serverInfo;
 		public boolean live = true;  
 	}
+	 
 	
 	public static class TrackItem {
 		public ServerAddress serverAddress;  
@@ -133,16 +137,17 @@ public class Protocol {
 		public Exception error; //current item error encountered
 	}
 	
-	public static class TrackerInfo extends TrackItem{
+	public static class TrackerInfo extends TrackItem {
+		public List<ServerAddress> trackerList;  
 		public List<ServerAddress> trackedServerList;
+		public Map<String, ServerInfo> serverTable;
 	}
 	  
-	public static class ServerInfo extends TrackerInfo{   
-		public List<ServerAddress> trackerList;  
+	public static class ServerInfo extends TrackItem {    
 		public Map<String, TopicInfo> topicTable = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	
-	public static class TopicInfo extends TrackItem{ 
+	public static class TopicInfo extends TrackItem { 
 		public String topicName;
 		public int mask; 
 		
