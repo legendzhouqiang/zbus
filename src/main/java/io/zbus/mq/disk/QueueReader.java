@@ -41,7 +41,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public QueueReader(QueueReader copy, String readerGroup) throws IOException{
 		this.index = copy.index; 
-		this.readerGroup = readerGroup;   
+		this.readerGroup = readerGroup;     
 		
 		load(readerFile(this.readerGroup), READER_FILE_SIZE); 
 		
@@ -49,6 +49,17 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		this.offset = copy.offset;
 		this.messageNumber = copy.messageNumber;
 		
+		if(this.blockNumber < index.getBlockStart()){ //forward to oldest available
+			this.blockNumber = index.getBlockStart();
+			this.offset = 0; 
+		}
+		if(index.overflow(this.blockNumber)){ //backward to latest available
+			this.blockNumber = index.currentBlockNumber(); 
+			this.offset = index.currentWriteOffset();
+		}
+		
+		writeOffset();  
+		 
 		block = this.index.createReadBlock(this.blockNumber);
 	}  
 	

@@ -795,7 +795,8 @@ function Broker(trackerAddress) {
     this.defaultSslCertFile = null;
 
     this.onServerJoin = null;
-    this.onServerLeave = null; 
+    this.onServerLeave = null;
+    this.onServerUpdated = null;
 
     this.readyServerRequired = 0;
     this.readyTriggered = false;
@@ -857,7 +858,10 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
         for (var i in toRemove) {
             var serverAddress = toRemove[i];
             broker._removeServer(serverAddress); 
-        } 
+        }
+        if (broker.onServerUpdated) {
+            broker.onServerUpdated();
+        }
     }
 
     client.connect(function (event) {

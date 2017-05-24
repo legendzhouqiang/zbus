@@ -30,8 +30,7 @@
             </a> 
         </div>
         <div class="collapse navbar-collapse" id="navbar">
-             <ul class="nav navbar-nav"> 
-            	<li><a class="link" href="/page/trace.htm">Trace</a></li>  
+             <ul class="nav navbar-nav">  
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
@@ -46,19 +45,10 @@
  
 <div class="nodes container-fluid">   
   
-
-
-<div class="row">
-    <div class="col-md-12">   
-        <div id="track-list" class="table table-condensed">  
-       	 	<span class="label label-primary">Trackers</span>
-        </div> 
-    </div>  
-</div>    
   
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-primary">Servers</span>
+        <span class="label label-primary">Tracked Servers</span>
     </div> 
     <div class="col-md-12">
         <table id="server-list"  class="table table-condensed table-bordered">
@@ -79,7 +69,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-primary">Topics</span>
+        <span class="label label-primary">Topic Table</span>
     </div>
 </div> 
  
@@ -159,23 +149,17 @@ $("#server-list").on("change", "input.server", function() {
 }); 
   
 
-$.getJSON('/query',function(serverInfo){   
-	$("#version").text(serverInfo.serverVersion); 
-	var trackerAddress = serverInfo.serverAddress;
+
+$.getJSON('/tracker',function(trackerInfo){   
+	$("#version").text(trackerInfo.serverVersion); 
+	var trackerAddress = trackerInfo.serverAddress;
 	broker = new Broker();   
-	broker.onServerUpdated = function(serverInfo){
+	broker.onServerUpdated = function(){
 		showServerTable(broker.routeTable.serverTable, filterServerList, trackerAddress);
 		showTopicTable(broker.routeTable.topicTable, filterServerList); 
-	};
-	broker.addTracker(trackerAddress); 
-	 
-	for(var i in serverInfo.trackerList){
-		var serverAddress = serverInfo.trackerList[i]; 
-		var serverFullAddr = httpFullAddress(serverAddress);
-		$("#track-list").append(
-			"<a class='link' target='_blank' href='" +serverFullAddr + "'>" + serverAddress.address + "</a>"
-		);
-	}  
+	}; 
+	
+	broker.addTracker(trackerAddress);  
 });    
 
 

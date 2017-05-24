@@ -218,9 +218,9 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
     		} 
 			
 			try {
-				Integer flag = msg.getTopicMask();   
-				if(flag != null){
-					mq.setMask(flag);
+				Integer topicMask = msg.getTopicMask();   
+				if(topicMask != null){
+					mq.setMask(topicMask);
 				}
 				
 				String groupName = msg.getConsumeGroup();
