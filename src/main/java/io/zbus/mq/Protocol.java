@@ -138,12 +138,14 @@ public class Protocol {
 	}
 	
 	public static class TrackerInfo extends TrackItem {
+		public long infoVersion;
 		public List<ServerAddress> trackerList;  
 		public List<ServerAddress> trackedServerList;
 		public Map<String, ServerInfo> serverTable;
 	}
 	  
 	public static class ServerInfo extends TrackItem {    
+		public long infoVersion;
 		public Map<String, TopicInfo> topicTable = new ConcurrentHashMap<String, TopicInfo>();  
 	}
 	

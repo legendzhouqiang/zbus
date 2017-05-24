@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.NetKit;
@@ -40,6 +41,8 @@ public class MqServer implements Closeable{
 	private MqAdaptor mqAdaptor;  
 	private Tracker tracker;
 	private MessageTracer messageTracer;
+	
+	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
 	public MqServer(){
 		this(new MqServerConfig());
@@ -168,6 +171,7 @@ public class MqServer implements Closeable{
 			table.put(e.getKey(), info);
 		}
 		ServerInfo info = new ServerInfo(); 
+		info.infoVersion = infoVersion.getAndIncrement();
 		info.serverAddress = serverAddress;
 		info.topicTable = table; 
  

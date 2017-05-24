@@ -6,25 +6,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TransferQueue;
 
 import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
-
-/**
- *  Route table based on the Topics info across ZbusServers.
- *  
- *  ServerTable: server address => ServerInfo
- *  TopicTable : topic string => list of server contains this topic(TopicInfo details)
- *  VoteTable  : topic string => list of server voted this topic
- *
- */
+ 
 public class BrokerRouteTable {  
 	//Server Address ==> Voted tracker list
 	private Map<ServerAddress, Set<ServerAddress>> votesTable = new ConcurrentHashMap<ServerAddress, Set<ServerAddress>>(); 

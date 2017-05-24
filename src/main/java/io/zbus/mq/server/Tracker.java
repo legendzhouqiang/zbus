@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
@@ -45,6 +46,8 @@ public class Tracker implements Closeable{
 	private boolean myServerInTrack; 
 	
 	private Map<String, String> sslCertFileTable;
+	
+	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
 	protected volatile ScheduledExecutorService heartbeator = Executors.newSingleThreadScheduledExecutor();
 
@@ -88,6 +91,7 @@ public class Tracker implements Closeable{
 			serverTable.put(myServerAddress.toString(), serverInfo());
 		}
 		TrackerInfo trackerInfo = new TrackerInfo(); 
+		trackerInfo.infoVersion = infoVersion.getAndIncrement();
 		trackerInfo.serverAddress = myServerAddress;
 		trackerInfo.trackerList = new ArrayList<ServerAddress>(this.upstreamTrackers.keySet()); 
 		trackerInfo.trackedServerList = serverList;
@@ -170,7 +174,8 @@ public class Tracker implements Closeable{
 				@Override
 				public void onDisconnected() throws IOException { 
 					log.warn("Server(%s) lost of tracking", serverAddress);
-					downstreamTrackers.remove(serverAddress);  
+					downstreamTrackers.remove(serverAddress); 
+					serverTable.remove(serverAddress.toString());
 					publishToSubscribers();   
     			}  
 			});
@@ -189,6 +194,7 @@ public class Tracker implements Closeable{
     		}catch (Exception e) {
 				log.error(e.getMessage(), e); 
 			}
+    		
     		serverTable.put(serverAddress.toString(), event.serverInfo);
     		
     		return;

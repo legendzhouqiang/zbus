@@ -360,8 +360,6 @@ function Ticket(reqMsg, callback) {
     reqMsg.id = this.id;
 } 
 
-if (__NODEJS__) {
-
 function addressKey(serverAddress) {
     var scheme = ""
     if (serverAddress.sslEnabled) {
@@ -369,18 +367,6 @@ function addressKey(serverAddress) {
     }
     return scheme + serverAddress.address;
 }
-
-} else { //WebSocket
-
-function addressKey(serverAddress) {
-    var scheme = "ws://"
-    if (serverAddress.sslEnabled) {
-        scheme = "wss://"
-    }
-    return scheme + serverAddress.address;
-}
-
-} //endof __NODEJS__ test
 
 function normalizeAddress(serverAddress, certFile) {
     if (typeof (serverAddress) == 'string') {
@@ -403,6 +389,19 @@ function normalizeAddress(serverAddress, certFile) {
     }
     return serverAddress; 
 }
+
+function containsAddress(serverAddressArray, serverAddress) {
+    for (var i in serverAddressArray) {
+        var addr = serverAddressArray[i];
+        if (addr.address == serverAddress.address && addr.sslEnabled == serverAddress.sslEnabled) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
  
 function MessageClient(serverAddress, certFile) { 
     if (__NODEJS__) {
@@ -535,6 +534,7 @@ MessageClient.prototype.close = function () {
     if (this.socket.destroyed) return;
     clearInterval(this.heartbeatInterval);
     this.socket.removeAllListeners("close");
+    this.autoReconnect = false;
     this.socket.destroy();
 } 
 
@@ -615,7 +615,15 @@ MessageClient.prototype.invoke = function (msg, callback) {
 MessageClient.prototype.close = function () {
     clearInterval(this.heartbeatInterval);
     this.socket.onclose = function () { }
+    this.autoReconnect = false;
     this.socket.close();
+}
+
+MessageClient.prototype.address = function () {
+    if (this.serverAddress.sslEnabled) {
+        return "wss://" + this.serverAddress.address;
+    }
+    return "ws://" + this.serverAddress.address;
 }
  
 }//End of __NODEJS___
@@ -624,12 +632,7 @@ MessageClient.prototype.close = function () {
 
 MessageClient.prototype.sendMessage = function (msg) {
     this.invoke(msg);
-}
- 
-MessageClient.prototype.address = function () {
-    return addressKey(this.serverAddress);
 } 
-
 
 function MqClient(serverAddress, certFile) {
     MessageClient.call(this, serverAddress, certFile);
@@ -682,84 +685,93 @@ MqClient.prototype.route = function (msg, callback) {
 
 
 function BrokerRouteTable() {
-    this.serverTable = {}; //Server Address ==> ServerInfo
-    this.topicTable = {};  //Topic ==> Server List(topic span across ZbusServers)
-    this.votesTable = {};  //Server Address ==> Voted tracker list
+    this.serverTable = {};  //{ ServerAddress => ServerInfo }
+    this.topicTable = {};   //{ TopicName=>{ ServerAddres=>TopicInfo } }
+    this.votesTable = {};   //{ TrackerAddress => { servers: Set[ServerAddress], version: xxx, tracker: ServerAddress } }
+    this.voteFactor = 0.5;  //for a serverInfo, how much percent of trackers should have voted
 }
 
-BrokerRouteTable.prototype.updateVotes = function (trackerInfo) {
-    var trackedServerList = trackerInfo.trackedServerList;
-    var trackerFullAddr = addressKey(trackerInfo.serverAddress);
-    for (var i in trackedServerList) {
-        var fullAddr = addressKey(trackedServerList[i]);
-        var votedTrackerSet = this.votesTable[fullAddr];
-        if (!votedTrackerSet) {
-            votedTrackerSet = new Set();
-            this.votesTable[fullAddr] = votedTrackerSet;
-        }
-        votedTrackerSet.add(trackerFullAddr);
-    }
 
+BrokerRouteTable.prototype.updateTracker = function (trackerInfo) {
     var toRemove = [];
-    for (var fullAddr in this.votesTable) {
-        var votedByThisTracker = false;
-        for (var i in trackedServerList) {
-            var trackedFullAddr = addressKey(trackedServerList[i]);
-            if (fullAddr == trackedFullAddr) {
-                votedByThisTracker = true;
-                break;
-            }
-        }
-        var votedTrackerSet = this.votesTable[fullAddr];
-        if (votedTrackerSet.has(trackerFullAddr) && !votedByThisTracker) {
-            votedTrackerSet.delete(trackedFullAddr);
-        }
-        if (this.canRemove(votedTrackerSet)) {
-            toRemove.push(fullAddr);
-        }
+    //1) Update VotesTable
+    var trackedServerList = trackerInfo.trackedServerList;
+    var trackerFullAddr = addressKey(trackerInfo.serverAddress); 
+    if (trackerFullAddr in this.votesTable) {
+        var vote = this.votesTable[trackerFullAddr];
+        if (vote.infoVersion >= trackerInfo.infoVersion) { 
+            return toRemove; //No need to update for older version
+        }  
+        //update votesTable if trackerInfo is newer updates
+        vote.infoVersion = trackerInfo.version,
+        vote.servers = trackedServerList;
+    } else {
+        this.votesTable[trackerFullAddr] = {
+            version: trackerInfo.infoVersion,
+            servers: trackedServerList,
+            tracker: trackerInfo.serverAddress,
+        };
     }
-    for (var i in toRemove) {
-        var fullAddr = toRemove[i];
-        delete this.serverTable[fullAddr];
-        delete this.votesTable[fullAddr];
-    }
-    this.rebuildTopicTable();
-
+     
+    //2) Merge ServerTable
+    var newServerTable = trackerInfo.serverTable;
+    for (var serverAddr in newServerTable) {
+        var newServerInfo = newServerTable[serverAddr];
+        var serverInfo = this.serverTable[serverAddr];
+        if (serverInfo && serverInfo.infoVersion >= newServerInfo.infoVersion) {
+            continue;
+        }
+        this.serverTable[serverAddr] = newServerInfo;
+    } 
+    
+    //3) Purge ServerTable
+    toRemove = this._purge();
     return toRemove;
 }
 
-BrokerRouteTable.prototype.updateServer = function (serverInfo) {
-    this.rebuildTopicTable(serverInfo);
-}
 
-BrokerRouteTable.prototype.removeServer = function (serverAddress) {
-    var downAddr = addressKey(serverAddress);
-    for (var addr in this.votesTable) {
-        var votedTrackerSet = this.votesTable[addr];
-        votedTrackerSet.clear(downAddr)
+BrokerRouteTable.prototype.removeTracker = function (trackerAddress) {
+    var trackerFullAddr = addressKey(trackerAddress);
+    if (!(trackerFullAddr in this.votesTable)) {
+        return [];
+    }
+    delete this.votesTable[trackerFullAddr];
+    return this._purge();
+} 
+
+BrokerRouteTable.prototype._purge = function () {
+    var toRemove = [];
+    //Find servers to remove
+    for (var serverAddr in this.serverTable) {
+        var serverInfo = this.serverTable[serverAddr];
+        var serverAddress = serverInfo.serverAddress;
+        
+        var count = 0;
+        for (var trackerAddr in this.votesTable) {//count on votesTable
+            var vote = this.votesTable[trackerAddr];
+            if (containsAddress(vote.servers, serverAddress)) count++; 
+        }
+        var voterCount = hashSize(this.votesTable);
+        if (count < voterCount * this.voteFactor) {
+            toRemove.push(serverAddress);
+        }
+    }
+    //Remove servers
+    for (var i in toRemove) {
+        var serverAddress = toRemove[i];
+        var addrKey = addressKey(serverAddress);
+        delete this.serverTable[addrKey];
     }
 
-    var votedTrackerSet = this.votesTable[downAddr];
-    if (this.canRemove(votedTrackerSet)) {
-        delete this.serverTable[downAddr];
-        delete this.votesTable[downAddr];
-        this.rebuildTopicTable();
-    }
+    this._rebuildTopicTable();
+    return toRemove;
 }
 
-BrokerRouteTable.prototype.canRemove = function (votedTrackerSet) {
-    return !votedTrackerSet || votedTrackerSet.size == 0;
-}
 
-BrokerRouteTable.prototype.rebuildTopicTable = function (serverInfo) {
-    if (serverInfo) {
-        var fullAddr = addressKey(serverInfo.serverAddress);
-        this.serverTable[fullAddr] = serverInfo;
-    }
+BrokerRouteTable.prototype._rebuildTopicTable = function () { 
     this.topicTable = {};
     for (var fullAddr in this.serverTable) {
-        var serverInfo = this.serverTable[fullAddr];
-
+        var serverInfo = this.serverTable[fullAddr]; 
         var serverTopicTable = serverInfo.topicTable;
         for (var topic in serverTopicTable) {
             var serverTopicInfo = serverTopicTable[topic];
@@ -777,12 +789,13 @@ function Broker(trackerAddress) {
     this.trackerSubscribers = {};
     this.clientTable = {};
     this.routeTable = new BrokerRouteTable();
+
+
     this.sslCertFileTable = {};
     this.defaultSslCertFile = null;
 
     this.onServerJoin = null;
-    this.onServerLeave = null;
-    this.onServerUpdated = null;
+    this.onServerLeave = null; 
 
     this.readyServerRequired = 0;
     this.readyTriggered = false;
@@ -801,68 +814,16 @@ Broker.prototype.ready = function (readyHandler) {
     }
 }
 
-//serverAddress = {address: xxx, sslEnabled: true/false }
-//certFile = /ssl/zbus.crt,  file path
-Broker.prototype.addServer = function (serverAddress, certFile) {
-    serverAddress = normalizeAddress(serverAddress, certFile);
-    var broker = this;
-    setTimeout(function () {
-        if (!broker.readyTriggered) {
-            broker.readyTriggered = true;
-            if (broker.onReady) {
-                try{ broker.onReady(); } catch (e) { console.log(e); } 
-            } 
+Broker.prototype.select = function (serverSelector, topic) {
+    keys = serverSelector(this.routeTable, topic);
+    var clients = [];
+    for (var i in keys) {
+        var key = keys[i];
+        if (key in this.clientTable) {
+            clients.push(this.clientTable[key]);
         }
-    }, this.readyTimeout);
-
-    var fullAddr = addressKey(serverAddress);
-    if (certFile) {
-        this.sslCertFileTable[serverAddress.address] = certFile;
     }
-
-    var client = this.clientTable[fullAddr]; 
-    if (client != null) {
-        client.query({}, function (msg) {
-            if (msg.status != 200) return;
-            serverInfo = msg.body;
-            broker.routeTable.updateServer(serverInfo);
-            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo); 
-        });
-        return;
-    } 
-
-    client = this._createClient(serverAddress, certFile); 
-    client.onDisconnected = function (event) {
-        console.log("Disconnected from " + fullAddr);
-        client.close();
-        delete broker.clientTable[fullAddr];
-        broker.routeTable.removeServer(serverAddress);
-
-        if (broker.onServerLeave) broker.onServerLeave(serverAddress); 
-        if (broker.onServerUpdated) broker.onServerUpdated();
-    }
-
-    client.connect(function (event) { 
-        client.query({}, function (msg) {
-            if (msg.status != 200) return;
-
-            serverInfo = msg.body;
-
-            broker.clientTable[addressKey(serverInfo.serverAddress)] = client;
-            broker.routeTable.updateServer(serverInfo);
-            if (broker.onServerJoin) broker.onServerJoin(serverInfo); 
-            if (broker.onServerUpdated) broker.onServerUpdated(serverInfo);
-            broker.readyServerRequired--;
-            if (broker.readyServerRequired <= 0) {
-                if (!broker.readyTriggered) {
-                    broker.readyTriggered = true; 
-                    if (broker.onReady) {
-                        try { broker.onReady(); } catch (e) { console.log(e); }
-                    }
-                }
-            }
-        });
-    });
+    return clients;
 }
 
 Broker.prototype.addTracker = function (trackerAddress, certFile) {
@@ -877,16 +838,26 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
     var client = this._createClient(trackerAddress, certFile);
     this.trackerSubscribers[fullAddr] = client;
 
-    var broker = this;
-
+    var broker = this; 
     client.onMessage = function (msg) {
-        var trackerInfo = msg.body;
-        var serverAddressList = trackerInfo.trackedServerList;
-        broker.routeTable.updateVotes(trackerInfo);
-        broker.readyServerRequired += serverAddressList.length;
-        for (var i in serverAddressList) {
-            broker.addServer(serverAddressList[i]);
+        if (msg.status != "200") {
+            console.log("Warn: " + msg);
+            return;
         }
+        var trackerInfo = msg.body; 
+        var toRemove = broker.routeTable.updateTracker(trackerInfo);
+        if (!broker.readyTriggered) {
+            broker.readyServerRequired = trackerInfo.trackedServerList.length;
+        }
+        var serverTable = broker.routeTable.serverTable;
+        for (var serverAddr in serverTable) {
+            var serverInfo = serverTable[serverAddr];
+            broker._addServer(serverInfo);
+        }
+        for (var i in toRemove) {
+            var serverAddress = toRemove[i];
+            broker._removeServer(serverAddress); 
+        } 
     }
 
     client.connect(function (event) {
@@ -894,7 +865,63 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
         msg.cmd = Protocol.TRACK_SUB;
         client.sendMessage(msg);
     });
+
+    setTimeout(function () {
+        if (!broker.readyTriggered) {
+            broker.readyTriggered = true;
+            if (broker.onReady) {
+                try { broker.onReady(); } catch (e) { console.log(e); }
+            }
+        }
+    }, this.readyTimeout);
 }
+
+
+Broker.prototype._addServer = function (serverInfo) {
+    serverAddress = serverInfo.serverAddress; 
+    var fullAddr = addressKey(serverAddress);  
+    var client = this.clientTable[fullAddr];
+    if (client != null) { 
+        return;
+    } 
+    client = this._createClient(serverAddress);
+    this.clientTable[fullAddr] = client;
+    
+    var broker = this;
+    client.connect(function () {
+        if (broker.onServerJoin) {
+            console.log("Server Joined: " + fullAddr);
+            broker.onServerJoin(serverInfo);
+        }
+
+        broker.readyServerRequired--;
+        if (broker.readyServerRequired <= 0) {
+            if (!broker.readyTriggered) {
+                broker.readyTriggered = true;
+                if (broker.onReady) {
+                    try { broker.onReady(); } catch (e) { console.log(e); }
+                }
+            }
+        }
+    });  
+}
+
+Broker.prototype._removeServer = function (serverAddress) { 
+    var fullAddr = addressKey(serverAddress);
+    var client = this.clientTable[fullAddr];
+    if (client == null) {
+        return;
+    }
+
+    if (this.onServerLeave) {
+        console.log("Server Left: " + fullAddr);
+        this.onServerLeave(serverAddress);
+    }
+
+    client.close();
+    delete this.clientTable[fullAddr]; 
+}
+ 
 
 Broker.prototype._createClient = function (serverAddress, certFile) {
     if (serverAddress.sslEnabled) {
@@ -909,19 +936,7 @@ Broker.prototype._createClient = function (serverAddress, certFile) {
         }
     }
     return new MqClient(serverAddress, certFile);
-}
-
-Broker.prototype.select = function (serverSelector, topic) {
-    keys = serverSelector(this.routeTable, topic);
-    var clients = [];
-    for (var i in keys) {
-        var key = keys[i];
-        if (key in this.clientTable) {
-            clients.push(this.clientTable[key]);
-        }
-    }
-    return clients;
-}
+} 
 
 ////////////////////////////////////////////////////////// 
 function MqAdmin(broker) {

@@ -44,30 +44,45 @@ ServerAddress => Voted Tracker list, MqServer's votes get down to some extent(de
 
 
 
-
 ###------------------------------Tracker Algorithm-----------------------------
-
 	ServerInfo:
-		+ ServerAddress: { Address:String, SslEnabled:Boolean }
-		+ ServerVersion: String
+		+ InfoVersion: long //incremental number
+		+ TrackerList: [ServerAddress]
 		+ TopicTable: { TopicName=>TopicInfo }
 	
+		+ ServerAddress: { Address:String, SslEnabled:Boolean }
+		+ ServerVersion: String
+	
 	TrackerInfo:
+		+ InfoVersion: long //incremental number
 		+ TrackedServerList: [ServerAddress]
-		+ TopicTable:{ TopicName=>{ServerAddress=>TopicInfo} }
+		+ ServerTable:{ ServerAddress=>ServerInfo }
 	
-	Algorithm MergeTrackerInfo(trackerInfo[0], trackerInfo[1]...): TrackerInfo
-	-- 1. Calculate LiveServerList[ServerAddress] based on votes.
-		Count on ServerAddress on every trackerInfo[i]
-		Keep ServerAddres's count>=#ActiveAccoun
+	BrokerRouteTable:
+		- removeFactor = 0.5
+		
+		+ VotesTable: { TrackerAddress=>Set[ServerAddress] }
+		+ ServerTable: { ServerAddress=> ServerInfo }
+		
+		+ TopicTable: { TopicName => { ServerAddress=>TopicInfo } }
+		
+		+ UpdateTracker(trackerInfo: TrackerInfo)
+		+ RemoveTracker(address: ServerAddress)
+		+ UpdateServer(serverInfo: ServerInfo)
+		+ RemoveServer(address: ServerAddress)
 	
-	-- 2. Merge TopicTable based on TopicName and ServerAddress (If conflicts: trackerInfo1>trackerInfo2...)
-		NewTopicTable = { TopicName=>{ServerAddress=>TopicInfo} }
-		For Each trackerInfo in [trackerInfo[0], trackerInfo[1]...]
-		Merge trackerInfo.TopicTable to NewTopicTable (If entry exists no overwrite)
+		+ CanRemove(address: ServerAddress){
+			If voted trackerCount < trackerCount*removeFactor;
+		}
 	
-	-- 3. Remove dead Server entries
-		For Each ToicName in NewTopicTable:
-		TopicServerTable = NewTopicTable[TopicName]
-		Remove entry in TopicServerTable if entry's ServerAddress NOT in LiveServerList
-		Remove entry in NewTopicTable, if entry's TopicServerTable is empty.
+	Algorithm UpdateTracker(trackerInfo): [ServerAddress] (ToRemove)
+		1. Update VotesTable if trackerInfo.InfoVersion > existing one
+		2. For each ServerInfo in trackerInfo.ServerTable:
+				Update ServerTable if ServerInfo.InfoVersion > existing one
+		3. For each ServerInfo in ServerTable:
+				Add to ToRemove list CanRemove
+	
+	Algorithm RebuildTopicTable():
+		For each serverInfo in ServerTable:
+			For each topicInfo in serverInfo:
+				Merge topicInfo into newTopicTable
