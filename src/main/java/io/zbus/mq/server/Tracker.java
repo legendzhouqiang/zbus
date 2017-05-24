@@ -168,6 +168,10 @@ public class Tracker implements Closeable{
 			return;
 		}   
 		
+		if(event.live){
+			serverTable.put(serverAddress.toString(), event.serverInfo);
+		}
+		
 		if(event.live && !downstreamTrackers.containsKey(serverAddress)){ //new downstream tracker
 			final MessageClient client = connectToServer(serverAddress);  
     		client.onDisconnected(new DisconnectedHandler() { 
@@ -193,11 +197,8 @@ public class Tracker implements Closeable{
     			client.connectAsync();  //TODO handle failed connections
     		}catch (Exception e) {
 				log.error(e.getMessage(), e); 
-			}
-    		
-    		serverTable.put(serverAddress.toString(), event.serverInfo);
-    		
-    		return;
+			} 
+
 		}
 		
 		if(!event.live){ //server down
@@ -210,7 +211,7 @@ public class Tracker implements Closeable{
 					log.error(e.getMessage(), e);
 				}
 			} 
-		} 
+		}  
 		
 		publishToSubscribers();  
 	}

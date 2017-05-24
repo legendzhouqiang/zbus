@@ -47,6 +47,7 @@ function showServerTable(serverInfoTable, filterServerList, trackerAddress){
 	            	</div>\
             	</td>\
 				<td>" + serverInfo.serverVersion + "</td>\
+				<td>" + serverInfo.infoVersion + "</td>\
 				<td>\
 	                <span class='badge'>" + hashSize(serverInfo.topicTable) + "</span>" + topicList + "\
 	           	</td>\
