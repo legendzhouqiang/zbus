@@ -49,8 +49,7 @@ class Protocol:
     SENDER = "sender"
     RECVER = "recver"
     ID = "id"
-
-    SERVER = "server"
+    
     ACK = "ack"
     ENCODING = "encoding"
 
@@ -613,6 +612,23 @@ class BrokerRouteTable:
         self.topic_table = {}
         self.server_table = {}
         self.votes_table = {}
+        
+    def update_tracker(self, tracker_info):
+        #1) Update votes
+        tracker_address = ServerAddress(tracker_info['serverAddress'])
+        
+        #2) Merge ServerTable
+        
+        
+        #3) Purge 
+        server_table_local = self.server_table
+        return self._purge(server_table_local)
+
+    def remove_tracker(self, tracker_address):
+        pass
+
+    def _purge(self, server_table_local):
+        pass
 
     def update_votes(self, tracker_info):
         votes_table_local = dict(self.votes_table)
