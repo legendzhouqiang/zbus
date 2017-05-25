@@ -23,10 +23,15 @@
 package io.zbus.rpc;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageCallback;
 import io.zbus.mq.Producer;
@@ -44,6 +49,10 @@ public class RpcInvoker {
 	
 	private RpcCodec codec; 
  
+	public RpcInvoker(Broker broker, String topic){
+		this(new RpcConfig(broker, topic));
+	}
+	
 	public RpcInvoker(RpcConfig config){ 
 		this.topic = config.getTopic(); 
 		if(this.topic == null){
@@ -59,8 +68,7 @@ public class RpcInvoker {
 		this.timeout = config.getInvokeTimeout();
 		this.verbose = config.isVerbose();
 		
-		this.producer = new Producer(config);
-		
+		this.producer = new Producer(config); 
 	}
 	
 	private Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
@@ -208,4 +216,58 @@ public class RpcInvoker {
 		} 
 		return resp.getResult();
 	} 
+	
+	
+	@SuppressWarnings("unchecked")
+	public <T> T createProxy(Class<T> clazz){  
+		Constructor<RpcInvocationHandler> rpcInvokerCtor;
+		try {
+			rpcInvokerCtor = RpcInvocationHandler.class.getConstructor(new Class[] {RpcInvoker.class });
+			RpcInvocationHandler rpcInvokerHandler = rpcInvokerCtor.newInstance(this); 
+			Class<T>[] interfaces = new Class[] { clazz }; 
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			return (T) Proxy.newProxyInstance(classLoader, interfaces, rpcInvokerHandler);
+		} catch (Exception e) { 
+			throw new RpcException(e);
+		}   
+	} 
+	
+	public static class RpcInvocationHandler implements InvocationHandler {  
+		private RpcInvoker rpc; 
+		private static final Object REMOTE_METHOD_CALL = new Object();
+
+		public RpcInvocationHandler(RpcInvoker rpc) {
+			this.rpc = rpc;
+		}
+		
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			if(args == null){
+				args = new Object[0];
+			}
+			Object value = handleLocalMethod(proxy, method, args);
+			if (value != REMOTE_METHOD_CALL) return value; 
+			Class<?> returnType = method.getReturnType(); 
+			return rpc.invokeSync(returnType, method.getName(),method.getParameterTypes(), args);
+		}
+
+		protected Object handleLocalMethod(Object proxy, Method method,
+				Object[] args) throws Throwable {
+			String methodName = method.getName();
+			Class<?>[] params = method.getParameterTypes();
+
+			if (methodName.equals("equals") && params.length == 1
+					&& params[0].equals(Object.class)) {
+				Object value0 = args[0];
+				if (value0 == null || !Proxy.isProxyClass(value0.getClass()))
+					return new Boolean(false);
+				RpcInvocationHandler handler = (RpcInvocationHandler) Proxy.getInvocationHandler(value0);
+				return new Boolean(this.rpc.equals(handler.rpc));
+			} else if (methodName.equals("hashCode") && params.length == 0) {
+				return new Integer(this.rpc.hashCode());
+			} else if (methodName.equals("toString") && params.length == 0) {
+				return "RpcInvocationHandler[" + this.rpc + "]";
+			}
+			return REMOTE_METHOD_CALL;
+		} 
+	}
 }

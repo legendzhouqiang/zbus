@@ -4,8 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import io.zbus.mq.Protocol.ServerAddress;
-import io.zbus.mq.Protocol.ServerInfo;
-import io.zbus.net.Client.DisconnectedHandler;
 import io.zbus.net.ClientFactory;
 import io.zbus.net.EventDriver;
 import io.zbus.net.Pool;
@@ -16,10 +14,7 @@ public class MqClientPool implements Closeable {
 	 
 	private ServerAddress serverAddress;
 	private final int clientPoolSize;
-	private EventDriver eventDriver;  
-	private MqClient detectClient;
-	private DisconnectedHandler disconnected;
-	
+	private EventDriver eventDriver;   
 	
 	public MqClientPool(String serverAddress, int clientPoolSize, EventDriver eventDriver){   
 		this.clientPoolSize = clientPoolSize;
@@ -32,8 +27,7 @@ public class MqClientPool implements Closeable {
 		
 		this.factory = new MqClientFactory(serverAddress, eventDriver);
 		this.pool = new Pool<MqClient>(factory, this.clientPoolSize); 
-		
-		monitorServer(this.serverAddress);
+		 
 	}
 	
 	public MqClientPool(String serverAddress, int clientPoolSize){
@@ -42,30 +36,7 @@ public class MqClientPool implements Closeable {
 	
 	public MqClientPool(String serverAddress){
 		this(serverAddress, 64);
-	} 
-	
-	private void monitorServer(ServerAddress serverAddress){
-		detectClient = new MqClient(serverAddress.address, eventDriver);
-		try {
-			ServerInfo info = detectClient.queryServer();
-			this.serverAddress = info.serverAddress;
-		} catch (Exception e) {    
-			throw new IllegalStateException(serverAddress + " offline");
-		}
-		
-		detectClient.onDisconnected(new DisconnectedHandler() { 
-			@Override
-			public void onDisconnected() throws IOException { 
-				if(disconnected != null){
-					disconnected.onDisconnected();
-				}
-			}
-		}); 
-	} 
-	
-	public void onDisconnected(DisconnectedHandler disconnected) {
-		this.disconnected = disconnected;
-	}
+	}  
 
 	public MqClient borrowClient(){
 		try {
@@ -94,8 +65,7 @@ public class MqClientPool implements Closeable {
 	@Override
 	public void close() throws IOException {
 		if(this.pool != null){
-			this.pool.close(); 
-			detectClient.close(); 
+			this.pool.close();  
 			eventDriver.close(); 
 			this.pool = null;
 		} 

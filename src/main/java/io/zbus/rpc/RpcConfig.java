@@ -34,8 +34,9 @@ public class RpcConfig extends ProducerConfig{
 	public RpcConfig() {
 		super(); 
 	}
-	public RpcConfig(Broker broker) {
+	public RpcConfig(Broker broker, String topic) {
 		super(broker); 
+		this.topic = topic;
 	}
 	
 	public String getModule() {

@@ -2,34 +2,23 @@ package io.zbus.examples.producer;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
-import io.zbus.mq.Producer;
-import io.zbus.mq.ProducerConfig; 
+import io.zbus.mq.Producer; 
 
-public class ProducerExample {
-
+public class ProducerExample { 
 	public static void main(String[] args) throws Exception { 
-		Broker broker = new Broker("conf/broker.xml");   
-		
-		ProducerConfig config = new ProducerConfig(broker);   
-		
-		Producer p = new Producer(config);
-		p.declareTopic("Hong"); 
-		
-		for(int i=0; i<10000; i++){
+		Broker broker = new Broker("localhost:15555"); 
+		  
+		Producer p = new Producer(broker);
+		p.declareTopic("hong"); 
+		 
 		Message msg = new Message();
-		msg.setTopic("Hong");
-		msg.setBody("hello world" + System.currentTimeMillis()); 
-		try{
-			Message res = p.publish(msg);
-			System.out.println(res); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		msg.setTopic("hong");
+		msg.setTag("group1.xxx");
+		msg.setBody("hello " + System.currentTimeMillis()); 
 		
-		Thread.sleep(20);
-		}
+		Message res = p.publish(msg);
+		System.out.println(res);   
 		 
 		broker.close();
-	}
-
+	} 
 }

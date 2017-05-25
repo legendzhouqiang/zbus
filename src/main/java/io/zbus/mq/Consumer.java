@@ -72,7 +72,9 @@ public class Consumer extends MqAdmin implements Closeable {
 				new LinkedBlockingQueue<Runnable>(maxInFlightMessage),
 				new ThreadPoolExecutor.CallerRunsPolicy());  
 		
-		MqClientPool[] pools = broker.selectClient(consumeServerSelector, topic); 
+		Message msg = new Message();
+		msg.setTopic(topic);
+		MqClientPool[] pools = broker.selectClient(consumeServerSelector, msg); 
 		
 		for(MqClientPool pool : pools){
 			startConsumeThreadGroup(pool);
@@ -214,7 +216,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	
 	public static class DefaultConsumeServerSelector implements ServerSelector{ 
 		@Override
-		public ServerAddress[] select(BrokerRouteTable table, String topic) { 
+		public ServerAddress[] select(BrokerRouteTable table, Message msg) { 
 			return table.serverTable().keySet().toArray(new ServerAddress[0]); 
 		} 
 	}  

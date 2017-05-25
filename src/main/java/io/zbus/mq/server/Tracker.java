@@ -83,6 +83,10 @@ public class Tracker implements Closeable{
 	public ServerInfo serverInfo(){
 		return mqServer.serverInfo();
 	}
+	
+	public List<ServerAddress> liveTrackerList(){
+		return new ArrayList<ServerAddress>(this.upstreamTrackers.keySet());
+	}
 	 
 	public TrackerInfo trackerInfo(){  
 		List<ServerAddress> serverList = new ArrayList<ServerAddress>(this.downstreamTrackers.keySet()); 
@@ -92,9 +96,7 @@ public class Tracker implements Closeable{
 		}
 		TrackerInfo trackerInfo = new TrackerInfo(); 
 		trackerInfo.infoVersion = infoVersion.getAndIncrement();
-		trackerInfo.serverAddress = myServerAddress;
-		trackerInfo.trackerList = new ArrayList<ServerAddress>(this.upstreamTrackers.keySet()); 
-		trackerInfo.trackedServerList = serverList;
+		trackerInfo.serverAddress = myServerAddress; 
 		trackerInfo.serverTable = serverTable; 
 		
 		return trackerInfo;

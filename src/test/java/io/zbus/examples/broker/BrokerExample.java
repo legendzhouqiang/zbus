@@ -2,7 +2,7 @@ package io.zbus.examples.broker;
 
 import io.zbus.mq.Broker;
 
-public class TrackBrokerConfigExample {
+public class BrokerExample {
  
 	public static void main(String[] args) throws Exception {	 
 		Broker broker = new Broker();  

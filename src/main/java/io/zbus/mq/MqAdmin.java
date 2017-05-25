@@ -35,7 +35,9 @@ public class MqAdmin {
 	}
 	
 	public TopicInfo[] queryTopic(String topic) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic); 
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		TopicInfo[] res = new TopicInfo[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -55,7 +57,9 @@ public class MqAdmin {
 	} 
 	
 	public TopicInfo[] declareTopic(String topic) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic); 
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		TopicInfo[] res = new TopicInfo[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -75,7 +79,9 @@ public class MqAdmin {
 	} 
 	
 	public Object[] removeTopic(String topic) throws IOException, InterruptedException { 
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic); 
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		Object[] res = new Object[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -95,7 +101,9 @@ public class MqAdmin {
 	
 	
 	public Object[] emptyTopic(String topic) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic); 
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		Object[] res = new Object[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -114,7 +122,10 @@ public class MqAdmin {
 	} 
 	
 	public ConsumeGroupInfo[] queryGroup(String topic, String group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		ConsumeGroupInfo[] res = new ConsumeGroupInfo[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -134,7 +145,11 @@ public class MqAdmin {
 	} 
 	
 	public ConsumeGroupInfo[] declareGroup(String topic, ConsumeGroup group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group.getGroupName());
+		
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		ConsumeGroupInfo[] res = new ConsumeGroupInfo[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -154,7 +169,11 @@ public class MqAdmin {
 	} 
 	
 	public Object[] removeGroup(String topic, String group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		Object[] res = new Object[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -173,7 +192,11 @@ public class MqAdmin {
 	} 
 	
 	public Object[] emptyGroup(String topic, String group) throws IOException, InterruptedException {
-		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, topic);
+		Message msg = new Message();
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		
+		MqClientPool[] pools = broker.selectClient(this.adminServerSelector, msg);
 		 
 		Object[] res = new Object[pools.length];
 		for(int i=0; i<pools.length; i++){
@@ -202,7 +225,7 @@ public class MqAdmin {
 
 	public static class DefaultAdminSelector implements ServerSelector{ 
 		@Override
-		public ServerAddress[] select(BrokerRouteTable table, String topic) { 
+		public ServerAddress[] select(BrokerRouteTable table, Message msg) { 
 			return table.serverTable().keySet().toArray(new ServerAddress[0]); 
 		} 
 	}

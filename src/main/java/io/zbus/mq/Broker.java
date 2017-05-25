@@ -3,10 +3,8 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -25,11 +23,14 @@ import io.zbus.net.EventDriver;
 import io.zbus.net.Session;
 
 public class Broker implements Closeable { 
-	private static final Logger log = LoggerFactory.getLogger(Broker.class);
+	private static final Logger log = LoggerFactory.getLogger(Broker.class); 
 	
 	private Map<ServerAddress, MqClientPool> poolTable = new ConcurrentHashMap<ServerAddress, MqClientPool>();   
 	private BrokerRouteTable routeTable = new BrokerRouteTable(); 
+	
 	private Map<ServerAddress, MessageClient> trackerSubscribers = new ConcurrentHashMap<ServerAddress, MessageClient>(); 
+	
+	
 	
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventDriver eventDriver;  
@@ -42,10 +43,6 @@ public class Broker implements Closeable {
 	
 	public Broker(){
 		this(new BrokerConfig());
-	}
-	
-	public Broker(String configFile){
-		this(new BrokerConfig(configFile));
 	} 
 	
 	public Broker(BrokerConfig config){
@@ -54,118 +51,104 @@ public class Broker implements Closeable {
 		this.sslCertFileTable = config.getSslCertFileTable();
 		this.defaultSslCertFile = config.getDefaultSslCertFile(); 
 		
-		List<ServerAddress> trackerList = config.getTrackerList();
-		
-		int totalServerCount = queryServerCount(trackerList);
-		if(totalServerCount > 1){
-			ready = new CountDownLatch(totalServerCount);
-		}
+		List<ServerAddress> trackerList = config.getTrackerList(); 
 		for(ServerAddress serverAddress : trackerList){ 
-			subscribeToTracker(serverAddress); 
-		}  
+			addTracker(serverAddress); 
+		}   
+	}   
+	
+	public Broker(String trackerList){
+		this.eventDriver = new EventDriver(); 
+		this.clientPoolSize = 32;
 		
-		
-		List<ServerAddress> serverList = config.getServerList();
-		for(ServerAddress serverAddress : serverList){
-			try {
-				addServer(serverAddress);
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-			}
+		String[] bb = trackerList.split("[,; ]");
+		for(String tracker : bb){
+			tracker = tracker.trim();
+			if(tracker.isEmpty()) continue; 
+			addTracker(tracker);
 		}
-	}  
-	 
-	
-	public MqClientPool[] selectClient(ServerSelector selector, String topic) {
-		checkReady();
-		
-		ServerAddress[] serverList = selector.select(routeTable, topic);
-		if(serverList == null){
-			return poolTable.values().toArray(new MqClientPool[0]);
-		}
-		
-		MqClientPool[] pools = new MqClientPool[serverList.length];
-		int count = 0;
-		for(int i=0; i<serverList.length; i++){
-			pools[i] = poolTable.get(serverList[i]);
-			if(pools[i] != null) count++;
-		} 
-		if(count == serverList.length) return pools;
-
-
-		MqClientPool[] pools2 = new MqClientPool[count];
-		int j = 0;
-		for(int i=0; i<pools.length; i++){
-			if(pools[i] != null){
-				pools2[j++] = pools[i];
-			}
-		} 
-		return pools2;
-	}
- 
-	public MqClientPool selectClient(String serverAddress) {
-		checkReady();
-		return poolTable.get(serverAddress); 
-	}  
-	
-	
-	public void addSslCertFile(String address, String certPath){
-		sslCertFileTable.put(address, certPath);
-	}
-	
-	public void addTracker(String trackerAddress, String certPath){
-		ServerAddress serverAddress = new ServerAddress(trackerAddress);
-		serverAddress.sslEnabled = certPath != null;
-		if(certPath != null){
-			sslCertFileTable.put(serverAddress.address, certPath);
-		} 
-		
-		addTracker(serverAddress);
 	} 
-	
+ 
 	public void addTracker(String trackerAddress){
 		addTracker(trackerAddress, null);
 	} 
 	
-	public void addTracker(ServerAddress trackerAddress){
-		if(trackerSubscribers.containsKey(trackerAddress)){
-			return;
+	public void addTracker(final ServerAddress trackerAddress){
+		addTracker(trackerAddress, null);
+	}
+	
+	public void addTracker(String trackerAddress, String certPath){
+		ServerAddress serverAddress = new ServerAddress(trackerAddress);
+		serverAddress.sslEnabled = certPath != null; 
+		
+		addTracker(serverAddress, certPath);
+	} 
+	
+	public void addTracker(final ServerAddress trackerAddress, String certPath){
+		if(trackerSubscribers.containsKey(trackerAddress)) return; 
+		
+		if(certPath != null){
+			sslCertFileTable.put(trackerAddress.address, certPath);
 		} 
-		subscribeToTracker(trackerAddress);  
-	}
-	
-	public void addServer(String address) throws IOException { 
-		addServer(address, null);
-	}
-	
-	public void addServer(String address, String certFile) throws IOException { 
-		ServerAddress serverAddress = new ServerAddress(address);
-		if(certFile != null){
-			serverAddress.sslEnabled = true;
-			sslCertFileTable.put(address, certFile);
-		}
-		addServer(serverAddress);
-	}
-	 
-	public void addServer(final ServerAddress serverAddress) throws IOException {  
-		MqClient client = null; 
-		ServerInfo serverInfo = null;
-		try { 
-			client = connectToServer(serverAddress);
-			serverInfo = client.queryServer();  
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			return;
-		} finally {
-			if(client != null){
-				client.close();
+		
+		final MessageClient client = connectToServer(trackerAddress); 
+		client.onDisconnected(new DisconnectedHandler() { 
+			@Override
+			public void onDisconnected() throws IOException { 
+				log.warn("Disconnected from tracker(%s)", trackerAddress);  
+				client.ensureConnectedAsync(); 
+			}  
+		});
+		
+		client.onConnected(new ConnectedHandler() {
+			@Override
+			public void onConnected() throws IOException { 
+				log.info("Connected to tracker(%s)", trackerAddress);  
+				
+				Message req = new Message();  
+				req.setCommand(Protocol.TRACK_SUB);
+				req.setAck(false); 
+				client.invokeAsync(req);
 			}
-		}	
-		 
-		addServer(serverInfo);
-	}  
+		}); 
+		
+		client.onMessage(new MsgHandler<Message>() {  
+			@Override
+			public void handle(Message msg, Session session) throws IOException { 
+				if(Protocol.TRACK_PUB.equals(msg.getCommand())){  
+					TrackerInfo trackerInfo = JsonKit.parseObject(msg.getBodyString(), TrackerInfo.class);
+					
+					//remote tracker's real address obtained, update ssl cert file mapping
+					if(trackerInfo.serverAddress.sslEnabled){
+						String sslCertFile = sslCertFileTable.get(trackerAddress.address);
+						if(sslCertFile != null){
+							sslCertFileTable.put(trackerInfo.serverAddress.address, sslCertFile);
+						}
+					} 
+					
+					List<ServerAddress> toRemove = routeTable.updateTracker(trackerInfo);
+					for(ServerInfo serverInfo : routeTable.serverTable().values()){
+						addServer(serverInfo);
+					}
+					
+					if(!toRemove.isEmpty()){ 
+						for(ServerAddress serverAddress : toRemove){
+							removeServer(serverAddress);
+						}
+					}  
+					
+					if(waitCheck){
+						ready.countDown();
+					}
+				}
+			}
+		});
+		
+		client.ensureConnectedAsync();
+		trackerSubscribers.put(trackerAddress, client); 
+	} 
 	
-	public void addServer(final ServerInfo serverInfo) throws IOException {   
+	private void addServer(final ServerInfo serverInfo) throws IOException {   
 		MqClientPool pool = null;  
 		final ServerAddress serverAddress = serverInfo.serverAddress;
 		synchronized (poolTable) {
@@ -178,20 +161,9 @@ public class Broker implements Closeable {
 				log.error(e.getMessage(), e);
 				return;
 			} 
-			poolTable.put(serverAddress, pool); 
-			
-			
-			pool.onDisconnected(new DisconnectedHandler() { 
-				@Override
-				public void onDisconnected() throws IOException { 
-					removeServer(serverAddress);
-				}
-			});  
+			poolTable.put(serverAddress, pool);  
 		}   
-		routeTable.updateServer(serverInfo);
-		ready.countDown();
-			
-		 
+		
 		final MqClientPool createdPool = pool;
 		eventDriver.getGroup().submit(new Runnable() { 
 			@Override
@@ -212,27 +184,23 @@ public class Broker implements Closeable {
 		}); 
 	}  
 	 
-	public void removeServer(final ServerAddress serverAddress) { 
+	private void removeServer(final ServerAddress serverAddress) { 
 		final MqClientPool pool;
 		synchronized (poolTable) { 
 			pool = poolTable.remove(serverAddress);
-			if(pool == null) return;
-			
-			routeTable.removeServer(serverAddress);  
-			
-			eventDriver.getGroup().schedule(new Runnable() {
-				
-				@Override
-				public void run() {
-					try {
-						pool.close();
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
-					} 
-				}
-			}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
-			
+			if(pool == null) return;   
 		}    
+		
+		eventDriver.getGroup().schedule(new Runnable() { 
+			@Override
+			public void run() {
+				try {
+					pool.close();
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				} 
+			}
+		}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
 		
 		for(final ServerNotifyListener listener : listeners){
 			eventDriver.getGroup().submit(new Runnable() { 
@@ -242,15 +210,7 @@ public class Broker implements Closeable {
 				}
 			});
 		}
-	} 
-	 
-	public void addServerNotifyListener(ServerNotifyListener listener) {
-		this.listeners.add(listener);
-	}
- 
-	public void removeServerNotifyListener(ServerNotifyListener listener) {
-		this.listeners.remove(listener);
-	} 
+	}  
 	
 	@Override
 	public void close() throws IOException {
@@ -266,89 +226,49 @@ public class Broker implements Closeable {
 		}  
 		
 		eventDriver.close();
+	}   
+	
+	public MqClientPool[] selectClient(ServerSelector selector, Message msg) {
+		checkReady();
+		
+		ServerAddress[] serverList = selector.select(routeTable, msg);
+		if(serverList == null){
+			return poolTable.values().toArray(new MqClientPool[0]);
+		}
+		
+		MqClientPool[] pools = new MqClientPool[serverList.length];
+		int count = 0;
+		for(int i=0; i<serverList.length; i++){
+			pools[i] = poolTable.get(serverList[i]);
+			if(pools[i] != null) count++;
+		} 
+		if(count == serverList.length) return pools; 
+
+		MqClientPool[] pools2 = new MqClientPool[count];
+		int j = 0;
+		for(int i=0; i<pools.length; i++){
+			if(pools[i] != null){
+				pools2[j++] = pools[i];
+			}
+		} 
+		return pools2;
 	} 
 	
-	private int queryServerCount(List<ServerAddress> serverAddressList){ 
-		Set<ServerAddress> addrSet = new HashSet<ServerAddress>(); 
-		for(ServerAddress serverAddress : serverAddressList){ 
-			final MqClient client = connectToServer(serverAddress);
-			try { 
-				TrackerInfo info = client.queryTracker();
-				addrSet.addAll(info.trackedServerList); 
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			} finally {
-				try {
-					client.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			} 
-		}
-		return addrSet.size(); 
+	
+	public void addSslCertFile(String address, String certPath){
+		sslCertFileTable.put(address, certPath);
 	}
 	
-	private void subscribeToTracker(final ServerAddress serverAddress){
-		final MessageClient client = connectToServer(serverAddress);
-		final String localTrackerAddress = serverAddress.address;
-		client.onDisconnected(new DisconnectedHandler() { 
-			@Override
-			public void onDisconnected() throws IOException { 
-				log.warn("Disconnected from tracker(%s)", serverAddress);  
-				client.ensureConnectedAsync(); 
-			}  
-		});
-		
-		client.onConnected(new ConnectedHandler() {
-			@Override
-			public void onConnected() throws IOException { 
-				log.info("Connected to tracker(%s)", serverAddress);  
-				
-				Message req = new Message();  
-				req.setCommand(Protocol.TRACK_SUB);
-				req.setAck(false); 
-				client.invokeAsync(req);
-			}
-		}); 
-		
-		client.onMessage(new MsgHandler<Message>() {  
-			@Override
-			public void handle(Message msg, Session session) throws IOException { 
-				if(Protocol.TRACK_PUB.equals(msg.getCommand())){ 
-					TrackerInfo trackerInfo = JsonKit.parseObject(msg.getBodyString(), TrackerInfo.class);
-					
-					//remote tracker's real address obtained, update ssl cert file mapping
-					if(trackerInfo.serverAddress.sslEnabled){
-						String sslCertFile = sslCertFileTable.get(localTrackerAddress);
-						if(sslCertFile != null){
-							sslCertFileTable.put(trackerInfo.serverAddress.address, sslCertFile);
-						}
-					}
-					
-					onTrackInfoUpdate(trackerInfo);
-				}
-			}
-		});
-		
-		client.ensureConnectedAsync();
-		trackerSubscribers.put(serverAddress, client); 
-	}
 	
-	private void onTrackInfoUpdate(TrackerInfo trackerInfo) throws IOException {
-		List<ServerAddress> toRemove = routeTable.updateVotes(trackerInfo);
-		if(!toRemove.isEmpty()){ 
-			for(ServerAddress serverAddress : toRemove){
-				removeServer(serverAddress);
-			}
-		}
-		
-		for(ServerAddress serverAddress : trackerInfo.trackedServerList){
-			MqClientPool pool = poolTable.get(serverAddress);
-			if(pool == null){
-				addServer(serverAddress); 
-			}  
-		}
+	public void addServerNotifyListener(ServerNotifyListener listener) {
+		this.listeners.add(listener);
+	}
+ 
+	public void removeServerNotifyListener(ServerNotifyListener listener) {
+		this.listeners.remove(listener);
 	} 
+	 
+	 
 	private void checkReady(){
 		if(waitCheck){
 			try {
@@ -395,7 +315,7 @@ public class Broker implements Closeable {
 	} 
 	
 	public static interface ServerSelector { 
-		ServerAddress[] select(BrokerRouteTable table, String topic); 
+		ServerAddress[] select(BrokerRouteTable table, Message message); 
 	} 
 	
 	public static interface ServerNotifyListener { 

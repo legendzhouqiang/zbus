@@ -695,7 +695,11 @@ function BrokerRouteTable() {
 BrokerRouteTable.prototype.updateTracker = function (trackerInfo) {
     var toRemove = [];
     //1) Update VotesTable
-    var trackedServerList = trackerInfo.trackedServerList;
+    var trackedServerList = [];
+    for(var serverAddr in trackerInfo.serverTable){
+    	var serverInfo = trackerInfo.serverTable[serverAddr];
+    	trackedServerList.push(serverInfo.serverAddress);
+    }
     var trackerFullAddr = addressKey(trackerInfo.serverAddress); 
     if (trackerFullAddr in this.votesTable) {
         var vote = this.votesTable[trackerFullAddr];
@@ -848,7 +852,7 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
         var trackerInfo = msg.body; 
         var toRemove = broker.routeTable.updateTracker(trackerInfo);
         if (!broker.readyTriggered) {
-            broker.readyServerRequired = trackerInfo.trackedServerList.length;
+            broker.readyServerRequired = hashSize(trackerInfo.serverTable);
         }
         var serverTable = broker.routeTable.serverTable;
         for (var serverAddr in serverTable) {

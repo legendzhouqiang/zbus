@@ -12,8 +12,8 @@ import io.zbus.mq.MqClient;
 public class ConsumerExample {
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {  
-		Broker broker = new Broker("conf/broker.xml");   
+	public static void main(String[] args) throws Exception {   
+		Broker broker = new Broker("localhost:15555");   
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
 		config.setTopic("MyTopic");
@@ -28,6 +28,5 @@ public class ConsumerExample {
 		
 		Consumer consumer = new Consumer(config);
 		consumer.start(); 
-	}
-
+	} 
 }
