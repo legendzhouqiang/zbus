@@ -3,8 +3,7 @@ sys.path.append("../")
 from zbus import Broker, Consumer
  
 broker = Broker()
-broker.add_tracker('localhost:15555')
-
+broker.add_tracker('localhost:15555') 
 
 def on_message(msg, client):
     print(msg)

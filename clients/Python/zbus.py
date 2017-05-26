@@ -521,32 +521,8 @@ class MqClientPool:
         self.maxsize = maxsize
         self.timeout = timeout
         self.ssl_cert_file = ssl_cert_file
-        self.reset()
-        self.on_connected = None
-        self.on_disconnected = None
-        self.detect_client = None
-
-    def start(self):
-        self.detect_client = MqClient(self.server_address, self.ssl_cert_file)
-
-        def pool_connected():
-            if self.on_connected:
-                server_info = self.detect_client.query()
-                if server_info['error']:
-                    self.log.error(server_info['error'])
-                    return
-
-                self.server_address = ServerAddress(
-                    server_info['serverAddress'])
-                self.on_connected(server_info)
-
-        def pool_disconnected():
-            if self.on_disconnected:
-                self.on_disconnected(self.server_address)
-
-        self.detect_client.on_connected = pool_connected
-        self.detect_client.on_disconnected = pool_disconnected
-        self.detect_client.start()
+        self.reset() 
+  
 
     def make_client(self):
         client = MqClient(self.server_address, self.ssl_cert_file)
@@ -599,75 +575,77 @@ class MqClientPool:
             except Queue.Full:
                 pass
 
-    def close(self):
-        if self.detect_client:
-            self.detect_client.close()
-            self.detect_client = None
+    def close(self): 
         for client in self.clients:
             client.close()
 
 
-class Vote:
-    def __init__(self, version):
-        self.version = version
-        self.tracked_servers = set()
+
 
 class BrokerRouteTable:
+    class Vote:
+        def __init__(self, version):
+            self.version = version
+            self.server_list = []
+            
     def __init__(self):
-        self.topic_table = {}
-        self.server_table = {}
-        self.votes_table = {}
+        self.topic_table = {}     #{ TopicName=>[TopicInfo] }
+        self.server_table = {}    #{ ServerAddress=>ServerInfo }
+        self.votes_table = {}     #{ TrackerAddress=>Vote }
         self.vote_factor = 0.5
         
     def update_tracker(self, tracker_info):
         #1) Update votes
         tracker_address = ServerAddress(tracker_info['serverAddress']) 
-        vote = self.votes_table[tracker_address]
-        
+        vote = self.votes_table.get(tracker_address) 
+        new_server_table = tracker_info['serverTable'] 
         tracker_version = tracker_info['infoVersion']
         if vote and vote.version >= tracker_version:
-            return
-        tracked_servers = set()
-        for server_addr in tracker_info['serverTable']:
-            server_info = tracker_info['serverTable'][server_addr]
-            tracked_servers.add(ServerAddress(server_info['serverAddress']))
+            return []
+        server_list = []
+        for server_info in new_server_table.values(): 
+            server_list.append(ServerAddress(server_info['serverAddress']))
 
         if not vote:
-            vote = Vote(tracker_version)
-        vote.tracked_servers = tracked_servers            
+            vote = BrokerRouteTable.Vote(tracker_version)
+            self.votes_table[tracker_address] = vote
+            
+        vote.version = tracker_version
+        vote.server_list = server_list            
         
         #2) Merge ServerTable
-        for server_addr in tracker_info['serverTable']:
-            server_info = tracker_info['serverTable'][server_addr]
-            old_server_info = self.server_table[server_addr]
+        for server_info in new_server_table.values(): 
+            server_address = ServerAddress(server_info['serverAddress'])
+            old_server_info = self.server_table.get(server_address) 
             if old_server_info and old_server_info['infoVersion']>=server_info['infoVersion']:
                 continue
-            self.server_table[server_addr] = server_info
+            self.server_table[server_address] = server_info
         
-        #3) Purge 
-        server_table_local = self.server_table
-        return self._purge(server_table_local)
+        #3) Purge  
+        return self._purge()
 
     def remove_tracker(self, tracker_address):
-        pass
+        tracker_address = ServerAddress(tracker_address)
+        vote = self.votes_table.pop(tracker_address)
+        if vote:
+            return self._purge() 
 
-    def _purge(self, server_table_local):
+    def _purge(self):
         to_remove = []
-        for server_address in server_table_local:
-            server_info = server_table_local[server_address]
-            count = 1
+        for server_address in self.server_table:
+            server_info = self.server_table[server_address]
+            count = 0
             for tracker_address in self.votes_table:
                 vote = self.votes_table[tracker_address]
-                if server_address in vote.tracked_servers:
+                if server_address in vote.server_list:
                     count += 1
             total_count = len(self.votes_table)
             if count < total_count*self.vote_factor:
                 to_remove.append(server_address)
-        for server_address in to_remove:
-            server_table_local.pop(server_address)
         
-        if len(to_remove)>0: return []
-        self.server_table = server_table_local
+        for server_address in to_remove:
+            self.server_table.pop(server_address)
+         
         topic_table = {}
         for key in self.server_table:
             server_info = self.server_table[key]
@@ -681,71 +659,6 @@ class BrokerRouteTable:
 
         self.topic_table = topic_table 
         return to_remove
-
-    def update_votes(self, tracker_info):
-        votes_table_local = dict(self.votes_table)
-        tracker_addr = ServerAddress(tracker_info['serverAddress'])
-
-        tracked_server_set = set()
-        for server_address in tracker_info['trackedServerList']:
-            server_address = ServerAddress(server_address)
-            tracked_server_set.add(server_address)
-
-        for server_address in tracked_server_set:
-            if server_address not in votes_table_local:
-                voted_trackers = set()
-                voted_trackers.add(tracker_addr)
-                votes_table_local[server_address] = voted_trackers
-            else:
-                voted_trackers = votes_table_local[server_address]
-                voted_trackers.add(tracker_addr)
-
-        to_remove = []
-        for server_address in votes_table_local:
-            voted_trackers = votes_table_local[server_address]
-            if tracker_addr in voted_trackers and server_address not in tracked_server_set:
-                voted_trackers.remove(tracker_addr)
-            if self.can_remove(voted_trackers):
-                to_remove.append(server_address)
-
-        self.votes_table = votes_table_local
-        if len(to_remove) < 1:
-            return to_remove
-
-        for server_address in to_remove:
-            self.server_table.pop(server_address, None)
-        self._rebuild_table()
-
-        return to_remove
-
-    def can_remove(self, tracker_set):
-        return len(tracker_set) < 1
-
-    def update_server(self, server_info):
-        self._rebuild_table(server_info)
-
-    def remove_server(self, server_address):
-        server_address = ServerAddress(server_address)
-        self.server_table.pop(server_address, None)
-        self._rebuild_table()
-
-    def _rebuild_table(self, server_info=None):
-        if server_info:
-            server_address = ServerAddress(server_info['serverAddress'])
-            self.server_table[server_address] = server_info
-
-        topic_table = {}
-        for key in self.server_table:
-            server_info = self.server_table[key]
-            server_topic_table = server_info['topicTable']
-            for topic_name in server_topic_table:
-                topic = server_topic_table[topic_name]
-                if topic_name not in topic_table:
-                    topic_table[topic_name] = [topic]
-                else:
-                    topic_table[topic_name].append(topic)
-
-        self.topic_table = topic_table
 
 
 class CountDownLatch(object):
@@ -775,10 +688,10 @@ class Broker:
         self.route_table = BrokerRouteTable()
         self.ssl_cert_file_table = {}
         self.tracker_subscribers = {}
-        self.notifiers = {}
-
+    
         self.on_server_join = None
         self.on_server_leave = None
+        self.on_server_updated = None
 
     def add_tracker(self, tracker_address, cert_file=None):
         tracker_address = ServerAddress(tracker_address)
@@ -787,7 +700,7 @@ class Broker:
         if cert_file:
             self.ssl_cert_file_table[tracker_address.address] = cert_file
 
-        notify = self.notifiers[tracker_address] = CountDownLatch(1)
+        notify = CountDownLatch(1)
 
         client = MqClient(tracker_address, cert_file)
         self.tracker_subscribers[tracker_address] = client
@@ -800,68 +713,49 @@ class Broker:
         def on_message(msg):
             if msg.status != '200':
                 self.log.error(msg)
-                return
-
+                return 
             tracker_info = msg.body
-            tracked_server_list = tracker_info['trackedServerList']
-
-            notify.count = len(tracked_server_list)
-
-            for server_address in tracked_server_list:
-                server_address = ServerAddress(server_address)
-                # if already exists, no add happens
-                self.add_server(server_address, None, notify)
-
-            to_remove = self.route_table.update_votes(tracker_info)
+            to_remove = self.route_table.update_tracker(tracker_info)
+            for server_address in self.route_table.server_table:
+                server_info = self.route_table.server_table[server_address]
+                self._add_server(server_info)
+            
             for server_address in to_remove:
-                pool = self.pool_table.pop(server_address, None)
-                if pool:
-                    self.log.info('%s left' % server_address)
-                    pool.close()
+                self._remove_server(server_address) 
+                
+            notify.count_down()
+            
 
         client.on_connected = tracker_connected
         client.on_message = on_message
         client.start()
 
-        notify.wait()
+        notify.wait() 
 
-    def add_server(self, server_address, cert_file=None, notify=None):
-        server_address = ServerAddress(server_address)
+    def _add_server(self, server_info):
+        server_address = ServerAddress(server_info['serverAddress'])
         if server_address in self.pool_table:
-            return
-
-        if cert_file:
-            self.ssl_cert_file_table[server_address.address] = cert_file
-
+            return 
+        
         self.log.info('%s joined' % server_address)
-        pool = MqClientPool(server_address, cert_file)
-        self.pool_table[pool.server_address] = pool
-
-        sync_wait = False
-        if not notify:
-            sync_wait = True
-            notify = CountDownLatch(1)
-
-        def server_connected(server_info):
-            self.route_table.update_server(server_info)
-            notify.count_down()
-            if self.on_server_join:
-                self.on_server_join(pool)
-
-        def server_disconnected(server_address):
-            self.route_table.remove_server(server_address)
+        pool = MqClientPool(server_address, self.ssl_cert_file_table.get(server_address.address))
+        self.pool_table[server_address] = pool
+        
+        if self.on_server_join:
+            self.on_server_join(pool) 
+            
+    def _remove_server(self, server_address): 
+        self.log.info('%s left' % server_address)
+        pool = self.pool_table.pop(server_address)
+        if pool:
             if self.on_server_leave:
                 self.on_server_leave(server_address)
-
-        pool.on_connected = server_connected
-        pool.on_disconnected = server_disconnected
-        pool.start()
-
-        if sync_wait:
-            notify.wait()
+            pool.close()
 
     def select(self, selector, msg):
         keys = selector(self.route_table, msg)
+        if not keys or len(keys) < 1:
+            raise Exception("Missing MqServer for: %s"%msg)
         res = []
         for key in keys:
             if key in self.pool_table:
@@ -897,8 +791,7 @@ class MqAdmin:
             client = None
             try:
                 client = pool.borrow_client()
-                res_i = client.invoke_object(
-                    cmd, topic, group=group, options=options, timeout=timeout)
+                res_i = client.invoke_object(cmd, topic, group=group, options=options, timeout=timeout)
                 res.append(res_i)
             finally:
                 if client:
@@ -927,10 +820,10 @@ class Producer(MqAdmin):
             server_table = route_table.server_table
             topic_table = route_table.topic_table
             if len(server_table) < 1:
-                raise Exception('missing MqServer for topic:%s' % msg.topic)
+                return []
 
             if msg.topic not in topic_table:
-                return [random.choice(server_table.keys())]
+                return []
             topic_server_list = topic_table[msg.topic]
             target = topic_server_list[0]
             for server_topic in topic_server_list:
