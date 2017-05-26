@@ -1005,12 +1005,12 @@ class RpcInvoker:
         msg.ack = False  # RPC ack must set to False to wait return
         msg.body = req
 
-        msg_res = self.producer.publish(
-            msg, timeout=self.timeout, selector=selector)
+        msg_res = self.producer.publish(msg, timeout=self.timeout, selector=selector)
 
         if isinstance(msg_res.body, bytearray):
             msg_res.body = msg_res.body.decode(msg_res.encoding or 'utf8')
-            msg_res.body = json.loads(msg_res.body)
+        
+        msg_res.body = json.loads(str(msg_res.body))
 
         if msg_res.status != '200':
             error_text = 'unknown error'
