@@ -607,18 +607,42 @@ class MqClientPool:
             client.close()
 
 
+class Vote:
+    def __init__(self, version):
+        self.version = version
+        self.tracked_servers = set()
+
 class BrokerRouteTable:
     def __init__(self):
         self.topic_table = {}
         self.server_table = {}
         self.votes_table = {}
+        self.vote_factor = 0.5
         
     def update_tracker(self, tracker_info):
         #1) Update votes
-        tracker_address = ServerAddress(tracker_info['serverAddress'])
+        tracker_address = ServerAddress(tracker_info['serverAddress']) 
+        vote = self.votes_table[tracker_address]
+        
+        tracker_version = tracker_info['infoVersion']
+        if vote and vote.version >= tracker_version:
+            return
+        tracked_servers = set()
+        for server_addr in tracker_info['serverTable']:
+            server_info = tracker_info['serverTable'][server_addr]
+            tracked_servers.add(ServerAddress(server_info['serverAddress']))
+
+        if not vote:
+            vote = Vote(tracker_version)
+        vote.tracked_servers = tracked_servers            
         
         #2) Merge ServerTable
-        
+        for server_addr in tracker_info['serverTable']:
+            server_info = tracker_info['serverTable'][server_addr]
+            old_server_info = self.server_table[server_addr]
+            if old_server_info and old_server_info['infoVersion']>=server_info['infoVersion']:
+                continue
+            self.server_table[server_addr] = server_info
         
         #3) Purge 
         server_table_local = self.server_table
@@ -628,7 +652,35 @@ class BrokerRouteTable:
         pass
 
     def _purge(self, server_table_local):
-        pass
+        to_remove = []
+        for server_address in server_table_local:
+            server_info = server_table_local[server_address]
+            count = 1
+            for tracker_address in self.votes_table:
+                vote = self.votes_table[tracker_address]
+                if server_address in vote.tracked_servers:
+                    count += 1
+            total_count = len(self.votes_table)
+            if count < total_count*self.vote_factor:
+                to_remove.append(server_address)
+        for server_address in to_remove:
+            server_table_local.pop(server_address)
+        
+        if len(to_remove)>0: return []
+        self.server_table = server_table_local
+        topic_table = {}
+        for key in self.server_table:
+            server_info = self.server_table[key]
+            server_topic_table = server_info['topicTable']
+            for topic_name in server_topic_table:
+                topic = server_topic_table[topic_name]
+                if topic_name not in topic_table:
+                    topic_table[topic_name] = [topic]
+                else:
+                    topic_table[topic_name].append(topic)
+
+        self.topic_table = topic_table 
+        return to_remove
 
     def update_votes(self, tracker_info):
         votes_table_local = dict(self.votes_table)
