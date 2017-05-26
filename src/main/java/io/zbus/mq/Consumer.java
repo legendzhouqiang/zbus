@@ -25,8 +25,8 @@ public class Consumer extends MqAdmin implements Closeable {
 	protected int consumeTimeout; 
 	
 	private ExecutorService consumeRunner;  
-	private ConsumeHandler consumeHandler;
-	private int consumeThreadCount;
+	private MessageHandler messageHandler;
+	private int connectionCount;
 	private int consumeRunnerPoolSize; 
 	private int maxInFlightMessage;  
 	
@@ -42,16 +42,9 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.consumeWindow = config.getConsumeWindow();
 		this.consumeTimeout = config.getConsumeTimeout();
 		
-		this.consumeHandler = config.getConsumeHandler();
-		if(this.consumeHandler == null){
-			final MessageProcessor messageProcessor = config.getMessageProcessor();
-			if(messageProcessor != null){
-				//default consumer trying to route back message if processed
-				consumeHandler = buildFromMessageProcessor(messageProcessor); 
-			}  
-		}
+		this.messageHandler = config.getMessageHandler();
 		this.consumeRunnerPoolSize = config.getConsumeRunnerPoolSize();
-		this.consumeThreadCount = config.getConsumeThreadCount();
+		this.connectionCount = config.getConnectionCount();
 		this.maxInFlightMessage = config.getMaxInFlightMessage();
 		
 		this.consumeServerSelector = config.getConsumeServerSelector();
@@ -63,7 +56,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	public synchronized void start() throws IOException{  
 		if(started) return;
 		
-		if(this.consumeHandler == null){
+		if(this.messageHandler == null){
 			throw new IllegalArgumentException("ConsumeHandler and MessageProcessor are both null");
 		} 
 		
@@ -111,15 +104,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		group.start(); 
 	}
 	
-	public void start(ConsumeHandler consumerHandler) throws IOException{
-		onMessage(consumerHandler);
+	public void start(MessageHandler consumerHandler) throws IOException{
+		setMessageHandler(consumerHandler);
 		start();
-	}
-	
-	public void start(MessageProcessor messageProcessor) throws IOException{
-		onMessage(messageProcessor);
-		start();
-	}
+	} 
 	
 	@Override
 	public void close() throws IOException { 
@@ -136,50 +124,18 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 	}
 	
-	public synchronized void onMessage(ConsumeHandler consumerHandler){
-		this.consumeHandler = consumerHandler;
-	}
-	
-	public synchronized void onMessage(MessageProcessor messageProcessor){
-		this.consumeHandler = buildFromMessageProcessor(messageProcessor);
+	public void setMessageHandler(MessageHandler messageHandler){
+		this.messageHandler = messageHandler;
 	} 
-	
-	private ConsumeHandler buildFromMessageProcessor(final MessageProcessor messageProcessor){
-		return new ConsumeHandler() { 
-			@Override
-			public void handle(Message msg, MqClient client) throws IOException { 
-				if(verbose){
-					log.info("Request:\n"+msg);
-				}
-				final String mq = msg.getTopic();
-				final String msgId  = msg.getId();
-				final String sender = msg.getSender();
-				
-				Message res = messageProcessor.process(msg);
-				
-				if(res != null){
-					res.setId(msgId);
-					res.setTopic(mq);  
-					res.setReceiver(sender); 
-					if(verbose){
-						log.info("Response:\n"+res);
-					}
-					//route back message
-					client.route(res);
-				}
-			}
-		};
-	} 
-	
 	
 	private class ConsumeThreadGroup implements Closeable{ 
 		private ConsumeThread[] threads;  
 		ConsumeThreadGroup(MqClientPool pool){ 
-			threads = new ConsumeThread[consumeThreadCount];
-			for(int i=0;i<consumeThreadCount;i++){
+			threads = new ConsumeThread[connectionCount];
+			for(int i=0;i<connectionCount;i++){
 				MqClient clieint = pool.createClient();
 				ConsumeThread thread = threads[i] = new ConsumeThread(clieint);
-				thread.setConsumeHandler(consumeHandler); 
+				thread.setConsumeHandler(messageHandler); 
 				
 				thread.setTopic(topic);
 				thread.setConsumeGroup(consumeGroup);

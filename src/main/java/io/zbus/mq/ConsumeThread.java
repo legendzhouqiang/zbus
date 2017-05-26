@@ -19,7 +19,7 @@ public class ConsumeThread extends Thread implements Closeable{
 	protected Integer consumeWindow;
 	
 	protected ExecutorService consumeRunner;
-	protected ConsumeHandler consumeHandler;
+	protected MessageHandler consumeHandler;
 	 
 	 
 	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
@@ -136,7 +136,7 @@ public class ConsumeThread extends Thread implements Closeable{
 		this.consumeTimeout = consumeTimeout;
 	}
 
-	public void setConsumeHandler(ConsumeHandler consumeHandler) {
+	public void setConsumeHandler(MessageHandler consumeHandler) {
 		this.consumeHandler = consumeHandler;
 	} 
 	
@@ -168,7 +168,7 @@ public class ConsumeThread extends Thread implements Closeable{
 		return consumeTimeout;
 	}
 
-	public ConsumeHandler getConsumeHandler() {
+	public MessageHandler getConsumeHandler() {
 		return consumeHandler;
 	}
 

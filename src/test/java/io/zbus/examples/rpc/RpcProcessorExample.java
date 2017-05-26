@@ -19,9 +19,10 @@ public class RpcProcessorExample {
 		ConsumerConfig config = new ConsumerConfig();
 		config.setBroker(broker);
 		config.setTopic("MyRpc");
-		config.setMessageProcessor(processor);   
+		config.setMessageHandler(processor);   
 		
-		Consumer consumer = new Consumer(config);
+		Consumer consumer = new Consumer(config); 
+		
 		consumer.start(); 
 	} 
 }

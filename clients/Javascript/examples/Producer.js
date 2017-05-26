@@ -5,8 +5,7 @@
 }
 
 
-var broker = new Broker();
-broker.addTracker("localhost:15555"); 
+var broker = new Broker("localhost:15555");
 
 broker.ready(function () {
 	var p = new Producer(broker);

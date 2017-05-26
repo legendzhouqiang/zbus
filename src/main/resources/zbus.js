@@ -789,7 +789,7 @@ BrokerRouteTable.prototype._rebuildTopicTable = function () {
 }
 
 
-function Broker(trackerAddress) {
+function Broker(trackerAddressList) {
     this.trackerSubscribers = {};
     this.clientTable = {};
     this.routeTable = new BrokerRouteTable();
@@ -807,8 +807,13 @@ function Broker(trackerAddress) {
     this.onReady = null;
     this.readyTimeout = 3000;//3 seconds
 
-    if (trackerAddress) {
-        this.addTracker(trackerAddress);
+    if (trackerAddressList) {
+    	var bb = trackerAddressList.split(";");
+    	for(var i in bb){
+    		var trackerAddress = bb[i];
+    		if(trackerAddress.trim() == "") continue;;
+    		this.addTracker(trackerAddress);
+    	} 
     } 
 }
 
@@ -1023,8 +1028,8 @@ function Consumer(broker, consumeCtrl) {
     this.consumeServerSelector = function (routeTable, topic) {
         return Object.keys(routeTable.serverTable);
     }
-    this.mqClientCount = 1;
-    this.onMessage = null;
+    this.connectionCount = 1;
+    this.messageHandler = null;
     if (typeof consumeCtrl == 'string') {
         consumeCtrl = {topic: consumeCtrl}
     }
@@ -1040,7 +1045,7 @@ Consumer.prototype.consumeToServer = function (clientInBrokerTable) {
 
     var consumingClients = [];
     var consumer = this;
-    for (var i = 0; i < this.mqClientCount; i++) {
+    for (var i = 0; i < this.connectionCount; i++) {
         var consumeClient = clientInBrokerTable.fork();
         consumingClients.push(consumeClient);
         consumer.consume(consumeClient, consumer.consumeCtrl); 
@@ -1082,7 +1087,7 @@ Consumer.prototype.start = function () {
 
 
 Consumer.prototype.consume = function(client, consumeCtrl) { 
-    var onMessage = this.onMessage;
+    var messageHandler = this.messageHandler;
     function consumeCallback(consumeCtrl, res) {
         if (res.status == 404) {
             client.declare(consumeCtrl, function (res) {
@@ -1105,9 +1110,9 @@ Consumer.prototype.consume = function(client, consumeCtrl) {
         res.id = id;
         res.url = originUrl;
 
-        if (onMessage) {
+        if (messageHandler) {
             try{
-                onMessage(res, client);
+            	messageHandler(res, client);
             } finally {
                 client.consume(consumeCtrl, function (res) {
                     consumeCallback(consumeCtrl, res);
@@ -1220,7 +1225,7 @@ function RpcProcessor() {
     this.methodTable = {}
 
     var processor = this;
-    this.onMessage = function (msg, client) {  
+    this.messageHandler = function (msg, client) {  
         var resMsg = {
             id: msg.id,
             recver: msg.sender,

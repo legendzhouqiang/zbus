@@ -34,8 +34,8 @@ import io.zbus.net.Session;
 
 public class MessageAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(MessageAdaptor.class);
-	protected MessageHandler filterHandler;   
-	protected Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>(); 
+	protected SessionMessageHandler filterHandler;   
+	protected Map<String, SessionMessageHandler> handlerMap = new ConcurrentHashMap<String, SessionMessageHandler>(); 
 	protected Map<String, Session> sessionTable;
 	
 	public MessageAdaptor(){ 
@@ -44,18 +44,18 @@ public class MessageAdaptor implements IoAdaptor{
 	
 	public MessageAdaptor(Map<String, Session> sessionTable){
 		this.sessionTable = sessionTable;
-		this.cmd(Message.HEARTBEAT, new MessageHandler() { 
+		this.cmd(Message.HEARTBEAT, new SessionMessageHandler() { 
 			public void handle(Message msg, Session sess) throws IOException { 
 				//ignore
 			}
 		});
 	}
 	 
-	public void cmd(String command, MessageHandler handler){
+	public void cmd(String command, SessionMessageHandler handler){
     	this.handlerMap.put(command, handler);
     }
 	 
-    public void registerFilterHandler(MessageHandler filterHandler) {
+    public void registerFilterHandler(SessionMessageHandler filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
@@ -69,7 +69,7 @@ public class MessageAdaptor implements IoAdaptor{
     	
     	String cmd = msg.getCommand();
     	if(cmd != null){ //cmd
-    		MessageHandler handler = handlerMap.get(cmd);
+    		SessionMessageHandler handler = handlerMap.get(cmd);
         	if(handler != null){
         		handler.handle(msg, sess);
         		return;

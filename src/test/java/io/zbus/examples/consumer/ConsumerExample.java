@@ -3,7 +3,7 @@ package io.zbus.examples.consumer;
 import java.io.IOException;
 
 import io.zbus.mq.Broker;
-import io.zbus.mq.ConsumeHandler;
+import io.zbus.mq.MessageHandler;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Message;
@@ -17,9 +17,9 @@ public class ConsumerExample {
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
 		config.setTopic("MyTopic");
-		config.setConsumeThreadCount(2);      // connection count to each server in broker
+		config.setConnectionCount(2);      // connection count to each server in broker
 		config.setConsumeRunnerPoolSize(64);  // consume handler running thread pool size
-		config.setConsumeHandler(new ConsumeHandler() { 
+		config.setMessageHandler(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, MqClient client) throws IOException {
 				System.out.println(msg);

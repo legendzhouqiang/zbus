@@ -4,8 +4,8 @@
     var RpcInvoker = zbus.RpcInvoker;
 }
 
-var broker = new Broker();
-broker.addTracker("localhost:15555");  
+var broker = new Broker("localhost:15555");
+
 var rpc = new RpcInvoker(broker, "myrpc");
 
 

@@ -6,16 +6,14 @@ public class ConsumerConfig extends MqConfig {
 	protected String topic;
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow; 
-	protected int consumeTimeout = 120000;// 2 minutes 
-	 
+	protected int consumeTimeout = 120000;// 2 minutes  
 	
-	protected ServerSelector consumeServerSelector;
-	
-	protected ConsumeHandler consumeHandler; 
-	protected MessageProcessor messageProcessor;  
-	protected int consumeThreadCount = 4;
+	protected MessageHandler messageHandler;   
+	protected int connectionCount = 4;
 	protected int consumeRunnerPoolSize = 64; 
 	protected int maxInFlightMessage = 100;
+	
+	protected ServerSelector consumeServerSelector; 
 	
 	public ConsumerConfig(){
 		
@@ -65,20 +63,12 @@ public class ConsumerConfig extends MqConfig {
 		this.consumeServerSelector = consumeServerSelector;
 	} 
 
-	public ConsumeHandler getConsumeHandler() {
-		return consumeHandler;
+	public MessageHandler getMessageHandler() {
+		return messageHandler;
 	}
 
-	public void setConsumeHandler(ConsumeHandler consumeHandler) {
-		this.consumeHandler = consumeHandler;
-	}
-
-	public MessageProcessor getMessageProcessor() {
-		return messageProcessor;
-	}
-
-	public void setMessageProcessor(MessageProcessor messageProcessor) {
-		this.messageProcessor = messageProcessor;
+	public void setMessageHandler(MessageHandler messageHandler) {
+		this.messageHandler = messageHandler;
 	} 
 	
 	public int getConsumeRunnerPoolSize() {
@@ -97,12 +87,12 @@ public class ConsumerConfig extends MqConfig {
 		this.maxInFlightMessage = maxInFlightMessage;
 	} 
 
-	public int getConsumeThreadCount() {
-		return consumeThreadCount;
+	public int getConnectionCount() {
+		return connectionCount;
 	}
 
-	public void setConsumeThreadCount(int consumeThreadCount) {
-		this.consumeThreadCount = consumeThreadCount;
+	public void setConnectionCount(int connectionCount) {
+		this.connectionCount = connectionCount;
 	}
 
 	@Override

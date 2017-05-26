@@ -27,7 +27,7 @@ import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.net.MessageAdaptor;
-import io.zbus.mq.net.MessageHandler;
+import io.zbus.mq.net.SessionMessageHandler;
 import io.zbus.net.Session;
 import io.zbus.rpc.Request;
 
@@ -35,7 +35,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(MqAdaptor.class);
 
 	private final Map<String, MessageQueue> mqTable; 
-	private final Map<String, MessageHandler> handlerMap = new ConcurrentHashMap<String, MessageHandler>();
+	private final Map<String, SessionMessageHandler> handlerMap = new ConcurrentHashMap<String, SessionMessageHandler>();
 	
 	private boolean verbose = false;    
 	private final MqServer mqServer;
@@ -97,7 +97,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		
 	}   
 	
-	private MessageHandler produceHandler = new MessageHandler() { 
+	private SessionMessageHandler produceHandler = new SessionMessageHandler() { 
 		@Override
 		public void handle(final Message msg, final Session sess) throws IOException {  
 			boolean ok = validateMessage(msg,sess);
@@ -129,7 +129,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler rpcHandler = new MessageHandler() { 
+	private SessionMessageHandler rpcHandler = new SessionMessageHandler() { 
 		@Override
 		public void handle(final Message msg, final Session sess) throws IOException {  
 			msg.setAck(false);
@@ -137,7 +137,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler consumeHandler = new MessageHandler() { 
+	private SessionMessageHandler consumeHandler = new SessionMessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(!auth(msg)){ 
@@ -159,7 +159,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler routeHandler = new MessageHandler() { 
+	private SessionMessageHandler routeHandler = new SessionMessageHandler() { 
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String recver = msg.getReceiver();
@@ -191,7 +191,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};  
 	
-	private MessageHandler declareHandler = new MessageHandler() {  
+	private SessionMessageHandler declareHandler = new SessionMessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
 			String topic = msg.getTopic();  
@@ -245,7 +245,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler queryHandler = new MessageHandler() {
+	private SessionMessageHandler queryHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(msg.getTopic() == null){  
 				ReplyKit.replyJson(msg, sess, mqServer.serverInfo()); 
@@ -276,7 +276,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}  
 	}; 
 	
-	private MessageHandler removeHandler = new MessageHandler() {  
+	private SessionMessageHandler removeHandler = new SessionMessageHandler() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {  
 			String topic = msg.getTopic(); 
@@ -320,7 +320,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		} 
 	};
 	
-	private MessageHandler pingHandler = new MessageHandler() {
+	private SessionMessageHandler pingHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = new Message();
 			res.setStatus(200); 
@@ -331,7 +331,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	};
 	 	 
 	
-	private MessageHandler homeHandler = new MessageHandler() {
+	private SessionMessageHandler homeHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			String msgId = msg.getId();
 			msg = new Message();
@@ -410,7 +410,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		return res;
 	}
 	
-	private MessageHandler pageHandler = new MessageHandler() {
+	private SessionMessageHandler pageHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException { 
 			Message res = handleTemplateRequest("/page/", msg.getUrl());
 			if("200".equals(res.getStatus())){
@@ -420,7 +420,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler jsHandler = new MessageHandler() {
+	private SessionMessageHandler jsHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/js/", msg.getUrl());
 			if("200".equals(res.getStatus())){
@@ -430,7 +430,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	
-	private MessageHandler cssHandler = new MessageHandler() {
+	private SessionMessageHandler cssHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/css/", msg.getUrl());
 			if("200".equals(res.getStatus())){
@@ -440,7 +440,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler imgHandler = new MessageHandler() {
+	private SessionMessageHandler imgHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/img/", msg.getUrl());
 			if("200".equals(res.getStatus())){
@@ -450,7 +450,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler faviconHandler = new MessageHandler() {
+	private SessionMessageHandler faviconHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/img/", "/img/logo.svg");
 			if("200".equals(res.getStatus())){
@@ -460,14 +460,14 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};  
 	
-	private MessageHandler heartbeatHandler = new MessageHandler() {
+	private SessionMessageHandler heartbeatHandler = new SessionMessageHandler() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
 			// just ignore
 		}
 	}; 
 	 
-	private MessageHandler trackPubServerHandler = new MessageHandler() {
+	private SessionMessageHandler trackPubServerHandler = new SessionMessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
@@ -485,7 +485,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	};
 	 
-	private MessageHandler trackSubHandler = new MessageHandler() {
+	private SessionMessageHandler trackSubHandler = new SessionMessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
@@ -493,7 +493,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler trackerHandler = new MessageHandler() {
+	private SessionMessageHandler trackerHandler = new SessionMessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
@@ -501,13 +501,13 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler serverHandler = new MessageHandler() {
+	private SessionMessageHandler serverHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException { 
 			ReplyKit.replyJson(msg, sess, mqServer.serverInfo());  
 		}
 	};
 	
-	private MessageHandler traceHandler = new MessageHandler() {
+	private SessionMessageHandler traceHandler = new SessionMessageHandler() {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
@@ -702,7 +702,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		} 
 		
     	if(cmd != null){
-	    	MessageHandler handler = handlerMap.get(cmd);
+	    	SessionMessageHandler handler = handlerMap.get(cmd);
 	    	if(handler != null){
 	    		handler.handle(msg, sess);
 	    		return;
@@ -747,7 +747,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		return true;
 	}
     
-    public void registerHandler(String command, MessageHandler handler){
+    public void registerHandler(String command, SessionMessageHandler handler){
     	this.handlerMap.put(command, handler);
     } 
 }
