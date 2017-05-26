@@ -2,9 +2,7 @@ import sys
 sys.path.append("../")
 from zbus import Broker, MqAdmin, Message
  
-broker = Broker()
-broker.add_tracker('localhost:15555')
-
+broker = Broker('localhost:15555')
 
 admin = MqAdmin(broker)
 

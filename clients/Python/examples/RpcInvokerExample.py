@@ -2,8 +2,7 @@ import sys
 sys.path.append("../")
 from zbus import Broker, RpcInvoker
  
-broker = Broker()
-broker.add_tracker('localhost:15555')
+broker = Broker('localhost:15555')
 
 rpc = RpcInvoker(broker, 'MyRpc')
 

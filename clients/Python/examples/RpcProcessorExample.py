@@ -28,8 +28,12 @@ p = RpcProcessor()
 p.add_module(MyService) #could be class or object
 
 
-broker = Broker()
-broker.add_tracker('localhost:15555') 
+broker = Broker('localhost:15555') 
+
 c = Consumer(broker, 'MyRpc')
-c.on_message = p #RpcProcessor is callable
+c.connection_count = 1
+c.message_handler = p #RpcProcessor is callable
 c.start()
+
+
+

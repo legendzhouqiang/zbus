@@ -1,13 +1,14 @@
 import sys
 sys.path.append("../")
-from zbus import MqClient, ConsumeThread
+from zbus import MqClientPool, ConsumeThread
 
-client = MqClient('localhost:15555')
-client.connect()
+pool = MqClientPool('localhost:15555')
 
-def on_message(msg, client):
+def message_handler(msg, client):
     print(msg)
 
-t = ConsumeThread(client, 'MyTopic2')
-t.on_message = on_message
+t = ConsumeThread(pool, 'MyTopic')
+t.connection_count = 2
+t.message_handler = message_handler
+
 t.start()

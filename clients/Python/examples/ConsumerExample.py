@@ -2,13 +2,11 @@ import sys
 sys.path.append("../")
 from zbus import Broker, Consumer
  
-broker = Broker()
-broker.add_tracker('localhost:15555') 
+broker = Broker('localhost:15555') 
 
-def on_message(msg, client):
+def message_handler(msg, client):
     print(msg)
 
 c = Consumer(broker, 'MyTopic')
-c.on_message = on_message
-c.connection_count = 2 
+c.message_handler = message_handler 
 c.start()
