@@ -17,7 +17,7 @@ namespace Zbus.Examples
         static void Main(string[] args)
         { 
             using (Broker broker = new Broker("localhost:15555"))
-            { 
+            {
                 RpcInvoker rpc = new RpcInvoker(broker, "MyRpc"); 
                 //Way 1) Raw invocation
                 var res = rpc.InvokeAsync<int>("plus", 1, 2).Result;
@@ -30,7 +30,9 @@ namespace Zbus.Examples
 
                 //Way 3) Strong typed class proxy
                 IService svc = rpc.CreateProxy<IService>();  //Create a proxy class, strongly invocation
-                Test(svc).Wait(); 
+
+                var res3 = svc.plus(1, 2);
+                Console.WriteLine(res3);
             }
 
             Console.WriteLine("done");

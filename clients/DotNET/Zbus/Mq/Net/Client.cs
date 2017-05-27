@@ -292,7 +292,7 @@ namespace Zbus.Mq.Net
                             Disconnected?.Invoke();
                             Thread.Sleep(3000);
                         }
-                        log.Error(e);
+                        log.Debug(e);
                     }
                 }
             });

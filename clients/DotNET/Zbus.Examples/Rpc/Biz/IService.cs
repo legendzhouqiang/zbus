@@ -6,19 +6,24 @@ using System.Threading.Tasks;
 
 namespace Api.Example
 {
-
+    /// <summary>
+    /// lower case methods only for test to language like java/javascript
+    /// </summary>
     public interface IService
     {
-        string Echo(string msg);
+        string echo(string msg);
+
+        string testEncoding();  
+
+        void noReturn();
+
+        int plus(int a, int b); 
+
+        void throwException();
+
 
         Task<string> GetStringAsync();
 
-        void NoReturn();
-
-        int Plus(int a, int b);
-
         Task<int> PlusAsync(int a, int b);
-
-        void ThrowException();
     }
 }

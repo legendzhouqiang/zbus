@@ -20,10 +20,7 @@ namespace Zbus.Examples
             c.ConnectionCount = 2; 
             c.MessageHandler = p.MessageHandler; //Set processor as message handler
             c.Start();
-
-            Console.WriteLine("done");
-            Console.ReadKey();
-            Thread.Sleep(1000000000);
+            Console.WriteLine("Rpc Service Ready");
         }
     }
 }

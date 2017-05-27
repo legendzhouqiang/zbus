@@ -8,14 +8,29 @@ namespace Api.Example
 {
     public class MyService : IService
     {
-        public string Echo(string msg)
+        public string echo(string msg)
         {
             return msg;
         }
 
-        public string TestEncoding()
+        public string testEncoding()
         {
             return "中文";
+        } 
+
+        public void noReturn()
+        {
+
+        }
+
+        public int plus(int a, int b)
+        {
+            return a + b;
+        } 
+
+        public void throwException()
+        {
+            throw new NotImplementedException();
         }
 
         public Task<string> GetStringAsync()
@@ -25,16 +40,6 @@ namespace Api.Example
                 Thread.Sleep(100);
                 return "Sleep(100)";
             });
-        } 
-
-        public void NoReturn()
-        {
-
-        }
-
-        public int Plus(int a, int b)
-        {
-            return a + b;
         }
 
         public Task<int> PlusAsync(int a, int b)
@@ -43,11 +48,6 @@ namespace Api.Example
             {
                 return a + b;
             });
-        }
-
-        public void ThrowException()
-        {
-            throw new NotImplementedException();
-        }
+        } 
     }
 }

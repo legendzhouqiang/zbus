@@ -85,7 +85,7 @@ namespace Zbus.Mq
             for(int i = 0; i < this.consumeThreadList.Length; i++)
             {
                 MqClient client = this.clients[i] = ClientFactory();
-                this.consumeThreadList[i] = new Thread(async () =>
+                this.consumeThreadList[i] = new Thread( () =>
                 {
                     using (client) { 
                         while (!cts.IsCancellationRequested)
@@ -93,12 +93,12 @@ namespace Zbus.Mq
                             Message msg;
                             try
                             {
-                                msg = await TakeAsync(client, cts.Token);
+                                msg =  TakeAsync(client, cts.Token).Result;
                                 if (msg == null) continue;
 
                                 if (RunInPool)
                                 {
-                                    await Task.Run(() =>
+                                    Task.Run(() =>
                                     {
                                         MessageRecevied?.Invoke(msg, client);
                                     });
