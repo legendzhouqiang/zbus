@@ -58,7 +58,7 @@ public class Message {
 	public static final String CONTENT_TYPE_BINARY   = "application/octet-stream"; 
 	public static final String CONTENT_TYPE_JSON     = "application/json"; 
 	 
-	private String status; //null: request, otherwise: response
+	private Integer status; //null: request, otherwise: response
 	private String url = "/";
 	private String method = "GET"; 
 	
@@ -104,17 +104,13 @@ public class Message {
 		return this;
 	}
 	
-	public Message setStatus(String status) { 
+	public Message setStatus(Integer status) { 
 		this.status = status;
 		return this; 
 	} 
 	
-	public String getStatus(){
+	public Integer getStatus(){
 		return status;
-	}
-	
-	public Message setStatus(int status){
-		return setStatus(""+status);
 	} 
 	
 	public String getMethod(){
@@ -242,7 +238,7 @@ public class Message {
 			StringTokenizer st = new StringTokenizer(meta);
 			String start = st.nextToken();
 			if(start.toUpperCase().startsWith("HTTP")){ //As response
-				this.status = st.nextToken(); 
+				this.status = Integer.valueOf(st.nextToken()); 
 			} else {
 				this.method = start;  
 				this.url = st.nextToken();
@@ -342,10 +338,12 @@ public class Message {
 	}  
 	
 	
-	public String getOriginStatus() {
-		return this.getHeader(ORIGIN_STATUS);
+	public Integer getOriginStatus() {
+		String value = this.getHeader(ORIGIN_STATUS);
+		if(value == null) return null;
+		return Integer.valueOf(value);
 	} 
-	public Message setOriginStatus(String value) {
+	public Message setOriginStatus(Integer value) {
 		this.setHeader(ORIGIN_STATUS, value);
 		return this;
 	}  
@@ -617,7 +615,7 @@ public class Message {
 				desc = "Unknown Status";
 			}
 			out.write(PREFIX);
-			out.write(status.getBytes());
+			out.write(String.format("%d", status).getBytes());
 			out.write(BLANK);
 			out.write(desc.getBytes());  
 		} else {

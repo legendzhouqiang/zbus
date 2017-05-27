@@ -175,7 +175,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 			msg.removeHeader(Protocol.RECVER);
 			msg.removeHeader(Protocol.COMMAND);
 			
-			String status = "200";
+			Integer status = 200;
 			if(msg.getOriginStatus() != null){
 				status = msg.getOriginStatus(); 
 				msg.removeHeader(Protocol.ORIGIN_STATUS);
@@ -335,7 +335,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 		public void handle(Message msg, Session sess) throws IOException {
 			String msgId = msg.getId();
 			msg = new Message();
-			msg.setStatus("200");
+			msg.setStatus(200);
 			msg.setId(msgId);
 			msg.setHeader("content-type", "text/html");
 			String body = FileKit.loadFileString("home.htm");
@@ -423,7 +423,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private SessionMessageHandler jsHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/js/", msg.getUrl());
-			if("200".equals(res.getStatus())){
+			if(res.getStatus() == 200){
 				res.setHeader("content-type", "application/javascript");
 			}
 			sess.write(res); 
@@ -433,7 +433,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private SessionMessageHandler cssHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/css/", msg.getUrl());
-			if("200".equals(res.getStatus())){
+			if(res.getStatus() == 200){
 				res.setHeader("content-type", "text/css");
 			} 
 			sess.write(res);
@@ -443,7 +443,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private SessionMessageHandler imgHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/img/", msg.getUrl());
-			if("200".equals(res.getStatus())){
+			if(res.getStatus() == 200){
 				res.setHeader("content-type", "image/svg+xml");
 			} 
 			sess.write(res);
@@ -453,7 +453,7 @@ public class MqAdaptor extends MessageAdaptor implements Closeable {
 	private SessionMessageHandler faviconHandler = new SessionMessageHandler() {
 		public void handle(Message msg, Session sess) throws IOException {
 			Message res = handleFileRequest("/img/", "/img/logo.svg");
-			if("200".equals(res.getStatus())){
+			if(res.getStatus() == 200){
 				res.setHeader("content-type", "image/svg+xml");
 			} 
 			sess.write(res);

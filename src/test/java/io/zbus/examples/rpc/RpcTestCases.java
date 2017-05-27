@@ -85,5 +85,17 @@ public class RpcTestCases {
 		
 		byte[] bin = biz.getBin();
 		System.out.println(bin);
+		
+		try{
+			biz.throwNullPointerException();
+		} catch (NullPointerException ex) {
+			System.out.println(ex);
+		}
+		
+		try{
+			biz.throwUnkownException();
+		} catch (Exception ex) {
+			System.out.println(ex);
+		}
 	}
 }

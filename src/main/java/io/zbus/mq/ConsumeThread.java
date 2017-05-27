@@ -59,13 +59,13 @@ public class ConsumeThread extends Thread implements Closeable{
 		try {  
 			res = client.consume(topic, this.consumeGroup.getGroupName(), this.getConsumeWindow()); 
 			if (res == null) return res; 
-			String status = res.getStatus();
-			if ("404".equals(status)) {
+			Integer status = res.getStatus();
+			if (status == 404) {
 				client.declareGroup(topic, consumeGroup); 
 				return take();
 			}
 			
-			if ("200".equals(status)) {
+			if (status == 200) {
 				return res;
 			}
 			

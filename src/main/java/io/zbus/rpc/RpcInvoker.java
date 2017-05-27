@@ -104,13 +104,8 @@ public class RpcInvoker {
 	} 
 	
 	public <T> T invokeSync(Class<T> resultClass, Request request){
-		Response resp = invokeSync(request);
-		try { 
-			T res = (T)JsonKit.convert(extractResult(resp), resultClass);
-			return res;
-		} catch (Exception e) { 
-			throw new RpcException(e.getMessage(), e.getCause());
-		}
+		Response resp = invokeSync(request); 
+		return (T)JsonKit.convert(extractResult(resp), resultClass); 
 	}
 	
 	
@@ -203,16 +198,12 @@ public class RpcInvoker {
 
 	
 	private Object extractResult(Response resp){
-		if(resp.getStackTrace() != null){
-			Throwable error = resp.getError();
-			if(error != null){
-				if(error instanceof RuntimeException){
-					throw (RuntimeException)error;
-				}
-				throw new RpcException(error.getMessage(), error.getCause()); 
-			} else {
-				throw new RpcException(resp.getStackTrace());
+		Object error = resp.getError();
+		if(error != null){ 
+			if(error instanceof RuntimeException){
+				throw (RuntimeException)error;
 			}
+			throw new RpcException(error.toString()); 
 		} 
 		return resp.getResult();
 	} 

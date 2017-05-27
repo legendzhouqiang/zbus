@@ -52,7 +52,7 @@ public class MqClient extends MessageClient{
 		
 		res.setId(res.getOriginId());
 		res.removeHeader(Protocol.ORIGIN_ID);
-		if ("200".equals(res.getStatus())){
+		if (res.getStatus() == 200){
 			String originUrl = res.getOriginUrl();
 			if(originUrl == null){
 				originUrl = "/";
@@ -166,7 +166,7 @@ public class MqClient extends MessageClient{
 		msg.setCommand(Protocol.ROUTE);  
 		msg.setAck(false); 
 		//invoke message should be request typed, if not add origin_status header and change it to request type
-		String status = msg.getStatus();
+		Integer status = msg.getStatus();
 		if(status != null){
 			msg.setOriginStatus(status); 
 			msg.setStatus(null); //make it as request 
@@ -196,7 +196,7 @@ public class MqClient extends MessageClient{
 	}
 	
 	private void checkResult(Message msg){
-		if(!"200".equals(msg.getStatus())){
+		if(msg.getStatus() != 200 ){
 			throw new MqException(msg.getBodyString());
 		}
 	}

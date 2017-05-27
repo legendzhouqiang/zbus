@@ -260,14 +260,12 @@ public class RpcProcessor implements MessageHandler{
 	}
 	
 	public Message process(Message msg){  
-		Response resp = new Response();
-		int status = 200;
+		Response resp = new Response(); 
 		final String msgId = msg.getId();
 		String encoding = msg.getEncoding();
 		try {
 			Object result = null;
-			Request req = codec.decodeRequest(msg); 
-			Request.normalize(req); 
+			Request req = codec.decodeRequest(msg);  
 			if(StrKit.isEmpty(req.getMethod())){
 				result = object2Methods;
 			} else {
@@ -285,16 +283,14 @@ public class RpcProcessor implements MessageHandler{
 			resp.setResult(result);  
 				
 		} catch (InvocationTargetException e) { 
-			resp.setError(e.getTargetException());
-			status = 500;
+			resp.setError(e.getTargetException()); 
 		} catch (Throwable e) { 
-			resp.setError(e);
-			status = 500;
+			resp.setError(e); 
 		} 
-		try{
+		try {
 			Message res = codec.encodeResponse(resp, encoding);
 			res.setId(msgId); 
-			res.setStatus(status);
+			res.setStatus(200);
 			return res;
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

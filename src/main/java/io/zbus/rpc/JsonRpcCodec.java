@@ -54,22 +54,14 @@ public class JsonRpcCodec implements RpcCodec {
 	
 	public Message encodeResponse(Response response, String encoding) {
 		Message msg = new Message();  
-		msg.setStatus("200"); 
-		msg.setEncoding(encoding);
-		if(response.getError() != null){
-			Throwable error = response.getError(); 
-			if(error instanceof IllegalArgumentException){
-				msg.setStatus("400");
-			} else {
-				msg.setStatus("500");
-			} 
-		}   
+		msg.setStatus(200);
+		msg.setEncoding(encoding); 
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
 		msg.setBody(JsonKit.toJSONBytes(response, encoding)); 
 		return msg; 
 	}
 	
-
+ 
 	public Response decodeResponse(Message msg){ 
 		String encoding = msg.getEncoding();
 		if(encoding == null){
@@ -83,25 +75,20 @@ public class JsonRpcCodec implements RpcCodec {
 			res = new Response(); 
 			Map<String, Object> json = null;
 			try{
-				jsonString = jsonString.replace("@type", "unknown-class"); //禁止掉实例化
+				jsonString = jsonString.replace("@type", "@class"); //disable desearialization by class name
 				json = JsonKit.parseObject(jsonString); 
 			} catch(Exception ex){
 				String prefix = "";
-				if("200".equals(msg.getStatus())){ 
+				if(msg.getStatus() == 200){ 
 					prefix = "JSON format invalid: ";
 				}
 				throw new RpcException(prefix + jsonString);
 			} 
-			if(json != null){
-				final String stackTrace = Response.KEY_STACK_TRACE;
-				final String error = Response.KEY_ERROR;
-				if(json.containsKey(stackTrace) && json.get(stackTrace) != null){ 
-					throw new RpcException((String)json.get(stackTrace));
+			if(json != null){  
+				if(json.containsKey("error") && json.get("error") != null){ 
+					throw new RpcException(json.get("error").toString());
 				}
-				if(json.containsKey(error) && json.get(error) != null){ 
-					throw new RpcException((String)json.get(error));
-				}
-				res.setResult(json.get(Response.KEY_RESULT));
+				res.setResult(json.get("result"));
 			}
 		} 
 		return res;

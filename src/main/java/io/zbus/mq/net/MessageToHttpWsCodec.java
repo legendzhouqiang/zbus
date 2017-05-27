@@ -32,12 +32,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Message;
 
-/**
- * Object -- HttpRequest/HttpResponse(HttpMessage) Message -- Zbus Message
- * 
- * @author rushmore (洪磊明)
- *
- */
+
 public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message> {
 	private static final Logger log = LoggerFactory.getLogger(MessageToHttpWsCodec.class);
 
@@ -47,7 +42,7 @@ public class MessageToHttpWsCodec extends MessageToMessageCodec<Object, Message>
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
 		//1) WebSocket mode
-		if(handshaker != null){//websocket stepped in, Message To WebSocketFrame
+		if(handshaker != null){//websocket step in, Message To WebSocketFrame
 			ByteBuf buf = Unpooled.wrappedBuffer(msg.toBytes());
 			WebSocketFrame frame = new TextWebSocketFrame(buf);
 			out.add(frame);
