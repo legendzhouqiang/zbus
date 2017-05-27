@@ -93,20 +93,20 @@ except:
 
 class Message(dict):
     http_status = {
-        "200": "OK",
-        "201": "Created",
-        "202": "Accepted",
-        "204": "No Content",
-        "206": "Partial Content",
-        "301": "Moved Permanently",
-        "304": "Not Modified",
-        "400": "Bad Request",
-        "401": "Unauthorized",
-        "403": "Forbidden",
-        "404": "Not Found",
-        "405": "Method Not Allowed",
-        "416": "Requested Range Not Satisfiable",
-        "500": "Internal Server Error",
+        200: "OK",
+        201: "Created",
+        202: "Accepted",
+        204: "No Content",
+        206: "Partial Content",
+        301: "Moved Permanently",
+        304: "Not Modified",
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        404: "Not Found",
+        405: "Method Not Allowed",
+        416: "Requested Range Not Satisfiable",
+        500: "Internal Server Error",
     }
     reserved_keys = set(['status', 'method', 'url', 'body'])
 
@@ -203,7 +203,7 @@ def decode_headers(buf):
     meta = lines[0].upper()
     blocks = meta.split()
     if meta.startswith('HTTP'):
-        msg.status = blocks[1]
+        msg.status = int(blocks[1])
     else:
         msg.method = blocks[0]
         if len(blocks) > 1:
@@ -480,7 +480,7 @@ class MqClient(MessageClient):
     def invoke_object(self, cmd, topic, group=None, options=None, timeout=3):
         res = self.invoke_cmd(cmd, topic, group=group,
                               options=options, timeout=timeout)
-        if res.status != '200':  # not throw exception, for batch operations' convenience
+        if res.status != 200:  # not throw exception, for batch operations' convenience
             return {'error': res.body.decode(res.encoding or 'utf8')}
         return res.body
 
@@ -715,7 +715,7 @@ class Broker:
             client.send(msg)
 
         def on_message(msg):
-            if msg.status != '200':
+            if msg.status != 200:
                 self.log.error(msg)
                 return 
             tracker_info = msg.body
@@ -877,10 +877,10 @@ class ConsumeThread:
 
     def take(self, client):
         res = client.consume(self.msg_ctrl, timeout=self.consume_timeout)
-        if res.status == '404':
+        if res.status == 404:
             client.declare(self.msg_ctrl, timeout=self.consume_timeout)
             return self.take()
-        if res.status == '200':
+        if res.status == 200:
             res.id = res.origin_id
             del res.origin_id
             if res.origin_url:
@@ -1008,25 +1008,21 @@ class RpcInvoker:
         msg_res = self.producer.publish(msg, timeout=self.timeout, selector=selector)
 
         if isinstance(msg_res.body, bytearray):
-            msg_res.body = msg_res.body.decode(msg_res.encoding or 'utf8')
+            msg_res.body = msg_res.body.decode(msg_res.encoding or 'utf8') 
+            msg_res.body = json.loads(str(msg_res.body))  
         
-        msg_res.body = json.loads(str(msg_res.body))
+        elif isinstance(msg_res.body, (str,bytes)) and msg_res['content-type'] == 'application/json':
+            msg_res.body = json.loads(str(msg_res.body))  
 
-        if msg_res.status != '200':
-            error_text = 'unknown error'
-            res = msg_res.body
-            if 'stackTrace' in res:
-                error_text = res['stackTrace']
-            elif 'error' in res:
-                error_text = res['error']
-            error_msg = '=========RPC Context=========\nTopic(%s)-Module(%s)-Method(%s)\n=========Message Dump========\n%s' % (
-                topic, module, method, msg)
-            raise Exception('%s\n%s' % (error_text, error_msg))
+        if msg_res.status != 200: 
+            raise Exception(msg_res.body)
 
         res = msg_res.body
+        if res and 'error' in res and res['error']:
+            raise Exception(res['error'])
         if res and 'result' in res:
-            return res['result']
-
+            return res['result']  
+        
     def __call__(self, *args, **kv_args):
         return self.invoke(params=args, **kv_args)
 
@@ -1067,37 +1063,37 @@ class RpcProcessor:
             return default
         return req[name] or default
 
-    def handle_request(self, msg, client):
+    def handle_request(self, msg, client):   
+        msg_res = Message()
+        msg_res.status = 200
+        msg_res.encoding = msg.encoding 
+        msg_res.recver = msg.sender
+        msg_res.id = msg.id 
+         
         error = None
         result = None
-        status = '200'
         try:
             if isinstance(msg.body, (bytes, bytearray)):
                 msg.body = str(msg.body.decode(msg.encoding or 'utf8'))
 
             if isinstance(msg.body, str):
-                msg.body = json.loads(msg.body)
-
+                msg.body = json.loads(msg.body) 
             req = msg.body
 
-        except Exception as e:
-            status = '400'
+        except Exception as e: 
             error = e
 
         if not error:
             try:
                 method = req['method']
                 module = self._get_value(req, 'module', '')
-                params = self._get_value(req, 'params', [])
-
-            except Exception as e:
-                status = '400'
+                params = self._get_value(req, 'params', []) 
+            except Exception as e: 
                 error = e
 
         if not error:
             key = '%s:%s' % (module, method)
-            if key not in self.methods:
-                status = '404'
+            if key not in self.methods: 
                 error = Exception('%s method not found' % key)
             else:
                 method_info = self.methods[key]
@@ -1107,26 +1103,12 @@ class RpcProcessor:
             try:
                 result = method(*params)
             except Exception as e:
-                error = e
-
-        if error:
-            self.log.warn(error)
-            result = {'error': str(error), 'stackTrace': str(error)}
-        else:
-            result = {'result': result, 'error': None, 'stackTrace': None}
-
-        try:
-            res = Message()
-            res.status = status
-            res.encoding = msg.encoding
-            res.body = result
-
-            res.recver = msg.sender
-            res.id = msg.id
-
-            client.route(res)
-        except e:
-            self.log.error(e)
+                error = e 
+                
+        msg_res.body = {'error': error, 'result': result} 
+        
+        try:  client.route(msg_res) 
+        except e: pass
 
     def __call__(self, *args, **kv_args):
         return self.handle_request(*args)

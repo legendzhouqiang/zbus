@@ -120,20 +120,20 @@ function underscore2camel(key) {
 } 
 
 var HttpStatus = {
-    "200": "OK",
-    "201": "Created",
-    "202": "Accepted",
-    "204": "No Content",
-    "206": "Partial Content",
-    "301": "Moved Permanently",
-    "304": "Not Modified",
-    "400": "Bad Request",
-    "401": "Unauthorized",
-    "403": "Forbidden",
-    "404": "Not Found",
-    "405": "Method Not Allowed",
-    "416": "Requested Range Not Satisfiable",
-    "500": "Internal Server Error"
+    200: "OK",
+    201: "Created",
+    202: "Accepted",
+    204: "No Content",
+    206: "Partial Content",
+    301: "Moved Permanently",
+    304: "Not Modified",
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    405: "Method Not Allowed",
+    416: "Requested Range Not Satisfiable",
+    500: "Internal Server Error"
 };
 
 
@@ -213,9 +213,7 @@ function httpEncode(msg) {
             if (typeof body != 'string') {
                 body = JSON.stringify(body);
                 contentType = "application/json";
-            } else {
-                contentType = "text/plain";
-            }
+            } 
             body = string2Uint8Array(body, encoding);
         }
     } else {
@@ -302,7 +300,7 @@ function httpDecode(data) {
     //parse first line 
     var bb = lines[0].split(" ");
     if (bb[0].toUpperCase().startsWith("HTTP")) {
-        msg.status = bb[1];
+        msg.status = parseInt(bb[1]);
     } else {
         msg.method = bb[0];
         msg.url = bb[1];
@@ -1179,14 +1177,14 @@ RpcInvoker.prototype._invokeMethod = function (req, callback) {
             if (msg.status != "200") {
                 throw msg.body;
             }
+            
             if(typeof(msg.body) == 'string'){
             	res = JSON.parse(msg.body);
             } else {
             	res = msg.body;
-            } 
-            
-            if (res.stackTrace) {
-                throw res.stackTrace;
+            }  
+            if (res.error) {
+                throw res.error;
             }
             callback(res.result);
         }
@@ -1225,41 +1223,33 @@ function RpcProcessor() {
     this.methodTable = {}
 
     var processor = this;
-    this.messageHandler = function (msg, client) {  
+    this.messageHandler = function (msg, client) {
+        var res = { error: null };  
         var resMsg = {
             id: msg.id,
             recver: msg.sender,
-            topic: msg.topic 
-        };
-
-        try {
-            var res = {};
+            topic: msg.topic,
+            status: 200,
+            body: res,
+        }; 
+        
+        try { 
             var req = msg.body;
-            if(typeof(req) == 'string'){
-            	req = JSON.parse(req);
-            }
+            if(typeof(req) == 'string') req = JSON.parse(req);  
             var key = processor._generateKey(req.module, req.method);
-            if (key in processor.methodTable) {
-                var m = processor.methodTable[key];
-                try{
-                    res.result = m.method.apply(m.target, req.params);
-                    res.error = null;
-                    res.stackTrace = null;
+            var m = processor.methodTable[key];
+            if(m) {
+                try {
+                    res.result = m.method.apply(m.target, req.params); 
                 } catch (e) {
-                    res.error = e;
-                    res.stackTrace = '' + e;
-                }
-                resMsg.status = 200;
-                resMsg.body = JSON.stringify(res);
+                    res.error = e; 
+                }  
             } else {
-                resMsg.status = 404;
-                resMsg.body = "Missing method: " + key;
-            }
+                res.error = "method(" + key + ") not found";
+            } 
         } catch (e) {
-            resMsg.status = 500;
-            resMsg.body = '' + e;
-        } finally { 
-            if (!resMsg.status) resMsg.status = 200;
+            res.error = e; 
+        } finally {   
             try { client.route(resMsg); } catch (e) { }
         }
     }
