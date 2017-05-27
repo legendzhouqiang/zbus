@@ -18,7 +18,7 @@ namespace Zbus.Examples
 
             Consumer c = new Consumer(broker, "MyRpc");
             c.ConnectionCount = 2; 
-            c.MessageReceived += p.MessageHandler; //Set processor as message handler
+            c.MessageHandler = p.MessageHandler; //Set processor as message handler
             c.Start();
 
             Console.WriteLine("done");

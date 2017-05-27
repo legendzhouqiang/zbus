@@ -22,7 +22,6 @@ namespace Zbus.Mq
         public IDictionary<ServerAddress, MqClientPool> PoolTable { get; private set; }
 
         private IDictionary<ServerAddress, MqClient> trackerSubscribers = new ConcurrentDictionary<ServerAddress, MqClient>();
-        
 
         private IDictionary<string, string> sslCertFileTable = new ConcurrentDictionary<string, string>();
 
@@ -83,90 +82,65 @@ namespace Zbus.Mq
             };
             client.MessageReceived += (msg) =>
             { 
-                if(msg.Status != "200")
+                if(msg.Status != 200)
                 {
                     log.Error(msg.BodyString);
                     return;
                 }
                 TrackerInfo trackerInfo = JsonKit.DeserializeObject<TrackerInfo>(msg.BodyString);
-                if (firstTime)
-                {
-                    int addCount = trackerInfo.TrackedServerList.Count - 1;
-                    if (addCount > 0)
-                    {
-                        countDown.AddCount();
-                    }  
-                } 
-                
-                foreach(ServerAddress serverAddress in trackerInfo.TrackedServerList)
-                {
-                    AddServer(serverAddress, null, firstTime? countDown : null);
-                }
-                firstTime = false;
 
-                IList<ServerAddress> toRemove = RouteTable.UpdateVotes(trackerInfo); 
+                IList<ServerAddress> toRemove = RouteTable.UpdateTracker(trackerInfo);
+                foreach(ServerInfo serverInfo in RouteTable.ServerTable.Values)
+                {
+                    AddServer(serverInfo);
+                }
                 foreach(ServerAddress serverAddress in toRemove)
                 {
-                    if (PoolTable.ContainsKey(serverAddress))
-                    {
-                        log.Info(serverAddress + ", left");
-                        MqClientPool pool = PoolTable[serverAddress];
-                        PoolTable.Remove(serverAddress);
-                        try
-                        {
-                            ServerLeave?.Invoke(serverAddress);
-                            pool.Dispose();
-                        }
-                        catch(Exception e)
-                        {
-                            log.Error(e);
-                        }
-                    }
+                    RemoveServer(serverAddress);
+                }
+                if (firstTime)
+                {
+                    countDown.Signal();
+                    firstTime = false;
                 } 
             };
             client.Start(); 
             countDown.Wait(waitTime);
-            countDown.Dispose(); 
+            countDown.Dispose();
         }
         public void AddTracker(string trackerAddress, string certFile = null)
         {
             AddTracker(new ServerAddress(trackerAddress), certFile);
         }
-        public void AddServer(ServerAddress serverAddress, string certFile = null, CountdownEvent countDown = null)
-        {
-            certFile = GetCertFile(serverAddress, certFile);
+
+        private void AddServer(ServerInfo serverInfo)
+        { 
+            ServerAddress serverAddress = serverInfo.ServerAddress;
+            if (PoolTable.ContainsKey(serverAddress)) return;
+
+            string certFile = GetCertFile(serverAddress);
 
             MqClientPool pool = new MqClientPool(serverAddress, certFile);
             if (ClientPoolSize.HasValue)
             {
                 pool.MaxCount = ClientPoolSize.Value;
-            }
-
-            pool.Connected += (serverInfo) =>
-            {
-                RouteTable.UpdateServer(serverInfo);
-                if(countDown != null)
-                {
-                    countDown.Signal();
-                }
-                ServerJoin?.Invoke(pool);
-            };
-            pool.Disconnected += (remoteServerAddr) =>
-            {
-                RouteTable.RemoveServer(remoteServerAddr);
-                ServerLeave?.Invoke(remoteServerAddr); 
-
-                PoolTable.Remove(pool.ServerAddress);
-                pool.Dispose(); 
-            };
-            pool.StartMonitor();
+            } 
             PoolTable[pool.ServerAddress] = pool;
+            ServerJoin?.Invoke(pool);
         }
 
-        public void AddServer(string serverAddress, string certFile = null, CountdownEvent countDown = null)
+        private void RemoveServer(ServerAddress serverAddress)
         {
-            AddServer(new ServerAddress(serverAddress), certFile);
-        }
+            MqClientPool pool;
+            PoolTable.TryGetValue(serverAddress, out pool);
+            if(pool != null)
+            {
+                PoolTable.Remove(serverAddress); 
+                ServerLeave?.Invoke(serverAddress); 
+                pool.Dispose(); 
+            }
+        } 
+
 
         private string GetCertFile(ServerAddress serverAddress, string certFile = null)
         {

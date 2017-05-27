@@ -43,13 +43,13 @@ namespace Zbus.Mq
         {
             Message res = await client.ConsumeAsync(Topic, ConsumeGroup.GroupName, ConsumeWindow, token);
             if (res == null) return res;
-            if(res.Status == "404")
+            if(res.Status == 404)
             {
                 await client.DeclareGroupAsync(Topic, ConsumeGroup, token);
                 return await TakeAsync(client, token);
             }
 
-            if(res.Status == "200")
+            if(res.Status == 200)
             {
                 res.Id = res.OriginId;
                 res.RemoveHeader(Protocol.ORIGIN_ID);

@@ -192,7 +192,7 @@ namespace Zbus.Rpc
         {
             Message msgRes = new Message
             {
-                Status = "200",
+                Status = 200,
                 Recver = msg.Sender,
                 Id = msg.Id
             };
@@ -217,20 +217,7 @@ namespace Zbus.Rpc
                     Error = e
                 };
             }
-
-            if (response.Error != null)
-            {
-                response.StackTrace = "" + response.Error;
-                if (response.Error is RpcException)
-                {
-                    msgRes.Status = "" + ((RpcException)response.Error).Status;
-                }
-                else
-                {
-                    msgRes.Status = "500";
-                }
-            }
-
+             
             try
             {
                 msgRes.SetJsonBody(JsonKit.SerializeObject(response), this.Encoding); 
@@ -252,31 +239,30 @@ namespace Zbus.Rpc
             MethodInstance target = null;
             if (request.Method == null)
             {
-                response.Error = new RpcException("missing method name", 400);
+                response.Error = new RpcException("missing method name");
                 return response;
             }
 
             target = FindMethod(module, method, args);
             if (target == null)
             {
-                string errorMsg = module + "." + method + " Not Found";
-                if (module == "")
+                string errorMsg = method + " not found";
+                if (module != "")
                 {
-                    errorMsg = method + " Not Found";
+                    errorMsg = module + ":" + errorMsg;
                 }
-                response.Error = new RpcException(errorMsg, 404);
+                response.Error = new RpcException(errorMsg);
                 return response;
-            }
+            } 
 
             try
             {
                 ParameterInfo[] pinfo = target.Method.GetParameters();
                 if (pinfo.Length != args.Length)
                 {
-                    response.Error = new RpcException("number of argument not match", 400);
+                    response.Error = new RpcException("number of argument not match");
                     return response;
                 }
-
                 for (int i = 0; i < pinfo.Length; i++)
                 {
                     if (args[i].GetType() != pinfo[i].ParameterType)

@@ -9,7 +9,7 @@ namespace Zbus.Mq
     public class Message : Id
     {
         public string Url { get; set; }
-        public string Status { get; set; }
+        public int? Status { get; set; }
         public string Method { get; set; } 
         public IDictionary<string, string> Headers { get; private set; }
         public byte[] Body { get; private set; }
@@ -230,9 +230,9 @@ namespace Zbus.Mq
             set { SetHeader(Protocol.ORIGIN_URL, value); }
         }
 
-        public string OriginStatus
+        public int? OriginStatus
         {
-            get { return GetHeader(Protocol.ORIGIN_STATUS); }
+            get { return GetHeader<int>(Protocol.ORIGIN_STATUS); }
             set { SetHeader(Protocol.ORIGIN_STATUS, value); }
         }
 

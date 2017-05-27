@@ -53,7 +53,8 @@ namespace Zbus.Rpc
         public async Task<Response> InvokeAsync(Request request, string topic=null, CancellationToken? token = null, ServerSelector selector = null)
         {
             Message msgReq = new Message();
-            if (topic == null) topic = this.Topic; 
+            if (topic == null) topic = this.Topic;
+            msgReq.Topic = topic;
 
             msgReq.SetJsonBody(JsonKit.SerializeObject(request), Encoding); 
             Message msgRes = await InvokeAsync(msgReq, token, GetSelector(selector));
@@ -65,9 +66,11 @@ namespace Zbus.Rpc
                 resp = JsonKit.DeserializeObject<Response>(bodyString);
             }
             catch
-            {
-                resp = new Response(); 
-                resp.StackTrace = bodyString; 
+            { 
+                resp = new Response
+                {
+                    Error = bodyString,
+                };
             }
             return resp;
         }
@@ -84,12 +87,12 @@ namespace Zbus.Rpc
             Response resp = await InvokeAsync(req, null, null, RpcServerSelector); 
             if (resp.Error != null) 
             {
-                throw resp.Error;
-            }
-            if(resp.StackTrace != null)
-            {
-                throw new MqException(resp.StackTrace);
-            }
+                if(resp.Error is Exception)
+                {
+                    throw (Exception)resp.Error;
+                }
+                throw new RpcException(resp.Error.ToString());
+            } 
             return JsonKit.Convert(resp.Result, type);
         }
 
@@ -101,9 +104,7 @@ namespace Zbus.Rpc
         public async Task<T> InvokeAsync<T>(string method, params object[] args)
         {
             return (T)await InvokeAsync(typeof(T), method, args);
-        }
-
-
+        } 
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
@@ -117,13 +118,13 @@ namespace Zbus.Rpc
             try
             {
                 Response resp = this.InvokeAsync(req).Result;
-                if (resp.StackTrace != null)
+                if (resp.Error != null)
                 {
-                    if (resp.Error != null)
+                    if (resp.Error is Exception)
                     {
-                        throw resp.Error;
+                        throw (Exception)resp.Error;
                     }
-                    throw new RpcException(resp.StackTrace);
+                    throw new RpcException(resp.Error.ToString());
                 }
                 result = JsonKit.Convert(resp.Result, binder.ReturnType);
             }

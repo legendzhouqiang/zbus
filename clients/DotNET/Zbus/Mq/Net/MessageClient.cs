@@ -53,11 +53,11 @@ namespace Zbus.Mq.Net
             if (msg.Status != null)
             {
                 string desc = "Unknow status";
-                if (HttpStatusTable.ContainsKey(msg.Status))
+                if (HttpStatusTable.ContainsKey(msg.Status.Value))
                 {
-                    desc = HttpStatusTable[msg.Status];
+                    desc = HttpStatusTable[msg.Status.Value];
                 }
-                buf.Put("HTTP/1.1 {0} {1}\r\n", msg.Status, desc);
+                buf.Put("HTTP/1.1 {0} {1}\r\n", msg.Status.Value, desc);
             }
             else
             {
@@ -118,7 +118,7 @@ namespace Zbus.Mq.Net
             string test = blocks[0].ToUpper();
             if (test.StartsWith("HTTP"))
             {
-                msg.Status = blocks[1];
+                msg.Status = int.Parse(blocks[1]);
             }
             else
             {
@@ -140,27 +140,25 @@ namespace Zbus.Mq.Net
             }
 
             return msg;
-        }
+        } 
 
-        
-
-        private static readonly IDictionary<string, string> HttpStatusTable = new Dictionary<string, string>();
+        private static readonly IDictionary<int, string> HttpStatusTable = new Dictionary<int, string>();
         static MessageCodec()
         {
-            HttpStatusTable.Add("200", "OK");
-            HttpStatusTable.Add("201", "Created");
-            HttpStatusTable.Add("202", "Accepted");
-            HttpStatusTable.Add("204", "No Content");
-            HttpStatusTable.Add("206", "Partial Content");
-            HttpStatusTable.Add("301", "Moved Permanently");
-            HttpStatusTable.Add("304", "Not Modified");
-            HttpStatusTable.Add("400", "Bad Request");
-            HttpStatusTable.Add("401", "Unauthorized");
-            HttpStatusTable.Add("403", "Forbidden");
-            HttpStatusTable.Add("404", "Not Found");
-            HttpStatusTable.Add("405", "Method Not Allowed");
-            HttpStatusTable.Add("416", "Requested Range Not Satisfiable");
-            HttpStatusTable.Add("500", "Internal Server Error");
+            HttpStatusTable.Add(200, "OK");
+            HttpStatusTable.Add(201, "Created");
+            HttpStatusTable.Add(202, "Accepted");
+            HttpStatusTable.Add(204, "No Content");
+            HttpStatusTable.Add(206, "Partial Content");
+            HttpStatusTable.Add(301, "Moved Permanently");
+            HttpStatusTable.Add(304, "Not Modified");
+            HttpStatusTable.Add(400, "Bad Request");
+            HttpStatusTable.Add(401, "Unauthorized");
+            HttpStatusTable.Add(403, "Forbidden");
+            HttpStatusTable.Add(404, "Not Found");
+            HttpStatusTable.Add(405, "Method Not Allowed");
+            HttpStatusTable.Add(416, "Requested Range Not Satisfiable");
+            HttpStatusTable.Add(500, "Internal Server Error");
         }
 
     }

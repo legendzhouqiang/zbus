@@ -5,28 +5,23 @@ namespace Zbus.Rpc
 {
 
     public class RpcException : Exception
-    {
-        public int Status { get; set; } = 500;
-
+    {  
         public RpcException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
 
         }
 
-        public RpcException(int status = 500)
-        {
-            this.Status = status;
+        public RpcException()
+        { 
         }
 
-        public RpcException(string message, int status = 500)
+        public RpcException(string message)
             : base(message)
-        {
-            this.Status = status;
+        { 
         }
-        public RpcException(string message, Exception inner, int status = 500)
+        public RpcException(string message, Exception inner)
             : base(message, inner)
-        {
-            this.Status = status;
+        { 
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Zbus.Mq
         private static readonly ILog log = LogManager.GetLogger(typeof(Consumer));
 
         public ServerSelector ConsumeSelector { get; set; }
-        public event Action<Message, MqClient> MessageReceived;
+        public Action<Message, MqClient> MessageHandler;
         public int? ConnectionCount { get; set; }
         public string Topic { get; private set; }
         public ConsumeGroup ConsumeGroup { get; set; }
@@ -42,7 +42,7 @@ namespace Zbus.Mq
                     return pool.Create();
                 },  
             };
-            thread.MessageRecevied += (msg, client) =>  MessageReceived?.Invoke(msg, client); 
+            thread.MessageRecevied += (msg, client) =>  MessageHandler?.Invoke(msg, client); 
 
             consumeThreadTable[serverAddress] = thread;
             thread.Start(); 
@@ -55,7 +55,7 @@ namespace Zbus.Mq
                 if (consumeThreadTable != null) return;
                 consumeThreadTable = new ConcurrentDictionary<ServerAddress, ConsumeThread>(); 
             } 
-            if (MessageReceived == null)
+            if (MessageHandler == null)
             {
                 throw new InvalidOperationException("Missing MessageReceived handler");
             }

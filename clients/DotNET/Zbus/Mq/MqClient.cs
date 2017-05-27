@@ -163,7 +163,7 @@ namespace Zbus.Mq
                 token = CancellationToken.None;
             }
             Message res = await this.InvokeAsync(msg, token.Value);
-            if (res.Status != "200")
+            if (res.Status != 200)
             {
                 T info = new T();
                 info.Error = res.BodyString;
@@ -180,7 +180,7 @@ namespace Zbus.Mq
                 token = CancellationToken.None;
             }
             Message res = await this.InvokeAsync(msg, token.Value);
-            if (res.Status != "200")
+            if (res.Status != 200)
             {
                 throw new MqException(res.BodyString);
             }
@@ -188,66 +188,27 @@ namespace Zbus.Mq
     }
 
     public class MqClientPool : Pool<MqClient>
-    {
-        public event Action<ServerInfo> Connected;
-        public event Action<ServerAddress> Disconnected; 
-        public ServerAddress ServerAddress { get; private set; }
-
-        private readonly string certFile;
-        private MqClient monitorClient;
-        public MqClientPool(string serverAddress) : this(new ServerAddress(serverAddress))
+    { 
+        public ServerAddress ServerAddress { get; private set; } 
+        private readonly string certFile; 
+        public MqClientPool(string serverAddress) 
+            : this(new ServerAddress(serverAddress))
         { 
+
         }
         public MqClientPool(ServerAddress serverAddress, string certFile = null)
         {
             this.ServerAddress = serverAddress;
             this.certFile = certFile;
 
-            ObjectActive = IsClientActive;
-            ObjectFactory = ClientFacotry; 
-        }  
-
-        public void StartMonitor()
-        {
-            lock (this)
+            ObjectActive = client =>
             {
-                if (monitorClient != null) return;
-            }
-            monitorClient = ObjectFactory();   
-
-            monitorClient.Connected += async() =>
-            {
-                ServerInfo serverInfo = await monitorClient.QueryServerAsync();
-                ServerAddress = new ServerAddress(serverInfo.ServerAddress);
-                Connected?.Invoke(serverInfo); 
+                return client.Active;
             };
-
-            monitorClient.Disconnected += () =>
+            ObjectFactory = () =>
             {
-                Disconnected?.Invoke(ServerAddress);
+                return new MqClient(this.ServerAddress, this.certFile);
             }; 
-            monitorClient.Start();
-        }
-
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            if(monitorClient != null)
-            {
-                monitorClient.Stop();
-            }
-        }
-
-        private bool IsClientActive(MqClient client)
-        {
-            return client.Active;
-        }
-
-        private MqClient ClientFacotry()
-        {
-            return new MqClient(this.ServerAddress, this.certFile);
-        }
+        }    
     }
 }

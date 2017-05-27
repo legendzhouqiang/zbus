@@ -13,7 +13,7 @@ namespace Zbus.Examples
             broker.AddTracker("localhost:15555");
 
             Consumer c = new Consumer(broker, "MyTopic");
-            c.MessageReceived += (msg, client) => {
+            c.MessageHandler += (msg, client) => {
                 Console.WriteLine(msg);
             };
             c.Start();

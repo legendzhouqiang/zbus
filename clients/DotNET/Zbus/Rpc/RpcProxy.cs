@@ -33,18 +33,7 @@ namespace Zbus.Rpc
                 res.Result = JsonKit.Convert(res.Result, realReturnType);
             }
             return res;
-        }
-
-        public dynamic Request(Type realReturnType, Request request)
-        {
-            Response res = Invoke(realReturnType, request);
-
-            if (res.Error != null)
-            {
-                throw res.Error;
-            }
-            return res.Result;
-        }
+        }  
 
         public override IMessage Invoke(IMessage msg)
         {
@@ -77,13 +66,22 @@ namespace Zbus.Rpc
                 //Simple methods
                 if (!typeof(Task).IsAssignableFrom(returnType))
                 {
-                    Response res = Invoke(returnType, req);
+                    Response resp = Invoke(returnType, req);
 
-                    if (res.Error != null)
+                    if (resp.Error != null)
                     {
-                        return new ReturnMessage(res.Error, methodCall);
+                        Exception error = null;
+                        if (resp.Error is Exception)
+                        {
+                            error = (Exception)resp.Error;
+                        }
+                        else
+                        {
+                            error = new RpcException(resp.Error.ToString());
+                        } 
+                        return new ReturnMessage(error, methodCall);
                     }
-                    return new ReturnMessage(res.Result, null, 0, methodCall.LogicalCallContext, methodCall);
+                    return new ReturnMessage(resp.Result, null, 0, methodCall.LogicalCallContext, methodCall);
                 }
 
                 //Task returned method 

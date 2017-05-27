@@ -8,8 +8,7 @@ namespace Zbus.Examples
     { 
         static void Main(string[] args)
         {
-            Broker broker = new Broker();
-            broker.AddTracker("localhost:15555");
+            Broker broker = new Broker("localhost:15555");
 
             Console.WriteLine(broker.RouteTable.ServerTable.Count);
             Console.ReadKey();

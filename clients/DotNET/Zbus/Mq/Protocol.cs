@@ -23,6 +23,7 @@ namespace Zbus.Mq
         //High Availability (HA) 
         public static readonly string TRACK_PUB = "track_pub";
         public static readonly string TRACK_SUB = "track_sub";
+        public static readonly string TRACKER   = "tracker";
 
         public static readonly string VERSION = "version";
 
@@ -47,7 +48,7 @@ namespace Zbus.Mq
         public static readonly string RECVER = "recver";
         public static readonly string ID = "id";
 
-        public static readonly string SERVER = "server";
+        public static readonly string HOST = "host";
         public static readonly string ACK = "ack";
         public static readonly string ENCODING = "encoding";
 
@@ -143,11 +144,13 @@ namespace Zbus.Mq
 
     public class TrackerInfo : TrackItem
     {
-        public List<ServerAddress> TrackedServerList { get; set; }
+        public long InfoVersion { get; set; }
+        public IDictionary<string, ServerInfo> ServerTable { get; set; }
     }
 
-    public class ServerInfo : TrackerInfo
+    public class ServerInfo : TrackItem
     {
+        public long InfoVersion { get; set; }
         public List<ServerAddress> TrackerList { get; set; }
         public IDictionary<string, TopicInfo> TopicTable { get; set; }
     }
