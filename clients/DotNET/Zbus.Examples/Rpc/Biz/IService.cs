@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Api.Example
 {
+
     public interface IService
     {
         string Echo(string msg);

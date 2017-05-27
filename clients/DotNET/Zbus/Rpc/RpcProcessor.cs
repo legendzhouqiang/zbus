@@ -32,9 +32,7 @@ namespace Zbus.Rpc
 
         public void AddModule<T>()
         {
-            Type t = typeof(T);
-            object instance = t.GetConstructors()[0].Invoke(new object[0]);
-            AddModule(instance);
+            AddModule(typeof(T)); 
         }
 
         public void AddModule(Type t)
@@ -45,36 +43,24 @@ namespace Zbus.Rpc
 
         public void AddModule(object service)
         {
-            IDictionary<string, MethodInstance> table = BuildMethodTable(service);
             foreach (Type type in service.GetType().GetInterfaces())
             {
-                AddModule(table, type.Name, service);
-                AddModule(table, type.FullName, service);
+                AddModule(type.Name, service);
+                AddModule(type.FullName, service);
             }
 
-            AddModule(table, "", service);
-            AddModule(table, service.GetType().Name, service);
-            AddModule(table, service.GetType().FullName, service);
+            AddModule("", service);
+            AddModule(service.GetType().Name, service);
+            AddModule(service.GetType().FullName, service);
         }
 
         public void AddModule(string module, object service)
         {
-            IDictionary<string, MethodInstance> table = BuildMethodTable(service);
-            AddModule(table, module, service);
-        }
+            BuildMethodTable(methods, module, service); 
+        } 
 
-        private void AddModule(IDictionary<string, MethodInstance> table, string module, object service)
-        {
-            foreach (var kv in table)
-            {
-                string id = module + ":" + kv.Key;
-                this.methods[id] = kv.Value;
-            }
-        }
-
-        private IDictionary<string, MethodInstance> BuildMethodTable(object service)
-        {
-            IDictionary<string, MethodInstance> table = new Dictionary<string, MethodInstance>();
+        private void BuildMethodTable(IDictionary<string, MethodInstance> table, string module, object service)
+        { 
             IDictionary<string, MethodInstance> ignore = new Dictionary<string, MethodInstance>();
             List<Type> types = new List<Type>();
             types.Add(service.GetType());
@@ -106,88 +92,35 @@ namespace Zbus.Rpc
                             break;
                         }
                     }
-
-                    string paramMD5 = "";
-                    foreach (ParameterInfo pInfo in info.GetParameters())
+                    ParameterInfo[] paramInfo = info.GetParameters();
+                    Type[] paramTypes = new Type[paramInfo.Length];
+                    for(int i = 0; i < paramTypes.Length; i++)
                     {
-                        paramMD5 += pInfo.ParameterType;
+                        paramTypes[i] = paramInfo[i].ParameterType;
                     }
-                    string key = id + ":" + paramMD5;
-                    string key2 = id;
+                    IList<string> keys = Keys(module, id, paramTypes);
 
                     MethodInstance instance = new MethodInstance(info, service);
-                    if (exclude)
-                    {
-                        ignore[key] = instance;
-                        ignore[key2] = instance;
-                    }
-                    else
+                    foreach(string key in keys)
                     {
                         table[key] = instance;
-                        table[key2] = instance;
-                    }
+                    } 
+                    if (exclude)
+                    {
+                        foreach (string key in keys)
+                        {
+                            ignore[key] = instance;
+                        }
+                    } 
                 }
             }
             foreach (string key in ignore.Keys)
             {
                 table.Remove(key);
-            }
-            return table;
-        }
-
-        private MethodInstance FindMethod(string module, string method, object[] args)
-        {
-            string paramMD5 = null;
-            foreach (object arg in args)
-            {
-                paramMD5 += arg.GetType();
-            }
-            MethodInstance m = FindMethod(module, method, paramMD5);
-            if (m != null) return m;
-            m = FindMethod(module, method, (string)null);
-            return m;
-        }
-        private MethodInstance FindMethod(string module, string method, string paramMD5)
-        {
-            MethodInstance m = FindMethod0(module, method, paramMD5);
-            if (m != null) return m;
-            string camelMethod = char.ToUpper(method[0]) + method.Substring(1);
-            if (!method.Equals(camelMethod))
-            {
-                m = FindMethod0(module, camelMethod, paramMD5);
-            }
-            return m;
-        }
-        private MethodInstance FindMethod0(string module, string method, string paramMD5)
-        {
-            string async = "Async";
-
-            string key = module + ":" + method;
-            if (paramMD5 != null)
-            {
-                key += ":" + paramMD5;
-            }
-            if (this.methods.ContainsKey(key))
-            {
-                return this.methods[key];
-            }
-
-            if (method.EndsWith(async)) //special for Async method
-            {
-                key = module + ":" + method.Substring(0, method.Length - async.Length);
-                if (paramMD5 != null)
-                {
-                    key += ":" + paramMD5;
-                }
-
-                if (this.methods.ContainsKey(key))
-                {
-                    return this.methods[key];
-                }
-            }
-            return null;
-        }
-
+            } 
+        } 
+        
+         
         public void MessageHandler(Message msg, MqClient client)
         {
             Message msgRes = new Message
@@ -298,6 +231,100 @@ namespace Zbus.Rpc
                 }
                 return response;
             }
+        }
+
+        private MethodInstance FindMethod(string module, string method, object[] args)
+        {
+            Type[] types = null;
+            if (args != null)
+            {
+                types = new Type[args.Length];
+                for (int i = 0; i < args.Length; i++)
+                {
+                    types[i] = args[i].GetType();
+                }
+            }
+
+            IList<string> keys = Keys(module, method, types);
+            foreach (string key in keys)
+            {
+                if (this.methods.ContainsKey(key))
+                {
+                    return this.methods[key];
+                }
+            }
+            return null;
+        } 
+
+        private IList<string> Keys(string module, string method, Type[] types)
+        {
+            string paramMD5 = null, key;
+            if(types != null)
+            {
+                foreach (Type type in types)
+                {
+                    paramMD5 += type + ",";
+                } 
+            } 
+
+            IList<string> keys = new List<string>();
+            key = module + ":" + method;
+            if (paramMD5 != null)
+            {
+                key += ":" + paramMD5;
+            }
+
+            if (!keys.Contains(key))
+            {
+                keys.Add(key);
+            }
+
+            key = module + ":" + char.ToUpper(method[0]) + method.Substring(1);
+            if (!keys.Contains(key))
+            {
+                keys.Add(key);
+            }
+
+            key = module + ":" + char.ToLower(method[0]) + method.Substring(1);
+            if (!keys.Contains(key))
+            {
+                keys.Add(key);
+            }
+
+            key = module + ":" + char.ToUpper(method[0]) + method.Substring(1);
+            if (paramMD5 != null)
+            {
+                key += ":" + paramMD5;
+            }
+            if (!keys.Contains(key))
+            {
+                keys.Add(key);
+            }
+
+            key = module + ":" + char.ToLower(method[0]) + method.Substring(1);
+            if (paramMD5 != null)
+            {
+                key += ":" + paramMD5;
+            }
+            if (!keys.Contains(key))
+            {
+                keys.Add(key);
+            }
+
+            string async = "Async";
+            if (method.EndsWith(async)) //special for Async method
+            {
+                key = module + ":" + method.Substring(0, method.Length - async.Length);
+                if (paramMD5 != null)
+                {
+                    key += ":" + paramMD5;
+                }
+                if (!keys.Contains(key))
+                {
+                    keys.Add(key);
+                }
+            }
+            return keys;
         }
 
         private class MethodInstance
