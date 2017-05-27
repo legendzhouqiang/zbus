@@ -7,8 +7,8 @@ class Protocol {
 	//MQ Produce/Consume
 	const PRODUCE       = "produce";   
 	const CONSUME       = "consume";  
-	const ROUTE   	     = "route";     //route back message to sender, designed for RPC 
-	const RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
+	const ROUTE   	    = "route";     //route back message to sender, designed for RPC 
+	const RPC   	    = "rpc";       //the same as produce command except rpc set ack false by default
 	
 	//Topic control
 	const DECLARE = "declare";  
@@ -19,25 +19,14 @@ class Protocol {
 	//High Availability (HA) 
 	const TRACK_PUB   = "track_pub"; 
 	const TRACK_SUB   = "track_sub";  
-	const TRACKER     = "tracker";  
-	const SERVER      = "server";  
-	
-	const TRACE         = "trace";   //trace latest message in server 
-	const VERSION       = "version";
-	const JS            = "js";      //serve javascript file
-	const CSS           = "css";     //serve css file 
-	const IMG           = "img";     //serve image file(SVG)
-	const PAGE          = "page";    //serve image file(SVG)
-	
-	const PING          = "ping";    //ping server, returning back server time
-	
+	const TRACKER     = "tracker";    
 	
 	//=============================[2] Parameter Values================================================
-	const COMMAND       		= "cmd";     
-	const TOPIC         		= "topic";
-	const TOPIC_MASK          	= "topic_mask"; 
-	const TAG   	     		= "tag";  
-	const OFFSET        		= "offset";
+	const COMMAND       	   = "cmd";     
+	const TOPIC         	   = "topic";
+	const TOPIC_MASK           = "topic_mask"; 
+	const TAG   	     	   = "tag";  
+	const OFFSET        	   = "offset";
 	
 	const CONSUME_GROUP        = "consume_group";  
 	const GROUP_START_COPY     = "group_start_copy";  
@@ -71,9 +60,10 @@ class Protocol {
 }
 
 class ServerAddress {
-	 public $address;
-	 public $sslEnabled;
-} 
+	public $address;
+	public $sslEnabled;
+}
+
 
 
 
