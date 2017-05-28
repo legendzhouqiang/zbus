@@ -1,5 +1,5 @@
 <?php
-include 'zbus.php';
+include '../zbus.php';
 
 $addr = new ServerAddress("localhost:15555", true); 
 
@@ -8,18 +8,13 @@ $msg = new Message();
 $msg->url = "/tracker";
 $msg->topic = "hong";
 $msg->token = 'xxxxs';
-
-$msg->set_json_body("jsonxxx"); 
  
+$msg->set_json_body("jsonxxx");  
 $buf = (string)$msg;
 
+echo $buf . PHP_EOL;
 
-$lines = preg_split('/\r\n?/', $buf);
+$msg2 = Message::decode($buf)[0];
 
-foreach($lines as $line){
-	echo $line.'----';
-}
-
-echo $buf; 
-
+echo $msg2;
 ?> 

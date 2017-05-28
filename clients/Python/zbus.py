@@ -205,7 +205,7 @@ def decode_headers(buf):
     if meta.upper().startswith('HTTP'):
         msg.status = int(blocks[1])
     else:
-        msg.method = blocks[0]
+        msg.method = blocks[0].upper()
         if len(blocks) > 1:
             msg.url = blocks[1]
 

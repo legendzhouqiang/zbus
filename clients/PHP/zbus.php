@@ -114,6 +114,9 @@ class Message {
 			$res .= sprintf("%s %s HTTP/1.1\r\n",$this->method?:"GET", $this->url?:"/");
 		}
 		foreach($this->headers as $key=>$value){
+			if($key == 'content-length'){
+				continue;
+			}
 			$res .= sprintf("%s: %s\r\n", $key, $value);
 		}
 		$body_len = 0;
@@ -129,27 +132,47 @@ class Message {
 		return $res;
 	}
 	
-	public static function decode($buf){
+	public static function decode($buf, $start=0){
+		$p = strpos($buf, "\r\n\r\n", $start);
+		if($p < 0) return array(null, $start);
 		
-		
-	}
-	
-	private static function find_header_end($buf, $start=0){
-		$i = $start;
-		$end = strlen(buf);
-		while ($i + 3 < $end){
-			if ($buf[i] == 13 && $buf[i + 1] == 10 && $buf[i + 2] == 13 && $buf[i + 3] == 10){
-				return $i + 3;
-			}
-			$i++;
+		$head = substr($buf, $start, $p);
+		$msg = Message::decode_headers($head);
+		$body_len = 0;
+		if(array_key_exists('content-length', $msg->headers)){
+			$body_len = $msg->headers['content-length'];
+			$body_len = intval($body_len);
 		} 
-		return -1;
+		if( $body_len == 0) return array($msg, $p); 
+		
+		if(strlen($buf)-$p < $body_len){
+			return array(null, $start);
+		}
+		$msg->body = substr($buf, $p+4, $body_len); 
+		return array($msg, $p + $body_len); 
 	}
-	
+	 
 	private static function decode_headers($buf){
 		$msg = new Message();
 		$lines = preg_split('/\r\n?/', $buf); 
-		
+		$meta = $lines[0];
+		$blocks = explode(' ', $meta); 
+		if(substr(strtoupper($meta), 0, 4 ) == "HTTP"){
+			$msg->status = intval($blocks[0]);
+		} else {
+			$msg->method = strtoupper($blocks[0]);
+			if(count($blocks) > 1){
+				$msg->url = $blocks[1];
+			}
+		} 
+		for($i=1; $i<count($lines); $i++){
+			$line = $lines[$i]; 
+			$kv = explode(':', $line); 
+			if(count($kv) < 2) continue;
+			$key = strtolower(trim($kv[0]));
+			$val = trim($kv[1]); 
+			$msg->headers[$key] = $val;
+		} 
 		return $msg;
 	}
 	
