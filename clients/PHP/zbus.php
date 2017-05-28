@@ -1,5 +1,4 @@
-<?php 
-
+﻿<?php 
 class Protocol {  
 	const VERSION_VALUE = "0.8.0";       //start from 0.8.0 
 	
@@ -62,6 +61,95 @@ class Protocol {
 class ServerAddress {
 	public $address;
 	public $sslEnabled;
+
+	function __construct($address, $sslEnabled = false) {
+		$this->address = $address;
+		$this->sslEnabled = $sslEnabled; 
+	}
+	
+	public function __toString(){
+		if($this->sslEnabled){
+			return "[SSL]".$this->address;
+		}
+		return $this->address;
+	}  
+} 
+
+class Message {
+	public $status;          //integer
+	public $method = "GET";
+	public $url = "/";
+	public $headers = array();
+	public $body;  
+	 
+	
+	public function set_json_body($value){
+		$this->headers['content-type'] = 'application/json';
+		$this->body = $value; 
+	}
+	
+	public function __set($name, $value){
+		if($value == null) return;
+		$this->headers[$name] = $value;
+	}
+	
+	public function __get($name){
+		return $this->headers[$name];
+	}
+	
+	public function __toString(){
+		return $this->encode();
+	}
+	
+	
+	public function encode(){
+		$res = "";
+		$desc = "unknown status";
+		if($this->status){
+			if(array_key_exists($this->status, Message::HTTP_STATUS_TABLE)){
+				$desc = Message::HTTP_STATUS_TABLE[$this->status];
+			}
+			$res .= sprintf("HTTP/1.1 %s %s\r\n",$this->status, $desc);
+		} else {
+			$res .= sprintf("%s %s HTTP/1.1\r\n",$this->method?:"GET", $this->url?:"/");
+		}
+		foreach($this->headers as $key=>$value){
+			$res .= sprintf("%s: %s\r\n", $key, $value);
+		}
+		$body_len = 0;
+		if($this->body){
+			$body_len = strlen($this->body);
+		}
+		$res .= sprintf("content-length: %d\r\n", $body_len);
+		$res .= sprintf("\r\n");
+		if($this->body){
+			$res .= $this->body;
+		}
+		
+		return $res;
+	}
+	
+	public static function decode($buf){
+		
+		
+	}
+	
+	private const HTTP_STATUS_TABLE = array( 
+		200 => "OK",
+		201 =>"Created",
+		202 =>"Accepted",
+		204 =>"No Content",
+		206 =>"Partial Content",
+		301 =>"Moved Permanently",
+		304 =>"Not Modified",
+		400 =>"Bad Request",
+		401 =>"Unauthorized",
+		403 =>"Forbidden",
+		404 =>"Not Found",
+		405 =>"Method Not Allowed",
+		416 =>"Requested Range Not Satisfiable",
+		500 =>"Internal Server Error",
+	);
 }
 
 
