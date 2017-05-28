@@ -59,16 +59,13 @@ class Protocol {
 }
 
 function log_info($message){
-	error_log($message);
-	echo $message . PHP_EOL;
+	error_log($message); 
 }
 function log_debug($message){
-	error_log($message);
-	echo $message . PHP_EOL;
+	error_log($message); 
 }
 function log_error($message){
-	error_log($message);
-	echo $message . PHP_EOL;
+	error_log($message); 
 }
 
 //borrowed from: https://stackoverflow.com/questions/2040240/php-function-to-generate-v4-uuid
@@ -273,6 +270,13 @@ class MessageClient{
 		log_debug("Connected to ($this->server_address)"); 
 	}  
 	
+	public function close(){
+		if($this->sock){
+			socket_close($this->sock);
+			$this->sock = null;
+		}
+	}
+	
 	private function throw_socket_exception($msg_prefix=null){
 		$errorcode = socket_last_error($this->sock);
 		$errormsg = socket_strerror($errorcode);
@@ -358,6 +362,28 @@ class MessageClient{
 	}
 }
 
+
+class MqClient extends MessageClient{
+	public $token;
+	
+	public function __construct($address, $ssl_cert_file=null){
+		parent::__construct($address, $ssl_cert_file);
+	}
+	
+	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3){
+		
+	}
+	
+	public function query($topic, $group=null, $timeout=3){
+		$msg = new Message();
+		$msg->topic = $topic;
+		$msg->topic = $group;
+		$msg->token = $this->token;
+		
+		
+		
+	}
+}
 
 
 ?> 
