@@ -134,6 +134,25 @@ class Message {
 		
 	}
 	
+	private static function find_header_end($buf, $start=0){
+		$i = $start;
+		$end = strlen(buf);
+		while ($i + 3 < $end){
+			if ($buf[i] == 13 && $buf[i + 1] == 10 && $buf[i + 2] == 13 && $buf[i + 3] == 10){
+				return $i + 3;
+			}
+			$i++;
+		} 
+		return -1;
+	}
+	
+	private static function decode_headers($buf){
+		$msg = new Message();
+		$lines = preg_split('/\r\n?/', $buf); 
+		
+		return $msg;
+	}
+	
 	private const HTTP_STATUS_TABLE = array( 
 		200 => "OK",
 		201 =>"Created",
