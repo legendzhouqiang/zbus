@@ -4,7 +4,8 @@ include '../zbus.php';
 $client = new MqClient("localhost:15555"); 
 
 $msg = new Message();
-$msg->url = "/server";  
+$msg->cmd = "consume";  
+$msg->topic = "hong";
 
 $res = $client->invoke($msg);  
 $client->close();
