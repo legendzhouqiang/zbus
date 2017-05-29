@@ -10,7 +10,7 @@ var broker = new Broker("localhost:15555");
 broker.ready(function () {
 	var p = new Producer(broker);
 	
-	var count = 0, topic = "hong6";
+	var count = 0, topic = "MyTopic";
 	//produce message every 3 seconds
 	function produce(p) {
 		var req = { topic: topic, body: 'published from javascript '+count++ };

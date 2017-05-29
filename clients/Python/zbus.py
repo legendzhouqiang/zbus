@@ -448,14 +448,17 @@ class MessageClient(object):
         self._thread.start()
 
 
-def build_msg(cmd, topic, group=None, options=None):
-    msg = Message()
-    msg.cmd = cmd
-    msg.topic = topic
-    msg.consume_group = group
-    if isinstance(options, dict):
-        for k in options:
-            msg[k] = options[k]
+def build_msg(cmd, topic_or_msg, group=None):
+    if isinstance(topic_or_msg, Message):
+        msg = topic_or_msg  
+    else:
+        msg = Message()
+        msg.topic = topic_or_msg
+    
+    msg.cmd = cmd  
+    if not msg.consume_group:
+        msg.consume_group = group 
+    
     return msg
 
 
@@ -464,47 +467,41 @@ class MqClient(MessageClient):
         MessageClient.__init__(self, address, ssl_cert_file)
         self.token = None
 
-    def invoke_cmd(self, cmd, topic_or_msg, group=None, options=None, timeout=3):
-        if isinstance(topic_or_msg, Message):
-            msg = topic_or_msg
-            msg.cmd = cmd
-            if not msg.consume_group:
-                msg.consume_group = group
-        else:
-            msg = build_msg(cmd, topic_or_msg, group=group, options=options)
-
+    def invoke_cmd(self, cmd, topic_or_msg, group=None,timeout=3):
+        msg = build_msg(cmd, topic_or_msg, group=group)
         if not msg.token:
             msg.token = self.token
+        
         return self.invoke(msg, timeout=timeout)
 
-    def invoke_object(self, cmd, topic, group=None, options=None, timeout=3):
-        res = self.invoke_cmd(cmd, topic, group=group,
-                              options=options, timeout=timeout)
+    def invoke_object(self, cmd, topic, group=None, timeout=3):
+        res = self.invoke_cmd(cmd, topic, group=group, timeout=timeout)
         if res.status != 200:  # not throw exception, for batch operations' convenience
             return {'error': res.body.decode(res.encoding or 'utf8')}
         return res.body
 
-    def produce(self, msg, timeout=3):
-        msg.cmd = Protocol.PRODUCE
-        return self.invoke(msg, timeout)
+    def produce(self, msg, timeout=3): 
+        return self.invoke_cmd(Protocol.PRODUCE, msg, group=None, timeout=timeout)
 
-    def consume(self, topic, group=None, options=None, timeout=3):
-        return self.invoke_cmd(Protocol.CONSUME, topic, group=group, options=options, timeout=timeout)
+    def consume(self, topic_or_msg, group=None, timeout=3):
+        return self.invoke_cmd(Protocol.CONSUME, topic_or_msg, group=group, timeout=timeout)
 
-    def query(self, topic=None, group=None, options=None, timeout=3):
-        return self.invoke_object(Protocol.QUERY, topic, group=group, options=options, timeout=timeout)
+    def query(self, topic_or_msg=None, group=None, options=None, timeout=3):
+        return self.invoke_object(Protocol.QUERY, topic_or_msg, group=group, timeout=timeout)
 
-    def declare(self, topic, group=None, options=None, timeout=3):
-        return self.invoke_object(Protocol.DECLARE, topic, group=group, options=options, timeout=timeout)
+    def declare(self, topic_or_msg, group=None, options=None, timeout=3):
+        return self.invoke_object(Protocol.DECLARE, topic_or_msg, group=group, timeout=timeout)
 
-    def remove(self, topic, group=None, options=None, timeout=3):
-        return self.invoke_object(Protocol.REMOVE, topic, group=group, options=options, timeout=timeout)
+    def remove(self, topic_or_msg, group=None, options=None, timeout=3):
+        return self.invoke_object(Protocol.REMOVE, topic_or_msg, group=group, timeout=timeout)
 
-    def empty(self, topic, group=None, options=None, timeout=3):
-        return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout)
+    def empty(self, topic_or_msg, group=None, options=None, timeout=3):
+        return self.invoke_object(Protocol.EMPTY, topic_or_msg, group=group, timeout=timeout)
 
     def route(self, msg, timeout=3):
         msg.cmd = Protocol.ROUTE
+        if not msg.token:
+            msg.token = self.token
         if msg.status:
             msg.origin_status = msg.status
             msg.status = None

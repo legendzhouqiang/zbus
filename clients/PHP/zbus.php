@@ -179,8 +179,9 @@ class Message {
 	public static function decode($buf, $start=0){
 		$p = strpos($buf, "\r\n\r\n", $start);
 		if($p < 0) return array(null, $start);
+		$head_len = $p - $start;
 		
-		$head = substr($buf, $start, $p);
+		$head = substr($buf, $start, $head_len);
 		$msg = Message::decode_headers($head);
 		$body_len = 0;
 		if(array_key_exists('content-length', $msg->headers)){
@@ -202,7 +203,7 @@ class Message {
 		$meta = $lines[0];
 		$blocks = explode(' ', $meta); 
 		if(substr(strtoupper($meta), 0, 4 ) == "HTTP"){
-			$msg->status = intval($blocks[0]);
+			$msg->status = intval($blocks[1]);
 		} else {
 			$msg->method = strtoupper($blocks[0]);
 			if(count($blocks) > 1){
@@ -371,18 +372,52 @@ class MqClient extends MessageClient{
 	}
 	
 	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3){
+		if(get_class($topic) != Message::class){
+			$msg = new Message();
+			$msg->topic = $topic_or_msg;
+			$msg->topic = $group;
+			$msg->token = $this->token;
+		}
 		
+		if($msg->token == null) $msg->token = $this->token;
+		$msg->cmd = $cmd;
+		
+		return $this->invoke($msg, $timeout);
 	}
 	
-	public function query($topic, $group=null, $timeout=3){
-		$msg = new Message();
-		$msg->topic = $topic;
-		$msg->topic = $group;
-		$msg->token = $this->token;
+	private function invoke_object($cmd, $topic_or_msg, $group=null, $timeout=3){
+		$res = $this->invoke_cmd($cmd, $topic_or_msg, $group, $timeout);
+		if($res->status != 200){
+			throw new Exception($res->body);
+		} 
 		
-		
-		
+		return json_decode($res->body);
 	}
+	
+	public function produce($msg, $timeout=3) {
+		return $this->invoke_cmd(Protocol::PRODUCE, $msg, null, $timeout);
+	}
+	
+	public function consume($topic_or_msg, $group=null, $timeout=3){
+		return $this->invoke_cmd(Protocol::CONSUME, $topic_or_msg, $group, $timeout);
+	}
+	
+	public function query($topic_or_msg, $group=null, $timeout=3){
+		return $this->invoke_object(Protocol::QUERY, $topic_or_msg, $group, $timeout);
+	}
+	
+	public function declare_($topic_or_msg, $group=null, $timeout=3){
+		return $this->invoke_object(Protocol::DECLARE_, $topic_or_msg, $group, $timeout);
+	}
+	
+	public function remove($topic_or_msg, $group=null, $timeout=3){
+		return $this->invoke_object(Protocol::REMOVE, $topic_or_msg, $group, $timeout);
+	}
+	
+	public function empty_($topic_or_msg, $group=null, $timeout=3){
+		return $this->invoke_object(Protocol::EMPTY_, $topic_or_msg, $group, $timeout);
+	} 
+	
 }
 
 
