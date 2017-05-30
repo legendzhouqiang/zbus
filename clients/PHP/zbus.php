@@ -93,25 +93,26 @@ function uuid() {
 
 class ServerAddress {
 	public $address;
-	public $sslEnabled;
+	public $ssl_enabled;
 
-	function __construct($address, $sslEnabled = false) {  
+	function __construct($address, $ssl_enabled= false) {  
 		if(is_string($address)){
 			$this->address = $address;
-			$this->sslEnabled = $sslEnabled; 
+			$this->$ssl_enabled= $ssl_enabled; 
 			return;
-		}
-		
-		$type = get_class($address);
-		if($type == ServerAddress::class){
+		} else if (is_array($address)){
+			$this->address = $address['address'];
+			$this->ssl_enabled= $address['sslEnabled'];
+		} else if (is_object($address) && get_class($address)== ServerAddress::class){
 			$this->address = $address->address;
-			$this->sslEnabled = $address->sslEnabled;
-		}
-		
+			$this->ssl_enabled= $address->ssl_enabled;
+		} else {
+			throw new Exception("address not support");
+		}  
 	}
 	
 	public function __toString(){
-		if($this->sslEnabled){
+		if($this->ssl_enabled){
 			return "[SSL]".$this->address;
 		}
 		return $this->address;
@@ -452,22 +453,88 @@ class MqClient extends MessageClient{
 	}  
 }
 
-
+ 
 class BrokerRouteTable {
-	public $topic_table = array();
-	public $server_table = array();
-	public $votes_table = array();
+	public $topic_table = array();   //{ TopicName => [TopicInfo] }
+	public $server_table = array();  //{ ServerAddress => ServerInfo }
+	public $votes_table = array();   //{ TrackerAddress => Vote } , Vote=(version, servers)
 	private $vote_factor = 0.5;
 	
 	public function update_tracker($tracker_info){
-		echo json_encode($tracker_info);
+		//1) Update votes
+		$tracker_address = new ServerAddress($tracker_info['serverAddress']);
+		$vote = @$this->votes_table[$tracker_address];
+		
+		if($vote && $vote['version'] >=  $tracker_info['infoVersion']){
+			return;
+		}
+		$servers = array();
+		$server_table = $tracker_info['serverTable'];
+		foreach($server_table as $key => $server_info){ 
+			array_push($servers, new ServerAddress($server_info['serverAddress']));
+		}
+		 
+		$this->votes_table[(string)$tracker_address] = array('version'=>$tracker_info['infoVersion'], 'servers'=>$servers);
+		
+		//2) Merge ServerTable
+		foreach($server_table as $key => $server_info){
+			$server_address = new ServerAddress($server_info['serverAddress']);
+			$this->server_table[(string)$server_address] = $server_info; 
+		} 
+		
+		//3) Purge
+		return $this->purge();
+	}
+	
+	public function remove_tracker($tracker_address){
+		$tracker_address = new ServerAddress($tracker_address);
+		unset($this->votes_table[(string)$tracker_address]);
+		return $this->purge();
+	}
+	
+	private function purge(){
+		$to_remove = array(); 
+		$server_table_local = $this->server_table;
+		foreach($server_table_local as $key => $server_info){
+			$server_address = new ServerAddress($server_info['serverAddress']); 
+			$count = 0;
+			foreach($this->votes_table as $key => $vote){
+				$servers = $vote['servers'];
+				if(in_array((string)$server_address, $servers)) $count++;
+			}
+			if($count < count($this->votes_table)*$this->vote_factor){
+				array_push($to_remove, $server_address);
+				unset($server_table_local[(string)$server_address]);
+			}
+			
+		} 
+		$this->server_table = $server_table_local;
+		
+		$this->rebuild_topic_table();  
+		return $to_remove;
+	}
+	
+	private function rebuild_topic_table(){
+		$topic_table = array();
+		foreach($this->server_table as $server_key => $server_info){
+			foreach($server_info['topicTable'] as $topic_key => $topic_info){
+				$topic_list = @$topic_table[$topic_key];
+				if($topic_list == null){
+					$topic_list = array();
+				}
+				array_push($topic_list, $topic_info);
+				$topic_table[$topic_key] = $topic_list;
+			}
+		}
+		$this->topic_table = $topic_table;
 	}
 }
 
 
-class Broker {
-	
+class Broker { 
 	public $route_table;
+	private $pool_table;
+	private $ssl_cert_file_table = array();
 	
 	public function __construct($tracker_address_list=null){ 
 		$this->route_table = new BrokerRouteTable();
@@ -483,18 +550,82 @@ class Broker {
 	public function add_tracker($tracker_address, $ssl_cert_file=null, $timeout=3){
 		$client = new MqClient($tracker_address, $ssl_cert_file);
 		$msg = new Message();
-		$msg->cmd = Protocol::TRACK_SUB;
+		$msg->cmd = Protocol::TRACKER;
 		
 		$res = $client->invoke($msg, $timeout);
 		if($res->status != 200){
 			throw new Exception($res->body);
 		}
 		
-		$tracker_info = json_decode($res->body);
+		$tracker_info = json_decode($res->body, true); //to array
 		$this->route_table->update_tracker($tracker_info);
+	} 
+	
+	public function select($selector, $msg){
+		$address_list = $selector($this->route_table, $msg);
+		$client_array = array();
+		foreach($address_list as $address){
+			$client = @$this->pool_table[(string)$address];
+			if($client == null){
+				$client = new MqClient($address, @$this->ssl_cert_file_table[$address->address]); //TODO SSL
+			}
+			array_push($client_array, $client);
+		} 
+		return $client_array;
+	} 
+}
+
+class MqAdmin {
+	protected $broker; 
+	protected $admin_selector;
+	public function __construct($broker){
+		$this->broker = $broker;
+		$this->admin_selector = function($route_table, $msg){
+			$server_table = $route_table->server_table;
+			$address_array = array();
+			foreach($server_table as $key => $server_info){
+				$server_address = new ServerAddress($server_info['serverAddress']);
+				array_push($address_array, $server_address);
+			}
+			return $address_array;
+		};
+	} 
+	
+	public function query($topic_or_msg, $group=null, $timeout=3){ 
+		
+	}
+	
+	public function declare_($topic_or_msg, $group=null, $timeout=3){ 
+	}
+	
+	public function remove($topic_or_msg, $group=null, $timeout=3){ 
+	}
+	
+	public function empty_($topic_or_msg, $group=null, $timeout=3){ 
+	}  
+}
+
+class Producer extends  MqAdmin{
+	public function __construct($broker){
+		parent::__construct($broker);
 	}
 }
 
+class Consumer extends  MqAdmin{
+	public function __construct($broker){
+		parent::__construct($broker);
+	}
+}
 
+class RpcInvoker{
+	public function __construct($broker){ 
+	}
+}
+
+class RpcProcessor{
+	public function __construct(){
+		
+	}
+} 
 
 ?> 

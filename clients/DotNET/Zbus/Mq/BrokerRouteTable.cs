@@ -51,12 +51,12 @@ namespace Zbus.Mq
             if(vote == null)
             {
                 vote = new Vote
-                {
-                    Version = trackerInfo.InfoVersion,
+                { 
                     Servers = servers,
                 };
                 VotesTable[trackerAddress] = vote;
-            } 
+            }
+            vote.Version = trackerInfo.InfoVersion;
             vote.Servers = servers;
 
             //2) Merge ServerTable
