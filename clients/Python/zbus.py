@@ -784,32 +784,32 @@ class MqAdmin:
         self.admin_selector = admin_selector
         self.token = None
 
-    def invoke_object(self, cmd, topic, group=None, options=None, timeout=3, selector=None):
-        msg = build_msg(cmd, topic, group=group, options=options)
+    def invoke_object(self, cmd, topic, group=None, timeout=3, selector=None):
+        msg = build_msg(cmd, topic, group=group)
         pools = self.broker.select(selector or self.admin_selector, msg)
         res = []
         for pool in pools:
             client = None
             try:
                 client = pool.borrow_client()
-                res_i = client.invoke_object(cmd, topic, group=group, options=options, timeout=timeout)
+                res_i = client.invoke_object(cmd, topic, group=group,timeout=timeout)
                 res.append(res_i)
             finally:
                 if client:
                     pool.return_client(client)
         return res
 
-    def declare(self, topic, group=None, options=None, timeout=3, selector=None):
-        return self.invoke_object(Protocol.DECLARE, topic, group=group, options=options, timeout=timeout, selector=selector)
+    def declare(self, topic, group=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.DECLARE, topic, group=group,timeout=timeout, selector=selector)
 
-    def query(self, topic, group=None, options=None, timeout=3, selector=None):
-        return self.invoke_object(Protocol.QUERY, topic, group=group, options=options, timeout=timeout, selector=selector)
+    def query(self, topic, group=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.QUERY, topic, group=group, timeout=timeout, selector=selector)
 
-    def remove(self, topic, group=None, options=None, timeout=3, selector=None):
-        return self.invoke_object(Protocol.REMOVE, topic, group=group, options=options, timeout=timeout, selector=selector)
+    def remove(self, topic, group=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.REMOVE, topic, group=group, timeout=timeout, selector=selector)
 
-    def empty(self, topic, group=None, options=None, timeout=3, selector=None):
-        return self.invoke_object(Protocol.EMPTY, topic, group=group, options=options, timeout=timeout, selector=selector)
+    def empty(self, topic, group=None, timeout=3, selector=None):
+        return self.invoke_object(Protocol.EMPTY, topic, group=group, timeout=timeout, selector=selector)
 
 
 class Producer(MqAdmin):

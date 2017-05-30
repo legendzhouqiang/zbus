@@ -7,7 +7,7 @@ while(true){
 	
 	$res = $client->consume("MyTopic"); 
 	
-	echo $res . "\n";
+	echo $res->encode() . "\n";
 } 
 
 ?> 

@@ -2,9 +2,11 @@
 include '../zbus.php';
 $client = new MqClient("localhost:15555");
 
-$res = $client->query("MyTopic");
-  
-echo $res->topicName;
-
+for($i=0;$i<20;$i++){
+	
+	$res = $client->query("MyTopic");
+	  
+	echo $res->topicName;
+} 
 
 ?> 

@@ -124,7 +124,22 @@ class Message {
 	public $url = "/";
 	public $headers = array();
 	public $body;  
-	 
+	
+	
+	public function remove_header($name){
+		if(!array_key_exists($name, $this->headers)) return;
+		unset($this->headers[$name]);
+	}
+	
+	public function get_header($name, $value=null) {
+		if(!array_key_exists($name, $this->headers)) return null;
+		return $this->headers[$name];
+	}
+	
+	public function set_header($name, $value){
+		if($value == null) return;
+		unset($this->headers[$name]);
+	}
 	
 	public function set_json_body($value){
 		$this->headers['content-type'] = 'application/json';
@@ -135,6 +150,7 @@ class Message {
 		if($value == null) return;
 		$this->headers[$name] = $value;
 	}
+	
 	
 	public function __get($name){
 		if(!array_key_exists($name, $this->headers)) return null;
@@ -188,13 +204,13 @@ class Message {
 			$body_len = $msg->headers['content-length'];
 			$body_len = intval($body_len);
 		} 
-		if( $body_len == 0) return array($msg, $p); 
+		if( $body_len == 0) return array($msg, $p+4); 
 		
 		if(strlen($buf)-$p < $body_len){
 			return array(null, $start);
 		}
 		$msg->body = substr($buf, $p+4, $body_len); 
-		return array($msg, $p + $body_len); 
+		return array($msg, $p+4 + $body_len); 
 	}
 	 
 	private static function decode_headers($buf){
@@ -371,15 +387,16 @@ class MqClient extends MessageClient{
 		parent::__construct($address, $ssl_cert_file);
 	}
 	
-	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3){
-		if(get_class($topic) != Message::class){
+	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3){ 
+		if(is_string($topic_or_msg)){ 
 			$msg = new Message();
-			$msg->topic = $topic_or_msg;
-			$msg->topic = $group;
-			$msg->token = $this->token;
+			$msg->topic = $topic_or_msg; 
+		} else if(is_object($topic_or_msg) && get_class($topic_or_msg) != Message::class){ 
+			throw new Exception("invalid topic_or_msg:$topic_or_msg");
 		}
 		
-		if($msg->token == null) $msg->token = $this->token;
+		$msg->consume_group = $group;
+		$msg->token = $this->token;
 		$msg->cmd = $cmd;
 		
 		return $this->invoke($msg, $timeout);
@@ -399,7 +416,17 @@ class MqClient extends MessageClient{
 	}
 	
 	public function consume($topic_or_msg, $group=null, $timeout=3){
-		return $this->invoke_cmd(Protocol::CONSUME, $topic_or_msg, $group, $timeout);
+		$res = $this->invoke_cmd(Protocol::CONSUME, $topic_or_msg, $group, $timeout);
+		$res->id = $res->origin_id; 
+		$res->remove_header(Protocol::ORIGIN_ID);
+		if($res->status == 200){
+			if($res->origin_url != null){
+				$res->url = $res->origin_url;
+				$res->status = null;
+				$res->remove_header(Protocol::ORIGIN_URL);
+			}
+		}
+		return $res;
 	}
 	
 	public function query($topic_or_msg, $group=null, $timeout=3){
