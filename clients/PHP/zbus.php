@@ -211,7 +211,7 @@ class Message {
 	
 	public static function decode($buf, $start=0){
 		$p = strpos($buf, "\r\n\r\n", $start);
-		if($p < 0) return array(null, $start);
+		if($p === false) return array(null, $start);
 		$head_len = $p - $start;
 		
 		$head = substr($buf, $start, $head_len);
@@ -349,9 +349,10 @@ class MessageClient{
 			$buf_len = 4096;
 			//$buf = socket_read($this->sock, $buf_len);  
 			$buf = fread($this->sock, $buf_len);  
-			if($buf === false){
+			if($buf === false || $buf == ''){
 				$this->throw_socket_exception("Socket read error");
 			}
+			
 			$all_buf .= $buf;
 			
 			$this->recv_buf .= $buf;
@@ -421,6 +422,7 @@ class MqClient extends MessageClient{
 	
 	public function consume($topic_or_msg, $group=null, $timeout=3){
 		$res = $this->invoke_cmd(Protocol::CONSUME, $topic_or_msg, $group, $timeout);
+		
 		$res->id = $res->origin_id; 
 		$res->remove_header(Protocol::ORIGIN_ID);
 		if($res->status == 200){
@@ -447,9 +449,52 @@ class MqClient extends MessageClient{
 	
 	public function empty_($topic_or_msg, $group=null, $timeout=3){
 		return $this->invoke_object(Protocol::EMPTY_, $topic_or_msg, $group, $timeout);
-	} 
-	
+	}  
 }
+
+
+class BrokerRouteTable {
+	public $topic_table = array();
+	public $server_table = array();
+	public $votes_table = array();
+	private $vote_factor = 0.5;
+	
+	public function update_tracker($tracker_info){
+		echo json_encode($tracker_info);
+	}
+}
+
+
+class Broker {
+	
+	public $route_table;
+	
+	public function __construct($tracker_address_list=null){ 
+		$this->route_table = new BrokerRouteTable();
+		
+		if($tracker_address_list){
+			$bb = explode(';', $tracker_address_list);
+			foreach($bb as $tracker_address){
+				$this->add_tracker($tracker_address);
+			} 
+		}
+	}
+	
+	public function add_tracker($tracker_address, $ssl_cert_file=null, $timeout=3){
+		$client = new MqClient($tracker_address, $ssl_cert_file);
+		$msg = new Message();
+		$msg->cmd = Protocol::TRACK_SUB;
+		
+		$res = $client->invoke($msg, $timeout);
+		if($res->status != 200){
+			throw new Exception($res->body);
+		}
+		
+		$tracker_info = json_decode($res->body);
+		$this->route_table->update_tracker($tracker_info);
+	}
+}
+
 
 
 ?> 

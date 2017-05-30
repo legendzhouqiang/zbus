@@ -1,4 +1,2 @@
 #zbus-php-client
-pthreads in PHP/Windows sucks!
-
-popen to mock threading?
+NO threading in PHP client!
