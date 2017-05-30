@@ -118,6 +118,23 @@ class ServerAddress {
 	}  
 } 
 
+const HTTP_STATUS_TABLE = array(
+	200 => "OK",
+	201 => "Created",
+	202 => "Accepted",
+	204 => "No Content",
+	206 => "Partial Content",
+	301 => "Moved Permanently",
+	304 => "Not Modified",
+	400 => "Bad Request",
+	401 => "Unauthorized",
+	403 => "Forbidden",
+	404 => "Not Found",
+	405 => "Method Not Allowed",
+	416 => "Requested Range Not Satisfiable",
+	500 => "Internal Server Error",
+);
+
 class Message {
 	public $status;          //integer
 	public $method = "GET";
@@ -166,8 +183,8 @@ class Message {
 		$res = "";
 		$desc = "unknown status";
 		if($this->status){
-			if(array_key_exists($this->status, Message::HTTP_STATUS_TABLE)){
-				$desc = Message::HTTP_STATUS_TABLE[$this->status];
+			if(array_key_exists($this->status, HTTP_STATUS_TABLE)){
+				$desc = HTTP_STATUS_TABLE[$this->status];
 			}
 			$res .= sprintf("HTTP/1.1 %s %s\r\n",$this->status, $desc);
 		} else {
@@ -235,27 +252,8 @@ class Message {
 			$msg->headers[$key] = $val;
 		} 
 		return $msg;
-	}  
-	
-	static $HTTP_STATUS_TABLE;
-}
-
-Message::$HTTP_STATUS_TABLE = array(
-	200 => "OK",
-	201 => "Created",
-	202 => "Accepted",
-	204 => "No Content",
-	206 => "Partial Content",
-	301 => "Moved Permanently",
-	304 => "Not Modified",
-	400 => "Bad Request",
-	401 => "Unauthorized",
-	403 => "Forbidden",
-	404 => "Not Found",
-	405 => "Method Not Allowed",
-	416 => "Requested Range Not Satisfiable",
-	500 => "Internal Server Error",
-);
+	}   
+}  
 
 
 class MessageClient{
@@ -270,8 +268,11 @@ class MessageClient{
 		$this->ssl_cert_file = $ssl_cert_file;
 	}
 	
-	public function connect() {
-		$this->sock = socket_create(AF_INET, SOCK_STREAM, 0);
+	public function connect($timeout=3) {
+		//$this->sock = socket_create(AF_INET, SOCK_STREAM, 0);
+		//if (!socket_connect($this->sock, $host, $port)){
+		//	$this->throw_socket_exception("Connection to ($address) failed");
+		//} 
 		$address = $this->server_address->address;
 		$bb = explode(':', $address);
 		$host = $bb[0];
@@ -281,9 +282,8 @@ class MessageClient{
 		}
 		
 		log_debug("Trying connect to ($this->server_address)");
-		if (!socket_connect($this->sock, $host, $port)){ 
-			$this->throw_socket_exception("Connection to ($address) failed");
-		} 
+		$this->sock = pfsockopen($host, $port, $errno, $errstr, $timeout);
+		
 		log_debug("Connected to ($this->server_address)"); 
 	}  
 	
@@ -321,7 +321,8 @@ class MessageClient{
 		$write_count = 0;
 		$total_count = strlen($buf);
 		while(true){
-			$n = socket_write($this->sock, $sending_buf, strlen($sending_buf));
+			//$n = socket_write($this->sock, $sending_buf, strlen($sending_buf));
+			$n = fwrite($this->sock, $sending_buf, strlen($sending_buf));
 			if($n === false) {
 				$this->throw_socket_exception("Socket write error");
 			}
@@ -346,7 +347,8 @@ class MessageClient{
 			}
 			
 			$buf_len = 4096;
-			$buf = socket_read($this->sock, $buf_len);  
+			//$buf = socket_read($this->sock, $buf_len);  
+			$buf = fread($this->sock, $buf_len);  
 			if($buf === false){
 				$this->throw_socket_exception("Socket read error");
 			}
@@ -391,7 +393,9 @@ class MqClient extends MessageClient{
 		if(is_string($topic_or_msg)){ 
 			$msg = new Message();
 			$msg->topic = $topic_or_msg; 
-		} else if(is_object($topic_or_msg) && get_class($topic_or_msg) != Message::class){ 
+		} else if(is_object($topic_or_msg) && get_class($topic_or_msg) == Message::class){ 
+			$msg = $topic_or_msg;
+		} else {
 			throw new Exception("invalid topic_or_msg:$topic_or_msg");
 		}
 		
