@@ -1,11 +1,20 @@
 <?php 
 include '../zbus.php';
-$client = new MqClient("localhost:15555");
+
+//start with a broker
+$broker = new Broker("localhost:15555");
+
+
+$p = new Producer($broker);
 
 $msg = new Message();
 $msg->topic = "MyTopic";
-$msg->body = "Hi, from PHP, the Fxxking BEST language of the world, :)";
+$msg->body = "from PHP";
+ 
+$p->produce($msg); 
 
-$res = $client->produce($msg) 
+
+//close broker
+$broker->close();
 
 ?> 

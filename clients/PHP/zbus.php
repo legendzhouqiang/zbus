@@ -269,11 +269,7 @@ class MessageClient{
 		$this->ssl_cert_file = $ssl_cert_file;
 	}
 	
-	public function connect($timeout=3) {
-		//$this->sock = socket_create(AF_INET, SOCK_STREAM, 0);
-		//if (!socket_connect($this->sock, $host, $port)){
-		//	$this->throw_socket_exception("Connection to ($address) failed");
-		//} 
+	public function connect($timeout=3) { 
 		$address = $this->server_address->address;
 		$bb = explode(':', $address);
 		$host = $bb[0];
@@ -283,8 +279,11 @@ class MessageClient{
 		}
 		
 		log_debug("Trying connect to ($this->server_address)");
-		$this->sock = pfsockopen($host, $port, $errno, $errstr, $timeout);
-		
+		//$this->sock = pfsockopen($host, $port, $errno, $errstr, $timeout);
+		$this->sock = socket_create(AF_INET, SOCK_STREAM, 0);
+		if (!socket_connect($this->sock, $host, $port)){
+			$this->throw_socket_exception("Connection to ($address) failed");
+		} 
 		log_debug("Connected to ($this->server_address)"); 
 	}  
 	
@@ -322,8 +321,8 @@ class MessageClient{
 		$write_count = 0;
 		$total_count = strlen($buf);
 		while(true){
-			//$n = socket_write($this->sock, $sending_buf, strlen($sending_buf));
-			$n = fwrite($this->sock, $sending_buf, strlen($sending_buf));
+			$n = socket_write($this->sock, $sending_buf, strlen($sending_buf));
+			//$n = fwrite($this->sock, $sending_buf, strlen($sending_buf));
 			if($n === false) {
 				$this->throw_socket_exception("Socket write error");
 			}
@@ -348,8 +347,8 @@ class MessageClient{
 			}
 			
 			$buf_len = 4096;
-			//$buf = socket_read($this->sock, $buf_len);  
-			$buf = fread($this->sock, $buf_len);  
+			$buf = socket_read($this->sock, $buf_len);  
+			//$buf = fread($this->sock, $buf_len);  
 			if($buf === false || $buf == ''){
 				$this->throw_socket_exception("Socket read error");
 			}
@@ -380,9 +379,23 @@ class MessageClient{
 				return $msg;
 			}   
 		} 
-	}
+	} 
 }
 
+function build_msg($cmd, $topic_or_msg, $group=null){
+	if(is_string($topic_or_msg)){
+		$msg = new Message();
+		$msg->topic = $topic_or_msg;
+	} else if(is_object($topic_or_msg) && get_class($topic_or_msg) == Message::class){
+		$msg = $topic_or_msg;
+	} else {
+		throw new Exception("invalid topic_or_msg:$topic_or_msg");
+	}
+	
+	$msg->consume_group = $group; 
+	$msg->cmd = $cmd;
+	return $msg;
+}
 
 class MqClient extends MessageClient{
 	public $token;
@@ -392,19 +405,8 @@ class MqClient extends MessageClient{
 	}
 	
 	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3){ 
-		if(is_string($topic_or_msg)){ 
-			$msg = new Message();
-			$msg->topic = $topic_or_msg; 
-		} else if(is_object($topic_or_msg) && get_class($topic_or_msg) == Message::class){ 
-			$msg = $topic_or_msg;
-		} else {
-			throw new Exception("invalid topic_or_msg:$topic_or_msg");
-		}
-		
-		$msg->consume_group = $group;
-		$msg->token = $this->token;
-		$msg->cmd = $cmd;
-		
+		$msg = build_msg($cmd, $topic_or_msg, $group);
+		$msg->token = $this->token;  
 		return $this->invoke($msg, $timeout);
 	}
 	
@@ -533,7 +535,7 @@ class BrokerRouteTable {
 
 class Broker { 
 	public $route_table;
-	private $pool_table;
+	private $pool_table = array();
 	private $ssl_cert_file_table = array();
 	
 	public function __construct($tracker_address_list=null){ 
@@ -563,21 +565,34 @@ class Broker {
 	
 	public function select($selector, $msg){
 		$address_list = $selector($this->route_table, $msg);
+		if(!is_array($address_list)){
+			$address_list = array($address_list);
+		}
+		
 		$client_array = array();
 		foreach($address_list as $address){
 			$client = @$this->pool_table[(string)$address];
 			if($client == null){
 				$client = new MqClient($address, @$this->ssl_cert_file_table[$address->address]); //TODO SSL
+				$this->pool_table[(string)$address] = $client;
 			}
 			array_push($client_array, $client);
 		} 
 		return $client_array;
 	} 
+	
+	public function close(){
+		foreach($this->pool_table as $key=>$client){
+			$client->close();
+		}
+		$this->pool_table = array();
+	}
 }
 
 class MqAdmin {
 	protected $broker; 
 	protected $admin_selector;
+	protected $token;
 	public function __construct($broker){
 		$this->broker = $broker;
 		$this->admin_selector = function($route_table, $msg){
@@ -591,24 +606,104 @@ class MqAdmin {
 		};
 	} 
 	
-	public function query($topic_or_msg, $group=null, $timeout=3){ 
+	private function invoke_cmd($cmd, $topic_or_msg, $group=null, $timeout=3, $selector=null){ 
+		$msg = build_msg($cmd, $topic_or_msg, $group);
+		if($msg->token == null) $msg->token = $this->token;
 		
+		if($selector == null) $selector = $this->admin_selector;
+		$client_array = $this->broker->select($selector, $msg);
+		$res = array();
+		foreach ($client_array as $client){
+			try {
+				$msg_res = $client->invoke($msg, $timeout); 
+				array_push($res, $msg_res);
+			} catch (Exception $e) {
+				array_push($res, $e);
+			}
+		}
+		return  $res;
+	}
+	private function invoke_object($cmd, $topic_or_msg, $group=null, $timeout=3, $selector=null){ 
+		$cmd_res = $this->invoke_cmd($cmd, $topic_or_msg, $group, $timeout, $selector);
+		$res = array();
+		foreach($cmd_res as $msg){
+			if($msg->status != 200){
+				$e = new Exception($msg->body);
+				array_push($res, $e);
+				continue;
+			} 
+			array_push($res, json_decode($msg->body));
+		}
+		return $res;
 	}
 	
-	public function declare_($topic_or_msg, $group=null, $timeout=3){ 
+	public function query($topic_or_msg, $group=null, $timeout=3, $selector=null){  
+		return $this->invoke_object(Protocol::QUERY, $topic_or_msg, $group, $timeout, $selector);
 	}
 	
-	public function remove($topic_or_msg, $group=null, $timeout=3){ 
+	public function declare_($topic_or_msg, $group=null, $timeout=3, $selector=null){ 
+		return $this->invoke_object(Protocol::DECLARE_, $topic_or_msg, $group, $timeout, $selector);
 	}
 	
-	public function empty_($topic_or_msg, $group=null, $timeout=3){ 
+	public function remove($topic_or_msg, $group=null, $timeout=3, $selector=null){ 
+		return $this->invoke_cmd(Protocol::REMOVE, $topic_or_msg, $group, $timeout, $selector);
+	}
+	
+	public function empty_($topic_or_msg, $group=null, $timeout=3, $selector=null){ 
+		return $this->invoke_cmd(Protocol::EMPTY_, $topic_or_msg, $group, $timeout, $selector);
 	}  
 }
 
 class Producer extends  MqAdmin{
+	protected $produce_selector;
+	
 	public function __construct($broker){
 		parent::__construct($broker);
+		
+		$this->produce_selector= function($route_table, $msg){
+			if($msg->topic == null){
+				throw new Exception("Missing topic");
+			}
+			if(count($route_table->server_table) < 1) {
+				return array();
+			}
+			$topic_table = $route_table->topic_table;
+			$server_list = @$topic_table[$msg->topic];
+			if($server_list == null || count($server_list) < 1){
+				return array();
+			}
+			$target = null;
+			foreach($server_list as $topic_info){
+				if($target == null){
+					$target = $topic_info;
+					continue;
+				}
+				if($target['consumerCount']<$topic_info['consumerCount']){
+					$target = $topic_info;
+				}
+			}
+			$res = array();
+			array_push($res, new ServerAddress($target['serverAddress']));
+			return $res;
+		};
 	}
+	
+	public function produce($msg, $timeout=3, $selector=null){
+		if($selector == null) $selector = $this->produce_selector;
+		
+		$msg->cmd = Protocol::PRODUCE;
+		if($msg->token == null) $msg->token = $this->token;
+		
+		$client_array = $this->broker->select($selector, $msg);
+		if(count($client_array) < 1){
+			throw new Exception("Missing MqServer for $msg");
+		}
+		
+		$client = $client_array[0];
+		
+		return $client->invoke($msg, $timeout); 
+	}
+	
 }
 
 class Consumer extends  MqAdmin{
@@ -619,6 +714,7 @@ class Consumer extends  MqAdmin{
 
 class RpcInvoker{
 	public function __construct($broker){ 
+		
 	}
 }
 

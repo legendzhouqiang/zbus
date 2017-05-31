@@ -1,12 +1,15 @@
 <?php 
 include '../zbus.php';
-$client = new MqClient("localhost:15555");
+$broker = new Broker("localhost:15555");
 
-for($i=0;$i<20;$i++){
-	
-	$res = $client->query("MyTopic");
-	  
-	echo $res->topicName;
-} 
+$admin = new MqAdmin($broker);
+
+$res = $admin->query("MyTopic");
+
+foreach($res as $topic_info){
+	echo json_encode($topic_info) . "\n";
+}
+
+$broker->close();
 
 ?> 
