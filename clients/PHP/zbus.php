@@ -453,6 +453,15 @@ class MqClient extends MessageClient{
 	public function empty_($topic_or_msg, $group=null, $timeout=3){
 		return $this->invoke_object(Protocol::EMPTY_, $topic_or_msg, $group, $timeout);
 	}  
+	
+	public function route($msg, $timeout=3){
+		$msg->cmd = Protocol::ROUTE;
+		if($msg->status != null){
+			$msg->set_header(Protocol::ORIGIN_STATUS, $msg->status);
+			$msg->status = null;
+		}
+		return $this->send($msg, $group, $timeout);
+	}  
 }
 
  
@@ -845,9 +854,47 @@ class RpcInvoker {
 	} 
 }
 
-class RpcProcessor{
-	public function __construct(){
+class RpcProcessor {
+	private $methods = array(); 
+	
+	public function add_module($service, $moudle=null){
+		if(is_string($service)){
+			$service = new $service();
+		}
+		$service_class = get_class($service);
+		$class = new ReflectionClass($service_class);
+		$methods = $class->getMethods(ReflectionMethod::IS_PUBLIC & ~ReflectionMethod::IS_STATIC);
 		
+	}
+	
+	private function process($request){
+		return new Response();
+	}
+	
+	
+	public function message_handler($msg, $client){
+		$msg_res = new Message();
+		$msg_res->recver = $msg->sender;
+		$msg_res->id = $msg->id;
+		$msg_res->status = 200;
+		
+		$response = new Response();
+		try{
+			$json = json_decode($msg->body, true);
+			$request = new Request();
+			$request->method = @$json['method'];
+			$request->params = @$json['params'];
+			$request->module = @$json['module'];
+			
+			$response = $this->process($request); 
+			
+		} catch (Exception $e){
+			$response->error = $e;
+		}
+		$json_res = json_encode($response);
+		$msg_res->set_json_body($json_res);
+		
+		$client->route($msg_res);
 	}
 } 
 
