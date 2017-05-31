@@ -155,7 +155,7 @@ class Message {
 	}
 	
 	public function set_header($name, $value){
-		if($value == null) return;
+		if($value === null) return;
 		unset($this->headers[$name]);
 	}
 	
@@ -165,7 +165,7 @@ class Message {
 	}
 	
 	public function __set($name, $value){
-		if($value == null) return;
+		if($value === null) return;
 		$this->headers[$name] = $value;
 	}
 	
@@ -712,10 +712,96 @@ class Consumer extends  MqAdmin{
 	}
 }
 
-class RpcInvoker{
-	public function __construct($broker){ 
-		
+
+
+
+
+class Request{
+	public $method;
+	public $params;
+	public $module;
+	
+	public function __construct($method=null, $params=null, $module=null){
+		$this->method = $method;
+		$this->params = $params;
+		$this->module = $module;
 	}
+}
+class Response{
+	public $result;
+	public $error;
+	
+	public function __construct($result=null, $error=null){
+		$this->result = $result;
+		$this->error = $error;
+	}
+	
+	public function __toString(){
+		return json_encode($this);
+	}
+}
+
+class RpcException extends Exception { 
+	public function __construct($message, $code = 0, Exception $previous = null) { 
+		parent::__construct($message, $code, $previous);
+	}
+	 
+	public function __toString() {
+		return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+	} 
+}
+
+class RpcInvoker {
+	public $producer;
+	public $token;
+	
+	public $topic;
+	public $module;
+	public $rpc_selector;
+	
+	public function __construct($broker, $topic){ 
+		$this->producer = new Producer($broker);
+		$this->topic = $topic;
+	} 
+	
+	public function __call($method, $args){
+		$request = new Request($method, $args);
+		$request->module = $this->module;
+		
+		$response = $this->invoke($request, 3, $this->rpc_selector);
+		
+		if($response->error != null){
+			if(is_object($response) && is_a($response, Exception::class)){
+				throw  $response->error;
+			}
+			throw new RpcException((string)$response->error);
+		}
+		return  $response->result;
+	}
+	
+	public function invoke($request, $timeout=3, $selector=null){
+		if($selector == null) $selector = $this->rpc_selector; 
+		
+		$msg = new Message();
+		$msg->topic = $this->topic;
+		$msg->token = $this->token; 
+		$msg->ack = 0;
+		
+		$rpc_body = json_encode($request);
+		$msg->set_json_body($rpc_body);
+		
+		$msg_res = $this->producer->produce($msg, $timeout, $selector);
+		if($msg_res->status != 200){
+			throw new RpcException($msg_res->body);
+		} 
+		
+		$arr = json_decode($msg_res->body, true);
+		$res = new Response();
+		$res->error = @$arr['error'];
+		$res->result = @$arr['result'];
+		
+		return $res;
+	} 
 }
 
 class RpcProcessor{

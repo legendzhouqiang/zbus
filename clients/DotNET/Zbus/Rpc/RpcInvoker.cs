@@ -60,6 +60,11 @@ namespace Zbus.Rpc
             Message msgRes = await InvokeAsync(msgReq, token, GetSelector(selector));
 
             string bodyString = msgRes.BodyString;
+            if(msgRes.Status != 200)
+            {
+                throw new RpcException(bodyString);
+            }
+
             Response resp = null;
             try
             {
