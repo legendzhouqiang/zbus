@@ -707,12 +707,53 @@ class Producer extends  MqAdmin{
 }
 
 class Consumer extends  MqAdmin{
-	public function __construct($broker){
+	public $message_handler;
+	public $topic;
+	public $consume_group = array();
+	
+	public $consume_selector;
+	public function __construct($broker, $topic){
 		parent::__construct($broker);
+		$this->topic = $topic;
+		
+		$this->$consume_selector= function($route_table, $msg){
+			$server_table = $route_table->server_table;
+			$address_array = array();
+			foreach($server_table as $key => $server_info){
+				$server_address = new ServerAddress($server_info['serverAddress']);
+				array_push($address_array, $server_address);
+			}
+			return $address_array;
+		};
+	} 
+	
+	public function start(){ 
+		$msg = new Message();
+		$msg->topic = $this->topic;
+		$msg->token = $this->token;
+		foreach($this->consume_group as $key=>$value){
+			$msg->set_header($key, $value);
+		}
+		
+		$client_array = $this->broker->select($this->$consume_selector, $msg);
+		//TODO: select on socket to handle multiple socket
+		if(count($client_array)<1) return ;
+		
+		$client = $client_array[0];
+		$func = $this->message_handler;
+		while(true){
+			$res = $client->consume($msg);
+			
+			if($func != null){
+				try{
+					$func($res, $client);
+				}catch (Exception $e){
+					log_error($e);
+				}
+			}
+		}  
 	}
-}
-
-
+} 
 
 
 

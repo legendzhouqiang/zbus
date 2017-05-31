@@ -1,5 +1,5 @@
 <?php 
-include '../zbus.php';
+require_once'../zbus.php';
 $client = new MqClient("localhost:15555");
 
 $msg = new Message();

@@ -1,6 +1,6 @@
 <?php  
 
-include '../zbus.php';
+require_once'../zbus.php';
 
 $broker = new Broker("localhost:15555");  
 

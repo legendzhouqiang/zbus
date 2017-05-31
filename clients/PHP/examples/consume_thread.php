@@ -1,5 +1,5 @@
 <?php   
-include '../zbus.php';
+require_once'../zbus.php';
  
 $timeout = 3;
 $client = new MqClient("localhost:15555");

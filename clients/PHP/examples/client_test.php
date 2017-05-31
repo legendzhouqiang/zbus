@@ -1,5 +1,5 @@
 <?php
-include('../zbus.php');
+require_once '../zbus.php';
 
 $sock = socket_create(AF_INET, SOCK_STREAM, 0);
 
