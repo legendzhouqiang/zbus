@@ -460,7 +460,7 @@ class MqClient extends MessageClient{
 			$msg->set_header(Protocol::ORIGIN_STATUS, $msg->status);
 			$msg->status = null;
 		}
-		return $this->send($msg, $group, $timeout);
+		return $this->send($msg, $timeout);
 	}  
 }
 
@@ -725,7 +725,7 @@ class Consumer extends  MqAdmin{
 		parent::__construct($broker);
 		$this->topic = $topic;
 		
-		$this->$consume_selector= function($route_table, $msg){
+		$this->consume_selector= function($route_table, $msg){
 			$server_table = $route_table->server_table;
 			$address_array = array();
 			foreach($server_table as $key => $server_info){
@@ -744,7 +744,7 @@ class Consumer extends  MqAdmin{
 			$msg->set_header($key, $value);
 		}
 		
-		$client_array = $this->broker->select($this->$consume_selector, $msg);
+		$client_array = $this->broker->select($this->consume_selector, $msg);
 		//TODO: select on socket to handle multiple socket
 		if(count($client_array)<1) return ;
 		
@@ -857,18 +857,40 @@ class RpcInvoker {
 class RpcProcessor {
 	private $methods = array(); 
 	
-	public function add_module($service, $moudle=null){
+	public function add_module($service, $module=null){
 		if(is_string($service)){
 			$service = new $service();
 		}
 		$service_class = get_class($service);
 		$class = new ReflectionClass($service_class);
 		$methods = $class->getMethods(ReflectionMethod::IS_PUBLIC & ~ReflectionMethod::IS_STATIC);
-		
+		foreach($methods as $method){ 
+			$key = $this->gen_key($module, $method->name);
+			$this->methods[$key] = array($method, $service); 
+		} 
+	}
+	
+	private function gen_key($module, $method_name){
+		return "$module:$method_name";
 	}
 	
 	private function process($request){
-		return new Response();
+		$key = $this->gen_key($request->module, $request->method);
+		$m = @$this->methods[$key];
+		if($m == null){
+			throw new ErrorException("Missing method $key");
+		}
+		$args = $request->params;
+		if($args === null){
+			$args = array();
+		}
+		$response = new Response();
+		try{
+			$response->result = $m[0]->invokeArgs($m[1], $args); 
+		} catch (Exception $e){
+			$response->error = $e;
+		}
+		return $response; 
 	}
 	
 	

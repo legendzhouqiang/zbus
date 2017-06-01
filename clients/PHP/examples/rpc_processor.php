@@ -2,9 +2,10 @@
 require_once '../zbus.php';
  
 
-class MyService{
+class MyService{  
+	
 	public function getString($msg){
-		return msg;
+		return $msg . ", From PHP";
 	}
 	
 	public function testEncoding() {
@@ -16,7 +17,7 @@ class MyService{
 	}
 	
 	public function plus($a, $b) {
-		return a + b;
+		return $a + $b;
 	}  
 } 
  
@@ -25,10 +26,10 @@ $service = new MyService();
 $processor = new RpcProcessor();
 $processor->add_module($service);
 
-
+ 
 $broker = new Broker("localhost:15555"); 
 $c = new Consumer($broker, "MyRpc"); 
-$c->message_handler = $processor->message_handler;
+$c->message_handler = array($processor, 'message_handler');
 
 $c->start();
 
