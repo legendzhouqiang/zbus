@@ -257,10 +257,12 @@ class Message {
 }  
 
 
-class MessageClient{
+class MessageClient{ 
+	public $sock;
+	
 	private $server_address; 
 	private $ssl_cert_file;
-	private $sock;
+	
 	private $recv_buf;
 	private $result_table = array();
 	
@@ -857,7 +859,7 @@ class RpcInvoker {
 class RpcProcessor {
 	private $methods = array(); 
 	
-	public function add_module($service, $module=null){
+	public function add_module($service, $module=null){ 
 		if(is_string($service)){
 			$service = new $service();
 		}
