@@ -6,19 +6,17 @@
 
 struct producer{
 	rclient_t* client;
-	char* mq; 
-	int   mode;
+	char* mq;  
 };
 
-producer_t* producer_new(rclient_t* client, char* mq, int mode){
+producer_t* producer_new(rclient_t* client, char* mq){
 	producer_t* self;
 	assert(client);
 	assert(mq);
 	self = (producer_t*)malloc(sizeof(*self));
 	memset(self, 0, sizeof(*self));
 	self->client = client;
-	self->mq = strdup(mq); 
-	self->mode = mode;
+	self->mq = strdup(mq);  
 	return self;
 }
 
@@ -38,7 +36,7 @@ int producer_send(producer_t* self, msg_t* msg, msg_t** result_p, int timeout){
 	assert(self);
 	assert(msg);
 	msg_set_cmd(msg, PRODUCE);
-	msg_set_mq(msg, self->mq);  
+	msg_set_topic(msg, self->mq);  
 
 	return rclient_invoke(self->client, msg, result_p, timeout);
 }
@@ -46,22 +44,19 @@ int producer_send(producer_t* self, msg_t* msg, msg_t** result_p, int timeout){
 
 struct consumer{
 	rclient_t* client;
-	char* mq; 
-	int   mode;
-	char* topic;
+	char* mq;   
 	int   auto_register;
 	int   reconnect_millis;
 };
 
-consumer_t* consumer_new(rclient_t* client, char* mq, int msg_mode){
+consumer_t* consumer_new(rclient_t* client, char* mq){
 	consumer_t* self;
 	assert(client);
 	assert(mq);
 	self = (consumer_t*)malloc(sizeof(*self));
 	memset(self, 0, sizeof(*self));
 	self->client = client;
-	self->mq = strdup(mq); 
-	self->mode = msg_mode;
+	self->mq = strdup(mq);  
 	self->auto_register = 1;
 	self->reconnect_millis = 3000; //3s
 	return self;
@@ -77,22 +72,14 @@ void consumer_destroy(consumer_t** self_p){
 	free(self);
 	*self_p = NULL;
 }
- 
-void consumer_set_topic(consumer_t* self, char* value){
-	assert(self);
-	if(self->topic){
-		free(self->topic);
-	}
-	self->topic = strdup(value);
-}
+  
 
 static int consumer_createmq(consumer_t* self, int timeout){
 	int rc;
 	char mode[64];
 	msg_t* res = NULL;
 
-	msg_t* msg = msg_new();  
-	sprintf(mode, "%d", self->mode);
+	msg_t* msg = msg_new();   
 	msg_set_cmd(msg, CREATE_MQ);  
 	msg_set_head(msg, "mq_name", self->mq); 
 	msg_set_head(msg, "mq_mode", mode);
@@ -114,20 +101,15 @@ int consumer_recv(consumer_t* self, msg_t** result_p, int timeout){
 	assert(self); 
 	msg = msg_new();
 	msg_set_cmd(msg, CONSUME);
-	msg_set_mq(msg, self->mq); 
-	if(self->mode & MODE_PUBSUB){
-		if(self->topic){
-			msg_set_topic(msg, self->topic);
-		}
-	}
+	msg_set_topic(msg, self->mq);  
 
 	rc = rclient_invoke(self->client, msg, result_p, timeout);
 	
-	if(rc == ERR_NET_RECV_FAILED){ //超时
+	if(rc == ERR_NET_RECV_FAILED){  
 		return rc;
 	}
 	
-	if(rc < 0){ //重新连接
+	if(rc < 0){ 
 		consumer_fail_over(self);
 		return consumer_recv(self, result_p, timeout);
 	}
@@ -139,7 +121,7 @@ int consumer_recv(consumer_t* self, msg_t** result_p, int timeout){
 		return consumer_recv(self, result_p, timeout);
 	}  
 	msg_set_id(msg, msg_get_rawid(msg));
-	msg_remove_head(msg, HEADER_RAWID);
+	msg_remove_head(msg, HEADER_ORIGIN_ID);
 	return rc; 
 }
 
@@ -202,7 +184,7 @@ int caller_invoke(caller_t* self, msg_t* request, msg_t** result_p, int timeout)
 	assert(self);
 	assert(request);
 	msg_set_cmd(request, PRODUCE);
-	msg_set_mq(request, self->mq); 
+	msg_set_topic(request, self->mq); 
 	msg_set_ack(request, 0);
 	msg_set_encoding(request, self->encoding);
 
@@ -343,7 +325,7 @@ void* do_rpc_work(void* args){
 	client = rclient_new(cfg->broker);
 	rclient_reconnect(client, cfg->reconnect_interval);
 	
-	consumer = consumer_new(client, cfg->mq, MODE_MQ); 
+	consumer = consumer_new(client, cfg->mq); 
 	
 	
 	while(1){

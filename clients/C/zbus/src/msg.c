@@ -360,10 +360,10 @@ void msg_set_id(msg_t* self, char* value){
 	msg_set_head(self, HEADER_ID, value);
 }
 char* msg_get_rawid(msg_t* self){
-	return msg_get_head(self, HEADER_RAWID);
+	return msg_get_head(self, HEADER_ORIGIN_ID);
 }
 void msg_set_rawid(msg_t* self, char* value){
-	msg_set_head(self, HEADER_RAWID, value);
+	msg_set_head(self, HEADER_ORIGIN_ID, value);
 }
 bool msg_is_ack(msg_t* self){
 	char* ack = msg_get_head(self, HEADER_ACK);
@@ -380,18 +380,12 @@ void msg_set_ack(msg_t* self, bool value){
 	}
 	msg_set_head(self, HEADER_ACK, str);
 }
-char* msg_get_mq(msg_t* self){
-	return msg_get_head(self, HEADER_MQ);
-}
-void msg_set_mq(msg_t* self, char* value){
-	msg_set_head(self, HEADER_MQ, value);
-}
 char* msg_get_topic(msg_t* self){
 	return msg_get_head(self, HEADER_TOPIC);
 }
 void msg_set_topic(msg_t* self, char* value){
 	msg_set_head(self, HEADER_TOPIC, value);
-}
+} 
 char* msg_get_encoding(msg_t* self){
 	return msg_get_head(self, HEADER_ENCODING);
 }
@@ -411,14 +405,7 @@ char* msg_get_cmd(msg_t* self){
 }
 void msg_set_cmd(msg_t* self, char* value){
 	msg_set_head(self, HEADER_CMD, value);
-}
-
-char* msg_get_subcmd(msg_t* self){
-	return msg_get_head(self, HEADER_SUB_CMD);
-}
-void msg_set_subcmd(msg_t* self, char* value){
-	msg_set_head(self, HEADER_SUB_CMD, value);
-}
+} 
 
 char* msg_get_status(msg_t* self){
 	return self->meta->status;

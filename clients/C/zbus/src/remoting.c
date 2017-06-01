@@ -320,7 +320,7 @@ int test_remoting(int argc, char* argv[]){
 	for(i=0;i<100000;i++){
 		msg = msg_new();
 		msg_set_cmd(msg, "produce");
-		msg_set_mq(msg, "MyMQ");
+		msg_set_topic(msg, "MyMQ");
 		msg_set_bodyfmt(msg, "hello world %lld", current_millis());
 
 		rc = rclient_send(client, msg);

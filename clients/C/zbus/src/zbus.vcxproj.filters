@@ -77,9 +77,6 @@
     <ClInclude Include="..\..\zbox\include\json.h">
       <Filter>Header Files\zbox</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\zbox\include\json.hpp">
-      <Filter>Header Files\zbox</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\zbox\include\list.h">
       <Filter>Header Files\zbox</Filter>
     </ClInclude>

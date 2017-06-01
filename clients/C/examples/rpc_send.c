@@ -2,7 +2,7 @@
 
 int main_jsonrpc_send(int argc, char* argv[]){
 	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
-	producer_t* p = producer_new(client, "MyJsonRpc", MODE_MQ);
+	producer_t* p = producer_new(client, "MyJsonRpc");
 	msg_t* msg, *res = NULL;
 	int rc,i;
 	

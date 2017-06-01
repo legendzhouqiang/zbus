@@ -3,7 +3,7 @@
 
 int main_rpc_recv(int argc, char* argv[]){
 	rclient_t* client = rclient_connect("127.0.0.1:15555", 10000);
-	consumer_t* consumer = consumer_new(client, "MyRpc", MODE_MQ);
+	consumer_t* consumer = consumer_new(client, "MyRpc");
 	msg_t*res = NULL;
 	int rc,i=0;
 	while(1){
