@@ -1,39 +1,26 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zbus", "zbus\src\zbus.vcxproj", "{9CE3A4B4-C640-49FC-B261-95988E3E8213}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "examples", "examples\examples.vcxproj", "{769D58A6-0897-483E-87FB-51A76C015047}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213} = {9CE3A4B4-C640-49FC-B261-95988E3E8213}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zbus", "zbus\zbus.vcxproj", "{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
-		Release|Win32 = Release|Win32
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Debug|Win32.ActiveCfg = Debug|Win32
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Debug|Win32.Build.0 = Debug|Win32
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Debug|x64.ActiveCfg = Debug|x64
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Debug|x64.Build.0 = Debug|x64
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Release|Win32.ActiveCfg = Release|x64
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Release|Win32.Build.0 = Release|x64
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Release|x64.ActiveCfg = Release|x64
-		{9CE3A4B4-C640-49FC-B261-95988E3E8213}.Release|x64.Build.0 = Release|x64
-		{769D58A6-0897-483E-87FB-51A76C015047}.Debug|Win32.ActiveCfg = Debug|Win32
-		{769D58A6-0897-483E-87FB-51A76C015047}.Debug|Win32.Build.0 = Debug|Win32
-		{769D58A6-0897-483E-87FB-51A76C015047}.Debug|x64.ActiveCfg = Debug|x64
-		{769D58A6-0897-483E-87FB-51A76C015047}.Debug|x64.Build.0 = Debug|x64
-		{769D58A6-0897-483E-87FB-51A76C015047}.Release|Win32.ActiveCfg = Release|Win32
-		{769D58A6-0897-483E-87FB-51A76C015047}.Release|Win32.Build.0 = Release|Win32
-		{769D58A6-0897-483E-87FB-51A76C015047}.Release|x64.ActiveCfg = Release|Win32
-		{769D58A6-0897-483E-87FB-51A76C015047}.Release|x64.Build.0 = Release|Win32
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Debug|x64.ActiveCfg = Debug|x64
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Debug|x64.Build.0 = Debug|x64
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Debug|x86.ActiveCfg = Debug|Win32
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Debug|x86.Build.0 = Debug|Win32
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Release|x64.ActiveCfg = Release|x64
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Release|x64.Build.0 = Release|x64
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Release|x86.ActiveCfg = Release|Win32
+		{8A23B9DC-EA31-4ADA-A688-962A1D760CA4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
