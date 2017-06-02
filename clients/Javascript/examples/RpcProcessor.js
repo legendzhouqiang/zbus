@@ -42,7 +42,7 @@ rpc.addModule(new MyService()); //object example
 //start Consumer with rpc.onMessage handling
 var broker = new Broker("localhost:15555");
 
-var c = new Consumer(broker, "myrpc");
+var c = new Consumer(broker, "MyRpc");
 c.connectionCount = 1;
 c.messageHandler = rpc.messageHandler;
 c.start(); 

@@ -6,7 +6,7 @@
 
 var broker = new Broker("localhost:15555");
 
-var rpc = new RpcInvoker(broker, "myrpc");
+var rpc = new RpcInvoker(broker, "MyRpc");
 
 
 broker.ready(function () {   

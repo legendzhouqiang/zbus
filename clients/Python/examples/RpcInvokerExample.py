@@ -13,7 +13,7 @@ print(res)
 res = rpc.plus(1,22)
 print(res)
 
-res = rpc.echo('hong')
+res = rpc.getString('hong')
 print(res)
  
 broker.close()
