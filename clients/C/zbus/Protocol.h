@@ -25,7 +25,7 @@ public:
 	static const string TRACKER;
 	static const string SERVER;
 
-	static const string COMMAND;
+	static const string CMD;
 	static const string TOPIC;
 	static const string TOPIC_MASK;
 	static const string TAG;

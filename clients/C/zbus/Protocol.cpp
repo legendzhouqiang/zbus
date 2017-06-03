@@ -22,7 +22,7 @@ const string Protocol::SERVER = "server";
  
 
 //=============================[2] Parameter Values================================================
-const string Protocol::COMMAND = "cmd";
+const string Protocol::CMD = "cmd";
 const string Protocol::TOPIC = "topic";
 const string Protocol::TOPIC_MASK = "topic_mask";
 const string Protocol::TAG = "tag";

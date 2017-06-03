@@ -296,8 +296,7 @@ MessageClient::~MessageClient() {
 int MessageClient::connect() {
 	string address = this->serverAddress.address;
 	size_t pos = address.find(':');
-	int port = 80;
-	int count = pos;
+	int port = 80; 
 	char* host = (char*)address.substr(0, pos).c_str();
 	if (pos != -1) {
 		port = atoi(address.substr(pos + 1).c_str());
