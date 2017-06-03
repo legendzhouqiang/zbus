@@ -1,11 +1,7 @@
-#ifndef __ZBUS_PLATFORM_H__
-#define __ZBUS_PLATFORM_H__ 
+#ifndef __ZBOX_PLATFORM_H__
+#define __ZBOX_PLATFORM_H__  
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
- 
 #if (defined (__64BIT__) || defined (__x86_64__))
 #    define __IS_64BIT__                //  May have 64-bit OS/compiler
 #else
@@ -105,7 +101,7 @@ extern "C" {
 #   define __UTYPE_LINUX
 #   define __UNIX__
 #   ifndef __NO_CTYPE
-#   define __NO_CTYPE                   //  Suppress warnings on tolower()
+#   define __NO_CTYPE     //  Suppress warnings on tolower()
 #   endif
 #elif (defined (Mips))
 #   define __UTYPE_MIPS
@@ -147,221 +143,25 @@ extern "C" {
 #   define __UTYPE_GENERIC
 #endif
 
-//- Standard ANSI include files ---------------------------------------------
 
-#include <ctype.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <time.h>
-#include <errno.h>
-#include <float.h>
-#include <math.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <assert.h>
 
-//- System-specific include files -------------------------------------------
-#if defined _WIN32
+#if defined (__WINDOWS__) 
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #endif
 
-#if (defined (__MSDOS__))
-#   if (defined (__WINDOWS__))
-#       if (!defined (FD_SETSIZE))
-#           define FD_SETSIZE 1024      //  Max. filehandles/sockets
-#       endif
-#       include <direct.h>
-#       include <windows.h>
-#       include <winsock.h>
-#       include <process.h>
-#		include <signal.h>
-#   endif
-#   include <malloc.h>
-#   include <dos.h>
-#   include <io.h>
-#   include <fcntl.h>
-#   include <sys/types.h>
-#   include <sys/stat.h>
-#   include <sys/utime.h>
-#   include <share.h>
-#   if _MSC_VER == 1500
-#       ifndef _CRT_SECURE_NO_DEPRECATE
-#           define _CRT_SECURE_NO_DEPRECATE   1
-#       endif
-#       pragma warning(disable: 4996)
-#   endif
-#endif
-
-#if (defined (__UNIX__))
-#   include <fcntl.h>
-#   include <netdb.h>
-#   include <unistd.h>
-#   include <pthread.h>
-#   include <dirent.h>
-#   include <pwd.h>
-#   include <grp.h>
-#   include <utime.h>
-#   include <syslog.h>
-#   include <inttypes.h>
-#   include <sys/types.h>
-#   include <sys/param.h>
-#   include <sys/socket.h>
-#   include <sys/time.h>
-#   include <sys/stat.h>
-#   include <sys/ioctl.h>
-#   include <sys/file.h>
-#   include <sys/wait.h>
-#   include <netinet/in.h>              //  Must come before arpa/inet.h
-#   if (!defined (__UTYPE_ANDROID)) && (!defined (__UTYPE_IBMAIX)) && (!defined (__UTYPE_HPUX)) && (!defined (__UTYPE_SUNOS))
-#       include <ifaddrs.h>
-#   endif
-#   if (!defined (__UTYPE_BEOS))
-#       include <arpa/inet.h>
-#       if (!defined (TCP_NODELAY))
-#           include <netinet/tcp.h>
-#       endif
-#   endif
-#   if (defined (__UTYPE_IBMAIX) || defined(__UTYPE_QNX))
-#       include <sys/select.h>
-#   endif
-#   if (defined (__UTYPE_BEOS))
-#       include <NetKit.h>
-#   endif
-#   if ((defined (_XOPEN_REALTIME) && (_XOPEN_REALTIME >= 1)) || \
-        (defined (_POSIX_VERSION)  && (_POSIX_VERSION  >= 199309L)))
-#       include <sched.h>
-#   endif
-#   if (defined (__UTYPE_OSX))
-#       include <crt_externs.h>         /* For _NSGetEnviron()               */
-#   endif
-#endif
-
-#if (defined (__VMS__))
-#   if (!defined (vaxc))
-#       include <fcntl.h>               //  Not provided by Vax C
-#   endif
-#   include <netdb.h>
-#   include <unistd.h>
-#   include <pthread.h>
-#   include <unixio.h>
-#   include <unixlib.h>
-#   include <types.h>
-#   include <file.h>
-#   include <socket.h>
-#   include <dirent.h>
-#   include <time.h>
-#   include <pwd.h>
-#   include <stat.h>
-#   include <in.h>
-#   include <inet.h>
-#endif
-
-#if (defined (__OS2__))
-#   include <sys/types.h>               //  Required near top
-#   include <fcntl.h>
-#   include <malloc.h>
-#   include <netdb.h>
-#   include <unistd.h>
-#   include <pthread.h>
-#   include <dirent.h>
-#   include <pwd.h>
-#   include <grp.h>
-#   include <io.h>
-#   include <process.h>
-#   include <sys/param.h>
-#   include <sys/socket.h>
-#   include <sys/select.h>
-#   include <sys/time.h>
-#   include <sys/stat.h>
-#   include <sys/ioctl.h>
-#   include <sys/file.h>
-#   include <sys/wait.h>
-#   include <netinet/in.h>              //  Must come before arpa/inet.h
-#   include <arpa/inet.h>
-#   include <utime.h>
-#   if (!defined (TCP_NODELAY))
-#       include <netinet/tcp.h>
-#   endif
-#endif
- 
-
-//- Check compiler data type sizes ------------------------------------------
-
-#if (UCHAR_MAX != 0xFF)
-#   error "Cannot compile: must change definition of 'byte'."
-#endif
-#if (USHRT_MAX != 0xFFFFU)
-#    error "Cannot compile: must change definition of 'dbyte'."
-#endif
-#if (UINT_MAX != 0xFFFFFFFFU)
-#    error "Cannot compile: must change definition of 'qbyte'."
-#endif
-
-//- Data types --------------------------------------------------------------
-typedef unsigned char   byte;           //  Single unsigned byte = 8 bits
-typedef unsigned short  dbyte;          //  Double byte = 16 bits
-typedef unsigned int    qbyte;          //  Quad byte = 32 bits
-
-//boolean define
-#ifndef __cplusplus
-#ifndef true
-typedef char  bool;
-#define true  1
-#define false 0
-#endif
-#endif
-
-//- Inevitable macros -------------------------------------------------------
-
-#define streq(s1,s2)    (!strcmp ((s1), (s2)))
-#define strneq(s1,s2)   (strcmp ((s1), (s2)))
-#define tblsize(x)      (sizeof (x) / sizeof ((x) [0]))
-#define tbllast(x)      (x [tblsize (x) - 1])
-
-
-//- A number of POSIX and C99 keywords and data types -----------------------
-
-#if (defined (__WINDOWS__))
-#   define inline __inline
-#   define strtoull _strtoui64
-#   define srandom      srand
-#   define TIMEZONE     _timezone
-#   define snprintf     _snprintf
-#   define vsnprintf    _vsnprintf
-#   define strtok_r	    strtok_s
-    typedef unsigned long ulong;
-    typedef unsigned int  uint;
-    typedef __int32 int32_t;
-    typedef __int64 int64_t;
-    typedef unsigned __int32 uint32_t;
-    typedef unsigned __int64 uint64_t;
-
-#elif (defined (__APPLE__))
-    typedef unsigned long ulong;
-    typedef unsigned int  uint;
-#endif
 
 
 
-#if !defined(mode_t)
-	#define mode_t long
-#endif
- 
+
+
+
 #if defined (__WINDOWS__)     
-#   define ZBUS_EXPORT __declspec(dllexport) 
+#   define ZBUS_API __declspec(dllexport) 
 #else
-#   define ZBUS_EXPORT
+#   define ZBUS_API
 #endif
 
-
-#ifdef __cplusplus
-}
-#endif
-
+	 
 
 #endif

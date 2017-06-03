@@ -1,8 +1,10 @@
 #ifndef __ZBUS_PROTOCOL_H__
 #define __ZBUS_PROTOCOL_H__  
 
-
+ 
 #include <string>
+#include <map>
+#include <vector>
 using namespace std;
 
 class Protocol {
@@ -64,7 +66,12 @@ public:
 	string address;
 	bool sslEnabled;
 
-	ServerAddress(string address, bool sslEnabled = false) {
+	ServerAddress(char* address, bool sslEnabled = false) {
+		this->address = address;
+		this->sslEnabled = sslEnabled;
+	}
+
+	ServerAddress(string& address, bool sslEnabled = false) {
 		this->address = address;
 		this->sslEnabled = sslEnabled;
 	}
@@ -72,7 +79,61 @@ public:
 	ServerAddress(ServerAddress* serverAddress) {
 		this->address = serverAddress->address;
 		this->sslEnabled = serverAddress->sslEnabled;
-	} 
+	}  
 };
+
+
+class ErrorInfo {  //used only for batch operation indication
+public:
+	exception error;
+};
+
+class TrackItem : ErrorInfo {
+public:
+	ServerAddress serverAddress;
+	string serverVersion; 
+};
+
+class ConsumeGroupInfo : ErrorInfo {
+public:
+	string topicName;
+	string groupName;
+	int mask;
+	string filter;
+	int64_t messageCount;
+	int consumerCount;
+	vector<string> consumerList;
+
+	string creator;
+	int64_t createdTime;
+	int64_t lastUpdatedTime;
+};
+
+class TopicInfo : TrackItem {
+public:
+	string topicName;
+	int mask; 
+	int64_t messageDepth; 
+	int consumerCount; 
+	vector<ConsumeGroupInfo> consumeGroupList; 
+
+	string creator;
+	int64_t createdTime;
+	int64_t lastUpdatedTime;
+};
+
+class ServerInfo : TrackItem {
+public:
+	string infoVersion;
+	map<string, TopicInfo> topicTable;
+};
+
+class TrackerInfo : TrackItem {
+public:
+	string infoVersion;
+	map<string, ServerInfo> serverTable;
+};
+
+
 
 #endif

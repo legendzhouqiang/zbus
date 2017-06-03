@@ -1,14 +1,19 @@
+#include "Protocol.h"
 #include "MessageClient.h"
-
+ 
 #include<iostream>
+
 using namespace std;
 
 
 int main(int argc, char* argv[]) { 
 	ServerAddress addr("localhost:15555"); 
-
-	cout << addr.address << endl;
-	cout << Protocol::COMMAND << endl; 
-
-	getchar();
+	Message msg; 
+	MessageClient client(addr);
+	
+	int rc = client.connect();
+	client.send(msg);
+	client.recv(); 
+	
+	system("pause");
 }
