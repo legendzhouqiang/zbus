@@ -135,5 +135,12 @@ public:
 };
 
 
+class HttpStatus {
+public:
+	static map<string, string> Table; 
+private:
+	static map<string, string> createTable(); 
+};
+
 
 #endif

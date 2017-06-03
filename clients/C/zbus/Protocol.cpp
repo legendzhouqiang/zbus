@@ -56,3 +56,25 @@ const int Protocol::MASK_PAUSE = 1 << 0;
 const int Protocol::MASK_RPC = 1 << 1;
 const int Protocol::MASK_EXCLUSIVE = 1 << 2;
 const int Protocol::MASK_DELETE_ON_EXIT = 1 << 3; 
+
+
+map<string, string> HttpStatus::createTable() {
+	map<string, string> table;
+	table["200"] = "OK";
+	table["201"] = "Created";
+	table["202"] = "Accepted";
+	table["204"] = "No Content";
+	table["206"] = "Partial Content";
+	table["301"] = "Moved Permanently";
+	table["304"] = "Not Modified";
+	table["400"] = "Bad Request";
+	table["401"] = "Unauthorized";
+	table["403"] = "Forbidden";
+	table["404"] = "Not Found";
+	table["405"] = "Method Not Allowed";
+	table["416"] = "Requested Range Not Satisfiable";
+	table["500"] = "Internal Server Error";
+	return table;
+}
+
+map<string, string> HttpStatus::Table = HttpStatus::createTable();

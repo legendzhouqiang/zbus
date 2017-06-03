@@ -131,7 +131,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Message.cpp" />
     <ClCompile Include="MessageClient.cpp" />
     <ClCompile Include="Protocol.cpp" />
   </ItemGroup>

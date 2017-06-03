@@ -4,81 +4,81 @@
 #include <exception>
 #include <string> 
 using namespace std;
-class Buffer {
+class ByteBuffer {
 private:
-	int mark = -1;
+	int mark_ = -1;
 	int position = 0;
-	int limit;
+	int limit_;
 	int capacity;
 	int ownData = 0;
 	char* data = 0;
 
 public: 
-	Buffer(int capacity) {
-		this->limit = this->capacity = capacity;
+	ByteBuffer(int capacity=1024) {
+		this->limit_ = this->capacity = capacity;
 
 		ownData = 1;
 		data = new char[capacity]; 
 	}
 
-	Buffer(char* array, int len) {
+	ByteBuffer(char* array, int len) {
 		ownData = 0;
 		data = array;
-		limit = capacity = len;
+		limit_ = capacity = len;
 	}
 
-	Buffer(Buffer* buf) {
+	ByteBuffer(ByteBuffer* buf) {
 		this->capacity = buf->capacity;
 		this->data = buf->data;
 		this->position = buf->position;
-		this->limit = buf->limit;
-		this->mark = buf->mark;
+		this->limit_ = buf->limit_;
+		this->mark_ = buf->mark_;
 		this->ownData = 0;
 	} 
 
-	~Buffer() {
+	~ByteBuffer() {
 		if (ownData) {
 			delete data;
 			data = 0;
 		}
 	}  
 
-	void mark_() {
-		this->mark = this->position;
+	void mark() {
+		this->mark_ = this->position;
 	}
 
-	Buffer* flip() {
-		this->limit = this->position;
+	ByteBuffer* flip() {
+		this->limit_ = this->position;
 		this->position = 0;
-		this->mark = -1;
+		this->mark_ = -1;
 		return this;
 	}
 
 	void reset() {
-		int m = this->mark;
+		int m = this->mark_;
 		if (m < 0) {
 			throw new std::exception("mark not set, reset discard"); 
 		}
 		this->position = m;
 	}  
 	int remaining() {
-		return this->limit - this->position;
+		return this->limit_ - this->position;
 	}
 
 	char* begin() { 
 		return this->data + this->position;
 	}
 	char* end() { 
-		return this->data + this->limit;
+		return this->data + this->limit_;
 	} 
 
-	Buffer* limit_(int newLimit) {
+	ByteBuffer* limit(int newLimit) {
 		if (newLimit>this->capacity || newLimit<0) {
 			throw new exception("set new limit error, discarding"); 
 		}
-		this->limit = newLimit;
-		if (this->position > this->limit) this->position = this->limit;
-		if (this->mark > this->limit) this->mark = -1;
+		this->limit_ = newLimit;
+		if (this->position > this->limit_) this->position = this->limit_;
+		if (this->mark_ > this->limit_) this->mark_ = -1;
 		return this;
 	}
 
@@ -87,12 +87,12 @@ public:
 
 		int res = n;
 		int newPos = this->position + n;
-		if (newPos>this->limit) {
-			newPos = this->limit;
+		if (newPos>this->limit_) {
+			newPos = this->limit_;
 			res = newPos - this->position;
 		}
 		this->position = newPos;
-		if (this->mark > this->position) this->mark = -1;
+		if (this->mark_ > this->position) this->mark_ = -1;
 		return res;
 	}
 
@@ -119,22 +119,30 @@ public:
 		return len;
 	}
 
-	int put(Buffer* buf) {
+	int put(ByteBuffer* buf) {
 		return put(buf->begin(), buf->remaining());
 	}
 
-	int putstr(char* str) {
+	int put(char* str) {
 		return put(str, strlen(str));
-	}
+	} 
 
-	int putkv(char* key, char* val) {
+	int putKeyValue(char* key, char* val) {
 		int len = 0;
-		len += putstr(key);
-		len += putstr(": ");
-		len += putstr(val);
-		len += putstr("\r\n");
+		len += put(key);
+		len += put(": ");
+		len += put(val);
+		len += put("\r\n");
 		return len;
 	} 
+
+	void print() {
+		char* data = new char[this->position + 1];
+		memcpy(data, this->data, this->position);
+		data[this->position] = '\0';
+		printf("%s", data);
+		delete data;
+	}
 
 private:
 	int expandIfNeeded(int need) {
@@ -154,7 +162,7 @@ private:
 		delete this->data;
 		this->data = new_data;
 		this->capacity = new_cap;
-		this->limit = new_cap;
+		this->limit_ = new_cap;
 		return 1;
 	}
 };

@@ -2,6 +2,7 @@
 #define __ZBUS_MESSAGE_H__   
 
 #include "Protocol.h"
+#include "Buffer.h"
 
 #include <string>
 #include <map>
@@ -82,17 +83,84 @@ public:
 	}
 
 private:
-	vector<unsigned char> body;   
+	void* body = 0;
+	int bodyLength = 0;
 public:
 	string status; //should be integer
 	string method = "GET";
 	string url = "/";
-	map<string, string> header; 
+	map<string, string> header;  
+	
 
-	void setBody(string& body);
-	void setBody(void* body, int64_t bodyLength);
-	void setBody(char* body);
-	void setJsonBody(char* body);
+public:
+	~Message() {
+		if (this->body) {
+			delete this->body;
+			this->body = 0;
+			this->bodyLength = 0;
+		}
+	}
+
+	void setBody(string& body) {
+		setBody((void*) body.c_str(), body.size());
+	}
+	void setBody(void* body, int bodyLength) {
+		if (this->body) {
+			delete this->body;
+		} 
+		this->bodyLength = bodyLength;
+		this->body = new char[this->bodyLength+1];
+		memcpy(this->body, body, bodyLength);
+		((char*)this->body)[this->bodyLength] = 0; // make it char* compatible
+	}
+
+	void setBody(char* body) {
+		setBody(body, strlen(body));
+	}
+
+	void setJsonBody(char* body) {
+		header["content-type"] = "application/json";
+		setBody(body);
+	}   
+
+	char* getBodyString() {
+		return (char*)body;
+	} 
+
+	ByteBuffer* encode() {
+		ByteBuffer* buf = new ByteBuffer();
+		if (status != "") {
+			string desc = HttpStatus::Table[status];
+			if (desc == "") {
+				desc = "Unknown Status";
+			} 
+			char data[256];
+			snprintf(data, sizeof(data), "HTTP/1.1 %s %s\r\n", status.c_str(), desc.c_str()); 
+			buf->put(data);
+		} else { 
+			char data[256];
+			snprintf(data, sizeof(data), "%s %s HTTP/1.1\r\n", method.c_str(), url.c_str()); 
+			buf->put(data);
+		}
+
+		for (map<string, string>::iterator iter = header.begin(); iter != header.end(); iter++) {
+			string key = iter->first;
+			string val = iter->second;
+			if (key == "content-length") continue;
+			buf->putKeyValue((char*)key.c_str(), (char*)val.c_str()); 
+		} 
+		 
+		char len[100];
+		snprintf(len, sizeof(len), "%d", bodyLength);
+		buf->putKeyValue("content-length", len);
+
+		buf->put("\r\n");
+		if (bodyLength > 0) {
+			buf->put(body, bodyLength);
+		}
+		return buf;
+	}  
+
 };
  
 
