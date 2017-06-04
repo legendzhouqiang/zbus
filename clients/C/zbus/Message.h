@@ -3,10 +3,12 @@
 
 #include "Protocol.h"
 #include "Buffer.h"
+#include "Kit.h"
 
 #include <string>
-#include <map> 
-#include <sstream> 
+#include <cstring> 
+#include <map>  
+
 using namespace std;
 
 class Message {
@@ -183,8 +185,12 @@ public:
 		char* headerStr = new char[len + 1];
 		strncpy(headerStr, buf.begin(), len);
 		headerStr[len] = '\0';
-		parseHead(headerStr);
+		bool ok = parseHead(headerStr);
 		delete headerStr;
+		if (!ok) {
+			buf.reset();
+			return false;
+		}
 
 		buf.drain(len);
 		string contentLen = header["content-length"];
@@ -195,12 +201,12 @@ public:
 		if (nBody > buf.remaining()) {
 			buf.reset();
 			return false;
-		} 
-
+		}  
 
 		this->body = new unsigned char[nBody];
 		this->bodyLength = nBody;
 		buf.get((char*)this->body, nBody);  
+		return true;
 	}
 
 private:
@@ -216,13 +222,36 @@ private:
 		}
 		return -1;
 	}
-	int parseHead(char* buf) {  
-		stringstream ss(buf);
-		string line;
-		getline(ss, line, '\n');
 
-		return 0;
-	}
+	bool parseHead(char* buf) {   
+		char* headCtx;
+		char* p = strtok_s(buf, "\r\n", &headCtx);
+		if (!p) { 
+			return false;
+		} 
+
+		char* metaCtx;
+		char* m = strtok_s(p, " ", &metaCtx);
+		if (cmpIgnoreCase(m, "HTTP")) {
+			status = strtok_s(NULL, " ", &metaCtx);
+		} else {
+			url = strtok_s(NULL, " ", &metaCtx);
+		}
+
+		p = strtok_s(NULL, "\r\n", &headCtx);
+		while (p) {
+			char* d = strchr(p, ':');
+			if (d) {//ignore not key value
+				char* key = strdupTrimed(p, d - p);
+				char* val = strdupTrimed(d + 1, p + strlen(p) - d - 1);
+				header[string(key)] = string(val);
+				free(key);
+				free(val);
+			}
+			p = strtok_s(NULL, "\r\n", &headCtx);
+		}
+		return true;
+	} 
 };
  
 

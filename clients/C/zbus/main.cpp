@@ -15,12 +15,18 @@ int main(int argc, char* argv[]) {
 	
 	Message msg;
 	msg.setCmd("tracker");  
-	 
+	msg.setBody("hello world");
 
-	stringstream ss("GET /tracker HTTP/1.1\r\ncmd:produce\r\n\r\n");
-	string line;
-	getline(ss, line, '\n'); 
-	cout << line << endl;
+	ByteBuffer buf;
+	msg.encode(buf);
+	buf.flip();
+
+	buf.print();
+	Message msg2;
+	msg2.decode(buf);
+
+	msg2.print();
+	   
 
 	system("pause");
 }
