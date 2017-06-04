@@ -1,7 +1,6 @@
 #include "Platform.h"
 #include "Buffer.h"
-#include "MessageClient.h"
-
+#include "MessageClient.h" 
 
 #ifdef __WINDOWS__
 #include <objbase.h>
@@ -309,32 +308,59 @@ MessageClient::MessageClient(string serverAddress, string sslCertFile) :
 	sslCertFile(sslCertFile),
 	socket(-1)
 { 
+	logger = Logger::getLogger();
+	readBuffer = NULL;
 }
 MessageClient::MessageClient(ServerAddress& serverAddress, string sslCertFile) :
 	serverAddress(serverAddress),
 	sslCertFile(sslCertFile),
 	socket(-1)
 {
-
+	logger = Logger::getLogger();
+	readBuffer = NULL;
 }
+
+
 MessageClient::~MessageClient() {
 	printf("destroy\n");
 	if (socket != -1) {
 		net_close(socket);
 		socket = -1;
 	}
+	for (map<string, Message*>::iterator iter = msgTable.begin(); iter != msgTable.end(); iter++) {
+		delete iter->second;
+	}
+	msgTable.clear();
+	if (readBuffer) {
+		delete readBuffer;
+		readBuffer = NULL;
+	}
 }
-
+void MessageClient::resetReadBuffer() {
+	if (readBuffer) {
+		delete readBuffer; 
+	}
+	readBuffer = new ByteBuffer(10240);
+}
 int MessageClient::connect() {
+	resetReadBuffer();
 	string address = this->serverAddress.address;
 	size_t pos = address.find(':');
 	int port = 80; 
 	char* host = (char*)address.substr(0, pos).c_str();
 	if (pos != -1) {
 		port = atoi(address.substr(pos + 1).c_str());
-	} 
-
-	return net_connect(&this->socket, host, port); 
+	}  
+	if(logger->isDebugEnabled()){
+		logger->debug("Trying connect to (%s)", address.c_str());
+	}
+	int ret = net_connect(&this->socket, host, port); 
+	if (ret == 0) {
+		if (logger->isDebugEnabled()) {
+			logger->debug("Connected to (%s)", address.c_str());
+		}
+	}
+	return ret;
 }
 
 
@@ -359,14 +385,39 @@ int MessageClient::send(Message& msg, int timeout) {
 		sent += ret;
 		start += ret;
 	}
+	if (logger->isDebugEnabled()) {
+		logger->debug((void*)buf.begin(), buf.remaining());
+	}
 	return sent;
 } 
 
 
-Message* MessageClient::recv(int timeout) {
-	unsigned char buf[102400];
-	int n = net_recv(this->socket, buf, sizeof(buf));
-	buf[n] = '\0';
-	printf("%s", buf);
-	return NULL;
+Message* MessageClient::recv(int& rc, char* msgid, int timeout) {
+	if (msgid){
+		Message* res = msgTable[msgid];
+		msgTable.erase(string(msgid)); 
+		if (res) {
+			rc = 0;
+			return res;
+		}
+	}
+
+	rc = net_set_timeout(this->socket, timeout);
+	if (rc < 0) return NULL;
+	
+	while (true) {
+		unsigned char data[10240];
+		int n = net_recv(this->socket, data, sizeof(data));
+		if (n < 0) {
+			rc = n;
+			return NULL;
+		} 
+		readBuffer->put((void*)data, n);
+
+		ByteBuffer buf(readBuffer); //duplicate, no copy of data
+		buf.flip();  
+		return 0;
+	} 
+
+	return 0;
 }

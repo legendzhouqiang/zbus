@@ -46,19 +46,18 @@ static int64_t current_time(void) {
 Logger::Logger(char* logDir) {
 	this->level = LOG_INFO;
 	if (logDir == NULL) {
-		this->log_file = stdout;
-	}
-	else {
-		strcpy(this->log_dir, log_dir);
-		check_and_mk_log_dir(this->log_dir);
+		this->logFile = stdout;
+	} else {
+		strcpy(this->logDir, logDir);
+		check_and_mk_log_dir(this->logDir);
 	}
 	this->mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
 	pthread_mutex_init((pthread_mutex_t*)this->mutex, 0);
 }	
 
 Logger::~Logger(){
-	if (this->log_file != stdout) {
-		fclose(this->log_file);
+	if (this->logFile != stdout) {
+		fclose(this->logFile);
 	}
 	if (this->mutex) {
 		pthread_mutex_destroy((pthread_mutex_t*)this->mutex);
@@ -70,12 +69,23 @@ Logger::~Logger(){
 	if(this->level >= (level)){\
 		pthread_mutex_lock((pthread_mutex_t*)this->mutex);\
 		this->logHead((level));\
-		FILE* file = this->logFile();\
+		FILE* file = this->getLogFile();\
 		va_list argptr;\
 		va_start (argptr, format);\
 		vfprintf ((file), format, argptr);\
 		va_end (argptr);\
 		fprintf (file, "\n");\
+		fflush (file);\
+		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);\
+	}\
+}while(0)
+
+#define _DO_LOG2(level, data, len) do{\
+	if(this->level >= (level)){\
+		pthread_mutex_lock((pthread_mutex_t*)this->mutex);\
+		this->logHead((level));\
+		FILE* file = this->getLogFile();\
+		fwrite(data, 1, len, file);\
 		fflush (file);\
 		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);\
 	}\
@@ -101,11 +111,32 @@ void Logger::error(const char *format, ...) {
 	_DO_LOG(level);
 }
 
-FILE* Logger::logFile() { 
+void Logger::debug(void* data, int len) {
+	int level = LOG_DEBUG;
+	_DO_LOG2(level, data, len);
+}
+
+void Logger::info(void* data, int len) {
+	int level = LOG_INFO;
+	_DO_LOG2(level, data, len);
+}
+
+void Logger::warn(void* data, int len) {
+	int level = LOG_WARN;
+	_DO_LOG2(level, data, len);
+}
+
+void Logger::error(void* data, int len) {
+	int level = LOG_ERROR;
+	_DO_LOG2(level, data, len);
+}
+
+
+FILE* Logger::getLogFile() { 
 	int date;
 	char fdate[32];
-	if (this->log_file == stdout) {
-		return this->log_file;
+	if (this->logFile == stdout) {
+		return this->logFile;
 	} 
 	time_t curtime = time(NULL);
 	struct tm *loctime;
@@ -113,21 +144,33 @@ FILE* Logger::logFile() {
 	strftime(fdate, 32, "%Y%m%d", loctime);
 	date = atoi(fdate);
 
-	if (date > this->log_date) {
-		char newfile[256];
-		this->log_date = date;
-		snprintf(newfile, sizeof(newfile), "%s/%s.log", this->log_dir, fdate);
-		if (this->log_file) {
-			fclose(this->log_file);
-		}
-		this->log_file = fopen(newfile, "a+");
-		if (!this->log_file) {
-			printf("create log file error[%s],using stdout instead\n", newfile);
-			this->log_file = stdout;
-		}
+	if (date > this->logDate) {
+		this->createLogFile();
 	}
-	return this->log_file; 
+	return this->logFile; 
 }
+
+void Logger::createLogFile() {
+	char fdate[32];
+	time_t curtime = time(NULL);
+	struct tm *loctime;
+	loctime = localtime(&curtime); 
+	strftime(fdate, 32, "%Y%m%d", loctime);
+	int date = atoi(fdate);
+
+	char newfile[256];
+	this->logDate = date;
+	snprintf(newfile, sizeof(newfile), "%s/%s.log", this->logDir, fdate);
+	if (this->logFile != stdout && this->logFile) {
+		fclose(this->logFile);
+	}
+	this->logFile = fopen(newfile, "a+");
+	if (!this->logFile) {
+		printf("create log file error[%s],using stdout instead\n", newfile);
+		this->logFile = stdout;
+	} 
+}
+
 
 
 void Logger::logHead(const int priority) {
@@ -138,7 +181,7 @@ void Logger::logHead(const int priority) {
 	char *caption;
 
 	loctime = localtime(&curtime);
-	file = logFile();
+	file = getLogFile();
 	strftime(formatted, 32, "[%Y-%m-%d %H:%M:%S", loctime);
 	fprintf(file, "%s.%03d] ", formatted, current_time() % 1000);
 
@@ -163,4 +206,18 @@ void Logger::logHead(const int priority) {
 	}
 
 	fprintf(file, "%s - ", caption);
+}
+
+Logger Logger::defaultLogger;
+ 
+void Logger::configDefaultLogger(char* logDir, int level) {
+	defaultLogger.level = level;
+	if (logDir) {
+		strcpy(defaultLogger.logDir, logDir); 
+		check_and_mk_log_dir(defaultLogger.logDir);
+		defaultLogger.createLogFile();
+	} 
+}
+Logger* Logger::getLogger() {
+	return &defaultLogger;
 }

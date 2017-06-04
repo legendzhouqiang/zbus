@@ -52,7 +52,7 @@ public:
 		this->position = 0;
 		this->mark_ = -1;
 		return this;
-	}
+	} 
 
 	void reset() {
 		int m = this->mark_;

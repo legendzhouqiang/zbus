@@ -11,23 +11,31 @@
  
 class Logger {
 private: 
-	char  log_dir[256];
-	FILE* log_file;
+	char  logDir[256];
+	FILE* logFile;
 	int level;
 	void* mutex;
-	int log_date;
+	int logDate;
 
 private:
-	FILE* logFile();
+	FILE* getLogFile();
+	void createLogFile();
 	void logHead(const int priority = LOG_INFO);
 public:
 	Logger(char* logDir=NULL);
 	~Logger();
 
-	void info(const char *format, ...);
+	
 	void debug(const char *format, ...);
+	void info(const char *format, ...);
+	void warn(const char *format, ...);
 	void error(const char *format, ...);
-	void warn(const char *format, ...); 
+	
+
+	void debug(void* data, int len);
+	void info(void* data, int len);
+	void warn(void* data, int len);
+	void error(void* data, int len);
 
 	void setLevel(int level) {
 		this->level = level;
@@ -35,6 +43,16 @@ public:
 	int getLevel() {
 		return this->level;
 	}
+
+	bool isDebugEnabled() {
+		return level >= LOG_DEBUG;
+	}
+
+private:
+	static Logger defaultLogger;
+public:
+	static void configDefaultLogger(char* logDir = NULL, int level=LOG_INFO);
+	static Logger* getLogger();
 };
 
 #endif

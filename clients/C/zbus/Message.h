@@ -5,8 +5,8 @@
 #include "Buffer.h"
 
 #include <string>
-#include <map>
-#include <vector>
+#include <map> 
+#include <sstream> 
 using namespace std;
 
 class Message {
@@ -166,6 +166,63 @@ public:
 		} 
 	}  
 
+	bool decode(ByteBuffer& buf) {
+		buf.mark();
+
+		//clear message
+		this->header.clear(); 
+		if (this->body) { 
+			delete this->body;
+			this->body = NULL;
+		}
+		this->bodyLength = 0;
+		this->status = "";
+
+		int len = findHeadLength(buf);
+		if (len < 0) return false;
+		char* headerStr = new char[len + 1];
+		strncpy(headerStr, buf.begin(), len);
+		headerStr[len] = '\0';
+		parseHead(headerStr);
+		delete headerStr;
+
+		buf.drain(len);
+		string contentLen = header["content-length"];
+		if (contentLen == "") {//no content-length, treat as message without body
+			return true;
+		} 
+		int nBody = atoi(contentLen.c_str());
+		if (nBody > buf.remaining()) {
+			buf.reset();
+			return false;
+		} 
+
+
+		this->body = new unsigned char[nBody];
+		this->bodyLength = nBody;
+		buf.get((char*)this->body, nBody);  
+	}
+
+private:
+	int findHeadLength(ByteBuffer& buf) {
+		char* begin = buf.begin();
+		char* p = begin;
+		char* end = buf.end();
+		while (p + 3 < end) {
+			if (*(p + 0) == '\r' && *(p + 1) == '\n' && *(p + 2) == '\r' && *(p + 3) == '\n') {
+				return p + 4 - begin;
+			}
+			p++;
+		}
+		return -1;
+	}
+	int parseHead(char* buf) {  
+		stringstream ss(buf);
+		string line;
+		getline(ss, line, '\n');
+
+		return 0;
+	}
 };
  
 

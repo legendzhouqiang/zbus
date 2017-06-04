@@ -3,6 +3,11 @@
 
 #include "Protocol.h"
 #include "Message.h"
+#include "Logger.h"
+#include "Buffer.h";
+
+#include <map>
+using namespace std;
 
 
 #define ERR_NET_UNKNOWN_HOST        -86  /**< Failed to get an IP address for the given hostname. */
@@ -22,10 +27,15 @@
 
 class MessageClient {
 private:
+	Logger* logger;
+private:
 	int socket;
 	ServerAddress serverAddress;
 	string sslCertFile;
-
+	map<string, Message*> msgTable;
+	ByteBuffer* readBuffer;
+private:
+	void resetReadBuffer();
 public:
 	MessageClient(string serverAddress, string sslCertFile="");
 	MessageClient(ServerAddress& serverAddress, string sslCertFile="");
@@ -33,7 +43,7 @@ public:
 
 	int connect();
 	int send(Message& msg, int timeout=3000);
-	Message* recv(int timeout = 3000); 
+	Message* recv(int& rc, char* msgid=NULL, int timeout=3000);
 };
 
 #endif
