@@ -1,26 +1,24 @@
 #include "Protocol.h"
 #include "MessageClient.h"
 #include "Buffer.h"
+#include "Logger.h"
  
 #include<iostream> 
 using namespace std;
 
 
 int main(int argc, char* argv[]) { 
-	ServerAddress addr("localhost:15555"); 
-	Message msg; 
+	ServerAddress addr("localhost:15555");  
 	MessageClient client(addr); 
+	client.connect();
 	
-	
-	msg.setCmd(Protocol::CONSUME);
-	msg.setTopic("hong");
-	msg.setConsumeGroup("xxx");  
-	msg.setBody(string("hello world")); 
+	Message msg;
+	msg.setCmd("tracker"); 
+	msg.print();
 
+	client.send(msg); 
+	client.recv();  
 
-	ByteBuffer* buf = msg.encode();
-	buf->print();
-	delete buf;  
 
 	cout << endl;
 	system("pause");

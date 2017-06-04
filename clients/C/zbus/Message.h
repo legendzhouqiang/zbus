@@ -127,8 +127,14 @@ public:
 		return (char*)body;
 	} 
 
-	ByteBuffer* encode() {
-		ByteBuffer* buf = new ByteBuffer();
+	void print() {
+		ByteBuffer buf;
+		encode(buf);
+		buf.flip();
+		buf.print();
+	}
+
+	void encode(ByteBuffer& buf) { 
 		if (status != "") {
 			string desc = HttpStatus::Table[status];
 			if (desc == "") {
@@ -136,29 +142,28 @@ public:
 			} 
 			char data[256];
 			snprintf(data, sizeof(data), "HTTP/1.1 %s %s\r\n", status.c_str(), desc.c_str()); 
-			buf->put(data);
+			buf.put(data);
 		} else { 
 			char data[256];
 			snprintf(data, sizeof(data), "%s %s HTTP/1.1\r\n", method.c_str(), url.c_str()); 
-			buf->put(data);
+			buf.put(data);
 		}
 
 		for (map<string, string>::iterator iter = header.begin(); iter != header.end(); iter++) {
 			string key = iter->first;
 			string val = iter->second;
 			if (key == "content-length") continue;
-			buf->putKeyValue((char*)key.c_str(), (char*)val.c_str()); 
+			buf.putKeyValue((char*)key.c_str(), (char*)val.c_str()); 
 		} 
 		 
 		char len[100];
 		snprintf(len, sizeof(len), "%d", bodyLength);
-		buf->putKeyValue("content-length", len);
+		buf.putKeyValue("content-length", len);
 
-		buf->put("\r\n");
+		buf.put("\r\n");
 		if (bodyLength > 0) {
-			buf->put(body, bodyLength);
-		}
-		return buf;
+			buf.put(body, bodyLength);
+		} 
 	}  
 
 };

@@ -148,9 +148,145 @@
 #if defined (__WINDOWS__) 
 #include <winsock2.h>
 #include <WS2tcpip.h>
+#endif 
+
+#if (defined (__MSDOS__))
+#   if (defined (__WINDOWS__))
+#       if (!defined (FD_SETSIZE))
+#           define FD_SETSIZE 1024      //  Max. filehandles/sockets
+#       endif
+#       include <direct.h>
+#       include <windows.h>
+#       include <winsock.h>
+#       include <process.h>
+#		include <signal.h>
+#   endif
+#   include <malloc.h>
+#   include <dos.h>
+#   include <io.h>
+#   include <fcntl.h>
+#   include <sys/types.h>
+#   include <sys/stat.h>
+#   include <sys/utime.h>
+#   include <share.h>
+#   if _MSC_VER == 1500
+#       ifndef _CRT_SECURE_NO_DEPRECATE
+#           define _CRT_SECURE_NO_DEPRECATE   1
+#       endif
+#       pragma warning(disable: 4996)
+#   endif
 #endif
 
 
+
+
+#if (defined (__UNIX__))
+#   include <fcntl.h>
+#   include <netdb.h>
+#   include <unistd.h>
+#   include <pthread.h>
+#   include <dirent.h>
+#   include <pwd.h>
+#   include <grp.h>
+#   include <utime.h>
+#   include <syslog.h>
+#   include <inttypes.h>
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   include <sys/socket.h>
+#   include <sys/time.h>
+#   include <sys/stat.h>
+#   include <sys/ioctl.h>
+#   include <sys/file.h>
+#   include <sys/wait.h>
+#   include <netinet/in.h>              //  Must come before arpa/inet.h
+#   if (!defined (__UTYPE_ANDROID)) && (!defined (__UTYPE_IBMAIX)) && (!defined (__UTYPE_HPUX)) && (!defined (__UTYPE_SUNOS))
+#       include <ifaddrs.h>
+#   endif
+#   if (!defined (__UTYPE_BEOS))
+#       include <arpa/inet.h>
+#       if (!defined (TCP_NODELAY))
+#           include <netinet/tcp.h>
+#       endif
+#   endif
+#   if (defined (__UTYPE_IBMAIX) || defined(__UTYPE_QNX))
+#       include <sys/select.h>
+#   endif
+#   if (defined (__UTYPE_BEOS))
+#       include <NetKit.h>
+#   endif
+#   if ((defined (_XOPEN_REALTIME) && (_XOPEN_REALTIME >= 1)) || \
+        (defined (_POSIX_VERSION)  && (_POSIX_VERSION  >= 199309L)))
+#       include <sched.h>
+#   endif
+#   if (defined (__UTYPE_OSX))
+#       include <crt_externs.h>         /* For _NSGetEnviron()               */
+#   endif
+#endif
+
+#if (defined (__VMS__))
+#   if (!defined (vaxc))
+#       include <fcntl.h>               //  Not provided by Vax C
+#   endif
+#   include <netdb.h>
+#   include <unistd.h>
+#   include <pthread.h>
+#   include <unixio.h>
+#   include <unixlib.h>
+#   include <types.h>
+#   include <file.h>
+#   include <socket.h>
+#   include <dirent.h>
+#   include <time.h>
+#   include <pwd.h>
+#   include <stat.h>
+#   include <in.h>
+#   include <inet.h>
+#endif
+
+#if (defined (__OS2__))
+#   include <sys/types.h>               //  Required near top
+#   include <fcntl.h>
+#   include <malloc.h>
+#   include <netdb.h>
+#   include <unistd.h>
+#   include <pthread.h>
+#   include <dirent.h>
+#   include <pwd.h>
+#   include <grp.h>
+#   include <io.h>
+#   include <process.h>
+#   include <sys/param.h>
+#   include <sys/socket.h>
+#   include <sys/select.h>
+#   include <sys/time.h>
+#   include <sys/stat.h>
+#   include <sys/ioctl.h>
+#   include <sys/file.h>
+#   include <sys/wait.h>
+#   include <netinet/in.h>              //  Must come before arpa/inet.h
+#   include <arpa/inet.h>
+#   include <utime.h>
+#   if (!defined (TCP_NODELAY))
+#       include <netinet/tcp.h>
+#   endif
+#endif
+
+
+
+
+#if (defined (__WINDOWS__)) 
+typedef unsigned long ulong;
+typedef unsigned int  uint;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+
+#elif (defined (__APPLE__))
+typedef unsigned long ulong;
+typedef unsigned int  uint;
+#endif
 
 
 

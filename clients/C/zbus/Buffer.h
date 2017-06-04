@@ -137,9 +137,10 @@ public:
 	} 
 
 	void print() {
-		char* data = new char[this->position + 1];
-		memcpy(data, this->data, this->position);
-		data[this->position] = '\0';
+		int len = this->remaining();
+		char* data = new char[len + 1];
+		memcpy(data, this->begin(), len);
+		data[len] = '\0';
 		printf("%s", data);
 		delete data;
 	}

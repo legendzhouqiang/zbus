@@ -1,5 +1,37 @@
 #include "Platform.h"
+#include "Buffer.h"
 #include "MessageClient.h"
+
+
+#ifdef __WINDOWS__
+#include <objbase.h>
+#else
+#include <uuid/uuid.h>
+typedef struct _GUID
+{
+	unsigned long  Data1;
+	unsigned short Data2;
+	unsigned short Data3;
+	unsigned char  Data4[8];
+} GUID, UUID;
+
+#endif
+
+static void gen_uuid(char* buf, int len) {
+	UUID uuid;
+#ifdef __WINDOWS__
+	CoCreateGuid(&uuid);
+#else
+	uuid_generate((char*)&uuid);
+#endif
+
+	snprintf(buf, len, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+		uuid.Data1, uuid.Data2, uuid.Data3,
+		uuid.Data4[0], uuid.Data4[1],
+		uuid.Data4[2], uuid.Data4[3],
+		uuid.Data4[4], uuid.Data4[5],
+		uuid.Data4[6], uuid.Data4[7]);
+}
 
 
 #ifdef __WINDOWS__
@@ -306,16 +338,34 @@ int MessageClient::connect() {
 }
 
 
-int MessageClient::send(Message& msg, int timeout) {
-	string req = "GET / HTTP/1.1\r\n\r\n";
+int MessageClient::send(Message& msg, int timeout) { 
+	int ret = net_set_timeout(this->socket, timeout);
+	if (ret < 0) return ret;
 
-	return net_send(socket, (unsigned char*)req.c_str(), req.size()); 
+	if (msg.getId() == "") {
+		char uuid[256];
+		gen_uuid(uuid, sizeof(uuid));
+		msg.setId(uuid);
+	}
+	ByteBuffer buf;
+	msg.encode(buf);
+	buf.flip(); 
+
+	int sent = 0, total = buf.remaining();
+	unsigned char* start = (unsigned char*)buf.begin();
+	while (sent < total) {
+		int ret = net_send(this->socket, start, total-sent);
+		if (ret < 0) return ret; //error happened
+		sent += ret;
+		start += ret;
+	}
+	return sent;
 } 
 
 
 Message* MessageClient::recv(int timeout) {
 	unsigned char buf[102400];
-	int n = net_recv(socket, buf, sizeof(buf));
+	int n = net_recv(this->socket, buf, sizeof(buf));
 	buf[n] = '\0';
 	printf("%s", buf);
 	return NULL;
