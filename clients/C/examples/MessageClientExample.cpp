@@ -13,9 +13,8 @@ int main_messageclient(int argc, char* argv[]) {
 		msg.setBody("hello world");
 
 		client.send(msg);
-		string msgid = msg.getId();
-		int rc;
-		Message* res = client.recv(rc, msgid.c_str());
+		string msgid = msg.getId(); 
+		Message* res = client.recv(msgid.c_str());
 		if (res) {
 			res->print();
 			delete res;

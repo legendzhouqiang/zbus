@@ -2,22 +2,14 @@
 
 
 int main(int argc, char* argv[]) {  
-	Logger::configDefaultLogger(0, LOG_DEBUG);
+	Logger::configDefaultLogger(0, LOG_INFO); 
+	Logger* log = Logger::getLogger();
 
 	MqClient client("localhost:15555");
 	client.connect();
 	 
-	Message msg;
-	msg.setCmd("server");
-	msg.setBody("hello world");
-
-	client.send(msg);
-	string msgid = msg.getId();
-	int rc;
-	Message* res = client.recv(rc, msgid.c_str());
-	if (res) { 
-		delete res;
-	} 
+	ServerInfo info = client.queryServer();
+	log->info("%s", info.infoVersion);
 
 	system("pause");
 }

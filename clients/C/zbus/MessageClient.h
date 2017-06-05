@@ -20,10 +20,7 @@ using namespace std;
 #define ERR_NET_SEND_FAILED         -78  /**< Sending information through the socket failed. */
 #define ERR_NET_CONN_RESET          -80  /**< Connection was reset by peer. */
 #define ERR_NET_WANT_READ           -82  /**< Connection requires a read call. */
-#define ERR_NET_WANT_WRITE          -84  /**< Connection requires a write call. */
-
-#define NET_LISTEN_BACKLOG           10  /**< The backlog that listen() should use. */
- 
+#define ERR_NET_WANT_WRITE          -84  /**< Connection requires a write call. */ 
 
 
 #ifdef __WINDOWS__
@@ -326,6 +323,25 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len)
 	return(ret);
 }
 
+class ZBUS_API MqException : public exception {
+public:
+	int code;
+	string message; 
+
+	MqException(string message = "Unknown exception", int code = -1) :
+		exception(message.c_str())
+	{
+		this->message = message;
+		this->code = code;
+	}
+
+	MqException(MqException& ex) :
+		exception(ex.message.c_str())
+	{
+		this->code = ex.code;
+		this->message = ex.message;
+	}
+};
 
 class ZBUS_API MessageClient { 
 public:    
@@ -354,7 +370,7 @@ public:
 		}
 	}
 	
-	int connect() {
+	void connect() {
 		resetReadBuffer();
 		string address = this->address;
 		size_t pos = address.find(':');
@@ -367,18 +383,29 @@ public:
 			logger->debug("Trying connect to (%s)", address.c_str());
 		}
 		int ret = net_connect(&this->socket, host, port);
+		if (ret != 0) {
+			string errMsg = errorMessage(ret);
+			throw MqException(errMsg, ret);
+		}
 		if (ret == 0) {
 			if (logger->isDebugEnabled()) {
 				logger->debug("Connected to (%s)", address.c_str());
 			}
-		}
-		return ret;
+		}  
 	}
 
+	Message* invoke(Message& msg, int timeout = 3000) {
+		send(msg, timeout);
+		string msgid = msg.getId();
+		return recv(msgid.c_str(), timeout);
+	}
 
-	int send(Message& msg, int timeout = 3000) {
+	void send(Message& msg, int timeout=3000) {
 		int ret = net_set_timeout(this->socket, timeout);
-		if (ret < 0) return ret;
+		if (ret < 0) {
+			string errMsg = errorMessage(ret);
+			throw MqException(errMsg, ret);
+		}
 
 		if (msg.getId() == "") {
 			char uuid[256];
@@ -393,18 +420,20 @@ public:
 		unsigned char* start = (unsigned char*)buf.begin();
 		while (sent < total) {
 			int ret = net_send(this->socket, start, total - sent);
-			if (ret < 0) return ret; //error happened
+			if (ret < 0) {  
+				string errMsg = errorMessage(ret);
+				throw MqException(errMsg, ret); 
+			}
 			sent += ret;
 			start += ret;
 		}
 		if (logger->isDebugEnabled()) {
 			logger->debug((void*)buf.begin(), buf.remaining());
-		}
-		return sent;
+		} 
 	}
 
 
-	Message* recv(int& rc, const char* msgid = NULL, int timeout = 3000) {
+	Message* recv(const char* msgid = NULL, int timeout = 3000) {
 		if (msgid) {
 			Message* res = msgTable[msgid];
 			if (res) {
@@ -413,8 +442,11 @@ public:
 			}
 		}
 
-		rc = net_set_timeout(this->socket, timeout);
-		if (rc < 0) return NULL;
+		int rc = net_set_timeout(this->socket, timeout);
+		if (rc < 0) {
+			string errMsg = errorMessage(rc);
+			throw MqException(errMsg, rc);
+		}
 		if (logger->isDebugEnabled()) {
 			logger->logHead(LOG_DEBUG);
 		}
@@ -423,7 +455,8 @@ public:
 			int n = net_recv(this->socket, data, sizeof(data));
 			if (n < 0) {
 				rc = n;
-				return NULL;
+				string errMsg = errorMessage(rc);
+				throw MqException(errMsg, rc);
 			}
 			readBuffer->put((void*)data, n);
 			if (logger->isDebugEnabled()) {
@@ -468,6 +501,36 @@ private:
 		}
 		readBuffer = new ByteBuffer();
 	}
+
+public:
+	inline static string errorMessage(int code) {
+		map<int, string>& table = NetErrorTable();
+		string res = table[code];
+		if (res == "") {
+			res = "Unknown error";
+		}
+		return res;
+	}
+	inline static map<int, string>& NetErrorTable() {
+		static bool init = false;
+		static map<int, string> table;
+		if (!init) {
+			init = true;
+			table[ERR_NET_UNKNOWN_HOST] = "Failed to get an IP address for the given hostname";
+			table[ERR_NET_SOCKET_FAILED] = "Failed to open a socket";
+			table[ERR_NET_CONNECT_FAILED] = "The connection to the given server / port failed";
+			table[ERR_NET_BIND_FAILED] = "Binding of the socket failed";
+			table[ERR_NET_LISTEN_FAILED] = "Could not listen on the socket";
+			table[ERR_NET_ACCEPT_FAILED] = "Could not accept the incoming connection";
+			table[ERR_NET_RECV_FAILED] = "Reading information from the socket failed";
+			table[ERR_NET_SEND_FAILED] = "Sending information through the socket failed";
+			table[ERR_NET_CONN_RESET] = "Connection was reset by peer";
+			table[ERR_NET_WANT_READ] = "Connection requires a read call";
+			table[ERR_NET_WANT_WRITE] = "Connection requires a write call"; 
+		}
+		return table;
+	}
+	
 };
 
 #endif

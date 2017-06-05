@@ -8,63 +8,63 @@
 using namespace std;
 
 
-#define HEADER_VERSION_VALUE "0.8.0"  //start from 0.8.0 
+#define PROTOCOL_VERSION_VALUE "0.8.0"  //start from 0.8.0 
 
 //=============================[1] Command Values================================================
 //MQ Produce/Consume
-#define HEADER_PRODUCE "produce"
-#define HEADER_CONSUME "consume"
-#define HEADER_ROUTE  "route"     //route back message to sender, designed for RPC 
-#define HEADER_RPC  "rpc"       //the same as produce command except rpc set ack false by default
+#define PROTOCOL_PRODUCE "produce"
+#define PROTOCOL_CONSUME "consume"
+#define PROTOCOL_ROUTE  "route"     //route back message to sender, designed for RPC 
+#define PROTOCOL_RPC  "rpc"       //the same as produce command except rpc set ack false by default
 
 //Topic control
-#define HEADER_DECLARE  "declare"
-#define HEADER_QUERY  "query"
-#define HEADER_REMOVE  "remove"
-#define HEADER_EMPTY  "empty"
+#define PROTOCOL_DECLARE  "declare"
+#define PROTOCOL_QUERY  "query"
+#define PROTOCOL_REMOVE  "remove"
+#define PROTOCOL_EMPTY  "empty"
 
 //High Availability (HA) 
-#define HEADER_TRACK_PUB  "track_pub"
-#define HEADER_TRACK_SUB  "track_sub"
-#define HEADER_TRACKER  "tracker"
-#define HEADER_SERVER  "server"
+#define PROTOCOL_TRACK_PUB  "track_pub"
+#define PROTOCOL_TRACK_SUB  "track_sub"
+#define PROTOCOL_TRACKER  "tracker"
+#define PROTOCOL_SERVER  "server"
 
 
 //=============================[2] Parameter Values================================================
-#define HEADER_CMD  "cmd"
-#define HEADER_TOPIC  "topic"
-#define HEADER_TOPIC_MASK  "topic_mask"
-#define HEADER_TAG  "tag"
-#define HEADER_OFFSET  "offset"
+#define PROTOCOL_CMD  "cmd"
+#define PROTOCOL_TOPIC  "topic"
+#define PROTOCOL_TOPIC_MASK  "topic_mask"
+#define PROTOCOL_TAG  "tag"
+#define PROTOCOL_OFFSET  "offset"
 
-#define HEADER_CONSUME_GROUP  "consume_group"
-#define HEADER_GROUP_START_COPY  "group_start_copy"
-#define HEADER_GROUP_START_OFFSET  "group_start_offset"
-#define HEADER_GROUP_START_MSGID  "group_start_msgid"
-#define HEADER_GROUP_START_TIME  "group_start_time"
-#define HEADER_GROUP_FILTER  "group_filter"
-#define HEADER_GROUP_MASK  "group_mask"
-#define HEADER_CONSUME_WINDOW  "consume_window"
+#define PROTOCOL_CONSUME_GROUP  "consume_group"
+#define PROTOCOL_GROUP_START_COPY  "group_start_copy"
+#define PROTOCOL_GROUP_START_OFFSET  "group_start_offset"
+#define PROTOCOL_GROUP_START_MSGID  "group_start_msgid"
+#define PROTOCOL_GROUP_START_TIME  "group_start_time"
+#define PROTOCOL_GROUP_FILTER  "group_filter"
+#define PROTOCOL_GROUP_MASK  "group_mask"
+#define PROTOCOL_CONSUME_WINDOW  "consume_window"
 
-#define HEADER_SENDER  "sender"
-#define HEADER_RECVER  "recver"
-#define HEADER_ID  "id"
+#define PROTOCOL_SENDER  "sender"
+#define PROTOCOL_RECVER  "recver"
+#define PROTOCOL_ID  "id"
 
-#define HEADER_HOST  "host"
-#define HEADER_ACK  "ack"
-#define HEADER_ENCODING  "encoding"
+#define PROTOCOL_HOST  "host"
+#define PROTOCOL_ACK  "ack"
+#define PROTOCOL_ENCODING  "encoding"
 
-#define HEADER_ORIGIN_ID  "origin_id"
-#define HEADER_ORIGIN_URL  "origin_url"
-#define HEADER_ORIGIN_STATUS  "origin_status"
+#define PROTOCOL_ORIGIN_ID  "origin_id"
+#define PROTOCOL_ORIGIN_URL  "origin_url"
+#define PROTOCOL_ORIGIN_STATUS  "origin_status"
 
 //Security 
-#define HEADER_TOKEN "token"
+#define PROTOCOL_TOKEN "token"
 
-#define HEADER_MASK_PAUSE           (1 << 0)
-#define HEADER_MASK_RPC             (1 << 1)
-#define HEADER_MASK_EXCLUSIVE       (1 << 2)
-#define HEADER_MASK_DELETE_ON_EXIT  (1 << 3)
+#define PROTOCOL_MASK_PAUSE           (1 << 0)
+#define PROTOCOL_MASK_RPC             (1 << 1)
+#define PROTOCOL_MASK_EXCLUSIVE       (1 << 2)
+#define PROTOCOL_MASK_DELETE_ON_EXIT  (1 << 3)
 
 
 

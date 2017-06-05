@@ -15,64 +15,64 @@ using namespace std;
 ZBUS_API class Message {
 public:
 	string getCmd() {
-		return getHeader(HEADER_CMD);
+		return getHeader(PROTOCOL_CMD);
 	}
 	void setCmd(string value) {
-		setHeader(HEADER_CMD, value);
+		setHeader(PROTOCOL_CMD, value);
 	}  
 	string getTopic() {
-		return getHeader(HEADER_TOPIC);
+		return getHeader(PROTOCOL_TOPIC);
 	}
 	void setTopic(string value) {
-		setHeader(HEADER_TOPIC, value);
+		setHeader(PROTOCOL_TOPIC, value);
 	}
 	string getConsumeGroup() {
-		return getHeader(HEADER_CONSUME_GROUP);
+		return getHeader(PROTOCOL_CONSUME_GROUP);
 	}
 	void setConsumeGroup(string value) {
-		setHeader(HEADER_CONSUME_GROUP, value);
+		setHeader(PROTOCOL_CONSUME_GROUP, value);
 	}
 	string getSender() {
-		return getHeader(HEADER_SENDER);
+		return getHeader(PROTOCOL_SENDER);
 	}
 	void setSender(string value) {
-		setHeader(HEADER_SENDER, value);
+		setHeader(PROTOCOL_SENDER, value);
 	}
 	string getRecver() {
-		return getHeader(HEADER_RECVER);
+		return getHeader(PROTOCOL_RECVER);
 	}
 	void setRecver(string value) {
-		setHeader(HEADER_RECVER, value);
+		setHeader(PROTOCOL_RECVER, value);
 	}
 	string getToken() {
-		return getHeader(HEADER_TOKEN);
+		return getHeader(PROTOCOL_TOKEN);
 	}
 	void setToken(string value) {
-		setHeader(HEADER_TOKEN, value);
+		setHeader(PROTOCOL_TOKEN, value);
 	}
 	string getId() {
-		return getHeader(HEADER_ID);
+		return getHeader(PROTOCOL_ID);
 	}
 	void setId(string value) {
-		setHeader(HEADER_ID, value);
+		setHeader(PROTOCOL_ID, value);
 	}
 	string getOriginId() {
-		return getHeader(HEADER_ORIGIN_ID);
+		return getHeader(PROTOCOL_ORIGIN_ID);
 	}
 	void setOriginId(string value) {
-		setHeader(HEADER_ORIGIN_ID, value);
+		setHeader(PROTOCOL_ORIGIN_ID, value);
 	}
 	string getOriginStatus() {
-		return getHeader(HEADER_ORIGIN_STATUS);
+		return getHeader(PROTOCOL_ORIGIN_STATUS);
 	}
 	void setOriginStatus(string value) {
-		setHeader(HEADER_ORIGIN_STATUS, value);
+		setHeader(PROTOCOL_ORIGIN_STATUS, value);
 	}
 	string getOriginUrl() {
-		return getHeader(HEADER_ORIGIN_URL);
+		return getHeader(PROTOCOL_ORIGIN_URL);
 	}
 	void setOriginUrl(string value) {
-		setHeader(HEADER_ORIGIN_URL, value);
+		setHeader(PROTOCOL_ORIGIN_URL, value);
 	}
 
 	string getHeader(string key, string defaultValue = "") {
@@ -126,9 +126,13 @@ public:
 		setBody(body);
 	}   
 
-	char* getBodyString() {
+	char* getBodyString() const{
 		return (char*)body;
 	} 
+
+	int getBodyLength() const {
+		return this->bodyLength;
+	}
 
 	void print() {
 		ByteBuffer buf;
@@ -251,9 +255,10 @@ private:
 	}  
 
 	static map<string, string>& HttpStatusTable() {
-		static bool inited = false;
+		static bool init = false;
 		static map<string, string> table;
-		if (!inited) {
+		if (!init) {
+			init = true;
 
 			table["200"] = "OK";
 			table["201"] = "Created";

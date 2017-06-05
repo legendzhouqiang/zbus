@@ -91,6 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\deps\jsoncpp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -103,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\deps\jsoncpp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -117,6 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\deps\jsoncpp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -133,6 +136,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\deps\jsoncpp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -141,6 +145,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\deps\jsoncpp\include\json\assertions.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\autolink.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\config.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\features.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\forwards.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\json.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\reader.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\value.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\version.h" />
+    <ClInclude Include="..\deps\jsoncpp\include\json\writer.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Kit.h" />
     <ClInclude Include="Logger.h" />
@@ -150,6 +164,11 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Thread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_reader.cpp" />
+    <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_value.cpp" />
+    <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_writer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
