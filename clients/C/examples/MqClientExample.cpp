@@ -1,4 +1,4 @@
-#include "MqClient.h" 
+#include "MqClient.h"  
 
 
 int main(int argc, char* argv[]) {  
@@ -8,8 +8,14 @@ int main(int argc, char* argv[]) {
 	MqClient client("localhost:15555");
 	client.connect();
 	 
-	ServerInfo info = client.queryServer();
+	TrackerInfo info = client.queryTracker();
 	log->info("%s", info.infoVersion.c_str());
+
+	TopicInfo topicInfo = client.queryTopic("hong"); 
+	log->info("%s", topicInfo.topicName.c_str());
+
+	ConsumeGroupInfo groupInfo = client.queryGroup("hong", "hong");
+	log->info("%s", groupInfo.groupName.c_str());
 
 	system("pause");
 	return 0;
