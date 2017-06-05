@@ -152,7 +152,6 @@
     <ClInclude Include="Thread.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MessageClient.cpp" />
     <ClCompile Include="Thread.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

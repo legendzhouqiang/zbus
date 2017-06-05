@@ -3,7 +3,7 @@
  
 #include "MessageClient.h"
  
-ZBUS_API class MqClient : public MessageClient {
+class ZBUS_API MqClient : public MessageClient {
 public:
 	MqClient(string address, bool sslEnabled = false, string sslCertFile = "") :
 		MessageClient(address, sslEnabled, sslCertFile){

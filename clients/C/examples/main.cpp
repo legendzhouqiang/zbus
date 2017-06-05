@@ -1,19 +1,15 @@
-#include "Protocol.h" 
-#include "Logger.h"
-#include "MessageClient.h"
-#include <iostream>
-using namespace std;
+#include "MqClient.h" 
 
 
 int main(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_DEBUG);
 
-	MessageClient client("localhost:15555");
+	MqClient client("localhost:15555");
 	client.connect();
 
 	for (int i = 0; i<100; i++) {
 		Message msg;
-		msg.setCmd("tracker");
+		msg.setCmd("server");
 		msg.setBody("hello world");
 
 		client.send(msg);
