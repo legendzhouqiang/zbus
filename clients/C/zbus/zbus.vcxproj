@@ -152,7 +152,6 @@
     <ClInclude Include="Thread.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MessageClient.cpp" />
     <ClCompile Include="Thread.cpp" />
   </ItemGroup>

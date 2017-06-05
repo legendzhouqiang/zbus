@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "Message.h"
 #include "Logger.h"
-#include "Buffer.h";
+#include "Buffer.h"
 
 #include <map>
 using namespace std;
@@ -25,7 +25,7 @@ using namespace std;
 #define NET_LISTEN_BACKLOG           10  /**< The backlog that listen() should use. */
  
 
-ZBUS_API class MessageClient {
+class ZBUS_API MessageClient {
 private:
 	Logger* logger;
 private:
@@ -40,12 +40,12 @@ private:
 private:
 	void resetReadBuffer();
 public:
-	ZBUS_API MessageClient(string address, bool sslEnabled=false, string sslCertFile="");
-	ZBUS_API virtual ~MessageClient();
+	MessageClient(string address, bool sslEnabled=false, string sslCertFile="");
+	virtual ~MessageClient();
 
-	ZBUS_API int connect();
-	ZBUS_API int send(Message& msg, int timeout=3000);
-	ZBUS_API Message* recv(int& rc, const char* msgid=NULL, int timeout=3000);
+	int connect();
+	int send(Message& msg, int timeout=3000);
+	Message* recv(int& rc, const char* msgid=NULL, int timeout=3000);
 };
 
 #endif

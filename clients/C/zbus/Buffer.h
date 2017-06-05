@@ -5,7 +5,7 @@
 #include <exception>
 #include <string> 
 using namespace std;
-ZBUS_API class ByteBuffer {
+class ZBUS_API ByteBuffer {
 private:
 	int mark_ = -1;
 	int position = 0;
