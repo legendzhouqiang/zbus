@@ -62,55 +62,41 @@ static void parseServerInfo(ServerInfo& info, Json::Value& root) {
 	} 
 }
 
-void parseConsumeGroupInfo(ConsumeGroupInfo& info, Message& msg) {
+bool parseBase(ErrorInfo& info, Json::Value& root, Message& msg) {
 	string bodyString = msg.getBodyString();
 	if (msg.status != "200") {
+		info.isError = true;
 		info.error = MqException(bodyString);
-		return;
-	}
-
-	Json::Value root;
+		return false;
+	} 
 	Json::Reader reader;
-	reader.parse(bodyString, root);
+	reader.parse(bodyString, root); 
+	return true;
+}
+
+void parseConsumeGroupInfo(ConsumeGroupInfo& info, Message& msg) { 
+	Json::Value root;
+	if (!parseBase(info, root, msg)) return;
 
 	parseConsumeGroupInfo(info, root); 
 }
 
 void parseTopicInfo(TopicInfo& info, Message& msg) {
-	string bodyString = msg.getBodyString();
-	if (msg.status != "200") {
-		info.error = MqException(bodyString);
-		return;
-	}
-
 	Json::Value root;
-	Json::Reader reader;
-	reader.parse(bodyString, root);
+	if (!parseBase(info, root, msg)) return;
+
 	parseTopicInfo(info, root);
 }
 void parseServerInfo(ServerInfo& info, Message& msg) {
-	string bodyString = msg.getBodyString();
-	if (msg.status != "200") {
-		info.error = MqException(bodyString);
-		return;
-	}
-
 	Json::Value root;
-	Json::Reader reader;
-	reader.parse(bodyString, root);
+	if (!parseBase(info, root, msg)) return;
+
 	parseServerInfo(info, root);
 }
 
 void parseTrackerInfo(TrackerInfo& info, Message& msg) {
-	string bodyString = msg.getBodyString();
-	if (msg.status != "200") {
-		info.error = MqException(bodyString);
-		return;
-	}
-
 	Json::Value root;
-	Json::Reader reader;
-	reader.parse(bodyString, root); 
+	if (!parseBase(info, root, msg)) return;
 
 	info.infoVersion = root["infoVersion"].asString();
 	parseServerAddress(info.serverAddress, root["serverAddress"]); 

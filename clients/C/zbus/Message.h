@@ -31,6 +31,63 @@ public:
 	void setConsumeGroup(string value) {
 		setHeader(PROTOCOL_CONSUME_GROUP, value);
 	}
+	string getGroupFilter() {
+		return getHeader(PROTOCOL_GROUP_FILTER);
+	}
+	void setGroupFilter(string value) {
+		setHeader(PROTOCOL_GROUP_FILTER, value);
+	}
+	
+	string getGroupStartCopy() {
+		return getHeader(PROTOCOL_GROUP_START_COPY);
+	}
+	void setGroupStartCopy(string value) {
+		setHeader(PROTOCOL_GROUP_START_COPY, value);
+	}
+	
+	string getGroupStartMsgId() {
+		return getHeader(PROTOCOL_GROUP_START_MSGID);
+	}
+	void setGroupStartMsgId(string value) {
+		setHeader(PROTOCOL_GROUP_START_MSGID, value);
+	}
+
+	int64_t getGroupStartOffset() {
+		string value = getHeader(PROTOCOL_GROUP_START_OFFSET);
+		if (value == "") return -1;
+		return atoll(value.c_str());
+	} 
+	void setGroupStartOffset(int64_t value = -1) {
+		if (value < 0) return;
+		char data[128];
+		sprintf(data, "%lld", value);
+		setHeader(PROTOCOL_GROUP_START_OFFSET, data);
+	}
+
+	int64_t getGroupStartTime() {
+		string value = getHeader(PROTOCOL_GROUP_START_TIME);
+		if (value == "") return -1;
+		return atoll(value.c_str());
+	}
+	void setGroupStartTime(int64_t value = -1) {
+		if (value < 0) return;
+		char data[128];
+		sprintf(data, "%lld", value);
+		setHeader(PROTOCOL_GROUP_START_TIME, data);
+	}
+	int getGroupMask() {
+		string value = getHeader(PROTOCOL_GROUP_MASK);
+		if (value == "") return -1;
+		return atoi(value.c_str());
+	} 
+	void setGroupMask(int value = -1) {
+		if (value < 0) return;
+		char mask[64];
+		sprintf(mask, "%d", value);
+		setHeader(PROTOCOL_GROUP_MASK, mask);
+	}
+
+
 	string getSender() {
 		return getHeader(PROTOCOL_SENDER);
 	}
@@ -72,6 +129,18 @@ public:
 	}
 	void setOriginUrl(string value) {
 		setHeader(PROTOCOL_ORIGIN_URL, value);
+	}
+
+	int getTopicMask() {
+		string value = getHeader(PROTOCOL_TOPIC_MASK);
+		if (value == "") return -1;
+		return atoi(value.c_str());
+	} 
+	void setTopicMask(int value=-1) {
+		if (value < 0) return;
+		char mask[64];
+		sprintf(mask, "%d", value);
+		setHeader(PROTOCOL_TOPIC_MASK, mask);
 	}
 
 	string getHeader(string key, string defaultValue = "") {

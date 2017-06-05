@@ -3,6 +3,8 @@
    
 #include "Message.h"
 #include "Protocol.h" 
+#include <string>
+using namespace std;
 
 void parseConsumeGroupInfo(ConsumeGroupInfo& info, Message& msg);
 void parseTopicInfo(TopicInfo& info, Message& msg);

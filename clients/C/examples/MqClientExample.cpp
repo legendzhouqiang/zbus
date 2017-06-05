@@ -17,6 +17,13 @@ int main(int argc, char* argv[]) {
 	ConsumeGroupInfo groupInfo = client.queryGroup("hong", "hong");
 	log->info("%s", groupInfo.groupName.c_str());
 
+	client.declareTopic("CPP_Topic");
+	ConsumeGroup group;
+	group.groupName = "MyCpp";
+	group.filter = "abc.*";
+
+	client.declareGroup("CPP_Topic", group);
+
 	system("pause");
 	return 0;
 }

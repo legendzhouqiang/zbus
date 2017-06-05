@@ -4,6 +4,38 @@
 #include "MessageClient.h"
 #include "Kit.h" 
  
+class ZBUS_API ConsumeGroup {
+public:
+	string groupName;
+	string filter;          //filter on message'tag
+	int mask = -1;
+
+	string startCopy;       //create group from another group 
+	int64_t startOffset = -1;
+	string startMsgId;      //create group start from offset, msgId to check valid
+	int64_t startTime = -1;    //create group start from time 
+
+	void load(Message& msg) {
+		groupName = msg.getConsumeGroup();
+		filter = msg.getGroupFilter();
+		mask = msg.getGroupMask();
+		startCopy = msg.getGroupStartCopy();
+		startOffset = msg.getGroupStartOffset();
+		startMsgId = msg.getGroupStartMsgId();
+		startTime = msg.getGroupStartTime();
+	}
+
+	void writeTo(Message& msg) {
+		msg.setConsumeGroup(groupName);
+		msg.setGroupFilter(filter); 
+		msg.setGroupMask(mask);
+		msg.setGroupStartCopy(startCopy);
+		msg.setGroupStartOffset(startOffset);
+		msg.setGroupStartMsgId(startMsgId);
+		msg.setGroupStartTime(startTime);
+	}
+};
+
 class ZBUS_API MqClient : public MessageClient {
 
 public:
@@ -67,6 +99,41 @@ public:
 		msg.setTopic(topic);
 		msg.setConsumeGroup(group);
 		msg.setToken(token);
+		Message* res = invoke(msg, timeout);
+
+		ConsumeGroupInfo info;
+		parseConsumeGroupInfo(info, *res);
+
+		if (res) {
+			delete res;
+		}
+		return info;
+	} 
+
+	TopicInfo declareTopic(string topic, int topicMask=-1, int timeout = 3000) {
+		Message msg;
+		msg.setCmd(PROTOCOL_DECLARE);
+		msg.setTopic(topic);
+		msg.setTopicMask(topicMask);
+		msg.setToken(token);
+		Message* res = invoke(msg, timeout);
+
+		TopicInfo info;
+		parseTopicInfo(info, *res);
+
+		if (res) {
+			delete res;
+		}
+		return info;
+	}
+
+	ConsumeGroupInfo declareGroup(string topic, ConsumeGroup& group, int timeout = 3000) {
+		Message msg;
+		msg.setCmd(PROTOCOL_DECLARE);
+		msg.setTopic(topic); 
+		msg.setToken(token);
+		group.writeTo(msg);
+
 		Message* res = invoke(msg, timeout);
 
 		ConsumeGroupInfo info;

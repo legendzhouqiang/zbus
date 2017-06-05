@@ -93,7 +93,8 @@ public:
 
 
 class ZBUS_API ErrorInfo {  //used only for batch operation indication
-public:
+public: 
+	bool isError;
 	std::exception error;
 };
 
