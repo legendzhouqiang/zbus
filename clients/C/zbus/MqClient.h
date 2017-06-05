@@ -4,6 +4,8 @@
 #include "MessageClient.h"
 #include <json/value.h> 
 #include <json/reader.h>
+#include <iostream>
+using namespace std;
  
 class ZBUS_API MqClient : public MessageClient {
 
@@ -20,17 +22,15 @@ public:
 
 	ServerInfo queryServer(int timeout=3000) {
 		Message msg;
-		msg.setCmd(PROTOCOL_SERVER);
+		msg.setCmd(PROTOCOL_QUERY);
 		msg.setToken(token); 
 		Message* res = invoke(msg, timeout);
-		
-		res->getBodyString();
-
+		 
+		string body = res->getBodyString();
+		cout << body << endl;
 		Json::Value root;
-		Json::Reader reader;
-		char* begin = res->getBodyString();
-		char* end = begin + res->getBodyLength();
-		reader.parse(begin, end, root);
+		Json::Reader reader; 
+		reader.parse(body, root);
 		
 
 		ServerInfo info;

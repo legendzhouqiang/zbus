@@ -4,7 +4,7 @@
 #include <cstring>   
 #include <cstdlib> 
 
-inline bool cmpIgnoreCase(char* s1, char* s2) {
+inline bool cmpIgnoreCase(char* s1, char* s2, int n) {
 	if (s1 == s2) return true;
 	if (s1 == NULL) return false;
 	if (s2 == NULL) return false;
@@ -14,7 +14,7 @@ inline bool cmpIgnoreCase(char* s1, char* s2) {
 	for (int i = 0; i < strlen(s1); i++) s1[i] = toupper(s1[i]);
 	for (int i = 0; i < strlen(s2); i++) s2[i] = toupper(s2[i]);
 
-	int res = strcmp(s1, s2);
+	int res = strncmp(s1, s2, n);
 	free(s1);
 	free(s2);
 	return res == 0;

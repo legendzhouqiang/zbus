@@ -9,7 +9,8 @@ int main(int argc, char* argv[]) {
 	client.connect();
 	 
 	ServerInfo info = client.queryServer();
-	log->info("%s", info.infoVersion);
+	log->info("%s", info.infoVersion.c_str());
 
 	system("pause");
+	return 0;
 }

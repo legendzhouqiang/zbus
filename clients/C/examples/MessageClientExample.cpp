@@ -20,6 +20,6 @@ int main_messageclient(int argc, char* argv[]) {
 			delete res;
 		}
 	}
-
 	system("pause");
+	return 0;
 }

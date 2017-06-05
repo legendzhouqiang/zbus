@@ -126,9 +126,14 @@ public:
 		setBody(body);
 	}   
 
-	char* getBodyString() const{
+	string getBodyString() const{
+		string res;
+		return res.assign((char*)body, (char*)body + bodyLength); 
+	}  
+
+	void* getBody() const {
 		return (char*)body;
-	} 
+	}  
 
 	int getBodyLength() const {
 		return this->bodyLength;
@@ -233,7 +238,7 @@ private:
 
 		char* metaCtx;
 		char* m = strtok_s(p, " ", &metaCtx);
-		if (cmpIgnoreCase(m, "HTTP")) {
+		if (cmpIgnoreCase(m, "HTTP", 4)) {
 			msg->status = strtok_s(NULL, " ", &metaCtx);
 		} else {
 			msg->url = strtok_s(NULL, " ", &metaCtx);
