@@ -151,9 +151,6 @@
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Thread.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Thread.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
