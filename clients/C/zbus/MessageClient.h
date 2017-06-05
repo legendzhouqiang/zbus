@@ -82,7 +82,7 @@ unsigned long  net_htonl(unsigned long  n);
 /*
 * Set the socket blocking or non-blocking
 */
-static int net_set_block(int fd)
+inline static int net_set_block(int fd)
 {
 #ifdef __WINDOWS__
 	u_long n = 0;
@@ -92,7 +92,7 @@ static int net_set_block(int fd)
 #endif
 }
 
-static int net_set_nonblock(int fd)
+inline static int net_set_nonblock(int fd)
 {
 #ifdef __WINDOWS__
 	u_long n = 1;
@@ -105,7 +105,7 @@ static int net_set_nonblock(int fd)
 /*
 * Prepare for using the sockets interface
 */
-static int net_prepare(void)
+inline static int net_prepare(void)
 {
 #ifdef __WINDOWS__ 
 	if (wsa_init_done == 0)
@@ -123,7 +123,7 @@ static int net_prepare(void)
 }
 
 //connect error, to fix
-static int connect_with_timeout(int fd, struct sockaddr *name, int len, int64_t timeout) {
+inline static int connect_with_timeout(int fd, struct sockaddr *name, int len, int64_t timeout) {
 	fd_set wset, eset;
 	int rc;
 	struct timeval tv;
@@ -158,7 +158,7 @@ static int connect_with_timeout(int fd, struct sockaddr *name, int len, int64_t 
 	return -1;
 }
 
-static void net_close(int fd)
+inline static void net_close(int fd)
 {
 	shutdown(fd, 2);
 	close(fd);
@@ -170,7 +170,7 @@ static void net_close(int fd)
 * Check if the requested operation would be blocking on a non-blocking socket
 * and thus 'failed' with a negative return value.
 */
-static int net_would_block(int fd)
+inline static int net_would_block(int fd)
 {
 	return(WSAGetLastError() == WSAEWOULDBLOCK);
 }
@@ -181,7 +181,7 @@ static int net_would_block(int fd)
 *
 * Note: on a blocking socket this function always returns 0!
 */
-static int net_would_block(int fd)
+inline static int net_would_block(int fd)
 {
 	/*
 	* Never return 'WOULD BLOCK' on a non-blocking socket
@@ -204,7 +204,7 @@ static int net_would_block(int fd)
 #endif
 
 
-static int net_set_timeout(int fd, int64_t timeout) {
+inline static int net_set_timeout(int fd, int64_t timeout) {
 	int rc = -1;
 #ifdef __UNIX__
 	struct timeval tv;
@@ -221,7 +221,7 @@ static int net_set_timeout(int fd, int64_t timeout) {
 /*
 * Initiate a TCP connection with host:port
 */
-static int net_connect(int *fd, const char *host, int port)
+inline static int net_connect(int *fd, const char *host, int port)
 {
 	int ret;
 	struct addrinfo hints, *addr_list, *cur;
@@ -271,7 +271,7 @@ static int net_connect(int *fd, const char *host, int port)
 /*
 * Read at most 'len' characters
 */
-static int net_recv(int fd, unsigned char *buf, size_t len)
+inline static int net_recv(int fd, unsigned char *buf, size_t len)
 {
 	int ret = read(fd, buf, len);
 
@@ -300,7 +300,7 @@ static int net_recv(int fd, unsigned char *buf, size_t len)
 /*
 * Write at most 'len' characters
 */
-static int net_send(int fd, const unsigned char *buf, size_t len)
+inline static int net_send(int fd, const unsigned char *buf, size_t len)
 {
 	int ret = write(fd, buf, len);
 

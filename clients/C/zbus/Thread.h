@@ -1,10 +1,10 @@
-#ifndef __ZBUS_THREADING_H__
-#define __ZBUS_THREADING_H__ 
+#ifndef __ZBUS_THREAD_H__
+#define __ZBUS_THREAD_H__ 
 
 #include "Platform.h"
  
 
-ZBUS_API int64_t current_millis(void) {
+inline static int64_t current_millis(void) {
 #if defined (__UNIX__)
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -17,7 +17,7 @@ ZBUS_API int64_t current_millis(void) {
 #endif
 }
 
-ZBUS_API void
+inline static void
 replace_sleep(int64_t msecs) {
 #if defined (__UNIX__)
 	struct timespec t;
@@ -128,12 +128,8 @@ ZBUS_API int sigaction(int sig, struct sigaction *in, struct sigaction *out);
 #define pthread_attr_getstacksize(x, y) (*(y) = *(x))
 #define pthread_attr_setstacksize(x, y) (*(x) = y)
 
-#define pthread_t u_int
-
-ZBUS_API int pthread_create(pthread_t *thread, const void *unused,
-				   void *(*start_routine)(void*), void *arg);
-
-ZBUS_API pthread_t pthread_self(void);
+#define pthread_t u_int 
+ 
 
 typedef struct {
 	CRITICAL_SECTION waiters_lock;
@@ -142,22 +138,7 @@ typedef struct {
 	HANDLE sema;
 	HANDLE continue_broadcast;
 } pthread_cond_t;
-
-ZBUS_API int pthread_cond_init(pthread_cond_t *cond, const void *unused);
-ZBUS_API int pthread_cond_destroy(pthread_cond_t *cond);
-ZBUS_API int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-
-ZBUS_API int pthread_cond_signal(pthread_cond_t *cond);
-ZBUS_API int pthread_cond_broadcast(pthread_cond_t *cond);
-
-ZBUS_API int  pthread_detach (pthread_t thread);
-ZBUS_API int  pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
-ZBUS_API void pthread_exit(void *value_ptr);
-ZBUS_API int  pthread_join(pthread_t* thread, void **retval);
-
-//NOT compatible to pthread
-ZBUS_API int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, int64_t millis);
-
+  
 
 #ifndef siginfo_t
 typedef struct {
@@ -187,7 +168,7 @@ typedef struct {
 
 
 /* Behaves as posix, works without ifdefs, makes compiler happy */
-int sigaction(int sig, struct sigaction *in, struct sigaction *out) {
+inline static int sigaction(int sig, struct sigaction *in, struct sigaction *out) {
 	_NOTUSED(out);
 
 	/* When the SA_SIGINFO flag is set in sa_flags then sa_sigaction
@@ -216,7 +197,7 @@ static unsigned __stdcall win32_proxy_threadproc(void *arg) {
 	return 0;
 }
 
-int pthread_create(pthread_t *thread, const void *unused,
+inline static int pthread_create(pthread_t *thread, const void *unused,
 	void *(*start_routine)(void*), void *arg) {
 	HANDLE h;
 	thread_params *params = (thread_params *)malloc(sizeof(thread_params));
@@ -240,16 +221,16 @@ int pthread_create(pthread_t *thread, const void *unused,
 }
 
 /* Noop in windows */
-int pthread_detach(pthread_t thread) {
+inline static int pthread_detach(pthread_t thread) {
 	_NOTUSED(thread);
 	return 0; /* noop */
 }
 
-pthread_t pthread_self(void) {
+inline static pthread_t pthread_self(void) {
 	return GetCurrentThreadId();
 }
 
-int pthread_sigmask(int how, const sigset_t *set, sigset_t *oset) {
+inline static int pthread_sigmask(int how, const sigset_t *set, sigset_t *oset) {
 	_NOTUSED(set);
 	_NOTUSED(oset);
 	switch (how) {
@@ -266,7 +247,7 @@ int pthread_sigmask(int how, const sigset_t *set, sigset_t *oset) {
 	return 0;
 }
 
-int pthread_join(pthread_t *thread, void **value_ptr) {
+inline static int pthread_join(pthread_t *thread, void **value_ptr) {
 	int result;
 	HANDLE h = OpenThread(SYNCHRONIZE, FALSE, *thread);
 	_NOTUSED(value_ptr);
@@ -284,7 +265,7 @@ int pthread_join(pthread_t *thread, void **value_ptr) {
 	return result;
 }
 
-int pthread_cond_init(pthread_cond_t *cond, const void *unused) {
+static inline int pthread_cond_init(pthread_cond_t *cond, const void *unused) {
 	_NOTUSED(unused);
 	cond->waiters = 0;
 	cond->was_broadcast = 0;
@@ -309,14 +290,14 @@ int pthread_cond_init(pthread_cond_t *cond, const void *unused) {
 	return 0;
 }
 
-int pthread_cond_destroy(pthread_cond_t *cond) {
+inline static int pthread_cond_destroy(pthread_cond_t *cond) {
 	CloseHandle(cond->sema);
 	CloseHandle(cond->continue_broadcast);
 	DeleteCriticalSection(&cond->waiters_lock);
 	return 0;
 }
 
-int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, int64_t millis) {
+inline static int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, int64_t millis) {
 	int last_waiter;
 
 	EnterCriticalSection(&cond->waiters_lock);
@@ -368,7 +349,7 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, int64_t
 	return 0;
 }
 
-int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+inline static int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
 	return pthread_cond_timedwait(cond, mutex, INFINITE);
 }
 
@@ -377,7 +358,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
 * is called while the mutex is held that is used in the corresponding
 * pthread_cond_wait calls!
 */
-int pthread_cond_signal(pthread_cond_t *cond) {
+inline static int pthread_cond_signal(pthread_cond_t *cond) {
 	int have_waiters;
 
 	EnterCriticalSection(&cond->waiters_lock);
@@ -393,12 +374,12 @@ int pthread_cond_signal(pthread_cond_t *cond) {
 		return 0;
 }
 
-void pthread_exit(void *value_ptr) {
+inline static void pthread_exit(void *value_ptr) {
 	ExitThread((DWORD)value_ptr);
 }
 
 
-int pthread_cond_broadcast(pthread_cond_t *cond) {
+inline static int pthread_cond_broadcast(pthread_cond_t *cond) {
 	EnterCriticalSection(&cond->waiters_lock);
 	if ((cond->was_broadcast = cond->waiters > 0)) {
 		/* wake up all waiters */
