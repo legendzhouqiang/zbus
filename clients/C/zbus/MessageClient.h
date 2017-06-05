@@ -1,7 +1,7 @@
 #ifndef __ZBUS_MESSAGE_CLIENT_H__
 #define __ZBUS_MESSAGE_CLIENT_H__  
-
-#include "Protocol.h"
+ 
+#include "Platform.h"
 #include "Message.h"
 #include "Logger.h"
 #include "Buffer.h";
@@ -25,25 +25,27 @@ using namespace std;
 #define NET_LISTEN_BACKLOG           10  /**< The backlog that listen() should use. */
  
 
-class MessageClient {
+ZBUS_API class MessageClient {
 private:
 	Logger* logger;
 private:
 	int socket;
-	ServerAddress serverAddress;
+
+	string address;
+	bool sslEnabed;
+
 	string sslCertFile;
 	map<string, Message*> msgTable;
 	ByteBuffer* readBuffer;
 private:
 	void resetReadBuffer();
 public:
-	MessageClient(string serverAddress, string sslCertFile="");
-	MessageClient(ServerAddress& serverAddress, string sslCertFile="");
-	~MessageClient();
+	ZBUS_API MessageClient(string address, bool sslEnabled=false, string sslCertFile="");
+	ZBUS_API virtual ~MessageClient();
 
-	int connect();
-	int send(Message& msg, int timeout=3000);
-	Message* recv(int& rc, char* msgid=NULL, int timeout=3000);
+	ZBUS_API int connect();
+	ZBUS_API int send(Message& msg, int timeout=3000);
+	ZBUS_API Message* recv(int& rc, const char* msgid=NULL, int timeout=3000);
 };
 
 #endif

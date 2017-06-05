@@ -303,26 +303,17 @@ static int net_send(int fd, const unsigned char *buf, size_t len)
 	return(ret);
 }
  
-MessageClient::MessageClient(string serverAddress, string sslCertFile) :
-	serverAddress(serverAddress),
+MessageClient::MessageClient(string address, bool sslEnabled, string sslCertFile) :
+	address(address),
+	sslEnabed(sslEnabed),
 	sslCertFile(sslCertFile),
 	socket(-1)
 { 
 	logger = Logger::getLogger();
-	readBuffer = NULL;
-}
-MessageClient::MessageClient(ServerAddress& serverAddress, string sslCertFile) :
-	serverAddress(serverAddress),
-	sslCertFile(sslCertFile),
-	socket(-1)
-{
-	logger = Logger::getLogger();
-	readBuffer = NULL;
-}
+	readBuffer = new ByteBuffer();
+} 
 
-
-MessageClient::~MessageClient() {
-	printf("destroy\n");
+MessageClient::~MessageClient() { 
 	if (socket != -1) {
 		net_close(socket);
 		socket = -1;
@@ -340,11 +331,11 @@ void MessageClient::resetReadBuffer() {
 	if (readBuffer) {
 		delete readBuffer; 
 	}
-	readBuffer = new ByteBuffer(10240);
+	readBuffer = new ByteBuffer();
 }
 int MessageClient::connect() {
 	resetReadBuffer();
-	string address = this->serverAddress.address;
+	string address = this->address;
 	size_t pos = address.find(':');
 	int port = 80; 
 	char* host = (char*)address.substr(0, pos).c_str();
@@ -392,19 +383,20 @@ int MessageClient::send(Message& msg, int timeout) {
 } 
 
 
-Message* MessageClient::recv(int& rc, char* msgid, int timeout) {
+Message* MessageClient::recv(int& rc, const char* msgid, int timeout) {
 	if (msgid){
 		Message* res = msgTable[msgid];
-		msgTable.erase(string(msgid)); 
 		if (res) {
-			rc = 0;
+			msgTable.erase(string(msgid));
 			return res;
-		}
+		} 
 	}
 
 	rc = net_set_timeout(this->socket, timeout);
-	if (rc < 0) return NULL;
-	
+	if (rc < 0) return NULL; 
+	if (logger->isDebugEnabled()) {
+		logger->logHead(LOG_DEBUG);
+	}
 	while (true) {
 		unsigned char data[10240];
 		int n = net_recv(this->socket, data, sizeof(data));
@@ -413,11 +405,25 @@ Message* MessageClient::recv(int& rc, char* msgid, int timeout) {
 			return NULL;
 		} 
 		readBuffer->put((void*)data, n);
+		if (logger->isDebugEnabled()) {
+			logger->logBody((void*)data, n, LOG_DEBUG);
+		}
 
 		ByteBuffer buf(readBuffer); //duplicate, no copy of data
 		buf.flip();  
-		return 0;
-	} 
 
-	return 0;
+		Message* msg = Message::decode(buf); 
+		if (msg == NULL) {
+			continue;
+		}
+
+		ByteBuffer* newBuf = new ByteBuffer(buf.begin(), buf.remaining());
+		delete this->readBuffer;
+		this->readBuffer = newBuf; 
+
+		if (msg->getId() == msgid) {
+			return msg;
+		} 
+		msgTable[msgid] = msg;  
+	}  
 }

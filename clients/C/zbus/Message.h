@@ -1,6 +1,7 @@
 #ifndef __ZBUS_MESSAGE_H__
 #define __ZBUS_MESSAGE_H__   
 
+#include "Platform.h"
 #include "Protocol.h"
 #include "Buffer.h"
 #include "Kit.h"
@@ -11,67 +12,67 @@
 
 using namespace std;
 
-class Message {
+ZBUS_API class Message {
 public:
 	string getCmd() {
-		return getHeader(Protocol::CMD);
+		return getHeader(HEADER_CMD);
 	}
 	void setCmd(string value) {
-		setHeader(Protocol::CMD, value);
+		setHeader(HEADER_CMD, value);
 	}  
 	string getTopic() {
-		return getHeader(Protocol::TOPIC);
+		return getHeader(HEADER_TOPIC);
 	}
 	void setTopic(string value) {
-		setHeader(Protocol::TOPIC, value);
+		setHeader(HEADER_TOPIC, value);
 	}
 	string getConsumeGroup() {
-		return getHeader(Protocol::CONSUME_GROUP);
+		return getHeader(HEADER_CONSUME_GROUP);
 	}
 	void setConsumeGroup(string value) {
-		setHeader(Protocol::CONSUME_GROUP, value);
+		setHeader(HEADER_CONSUME_GROUP, value);
 	}
 	string getSender() {
-		return getHeader(Protocol::SENDER);
+		return getHeader(HEADER_SENDER);
 	}
 	void setSender(string value) {
-		setHeader(Protocol::SENDER, value);
+		setHeader(HEADER_SENDER, value);
 	}
 	string getRecver() {
-		return getHeader(Protocol::RECVER);
+		return getHeader(HEADER_RECVER);
 	}
 	void setRecver(string value) {
-		setHeader(Protocol::RECVER, value);
+		setHeader(HEADER_RECVER, value);
 	}
 	string getToken() {
-		return getHeader(Protocol::TOKEN);
+		return getHeader(HEADER_TOKEN);
 	}
 	void setToken(string value) {
-		setHeader(Protocol::TOKEN, value);
+		setHeader(HEADER_TOKEN, value);
 	}
 	string getId() {
-		return getHeader(Protocol::ID);
+		return getHeader(HEADER_ID);
 	}
 	void setId(string value) {
-		setHeader(Protocol::ID, value);
+		setHeader(HEADER_ID, value);
 	}
 	string getOriginId() {
-		return getHeader(Protocol::ORIGIN_ID);
+		return getHeader(HEADER_ORIGIN_ID);
 	}
 	void setOriginId(string value) {
-		setHeader(Protocol::ORIGIN_ID, value);
+		setHeader(HEADER_ORIGIN_ID, value);
 	}
 	string getOriginStatus() {
-		return getHeader(Protocol::ORIGIN_STATUS);
+		return getHeader(HEADER_ORIGIN_STATUS);
 	}
 	void setOriginStatus(string value) {
-		setHeader(Protocol::ORIGIN_STATUS, value);
+		setHeader(HEADER_ORIGIN_STATUS, value);
 	}
 	string getOriginUrl() {
-		return getHeader(Protocol::ORIGIN_URL);
+		return getHeader(HEADER_ORIGIN_URL);
 	}
 	void setOriginUrl(string value) {
-		setHeader(Protocol::ORIGIN_URL, value);
+		setHeader(HEADER_ORIGIN_URL, value);
 	}
 
 	string getHeader(string key, string defaultValue = "") {
@@ -134,11 +135,12 @@ public:
 		encode(buf);
 		buf.flip();
 		buf.print();
+		printf("\n");
 	}
 
 	void encode(ByteBuffer& buf) { 
 		if (status != "") {
-			string desc = HttpStatus::Table[status];
+			string desc = HttpStatusTable()[status];
 			if (desc == "") {
 				desc = "Unknown Status";
 			} 
@@ -168,49 +170,44 @@ public:
 		} 
 	}  
 
-	bool decode(ByteBuffer& buf) {
+    inline static Message* decode(ByteBuffer& buf) {
 		buf.mark();
 
-		//clear message
-		this->header.clear(); 
-		if (this->body) { 
-			delete this->body;
-			this->body = NULL;
-		}
-		this->bodyLength = 0;
-		this->status = "";
+		Message* msg = new Message(); 
 
 		int len = findHeadLength(buf);
 		if (len < 0) return false;
 		char* headerStr = new char[len + 1];
 		strncpy(headerStr, buf.begin(), len);
 		headerStr[len] = '\0';
-		bool ok = parseHead(headerStr);
+		bool ok = parseHead(headerStr, msg);
 		delete headerStr;
 		if (!ok) {
 			buf.reset();
-			return false;
+			delete msg;
+			return NULL;
 		}
 
 		buf.drain(len);
-		string contentLen = header["content-length"];
+		string contentLen = msg->header["content-length"];
 		if (contentLen == "") {//no content-length, treat as message without body
-			return true;
+			return msg;
 		} 
 		int nBody = atoi(contentLen.c_str());
 		if (nBody > buf.remaining()) {
 			buf.reset();
-			return false;
+			delete msg;
+			return NULL;
 		}  
 
-		this->body = new unsigned char[nBody];
-		this->bodyLength = nBody;
-		buf.get((char*)this->body, nBody);  
-		return true;
+		msg->body = new unsigned char[nBody];
+		msg->bodyLength = nBody;
+		buf.get((char*)msg->body, nBody);  
+		return msg;
 	}
 
 private:
-	int findHeadLength(ByteBuffer& buf) {
+	inline static int findHeadLength(ByteBuffer& buf) {
 		char* begin = buf.begin();
 		char* p = begin;
 		char* end = buf.end();
@@ -223,7 +220,7 @@ private:
 		return -1;
 	}
 
-	bool parseHead(char* buf) {   
+    inline static bool parseHead(char* buf, Message* msg) {   
 		char* headCtx;
 		char* p = strtok_s(buf, "\r\n", &headCtx);
 		if (!p) { 
@@ -233,9 +230,9 @@ private:
 		char* metaCtx;
 		char* m = strtok_s(p, " ", &metaCtx);
 		if (cmpIgnoreCase(m, "HTTP")) {
-			status = strtok_s(NULL, " ", &metaCtx);
+			msg->status = strtok_s(NULL, " ", &metaCtx);
 		} else {
-			url = strtok_s(NULL, " ", &metaCtx);
+			msg->url = strtok_s(NULL, " ", &metaCtx);
 		}
 
 		p = strtok_s(NULL, "\r\n", &headCtx);
@@ -244,14 +241,37 @@ private:
 			if (d) {//ignore not key value
 				char* key = strdupTrimed(p, d - p);
 				char* val = strdupTrimed(d + 1, p + strlen(p) - d - 1);
-				header[string(key)] = string(val);
+				msg->header[string(key)] = string(val);
 				free(key);
 				free(val);
 			}
 			p = strtok_s(NULL, "\r\n", &headCtx);
 		}
 		return true;
-	} 
+	}  
+
+	static map<string, string>& HttpStatusTable() {
+		static bool inited = false;
+		static map<string, string> table;
+		if (!inited) {
+
+			table["200"] = "OK";
+			table["201"] = "Created";
+			table["202"] = "Accepted";
+			table["204"] = "No Content";
+			table["206"] = "Partial Content";
+			table["301"] = "Moved Permanently";
+			table["304"] = "Not Modified";
+			table["400"] = "Bad Request";
+			table["401"] = "Unauthorized";
+			table["403"] = "Forbidden";
+			table["404"] = "Not Found";
+			table["405"] = "Method Not Allowed";
+			table["416"] = "Requested Range Not Satisfiable";
+			table["500"] = "Internal Server Error";
+		}
+		return table;
+	}
 };
  
 

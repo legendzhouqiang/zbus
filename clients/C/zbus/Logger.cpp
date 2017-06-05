@@ -87,6 +87,7 @@ Logger::~Logger(){
 		FILE* file = this->getLogFile();\
 		fwrite(data, 1, len, file);\
 		fflush (file);\
+		fprintf (file, "\n");\
 		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);\
 	}\
 }while(0)
@@ -132,6 +133,17 @@ void Logger::error(void* data, int len) {
 }
 
 
+void Logger::logBody(void* data, int len, const int level) {
+	if (this->level >= (level)) {
+		pthread_mutex_lock((pthread_mutex_t*)this->mutex); 
+		FILE* file = this->getLogFile(); 
+		fwrite(data, 1, len, file);
+		fflush(file);
+		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);
+	}
+}
+
+
 FILE* Logger::getLogFile() { 
 	int date;
 	char fdate[32];
@@ -173,7 +185,7 @@ void Logger::createLogFile() {
 
 
 
-void Logger::logHead(const int priority) {
+void Logger::logHead(const int level) {
 	FILE* file;
 	time_t curtime = time(NULL);
 	struct tm *loctime;
@@ -185,7 +197,7 @@ void Logger::logHead(const int priority) {
 	strftime(formatted, 32, "[%Y-%m-%d %H:%M:%S", loctime);
 	fprintf(file, "%s.%03d] ", formatted, current_time() % 1000);
 
-	switch (priority)
+	switch (level)
 	{
 	case LOG_DEBUG:
 		caption = "DEBUG";
@@ -207,6 +219,9 @@ void Logger::logHead(const int priority) {
 
 	fprintf(file, "%s - ", caption);
 }
+
+
+
 
 Logger Logger::defaultLogger;
  

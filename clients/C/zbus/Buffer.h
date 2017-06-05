@@ -1,10 +1,11 @@
 #ifndef __ZBUS_BUFFER_H__
 #define __ZBUS_BUFFER_H__   
 
+#include "Platform.h"
 #include <exception>
 #include <string> 
 using namespace std;
-class ByteBuffer {
+ZBUS_API class ByteBuffer {
 private:
 	int mark_ = -1;
 	int position = 0;
@@ -14,7 +15,7 @@ private:
 	char* data = 0;
 
 public: 
-	ByteBuffer(int capacity=1024) {
+	ByteBuffer(int capacity=10240) {
 		this->limit_ = this->capacity = capacity;
 
 		ownData = 1;
@@ -22,9 +23,10 @@ public:
 	}
 
 	ByteBuffer(char* array, int len) {
-		ownData = 0;
-		data = array;
+		ownData = 1;
 		limit_ = capacity = len;
+		data = new char[capacity];
+		memcpy(data, array, capacity); 
 	}
 
 	ByteBuffer(ByteBuffer* buf) {
@@ -150,6 +152,9 @@ private:
 		if (this->ownData == 0) return -1; //can not expand for duplicated
 
 		int new_cap = this->capacity;
+		if (new_cap <= 0) {
+			new_cap = 10240; //default 
+		}
 		int new_size = this->position + need;
 		char* new_data;
 		

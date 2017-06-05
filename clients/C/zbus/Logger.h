@@ -9,7 +9,7 @@
 #define	LOG_INFO	2	/* informational */
 #define	LOG_DEBUG	3	/* debug-level messages */ 
  
-class Logger {
+class ZBUS_API Logger {
 private: 
 	char  logDir[256];
 	FILE* logFile;
@@ -20,11 +20,13 @@ private:
 private:
 	FILE* getLogFile();
 	void createLogFile();
-	void logHead(const int priority = LOG_INFO);
+	
 public:
 	Logger(char* logDir=NULL);
 	~Logger();
 
+	void logHead(const int level = LOG_INFO);
+	void logBody(void* data,int len, const int level = LOG_INFO);
 	
 	void debug(const char *format, ...);
 	void info(const char *format, ...);
