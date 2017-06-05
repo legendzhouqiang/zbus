@@ -24,6 +24,10 @@ int main(int argc, char* argv[]) {
 
 	client.declareGroup("CPP_Topic", group);
 
+	client.removeGroup("CPP_Topic", "MyCpp");
+
+	client.removeTopic("CPP_Topic");
+
 	system("pause");
 	return 0;
 }

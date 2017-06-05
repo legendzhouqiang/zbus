@@ -150,6 +150,7 @@ public:
 	}
 
 	void setHeader(string key, string value) {
+		if (value == "") return;
 		header[key] = value;
 	}
 

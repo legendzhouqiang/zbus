@@ -56,9 +56,7 @@ public:
 		TrackerInfo info;
 		parseTrackerInfo(info, *res);
 
-		if (res) {
-			delete res;
-		}
+		if (res) delete res; 
 		return info;
 	}
 
@@ -71,9 +69,7 @@ public:
 		ServerInfo info;
 		parseServerInfo(info, *res); 
 
-		if (res) {
-			delete res;
-		} 
+		if (res) delete res; 
 		return info;
 	}  
 
@@ -87,9 +83,7 @@ public:
 		TopicInfo info;
 		parseTopicInfo(info, *res);
 
-		if (res) {
-			delete res;
-		}
+		if (res) delete res; 
 		return info;
 	}
 
@@ -104,9 +98,7 @@ public:
 		ConsumeGroupInfo info;
 		parseConsumeGroupInfo(info, *res);
 
-		if (res) {
-			delete res;
-		}
+		if (res) delete res; 
 		return info;
 	} 
 
@@ -121,9 +113,7 @@ public:
 		TopicInfo info;
 		parseTopicInfo(info, *res);
 
-		if (res) {
-			delete res;
-		}
+		if (res)  delete res; 
 		return info;
 	}
 
@@ -139,11 +129,55 @@ public:
 		ConsumeGroupInfo info;
 		parseConsumeGroupInfo(info, *res);
 
-		if (res) {
-			delete res;
-		}
+		if (res)  delete res; 
+
 		return info;
 	}
+
+	void removeTopic(string topic, int timeout = 3000) {
+		removeGroup(topic, "", timeout);
+	}
+
+	void removeGroup(string topic, string group, int timeout = 3000) {
+		Message msg;
+		msg.setCmd(PROTOCOL_REMOVE);
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		msg.setToken(token); 
+
+		Message* res = invoke(msg, timeout);
+
+		if (res && res->status != "200") {
+			MqException error(res->getBodyString());
+			delete res;
+			throw error;
+		}
+
+		if (res) delete res; 
+	}
+
+	void emptyTopic(string topic, int timeout = 3000) {
+		emptyGroup(topic, "", timeout);
+	}
+
+	void emptyGroup(string topic, string group, int timeout = 3000) {
+		Message msg;
+		msg.setCmd(PROTOCOL_EMPTY);
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		msg.setToken(token);
+
+		Message* res = invoke(msg, timeout);
+
+		if (res && res->status != "200") {
+			MqException error(res->getBodyString());
+			delete res;
+			throw error;
+		}
+
+		if (res) delete res;
+	}
+
 
 };
 
