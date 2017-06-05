@@ -2,10 +2,7 @@
 #define __ZBUS_MQ_CLIENT_H__  
  
 #include "MessageClient.h"
-#include <json/value.h> 
-#include <json/reader.h>
-#include <iostream>
-using namespace std;
+#include "Kit.h" 
  
 class ZBUS_API MqClient : public MessageClient {
 
@@ -16,33 +13,22 @@ public:
 		MessageClient(address, sslEnabled, sslCertFile){
 
 	}
-	virtual ~MqClient() {
-
-	}
+	virtual ~MqClient() { }
 
 	ServerInfo queryServer(int timeout=3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_QUERY);
 		msg.setToken(token); 
-		Message* res = invoke(msg, timeout);
-		 
-		string body = res->getBodyString();
-		cout << body << endl;
-		Json::Value root;
-		Json::Reader reader; 
-		reader.parse(body, root);
-		
+		Message* res = invoke(msg, timeout); 
 
 		ServerInfo info;
-		info.infoVersion = root["infoVersion"].asString();
+		parseServerInfo(info, *res); 
+
 		if (res) {
 			delete res;
 		} 
 		return info;
-	}
-
-
-
+	}  
 
 };
 

@@ -89,5 +89,8 @@
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_writer.cpp">
       <Filter>Source Files\jsoncpp</Filter>
     </ClCompile>
+    <ClCompile Include="Kit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -323,26 +323,6 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len)
 	return(ret);
 }
 
-class ZBUS_API MqException : public exception {
-public:
-	int code;
-	string message; 
-
-	MqException(string message = "Unknown exception", int code = -1) :
-		exception(message.c_str())
-	{
-		this->message = message;
-		this->code = code;
-	}
-
-	MqException(MqException& ex) :
-		exception(ex.message.c_str())
-	{
-		this->code = ex.code;
-		this->message = ex.message;
-	}
-};
-
 class ZBUS_API MessageClient { 
 public:    
 	MessageClient(string address, bool sslEnabled = false, string sslCertFile = "") :

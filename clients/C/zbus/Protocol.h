@@ -94,17 +94,17 @@ public:
 
 class ZBUS_API ErrorInfo {  //used only for batch operation indication
 public:
-	exception error;
+	std::exception error;
 };
 
-class ZBUS_API TrackItem : ErrorInfo {
+class ZBUS_API TrackItem : public ErrorInfo {
 public:
 	TrackItem() {}
 	ServerAddress serverAddress;
 	string serverVersion;
 };
 
-class ZBUS_API ConsumeGroupInfo : ErrorInfo {
+class ZBUS_API ConsumeGroupInfo : public ErrorInfo {
 public:
 	string topicName;
 	string groupName;
@@ -119,7 +119,7 @@ public:
 	int64_t lastUpdatedTime;
 };
 
-class ZBUS_API TopicInfo : TrackItem {
+class ZBUS_API TopicInfo : public TrackItem {
 public:
 	string topicName;
 	int mask; 
@@ -132,16 +132,37 @@ public:
 	int64_t lastUpdatedTime;
 };
 
-class ZBUS_API ServerInfo : TrackItem {
+class ZBUS_API ServerInfo : public TrackItem {
 public:
 	string infoVersion;
-	map<string, TopicInfo> topicTable;
+	map<string, TopicInfo> topicTable; 
 };
 
-class ZBUS_API TrackerInfo : TrackItem {
+class ZBUS_API TrackerInfo : public TrackItem {
 public:
 	string infoVersion;
-	map<string, ServerInfo> serverTable;
+	map<string, ServerInfo> serverTable; 
 };  
+
+
+class ZBUS_API MqException : public exception {
+public:
+	int code;
+	string message;
+
+	MqException(string message = "Unknown exception", int code = -1) :
+		exception(message.c_str())
+	{
+		this->message = message;
+		this->code = code;
+	}
+
+	MqException(MqException& ex) :
+		exception(ex.message.c_str())
+	{
+		this->code = ex.code;
+		this->message = ex.message;
+	}
+};
 
 #endif
