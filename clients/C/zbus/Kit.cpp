@@ -10,11 +10,8 @@ static void parseServerAddress(ServerAddress& info, Json::Value& root) {
 }
 
 static void parseConsumeGroupInfo(ConsumeGroupInfo& info, Json::Value& root){  
-	info.consumerCount = root["consumerCount"].asInt();
-
-	Json::Value& consumerList = root["consumerList"];
-	for (Json::ValueIterator it = consumerList.begin(); it != consumerList.end(); ++it){
-		const Json::Value& value = *it; 
+	info.consumerCount = root["consumerCount"].asInt(); 
+	for (Json::Value& value : root["consumerList"]){ 
 		info.consumerList.push_back(value.asString());
 	} 
 	info.createdTime = root["createdTime"].asLargestInt();
@@ -27,10 +24,8 @@ static void parseConsumeGroupInfo(ConsumeGroupInfo& info, Json::Value& root){
 	info.topicName = root["topicName"].asString(); 
 }
 
-static void parseTopicInfo(TopicInfo& info, Json::Value& root) { 
-	Json::Value& groupList = root["consumeGroupList"];
-	for (Json::ValueIterator it = groupList.begin(); it != groupList.end(); ++it) {
-		Json::Value& value = *it;
+static void parseTopicInfo(TopicInfo& info, Json::Value& root) {  
+	for (Json::Value& value : root["consumeGroupList"]) { 
 		ConsumeGroupInfo groupInfo;
 		parseConsumeGroupInfo(groupInfo, value);
 		info.consumeGroupList.push_back(groupInfo);

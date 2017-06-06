@@ -118,41 +118,6 @@ inline static int net_prepare(void)
 	return(0);
 }
 
-//connect error, to fix
-inline static int connect_with_timeout(int fd, struct sockaddr *name, int len, int64_t timeout) {
-	fd_set wset, eset;
-	int rc;
-	struct timeval tv;
-
-	if (timeout <= 0) {//no handling
-		return connect(fd, name, len);
-	}
-
-	FD_ZERO(&wset);
-	FD_ZERO(&eset);
-	FD_SET(fd, &wset);
-	FD_SET(fd, &eset);
-
-	tv.tv_sec = (long)timeout / 1000;
-	tv.tv_usec = timeout % 1000 * 10000;
-
-	rc = net_set_nonblock(fd);
-	if (rc != 0) {
-		return rc;
-	}
-	rc = connect(fd, name, len);
-	if (rc != 0) {
-		return rc;
-	}
-	net_set_block(fd);
-
-	select(0, NULL, &wset, &eset, &tv);
-
-	if (FD_ISSET(fd, &wset)) {
-		return 0;
-	}
-	return -1;
-}
 
 inline static void net_close(int fd){
 	shutdown(fd, 2);
@@ -211,9 +176,8 @@ inline static int net_set_timeout(int fd, int64_t timeout) {
 #endif 
 	return rc;
 }
-/*
-* Initiate a TCP connection with host:port
-*/
+
+
 inline static int net_connect(int *fd, const char *host, int port){
 	int ret;
 	struct addrinfo hints, *addr_list, *cur;
@@ -258,11 +222,7 @@ inline static int net_connect(int *fd, const char *host, int port){
 	return(ret);
 }
 
-
-
-/*
-* Read at most 'len' characters
-*/
+ 
 inline static int net_recv(int fd, unsigned char *buf, size_t len){
 	int ret = read(fd, buf, len);
 

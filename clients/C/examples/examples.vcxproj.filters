@@ -21,5 +21,11 @@
     <ClCompile Include="MessageClientExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MqClientPoolExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BrokerExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

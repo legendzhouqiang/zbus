@@ -1,7 +1,7 @@
 #include "MqClient.h"  
 
 
-int main(int argc, char* argv[]) {  
+int main_mqclient(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_DEBUG); 
 	Logger* log = Logger::getLogger();
 
@@ -9,15 +9,17 @@ int main(int argc, char* argv[]) {
 	client.connect();
 	 
 	TrackerInfo info = client.queryTracker();
-	log->info("%s", info.infoVersion.c_str());
-
-	TopicInfo topicInfo = client.queryTopic("hong"); 
-	log->info("%s", topicInfo.topicName.c_str());
-
-	ConsumeGroupInfo groupInfo = client.queryGroup("hong", "hong");
-	log->info("%s", groupInfo.groupName.c_str());
+	log->info("%s", info.serverAddress.address.c_str());
 
 	client.declareTopic("CPP_Topic");
+
+	TopicInfo topicInfo = client.queryTopic("CPP_Topic"); 
+	log->info("%s", topicInfo.topicName.c_str());
+
+	ConsumeGroupInfo groupInfo = client.queryGroup("CPP_Topic", "CPP_Topic");
+	log->info("%s", groupInfo.groupName.c_str());
+
+	
 	ConsumeGroup group;
 	group.groupName = "MyCpp";
 	group.filter = "abc.*";

@@ -2,17 +2,22 @@
 #define __ZBUS_MQ_CLIENT_H__  
  
 #include "MessageClient.h"
-#include "Kit.h" 
+#include "Kit.h"  
+
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+
  
 class ZBUS_API ConsumeGroup {
 public:
-	string groupName;
-	string filter;          //filter on message'tag
+	std::string groupName;
+	std::string filter;          //filter on message'tag
 	int mask = -1;
 
-	string startCopy;       //create group from another group 
+	std::string startCopy;       //create group from another group 
 	int64_t startOffset = -1;
-	string startMsgId;      //create group start from offset, msgId to check valid
+	std::string startMsgId;      //create group start from offset, msgId to check valid
 	int64_t startTime = -1;    //create group start from time 
 
 	void load(Message& msg) {
@@ -39,9 +44,9 @@ public:
 class ZBUS_API MqClient : public MessageClient {
 
 public:
-	string token;
+	std::string token;
 
-	MqClient(string address, bool sslEnabled = false, string sslCertFile = "") :
+	MqClient(std::string address, bool sslEnabled = false, std::string sslCertFile = "") :
 		MessageClient(address, sslEnabled, sslCertFile){
 
 	}
@@ -73,7 +78,7 @@ public:
 		return info;
 	}  
 
-	TopicInfo queryTopic(string topic, int timeout = 3000) {
+	TopicInfo queryTopic(std::string topic, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_QUERY);
 		msg.setTopic(topic);
@@ -87,7 +92,7 @@ public:
 		return info;
 	}
 
-	ConsumeGroupInfo queryGroup(string topic, string group, int timeout = 3000) {
+	ConsumeGroupInfo queryGroup(std::string topic, std::string group, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_QUERY);
 		msg.setTopic(topic);
@@ -102,7 +107,7 @@ public:
 		return info;
 	} 
 
-	TopicInfo declareTopic(string topic, int topicMask=-1, int timeout = 3000) {
+	TopicInfo declareTopic(std::string topic, int topicMask=-1, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_DECLARE);
 		msg.setTopic(topic);
@@ -117,7 +122,7 @@ public:
 		return info;
 	}
 
-	ConsumeGroupInfo declareGroup(string topic, ConsumeGroup& group, int timeout = 3000) {
+	ConsumeGroupInfo declareGroup(std::string topic, ConsumeGroup& group, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_DECLARE);
 		msg.setTopic(topic); 
@@ -134,11 +139,11 @@ public:
 		return info;
 	}
 
-	void removeTopic(string topic, int timeout = 3000) {
+	void removeTopic(std::string topic, int timeout = 3000) {
 		removeGroup(topic, "", timeout);
 	}
 
-	void removeGroup(string topic, string group, int timeout = 3000) {
+	void removeGroup(std::string topic, std::string group, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_REMOVE);
 		msg.setTopic(topic);
@@ -156,11 +161,11 @@ public:
 		if (res) delete res; 
 	}
 
-	void emptyTopic(string topic, int timeout = 3000) {
+	void emptyTopic(std::string topic, int timeout = 3000) {
 		emptyGroup(topic, "", timeout);
 	}
 
-	void emptyGroup(string topic, string group, int timeout = 3000) {
+	void emptyGroup(std::string topic, std::string group, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_EMPTY);
 		msg.setTopic(topic);
@@ -178,5 +183,70 @@ public:
 		if (res) delete res;
 	}  
 };
+ 
+class ZBUS_API MqClientPool {
+public:
+	MqClientPool(std::string serverAddress, int maxSize = 32, bool sslEnabled = false, std::string sslCertFile = "") :
+		maxSize(maxSize),
+		serverAddress(serverAddress), sslEnabled(sslEnabled), sslCertFile(sslCertFile)
+	{
+
+	} 
+
+	virtual ~MqClientPool() {
+		std::unique_lock<std::mutex> lock(mutex);
+		while (!queue.empty()) {
+			MqClient* client = queue.front(); 
+			delete client;
+			queue.pop();
+		}
+	}
+
+	void returnClient(MqClient* value) {
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			queue.push(value);
+		}
+		signal.notify_one();
+	}
+
+	MqClient* borrowClient() {
+		std::unique_lock<std::mutex> lock(mutex);
+		if (size<maxSize && queue.empty()) {
+			MqClient* client = makeClient();
+			queue.push(client);
+			size++;
+		}
+		while (queue.empty()) {
+			signal.wait(lock);
+		}
+
+		MqClient* value = queue.front();
+		queue.pop();
+		return value;
+	}
+
+	MqClient* makeClient() {
+		MqClient* client = new MqClient(serverAddress, sslEnabled, sslCertFile);
+		client->connect();
+		return client;
+	} 
+
+private:
+	std::string serverAddress;
+	bool sslEnabled;
+	std::string sslCertFile;
+
+
+	int size;
+	int maxSize;
+	std::queue<MqClient*> queue;
+	mutable std::mutex mutex;
+	std::condition_variable signal;
+};
+
+
+ 
+
 
 #endif
