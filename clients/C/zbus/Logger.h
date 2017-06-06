@@ -1,12 +1,8 @@
 #ifndef __ZBUS_LOG_H__
 #define __ZBUS_LOG_H__
 
-#include "Platform.h" 
-#include "Thread.h"
-#include <cassert>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
+#include "Platform.h"    
+
  
 #define	LOG_ERROR	0	/* error conditions */
 #define	LOG_WARN	1	/* warning conditions */ 
@@ -16,7 +12,7 @@
 
 #define _DO_LOG(level) do{\
 	if(this->level >= (level)){\
-		pthread_mutex_lock((pthread_mutex_t*)this->mutex);\
+		std::lock_guard<std::mutex> lock(this->mutex);\
 		this->logHead((level));\
 		FILE* file = this->getLogFile();\
 		va_list argptr;\
@@ -25,19 +21,17 @@
 		va_end (argptr);\
 		fprintf (file, "\n");\
 		fflush (file);\
-		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);\
 	}\
 }while(0)
 
 #define _DO_LOG2(level, data, len) do{\
 	if(this->level >= (level)){\
-		pthread_mutex_lock((pthread_mutex_t*)this->mutex);\
+		std::lock_guard<std::mutex> lock(this->mutex);\
 		this->logHead((level));\
 		FILE* file = this->getLogFile();\
 		fwrite(data, 1, len, file);\
 		fflush (file);\
 		fprintf (file, "\n");\
-		pthread_mutex_unlock((pthread_mutex_t*)this->mutex);\
 	}\
 }while(0)
 
@@ -67,19 +61,13 @@ public:
 		else {
 			strcpy(this->logDir, logDir);
 			mkdirIfNeeded(this->logDir);
-		}
-		this->mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-		pthread_mutex_init((pthread_mutex_t*)this->mutex, 0);
+		} 
 	}
 
 	~Logger() {
 		if (this->logFile != stdout) {
 			fclose(this->logFile);
-		}
-		if (this->mutex) {
-			pthread_mutex_destroy((pthread_mutex_t*)this->mutex);
-			this->mutex = 0;
-		}
+		} 
 	}
 
 	void setLevel(int level) {
@@ -170,11 +158,10 @@ public:
 
 	void logBody(void* data, int len, const int level) {
 		if (this->level >= (level)) {
-			pthread_mutex_lock((pthread_mutex_t*)this->mutex);
+			std::lock_guard<std::mutex> lock(this->mutex); 
 			FILE* file = this->getLogFile();
 			fwrite(data, 1, len, file);
-			fflush(file);
-			pthread_mutex_unlock((pthread_mutex_t*)this->mutex);
+			fflush(file); 
 		}
 	}
 
@@ -257,9 +244,9 @@ private:
 private:
 	char  logDir[256];
 	FILE* logFile;
-	int level;
-	void* mutex;
+	int level; 
 	int logDate; 
+	std::mutex mutex;
 };
 
 #endif

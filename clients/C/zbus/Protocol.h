@@ -1,10 +1,10 @@
 #ifndef __ZBUS_PROTOCOL_H__
 #define __ZBUS_PROTOCOL_H__  
-
-#include "Platform.h"
+ 
 #include <string>
 #include <map>
 #include <vector>
+#include <cstdint>
 using namespace std;
 
 

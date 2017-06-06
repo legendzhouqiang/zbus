@@ -4,14 +4,10 @@
 #include "Platform.h"
 #include "Protocol.h"
 #include "Buffer.h" 
-
-#include <string>
-#include <cstring> 
-#include <map>  
-
+ 
 using namespace std;
 
-ZBUS_API class Message {
+class ZBUS_API Message {
 public:
 	string getCmd() {
 		return getHeader(PROTOCOL_CMD);

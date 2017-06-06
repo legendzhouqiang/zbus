@@ -2,9 +2,7 @@
 #define __ZBUS_KIT_H__   
    
 #include "Message.h"
-#include "Protocol.h" 
-#include <string>
-using namespace std;
+#include "Protocol.h"   
 
 void parseConsumeGroupInfo(ConsumeGroupInfo& info, Message& msg);
 void parseTopicInfo(TopicInfo& info, Message& msg);

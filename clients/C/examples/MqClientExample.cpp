@@ -2,7 +2,7 @@
 
 
 int main(int argc, char* argv[]) {  
-	Logger::configDefaultLogger(0, LOG_INFO); 
+	Logger::configDefaultLogger(0, LOG_DEBUG); 
 	Logger* log = Logger::getLogger();
 
 	MqClient client("localhost:15555");

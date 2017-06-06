@@ -176,9 +176,7 @@ public:
 		}
 
 		if (res) delete res;
-	}
-
-
+	}  
 };
 
 #endif

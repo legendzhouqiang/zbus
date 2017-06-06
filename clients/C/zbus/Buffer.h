@@ -1,10 +1,9 @@
 #ifndef __ZBUS_BUFFER_H__
 #define __ZBUS_BUFFER_H__   
 
-#include "Platform.h"
-#include <exception>
-#include <string> 
+#include "Platform.h" 
 using namespace std;
+
 class ZBUS_API ByteBuffer {
 private:
 	int mark_ = -1;

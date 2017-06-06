@@ -1,3 +1,2 @@
-#zbus-c-client
-
-coming soon
+#zbus-cxx-client
+C++11 based

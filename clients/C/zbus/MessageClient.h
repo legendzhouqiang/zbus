@@ -6,7 +6,6 @@
 #include "Logger.h"
 #include "Buffer.h"
 
-#include <map>
 using namespace std;
 
 
@@ -155,8 +154,7 @@ inline static int connect_with_timeout(int fd, struct sockaddr *name, int len, i
 	return -1;
 }
 
-inline static void net_close(int fd)
-{
+inline static void net_close(int fd){
 	shutdown(fd, 2);
 	close(fd);
 }
@@ -167,8 +165,7 @@ inline static void net_close(int fd)
 * Check if the requested operation would be blocking on a non-blocking socket
 * and thus 'failed' with a negative return value.
 */
-inline static int net_would_block(int fd)
-{
+inline static int net_would_block(int fd){
 	return(WSAGetLastError() == WSAEWOULDBLOCK);
 }
 #else
@@ -178,8 +175,7 @@ inline static int net_would_block(int fd)
 *
 * Note: on a blocking socket this function always returns 0!
 */
-inline static int net_would_block(int fd)
-{
+inline static int net_would_block(int fd){
 	/*
 	* Never return 'WOULD BLOCK' on a non-blocking socket
 	*/
@@ -218,8 +214,7 @@ inline static int net_set_timeout(int fd, int64_t timeout) {
 /*
 * Initiate a TCP connection with host:port
 */
-inline static int net_connect(int *fd, const char *host, int port)
-{
+inline static int net_connect(int *fd, const char *host, int port){
 	int ret;
 	struct addrinfo hints, *addr_list, *cur;
 	char port_str[6];
@@ -268,8 +263,7 @@ inline static int net_connect(int *fd, const char *host, int port)
 /*
 * Read at most 'len' characters
 */
-inline static int net_recv(int fd, unsigned char *buf, size_t len)
-{
+inline static int net_recv(int fd, unsigned char *buf, size_t len){
 	int ret = read(fd, buf, len);
 
 	if (ret < 0)
@@ -297,8 +291,7 @@ inline static int net_recv(int fd, unsigned char *buf, size_t len)
 /*
 * Write at most 'len' characters
 */
-inline static int net_send(int fd, const unsigned char *buf, size_t len)
-{
+inline static int net_send(int fd, const unsigned char *buf, size_t len){
 	int ret = write(fd, buf, len);
 
 	if (ret < 0)
@@ -322,6 +315,7 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len)
 
 	return(ret);
 }
+
 
 class ZBUS_API MessageClient { 
 public:    
