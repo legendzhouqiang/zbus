@@ -276,6 +276,9 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len){
 	return(ret);
 }
 
+typedef void(*ConnectedHandler)();
+typedef void(*DisconnectedHandler)();
+typedef void(*MessageHandler)(Message*);
 
 class ZBUS_API MessageClient { 
 public:    
