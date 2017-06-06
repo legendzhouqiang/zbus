@@ -91,6 +91,12 @@ public:
 	}  
 };
 
+inline static bool operator<(const ServerAddress& l, const ServerAddress& r) {
+	if (l.address < r.address) return true;
+	if (l.address > r.address) return false;
+	return l.sslEnabled < r.sslEnabled;
+}
+
 
 class ZBUS_API ErrorInfo {  //used only for batch operation indication
 public: 

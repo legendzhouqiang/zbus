@@ -294,10 +294,11 @@ public:
 			net_close(socket);
 			socket = -1;
 		}
-		for (map<string, Message*>::iterator iter = msgTable.begin(); iter != msgTable.end(); iter++) {
-			delete iter->second;
+		for (auto &kv : msgTable) {
+			delete kv.second;
 		}
 		msgTable.clear();
+
 		if (readBuffer) {
 			delete readBuffer;
 			readBuffer = NULL;
@@ -305,36 +306,54 @@ public:
 	}
 	
 	void connect() {
-		resetReadBuffer();
-		string address = this->address;
-		size_t pos = address.find(':');
-		int port = 80;
-		char* host = (char*)address.substr(0, pos).c_str();
-		if (pos != -1) {
-			port = atoi(address.substr(pos + 1).c_str());
+		if (this->socket != -1) {
+			return; //already
 		}
-		if (logger->isDebugEnabled()) {
-			logger->debug("Trying connect to (%s)", address.c_str());
-		}
-		int ret = net_connect(&this->socket, host, port);
-		if (ret != 0) {
-			string errMsg = errorMessage(ret);
-			throw MqException(errMsg, ret);
-		}
-		if (ret == 0) {
-			if (logger->isDebugEnabled()) {
-				logger->debug("Connected to (%s)", address.c_str());
+		{
+			std::unique_lock<std::mutex> lock(mutex); 
+			resetReadBuffer();
+			string address = this->address;
+			size_t pos = address.find(':');
+			int port = 80;
+			char* host = (char*)address.substr(0, pos).c_str();
+			if (pos != -1) {
+				port = atoi(address.substr(pos + 1).c_str());
 			}
-		}  
+			if (logger->isDebugEnabled()) {
+				logger->debug("Trying connect to (%s)", address.c_str());
+			}
+			int ret = net_connect(&this->socket, host, port);
+			if (ret != 0) {
+				string errMsg = errorMessage(ret);
+				throw MqException(errMsg, ret);
+			}
+			if (ret == 0) {
+				if (logger->isDebugEnabled()) {
+					logger->debug("Connected to (%s)", address.c_str());
+				}
+			}  
+		}
 	}
 
 	Message* invoke(Message& msg, int timeout = 3000) {
-		send(msg, timeout);
+		std::unique_lock<std::mutex> lock(mutex);
+		sendUnsafe(msg, timeout);
 		string msgid = msg.getId();
-		return recv(msgid.c_str(), timeout);
+		return recvUnsafe(msgid.c_str(), timeout);
 	}
 
-	void send(Message& msg, int timeout=3000) {
+	void send(Message& msg, int timeout = 3000) {
+		std::unique_lock<std::mutex> lock(mutex);
+		sendUnsafe(msg, timeout);
+	}
+
+	Message* recv(const char* msgid = NULL, int timeout = 3000) {
+		std::unique_lock<std::mutex> lock(mutex);
+		return recvUnsafe(msgid, timeout);
+	}
+
+private:
+	void sendUnsafe(Message& msg, int timeout=3000) {
 		int ret = net_set_timeout(this->socket, timeout);
 		if (ret < 0) {
 			string errMsg = errorMessage(ret);
@@ -367,7 +386,7 @@ public:
 	}
 
 
-	Message* recv(const char* msgid = NULL, int timeout = 3000) {
+	Message* recvUnsafe(const char* msgid = NULL, int timeout = 3000) {
 		if (msgid) {
 			Message* res = msgTable[msgid];
 			if (res) {
@@ -417,7 +436,7 @@ public:
 	}
 
 private:
-		Logger* logger;
+	Logger* logger;
 private:
 	int socket;
 
@@ -427,6 +446,7 @@ private:
 	string sslCertFile;
 	map<string, Message*> msgTable;
 	ByteBuffer* readBuffer;
+	mutable std::mutex mutex;
 
 private:
 	void resetReadBuffer() {

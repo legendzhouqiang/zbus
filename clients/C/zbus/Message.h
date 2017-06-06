@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "Protocol.h"
 #include "Buffer.h" 
- 
+#include <sstream>
 using namespace std;
 
 class ZBUS_API Message {
@@ -49,40 +49,32 @@ public:
 	}
 
 	int64_t getGroupStartOffset() {
-		string value = getHeader(PROTOCOL_GROUP_START_OFFSET);
-		if (value == "") return -1;
-		return atoll(value.c_str());
+		return getNumber<int64_t>(PROTOCOL_GROUP_START_OFFSET); 
 	} 
 	void setGroupStartOffset(int64_t value = -1) {
-		if (value < 0) return;
-		char data[128];
-		sprintf(data, "%lld", value);
-		setHeader(PROTOCOL_GROUP_START_OFFSET, data);
+		setNumber(PROTOCOL_GROUP_START_OFFSET, value); 
 	}
 
 	int64_t getGroupStartTime() {
-		string value = getHeader(PROTOCOL_GROUP_START_TIME);
-		if (value == "") return -1;
-		return atoll(value.c_str());
+		return getNumber<int64_t>(PROTOCOL_GROUP_START_TIME); 
 	}
 	void setGroupStartTime(int64_t value = -1) {
-		if (value < 0) return;
-		char data[128];
-		sprintf(data, "%lld", value);
-		setHeader(PROTOCOL_GROUP_START_TIME, data);
-	}
-	int getGroupMask() {
-		string value = getHeader(PROTOCOL_GROUP_MASK);
-		if (value == "") return -1;
-		return atoi(value.c_str());
-	} 
-	void setGroupMask(int value = -1) {
-		if (value < 0) return;
-		char mask[64];
-		sprintf(mask, "%d", value);
-		setHeader(PROTOCOL_GROUP_MASK, mask);
+		setNumber(PROTOCOL_GROUP_START_TIME, value); 
 	}
 
+	int getGroupMask() {
+		return getNumber<int>(PROTOCOL_GROUP_MASK); 
+	} 
+	void setGroupMask(int value = -1) {
+		setNumber(PROTOCOL_GROUP_MASK, value); 
+	}
+
+	int getConsumeWindow() {
+		return getNumber<int>(PROTOCOL_CONSUME_WINDOW); 
+	}
+	void setConsumeWindow(int value = -1) {
+		setNumber(PROTOCOL_CONSUME_WINDOW, value);
+	}   
 
 	string getSender() {
 		return getHeader(PROTOCOL_SENDER);
@@ -125,18 +117,22 @@ public:
 	}
 	void setOriginUrl(string value) {
 		setHeader(PROTOCOL_ORIGIN_URL, value);
+	} 
+
+	bool isAck() {
+		string value = getHeader(PROTOCOL_ACK);
+		return (value == "true" || value == "True" || value == "1"); 
+	}
+
+	void setAck(bool value) {
+		setNumber(PROTOCOL_ACK, value?1:0);
 	}
 
 	int getTopicMask() {
-		string value = getHeader(PROTOCOL_TOPIC_MASK);
-		if (value == "") return -1;
-		return atoi(value.c_str());
+		return getNumber<int>(PROTOCOL_TOPIC_MASK); 
 	} 
 	void setTopicMask(int value=-1) {
-		if (value < 0) return;
-		char mask[64];
-		sprintf(mask, "%d", value);
-		setHeader(PROTOCOL_TOPIC_MASK, mask);
+		setNumber(PROTOCOL_TOPIC_MASK, value); 
 	}
 
 	string getHeader(string key, string defaultValue = "") {
@@ -149,6 +145,23 @@ public:
 		if (value == "") return;
 		header[key] = value;
 	}
+
+private:
+	template<typename T>
+	T getNumber(char* key) {
+		std::string value = getHeader(key);
+		if (value == "") return -1;
+		std::stringstream ss(value);
+		T number;
+		ss >> number;
+		return number;
+	}
+
+	template<typename T>
+	void setNumber(char* key, T value) {
+		if (value < 0) return; 
+		setHeader(key, std::to_string(value));
+	} 
 
 private:
 	void* body = 0;

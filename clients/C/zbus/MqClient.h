@@ -52,6 +52,36 @@ public:
 	}
 	virtual ~MqClient() { }
 
+
+	void produce(Message& msg, int timeout = 3000) { 
+		msg.setCmd(PROTOCOL_PRODUCE);
+		if (msg.getToken() != "") {
+			msg.setToken(token);
+		} 
+		Message* res = invoke(msg, timeout);
+		if (res && res->status != "200") {
+			std::string body = res->getBodyString();
+			string code = res->status;
+			delete res;
+			throw MqException(body, atoi(code.c_str()));
+		}
+	}
+
+	Message* consume(string topic, string group="", int window=-1, int timeout = 3000) {
+		Message msg;
+		msg.setCmd(PROTOCOL_CONSUME);
+		msg.setTopic(topic);
+		msg.setConsumeGroup(group);
+		msg.setConsumeWindow(window);
+		
+		if (msg.getToken() != "") {
+			msg.setToken(token);
+		}
+		return invoke(msg, timeout); 
+	}
+
+
+
 	TrackerInfo queryTracker(int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_TRACKER);
@@ -182,6 +212,19 @@ public:
 
 		if (res) delete res;
 	}  
+
+	void route(Message& msg, int timeout = 3000) {
+		msg.setCmd(PROTOCOL_ROUTE); 
+		msg.setAck(false);
+		if (msg.getToken() != "") {
+			msg.setToken(token);
+		} 
+		if (msg.status != "") {
+			msg.setOriginStatus(msg.status);
+			msg.status = "";
+		}
+		send(msg, timeout);
+	}
 };
  
 class ZBUS_API MqClientPool {

@@ -1,8 +1,9 @@
 #include "MqClient.h"  
 
 
-int main_mqclient(int argc, char* argv[]) {  
-	Logger::configDefaultLogger(0, LOG_DEBUG); 
+
+int main(int argc, char* argv[]) {  
+	Logger::configDefaultLogger(0, LOG_INFO); 
 	Logger* log = Logger::getLogger();
 
 	MqClient client("localhost:15555");
@@ -11,24 +12,36 @@ int main_mqclient(int argc, char* argv[]) {
 	TrackerInfo info = client.queryTracker();
 	log->info("%s", info.serverAddress.address.c_str());
 
-	client.declareTopic("CPP_Topic");
+	string topic = "CPP_Topic";
+	client.declareTopic(topic);
 
-	TopicInfo topicInfo = client.queryTopic("CPP_Topic"); 
+	TopicInfo topicInfo = client.queryTopic(topic); 
 	log->info("%s", topicInfo.topicName.c_str());
 
-	ConsumeGroupInfo groupInfo = client.queryGroup("CPP_Topic", "CPP_Topic");
-	log->info("%s", groupInfo.groupName.c_str());
-
-	
+	ConsumeGroupInfo groupInfo = client.queryGroup(topic, "CPP_Topic");
+	log->info("%s", groupInfo.groupName.c_str()); 
+	 
 	ConsumeGroup group;
 	group.groupName = "MyCpp";
 	group.filter = "abc.*";
 
-	client.declareGroup("CPP_Topic", group);
+	client.declareGroup(topic, group);
 
-	client.removeGroup("CPP_Topic", "MyCpp");
+	Message msg;
+	msg.setTopic(topic);
+	msg.setBody("From C++ 11, cool man");
 
-	client.removeTopic("CPP_Topic");
+	client.produce(msg);
+
+	Message* res = client.consume(topic);
+	res->print();
+	delete res;
+
+
+	client.removeGroup(topic, "MyCpp");
+
+	client.removeTopic(topic); 
+
 
 	system("pause");
 	return 0;
