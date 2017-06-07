@@ -321,8 +321,8 @@ public:
 				}
 			}  
 		}
-		if (connected) {
-			connected(this);
+		if (onConnected) {
+			onConnected(this);
 		}
 	}
 
@@ -346,7 +346,7 @@ public:
 		return recvUnsafe(msgid, timeout);
 	}
 
-	void start(int timeout=3000) {
+	void start(int timeout=10000) {
 		std::unique_lock<std::mutex> lock(processMutex);
 		if (processThread != NULL) return;
 		processThread = new std::thread(&MessageClient::processMessage, this, timeout);
@@ -384,7 +384,7 @@ public:
 	}
 
 private:
-	void processMessage(int timeout=3000) {
+	void processMessage(int timeout=10000) {
 		while (true) {
 			try {
 				Message* msg = recv(NULL, timeout); 
@@ -397,14 +397,15 @@ private:
 			}
 			catch (MqException& e) {
 				if (!autoConnect) break;
-				logger->info("%d, %s", e.code, e.message.c_str());
+				
 				if (e.code != ERR_NET_RECV_FAILED) { //timeout?
 					close(false); //no stop of thread
-					if (this->disconnected) {
-						this->disconnected();
+					if (this->onDisconnected) {
+						this->onDisconnected();
 					}
 					std::this_thread::sleep_for(2s);
 				}  
+				logger->info("%d, %s", e.code, e.message.c_str());
 			} 
 		}
 	}
@@ -506,10 +507,10 @@ private:
 public:
 	typedef void(*ConnectedHandler)(MessageClient* client);
 	typedef void(*DisconnectedHandler)();
-	typedef void(*MessageHandler)(Message*);
+	typedef void(*MessageHandler)(Message*); //message need to be deleted in handler
 
-	ConnectedHandler connected;
-	DisconnectedHandler disconnected;
+	ConnectedHandler onConnected;
+	DisconnectedHandler onDisconnected;
 	MessageHandler onMessage;
 private:
 	bool autoConnect = true;

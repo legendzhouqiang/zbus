@@ -2,6 +2,7 @@
 #define __ZBUS_BROKER_H__  
  
 #include "MqClient.h" 
+#include "Kit.h"
 #include <map>
 #include <string>   
 #include <vector>
@@ -30,8 +31,10 @@ public:
 class ZBUS_API Broker {
 public:
 	Broker(std::string trackerAddress, bool sslEnabled = false, std::string sslCertFile = "") {
-
+		ServerAddress serverAddress(trackerAddress, sslEnabled);
+		addTracker(serverAddress, sslCertFile);
 	}
+
 	virtual ~Broker() {
 		for (auto& kv : poolTable) {
 			delete kv.second;
@@ -51,10 +54,30 @@ public:
 		if (sslCertFile != "") {
 			sslCertFileTable[serverAddress.address] = sslCertFile;
 		}
-		MqClient* subscriber = new MqClient(serverAddress.address, serverAddress.sslEnabled, sslCertFile);
-		trackerSubscribers[serverAddress] = subscriber; 
+		MqClient* client = new MqClient(serverAddress.address, serverAddress.sslEnabled, sslCertFile);
+		trackerSubscribers[serverAddress] = client;
 
+		client->onConnected = [](MessageClient* client) {
+			Message msg;
+			msg.setCmd(PROTOCOL_TRACK_SUB);
+			client->send(msg);
+		};
+
+		client->onMessage = [](Message* msg) {
+			msg->print();
+			TrackerInfo info;
+			parseTrackerInfo(info, *msg);
+			
+
+
+			delete msg;
+		}; 
+		client->start();
 	}
+
+private:
+
+
 
 private: 
 	BrokerRouteTable routeTable;
