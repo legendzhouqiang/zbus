@@ -270,9 +270,7 @@ public:
 	}
 
 	MqClient* makeClient() {
-		MqClient* client = new MqClient(serverAddress, sslEnabled, sslCertFile);
-		client->connect();
-		return client;
+		return new MqClient(serverAddress, sslEnabled, sslCertFile); 
 	} 
 
 private:

@@ -1,7 +1,7 @@
 #include "MqClient.h" 
 
 
-int main_messageclient(int argc, char* argv[]) {  
+int main_MessageClient(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_DEBUG);
 
 	MessageClient client("localhost:15555");
@@ -13,7 +13,7 @@ int main_messageclient(int argc, char* argv[]) {
 		msg.setBody("hello world");
 
 		client.send(msg);
-		string msgid = msg.getId(); 
+		string msgid = msg.getId();
 		Message* res = client.recv(msgid.c_str());
 		if (res) {
 			res->print();

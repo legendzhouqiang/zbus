@@ -11,10 +11,7 @@ using namespace std;
 
 #define ERR_NET_UNKNOWN_HOST        -86  /**< Failed to get an IP address for the given hostname. */
 #define ERR_NET_SOCKET_FAILED       -66  /**< Failed to open a socket. */
-#define ERR_NET_CONNECT_FAILED      -68  /**< The connection to the given server / port failed. */
-#define ERR_NET_BIND_FAILED         -70  /**< Binding of the socket failed. */
-#define ERR_NET_LISTEN_FAILED       -72  /**< Could not listen on the socket. */
-#define ERR_NET_ACCEPT_FAILED       -74  /**< Could not accept the incoming connection. */
+#define ERR_NET_CONNECT_FAILED      -68  /**< The connection to the given server / port failed. */ 
 #define ERR_NET_RECV_FAILED         -76  /**< Reading information from the socket failed. */
 #define ERR_NET_SEND_FAILED         -78  /**< Sending information through the socket failed. */
 #define ERR_NET_CONN_RESET          -80  /**< Connection was reset by peer. */
@@ -261,7 +258,7 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len){
 
 #ifdef __WINDOWS__
 		if (WSAGetLastError() == WSAECONNRESET)
-			return(ERR_NET_CONN_RESET);
+			return(ERR_NET_CONN_RESET); 
 #else
 		if (errno == EPIPE || errno == ECONNRESET)
 			return(ERR_NET_CONN_RESET);
@@ -276,9 +273,7 @@ inline static int net_send(int fd, const unsigned char *buf, size_t len){
 	return(ret);
 }
 
-typedef void(*ConnectedHandler)();
-typedef void(*DisconnectedHandler)();
-typedef void(*MessageHandler)(Message*);
+
 
 class ZBUS_API MessageClient { 
 public:    
@@ -293,19 +288,7 @@ public:
 	}
 
 	virtual ~MessageClient() {
-		if (socket != -1) {
-			net_close(socket);
-			socket = -1;
-		}
-		for (auto &kv : msgTable) {
-			delete kv.second;
-		}
-		msgTable.clear();
-
-		if (readBuffer) {
-			delete readBuffer;
-			readBuffer = NULL;
-		}
+		this->close(true);
 	}
 	
 	void connect() {
@@ -314,6 +297,8 @@ public:
 		}
 		{
 			std::unique_lock<std::mutex> lock(mutex); 
+			if (this->socket != -1) return;
+
 			resetReadBuffer();
 			string address = this->address;
 			size_t pos = address.find(':');
@@ -336,9 +321,13 @@ public:
 				}
 			}  
 		}
+		if (connected) {
+			connected(this);
+		}
 	}
 
 	Message* invoke(Message& msg, int timeout = 3000) {
+		connect();
 		std::unique_lock<std::mutex> lock(mutex);
 		sendUnsafe(msg, timeout);
 		string msgid = msg.getId();
@@ -346,16 +335,79 @@ public:
 	}
 
 	void send(Message& msg, int timeout = 3000) {
+		connect();
 		std::unique_lock<std::mutex> lock(mutex);
 		sendUnsafe(msg, timeout);
 	}
 
 	Message* recv(const char* msgid = NULL, int timeout = 3000) {
+		connect();
 		std::unique_lock<std::mutex> lock(mutex);
 		return recvUnsafe(msgid, timeout);
 	}
 
+	void start(int timeout=3000) {
+		std::unique_lock<std::mutex> lock(processMutex);
+		if (processThread != NULL) return;
+		processThread = new std::thread(&MessageClient::processMessage, this, timeout);
+	}
+
+	void join() {
+		if (processThread) {
+			processThread->join();
+		}
+	}
+
+	void close(bool stopThread=true) {
+		if (stopThread) {
+			autoConnect = false;
+		}
+		if (socket != -1) {
+			net_close(socket);
+			socket = -1;
+		}
+		for (auto &kv : msgTable) {
+			delete kv.second;
+		}
+		msgTable.clear();
+
+		if (readBuffer) {
+			delete readBuffer;
+			readBuffer = NULL;
+		}
+
+		if (stopThread && this->processThread) { 
+			this->processThread->join();
+			delete this->processThread;
+			this->processThread = NULL;
+		}
+	}
+
 private:
+	void processMessage(int timeout=3000) {
+		while (true) {
+			try {
+				Message* msg = recv(NULL, timeout); 
+
+				if (onMessage) {
+					onMessage(msg);
+				} else {
+					delete msg;
+				} 
+			}
+			catch (MqException& e) {
+				if (!autoConnect) break;
+				logger->info("%d, %s", e.code, e.message.c_str());
+				if (e.code != ERR_NET_RECV_FAILED) { //timeout?
+					close(false); //no stop of thread
+					if (this->disconnected) {
+						this->disconnected();
+					}
+					std::this_thread::sleep_for(2s);
+				}  
+			} 
+		}
+	}
 	void sendUnsafe(Message& msg, int timeout=3000) {
 		int ret = net_set_timeout(this->socket, timeout);
 		if (ret < 0) {
@@ -431,7 +483,7 @@ private:
 			delete this->readBuffer;
 			this->readBuffer = newBuf;
 
-			if (msg->getId() == msgid) {
+			if (msgid == NULL || msg->getId() == msgid) {
 				return msg;
 			}
 			msgTable[msgid] = msg;
@@ -447,9 +499,22 @@ private:
 	bool sslEnabed;
 
 	string sslCertFile;
-	map<string, Message*> msgTable;
+	map<string, Message*> msgTable; 
 	ByteBuffer* readBuffer;
 	mutable std::mutex mutex;
+
+public:
+	typedef void(*ConnectedHandler)(MessageClient* client);
+	typedef void(*DisconnectedHandler)();
+	typedef void(*MessageHandler)(Message*);
+
+	ConnectedHandler connected;
+	DisconnectedHandler disconnected;
+	MessageHandler onMessage;
+private:
+	bool autoConnect = true;
+	std::thread* processThread;
+	mutable std::mutex processMutex;
 
 private:
 	void resetReadBuffer() {
@@ -475,10 +540,7 @@ public:
 			init = true;
 			table[ERR_NET_UNKNOWN_HOST] = "Failed to get an IP address for the given hostname";
 			table[ERR_NET_SOCKET_FAILED] = "Failed to open a socket";
-			table[ERR_NET_CONNECT_FAILED] = "The connection to the given server / port failed";
-			table[ERR_NET_BIND_FAILED] = "Binding of the socket failed";
-			table[ERR_NET_LISTEN_FAILED] = "Could not listen on the socket";
-			table[ERR_NET_ACCEPT_FAILED] = "Could not accept the incoming connection";
+			table[ERR_NET_CONNECT_FAILED] = "The connection to the given server / port failed"; 
 			table[ERR_NET_RECV_FAILED] = "Reading information from the socket failed";
 			table[ERR_NET_SEND_FAILED] = "Sending information through the socket failed";
 			table[ERR_NET_CONN_RESET] = "Connection was reset by peer";
