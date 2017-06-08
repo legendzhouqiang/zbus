@@ -1,7 +1,7 @@
 #include "MqAdmin.h"  
 
 
-int main(int argc, char* argv[]) {  
+int main_MqAdmin(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_INFO); 
 	Logger* log = Logger::getLogger(); 
 

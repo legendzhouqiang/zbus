@@ -163,6 +163,7 @@
     <ClCompile Include="MqAdminExample.cpp" />
     <ClCompile Include="MqClientExample.cpp" />
     <ClCompile Include="MqClientPoolExample.cpp" />
+    <ClCompile Include="ProducerExample.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

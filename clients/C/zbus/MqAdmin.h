@@ -44,12 +44,11 @@
 
 
 class ZBUS_API MqAdmin {
-private:
-	std::string token;
-	Broker* broker;
-
+protected: 
+	Broker* broker; 
 	ServerSelector adminSelector;
 public: 
+	std::string token; 
 
 	MqAdmin(Broker* broker) : broker(broker){
 		adminSelector = [] (BrokerRouteTable& routeTable, Message& msg) {
