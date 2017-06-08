@@ -390,7 +390,7 @@ private:
 				Message* msg = recv(NULL, timeout); 
 
 				if (onMessage) {
-					onMessage(msg);
+					onMessage(msg, this->contextObject);
 				} else {
 					delete msg;
 				} 
@@ -507,11 +507,13 @@ private:
 public:
 	typedef void(*ConnectedHandler)(MessageClient* client);
 	typedef void(*DisconnectedHandler)();
-	typedef void(*MessageHandler)(Message*); //message need to be deleted in handler
+	typedef void(*MessageHandler)(Message*, void*); //message need to be deleted in handler
 
 	ConnectedHandler onConnected;
 	DisconnectedHandler onDisconnected;
 	MessageHandler onMessage;
+
+	void* contextObject;
 private:
 	bool autoConnect = true;
 	std::thread* processThread;

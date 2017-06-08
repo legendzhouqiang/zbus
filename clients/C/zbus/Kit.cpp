@@ -42,7 +42,7 @@ static void parseTopicInfo(TopicInfo& info, Json::Value& root) {
 }
 
 static void parseServerInfo(ServerInfo& info, Json::Value& root) {
-	info.infoVersion = root["infoVersion"].asString();
+	info.infoVersion = root["infoVersion"].asLargestInt();
 	parseServerAddress(info.serverAddress, root["serverAddress"]);
 	info.serverVersion = root["serverVersion"].asString();  
 
@@ -93,7 +93,7 @@ void parseTrackerInfo(TrackerInfo& info, Message& msg) {
 	Json::Value root;
 	if (!parseBase(info, root, msg)) return;
 
-	info.infoVersion = root["infoVersion"].asString();
+	info.infoVersion = root["infoVersion"].asLargestInt();
 	parseServerAddress(info.serverAddress, root["serverAddress"]); 
 
 	Json::Value& serverTableValue = root["serverTable"];

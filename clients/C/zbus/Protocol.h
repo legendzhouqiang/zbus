@@ -89,6 +89,10 @@ public:
 		this->address = serverAddress->address;
 		this->sslEnabled = serverAddress->sslEnabled;
 	}  
+
+	virtual bool operator==(const ServerAddress& other) const {
+		return this->address == other.address && this->sslEnabled == other.sslEnabled;
+	}
 };
 
 inline static bool operator<(const ServerAddress& l, const ServerAddress& r) {
@@ -141,13 +145,13 @@ public:
 
 class ZBUS_API ServerInfo : public TrackItem {
 public:
-	string infoVersion;
+	int64_t infoVersion;
 	map<string, TopicInfo> topicTable; 
 };
 
 class ZBUS_API TrackerInfo : public TrackItem {
 public:
-	string infoVersion;
+	int64_t infoVersion;
 	map<string, ServerInfo> serverTable; 
 };  
 

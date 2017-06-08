@@ -7,7 +7,7 @@ int main_MessageClientThread(int argc, char* argv[]) {
 
 	MessageClient client("localhost:15555");
 	
-	client.onMessage = [](Message* msg) {
+	client.onMessage = [](Message* msg, void* ctx) {
 		msg->print();
 		delete msg;
 	};
