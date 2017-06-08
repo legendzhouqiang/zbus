@@ -3,12 +3,11 @@
  
 #include "MqClient.h" 
 #include "Kit.h"
+#include "Logger.h"
 #include <map>
 #include <string>   
 #include <vector>
-#include <algorithm>
-
-#include <iostream>
+#include <algorithm> 
 
  
 class Vote {
@@ -27,7 +26,7 @@ public:
 	BrokerRouteTable(double voteFactor = 0.5): voteFactor(voteFactor) { 
 	}
 
-	vector<ServerAddress> updateTracker(TrackerInfo& trackerInfo) { 
+	std::vector<ServerAddress> updateTracker(TrackerInfo& trackerInfo) {
 		//1) update votes
 		ServerAddress& trackerAddress = trackerInfo.serverAddress; 
 		int64_t trackerVersion = trackerInfo.infoVersion;
@@ -36,11 +35,11 @@ public:
 			vote = votesTable[trackerAddress];
 		}
 		if (trackerVersion <= vote.version) {
-			return vector<ServerAddress>();
+			return std::vector<ServerAddress>();
 		}
 
 		vote.version = trackerVersion;
-		vector<ServerAddress> servers;
+		std::vector<ServerAddress> servers;
 		for (auto& kv : trackerInfo.serverTable) {
 			servers.push_back(kv.second.serverAddress);
 		}
@@ -63,14 +62,14 @@ public:
 	} 
 
 
-	vector<ServerAddress> removeTracker(ServerAddress& trackerAddress) {
+	std::vector<ServerAddress> removeTracker(ServerAddress& trackerAddress) {
 		votesTable.erase(trackerAddress);
 		return purge();
 	} 
 
 private:
 	double voteFactor = 0.5;
-	vector<ServerAddress> purge() {
+	std::vector<ServerAddress> purge() {
 		vector<ServerAddress> toRemove;
 		for (auto& s : serverTable) {
 			ServerInfo& serverInfo = s.second;
@@ -114,9 +113,15 @@ private:
 
 class ZBUS_API Broker {
 public:
-	Broker(std::string trackerAddress, bool sslEnabled = false, std::string sslCertFile = "") {
+	typedef vector<ServerAddress>(*ServerSelector)(BrokerRouteTable& routeTable, Message& msg);
+	typedef void(*ServerJoin)(MqClientPool* pool);
+	typedef void(*ServerLeave)(ServerAddress serverAddress);
+
+public:
+	Broker(std::string trackerAddress, bool sslEnabled = false, std::string sslCertFile = "", int poolSize=32) {
 		ServerAddress serverAddress(trackerAddress, sslEnabled);
 		addTracker(serverAddress, sslCertFile);
+		this->poolSize = poolSize;
 	}
 
 	virtual ~Broker() {
@@ -147,27 +152,90 @@ public:
 			client->send(msg);
 		}; 
 
-		client->contextObject = &this->routeTable;   //Ugly!!!, any better way to access routeTable?
+		client->contextObject = this;   //Ugly!!!, any better way to access routeTable?
 		client->onMessage = [](Message* msg, void* ctx) {  
 			TrackerInfo info;
 			parseTrackerInfo(info, *msg); 
-
-			BrokerRouteTable* routeTable = (BrokerRouteTable*)ctx;
-			routeTable->updateTracker(info); 
-
 			delete msg;
+
+			Broker* broker = (Broker*)ctx;
+
+			BrokerRouteTable& routeTable = broker->routeTable;
+			std::vector<ServerAddress> toRemove = routeTable.updateTracker(info);
+			std::map<ServerAddress, ServerInfo>& serverTable = routeTable.serverTable;
+			
+			for (auto& kv : serverTable) {
+				ServerInfo& serverInfo = kv.second;
+				broker->addServer(serverInfo.serverAddress);
+			}
+			for (ServerAddress& serverAddress : toRemove) {
+				broker->removeServer(serverAddress);
+			}  
+			broker->signal.notify_all();
 		};
 
 		client->start();
-	}  
+		std::unique_lock<std::mutex> lock(mutex);
+		signal.wait_for(lock, std::chrono::seconds(3));
+	}    
+
+	void addServer(ServerAddress& serverAddress) {
+		if (poolTable.count(serverAddress)>0) {
+			return;
+		}
+		logger->info("%s joined", serverAddress.toString().c_str());
+		string sslCertFile = sslCertFileTable[serverAddress.address];
+		MqClientPool* pool = new MqClientPool(serverAddress.address, poolSize, serverAddress.sslEnabled, sslCertFile);
+		poolTable[serverAddress] = pool;
+		if (onServerJoin) {
+			onServerJoin(pool);
+		} 
+	}
+	
+	void removeServer(ServerAddress& serverAddress) { 
+		if (poolTable.count(serverAddress)<1) {
+			return;
+		}
+		if (onServerLeave) {
+			onServerLeave(serverAddress);
+		}
+		MqClientPool* pool = poolTable[serverAddress]; 
+		poolTable.erase(serverAddress); 
+		if (pool != NULL) {
+			delete pool;
+		}
+
+		logger->info("%s left", serverAddress.toString().c_str());
+	}
 
 
-private: 
+	vector<MqClientPool*> select(ServerSelector selector, Message& msg) {
+		std::vector<ServerAddress> addrList = selector(this->routeTable, msg);
+		vector<MqClientPool*> res;
+		for (ServerAddress& address : addrList) {
+			MqClientPool* pool = poolTable[address];
+			if (pool == NULL) continue;
+			res.push_back(pool);
+		}  
+		return res;
+	}
+
+public:  
+	ServerJoin onServerJoin;
+	ServerLeave onServerLeave;
+public:
 	BrokerRouteTable routeTable;
+	std::condition_variable signal;
+private:  
+	Logger* logger = Logger::getLogger();
 
 	std::map<ServerAddress, MqClientPool*> poolTable;
 	std::map<ServerAddress, MqClient*> trackerSubscribers;
 	std::map<std::string, std::string> sslCertFileTable;
+
+	mutable std::mutex mutex; 
+	
+	int poolSize = 32;
 };
 
 #endif

@@ -396,16 +396,18 @@ private:
 				} 
 			}
 			catch (MqException& e) {
-				if (!autoConnect) break;
-				
-				if (e.code != ERR_NET_RECV_FAILED) { //timeout?
-					close(false); //no stop of thread
-					if (this->onDisconnected) {
-						this->onDisconnected();
-					}
-					std::this_thread::sleep_for(2s);
-				}  
-				logger->info("%d, %s", e.code, e.message.c_str());
+				if (!autoConnect) break;  
+
+				if (e.code == ERR_NET_RECV_FAILED) { //timeout?
+					continue;
+				}
+
+				logger->error("%d, %s", e.code, e.message.c_str());
+				close(false); //no stop of thread
+				if (this->onDisconnected) {
+					this->onDisconnected();
+				}
+				std::this_thread::sleep_for(std::chrono::seconds(3)); 
 			} 
 		}
 	}

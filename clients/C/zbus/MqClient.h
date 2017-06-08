@@ -236,7 +236,7 @@ public:
 
 	} 
 
-	virtual ~MqClientPool() {
+	virtual ~MqClientPool() { 
 		std::unique_lock<std::mutex> lock(mutex);
 		while (!queue.empty()) {
 			MqClient* client = queue.front(); 
@@ -284,10 +284,6 @@ private:
 	std::queue<MqClient*> queue;
 	mutable std::mutex mutex;
 	std::condition_variable signal;
-};
-
-
- 
-
+}; 
 
 #endif

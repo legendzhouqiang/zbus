@@ -93,6 +93,11 @@ public:
 	virtual bool operator==(const ServerAddress& other) const {
 		return this->address == other.address && this->sslEnabled == other.sslEnabled;
 	}
+
+	std::string toString() {
+		if (this->sslEnabled) return "SSL" + this->address;
+		return this->address;
+	}
 };
 
 inline static bool operator<(const ServerAddress& l, const ServerAddress& r) {
