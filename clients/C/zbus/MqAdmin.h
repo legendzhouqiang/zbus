@@ -61,6 +61,12 @@ public:
 	}
 	virtual ~MqAdmin() { }   
 
+	std::vector<TrackerInfo> queryTracker(int timeout = 3000, ServerSelector selector = NULL) {
+		_MQADMIN_BEGIN(TrackerInfo, PROTOCOL_TRACKER, selector)
+			t = client->queryTracker(timeout);
+		_MQADMIN_END()
+	}
+
 	std::vector<ServerInfo> queryServer(int timeout=3000, ServerSelector selector=NULL) {
 		_MQADMIN_BEGIN(ServerInfo, PROTOCOL_QUERY, selector)
 			t = client->queryServer(timeout);

@@ -146,6 +146,10 @@ public:
 		header[key] = value;
 	}
 
+	void removeHeader(string key) {
+		header.erase(key);
+	}
+
 private:
 	template<typename T>
 	T getNumber(char* key) {

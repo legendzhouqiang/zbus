@@ -36,5 +36,8 @@
     <ClCompile Include="ProducerExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConsumerExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
