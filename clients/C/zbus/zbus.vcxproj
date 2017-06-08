@@ -157,12 +157,15 @@
     <ClInclude Include="..\deps\jsoncpp\include\json\writer.h" />
     <ClInclude Include="Broker.h" />
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Consumer.h" />
     <ClInclude Include="Kit.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="MessageClient.h" />
+    <ClInclude Include="MqAdmin.h" />
     <ClInclude Include="MqClient.h" />
     <ClInclude Include="Platform.h" />
+    <ClInclude Include="Producer.h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>

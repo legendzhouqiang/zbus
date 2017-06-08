@@ -111,9 +111,10 @@ private:
 	}
 };
 
+typedef vector<ServerAddress>(*ServerSelector)(BrokerRouteTable& routeTable, Message& msg);
+
 class ZBUS_API Broker {
 public:
-	typedef vector<ServerAddress>(*ServerSelector)(BrokerRouteTable& routeTable, Message& msg);
 	typedef void(*ServerJoin)(MqClientPool* pool);
 	typedef void(*ServerLeave)(ServerAddress serverAddress);
 

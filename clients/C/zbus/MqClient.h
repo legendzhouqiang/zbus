@@ -152,6 +152,12 @@ public:
 		return info;
 	}
 
+	ConsumeGroupInfo declareGroup(std::string topic, string group, int timeout = 3000) {
+		ConsumeGroup consumeGroup;
+		consumeGroup.groupName = group;
+		return declareGroup(topic, consumeGroup, timeout);
+	}
+
 	ConsumeGroupInfo declareGroup(std::string topic, ConsumeGroup& group, int timeout = 3000) {
 		Message msg;
 		msg.setCmd(PROTOCOL_DECLARE);
@@ -246,6 +252,7 @@ public:
 	}
 
 	void returnClient(MqClient* value) {
+		if (value == NULL) return;
 		{
 			std::lock_guard<std::mutex> lock(mutex);
 			queue.push(value);

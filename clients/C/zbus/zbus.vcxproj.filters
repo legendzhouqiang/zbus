@@ -78,6 +78,15 @@
     <ClInclude Include="Broker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MqAdmin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Consumer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Producer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_reader.cpp">

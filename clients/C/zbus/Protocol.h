@@ -111,6 +111,11 @@ class ZBUS_API ErrorInfo {  //used only for batch operation indication
 public: 
 	bool isError;
 	std::exception error;
+
+	void setError(std::exception& error) {
+		isError = true;
+		this->error = error;
+	}
 };
 
 class ZBUS_API TrackItem : public ErrorInfo {
