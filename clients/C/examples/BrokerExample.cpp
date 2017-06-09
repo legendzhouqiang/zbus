@@ -2,12 +2,12 @@
 
 
 int main_Broker(int argc, char* argv[]) {  
-	Logger::configDefaultLogger(0, LOG_INFO); 
-	Logger* log = Logger::getLogger(); 
-
+	Logger::configDefaultLogger(0, LOG_DEBUG); 
+	Logger* log = Logger::getLogger();  
 
 	Broker broker("localhost:15555");
+	 
 
-	system("pause");
+	broker.join(); //wait for underlying threads
 	return 0;
 }

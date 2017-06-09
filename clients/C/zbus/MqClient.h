@@ -278,7 +278,11 @@ public:
 
 	MqClient* makeClient() {
 		return new MqClient(serverAddress, sslEnabled, sslCertFile); 
-	} 
+	}  
+
+	ServerAddress getServerAddress() {
+		return ServerAddress(serverAddress, sslEnabled);
+	}
 
 private:
 	std::string serverAddress;

@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClCompile Include="BrokerExample.cpp" />
     <ClCompile Include="ConsumerExample.cpp" />
+    <ClCompile Include="ConsumeThreadExample.cpp" />
     <ClCompile Include="MessageClientExample.cpp" />
     <ClCompile Include="MessageClientThreadExample.cpp" />
     <ClCompile Include="MqAdminExample.cpp" />

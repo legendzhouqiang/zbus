@@ -115,8 +115,8 @@ typedef vector<ServerAddress>(*ServerSelector)(BrokerRouteTable& routeTable, Mes
 
 class ZBUS_API Broker {
 public:
-	typedef void(*ServerJoin)(MqClientPool* pool);
-	typedef void(*ServerLeave)(ServerAddress serverAddress);
+	typedef void(*ServerJoin)(MqClientPool* pool, void*);
+	typedef void(*ServerLeave)(ServerAddress serverAddress, void*);
 
 public:
 	Broker(std::string trackerAddress, bool sslEnabled = false, std::string sslCertFile = "", int poolSize=32) {
@@ -180,6 +180,12 @@ public:
 		signal.wait_for(lock, std::chrono::seconds(3));
 	}    
 
+	void join() {
+		for (auto& kv : trackerSubscribers) {
+			kv.second->join();
+		}
+	}
+
 	void addServer(ServerAddress& serverAddress) {
 		if (poolTable.count(serverAddress)>0) {
 			return;
@@ -189,7 +195,7 @@ public:
 		MqClientPool* pool = new MqClientPool(serverAddress.address, poolSize, serverAddress.sslEnabled, sslCertFile);
 		poolTable[serverAddress] = pool;
 		if (onServerJoin) {
-			onServerJoin(pool);
+			onServerJoin(pool, contextObject);
 		} 
 	}
 	
@@ -198,7 +204,7 @@ public:
 			return;
 		}
 		if (onServerLeave) {
-			onServerLeave(serverAddress);
+			onServerLeave(serverAddress, contextObject);
 		}
 		MqClientPool* pool = poolTable[serverAddress]; 
 		poolTable.erase(serverAddress); 
@@ -222,6 +228,7 @@ public:
 	}
 
 public:  
+	void* contextObject;
 	ServerJoin onServerJoin;
 	ServerLeave onServerLeave;
 public:

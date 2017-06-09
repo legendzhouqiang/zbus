@@ -211,6 +211,7 @@ inline static int net_connect(int *fd, const char *host, int port){
 		}
 
 		close(*fd);
+		*fd = -1;
 		ret = ERR_NET_CONNECT_FAILED;
 	}
 
