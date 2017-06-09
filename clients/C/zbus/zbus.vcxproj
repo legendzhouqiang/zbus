@@ -145,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\deps\jsoncpp\include\json\allocator.h" />
     <ClInclude Include="..\deps\jsoncpp\include\json\assertions.h" />
     <ClInclude Include="..\deps\jsoncpp\include\json\autolink.h" />
     <ClInclude Include="..\deps\jsoncpp\include\json\config.h" />
@@ -167,12 +168,14 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Producer.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="RpcInvoker.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_reader.cpp" />
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_value.cpp" />
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_writer.cpp" />
     <ClCompile Include="Kit.cpp" />
+    <ClCompile Include="RpcInvoker.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

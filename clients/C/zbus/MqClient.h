@@ -53,18 +53,15 @@ public:
 	virtual ~MqClient() { }
 
 
-	void produce(Message& msg, int timeout = 3000) { 
+	Message produce(Message& msg, int timeout = 3000) { 
 		msg.setCmd(PROTOCOL_PRODUCE);
 		if (msg.getToken() != "") {
 			msg.setToken(token);
 		} 
 		Message* res = invoke(msg, timeout);
-		if (res && res->status != "200") {
-			std::string body = res->getBodyString();
-			string code = res->status;
-			delete res;
-			throw MqException(body, atoi(code.c_str()));
-		}
+		Message ret(*res);
+		delete res;
+		return ret; 
 	}
 
 	Message* consume(string topic, string group="", int window=-1, int timeout = 3000) {

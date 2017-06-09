@@ -166,6 +166,7 @@
     <ClCompile Include="MqClientExample.cpp" />
     <ClCompile Include="MqClientPoolExample.cpp" />
     <ClCompile Include="ProducerExample.cpp" />
+    <ClCompile Include="RpcInvokerExample.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

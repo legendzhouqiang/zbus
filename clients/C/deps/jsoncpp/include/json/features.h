@@ -10,6 +10,8 @@
 #include "forwards.h"
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
+#pragma pack(push, 8)
+
 namespace Json {
 
 /** \brief Configuration passed to reader and writer.
@@ -44,8 +46,16 @@ public:
   /// \c true if root must be either an array or an object value. Default: \c
   /// false.
   bool strictRoot_;
+
+  /// \c true if dropped null placeholders are allowed. Default: \c false.
+  bool allowDroppedNullPlaceholders_;
+
+  /// \c true if numeric object key are allowed. Default: \c false.
+  bool allowNumericKeys_;
 };
 
 } // namespace Json
+
+#pragma pack(pop)
 
 #endif // CPPTL_JSON_FEATURES_H_INCLUDED

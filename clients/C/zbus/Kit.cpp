@@ -1,8 +1,7 @@
 #include "Kit.h"
 #include "Protocol.h"
 
-#include <json/value.h> 
-#include <json/reader.h>
+#include <json/json.h>
 
 static void parseServerAddress(ServerAddress& info, Json::Value& root) {
 	info.address = root["address"].asString();

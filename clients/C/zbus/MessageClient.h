@@ -8,6 +8,10 @@
 
 using namespace std;
 
+#if defined(_MSC_VER) && _MSC_VER >= 1400 // VC++ 8.0
+// Disable warning about strdup being deprecated.
+#pragma warning(disable : 4996)
+#endif
 
 #define ERR_NET_UNKNOWN_HOST        -86  /**< Failed to get an IP address for the given hostname. */
 #define ERR_NET_SOCKET_FAILED       -66  /**< Failed to open a socket. */
@@ -51,27 +55,9 @@ static void gen_uuid(char* buf, int len) {
 
 
 #ifdef __WINDOWS__
-
-#define read(fd,buf,len)        recv(fd,(char*)buf,(int) len,0)
-#define write(fd,buf,len)       send(fd,(char*)buf,(int) len,0)
-#define close(fd)               closesocket(fd)
-
 static int wsa_init_done = 0;
 #endif
-
-
-#define HTONS(n) ((((unsigned short)(n) & 0xFF      ) << 8 ) | \
-                           (((unsigned short)(n) & 0xFF00    ) >> 8 ))
-#define HTONL(n) ((((unsigned long )(n) & 0xFF      ) << 24) | \
-                           (((unsigned long )(n) & 0xFF00    ) << 8 ) | \
-                           (((unsigned long )(n) & 0xFF0000  ) >> 8 ) | \
-                           (((unsigned long )(n) & 0xFF000000) >> 24))
-
-unsigned short net_htons(unsigned short n);
-unsigned long  net_htonl(unsigned long  n);
-#define net_htons(n) HTONS(n)
-#define net_htonl(n) HTONL(n)
-
+ 
 /*
 * Set the socket blocking or non-blocking
 */
@@ -118,7 +104,11 @@ inline static int net_prepare(void)
 
 inline static void net_close(int fd){
 	shutdown(fd, 2);
+#ifdef __WINDOWS__ 
+	closesocket(fd);
+#else
 	close(fd);
+#endif
 }
 
 
@@ -222,56 +212,66 @@ inline static int net_connect(int *fd, const char *host, int port){
 
  
 inline static int net_recv(int fd, unsigned char *buf, size_t len){
+	
+#ifdef __WINDOWS__
+	int ret = recv(fd, (char*)buf, (int)len, 0);
+	if (ret < 0)
+	{
+		if (net_would_block(fd) != 0)
+			return(ERR_NET_WANT_READ);
+		if (WSAGetLastError() == WSAECONNRESET)
+			return(ERR_NET_CONN_RESET);
+		return(ERR_NET_RECV_FAILED);
+	}
+	return(ret);
+#else
 	int ret = read(fd, buf, len);
 
 	if (ret < 0)
 	{
 		if (net_would_block(fd) != 0)
 			return(ERR_NET_WANT_READ);
-
-#ifdef __WINDOWS__
-		if (WSAGetLastError() == WSAECONNRESET)
-			return(ERR_NET_CONN_RESET);
-#else
 		if (errno == EPIPE || errno == ECONNRESET)
 			return(ERR_NET_CONN_RESET);
 
 		if (errno == EINTR)
 			return(ERR_NET_WANT_READ);
-#endif
-
+		
 		return(ERR_NET_RECV_FAILED);
 	}
-
 	return(ret);
+#endif  
+	
 }
+ 
 
-/*
-* Write at most 'len' characters
-*/
 inline static int net_send(int fd, const unsigned char *buf, size_t len){
-	int ret = write(fd, buf, len);
-
+#ifdef __WINDOWS__
+	int ret = send(fd, (char*)buf, (int)len, 0);
 	if (ret < 0)
 	{
 		if (net_would_block(fd) != 0)
 			return(ERR_NET_WANT_WRITE);
-
-#ifdef __WINDOWS__
 		if (WSAGetLastError() == WSAECONNRESET)
-			return(ERR_NET_CONN_RESET); 
+			return(ERR_NET_CONN_RESET);
+		return(ERR_NET_SEND_FAILED);
+	}
+	return ret;
 #else
+	int ret = write(fd, (char*)buf, (int)len, 0);
+	if (ret < 0)
+	{
+		if (net_would_block(fd) != 0)
+			return(ERR_NET_WANT_WRITE);
 		if (errno == EPIPE || errno == ECONNRESET)
 			return(ERR_NET_CONN_RESET);
 
 		if (errno == EINTR)
 			return(ERR_NET_WANT_WRITE);
-#endif
-
 		return(ERR_NET_SEND_FAILED);
 	}
-
-	return(ret);
+	return ret;
+#endif 
 }
 
 

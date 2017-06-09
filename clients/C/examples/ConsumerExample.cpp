@@ -1,7 +1,7 @@
 #include "Consumer.h"  
 
 
-int main(int argc, char* argv[]) {  
+int main_Consumer(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_INFO);  
 
 	Broker broker("localhost:15555");

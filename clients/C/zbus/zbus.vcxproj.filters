@@ -45,6 +45,24 @@
     <ClInclude Include="MqClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Broker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MqAdmin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Consumer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Producer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RpcInvoker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\jsoncpp\include\json\allocator.h">
+      <Filter>Header Files\jsoncpp</Filter>
+    </ClInclude>
     <ClInclude Include="..\deps\jsoncpp\include\json\assertions.h">
       <Filter>Header Files\jsoncpp</Filter>
     </ClInclude>
@@ -75,18 +93,6 @@
     <ClInclude Include="..\deps\jsoncpp\include\json\writer.h">
       <Filter>Header Files\jsoncpp</Filter>
     </ClInclude>
-    <ClInclude Include="Broker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MqAdmin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Consumer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Producer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_reader.cpp">
@@ -99,6 +105,9 @@
       <Filter>Source Files\jsoncpp</Filter>
     </ClCompile>
     <ClCompile Include="Kit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RpcInvoker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -178,6 +178,16 @@ public:
 	
 
 public:
+	Message() {
+
+	}
+	Message(Message& msg) {
+		this->status = msg.status;
+		this->url = msg.url;
+		this->method = msg.method;
+		this->header = msg.header;
+		this->setBody(msg.body, msg.bodyLength);
+	}
 	~Message() {
 		if (this->body) {
 			delete this->body;
@@ -203,9 +213,9 @@ public:
 		setBody(body, strlen(body));
 	}
 
-	void setJsonBody(char* body) {
+	void setJsonBody(string body) {
 		header["content-type"] = "application/json";
-		setBody(body);
+		setBody((char*)body.c_str(), body.size());
 	}   
 
 	string getBodyString() const{

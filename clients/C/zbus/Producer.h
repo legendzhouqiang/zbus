@@ -31,7 +31,7 @@ public:
 		};
 	} 
 
-	void produce(Message& msg, int timeout = 3000, ServerSelector selector = NULL) {
+	Message produce(Message& msg, int timeout = 3000, ServerSelector selector = NULL) {
 		msg.setCmd(PROTOCOL_PRODUCE); 
 		if (selector == NULL) {
 			selector = this->produceSelector; 
@@ -40,16 +40,11 @@ public:
 		if (pools.size() < 0) throw new MqException("Missing MqServer for topic: " + msg.getTopic());
 		MqClientPool* pool = pools[0];
 		
-		MqClient* client = NULL;
-		try {
-			client = pool->borrowClient();
-			client->produce(msg, timeout);
-		}
-		catch (MqException& e) { 
-			pool->returnClient(client);
-			throw e;
-		}
+		MqClient* client = NULL; 
+		client = pool->borrowClient();
+		Message res = client->produce(msg, timeout); 
 		pool->returnClient(client); 
+		return res;
 	}  
 };
   
