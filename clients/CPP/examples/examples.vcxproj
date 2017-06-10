@@ -167,6 +167,7 @@
     <ClCompile Include="MqClientPoolExample.cpp" />
     <ClCompile Include="ProducerExample.cpp" />
     <ClCompile Include="RpcInvokerExample.cpp" />
+    <ClCompile Include="RpcProcessorAsyncExample.cpp" />
     <ClCompile Include="RpcProcessorExample.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

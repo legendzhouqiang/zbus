@@ -21,9 +21,12 @@ public:
 			throw std::exception("Missing message handler");
 		} 
 		for (int i = 0; i < this->connectionCount; i++) {
-			MqClient* client = pool->makeClient();
-			clients.push_back(client);
-			std::thread* t = new std::thread(&ConsumeThread::run, this, client);
+			//separate recv and send clients since recv will block, otherwise consumer's message handler can not work in multi-threading environment
+			MqClient* clientRecv = pool->makeClient();
+			MqClient* clientSend = pool->makeClient();
+			clients.push_back(clientRecv);
+			clients.push_back(clientSend);
+			std::thread* t = new std::thread(&ConsumeThread::run, this, clientRecv, clientSend);
 			clientThreads.push_back(t);
 		} 
 	}
@@ -70,17 +73,18 @@ private:
 		return res;
 	}
 
-	void run(MqClient* client) {
+	void run(MqClient* clientRecv, MqClient* clientSend) {
 		while (running) {
 			try {
-				Message* msg = take(client);
-				messageHander(msg, client, contextObject); 
+				Message* msg = take(clientRecv);
+				messageHander(msg, clientSend, contextObject);
 			}
 			catch (MqException& e) {   
 				if (e.code == ERR_NET_RECV_FAILED) { //timeout?
 					continue;
 				} 
-				client->close();
+				clientRecv->close();
+				clientSend->close();
 				logger->error("%d, %s", e.code, e.message.c_str()); 
 				std::this_thread::sleep_for(std::chrono::seconds(3));
 			} 

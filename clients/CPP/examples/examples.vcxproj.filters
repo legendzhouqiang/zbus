@@ -48,5 +48,8 @@
     <ClCompile Include="RpcProcessorExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RpcProcessorAsyncExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

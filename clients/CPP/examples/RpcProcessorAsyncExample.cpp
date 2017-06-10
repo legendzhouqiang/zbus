@@ -11,16 +11,14 @@ public:
 		return str;
 	}
 };
- 
-
+  
 class AsyncRpcProcessor : public RpcProcessor {
 private:
-	MyService2* svc;
-	std::map<string, std::thread*> threadTable;
+	MyService2* svc; 
 public:
 	AsyncRpcProcessor(MyService2* svc) {
-		this->svc = svc;
-	}
+		this->svc = svc; 
+	} 
 
 	virtual void process(Request* req, Response* res) {
 		if (req->method == "plus") {
@@ -48,8 +46,9 @@ public:
 		Request* req = new Request();
 		Response* res = new Response(); 
 		req->fromJson(reqMsg->getBodyString());
-		delete reqMsg;
+		delete reqMsg; 
 
+		//use thread to handle
 		std::thread* t = new std::thread([=]() {
 			try {
 				process(req, res);
@@ -62,8 +61,9 @@ public:
 			client->route(*resMsg);
 			delete resMsg;
 			delete req;
-			delete res; 
-		}); 
+			delete res;  
+		});   
+		//TODO: delete thread once finshed, C++11 thread design sucks?
 	}
 
 };
