@@ -169,13 +169,13 @@
     <ClInclude Include="Producer.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RpcInvoker.h" />
+    <ClInclude Include="RpcProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_reader.cpp" />
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_value.cpp" />
     <ClCompile Include="..\deps\jsoncpp\src\lib_json\json_writer.cpp" />
     <ClCompile Include="Kit.cpp" />
-    <ClCompile Include="RpcInvoker.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

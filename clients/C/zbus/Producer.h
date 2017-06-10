@@ -31,8 +31,7 @@ public:
 		};
 	} 
 
-	Message produce(Message& msg, int timeout = 3000, ServerSelector selector = NULL) {
-		msg.setCmd(PROTOCOL_PRODUCE); 
+	Message produce(Message& msg, int timeout = 3000, ServerSelector selector = NULL) { 
 		if (selector == NULL) {
 			selector = this->produceSelector; 
 		}
@@ -46,6 +45,26 @@ public:
 		pool->returnClient(client); 
 		return res;
 	}  
+
+	/**
+	Need event loop facility to make the async work smoothingly, such as libuv from NodeJS
+	*/
+	void produceAsync(Message& msg, int timeout = 3000, ServerSelector selector = NULL) {
+		msg.setAck(false);
+		msg.setCmd(PROTOCOL_PRODUCE);
+		
+		if (selector == NULL) {
+			selector = this->produceSelector;
+		}
+		vector<MqClientPool*> pools = broker->select(selector, msg);
+		if (pools.size() < 0) throw new MqException("Missing MqServer for topic: " + msg.getTopic());
+		MqClientPool* pool = pools[0];
+
+		MqClient* client = NULL;
+		client = pool->borrowClient();
+		client->send(msg, timeout);
+		pool->returnClient(client); 
+	}
 };
   
 #endif

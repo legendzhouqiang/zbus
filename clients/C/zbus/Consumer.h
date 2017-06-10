@@ -3,7 +3,7 @@
  
 #include "MqAdmin.h" 
 
-typedef void(*MessageHandler)(Message& msg, MqClient* client);
+typedef void(*MessageHandler)(Message* , MqClient*, void* ctx);
 class ConsumeThread {
 public:
 	ConsumeThread(MqClientPool* pool, MessageHandler messageHander=NULL, int connectionCount = 1, int timeout = 1000) :
@@ -74,8 +74,7 @@ private:
 		while (running) {
 			try {
 				Message* msg = take(client);
-				messageHander(*msg, client);
-				delete msg;
+				messageHander(msg, client, contextObject); 
 			}
 			catch (MqException& e) {   
 				if (e.code == ERR_NET_RECV_FAILED) { //timeout?
@@ -95,6 +94,7 @@ public:
 	int consumeTimeout = 10000;
 	int connectionCount = 1;
 	MessageHandler messageHander;
+	void* contextObject;
 
 private:
 	MqClientPool* pool;
@@ -173,6 +173,7 @@ private:
 		ct->messageHander = this->messageHander;
 		ct->token = this->token;
 		ct->topic = this->topic;
+		ct->contextObject = this->contextObject;
 
 		consumeThreadTable[serverAddress] = ct;
 		ct->start();
@@ -200,6 +201,7 @@ public:
 	int consumeTimeout = 10000;
 	int connectionCount = 1;
 	MessageHandler messageHander;
+	void* contextObject;
 };
   
 #endif

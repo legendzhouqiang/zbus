@@ -1,7 +1,8 @@
 #include "RpcInvoker.h"
+#include <iostream>
+using namespace std;
 
-
-int main(int argc, char* argv[]) {  
+int main_RpcInvoker(int argc, char* argv[]) {  
 	Logger::configDefaultLogger(0, LOG_INFO);  
 
 	Broker broker("localhost:15555"); 
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
 
 	Response res = rpc.invoke(req);
 
-	broker.join(); 
+	cout << res.result << endl;
+	cin.get();
 	return 0;
 }

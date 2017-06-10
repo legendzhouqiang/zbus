@@ -11,6 +11,31 @@ public:
 	std::string method;
 	std::string module;
 	std::vector<Json::Value> params; 
+
+	std::string toJson() {
+		Json::Value root;
+		root["method"] = method;
+		root["module"] = module;
+		Json::Value args;
+		for (Json::Value& param : this->params) {
+			args.append(param);
+		}
+		root["params"] = args;
+
+		Json::StyledWriter writer;
+		return writer.write(root);
+	}
+
+	void fromJson(std::string& jsonString) {
+		Json::Value root;
+		Json::Reader reader;
+		reader.parse(jsonString, root); 
+		this->method = root["method"].asString();
+		this->module = root["module"].asString();
+		for (Json::Value& param : root["params"]) {
+			this->params.push_back(param);
+		}
+	}
 };
 
 class ZBUS_API Response {
@@ -20,6 +45,22 @@ public:
 
 	bool isError() {
 		return !error.isNull();
+	}
+
+	std::string toJson() {
+		Json::Value root;
+		root["result"] = result;
+		root["error"] = error; 
+		Json::StyledWriter writer;
+		return writer.write(root);
+	}
+
+	void fromJson(std::string& jsonString) {
+		Json::Value root;
+		Json::Reader reader;
+		reader.parse(jsonString, root);
+		this->result = root["result"];
+		this->error = root["error"];
 	}
 };
 
@@ -38,18 +79,8 @@ public:
 		msg.setAck(false);
 		msg.setTopic(topic);
 		msg.setToken(token); 
-
-		Json::Value root;
-		root["method"] = req.method;
-		root["module"] = req.module;
-		Json::Value params;
-		for (Json::Value& param : req.params) {
-			params.append(param);
-		}
-		root["params"] = params;
-
-		Json::StyledWriter writer;  
-		msg.setJsonBody(writer.write(root)); 
+		 
+		msg.setJsonBody(req.toJson());
 		
 		if (selector == NULL) {
 			selector = rpcSelector;
@@ -61,11 +92,7 @@ public:
 			res.error = Json::Value(bodyString);
 		}
 		else {
-			Json::Reader reader;
-			Json::Value value;
-			reader.parse(bodyString, value);
-			res.error = value["error"];
-			res.result = value["result"];
+			res.fromJson(bodyString);
 		}
 		return res;
 	}

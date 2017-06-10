@@ -55,7 +55,7 @@ public:
 
 	Message produce(Message& msg, int timeout = 3000) { 
 		msg.setCmd(PROTOCOL_PRODUCE);
-		if (msg.getToken() != "") {
+		if (msg.getToken() == "") {
 			msg.setToken(token);
 		} 
 		Message* res = invoke(msg, timeout);
@@ -71,7 +71,7 @@ public:
 		msg.setConsumeGroup(group);
 		msg.setConsumeWindow(window);
 		
-		if (msg.getToken() != "") {
+		if (msg.getToken() == "") {
 			msg.setToken(token);
 		}
 		return invoke(msg, timeout); 
@@ -219,7 +219,7 @@ public:
 	void route(Message& msg, int timeout = 3000) {
 		msg.setCmd(PROTOCOL_ROUTE); 
 		msg.setAck(false);
-		if (msg.getToken() != "") {
+		if (msg.getToken() == "") {
 			msg.setToken(token);
 		} 
 		if (msg.status != "") {

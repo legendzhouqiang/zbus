@@ -200,7 +200,11 @@ inline static int net_connect(int *fd, const char *host, int port){
 			break;
 		}
 
+#ifdef __WINDOWS__ 
+		closesocket(*fd);
+#else
 		close(*fd);
+#endif 
 		*fd = -1;
 		ret = ERR_NET_CONNECT_FAILED;
 	}

@@ -7,8 +7,9 @@ int main_Consumer(int argc, char* argv[]) {
 	Broker broker("localhost:15555");
 
 	Consumer c(&broker, "MyTopic"); 
-	c.messageHander = [](Message& msg, MqClient* client) {
-		msg.print();
+	c.messageHander = [](Message* msg, MqClient* client, void* ctx) {
+		msg->print();
+		delete msg;
 	};  
 	c.start();  
 
