@@ -36,6 +36,8 @@ public:
 			res->result = Json::Value(s);
 			return;
 		}
+
+		res->error = Json::Value("Missing method: " + req->method);
 	}
 };
 
