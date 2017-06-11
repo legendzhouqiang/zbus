@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
-	"os"
+	"log"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -25,6 +27,7 @@ func NewMessage() *Message {
 	m.Url = "/"
 	m.Method = "GET"
 	m.Header = make(map[string]string)
+	m.Header["connection"] = "Keep-Alive"
 	return m
 }
 
@@ -98,21 +101,58 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	if bodyLen > 0 {
 		m.SetBody(bb[idx+4 : idx+4+bodyLen])
 	}
+	data := make([]byte, idx+4+bodyLen)
+	buf.Read(data)
 	return m
 }
 
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+	bufRead := new(bytes.Buffer)
+	for {
+		data := make([]byte, 1024)
+		n, err := conn.Read(data)
+		if err != nil {
+			log.Println("Error reading: ", err.Error())
+			break
+		}
+		bufRead.Write(data[0:n])
+
+		for {
+			req := DecodeMessage(bufRead)
+			if req == nil {
+				bufRead2 := new(bytes.Buffer)
+				bufRead2.Write(bufRead.Bytes())
+				bufRead = bufRead2
+				break
+			}
+
+			res := NewMessage()
+			res.Status = "200"
+			res.SetBodyString("Hello World")
+			bufWrite := new(bytes.Buffer)
+			res.EncodeMessage(bufWrite)
+			conn.Write(bufWrite.Bytes())
+		}
+	}
+	log.Println("Connection closed, ", conn)
+}
+
 func main() {
-	m := NewMessage()
-	m.Status = "200"
-	m.Header["cmd"] = "produce"
-	m.Header["topic"] = "MyTopic"
-	m.SetBodyString("Hello World")
-
-	buf := new(bytes.Buffer)
-	m.EncodeMessage(buf)
-	m2 := DecodeMessage(buf)
-	buf2 := new(bytes.Buffer)
-	m2.EncodeMessage(buf2)
-
-	buf2.WriteTo(os.Stdout)
+	var addr = *flag.String("h", "0.0.0.0:15555", "zbus server address")
+	server, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Println("Error listening:", err.Error())
+		return
+	}
+	defer server.Close()
+	log.Println("Listening on " + addr)
+	for {
+		conn, err := server.Accept()
+		if err != nil {
+			log.Println("Error accepting: ", err.Error())
+			return
+		}
+		go handleConnection(conn)
+	}
 }
