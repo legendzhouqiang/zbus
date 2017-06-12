@@ -263,10 +263,10 @@ type Conn struct {
 	readDecompress         bool // whether last read frame had RSV1 set
 	newDecompressionReader func(io.Reader) io.ReadCloser
 }
-
+ 
 func newConn(conn net.Conn, isServer bool, readBufferSize, writeBufferSize int) *Conn {
 	return newConnBRW(conn, isServer, readBufferSize, writeBufferSize, nil)
-}
+} 
 
 type writeHook struct {
 	p []byte
