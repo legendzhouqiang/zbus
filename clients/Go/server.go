@@ -106,7 +106,7 @@ outter:
 		}
 	}
 
-	if wsConn != nil { //upgrade to Websocket
+	if wsConn != nil { //upgraded to Websocket
 		bufRead = new(bytes.Buffer)
 		for {
 			msgtype, data, err := wsConn.ReadMessage()
@@ -131,16 +131,19 @@ outter:
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
-	var addr = *flag.String("h", "0.0.0.0:15555", "zbus server address")
+	var host = *flag.String("h", "0.0.0.0", "zbus server host")
+	var port = *flag.Int("p", 15555, "zbus server port")
+	var addr = fmt.Sprintf("%s:%d", host, port)
 	server, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		return
 	}
 	defer server.Close()
-	log.Println("Listening on " + addr)
 
-	handler := NewServerSessionHandler()
+	log.Println("Listening on " + addr)
+	realAddr := ServerAddress(host, port)
+	handler := NewServerHandler(realAddr)
 	for {
 		conn, err := server.Accept()
 		if err != nil {

@@ -52,6 +52,14 @@ func NewMessage() *Message {
 	return m
 }
 
+//SetHeaderIfNone updates header by value if not set yet
+func (m *Message) SetHeaderIfNone(key string, val string) {
+	if _, ok := m.Header[key]; ok {
+		return
+	}
+	m.Header[key] = val
+}
+
 //SetBody set binary body of Message
 func (m *Message) SetBody(body []byte) {
 	m.body = body
