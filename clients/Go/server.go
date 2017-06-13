@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 
+	"fmt"
+
 	"./websocket"
 )
 
@@ -19,8 +21,8 @@ type Session struct {
 }
 
 //NewSession create session
-func NewSession(netConn *net.Conn, wsConn *websocket.Conn) Session {
-	sess := Session{}
+func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
+	sess := &Session{}
 	sess.ID = uuid()
 	if netConn != nil {
 		sess.isWebsocket = false
@@ -34,18 +36,18 @@ func NewSession(netConn *net.Conn, wsConn *websocket.Conn) Session {
 }
 
 //Upgrade session to be based on websocket
-func (s Session) Upgrade(wsConn *websocket.Conn) {
+func (s *Session) Upgrade(wsConn *websocket.Conn) {
 	s.wsConn = *wsConn
 	s.isWebsocket = true
 }
 
-//ToString get string value of session
-func (s Session) ToString() string {
-	return s.ID
+//String get string value of session
+func (s *Session) String() string {
+	return fmt.Sprintf("%s-%s", s.ID, s.netConn.RemoteAddr())
 }
 
 //WriteMessage write message to underlying connection
-func (s Session) WriteMessage(msg Message, msgType *int) error {
+func (s *Session) WriteMessage(msg *Message, msgType *int) error {
 	buf := new(bytes.Buffer)
 	msg.EncodeMessage(buf)
 	if s.isWebsocket {
@@ -56,29 +58,11 @@ func (s Session) WriteMessage(msg Message, msgType *int) error {
 }
 
 //SessionHandler handles session lifecyle
-type SessionHandler struct {
-	Created   func(sess Session)
-	ToDestroy func(sess Session)
-	OnMessage func(msg Message, sess Session, msgType *int) //msgType only used for websocket
-	OnError   func(err error, sess Session)
-}
-
-//NewSessionHandler create default handler
-func NewSessionHandler() SessionHandler {
-	return SessionHandler{
-		Created: func(sess Session) {
-			log.Printf("Session(%s) created", sess.ToString())
-		},
-		ToDestroy: func(sess Session) {
-			log.Printf("Session(%s) destroyed", sess.ToString())
-		},
-		OnMessage: func(msg Message, sess Session, msgType *int) {
-			log.Print(msg.ToString())
-		},
-		OnError: func(err error, sess Session) {
-			log.Printf("Session(%s) error: %s", sess.ID, err)
-		},
-	}
+type SessionHandler interface {
+	Created(sess *Session)
+	ToDestroy(sess *Session)
+	OnMessage(msg *Message, sess *Session, msgType *int) //msgType only used for websocket
+	OnError(err error, sess *Session)
 }
 
 var upgrader = Upgrader{}
@@ -109,15 +93,16 @@ outter:
 			}
 
 			//upgrade to Websocket if requested
-			if tokenListContainsValue(req.Header, "connection", "upgrade") {
+			if IsWebSocketUpgrade(req.Header) {
 				wsConn, err = upgrader.Upgrade(conn, req)
 				if err == nil {
-					log.Printf("Upgraded to websocket: %s\n", req.ToString())
+					log.Printf("Upgraded to websocket: %s\n", req)
 					session.Upgrade(wsConn)
 					break outter
 				}
 			}
-			handler.OnMessage(*req, session, nil)
+
+			handler.OnMessage(req, session, nil)
 		}
 	}
 
@@ -137,18 +122,15 @@ outter:
 				break
 			}
 
-			handler.OnMessage(*req, session, &msgtype)
+			handler.OnMessage(req, session, &msgtype)
 		}
 	}
 	handler.ToDestroy(session)
 	conn.Close()
 }
 
-var sessionTable map[string]Session
-
 func main() {
-	log.SetFlags(log.Lshortfile)
-	sessionTable = make(map[string]Session)
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 	var addr = *flag.String("h", "0.0.0.0:15555", "zbus server address")
 	server, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -158,15 +140,7 @@ func main() {
 	defer server.Close()
 	log.Println("Listening on " + addr)
 
-	handler := NewSessionHandler()
-
-	handler.OnMessage = func(msg Message, sess Session, msgType *int) {
-		res := NewMessage()
-		res.Status = "200"
-		res.SetBodyString("Hello World")
-		sess.WriteMessage(*res, msgType)
-	}
-
+	handler := NewServerSessionHandler()
 	for {
 		conn, err := server.Accept()
 		if err != nil {

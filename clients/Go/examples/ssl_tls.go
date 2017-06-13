@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"io"
 	"log"
 	"net"
+	"os"
 )
 
 func handleConnection(conn net.Conn) {
@@ -26,15 +28,13 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func main() {
-	m := make(map[string]string)
-	m["hong"] = "leiming"
+func main2() {
 
-	x, e := m["yyy"]
-	print(x)
-	print(e)
+	logFile, err := os.OpenFile("/tmp/log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
-	log.SetFlags(log.Lshortfile)
 	cert, err := tls.LoadX509KeyPair("zbus.crt", "zbus.key")
 	if err != nil {
 		log.Println(err)
@@ -42,6 +42,7 @@ func main() {
 	}
 	config := &tls.Config{Certificates: []tls.Certificate{cert}}
 	server, err := tls.Listen("tcp", ":15555", config)
+	log.Println("Server listening at 0.0.0.0:15555")
 	if err != nil {
 		log.Println(err)
 		return

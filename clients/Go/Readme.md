@@ -1,3 +1,3 @@
-#zbus-go-client
+#zbus-go
 
-coming soon
+experimental zbus server built on Golang

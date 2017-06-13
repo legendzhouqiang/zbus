@@ -44,12 +44,6 @@ type Upgrader struct {
 	// CheckOrigin is nil, the host in the Origin header must not be set or
 	// must match the host of the request.
 	CheckOrigin func(header map[string]string) bool
-
-	// EnableCompression specify if the server should attempt to negotiate per
-	// message compression (RFC 7692). Setting this value to true does not
-	// guarantee that compression will be supported. Currently only "no context
-	// takeover" modes are supported.
-	EnableCompression bool
 }
 
 // Subprotocols returns the subprotocols requested by the client in the
@@ -69,7 +63,8 @@ func Subprotocols(header map[string]string) []string {
 // IsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
 func IsWebSocketUpgrade(header map[string]string) bool {
-	return false
+	return tokenListContainsValue(header, "connection", "upgrade") &&
+		tokenListContainsValue(header, "upgrade", "websocket")
 }
 
 // CheckSameOrigin returns true if the origin is not set or is equal to the request host.
@@ -120,33 +115,32 @@ func (u *Upgrader) returnError(netConn net.Conn, status int, reason string) (*we
 // request. Use the responseHeader to specify cookies (Set-Cookie) and the
 // application negotiated subprotocol (Sec-Websocket-Protocol).
 //
-// If the upgrade fails, then Upgrade replies to the client with an HTTP error
-// response.
+// If the upgrade fails, then Upgrade replies to the client with an HTTP error response.
 func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, error) {
 	if req.Method != "GET" {
-		return u.returnError(netConn, StatusMethodNotAllowed, "websocket: not a websocket handshake: request method is not GET")
+		return u.returnError(netConn, 405, "websocket: not a websocket handshake: request method is not GET")
 	}
 
 	if !tokenListContainsValue(req.Header, "connection", "upgrade") {
-		return u.returnError(netConn, StatusBadRequest, "websocket: not a websocket handshake: 'upgrade' token not found in 'Connection' header")
+		return u.returnError(netConn, 400, "websocket: not a websocket handshake: 'upgrade' token not found in 'Connection' header")
 	}
 
 	if !tokenListContainsValue(req.Header, "upgrade", "websocket") {
-		return u.returnError(netConn, StatusBadRequest, "websocket: not a websocket handshake: 'websocket' token not found in 'Upgrade' header")
+		return u.returnError(netConn, 400, "websocket: not a websocket handshake: 'websocket' token not found in 'Upgrade' header")
 	}
 
 	if !tokenListContainsValue(req.Header, "sec-websocket-version", "13") {
-		return u.returnError(netConn, StatusBadRequest, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
+		return u.returnError(netConn, 400, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
 	checkOrigin := u.CheckOrigin
 	if checkOrigin != nil && !checkOrigin(req.Header) {
-		return u.returnError(netConn, StatusForbidden, "websocket: 'Origin' header value not allowed")
+		return u.returnError(netConn, 403, "websocket: 'Origin' header value not allowed")
 	}
 
 	challengeKey := req.Header["sec-websocket-key"]
 	if challengeKey == "" {
-		return u.returnError(netConn, StatusBadRequest, "websocket: not a websocket handshake: `Sec-Websocket-Key' header is missing or blank")
+		return u.returnError(netConn, 400, "websocket: not a websocket handshake: `Sec-Websocket-Key' header is missing or blank")
 	}
 
 	subprotocol := u.selectSubprotocol(req.Header)
@@ -157,7 +151,7 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 	wsConn.SetSubprotocol(subprotocol)
 
 	resp := NewMessage()
-	resp.Status = strconv.Itoa(StatusSwitchingProtocols)
+	resp.Status = "101"
 	resp.Header["Upgrade"] = "websocket"
 	resp.Header["Connection"] = "Upgrade"
 	resp.Header["Sec-WebSocket-Accept"] = computeAcceptKey(challengeKey)
