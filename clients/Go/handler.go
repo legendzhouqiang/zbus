@@ -37,12 +37,22 @@ func NewServerHandler(serverAddress string) *ServerHandler {
 		serverAddress: serverAddress,
 	}
 
+	s.handlerTable["favicon.ico"] = faviconHandler
+
 	s.handlerTable[protocol.Home] = homeHandler
 	s.handlerTable[protocol.Js] = jsHandler
 	s.handlerTable[protocol.Css] = cssHandler
 	s.handlerTable[protocol.Img] = imgHandler
 	s.handlerTable[protocol.Page] = pageHandler
-
+	s.handlerTable[protocol.Produce] = produceHandler
+	s.handlerTable[protocol.Consume] = consumeHandler
+	s.handlerTable[protocol.Query] = queryHandler
+	s.handlerTable[protocol.Remove] = removeHandler
+	s.handlerTable[protocol.Empty] = emptyHandler
+	s.handlerTable[protocol.Tracker] = trackerHandler
+	s.handlerTable[protocol.Server] = serverHandler
+	s.handlerTable[protocol.TrackPub] = trackPubHandler
+	s.handlerTable[protocol.TrackSub] = trackSubHandler
 	return s
 }
 
@@ -162,29 +172,115 @@ func handleUrlRpc(msg *Message, rest string, kvstr string) {
 	msg.SetBody(data)
 }
 
-func homeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+func renderFile(file string, contentType string, s *ServerHandler, msg *Message, sess *Session, msgType *int) {
 	res := NewMessage()
-	res.Status = "200"
-	res.SetBodyString("Hello World")
+	if file == "" {
+		url := msg.Url
+		bb := SplitClean(url, "/")
+		if len(bb) > 1 {
+			file = bb[1]
+		}
+	}
+
+	data, err := ReadAssetFile(file)
+	if err != nil {
+		res.Status = "404"
+		res.SetBodyString(fmt.Sprintf("File(%s) error: %s", file, err))
+	} else {
+		res.Status = "200"
+		res.SetBody(data)
+	}
+	res.Header["content-type"] = contentType
 	sess.WriteMessage(res, msgType)
 }
 
-func faviconHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+func homeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	renderFile("home.htm", "text/html", s, msg, sess, msgType)
+}
 
+func faviconHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	renderFile("logo.svg", "image/svg+xml", s, msg, sess, msgType)
 }
 
 func jsHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-
+	renderFile("", "application/javascript", s, msg, sess, msgType)
 }
 
 func cssHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-
+	renderFile("", "text/css", s, msg, sess, msgType)
 }
 
 func imgHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-
+	renderFile("", "image/svg+xml", s, msg, sess, msgType)
 }
 
 func pageHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	renderFile("", "text/html", s, msg, sess, msgType)
+}
 
+func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	//just ignore
+}
+
+func produceHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func consumeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func queryHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func removeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func emptyHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func trackerHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func serverHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func trackPubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
+}
+
+func trackSubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	res := NewMessage()
+	res.Status = "500"
+	res.SetBodyString("Not implemented")
+	sess.WriteMessage(res, msgType)
 }

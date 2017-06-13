@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+//ReadAssetFile read asset file via go binary data or direct io
+func ReadAssetFile(file string) ([]byte, error) {
+	//return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
+	return Asset(fmt.Sprintf("asset/%s", file))
+}
+
 //SplitClean splits string without empty
 func SplitClean(s string, sep string) []string {
 	bb := strings.Split(s, sep)

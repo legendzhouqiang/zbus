@@ -17,6 +17,8 @@ const (
 	//Tracker
 	TrackPub = "track_pub"
 	TrackSub = "track_sub"
+	Tracker  = "tracker"
+	Server   = "server"
 
 	Cmd       = "cmd"
 	Topic     = "topic"
@@ -61,4 +63,6 @@ const (
 	Css  = "css"
 	Img  = "img"
 	Page = "page"
+
+	Heartbeat = "heartbeat"
 )
