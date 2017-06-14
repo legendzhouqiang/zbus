@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net"
-
-	"fmt"
 
 	"./websocket"
 )

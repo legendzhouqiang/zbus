@@ -1,17 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-
 	"strings"
-
-	"encoding/json"
 
 	"./protocol"
 )
 
-var restCommands []string = []string{protocol.Produce, protocol.Consume, protocol.Declare, protocol.Query, protocol.Empty}
+var restCommands = []string{protocol.Produce, protocol.Consume, protocol.Declare, protocol.Query, protocol.Empty}
 
 func isRestCommand(cmd string) bool {
 	for _, value := range restCommands {
