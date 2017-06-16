@@ -36,14 +36,17 @@ type Index struct {
 //NewIndex create index file
 func NewIndex(dirPath string) (*Index, error) {
 	_, name := filepath.Split(dirPath)
-	fullPath := filepath.Join(dirPath, fmt.Sprintf("%s.idx", name))
-	m, err := NewMappedFile(fullPath)
+	fullPath := filepath.Join(dirPath, fmt.Sprintf("%s%s", name, IndexSuffix))
+	m, err := NewMappedFile(fullPath, IndexSize)
 	if err != nil {
 		return nil, err
 	}
 	index := &Index{m, name, IndexVersion, 0, 0, 0}
 
-	if m.fileExists {
+	if m.newFile {
+		m.buf.SetPos(0)
+		m.buf.PutInt32(index.version)
+	} else {
 		m.buf.SetPos(0)
 		index.version, _ = m.buf.GetInt32()
 		if index.version != IndexVersion {
@@ -53,9 +56,6 @@ func NewIndex(dirPath string) (*Index, error) {
 		index.blockCount, _ = m.buf.GetInt32()
 		index.blockStart, _ = m.buf.GetInt64()
 		index.msgCount, _ = m.buf.GetInt64()
-	} else {
-		m.buf.SetPos(0)
-		m.buf.PutInt32(index.version)
 	}
 	return index, nil
 }

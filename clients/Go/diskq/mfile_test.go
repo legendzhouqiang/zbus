@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestMappedFile_GetExt(t *testing.T) {
-	m, err := NewMappedFile("/tmp/MyTopic.idx")
+	m, err := NewMappedFile("/tmp/MyTopic.idx", 1024)
 	if err != nil {
 		t.Fail()
 	}

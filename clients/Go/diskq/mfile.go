@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -42,24 +43,26 @@ type MappedFile struct {
 
 	extensions []string
 
-	buf        *MBuf
-	fileExists bool
+	buf     *MappedBuf
+	newFile bool
+	mutex   *sync.Mutex
 }
 
 //NewMappedFile create mapped file
-func NewMappedFile(fileName string) (*MappedFile, error) {
+func NewMappedFile(fileName string, fileSize int) (*MappedFile, error) {
 	newFile := true
 	if _, err := os.Stat(fileName); err == nil {
 		newFile = false
 	}
-	buf, err := NewMBuf(fileName, HeaderSize)
+	buf, err := NewMappedBuf(fileName, fileSize)
 	if err != nil {
 		return nil, err
 	}
 	m := &MappedFile{}
 	m.buf = buf
 	m.extensions = make([]string, ExtItemCount)
-	m.fileExists = !newFile
+	m.newFile = newFile
+	m.mutex = &sync.Mutex{}
 	if newFile {
 		ts := time.Now().UnixNano() / int64(time.Millisecond)
 		m.SetCreatedTime(ts)
@@ -94,6 +97,8 @@ func (m *MappedFile) Mask() int32 {
 
 //SetMask set mask value
 func (m *MappedFile) SetMask(value int32) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	m.mask = value
 	m.buf.SetPos(MaskPos)
 	m.buf.PutInt32(value)
@@ -106,6 +111,8 @@ func (m *MappedFile) CreatedTime() int64 {
 
 //SetCreatedTime set createdTime
 func (m *MappedFile) SetCreatedTime(value int64) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	m.createdTime = value
 	m.buf.SetPos(CreatedTimePos)
 	m.buf.PutInt64(value)
@@ -118,6 +125,8 @@ func (m *MappedFile) UpdatedTime() int64 {
 
 //SetUpdatedTime set updatedTime
 func (m *MappedFile) SetUpdatedTime(value int64) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	m.updatedTime = value
 	m.buf.SetPos(UpdatedTimePos)
 	m.buf.PutInt64(value)
@@ -134,6 +143,9 @@ func (m *MappedFile) SetCreator(value string) error {
 	if n > 127 {
 		return fmt.Errorf("%s longer than 127", value)
 	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	m.creator = value
 	m.buf.SetPos(CreatorPos)
 	m.buf.PutByte(byte(n))
@@ -159,7 +171,10 @@ func (m *MappedFile) SetExt(idx int, value string) error {
 	if n >= ExtItemSize {
 		return fmt.Errorf("%s longer than %d", value, ExtItemSize-1)
 	}
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
+	m.extensions[idx] = value
 	m.buf.SetPos(int32(ExtOffset + ExtItemSize*idx))
 	m.buf.PutString(value)
 	return nil
