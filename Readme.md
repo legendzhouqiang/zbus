@@ -113,7 +113,7 @@ with special selection algorithm.
 	topic: <topic> 
 	token: [token]
 
-**prodcue**
+**produce**
 	
 	cmd: produce
 	tag: [tag]    //tag of message, used for consume-group filter
