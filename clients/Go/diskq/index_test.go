@@ -1,4 +1,4 @@
-package main
+package diskq
 
 import (
 	"testing"
@@ -13,4 +13,18 @@ func TestNewIndex(t *testing.T) {
 	if idx.version != IndexVersion {
 		t.Fail()
 	}
+}
+
+func TestIndex_LoadBlockToWrite(t *testing.T) {
+	idx, err := NewIndex("/tmp/IndexExample")
+	if err != nil {
+		t.Fail()
+	}
+	defer idx.Close()
+
+	block, err := idx.LoadBlockToWrite()
+	if err != nil {
+		t.Fail()
+	}
+	block.Close()
 }

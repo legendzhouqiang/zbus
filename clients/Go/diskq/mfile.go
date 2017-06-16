@@ -1,4 +1,4 @@
-package main
+package diskq
 
 import (
 	"fmt"
@@ -8,10 +8,6 @@ import (
 )
 
 const (
-	MsgIdMaxLen  = 39
-	MsgTagMaxLen = 127
-	MsgBodyPos   = 8 + 8 + 40 + 8 + 8 + 128 //200
-
 	HeaderSize     = 1024
 	CreatorPos     = 512 - 128 //creator max length 127(another 1 byte for length)
 	CreatedTimePos = CreatorPos - 8
@@ -22,17 +18,6 @@ const (
 	ExtItemCount = 4
 	ExtOffset    = HeaderSize - ExtItemSize*ExtItemCount
 )
-
-//DiskMessage to read and write in disk for DiskQ
-type DiskMessage struct {
-	Offset     int64
-	Timestamp  int64
-	Id         string // write 40 = 1_len + max 39
-	CorrOffset int64
-	MsgNo      int64
-	Tag        string // write 128 = 1_len + max 127
-	Body       []byte // write 4_len + body
-}
 
 //MappedFile mapping disk file for DiskQ index and reader index
 type MappedFile struct {
