@@ -13,13 +13,13 @@ import (
 //FixedBuf is a fixed length of buffer
 type FixedBuf struct {
 	data []byte
-	pos  int32
-	cap  int32
+	pos  int
+	cap  int
 	bo   binary.ByteOrder
 }
 
 //NewFixedBuf create fixed length buffer
-func NewFixedBuf(cap int32) *FixedBuf {
+func NewFixedBuf(cap int) *FixedBuf {
 	data := make([]byte, cap)
 	return &FixedBuf{data, 0, cap, binary.BigEndian}
 }
@@ -27,7 +27,7 @@ func NewFixedBuf(cap int32) *FixedBuf {
 //FixedBufFWrap create fixed lenght buffer from data
 func FixedBufFWrap(data []byte) *FixedBuf {
 	n := len(data)
-	return &FixedBuf{data, 0, int32(n), binary.BigEndian}
+	return &FixedBuf{data, 0, n, binary.BigEndian}
 }
 
 //Bytes return available data
@@ -36,16 +36,16 @@ func (b *FixedBuf) Bytes() []byte {
 }
 
 //Cap return capacity of the buffer
-func (b *FixedBuf) Cap() int32 {
+func (b *FixedBuf) Cap() int {
 	return b.cap
 }
 
 //Remaining return remaing byte count of the buffer
-func (b *FixedBuf) Remaining() int32 {
+func (b *FixedBuf) Remaining() int {
 	return b.cap - b.pos
 }
 
-func (b *FixedBuf) check(forward int32) error {
+func (b *FixedBuf) check(forward int) error {
 	if b.pos+forward > b.cap {
 		return fmt.Errorf("pos=%d, invalid to forward %d byte", b.pos, forward)
 	}
@@ -53,7 +53,7 @@ func (b *FixedBuf) check(forward int32) error {
 }
 
 //SetPos set position
-func (b *FixedBuf) SetPos(pos int32) {
+func (b *FixedBuf) SetPos(pos int) {
 	b.pos = pos
 }
 
@@ -69,7 +69,7 @@ func (b *FixedBuf) GetByte() (byte, error) {
 
 //GetInt16 read two bytes as int16
 func (b *FixedBuf) GetInt16() (int16, error) {
-	n := int32(2)
+	n := 2
 	if err := b.check(n); err != nil {
 		return 0, err
 	}
@@ -80,7 +80,7 @@ func (b *FixedBuf) GetInt16() (int16, error) {
 
 //GetInt32 read two bytes as int32
 func (b *FixedBuf) GetInt32() (int32, error) {
-	n := int32(4)
+	n := 4
 	if err := b.check(n); err != nil {
 		return 0, err
 	}
@@ -91,7 +91,7 @@ func (b *FixedBuf) GetInt32() (int32, error) {
 
 //GetInt64 read two bytes as int64
 func (b *FixedBuf) GetInt64() (int64, error) {
-	n := int32(8)
+	n := 8
 	if err := b.check(n); err != nil {
 		return 0, err
 	}
@@ -101,7 +101,7 @@ func (b *FixedBuf) GetInt64() (int64, error) {
 }
 
 //GetBytes read n bytes
-func (b *FixedBuf) GetBytes(n int32) ([]byte, error) {
+func (b *FixedBuf) GetBytes(n int) ([]byte, error) {
 	if err := b.check(n); err != nil {
 		return nil, err
 	}
@@ -115,22 +115,36 @@ func (b *FixedBuf) GetString() (string, error) {
 	if err := b.check(1); err != nil {
 		return "", err
 	}
-	n := int32(b.data[b.pos])
+	n := int(b.data[b.pos])
 	if n < 0 || n > 127 {
 		return "", fmt.Errorf("GetString error, invalid length in first byte")
 	}
-	if err := b.check(int32(n + 1)); err != nil {
+	if err := b.check(n + 1); err != nil {
 		return "", err
 	}
 
-	value := string(b.data[b.pos+1 : b.pos+int32(n+1)])
-	b.pos += int32(n + 1)
+	value := string(b.data[b.pos+1 : b.pos+n+1])
+	b.pos += n + 1
+	return value, nil
+}
+
+//GetStringN read string forwarding spanSize
+func (b *FixedBuf) GetStringN(spanSize int) (string, error) {
+	if err := b.check(spanSize); err != nil {
+		return "", err
+	}
+	n := int(b.data[b.pos])
+	if n < 0 || n >= spanSize {
+		return "", fmt.Errorf("GetString error, invalid length in first byte")
+	}
+	value := string(b.data[b.pos+1 : b.pos+n+1])
+	b.pos += spanSize
 	return value, nil
 }
 
 //PutString write string(1_len + max 127 string)
 func (b *FixedBuf) PutString(value string) error {
-	n := int32(len(value))
+	n := len(value)
 	if n > 127 {
 		return fmt.Errorf("PutString error, string longer than 127")
 	}
@@ -143,9 +157,25 @@ func (b *FixedBuf) PutString(value string) error {
 	return nil
 }
 
+//PutStringN write string(1_len + max 127 string)
+func (b *FixedBuf) PutStringN(value string, spanSize int) error {
+	if err := b.check(spanSize); err != nil {
+		return err
+	}
+	n := len(value)
+	if n >= spanSize {
+		return fmt.Errorf("PutString error, string longer than %d", spanSize-1)
+	}
+
+	b.data[b.pos] = byte(n)
+	copy(b.data[b.pos+1:], []byte(value))
+	b.pos += spanSize
+	return nil
+}
+
 //PutByte write one byte
 func (b *FixedBuf) PutByte(value byte) error {
-	n := int32(1)
+	n := 1
 	if err := b.check(n); err != nil {
 		return err
 	}
@@ -156,7 +186,7 @@ func (b *FixedBuf) PutByte(value byte) error {
 
 //PutInt16 write int16
 func (b *FixedBuf) PutInt16(value int16) error {
-	n := int32(2)
+	n := 2
 	if err := b.check(n); err != nil {
 		return err
 	}
@@ -167,7 +197,7 @@ func (b *FixedBuf) PutInt16(value int16) error {
 
 //PutInt32 write int32
 func (b *FixedBuf) PutInt32(value int32) error {
-	n := int32(24)
+	n := 4
 	if err := b.check(n); err != nil {
 		return err
 	}
@@ -178,7 +208,7 @@ func (b *FixedBuf) PutInt32(value int32) error {
 
 //PutInt64 write int64
 func (b *FixedBuf) PutInt64(value int64) error {
-	n := int32(24)
+	n := 8
 	if err := b.check(n); err != nil {
 		return err
 	}
@@ -189,7 +219,7 @@ func (b *FixedBuf) PutInt64(value int64) error {
 
 //PutBytes write n bytes
 func (b *FixedBuf) PutBytes(value []byte) error {
-	n := int32(len(value))
+	n := len(value)
 	if err := b.check(n); err != nil {
 		return err
 	}

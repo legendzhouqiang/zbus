@@ -63,7 +63,7 @@ func NewMappedFile(fileName string, fileSize int) (*MappedFile, error) {
 		m.mask, _ = buf.GetInt32()
 
 		for i := 0; i < ExtItemCount; i++ {
-			m.buf.SetPos(int32(ExtOffset + ExtItemSize*i))
+			m.buf.SetPos(ExtOffset + ExtItemSize*i)
 			m.extensions[i], _ = buf.GetString()
 		}
 	}
@@ -160,7 +160,7 @@ func (m *MappedFile) SetExt(idx int, value string) error {
 	defer m.mutex.Unlock()
 
 	m.extensions[idx] = value
-	m.buf.SetPos(int32(ExtOffset + ExtItemSize*idx))
+	m.buf.SetPos(ExtOffset + ExtItemSize*idx)
 	m.buf.PutString(value)
 	return nil
 }

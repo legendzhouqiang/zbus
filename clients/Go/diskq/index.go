@@ -148,14 +148,35 @@ func (idx *Index) ReadOffset(blockNo int64) *Offset {
 	return idx.readOffset(blockNo)
 }
 
-//IncreaseMsgCount with delta value
-func (idx *Index) IncreaseMsgCount(delta int) {
+//AddMsgCount with delta value
+func (idx *Index) AddMsgCount(delta int) {
 	idx.mutex.Lock()
 	defer idx.mutex.Unlock()
 
 	idx.msgCount += int64(delta)
 	idx.buf.SetPos(MessageCountPos)
 	idx.buf.PutInt64(idx.msgCount)
+}
+
+//GetAndAddMsgCount with delta value
+func (idx *Index) GetAndAddMsgCount(delta int) int64 {
+	idx.mutex.Lock()
+	defer idx.mutex.Unlock()
+	msgCount := idx.msgCount
+	idx.msgCount += int64(delta)
+	idx.buf.SetPos(MessageCountPos)
+	idx.buf.PutInt64(idx.msgCount)
+	return msgCount
+}
+
+//WriteEndOffset of current writing block
+func (idx *Index) WriteEndOffset(endOffset int32) {
+	idx.mutex.Lock()
+	defer idx.mutex.Unlock()
+
+	idx.buf.SetPos(idx.currBlockPos() + 16)
+	idx.buf.PutInt32(endOffset)
+	idx.buf.PutInt64(time.Now().UnixNano() / int64(time.Millisecond))
 }
 
 func (idx *Index) isCurrBlockFull() bool {
@@ -200,12 +221,12 @@ func (idx *Index) currBlockNo() int64 {
 	return idx.blockStart + int64(idx.blockCount) - 1
 }
 
-func (idx *Index) currBlockPos() int32 {
+func (idx *Index) currBlockPos() int {
 	return idx.blockPos(idx.currBlockNo())
 }
 
-func (idx *Index) blockPos(blockNo int64) int32 {
-	return int32(HeaderSize + (blockNo%BlockMaxCount)*OffsetSize)
+func (idx *Index) blockPos(blockNo int64) int {
+	return int(HeaderSize + (blockNo%BlockMaxCount)*OffsetSize)
 }
 
 func (idx *Index) readOffset(blockNo int64) *Offset {
