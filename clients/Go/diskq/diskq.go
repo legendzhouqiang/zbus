@@ -2,6 +2,8 @@ package diskq
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -12,6 +14,73 @@ const (
 	FilterMaxLen = 127
 )
 
+//DiskQueue writer + N readers
+type DiskQueue struct {
+	index   *Index
+	name    string
+	writer  *QueueWriter
+	readers map[string]*QueueReader
+}
+
+//NewDiskQueue create or load disk queue
+func NewDiskQueue(dirPath string) (*DiskQueue, error) {
+	index, err := NewIndex(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	q := &DiskQueue{}
+	q.index = index
+	q.name = q.index.Name()
+	q.writer, err = NewQueueWriter(index)
+	if err != nil {
+		q.Close()
+		return nil, err
+	}
+	q.readers = make(map[string]*QueueReader)
+	err = q.loadReaders()
+	if err != nil {
+		q.Close()
+		return nil, err
+	}
+	return q, nil
+}
+
+//Close disk queue
+func (q *DiskQueue) Close() {
+	if q.writer != nil {
+		q.writer.Close()
+		q.writer = nil
+	}
+	for _, r := range q.readers {
+		r.Close()
+	}
+	q.readers = make(map[string]*QueueReader)
+}
+
+func (q *DiskQueue) loadReaders() error {
+	readerDir := q.index.ReaderDir()
+	files, err := ioutil.ReadDir(readerDir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue //ignore
+		}
+		fileName := file.Name()
+		if !strings.HasSuffix(fileName, ReaderSuffix) {
+			continue
+		}
+		name := fileName[0 : len(fileName)-len(ReaderSuffix)]
+		r, err := NewQueueReader(q.index, name)
+		if err != nil {
+			log.Printf("Reader %s load error: %s", fileName, err)
+		}
+		q.readers[name] = r
+	}
+	return nil
+}
+
 //QueueWriter to write into Queue
 type QueueWriter struct {
 	index *Index
@@ -20,10 +89,14 @@ type QueueWriter struct {
 }
 
 //NewQueueWriter create writer
-func NewQueueWriter(index *Index) *QueueWriter {
+func NewQueueWriter(index *Index) (*QueueWriter, error) {
 	w := &QueueWriter{index, nil, &sync.Mutex{}}
-	w.block, _ = index.LoadBlockToWrite()
-	return w
+	var err error
+	w.block, err = index.LoadBlockToWrite()
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
 }
 
 //Close the writer

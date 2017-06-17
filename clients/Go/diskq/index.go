@@ -128,6 +128,21 @@ func (idx *Index) MsgCount() int64 {
 	return idx.msgCount
 }
 
+//Name returns index name
+func (idx *Index) Name() string {
+	return idx.name
+}
+
+//ReaderDir return reader directory
+func (idx *Index) ReaderDir() string {
+	return filepath.Join(idx.dirPath, ReaderDir)
+}
+
+//BlockDir return data directory
+func (idx *Index) BlockDir() string {
+	return filepath.Join(idx.dirPath, BlockDir)
+}
+
 //IsOverflow test if block number is larger than the last block
 func (idx *Index) IsOverflow(blockNo int64) bool {
 	return blockNo >= (idx.blockStart + int64(idx.blockCount))

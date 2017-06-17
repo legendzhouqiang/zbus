@@ -15,7 +15,7 @@ func newIndex() *Index {
 }
 
 var index = newIndex()
-var qwriter = NewQueueWriter(index)
+var qwriter, _ = NewQueueWriter(index)
 
 func TestNewQueueWriter(t *testing.T) {
 
@@ -94,4 +94,12 @@ func TestQueueReader_Read(t *testing.T) {
 		}
 		println(m.Offset, m.Tag)
 	}
+}
+
+func TestNewDiskQueue(t *testing.T) {
+	q, err := NewDiskQueue("/tmp/diskq/hong")
+	if err != nil {
+		t.Fail()
+	}
+	defer q.Close()
 }
