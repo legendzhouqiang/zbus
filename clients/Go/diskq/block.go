@@ -54,7 +54,7 @@ func (b *Block) Write(msg *DiskMsg) (int, error) {
 
 	startOffset := b.index.ReadOffset(b.blockNo).EndOffset
 	if startOffset >= BlockMaxSize {
-		return 0, fmt.Errorf("Block full")
+		return 0, nil
 	}
 
 	msg.Offset = int64(startOffset)
@@ -139,4 +139,45 @@ func (m *DiskMsg) writeToBuffer(buf *FixedBuf) error {
 		buf.PutBytes(m.Body)
 	}
 	return nil
+}
+
+func (b *Block) Read(pos int) (*DiskMsg, error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	return b.read(pos)
+}
+
+func (b *Block) read(pos int) (*DiskMsg, error) {
+	_, err := b.file.Seek(int64(pos), 0)
+	if err != nil {
+		return nil, err
+	}
+	head := make([]byte, MsgBodyPos+4) //read length
+	_, err = b.file.Read(head)
+	if err != nil {
+		return nil, err
+	}
+	buf := NewFixedBufFWrap(head)
+	m := &DiskMsg{}
+	m.Offset, _ = buf.GetInt64()
+	m.Timestamp, _ = buf.GetInt64()
+	m.Id, _ = buf.GetStringN(MsgIdMaxLen + 1)
+	m.CorrOffset, _ = buf.GetInt64()
+	m.MsgNo, _ = buf.GetInt64()
+	m.Tag, _ = buf.GetStringN(MsgTagMaxLen + 1)
+
+	bodySize, _ := buf.GetInt32()
+	if bodySize < 0 {
+		return nil, fmt.Errorf("Block.read bodySize < 0")
+	}
+	if bodySize == 0 {
+		return m, nil
+	}
+	m.Body = make([]byte, bodySize)
+	_, err = b.file.Read(m.Body)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }

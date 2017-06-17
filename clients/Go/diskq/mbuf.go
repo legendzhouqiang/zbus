@@ -24,8 +24,8 @@ func NewFixedBuf(cap int) *FixedBuf {
 	return &FixedBuf{data, 0, cap, binary.BigEndian}
 }
 
-//FixedBufFWrap create fixed lenght buffer from data
-func FixedBufFWrap(data []byte) *FixedBuf {
+//NewFixedBufFWrap create fixed lenght buffer from data
+func NewFixedBufFWrap(data []byte) *FixedBuf {
 	n := len(data)
 	return &FixedBuf{data, 0, n, binary.BigEndian}
 }
@@ -266,7 +266,7 @@ func NewMappedBuf(fileName string, length int) (*MappedBuf, error) {
 	if err != nil {
 		return nil, err
 	}
-	buf := FixedBufFWrap(data)
+	buf := NewFixedBufFWrap(data)
 	return &MappedBuf{buf, data, file}, nil
 }
 
