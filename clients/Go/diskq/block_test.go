@@ -69,14 +69,11 @@ func TestBlock_Read(t *testing.T) {
 
 	start := 0
 	for i := 0; i < n; i++ {
-		m, err := block.Read(start)
+		m, _, _, err := block.Read(start, nil)
 		if err != nil {
 			t.Fail()
 		}
 		start += m.Size()
 		fmt.Println(m.Offset)
 	}
-}
-
-func TestBlock_read(t *testing.T) {
 }

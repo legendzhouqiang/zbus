@@ -19,6 +19,7 @@ const (
 
 	OffsetSize = 28
 	IndexSize  = HeaderSize + BlockMaxCount*OffsetSize
+	ReaderSize = HeaderSize
 
 	BlockCountPos   = 4
 	MessageCountPos = 16
@@ -215,6 +216,14 @@ func (idx *Index) addNewOffset() (*Offset, error) {
 func (idx *Index) writeBlockCount(value int32) {
 	idx.buf.SetPos(BlockCountPos)
 	idx.buf.PutInt32(value)
+}
+
+//CurrBlockNo last lock number
+func (idx *Index) CurrBlockNo() int64 {
+	idx.mutex.Lock()
+	defer idx.mutex.Unlock()
+
+	return idx.currBlockNo()
 }
 
 func (idx *Index) currBlockNo() int64 {

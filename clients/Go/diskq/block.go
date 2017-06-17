@@ -3,6 +3,7 @@ package diskq
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -45,6 +46,16 @@ func newBlock(index *Index, blockNo int64, file *os.File) *Block {
 //Close the block file
 func (b *Block) Close() {
 	b.file.Close()
+}
+
+//IsFull test if the block is full
+func (b *Block) IsFull() bool {
+	return b.index.ReadOffset(b.blockNo).EndOffset >= BlockMaxSize
+}
+
+//IsBlockEnd test if the pos passed the block end
+func (b *Block) IsBlockEnd(pos int) bool {
+	return int32(pos) >= b.index.ReadOffset(b.blockNo).EndOffset
 }
 
 //Write message to disk
@@ -141,22 +152,75 @@ func (m *DiskMsg) writeToBuffer(buf *FixedBuf) error {
 	return nil
 }
 
-func (b *Block) Read(pos int) (*DiskMsg, error) {
+//Read message at pos, filterPart could be nil -- no filter on message
+func (b *Block) Read(pos int, filterParts []string) (*DiskMsg, int64, int, error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	return b.read(pos)
+	return b.read(pos, filterParts)
 }
 
-func (b *Block) read(pos int) (*DiskMsg, error) {
+func filterMatch(filterParts []string, tag string) bool {
+	if filterParts == nil {
+		return true
+	}
+	tagParts := strings.Split(tag, ".")
+	for i := 0; i < len(filterParts); i++ {
+		filterPart := filterParts[i]
+		if i >= len(tagParts) {
+			return false
+		}
+		tagPart := tagParts[i]
+		if filterPart == "+" {
+			continue
+		}
+		if filterPart == "*" {
+			return true
+		}
+		if filterPart == tagPart {
+			continue
+		}
+		return false
+	}
+	return len(filterParts) == len(tagParts)
+}
+
+//return last read message number(lastMsgNo), bytesRead, nil if no error found
+func (b *Block) read(pos int, filterParts []string) (*DiskMsg, int64, int, error) {
+	bytesRead := 0
+	lastMsgNo := int64(-1)
+	for {
+		if b.IsBlockEnd(pos + bytesRead) {
+			break
+		}
+		msg, bodySize, err := b.readHead(pos + bytesRead)
+		if err != nil {
+			return nil, lastMsgNo, bytesRead, err
+		}
+		lastMsgNo = msg.MsgNo
+		bytesRead += int(bodySize + 4 + MsgBodyPos)
+		if !filterMatch(filterParts, msg.Tag) {
+			continue
+		}
+		msg.Body = make([]byte, bodySize)
+		_, err = b.file.Read(msg.Body)
+		if err != nil {
+			return nil, lastMsgNo, bytesRead, err
+		}
+		return msg, lastMsgNo, bytesRead, nil
+	}
+	return nil, lastMsgNo, bytesRead, nil
+}
+
+func (b *Block) readHead(pos int) (*DiskMsg, int32, error) {
 	_, err := b.file.Seek(int64(pos), 0)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	head := make([]byte, MsgBodyPos+4) //read length
 	_, err = b.file.Read(head)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	buf := NewFixedBufFWrap(head)
 	m := &DiskMsg{}
@@ -169,15 +233,7 @@ func (b *Block) read(pos int) (*DiskMsg, error) {
 
 	bodySize, _ := buf.GetInt32()
 	if bodySize < 0 {
-		return nil, fmt.Errorf("Block.read bodySize < 0")
+		return nil, 0, fmt.Errorf("Block.read bodySize < 0")
 	}
-	if bodySize == 0 {
-		return m, nil
-	}
-	m.Body = make([]byte, bodySize)
-	_, err = b.file.Read(m.Body)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
+	return m, bodySize, nil
 }
