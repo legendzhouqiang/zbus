@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -57,8 +58,30 @@ func (q *DiskQueue) Close() {
 	q.readers = make(map[string]*QueueReader)
 }
 
+//Write to disk queue
+func (q *DiskQueue) Write(m *DiskMsg) (int, error) {
+	return q.writer.Write(m)
+}
+
+//WriteBatch messages to disk queue
+func (q *DiskQueue) WriteBatch(msgs []DiskMsg) (int, error) {
+	return q.writer.WriteBatch(msgs)
+}
+
+//Read message from disk queue
+func (q *DiskQueue) Read(readerName string) (*DiskMsg, error) {
+	r, ok := q.readers[readerName]
+	if !ok {
+		return nil, fmt.Errorf("reader(%s) not found", readerName)
+	}
+	return r.Read()
+}
+
 func (q *DiskQueue) loadReaders() error {
 	readerDir := q.index.ReaderDir()
+	if err := os.MkdirAll(readerDir, 0644); err != nil {
+		return err
+	}
 	files, err := ioutil.ReadDir(readerDir)
 	if err != nil {
 		return err
@@ -79,6 +102,26 @@ func (q *DiskQueue) loadReaders() error {
 		q.readers[name] = r
 	}
 	return nil
+}
+
+//SetMask update mask value
+func (q *DiskQueue) SetMask(value int32) {
+	q.index.SetMask(value)
+}
+
+//SetCreator update creator
+func (q *DiskQueue) SetCreator(value string) {
+	q.index.SetCreator(value)
+}
+
+//SetExt update ext
+func (q *DiskQueue) SetExt(i int, value string) error {
+	return q.index.SetExt(i, value)
+}
+
+//GetExt get ext
+func (q *DiskQueue) GetExt(i int) (string, error) {
+	return q.index.GetExt(i)
 }
 
 //QueueWriter to write into Queue

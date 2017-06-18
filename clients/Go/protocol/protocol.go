@@ -66,3 +66,64 @@ const (
 
 	Heartbeat = "heartbeat"
 )
+
+//ServerAddress server address
+type ServerAddress struct {
+	Address    string `json:"address"`
+	SslEnabled bool   `json:"sslEnabled"`
+}
+
+//ErrInfo for batch operation
+type ErrInfo struct {
+	Error error `json:"error"`
+}
+
+//TrackItem tracked item info
+type TrackItem struct {
+	ErrInfo       `json:""`
+	ServerAddress ServerAddress `json:"serverAddress"`
+	ServerVersion string        `json:"serverVersion"`
+}
+
+//TrackerInfo tracker info
+type TrackerInfo struct {
+	TrackItem   `json:""`
+	InfoVersion int64                 `json:"infoVersion"`
+	ServerTable map[string]ServerInfo `json:"serverTable"`
+}
+
+//ServerInfo server info
+type ServerInfo struct {
+	TrackItem   `json:""`
+	InfoVersion int64                `json:"infoVersion"`
+	TrackerList []ServerAddress      `json:"trackerList"`
+	TopicTable  map[string]TopicInfo `json:"topicTable"`
+}
+
+//TopicInfo topic info
+type TopicInfo struct {
+	TrackItem        `json:""`
+	TopicName        string             `json:"topicName"`
+	Mask             int32              `json:"mask"`
+	MessageDepth     int64              `json:"messageDepth"`  //message count on disk
+	ConsumerCount    int32              `json:"consumerCount"` //total consumer count in consumeGroupList
+	ConsumeGroupList []ConsumeGroupInfo `json:"consumeGroupList"`
+	Creator          string             `json:"creator"`
+	CreatedTime      int64              `json:"createdTime"`
+	LastUpdatedTime  int64              `json:"lastUpdatedTime"`
+}
+
+//ConsumeGroupInfo consume group
+type ConsumeGroupInfo struct {
+	ErrInfo         `json:""`
+	TopicName       string   `json:"topicName"`
+	GroupName       string   `json:"groupName"`
+	Mask            int32    `json:"mask"`
+	Filter          string   `json:"filter"`
+	MessageCount    int64    `json:"messageCount"`
+	ConsumerCount   int32    `json:"consumerCount"`
+	ConsumerList    []string `json:"consumerList"`
+	Creator         string   `json:"creator"`
+	CreatedTime     int64    `json:"createdTime"`
+	LastUpdatedTime int64    `json:"lastUpdatedTime"`
+}
