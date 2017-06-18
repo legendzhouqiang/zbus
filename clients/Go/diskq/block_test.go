@@ -50,11 +50,11 @@ func Benchmark_BlockWrite(b *testing.B) {
 }
 
 func TestBlock_WriteBatch(t *testing.T) {
-	msgs := make([]DiskMsg, 10)
+	msgs := make([]*DiskMsg, 10)
 	for i := 0; i < len(msgs); i++ {
 		msg := &DiskMsg{}
 		msg.Body = []byte("hello world")
-		msgs[i] = *msg
+		msgs[i] = msg
 	}
 	block.WriteBatch(msgs)
 }

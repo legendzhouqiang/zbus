@@ -45,7 +45,7 @@ func (w *QueueWriter) Write(m *DiskMsg) (int, error) {
 }
 
 //WriteBatch write multiple msg in one batch
-func (w *QueueWriter) WriteBatch(msgs []DiskMsg) (int, error) {
+func (w *QueueWriter) WriteBatch(msgs []*DiskMsg) (int, error) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 

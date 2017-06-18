@@ -28,6 +28,15 @@ type QueueReader struct {
 
 //NewQueueReader create reader
 func NewQueueReader(index *Index, group string) (*QueueReader, error) {
+	return newQueueReader(index, nil, group)
+}
+
+//NewQueueReaderCopy copy from another reader
+func NewQueueReaderCopy(copy *QueueReader, group string) (*QueueReader, error) {
+	return newQueueReader(copy.index, copy, group)
+}
+
+func newQueueReader(index *Index, copy *QueueReader, group string) (*QueueReader, error) {
 	fullPath := filepath.Join(index.dirPath, ReaderDir, fmt.Sprintf("%s%s", group, ReaderSuffix))
 	m, err := NewMappedFile(fullPath, ReaderSize)
 	if err != nil {
@@ -38,18 +47,26 @@ func NewQueueReader(index *Index, group string) (*QueueReader, error) {
 	r.group = group
 	r.index = index
 
-	if r.newFile {
-		r.blockNo = index.BlockStart()
-		r.offset = 0
+	if copy == nil {
+		if r.newFile {
+			r.blockNo = index.BlockStart()
+			r.offset = 0
+			r.writeOffset()
+			r.buf.SetPos(FilterPos)
+			r.buf.PutString(r.filter)
+		} else {
+			r.buf.SetPos(0)
+			r.blockNo, _ = r.buf.GetInt64()
+			r.offset, _ = r.buf.GetInt32()
+			r.filter, _ = r.buf.GetStringN(FilterMaxLen + 1)
+			r.filterParts = strings.Split(r.filter, ".")
+		}
+	} else {
+		r.blockNo = copy.blockNo
+		r.msgNo = copy.msgNo
 		r.writeOffset()
 		r.buf.SetPos(FilterPos)
-		r.buf.PutString(r.filter) //empty
-	} else {
-		r.buf.SetPos(0)
-		r.blockNo, _ = r.buf.GetInt64()
-		r.offset, _ = r.buf.GetInt32()
-		r.filter, _ = r.buf.GetStringN(FilterMaxLen + 1)
-		r.filterParts = strings.Split(r.filter, ".")
+		r.buf.PutString(r.filter)
 	}
 
 	start := r.index.BlockStart()
@@ -84,6 +101,26 @@ func (r *QueueReader) Close() {
 	if r.block != nil {
 		r.block.Close()
 	}
+}
+
+//BlockNo returns block number
+func (r *QueueReader) BlockNo() int64 {
+	return r.blockNo
+}
+
+//MsgNo returns message number
+func (r *QueueReader) MsgNo() int64 {
+	return r.msgNo
+}
+
+//MsgCount remaining message count
+func (r *QueueReader) MsgCount() int64 {
+	return r.index.MsgNo() - r.msgNo
+}
+
+//Name returns reader/group name
+func (r *QueueReader) Name() string {
+	return r.group
 }
 
 //Filter returns filter
@@ -148,7 +185,7 @@ func (r *QueueReader) writeOffset() {
 func (r *QueueReader) readMsgNo() error {
 	if r.block.IsBlockEnd(int(r.offset)) { //just at the end of block
 		if r.index.IsOverflow(r.blockNo + 1) { //no more block available
-			r.msgNo = r.index.MsgCount() - 1
+			r.msgNo = r.index.MsgNo()
 			return nil
 		}
 		r.blockNo++ //forward to next readable block

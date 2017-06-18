@@ -69,7 +69,7 @@ func (b *Block) Write(msg *DiskMsg) (int, error) {
 	}
 
 	msg.Offset = int64(startOffset)
-	msg.MsgNo = b.index.GetAndAddMsgCount(1)
+	msg.MsgNo = b.index.GetAndAddMsgNo(1)
 	msgSize := msg.Size()
 	buf := NewFixedBuf(msgSize)
 	msg.writeToBuffer(buf)
@@ -83,7 +83,7 @@ func (b *Block) Write(msg *DiskMsg) (int, error) {
 }
 
 //WriteBatch write message in batch mode
-func (b *Block) WriteBatch(msgs []DiskMsg) (int, error) {
+func (b *Block) WriteBatch(msgs []*DiskMsg) (int, error) {
 	if len(msgs) == 0 {
 		return 0, fmt.Errorf("WriteBatch msgs parameter length should >= 1")
 	}
@@ -97,7 +97,7 @@ func (b *Block) WriteBatch(msgs []DiskMsg) (int, error) {
 	}
 	totalSize := 0
 	offset := startOffset
-	msgNo := b.index.GetAndAddMsgCount(len(msgs))
+	msgNo := b.index.GetAndAddMsgNo(len(msgs))
 	for _, msg := range msgs {
 		msg.Offset = int64(offset)
 		msg.MsgNo = msgNo

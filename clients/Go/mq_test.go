@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -38,7 +39,39 @@ func TestMessageQueue_Read(t *testing.T) {
 
 func TestMessageQueue_ConsumeGroup(t *testing.T) {
 	g := &ConsumeGroup{}
-	g.Mask = 0
 	g.GroupName = "hong"
+	g.Mask = &[]int32{0}[0]
 	fmt.Println(g.Mask)
+}
+func TestLoadMqTable(t *testing.T) {
+	table, err := LoadMqTable("/tmp/diskq")
+	if err != nil {
+		t.Fail()
+	}
+	println(table)
+}
+
+func TestMessageQueue_DeclareGroup(t *testing.T) {
+	group := &ConsumeGroup{}
+	group.GroupName = "hongx"
+
+	info, err := mq.DeclareGroup(group)
+	if err != nil {
+		t.Fail()
+	}
+	fmt.Println(info)
+}
+
+func TestMessageQueue_TopicInfo(t *testing.T) {
+	info := mq.TopicInfo()
+	data, _ := json.MarshalIndent(info, "", "	")
+	println(string(data))
+}
+
+func TestMessageQueue_Destroy(t *testing.T) {
+	mq, _ := NewMessageQueue("/tmp/tempmq", "hong")
+	err := mq.Destroy()
+	if err != nil {
+		t.Fail()
+	}
 }

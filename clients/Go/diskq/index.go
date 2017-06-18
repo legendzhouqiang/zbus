@@ -43,7 +43,7 @@ type Index struct {
 	version    int32
 	blockCount int32
 	blockStart int64
-	msgCount   int64
+	msgNo      int64
 }
 
 //NewIndex create index file
@@ -68,7 +68,7 @@ func NewIndex(dirPath string) (*Index, error) {
 		}
 		index.blockCount, _ = m.buf.GetInt32()
 		index.blockStart, _ = m.buf.GetInt64()
-		index.msgCount, _ = m.buf.GetInt64()
+		index.msgNo, _ = m.buf.GetInt64()
 	}
 	return index, nil
 }
@@ -123,14 +123,19 @@ func (idx *Index) BlockStart() int64 {
 	return idx.blockStart
 }
 
-//MsgCount returns message count
-func (idx *Index) MsgCount() int64 {
-	return idx.msgCount
+//MsgNo returns message count
+func (idx *Index) MsgNo() int64 {
+	return idx.msgNo
 }
 
 //Name returns index name
 func (idx *Index) Name() string {
 	return idx.name
+}
+
+//Dir return index's directory
+func (idx *Index) Dir() string {
+	return idx.dirPath
 }
 
 //ReaderDir return reader directory
@@ -164,25 +169,25 @@ func (idx *Index) ReadOffset(blockNo int64) *Offset {
 	return idx.readOffset(blockNo)
 }
 
-//AddMsgCount with delta value
-func (idx *Index) AddMsgCount(delta int) {
+//AddMsgNo with delta value
+func (idx *Index) AddMsgNo(delta int) {
 	idx.mutex.Lock()
 	defer idx.mutex.Unlock()
 
-	idx.msgCount += int64(delta)
+	idx.msgNo += int64(delta)
 	idx.buf.SetPos(MessageCountPos)
-	idx.buf.PutInt64(idx.msgCount)
+	idx.buf.PutInt64(idx.msgNo)
 }
 
-//GetAndAddMsgCount with delta value
-func (idx *Index) GetAndAddMsgCount(delta int) int64 {
+//GetAndAddMsgNo with delta value
+func (idx *Index) GetAndAddMsgNo(delta int) int64 {
 	idx.mutex.Lock()
 	defer idx.mutex.Unlock()
-	msgCount := idx.msgCount
-	idx.msgCount += int64(delta)
+	msgNo := idx.msgNo
+	idx.msgNo += int64(delta)
 	idx.buf.SetPos(MessageCountPos)
-	idx.buf.PutInt64(idx.msgCount)
-	return msgCount
+	idx.buf.PutInt64(idx.msgNo)
+	return msgNo
 }
 
 //WriteEndOffset of current writing block

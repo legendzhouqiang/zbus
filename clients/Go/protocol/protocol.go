@@ -103,14 +103,14 @@ type ServerInfo struct {
 //TopicInfo topic info
 type TopicInfo struct {
 	TrackItem        `json:""`
-	TopicName        string             `json:"topicName"`
-	Mask             int32              `json:"mask"`
-	MessageDepth     int64              `json:"messageDepth"`  //message count on disk
-	ConsumerCount    int32              `json:"consumerCount"` //total consumer count in consumeGroupList
-	ConsumeGroupList []ConsumeGroupInfo `json:"consumeGroupList"`
-	Creator          string             `json:"creator"`
-	CreatedTime      int64              `json:"createdTime"`
-	LastUpdatedTime  int64              `json:"lastUpdatedTime"`
+	TopicName        string              `json:"topicName"`
+	Mask             int32               `json:"mask"`
+	MessageDepth     int64               `json:"messageDepth"`  //message count on disk
+	ConsumerCount    int32               `json:"consumerCount"` //total consumer count in consumeGroupList
+	ConsumeGroupList []*ConsumeGroupInfo `json:"consumeGroupList"`
+	Creator          string              `json:"creator"`
+	CreatedTime      int64               `json:"createdTime"`
+	LastUpdatedTime  int64               `json:"lastUpdatedTime"`
 }
 
 //ConsumeGroupInfo consume group

@@ -31,6 +31,8 @@ type MappedFile struct {
 	buf     *MappedBuf
 	newFile bool
 	mutex   *sync.Mutex
+
+	bufFile string
 }
 
 //NewMappedFile create mapped file
@@ -48,6 +50,7 @@ func NewMappedFile(fileName string, fileSize int) (*MappedFile, error) {
 	m.extensions = make([]string, ExtItemCount)
 	m.newFile = newFile
 	m.mutex = &sync.Mutex{}
+	m.bufFile = fileName
 	if newFile {
 		ts := time.Now().UnixNano() / int64(time.Millisecond)
 		m.SetCreatedTime(ts)
@@ -78,6 +81,11 @@ func (m *MappedFile) Close() error {
 //Mask get mask value
 func (m *MappedFile) Mask() int32 {
 	return m.mask
+}
+
+//IsNewFile check if mapped file first time created
+func (m *MappedFile) IsNewFile() bool {
+	return m.newFile
 }
 
 //SetMask set mask value
@@ -163,4 +171,9 @@ func (m *MappedFile) SetExt(idx int, value string) error {
 	m.buf.SetPos(ExtOffset + ExtItemSize*idx)
 	m.buf.PutString(value)
 	return nil
+}
+
+//File return the underlying file full path
+func (m *MappedFile) File() string {
+	return m.bufFile
 }
