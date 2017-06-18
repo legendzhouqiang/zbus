@@ -8,6 +8,9 @@ import (
 	"log"
 	"net"
 
+	"time"
+
+	"./protocol"
 	"./websocket"
 )
 
@@ -128,23 +131,67 @@ outter:
 	conn.Close()
 }
 
+//Server = MqServer + Tracker
+type Server struct {
+	ServerAddress *protocol.ServerAddress
+	MqTable       map[string]*MessageQueue
+
+	MqDir       string
+	TrackerList []string
+
+	infoVersion int64
+}
+
+func newServer() *Server {
+	s := &Server{}
+	s.infoVersion = time.Now().UnixNano() / int64(time.Millisecond)
+	return s
+}
+
+func (s *Server) serverInfo() *protocol.ServerInfo {
+	info := &protocol.ServerInfo{}
+	info.ServerAddress = s.ServerAddress
+	info.ServerVersion = protocol.VersionValue
+	info.InfoVersion = s.infoVersion
+	info.TrackerList = []protocol.ServerAddress{}
+	info.TopicTable = make(map[string]*protocol.TopicInfo)
+	for key, mq := range s.MqTable {
+		info.TopicTable[key] = mq.TopicInfo()
+	}
+
+	return info
+}
+
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 	var host = *flag.String("h", "0.0.0.0", "zbus server host")
 	var port = *flag.Int("p", 15555, "zbus server port")
 	var addr = fmt.Sprintf("%s:%d", host, port)
-	server, err := net.Listen("tcp", addr)
+	var mqDir = *flag.String("dir", "/tmp/zbus", "zbus MQ directory")
+
+	fd, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		return
 	}
-	defer server.Close()
+	defer fd.Close()
 
 	log.Println("Listening on " + addr)
 	realAddr := ServerAddress(host, port)
-	handler := NewServerHandler(realAddr)
+	server := newServer()
+	server.MqDir = mqDir
+	server.ServerAddress = &protocol.ServerAddress{realAddr, false}
+
+	mqTable, err := LoadMqTable(mqDir)
+	if err != nil {
+		log.Println("Error loading MQ table: ", err.Error())
+		return
+	}
+	server.MqTable = mqTable
+
+	handler := NewServerHandler(server)
 	for {
-		conn, err := server.Accept()
+		conn, err := fd.Accept()
 		if err != nil {
 			log.Println("Error accepting: ", err.Error())
 			return

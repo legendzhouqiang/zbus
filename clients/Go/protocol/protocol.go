@@ -1,5 +1,7 @@
 package protocol
 
+import "fmt"
+
 const (
 	VersionValue = "0.8.0"
 	//MQ Produce/Consume
@@ -73,6 +75,13 @@ type ServerAddress struct {
 	SslEnabled bool   `json:"sslEnabled"`
 }
 
+func (sa *ServerAddress) String() string {
+	if sa.SslEnabled {
+		return fmt.Sprintf("[SSL]%s", sa.Address)
+	}
+	return sa.Address
+}
+
 //ErrInfo for batch operation
 type ErrInfo struct {
 	Error error `json:"error"`
@@ -81,8 +90,8 @@ type ErrInfo struct {
 //TrackItem tracked item info
 type TrackItem struct {
 	ErrInfo       `json:""`
-	ServerAddress ServerAddress `json:"serverAddress"`
-	ServerVersion string        `json:"serverVersion"`
+	ServerAddress *ServerAddress `json:"serverAddress"`
+	ServerVersion string         `json:"serverVersion"`
 }
 
 //TrackerInfo tracker info
@@ -95,9 +104,9 @@ type TrackerInfo struct {
 //ServerInfo server info
 type ServerInfo struct {
 	TrackItem   `json:""`
-	InfoVersion int64                `json:"infoVersion"`
-	TrackerList []ServerAddress      `json:"trackerList"`
-	TopicTable  map[string]TopicInfo `json:"topicTable"`
+	InfoVersion int64                 `json:"infoVersion"`
+	TrackerList []ServerAddress       `json:"trackerList"`
+	TopicTable  map[string]*TopicInfo `json:"topicTable"`
 }
 
 //TopicInfo topic info

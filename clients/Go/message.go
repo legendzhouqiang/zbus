@@ -70,6 +70,12 @@ func (m *Message) SetBodyString(body string) {
 	m.body = []byte(body)
 }
 
+//SetJsonBody set json body
+func (m *Message) SetJsonBody(body string) {
+	m.body = []byte(body)
+	m.Header["content-type"] = "application/json"
+}
+
 //EncodeMessage encodes Message to []byte
 func (m *Message) EncodeMessage(buf *bytes.Buffer) {
 	if m.Status != "" {

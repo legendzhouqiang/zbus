@@ -22,17 +22,20 @@ func isRestCommand(cmd string) bool {
 
 //ServerHandler manages session from clients
 type ServerHandler struct {
-	SessionTable  map[string]Session
-	handlerTable  map[string]func(*ServerHandler, *Message, *Session, *int)
+	SessionTable map[string]*Session
+	handlerTable map[string]func(*ServerHandler, *Message, *Session, *int)
+
 	serverAddress string
+	server        *Server
 }
 
 //NewServerHandler create ServerSessionHandler
-func NewServerHandler(serverAddress string) *ServerHandler {
+func NewServerHandler(server *Server) *ServerHandler {
 	s := &ServerHandler{
-		SessionTable:  make(map[string]Session),
+		SessionTable:  make(map[string]*Session),
 		handlerTable:  make(map[string]func(*ServerHandler, *Message, *Session, *int)),
-		serverAddress: serverAddress,
+		serverAddress: server.ServerAddress.Address,
+		server:        server,
 	}
 
 	s.handlerTable["favicon.ico"] = faviconHandler
@@ -262,10 +265,13 @@ func trackerHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int)
 	sess.WriteMessage(res, msgType)
 }
 
-func serverHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
+	res.Status = "200"
+	info := s.server.serverInfo()
+	data, _ := json.Marshal(info)
+	res.SetJsonBody(string(data))
+
 	sess.WriteMessage(res, msgType)
 }
 
