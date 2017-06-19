@@ -69,7 +69,7 @@ func TestMessageQueue_TopicInfo(t *testing.T) {
 }
 
 func TestMessageQueue_Destroy(t *testing.T) {
-	mq, _ := NewMessageQueue("/tmp/tempmq", "hong")
+	mq, _ := NewMessageQueue("/tmp/tempmq", "hong2")
 	err := mq.Destroy()
 	if err != nil {
 		t.Fail()
