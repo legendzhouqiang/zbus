@@ -71,10 +71,6 @@ func NewMessageQueue(baseDir string, name string) (*MessageQueue, error) {
 		q.Close()
 		return nil, err
 	}
-	if index.IsNewFile() {
-		group := &ConsumeGroup{GroupName: name}
-		q.DeclareGroup(group) //ignore error
-	}
 	return q, nil
 }
 
@@ -335,9 +331,43 @@ type ConsumeGroup struct {
 
 	StartCopy   *string //create group from another group
 	StartOffset *int64
-	StartMsgId  *string //create group start from offset, msgId to validate
+	StartMsgid  *string //create group start from offset, msgId to validate
 	StartTime   *int64  //create group start from time
 
 	//only used in server side, TODO
 	Creator *string
+}
+
+//WriteTo message
+func (g *ConsumeGroup) WriteTo(m *Message) {
+	m.SetConsumeGroup(g.GroupName)
+	if g.Filter != nil {
+		m.SetGroupFilter(*g.Filter)
+	}
+	if g.Mask != nil {
+		m.SetGroupMask(*g.Mask)
+	}
+	if g.StartCopy != nil {
+		m.SetGroupStartCopy(*g.StartCopy)
+	}
+	if g.StartMsgid != nil {
+		m.SetGroupStartMsgid(*g.StartMsgid)
+	}
+	if g.StartOffset != nil {
+		m.SetGroupStartOffset(*g.StartOffset)
+	}
+	if g.StartTime != nil {
+		m.SetGroupStartTime(*g.StartTime)
+	}
+}
+
+//LoadFrom message
+func (g *ConsumeGroup) LoadFrom(m *Message) {
+	g.GroupName = m.ConsumeGroup()
+	g.Filter = m.GroupFilter()
+	g.Mask = m.GroupMask()
+	g.StartCopy = m.GroupStartCopy()
+	g.StartMsgid = m.GroupStartMsgid()
+	g.StartOffset = m.GroupStartOffset()
+	g.StartTime = m.GroupStartTime()
 }

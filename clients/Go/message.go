@@ -165,6 +165,21 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	return m
 }
 
+//////////////////////////////The following are all helper Getter/Setter of Header///////////////////////////
+
+//GetHeader key=value
+func (m *Message) GetHeader(key string) string {
+	return m.Header[key]
+}
+
+//SetHeader key=value
+func (m *Message) SetHeader(key string, value string) {
+	if value == "" {
+		return
+	}
+	m.Header[key] = value
+}
+
 //Ack return whether ack header set or not, default to true
 func (m *Message) Ack() bool {
 	ack := m.GetHeader(protocol.Ack)
@@ -223,6 +238,93 @@ func (m *Message) SetConsumeGroup(value string) {
 	m.SetHeader(protocol.ConsumeGroup, value)
 }
 
+//GroupFilter key=group_filter
+func (m *Message) GroupFilter() *string {
+	s, ok := m.Header[protocol.GroupFilter]
+	if !ok {
+		return nil
+	}
+	return &[]string{s}[0]
+}
+
+//SetGroupFilter key=group_filter
+func (m *Message) SetGroupFilter(value string) {
+	m.SetHeader(protocol.GroupFilter, value)
+}
+
+//GroupMask key=group_mask
+func (m *Message) GroupMask() *int32 {
+	s, ok := m.Header[protocol.GroupMask]
+	if !ok {
+		return nil
+	}
+	value, _ := strconv.Atoi(s)
+	return &[]int32{int32(value)}[0]
+}
+
+//SetGroupMask key=group_mask
+func (m *Message) SetGroupMask(value int32) {
+	m.SetHeader(protocol.GroupMask, strconv.Itoa(int(value)))
+}
+
+//GroupStartCopy key=group_start_copy
+func (m *Message) GroupStartCopy() *string {
+	s, ok := m.Header[protocol.GroupStartCopy]
+	if !ok {
+		return nil
+	}
+	return &[]string{s}[0]
+}
+
+//SetGroupStartCopy key=group_start_copy
+func (m *Message) SetGroupStartCopy(value string) {
+	m.SetHeader(protocol.GroupStartCopy, value)
+}
+
+//GroupStartOffset group_start_offset
+func (m *Message) GroupStartOffset() *int64 {
+	s, ok := m.Header[protocol.GroupStartOffset]
+	if !ok {
+		return nil
+	}
+	value, _ := strconv.ParseInt(s, 10, 64)
+	return &[]int64{value}[0]
+}
+
+//SetGroupStartOffset group_start_offset
+func (m *Message) SetGroupStartOffset(value int64) {
+	m.SetHeader(protocol.GroupStartOffset, fmt.Sprintf("%d", value))
+}
+
+//GroupStartMsgid key=group_start_msgid
+func (m *Message) GroupStartMsgid() *string {
+	s, ok := m.Header[protocol.GroupStartMsgid]
+	if !ok {
+		return nil
+	}
+	return &[]string{s}[0]
+}
+
+//SetGroupStartMsgid key=group_start_msgid
+func (m *Message) SetGroupStartMsgid(value string) {
+	m.SetHeader(protocol.GroupStartMsgid, value)
+}
+
+//GroupStartTime group_start_time
+func (m *Message) GroupStartTime() *int64 {
+	s, ok := m.Header[protocol.GroupStartTime]
+	if !ok {
+		return nil
+	}
+	value, _ := strconv.ParseInt(s, 10, 64)
+	return &[]int64{value}[0]
+}
+
+//SetGroupStartTime group_start_time
+func (m *Message) SetGroupStartTime(value int64) {
+	m.SetHeader(protocol.GroupStartTime, fmt.Sprintf("%d", value))
+}
+
 //OriginUrl key=origin_url
 func (m *Message) OriginUrl() string {
 	return m.GetHeader(protocol.OriginUrl)
@@ -233,15 +335,27 @@ func (m *Message) SetOriginUrl(value string) {
 	m.SetHeader(protocol.OriginUrl, value)
 }
 
-//GetHeader key=value
-func (m *Message) GetHeader(key string) string {
-	return m.Header[key]
+//Token key=token
+func (m *Message) Token() string {
+	return m.GetHeader(protocol.Token)
 }
 
-//SetHeader key=value
-func (m *Message) SetHeader(key string, value string) {
-	if value == "" {
-		return
+//SetToken key=token
+func (m *Message) SetToken(value string) {
+	m.SetHeader(protocol.Token, value)
+}
+
+//TopicMask key=topic_mask
+func (m *Message) TopicMask() *int32 {
+	s := m.GetHeader(protocol.TopicMask)
+	if s == "" {
+		return nil
 	}
-	m.Header[key] = value
+	value, _ := strconv.Atoi(s)
+	return &[]int32{int32(value)}[0]
+}
+
+//SetTopicMask key=topic_mask
+func (m *Message) SetTopicMask(value int32) {
+	m.SetHeader(protocol.TopicMask, strconv.Itoa(int(value)))
 }

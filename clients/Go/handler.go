@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
@@ -46,6 +47,7 @@ func NewServerHandler(server *Server) *ServerHandler {
 	s.handlerTable[protocol.Page] = pageHandler
 	s.handlerTable[protocol.Produce] = produceHandler
 	s.handlerTable[protocol.Consume] = consumeHandler
+	s.handlerTable[protocol.Declare] = declareHandler
 	s.handlerTable[protocol.Query] = queryHandler
 	s.handlerTable[protocol.Remove] = removeHandler
 	s.handlerTable[protocol.Empty] = emptyHandler
@@ -222,37 +224,47 @@ func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session, msgType *in
 	//just ignore
 }
 
-func findMqHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) *MessageQueue {
-	topic := msg.Topic()
+func auth(s *ServerHandler, msg *Message, sess *Session, msgType *int) bool {
+	return true
+}
+
+func findMQ(s *ServerHandler, req *Message, sess *Session, msgType *int) *MessageQueue {
+	topic := req.Topic()
 	if topic == "" {
-		res := NewMessageStatus(400, "Missing topic")
-		sess.WriteMessage(res, msgType)
+		reply(400, req.Id(), "Missing topic", sess, msgType)
 		return nil
 	}
 	mq := s.server.MqTable[topic]
 	if mq == nil {
-		res := NewMessageStatus(404, "Topic(%s) not found", topic)
-		sess.WriteMessage(res, msgType)
+		body := fmt.Sprintf("Topic(%s) not found", topic)
+		reply(404, req.Id(), body, sess, msgType)
 		return nil
 	}
 	return mq
 }
 
-func produceHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	mq := findMqHandler(s, msg, sess, msgType)
+func produceHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	mq := findMQ(s, req, sess, msgType)
 	if mq == nil {
 		return
 	}
-	mq.Write(msg)
 
-	if msg.Ack() {
-		res := NewMessageStatus(200, "%d", CurrMillis())
-		sess.WriteMessage(res, msgType)
+	mq.Write(req)
+
+	if req.Ack() {
+		body := fmt.Sprintf("%d", CurrMillis())
+		reply(200, req.Id(), body, sess, msgType)
 	}
 }
 
 func consumeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	mq := findMqHandler(s, req, sess, msgType)
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	mq := findMQ(s, req, sess, msgType)
 	if mq == nil {
 		return
 	}
@@ -268,7 +280,7 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 		return
 	}
 	if resp == nil {
-		//wait ...
+		//to wait ... TODO!!!!
 		return
 	}
 
@@ -281,23 +293,105 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 	sess.WriteMessage(resp, msgType)
 }
 
-func queryHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	topic := req.Topic()
+	if topic == "" {
+		reply(400, req.Id(), "Missing topic", sess, msgType)
+		return
+	}
+	g := &ConsumeGroup{}
+	g.LoadFrom(req)
+	declareGroup := g.GroupName != ""
+	if g.GroupName == "" {
+		g.GroupName = topic
+	}
+
+	var err error
+	var info interface{}
+
+	mq := s.server.MqTable[topic]
+	if mq == nil {
+		mq, err = NewMessageQueue(s.server.MqDir, topic)
+		if err != nil {
+			body := fmt.Sprintf("Delcare Topic error: %s", err.Error())
+			reply(500, req.Id(), body, sess, msgType)
+			return
+		}
+		mq.SetCreator(req.Token()) //token as creator, TODO
+		mask := req.TopicMask()
+		if mask != nil {
+			mq.SetMask(*mask)
+		}
+		s.server.MqTable[topic] = mq
+
+		info, err = mq.DeclareGroup(g)
+		if err != nil {
+			body := fmt.Sprintf("Delcare ConsumeGroup error: %s", err.Error())
+			reply(500, req.Id(), body, sess, msgType)
+			return
+		}
+	} else {
+		mask := req.TopicMask()
+		if mask != nil {
+			mq.SetMask(*mask)
+		}
+
+		if declareGroup {
+			info, err = mq.DeclareGroup(g)
+			if err != nil {
+				body := fmt.Sprintf("Delcare ConsumeGroup error: %s", err.Error())
+				reply(500, req.Id(), body, sess, msgType)
+				return
+			}
+		}
+	}
+
+	if !declareGroup {
+		info = mq.TopicInfo()
+	}
+
+	data, _ := json.Marshal(info)
+	reply(200, req.Id(), string(data), sess, msgType)
 }
 
-func removeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
 }
 
-func emptyHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func removeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
 }
 
-func trackerHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func emptyHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
+}
+
+func trackerHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
 }
 
 func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+
 	res := NewMessage()
 	res.Status = 200
 	info := s.server.serverInfo()
@@ -307,10 +401,23 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	sess.WriteMessage(res, msgType)
 }
 
-func trackPubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func trackPubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
 }
 
-func trackSubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func trackSubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	if !auth(s, req, sess, msgType) {
+		return
+	}
+
+	reply(500, req.Id(), "Not Implemented", sess, msgType)
+}
+
+func reply(status int, msgid string, body string, sess *Session, msgType *int) {
+	resp := NewMessageStatus(status, body)
+	resp.SetId(msgid)
+	sess.WriteMessage(resp, msgType)
 }
