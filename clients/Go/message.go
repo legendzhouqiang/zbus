@@ -43,21 +43,21 @@ type Message struct {
 	body []byte
 }
 
-//NewMessage creates a Message
-func NewMessage() *Message {
+//NewMessage creates a Message, args if provied format to body string
+func NewMessage(args ...interface{}) *Message {
 	m := new(Message)
 	m.Url = "/"
 	m.Method = "GET"
 	m.Header = make(map[string]string)
 	m.Header["connection"] = "Keep-Alive"
+	m.SetBodyString(args...)
 	return m
 }
 
 //NewMessageStatus create message with status and body
-func NewMessageStatus(status int, body string) *Message {
-	m := NewMessage()
+func NewMessageStatus(status int, args ...interface{}) *Message {
+	m := NewMessage(args...)
 	m.Status = status
-	m.SetBodyString(body)
 	return m
 }
 
@@ -75,8 +75,16 @@ func (m *Message) SetBody(body []byte) {
 }
 
 //SetBodyString set string body of Message
-func (m *Message) SetBodyString(body string) {
-	m.body = []byte(body)
+func (m *Message) SetBodyString(args ...interface{}) {
+	if len(args) > 0 {
+		format := args[0]
+		switch format.(type) {
+		case string:
+			body := fmt.Sprintf(format.(string), args[1:]...)
+			m.body = []byte(body)
+			//ignore otherwise
+		}
+	}
 }
 
 //SetJsonBody set json body
@@ -159,7 +167,7 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 
 //Ack return whether ack header set or not, default to true
 func (m *Message) Ack() bool {
-	ack := m.Header[protocol.Ack]
+	ack := m.GetHeader(protocol.Ack)
 	if ack == "" {
 		return true //default to ack if not set
 	}
@@ -172,5 +180,68 @@ func (m *Message) Ack() bool {
 
 //SetAck set ack value to header
 func (m *Message) SetAck(ack bool) {
-	m.Header[protocol.Ack] = fmt.Sprintf("%v", ack)
+	m.SetHeader(protocol.Ack, fmt.Sprintf("%v", ack))
+}
+
+//Id key=id
+func (m *Message) Id() string {
+	return m.GetHeader(protocol.Id)
+}
+
+//SetId key=id
+func (m *Message) SetId(value string) {
+	m.SetHeader(protocol.Id, value)
+}
+
+//OriginId key=origin_id
+func (m *Message) OriginId() string {
+	return m.GetHeader(protocol.OriginId)
+}
+
+//SetOriginId key=origin_id
+func (m *Message) SetOriginId(value string) {
+	m.SetHeader(protocol.OriginId, value)
+}
+
+//Topic key=topic
+func (m *Message) Topic() string {
+	return m.GetHeader(protocol.Topic)
+}
+
+//SetTopic key=topic
+func (m *Message) SetTopic(value string) {
+	m.SetHeader(protocol.Topic, value)
+}
+
+//ConsumeGroup key=consume_group
+func (m *Message) ConsumeGroup() string {
+	return m.GetHeader(protocol.ConsumeGroup)
+}
+
+//SetConsumeGroup key=consume_group
+func (m *Message) SetConsumeGroup(value string) {
+	m.SetHeader(protocol.ConsumeGroup, value)
+}
+
+//OriginUrl key=origin_url
+func (m *Message) OriginUrl() string {
+	return m.GetHeader(protocol.OriginUrl)
+}
+
+//SetOriginUrl key=origin_url
+func (m *Message) SetOriginUrl(value string) {
+	m.SetHeader(protocol.OriginUrl, value)
+}
+
+//GetHeader key=value
+func (m *Message) GetHeader(key string) string {
+	return m.Header[key]
+}
+
+//SetHeader key=value
+func (m *Message) SetHeader(key string, value string) {
+	if value == "" {
+		return
+	}
+	m.Header[key] = value
 }

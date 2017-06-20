@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strings"
 
@@ -88,7 +87,7 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
 		handler(s, msg, sess, msgType)
 		return
 	}
-	res := NewMessageStatus(400, fmt.Sprintf("Bad format: command(%s) not support", cmd))
+	res := NewMessageStatus(400, "Bad format: command(%s) not support", cmd)
 	sess.WriteMessage(res, msgType)
 }
 
@@ -186,7 +185,7 @@ func renderFile(file string, contentType string, s *ServerHandler, msg *Message,
 	data, err := ReadAssetFile(file)
 	if err != nil {
 		res.Status = 404
-		res.SetBodyString(fmt.Sprintf("File(%s) error: %s", file, err))
+		res.SetBodyString("File(%s) error: %s", file, err)
 	} else {
 		res.Status = 200
 		res.SetBody(data)
@@ -223,31 +222,63 @@ func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session, msgType *in
 	//just ignore
 }
 
-func produceHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	topic := msg.Header[protocol.Topic]
+func findMqHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) *MessageQueue {
+	topic := msg.Topic()
 	if topic == "" {
-		res := NewMessageStatus(400, "Topic Missing")
+		res := NewMessageStatus(400, "Missing topic")
 		sess.WriteMessage(res, msgType)
+		return nil
+	}
+	mq := s.server.MqTable[topic]
+	if mq == nil {
+		res := NewMessageStatus(404, "Topic(%s) not found", topic)
+		sess.WriteMessage(res, msgType)
+		return nil
+	}
+	return mq
+}
+
+func produceHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+	mq := findMqHandler(s, msg, sess, msgType)
+	if mq == nil {
 		return
 	}
-
-	mq, ok := s.server.MqTable[topic]
-	if !ok {
-		res := NewMessageStatus(404, fmt.Sprintf("Topic(%s) Not Found", topic))
-		sess.WriteMessage(res, msgType)
-		return
-	}
-
 	mq.Write(msg)
 
 	if msg.Ack() {
-		res := NewMessageStatus(200, fmt.Sprintf("%d", CurrMillis()))
+		res := NewMessageStatus(200, "%d", CurrMillis())
 		sess.WriteMessage(res, msgType)
 	}
 }
 
-func consumeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
+func consumeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
+	mq := findMqHandler(s, req, sess, msgType)
+	if mq == nil {
+		return
+	}
+	group := req.ConsumeGroup()
+	if group == "" {
+		group = mq.Name()
+	}
+
+	resp, status, err := mq.Read(group)
+	if err != nil {
+		resp = NewMessageStatus(status, err.Error())
+		sess.WriteMessage(resp, msgType)
+		return
+	}
+	if resp == nil {
+		//wait ...
+		return
+	}
+
+	resp.SetOriginId(resp.Id())
+	resp.SetId(req.Id())
+	if resp.Status == 0 {
+		resp.SetOriginUrl(resp.Url)
+	}
+	resp.Status = 200
+	sess.WriteMessage(resp, msgType)
 }
 
 func queryHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {

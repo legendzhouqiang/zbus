@@ -28,7 +28,7 @@ func TestMessageQueue_Write(t *testing.T) {
 
 func TestMessageQueue_Read(t *testing.T) {
 
-	msg, err := mq.Read("hong")
+	msg, _, err := mq.Read("hong")
 	if err != nil {
 		t.Fail()
 	}

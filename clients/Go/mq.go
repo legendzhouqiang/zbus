@@ -129,23 +129,23 @@ func (q *MessageQueue) WriteBatch(msgs []*Message) error {
 }
 
 //Read a message from MQ' consume group
-func (q *MessageQueue) Read(group string) (*Message, error) {
+func (q *MessageQueue) Read(group string) (*Message, int, error) {
 	if group == "" {
 		group = q.name //default to topic name
 	}
-	r, ok := q.readers[group]
-	if !ok {
-		return nil, fmt.Errorf("reader(%s) not found", group)
+	r := q.readers[group]
+	if r == nil {
+		return nil, 404, fmt.Errorf("ConsumeGroup(%s) not found", group)
 	}
 	data, err := r.Read()
 	if err != nil {
-		return nil, err
+		return nil, 500, err
 	}
 	if data == nil {
-		return nil, nil
+		return nil, 200, nil
 	}
 	buf := bytes.NewBuffer(data.Body)
-	return DecodeMessage(buf), nil
+	return DecodeMessage(buf), 200, nil
 }
 
 //DeclareGroup create/update a consume group
@@ -295,6 +295,16 @@ func (q *MessageQueue) loadReaders() error {
 		q.readers[name] = r
 	}
 	return nil
+}
+
+//Name return the name of MQ
+func (q *MessageQueue) Name() string {
+	return q.name
+}
+
+//ConsumeGroup returns the reader of the group
+func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
+	return q.readers[group]
 }
 
 //SetMask update mask value
