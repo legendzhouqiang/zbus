@@ -169,7 +169,12 @@ func main() {
 	var addr = fmt.Sprintf("%s:%d", host, port)
 	var mqDir = *flag.String("dir", "/tmp/zbus", "zbus MQ directory")
 
-	fd, err := net.Listen("tcp", addr)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		log.Println("Error addres:", err.Error())
+		return
+	}
+	fd, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		return
@@ -191,7 +196,7 @@ func main() {
 
 	handler := NewServerHandler(server)
 	for {
-		conn, err := fd.Accept()
+		conn, err := fd.AcceptTCP()
 		if err != nil {
 			log.Println("Error accepting: ", err.Error())
 			return

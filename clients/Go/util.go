@@ -6,12 +6,32 @@ import (
 	"net"
 	"sort"
 	"strings"
+	"time"
 )
+
+//CurrMillis returns current milliseconds of Unix time
+func CurrMillis() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+var fileMap map[string][]byte
 
 //ReadAssetFile read asset file via go binary data or direct io
 func ReadAssetFile(file string) ([]byte, error) {
 	//return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
-	return Asset(fmt.Sprintf("asset/%s", file))
+
+	if fileMap == nil {
+		fileMap = make(map[string][]byte)
+	}
+	fileData, ok := fileMap[file]
+	if !ok {
+		fileData, err := Asset(fmt.Sprintf("asset/%s", file))
+		if err == nil {
+			fileMap[file] = fileData
+		}
+		return fileData, err
+	}
+	return fileData, nil
 }
 
 //SplitClean splits string without empty

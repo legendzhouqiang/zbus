@@ -8,7 +8,6 @@ import (
 	"io"
 	"net"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -99,7 +98,7 @@ func (u *Upgrader) returnError(netConn net.Conn, status int, reason string) (*we
 	err := HandshakeError{reason}
 
 	resp := NewMessage()
-	resp.Status = strconv.Itoa(status)
+	resp.Status = status
 	resp.Header["sec-websocket-version"] = "13"
 
 	bufWrite := new(bytes.Buffer)
@@ -151,7 +150,7 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 	wsConn.SetSubprotocol(subprotocol)
 
 	resp := NewMessage()
-	resp.Status = "101"
+	resp.Status = 101
 	resp.Header["Upgrade"] = "websocket"
 	resp.Header["Connection"] = "Upgrade"
 	resp.Header["Sec-WebSocket-Accept"] = computeAcceptKey(challengeKey)

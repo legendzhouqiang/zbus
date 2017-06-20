@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"./protocol"
 )
 
 var statusText = map[int]string{
@@ -33,7 +35,7 @@ func StatusText(code int) string {
 
 //Message stands for HTTP message including Request and Response
 type Message struct {
-	Status string
+	Status int
 	Url    string
 	Method string
 	Header map[string]string
@@ -44,11 +46,18 @@ type Message struct {
 //NewMessage creates a Message
 func NewMessage() *Message {
 	m := new(Message)
-	m.Status = ""
 	m.Url = "/"
 	m.Method = "GET"
 	m.Header = make(map[string]string)
 	m.Header["connection"] = "Keep-Alive"
+	return m
+}
+
+//NewMessageStatus create message with status and body
+func NewMessageStatus(status int, body string) *Message {
+	m := NewMessage()
+	m.Status = status
+	m.SetBodyString(body)
 	return m
 }
 
@@ -78,9 +87,8 @@ func (m *Message) SetJsonBody(body string) {
 
 //EncodeMessage encodes Message to []byte
 func (m *Message) EncodeMessage(buf *bytes.Buffer) {
-	if m.Status != "" {
-		status, _ := strconv.Atoi(m.Status)
-		buf.WriteString(fmt.Sprintf("HTTP/1.1 %s %s\r\n", m.Status, StatusText(status)))
+	if m.Status != 0 {
+		buf.WriteString(fmt.Sprintf("HTTP/1.1 %d %s\r\n", m.Status, StatusText(m.Status)))
 	} else {
 		buf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", m.Method, m.Url))
 	}
@@ -122,7 +130,7 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	meta := string(header[0])
 	metaFields := strings.Fields(meta)
 	if strings.HasPrefix(strings.ToUpper(metaFields[0]), "HTTP") {
-		m.Status = metaFields[1]
+		m.Status, _ = strconv.Atoi(metaFields[1])
 	} else {
 		m.Method = metaFields[0]
 		m.Url = metaFields[1]
@@ -147,4 +155,22 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	data := make([]byte, idx+4+bodyLen)
 	buf.Read(data)
 	return m
+}
+
+//Ack return whether ack header set or not, default to true
+func (m *Message) Ack() bool {
+	ack := m.Header[protocol.Ack]
+	if ack == "" {
+		return true //default to ack if not set
+	}
+	boolAck, err := strconv.ParseBool(ack)
+	if err != nil {
+		return false
+	}
+	return boolAck
+}
+
+//SetAck set ack value to header
+func (m *Message) SetAck(ack bool) {
+	m.Header[protocol.Ack] = fmt.Sprintf("%v", ack)
 }

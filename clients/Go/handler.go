@@ -88,9 +88,7 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
 		handler(s, msg, sess, msgType)
 		return
 	}
-	res := NewMessage()
-	res.Status = "400"
-	res.SetBodyString(fmt.Sprintf("Bad format: command(%s) not support", cmd))
+	res := NewMessageStatus(400, fmt.Sprintf("Bad format: command(%s) not support", cmd))
 	sess.WriteMessage(res, msgType)
 }
 
@@ -122,8 +120,10 @@ func handleUrlMessage(msg *Message) {
 			handleUrlRpc(msg, rest, kvstr)
 		} else if isRestCommand(cmd) {
 			bb := SplitClean(rest, "/")
-			if len(bb) == 2 {
+			if len(bb) > 0 {
 				msg.SetHeaderIfNone(protocol.Topic, bb[0])
+			}
+			if len(bb) > 1 {
 				msg.SetHeaderIfNone(protocol.ConsumeGroup, bb[1])
 			}
 		}
@@ -185,10 +185,10 @@ func renderFile(file string, contentType string, s *ServerHandler, msg *Message,
 
 	data, err := ReadAssetFile(file)
 	if err != nil {
-		res.Status = "404"
+		res.Status = 404
 		res.SetBodyString(fmt.Sprintf("File(%s) error: %s", file, err))
 	} else {
-		res.Status = "200"
+		res.Status = 200
 		res.SetBody(data)
 	}
 	res.Header["content-type"] = contentType
@@ -224,50 +224,51 @@ func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session, msgType *in
 }
 
 func produceHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	topic := msg.Header[protocol.Topic]
+	if topic == "" {
+		res := NewMessageStatus(400, "Topic Missing")
+		sess.WriteMessage(res, msgType)
+		return
+	}
+
+	mq, ok := s.server.MqTable[topic]
+	if !ok {
+		res := NewMessageStatus(404, fmt.Sprintf("Topic(%s) Not Found", topic))
+		sess.WriteMessage(res, msgType)
+		return
+	}
+
+	mq.Write(msg)
+
+	if msg.Ack() {
+		res := NewMessageStatus(200, fmt.Sprintf("%d", CurrMillis()))
+		sess.WriteMessage(res, msgType)
+	}
 }
 
 func consumeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func queryHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func removeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func emptyHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func trackerHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 	res := NewMessage()
-	res.Status = "200"
+	res.Status = 200
 	info := s.server.serverInfo()
 	data, _ := json.Marshal(info)
 	res.SetJsonBody(string(data))
@@ -276,15 +277,9 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 }
 
 func trackPubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
 
 func trackSubHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	res := NewMessage()
-	res.Status = "500"
-	res.SetBodyString("Not implemented")
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(NewMessageStatus(500, "Not Implemented"), msgType)
 }
