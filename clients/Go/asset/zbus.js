@@ -551,6 +551,7 @@ MessageClient.prototype.connect = function (connectedHandler) {
     }
 
     this.socket = new WebSocket(this.address());
+    this.socket.binaryType = 'arraybuffer';
     var client = this;
     this.socket.onopen = function (event) {
         console.log("Connected to " + client.address());

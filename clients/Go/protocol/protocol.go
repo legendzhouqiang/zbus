@@ -97,8 +97,8 @@ type TrackItem struct {
 //TrackerInfo tracker info
 type TrackerInfo struct {
 	TrackItem   `json:""`
-	InfoVersion int64                 `json:"infoVersion"`
-	ServerTable map[string]ServerInfo `json:"serverTable"`
+	InfoVersion int64                  `json:"infoVersion"`
+	ServerTable map[string]*ServerInfo `json:"serverTable"`
 }
 
 //ServerInfo server info

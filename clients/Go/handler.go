@@ -9,7 +9,14 @@ import (
 	"./protocol"
 )
 
-var restCommands = []string{protocol.Produce, protocol.Consume, protocol.Declare, protocol.Query, protocol.Empty}
+var restCommands = []string{
+	protocol.Produce,
+	protocol.Consume,
+	protocol.Declare,
+	protocol.Query,
+	protocol.Remove,
+	protocol.Empty,
+}
 
 func isRestCommand(cmd string) bool {
 	for _, value := range restCommands {
@@ -361,26 +368,67 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 	if !auth(s, req, sess, msgType) {
 		return
 	}
+	mq := findMQ(s, req, sess, msgType)
+	if mq == nil {
+		return
+	}
 
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
+	var info interface{}
+	group := req.ConsumeGroup()
+	if group == "" {
+		info = mq.TopicInfo()
+	} else {
+		groupInfo := mq.GroupInfo(group)
+		if groupInfo == nil {
+			body := fmt.Sprintf("ConsumeGroup(%s) not found", group)
+			reply(404, req.Id(), body, sess, msgType)
+			return
+		}
+		info = groupInfo
+	}
+
+	data, _ := json.Marshal(info)
+	reply(200, req.Id(), string(data), sess, msgType)
+
 }
 
 func removeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 	if !auth(s, req, sess, msgType) {
 		return
 	}
+	mq := findMQ(s, req, sess, msgType)
+	if mq == nil {
+		return
+	}
+	topic := mq.Name()
+	group := req.ConsumeGroup()
+	if group == "" {
+		delete(s.server.MqTable, mq.Name())
+		err := mq.Destroy()
+		if err != nil {
+			body := fmt.Sprintf("Remove topic(%s) error: %s", topic, err.Error())
+			reply(500, req.Id(), body, sess, msgType)
+			return
+		}
+	} else {
+		if mq.ConsumeGroup(group) == nil {
+			body := fmt.Sprintf("ConsumeGroup(%s) not found", group)
+			reply(404, req.Id(), body, sess, msgType)
+			return
+		}
 
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
+		err := mq.RemoveGroup(group)
+		if err != nil {
+			body := fmt.Sprintf("Remove ConsumeGroup(%s) error: %s", group, err.Error())
+			reply(500, req.Id(), body, sess, msgType)
+			return
+		}
+	}
+
+	reply(200, req.Id(), fmt.Sprintf("%d", CurrMillis()), sess, msgType)
 }
 
 func emptyHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
-		return
-	}
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
-}
-
-func trackerHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 	if !auth(s, req, sess, msgType) {
 		return
 	}
@@ -399,21 +447,6 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res.SetJsonBody(string(data))
 
 	sess.WriteMessage(res, msgType)
-}
-
-func trackPubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
-		return
-	}
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
-}
-
-func trackSubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
-		return
-	}
-
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
 }
 
 func reply(status int, msgid string, body string, sess *Session, msgType *int) {

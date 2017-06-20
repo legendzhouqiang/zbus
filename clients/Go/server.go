@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync/atomic"
 
 	"time"
 
@@ -123,7 +124,9 @@ outter:
 				handler.OnError(err, session)
 				break
 			}
-
+			if IsWebSocketUpgrade(req.Header) {
+				continue
+			}
 			handler.OnMessage(req, session, &msgtype)
 		}
 	}
@@ -140,11 +143,14 @@ type Server struct {
 	TrackerList []string
 
 	infoVersion int64
+
+	trackerOnly bool
 }
 
 func newServer() *Server {
 	s := &Server{}
 	s.infoVersion = time.Now().UnixNano() / int64(time.Millisecond)
+	s.trackerOnly = false
 	return s
 }
 
@@ -152,11 +158,26 @@ func (s *Server) serverInfo() *protocol.ServerInfo {
 	info := &protocol.ServerInfo{}
 	info.ServerAddress = s.ServerAddress
 	info.ServerVersion = protocol.VersionValue
+	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
 	info.TrackerList = []protocol.ServerAddress{}
 	info.TopicTable = make(map[string]*protocol.TopicInfo)
 	for key, mq := range s.MqTable {
 		info.TopicTable[key] = mq.TopicInfo()
+	}
+
+	return info
+}
+
+func (s *Server) trackerInfo() *protocol.TrackerInfo {
+	info := &protocol.TrackerInfo{}
+	info.ServerAddress = s.ServerAddress
+	info.ServerVersion = protocol.VersionValue
+	atomic.AddInt64(&s.infoVersion, 1)
+	info.InfoVersion = s.infoVersion
+	info.ServerTable = make(map[string]*protocol.ServerInfo)
+	if !s.trackerOnly {
+		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
 
 	return info
@@ -168,6 +189,7 @@ func main() {
 	var port = *flag.Int("p", 15555, "zbus server port")
 	var addr = fmt.Sprintf("%s:%d", host, port)
 	var mqDir = *flag.String("dir", "/tmp/zbus", "zbus MQ directory")
+	var trackerOnly = *flag.Bool("trackonly", false, "server work as tracker only, or both tracker and mqserver")
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -186,6 +208,7 @@ func main() {
 	server := newServer()
 	server.MqDir = mqDir
 	server.ServerAddress = &protocol.ServerAddress{realAddr, false}
+	server.trackerOnly = trackerOnly
 
 	mqTable, err := LoadMqTable(mqDir)
 	if err != nil {

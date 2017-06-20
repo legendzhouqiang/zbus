@@ -213,6 +213,7 @@ func (q *MessageQueue) TopicInfo() *protocol.TopicInfo {
 	info.Creator = q.index.Creator()
 	info.CreatedTime = q.index.CreatedTime()
 	info.LastUpdatedTime = q.index.UpdatedTime()
+	info.ConsumeGroupList = []*protocol.ConsumeGroupInfo{}
 	for _, r := range q.readers {
 		groupInfo := q.groupInfo(r)
 		info.ConsumeGroupList = append(info.ConsumeGroupList, groupInfo)
@@ -228,6 +229,12 @@ func (q *MessageQueue) GroupInfo(group string) *protocol.ConsumeGroupInfo {
 		return q.groupInfo(g)
 	}
 	return nil
+}
+
+//ConsumeGroup returns reader for the consume group
+func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
+	g, _ := q.readers[group]
+	return g
 }
 
 func (q *MessageQueue) groupInfo(g *diskq.QueueReader) *protocol.ConsumeGroupInfo {
@@ -296,11 +303,6 @@ func (q *MessageQueue) loadReaders() error {
 //Name return the name of MQ
 func (q *MessageQueue) Name() string {
 	return q.name
-}
-
-//ConsumeGroup returns the reader of the group
-func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
-	return q.readers[group]
 }
 
 //SetMask update mask value
