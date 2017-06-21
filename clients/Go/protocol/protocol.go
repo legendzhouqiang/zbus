@@ -140,30 +140,25 @@ type ConsumeGroupInfo struct {
 }
 
 //AddServerContext generic way TOFIX
-func AddServerContext(info interface{}, address *ServerAddress) {
-
-}
-
-//AddTopicInfoContext to the tracked item
-func AddTopicInfoContext(info *TopicInfo, address *ServerAddress) {
-	info.ServerAddress = address
-	info.ServerVersion = VersionValue
-}
-
-//AddServerInfoContext serverInfo
-func AddServerInfoContext(info *ServerInfo, address *ServerAddress) {
-	info.ServerAddress = address
-	info.ServerVersion = VersionValue
-	for _, topicInfo := range info.TopicTable {
-		AddTopicInfoContext(topicInfo, address)
-	}
-}
-
-//AddTrackerInfoContext TrackerInfo
-func AddTrackerInfoContext(info *TrackerInfo, address *ServerAddress) {
-	info.ServerAddress = address
-	info.ServerVersion = VersionValue
-	for _, serverInfo := range info.ServerTable {
-		AddServerInfoContext(serverInfo, address)
+func AddServerContext(t interface{}, address *ServerAddress) {
+	switch t.(type) {
+	case *TopicInfo:
+		info := t.(*TopicInfo)
+		info.ServerAddress = address
+		info.ServerVersion = VersionValue
+	case *ServerInfo:
+		info := t.(*ServerInfo)
+		info.ServerAddress = address
+		info.ServerVersion = VersionValue
+		for _, topicInfo := range info.TopicTable {
+			AddServerContext(topicInfo, address)
+		}
+	case *TrackerInfo:
+		info := t.(*TrackerInfo)
+		info.ServerAddress = address
+		info.ServerVersion = VersionValue
+		for _, serverInfo := range info.ServerTable {
+			AddServerContext(serverInfo, address)
+		}
 	}
 }

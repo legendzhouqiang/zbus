@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -23,4 +24,13 @@ func TestJson(t *testing.T) {
 	}
 	println(string(data))
 
+}
+
+func TestAddServerContext(t *testing.T) {
+	topicInfo := &TopicInfo{}
+	addr := &ServerAddress{"localhost:15555", false}
+
+	AddServerContext(topicInfo, addr)
+
+	fmt.Println(topicInfo) 
 }

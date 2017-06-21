@@ -359,9 +359,10 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 	if !declareGroup {
 		info = mq.TopicInfo()
 	}
+
 	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
-	reply(200, req.Id(), string(data), sess, msgType)
+	replyJson(200, req.Id(), string(data), sess, msgType)
 }
 
 func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
@@ -389,8 +390,7 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 
 	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
-	reply(200, req.Id(), string(data), sess, msgType)
-
+	replyJson(200, req.Id(), string(data), sess, msgType)
 }
 
 func removeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
@@ -444,16 +444,21 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res := NewMessage()
 	res.Status = 200
 	info := s.server.serverInfo()
+
 	protocol.AddServerContext(info, s.server.ServerAddress)
-
 	data, _ := json.Marshal(info)
-	res.SetJsonBody(string(data))
-
-	sess.WriteMessage(res, msgType)
+	replyJson(200, req.Id(), string(data), sess, msgType)
 }
 
 func reply(status int, msgid string, body string, sess *Session, msgType *int) {
 	resp := NewMessageStatus(status, body)
 	resp.SetId(msgid)
+	sess.WriteMessage(resp, msgType)
+}
+
+func replyJson(status int, msgid string, body string, sess *Session, msgType *int) {
+	resp := NewMessageStatus(status)
+	resp.SetId(msgid)
+	resp.SetJsonBody(body)
 	sess.WriteMessage(resp, msgType)
 }

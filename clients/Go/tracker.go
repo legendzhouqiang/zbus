@@ -24,6 +24,7 @@ func trackerHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 		return
 	}
 	info := s.server.trackerInfo()
+
 	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	reply(200, req.Id(), string(data), sess, msgType)
@@ -41,6 +42,8 @@ func trackSubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int
 		return
 	}
 	info := s.server.trackerInfo()
+
+	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
-	reply(200, req.Id(), string(data), sess, msgType)
+	replyJson(200, req.Id(), string(data), sess, msgType)
 }
