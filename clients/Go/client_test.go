@@ -26,11 +26,12 @@ func TestMessageClient_Send(t *testing.T) {
 	req.Url = "/server"
 
 	err = c.Send(req)
+	println(req.Id())
 	if err != nil {
 		t.Fail()
 	}
 
-	msg, err := c.Recv()
+	msg, err := c.Recv(nil)
 	if err != nil {
 		t.Fail()
 	}
