@@ -1,6 +1,8 @@
 package protocol
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
 	VersionValue = "0.8.0"
@@ -135,4 +137,33 @@ type ConsumeGroupInfo struct {
 	Creator         string   `json:"creator"`
 	CreatedTime     int64    `json:"createdTime"`
 	LastUpdatedTime int64    `json:"lastUpdatedTime"`
+}
+
+//AddServerContext generic way TOFIX
+func AddServerContext(info interface{}, address *ServerAddress) {
+
+}
+
+//AddTopicInfoContext to the tracked item
+func AddTopicInfoContext(info *TopicInfo, address *ServerAddress) {
+	info.ServerAddress = address
+	info.ServerVersion = VersionValue
+}
+
+//AddServerInfoContext serverInfo
+func AddServerInfoContext(info *ServerInfo, address *ServerAddress) {
+	info.ServerAddress = address
+	info.ServerVersion = VersionValue
+	for _, topicInfo := range info.TopicTable {
+		AddTopicInfoContext(topicInfo, address)
+	}
+}
+
+//AddTrackerInfoContext TrackerInfo
+func AddTrackerInfoContext(info *TrackerInfo, address *ServerAddress) {
+	info.ServerAddress = address
+	info.ServerVersion = VersionValue
+	for _, serverInfo := range info.ServerTable {
+		AddServerInfoContext(serverInfo, address)
+	}
 }

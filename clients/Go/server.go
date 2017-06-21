@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"sync/atomic"
 
 	"time"
@@ -185,11 +186,23 @@ func (s *Server) trackerInfo() *protocol.TrackerInfo {
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
-	var host = *flag.String("h", "0.0.0.0", "zbus server host")
-	var port = *flag.Int("p", 15555, "zbus server port")
-	var addr = fmt.Sprintf("%s:%d", host, port)
-	var mqDir = *flag.String("dir", "/tmp/zbus", "zbus MQ directory")
-	var trackerOnly = *flag.Bool("trackonly", false, "server work as tracker only, or both tracker and mqserver")
+
+	var (
+		addr        string
+		mqDir       string
+		trackerOnly bool
+	)
+	flag.StringVar(&addr, "addr", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&mqDir, "dir", "/tmp/zbus", "Message Queue directory")
+	flag.BoolVar(&trackerOnly, "trackonly", false, "Server work as tracker only, or both tracker and mqserver")
+	flag.Parse()
+
+	if _, err := os.Stat(mqDir); err != nil {
+		if err := os.MkdirAll(mqDir, 0644); err != nil {
+			log.Println("MqDir creation failed:", err.Error())
+			return
+		}
+	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -204,10 +217,10 @@ func main() {
 	defer fd.Close()
 
 	log.Println("Listening on " + addr)
-	realAddr := ServerAddress(host, port)
+	addr = ServerAddress(addr) //get real server address if needs
 	server := newServer()
 	server.MqDir = mqDir
-	server.ServerAddress = &protocol.ServerAddress{realAddr, false}
+	server.ServerAddress = &protocol.ServerAddress{addr, false}
 	server.trackerOnly = trackerOnly
 
 	mqTable, err := LoadMqTable(mqDir)

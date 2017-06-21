@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"sort"
 	"strings"
@@ -19,7 +18,7 @@ var fileMap map[string][]byte
 
 //ReadAssetFile read asset file via go binary data or direct io
 func ReadAssetFile(file string) ([]byte, error) {
-	return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
+	//return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
 
 	if fileMap == nil {
 		fileMap = make(map[string][]byte)
@@ -54,16 +53,21 @@ func uuid() string {
 	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-//ServerAddress combines host and port to form a valid server address, if host is "0.0.0.0",
-//local ip address is replaced
-func ServerAddress(host string, port int) string {
-	if host == "0.0.0.0" {
+//ServerAddress find the real address
+func ServerAddress(addr string) string {
+	bb := SplitClean(addr, ":")
+	host := bb[0]
+	port := "80"
+	if len(bb) > 1 {
+		port = bb[1]
+	}
+	if host == "0.0.0.0" || host == "" {
 		ip, err := LocalIPAddress()
 		if err == nil {
 			host = ip.String()
 		}
 	}
-	return fmt.Sprintf("%s:%d", host, port)
+	return fmt.Sprintf("%s:%s", host, port)
 }
 
 type byIP []net.IP

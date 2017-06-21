@@ -359,7 +359,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 	if !declareGroup {
 		info = mq.TopicInfo()
 	}
-
+	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	reply(200, req.Id(), string(data), sess, msgType)
 }
@@ -387,6 +387,7 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 		info = groupInfo
 	}
 
+	protocol.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	reply(200, req.Id(), string(data), sess, msgType)
 
@@ -443,6 +444,8 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res := NewMessage()
 	res.Status = 200
 	info := s.server.serverInfo()
+	protocol.AddServerContext(info, s.server.ServerAddress)
+
 	data, _ := json.Marshal(info)
 	res.SetJsonBody(string(data))
 
