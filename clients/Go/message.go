@@ -180,6 +180,16 @@ func (m *Message) SetHeader(key string, value string) {
 	m.Header[key] = value
 }
 
+//Cmd key=cmd
+func (m *Message) Cmd() string {
+	return m.GetHeader(proto.Cmd)
+}
+
+//SetCmd key=cmd
+func (m *Message) SetCmd(value string) {
+	m.SetHeader(proto.Cmd, value)
+}
+
 //Ack return whether ack header set or not, default to true
 func (m *Message) Ack() bool {
 	ack := m.GetHeader(proto.Ack)
