@@ -1,4 +1,4 @@
-package protocol
+package proto
 
 import (
 	"encoding/json"
@@ -32,5 +32,5 @@ func TestAddServerContext(t *testing.T) {
 
 	AddServerContext(topicInfo, addr)
 
-	fmt.Println(topicInfo) 
+	fmt.Println(topicInfo)
 }

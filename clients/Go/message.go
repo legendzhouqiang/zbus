@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"./protocol"
+	"./proto"
 )
 
 var statusText = map[int]string{
@@ -182,7 +182,7 @@ func (m *Message) SetHeader(key string, value string) {
 
 //Ack return whether ack header set or not, default to true
 func (m *Message) Ack() bool {
-	ack := m.GetHeader(protocol.Ack)
+	ack := m.GetHeader(proto.Ack)
 	if ack == "" {
 		return true //default to ack if not set
 	}
@@ -195,52 +195,62 @@ func (m *Message) Ack() bool {
 
 //SetAck set ack value to header
 func (m *Message) SetAck(ack bool) {
-	m.SetHeader(protocol.Ack, fmt.Sprintf("%v", ack))
+	m.SetHeader(proto.Ack, fmt.Sprintf("%v", ack))
 }
 
 //Id key=id
 func (m *Message) Id() string {
-	return m.GetHeader(protocol.Id)
+	return m.GetHeader(proto.Id)
 }
 
 //SetId key=id
 func (m *Message) SetId(value string) {
-	m.SetHeader(protocol.Id, value)
+	m.SetHeader(proto.Id, value)
+}
+
+//Tag key=tag
+func (m *Message) Tag() string {
+	return m.GetHeader(proto.Tag)
+}
+
+//SetTag key=tag
+func (m *Message) SetTag(value string) {
+	m.SetHeader(proto.Tag, value)
 }
 
 //OriginId key=origin_id
 func (m *Message) OriginId() string {
-	return m.GetHeader(protocol.OriginId)
+	return m.GetHeader(proto.OriginId)
 }
 
 //SetOriginId key=origin_id
 func (m *Message) SetOriginId(value string) {
-	m.SetHeader(protocol.OriginId, value)
+	m.SetHeader(proto.OriginId, value)
 }
 
 //Topic key=topic
 func (m *Message) Topic() string {
-	return m.GetHeader(protocol.Topic)
+	return m.GetHeader(proto.Topic)
 }
 
 //SetTopic key=topic
 func (m *Message) SetTopic(value string) {
-	m.SetHeader(protocol.Topic, value)
+	m.SetHeader(proto.Topic, value)
 }
 
 //ConsumeGroup key=consume_group
 func (m *Message) ConsumeGroup() string {
-	return m.GetHeader(protocol.ConsumeGroup)
+	return m.GetHeader(proto.ConsumeGroup)
 }
 
 //SetConsumeGroup key=consume_group
 func (m *Message) SetConsumeGroup(value string) {
-	m.SetHeader(protocol.ConsumeGroup, value)
+	m.SetHeader(proto.ConsumeGroup, value)
 }
 
 //GroupFilter key=group_filter
 func (m *Message) GroupFilter() *string {
-	s, ok := m.Header[protocol.GroupFilter]
+	s, ok := m.Header[proto.GroupFilter]
 	if !ok {
 		return nil
 	}
@@ -249,12 +259,12 @@ func (m *Message) GroupFilter() *string {
 
 //SetGroupFilter key=group_filter
 func (m *Message) SetGroupFilter(value string) {
-	m.SetHeader(protocol.GroupFilter, value)
+	m.SetHeader(proto.GroupFilter, value)
 }
 
 //GroupMask key=group_mask
 func (m *Message) GroupMask() *int32 {
-	s, ok := m.Header[protocol.GroupMask]
+	s, ok := m.Header[proto.GroupMask]
 	if !ok {
 		return nil
 	}
@@ -264,12 +274,12 @@ func (m *Message) GroupMask() *int32 {
 
 //SetGroupMask key=group_mask
 func (m *Message) SetGroupMask(value int32) {
-	m.SetHeader(protocol.GroupMask, strconv.Itoa(int(value)))
+	m.SetHeader(proto.GroupMask, strconv.Itoa(int(value)))
 }
 
 //GroupStartCopy key=group_start_copy
 func (m *Message) GroupStartCopy() *string {
-	s, ok := m.Header[protocol.GroupStartCopy]
+	s, ok := m.Header[proto.GroupStartCopy]
 	if !ok {
 		return nil
 	}
@@ -278,12 +288,12 @@ func (m *Message) GroupStartCopy() *string {
 
 //SetGroupStartCopy key=group_start_copy
 func (m *Message) SetGroupStartCopy(value string) {
-	m.SetHeader(protocol.GroupStartCopy, value)
+	m.SetHeader(proto.GroupStartCopy, value)
 }
 
 //GroupStartOffset group_start_offset
 func (m *Message) GroupStartOffset() *int64 {
-	s, ok := m.Header[protocol.GroupStartOffset]
+	s, ok := m.Header[proto.GroupStartOffset]
 	if !ok {
 		return nil
 	}
@@ -293,12 +303,12 @@ func (m *Message) GroupStartOffset() *int64 {
 
 //SetGroupStartOffset group_start_offset
 func (m *Message) SetGroupStartOffset(value int64) {
-	m.SetHeader(protocol.GroupStartOffset, fmt.Sprintf("%d", value))
+	m.SetHeader(proto.GroupStartOffset, fmt.Sprintf("%d", value))
 }
 
 //GroupStartMsgid key=group_start_msgid
 func (m *Message) GroupStartMsgid() *string {
-	s, ok := m.Header[protocol.GroupStartMsgid]
+	s, ok := m.Header[proto.GroupStartMsgid]
 	if !ok {
 		return nil
 	}
@@ -307,12 +317,12 @@ func (m *Message) GroupStartMsgid() *string {
 
 //SetGroupStartMsgid key=group_start_msgid
 func (m *Message) SetGroupStartMsgid(value string) {
-	m.SetHeader(protocol.GroupStartMsgid, value)
+	m.SetHeader(proto.GroupStartMsgid, value)
 }
 
 //GroupStartTime group_start_time
 func (m *Message) GroupStartTime() *int64 {
-	s, ok := m.Header[protocol.GroupStartTime]
+	s, ok := m.Header[proto.GroupStartTime]
 	if !ok {
 		return nil
 	}
@@ -322,32 +332,32 @@ func (m *Message) GroupStartTime() *int64 {
 
 //SetGroupStartTime group_start_time
 func (m *Message) SetGroupStartTime(value int64) {
-	m.SetHeader(protocol.GroupStartTime, fmt.Sprintf("%d", value))
+	m.SetHeader(proto.GroupStartTime, fmt.Sprintf("%d", value))
 }
 
 //OriginUrl key=origin_url
 func (m *Message) OriginUrl() string {
-	return m.GetHeader(protocol.OriginUrl)
+	return m.GetHeader(proto.OriginUrl)
 }
 
 //SetOriginUrl key=origin_url
 func (m *Message) SetOriginUrl(value string) {
-	m.SetHeader(protocol.OriginUrl, value)
+	m.SetHeader(proto.OriginUrl, value)
 }
 
 //Token key=token
 func (m *Message) Token() string {
-	return m.GetHeader(protocol.Token)
+	return m.GetHeader(proto.Token)
 }
 
 //SetToken key=token
 func (m *Message) SetToken(value string) {
-	m.SetHeader(protocol.Token, value)
+	m.SetHeader(proto.Token, value)
 }
 
 //TopicMask key=topic_mask
 func (m *Message) TopicMask() *int32 {
-	s := m.GetHeader(protocol.TopicMask)
+	s := m.GetHeader(proto.TopicMask)
 	if s == "" {
 		return nil
 	}
@@ -357,5 +367,5 @@ func (m *Message) TopicMask() *int32 {
 
 //SetTopicMask key=topic_mask
 func (m *Message) SetTopicMask(value int32) {
-	m.SetHeader(protocol.TopicMask, strconv.Itoa(int(value)))
+	m.SetHeader(proto.TopicMask, strconv.Itoa(int(value)))
 }

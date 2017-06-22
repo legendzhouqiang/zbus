@@ -11,7 +11,7 @@ import (
 	"bytes"
 
 	"./diskq"
-	"./protocol"
+	"./proto"
 )
 
 //MessageQueue writer + N readers
@@ -93,8 +93,8 @@ func (q *MessageQueue) Close() {
 //Produce a message to MQ
 func (q *MessageQueue) Write(msg *Message) error {
 	data := &diskq.DiskMsg{}
-	data.Id = msg.Header[protocol.Id]
-	data.Tag = msg.Header[protocol.Tag]
+	data.Id = msg.Id()
+	data.Tag = msg.Tag()
 	buf := new(bytes.Buffer)
 	msg.EncodeMessage(buf)
 	data.Body = buf.Bytes()
@@ -113,8 +113,8 @@ func (q *MessageQueue) WriteBatch(msgs []*Message) error {
 	for i := 0; i < len(msgs); i++ {
 		msg := msgs[i]
 		data := &diskq.DiskMsg{}
-		data.Id = msg.Header[protocol.Id]
-		data.Tag = msg.Header[protocol.Tag]
+		data.Id = msg.Id()
+		data.Tag = msg.Tag()
 		buf := new(bytes.Buffer)
 		msg.EncodeMessage(buf)
 		data.Body = buf.Bytes()
@@ -145,7 +145,7 @@ func (q *MessageQueue) Read(group string) (*Message, int, error) {
 }
 
 //DeclareGroup create/update a consume group
-func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*protocol.ConsumeGroupInfo, error) {
+func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInfo, error) {
 	groupName := group.GroupName
 	if groupName == "" {
 		groupName = q.name
@@ -205,15 +205,15 @@ func (q *MessageQueue) Destroy() error {
 }
 
 //TopicInfo returns message queue info
-func (q *MessageQueue) TopicInfo() *protocol.TopicInfo {
-	info := &protocol.TopicInfo{}
+func (q *MessageQueue) TopicInfo() *proto.TopicInfo {
+	info := &proto.TopicInfo{}
 	info.TopicName = q.name
 	info.Mask = q.index.Mask()
 	info.MessageDepth = q.index.MsgNo()
 	info.Creator = q.index.Creator()
 	info.CreatedTime = q.index.CreatedTime()
 	info.LastUpdatedTime = q.index.UpdatedTime()
-	info.ConsumeGroupList = []*protocol.ConsumeGroupInfo{}
+	info.ConsumeGroupList = []*proto.ConsumeGroupInfo{}
 	for _, r := range q.readers {
 		groupInfo := q.groupInfo(r)
 		info.ConsumeGroupList = append(info.ConsumeGroupList, groupInfo)
@@ -223,7 +223,7 @@ func (q *MessageQueue) TopicInfo() *protocol.TopicInfo {
 }
 
 //GroupInfo returns consume group info
-func (q *MessageQueue) GroupInfo(group string) *protocol.ConsumeGroupInfo {
+func (q *MessageQueue) GroupInfo(group string) *proto.ConsumeGroupInfo {
 	g, _ := q.readers[group]
 	if g != nil {
 		return q.groupInfo(g)
@@ -237,8 +237,8 @@ func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
 	return g
 }
 
-func (q *MessageQueue) groupInfo(g *diskq.QueueReader) *protocol.ConsumeGroupInfo {
-	info := &protocol.ConsumeGroupInfo{}
+func (q *MessageQueue) groupInfo(g *diskq.QueueReader) *proto.ConsumeGroupInfo {
+	info := &proto.ConsumeGroupInfo{}
 	info.TopicName = q.name
 	info.GroupName = g.Name()
 	info.Mask = g.Mask()

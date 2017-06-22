@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+//UUID generate psudo uuid string
+func uuid() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+}
+
 //CurrMillis returns current milliseconds of Unix time
 func CurrMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
@@ -44,13 +51,6 @@ func SplitClean(s string, sep string) []string {
 		}
 	}
 	return r
-}
-
-//UUID generate psudo uuid string
-func uuid() string {
-	b := make([]byte, 16)
-	rand.Read(b)
-	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
 //ServerAddress find the real address

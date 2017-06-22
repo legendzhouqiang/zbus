@@ -12,7 +12,7 @@ import (
 
 	"time"
 
-	"./protocol"
+	"./proto"
 	"./websocket"
 )
 
@@ -137,7 +137,7 @@ outter:
 
 //Server = MqServer + Tracker
 type Server struct {
-	ServerAddress *protocol.ServerAddress
+	ServerAddress *proto.ServerAddress
 	MqTable       map[string]*MessageQueue
 
 	MqDir       string
@@ -155,14 +155,14 @@ func newServer() *Server {
 	return s
 }
 
-func (s *Server) serverInfo() *protocol.ServerInfo {
-	info := &protocol.ServerInfo{}
+func (s *Server) serverInfo() *proto.ServerInfo {
+	info := &proto.ServerInfo{}
 	info.ServerAddress = s.ServerAddress
-	info.ServerVersion = protocol.VersionValue
+	info.ServerVersion = proto.VersionValue
 	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
-	info.TrackerList = []protocol.ServerAddress{}
-	info.TopicTable = make(map[string]*protocol.TopicInfo)
+	info.TrackerList = []proto.ServerAddress{}
+	info.TopicTable = make(map[string]*proto.TopicInfo)
 	for key, mq := range s.MqTable {
 		info.TopicTable[key] = mq.TopicInfo()
 	}
@@ -170,13 +170,13 @@ func (s *Server) serverInfo() *protocol.ServerInfo {
 	return info
 }
 
-func (s *Server) trackerInfo() *protocol.TrackerInfo {
-	info := &protocol.TrackerInfo{}
+func (s *Server) trackerInfo() *proto.TrackerInfo {
+	info := &proto.TrackerInfo{}
 	info.ServerAddress = s.ServerAddress
-	info.ServerVersion = protocol.VersionValue
+	info.ServerVersion = proto.VersionValue
 	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
-	info.ServerTable = make(map[string]*protocol.ServerInfo)
+	info.ServerTable = make(map[string]*proto.ServerInfo)
 	if !s.trackerOnly {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
@@ -220,7 +220,7 @@ func main() {
 	addr = ServerAddress(addr) //get real server address if needs
 	server := newServer()
 	server.MqDir = mqDir
-	server.ServerAddress = &protocol.ServerAddress{addr, false}
+	server.ServerAddress = &proto.ServerAddress{addr, false}
 	server.trackerOnly = trackerOnly
 
 	mqTable, err := LoadMqTable(mqDir)

@@ -6,16 +6,16 @@ import (
 	"log"
 	"strings"
 
-	"./protocol"
+	"./proto"
 )
 
 var restCommands = []string{
-	protocol.Produce,
-	protocol.Consume,
-	protocol.Declare,
-	protocol.Query,
-	protocol.Remove,
-	protocol.Empty,
+	proto.Produce,
+	proto.Consume,
+	proto.Declare,
+	proto.Query,
+	proto.Remove,
+	proto.Empty,
 }
 
 func isRestCommand(cmd string) bool {
@@ -47,21 +47,21 @@ func NewServerHandler(server *Server) *ServerHandler {
 
 	s.handlerTable["favicon.ico"] = faviconHandler
 
-	s.handlerTable[protocol.Home] = homeHandler
-	s.handlerTable[protocol.Js] = jsHandler
-	s.handlerTable[protocol.Css] = cssHandler
-	s.handlerTable[protocol.Img] = imgHandler
-	s.handlerTable[protocol.Page] = pageHandler
-	s.handlerTable[protocol.Produce] = produceHandler
-	s.handlerTable[protocol.Consume] = consumeHandler
-	s.handlerTable[protocol.Declare] = declareHandler
-	s.handlerTable[protocol.Query] = queryHandler
-	s.handlerTable[protocol.Remove] = removeHandler
-	s.handlerTable[protocol.Empty] = emptyHandler
-	s.handlerTable[protocol.Tracker] = trackerHandler
-	s.handlerTable[protocol.Server] = serverHandler
-	s.handlerTable[protocol.TrackPub] = trackPubHandler
-	s.handlerTable[protocol.TrackSub] = trackSubHandler
+	s.handlerTable[proto.Home] = homeHandler
+	s.handlerTable[proto.Js] = jsHandler
+	s.handlerTable[proto.Css] = cssHandler
+	s.handlerTable[proto.Img] = imgHandler
+	s.handlerTable[proto.Page] = pageHandler
+	s.handlerTable[proto.Produce] = produceHandler
+	s.handlerTable[proto.Consume] = consumeHandler
+	s.handlerTable[proto.Declare] = declareHandler
+	s.handlerTable[proto.Query] = queryHandler
+	s.handlerTable[proto.Remove] = removeHandler
+	s.handlerTable[proto.Empty] = emptyHandler
+	s.handlerTable[proto.Tracker] = trackerHandler
+	s.handlerTable[proto.Server] = serverHandler
+	s.handlerTable[proto.TrackPub] = trackPubHandler
+	s.handlerTable[proto.TrackSub] = trackSubHandler
 	return s
 }
 
@@ -82,15 +82,15 @@ func (s *ServerHandler) OnError(err error, sess *Session) {
 
 //OnMessage when message available on socket
 func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
-	msg.Header[protocol.Sender] = sess.ID
-	msg.Header[protocol.Host] = s.serverAddress
-	if _, ok := msg.Header[protocol.Id]; !ok {
-		msg.Header[protocol.Id] = uuid()
+	msg.Header[proto.Sender] = sess.ID
+	msg.Header[proto.Host] = s.serverAddress
+	if _, ok := msg.Header[proto.Id]; !ok {
+		msg.Header[proto.Id] = uuid()
 	}
 
 	handleUrlMessage(msg)
 
-	cmd := msg.Header[protocol.Cmd]
+	cmd := msg.Header[proto.Cmd]
 	handler, ok := s.handlerTable[cmd]
 	if ok {
 		handler(s, msg, sess, msgType)
@@ -101,12 +101,12 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
 }
 
 func handleUrlMessage(msg *Message) {
-	if _, ok := msg.Header[protocol.Cmd]; ok {
+	if _, ok := msg.Header[proto.Cmd]; ok {
 		return
 	}
 	url := msg.Url
 	if url == "/" {
-		msg.Header[protocol.Cmd] = ""
+		msg.Header[proto.Cmd] = ""
 		return
 	}
 	idx := strings.IndexByte(url, '?')
@@ -124,21 +124,21 @@ func handleUrlMessage(msg *Message) {
 		rest := cmd[topicStart+1:]
 
 		cmd = cmd[0:topicStart]
-		if cmd == protocol.Rpc {
+		if cmd == proto.Rpc {
 			handleUrlRpc(msg, rest, kvstr)
 		} else if isRestCommand(cmd) {
 			bb := SplitClean(rest, "/")
 			if len(bb) > 0 {
-				msg.SetHeaderIfNone(protocol.Topic, bb[0])
+				msg.SetHeaderIfNone(proto.Topic, bb[0])
 			}
 			if len(bb) > 1 {
-				msg.SetHeaderIfNone(protocol.ConsumeGroup, bb[1])
+				msg.SetHeaderIfNone(proto.ConsumeGroup, bb[1])
 			}
 		}
 	}
-	msg.Header[protocol.Cmd] = strings.ToLower(cmd)
+	msg.Header[proto.Cmd] = strings.ToLower(cmd)
 
-	if cmd != protocol.Rpc && kvstr != "" {
+	if cmd != proto.Rpc && kvstr != "" {
 		handleUrlKVs(msg, kvstr)
 	}
 }
@@ -170,7 +170,7 @@ func handleUrlRpc(msg *Message, rest string, kvstr string) {
 	if len(bb) < 2 {
 		return //invalid
 	}
-	msg.SetHeaderIfNone(protocol.Topic, bb[0])
+	msg.SetHeaderIfNone(proto.Topic, bb[0])
 	method := bb[1]
 	var params []string
 	for i := 2; i < len(bb); i++ {
@@ -360,7 +360,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 		info = mq.TopicInfo()
 	}
 
-	protocol.AddServerContext(info, s.server.ServerAddress)
+	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess, msgType)
 }
@@ -388,7 +388,7 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 		info = groupInfo
 	}
 
-	protocol.AddServerContext(info, s.server.ServerAddress)
+	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess, msgType)
 }
@@ -445,7 +445,7 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res.Status = 200
 	info := s.server.serverInfo()
 
-	protocol.AddServerContext(info, s.server.ServerAddress)
+	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess, msgType)
 }

@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestNewMessageClient(t *testing.T) {
 	c := NewMessageClient("localhost:15555", nil)
