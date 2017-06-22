@@ -14,6 +14,7 @@ import (
 
 	"./proto"
 	"./websocket"
+	"io"
 )
 
 // Session abstract socket connection
@@ -190,12 +191,29 @@ func main() {
 	var (
 		addr        string
 		mqDir       string
+		logDir      string
 		trackerOnly bool
+		logToConsole bool
+		trackerList string
 	)
 	flag.StringVar(&addr, "addr", "0.0.0.0:15555", "Server address")
-	flag.StringVar(&mqDir, "dir", "/tmp/zbus", "Message Queue directory")
-	flag.BoolVar(&trackerOnly, "trackonly", false, "Server work as tracker only, or both tracker and mqserver")
+	flag.StringVar(&mqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
+	flag.StringVar(&logDir, "logdir", "", "Log file location")
+	flag.StringVar(&trackerList, "tracker", "", "Tracker list")
+	flag.BoolVar(&trackerOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+	flag.BoolVar(&logToConsole, "logconsole", true, "Log to console flag")
 	flag.Parse()
+
+	var logTargets []io.Writer
+	if logToConsole {
+		logTargets = append(logTargets, os.Stdout)
+	} 
+	if logDir != ""{  
+	}
+	if logTargets != nil{
+		w := io.MultiWriter(logTargets...)
+		log.SetOutput(w)
+	}
 
 	if _, err := os.Stat(mqDir); err != nil {
 		if err := os.MkdirAll(mqDir, 0644); err != nil {
@@ -220,8 +238,9 @@ func main() {
 	addr = ServerAddress(addr) //get real server address if needs
 	server := newServer()
 	server.MqDir = mqDir
-	server.ServerAddress = &proto.ServerAddress{addr, false}
 	server.trackerOnly = trackerOnly
+	server.ServerAddress = &proto.ServerAddress{addr, false}
+	server.TrackerList = SplitClean(trackerList, ";")
 
 	mqTable, err := LoadMqTable(mqDir)
 	if err != nil {

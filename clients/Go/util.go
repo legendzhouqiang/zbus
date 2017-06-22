@@ -43,6 +43,9 @@ func ReadAssetFile(file string) ([]byte, error) {
 
 //SplitClean splits string without empty
 func SplitClean(s string, sep string) []string {
+	if s == "" {
+		return []string{}
+	}
 	bb := strings.Split(s, sep)
 	var r []string
 	for _, str := range bb {
