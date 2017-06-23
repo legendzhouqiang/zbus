@@ -1,5 +1,5 @@
 #Websocket
 
-updated from Gorillia/websocket
+Modified from Gorillia/websocket
 
 https://github.com/gorilla/websocket
