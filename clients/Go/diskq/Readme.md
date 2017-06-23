@@ -19,20 +19,20 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 			   +------------------------------------------------+      |
 			   | MessageNumber                                 8|      |
 			   +------------------------------------------------+      |
-			   |               Extension                 to 1024|      |
+			   |               Extension               to 1024th|      |
 			   +------------------------------------------------+      |
-		       |0_createdTs | baseOffset | endOffset | updatedTs|<-----+
+		       |0_baseOffset | createdTs | endOffset | updatedTs|<-----+
 		       +------------------------------------------------+
-		  +--->|1_createdTs | baseOffset | endOffset | updatedTs|        BlockFile 00000000000000000000.zbus
+		  +--->|1_baseOffset | createdTs | endOffset | updatedTs|        BlockFile 00000000000000000000.zbus
 		  |    +------------------------------------------------+      +------->+---------------+                   DiskMessage Format  
 		  |    |                    ...                         |      |        | DiskMessage_0 |                   +----------------+ 
 		  |    +------------------------------------------------+      |        | DiskMessage_1 |                   | Offset        8| 
-		  |    |n_createdTs | baseOffset | endOffset | updatedTs|      |        | DiskMessage_2 |<---+              +----------------+ 
+		  |    |n_baseOffset | createdTs | endOffset | updatedTs|      |        | DiskMessage_2 |<---+              +----------------+ 
 		  |    +------------------------------------------------+      |        |       .       |    |              | Timestamp     8| 
-		  |           |            | [QueueWriter]                     |        |       .       |    |              +----------------+ 
-		  |           +----------- | ----------------------------------+        |       .       |    |              | Id           40| 
-		  |                        |                                            | DiskMessage_n |    |              +----------------+ 
-		  |                        +------------------------------------------->+---------------+    |              | CorrOffset    8| 
+		  |           |                      | [QueueWriter]           |        |       .       |    |              +----------------+ 
+		  |           +--------------------- | ------------------------+        |       .       |    |              | Id           40| 
+		  |                                  |                                  | DiskMessage_n |    |              +----------------+ 
+		  |                                  +--------------------------------->+---------------+    |              | CorrOffset    8| 
 		  |                                                                                          |              +----------------+ 
 		  |                                                                                          |              | MessageNumber 8| 
 		  | [QueueReader1] MappedFile                                                                |              +----------------+ 
@@ -41,7 +41,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 		        +---------------+                                                                    |              | Length        4| 
 		        | Offset       4|--------------------------------------------------------------------+              +----------------+ 
 		        +---------------+                                                                                   | Body          ?| 
-		        | Tag        128|                                                                                   +----------------+ 
+		        | Filter     128|                                                                                   +----------------+ 
 		        +---------------+ 
 		  ^ 
 	      | [QueueReader2] MappedFile                                                                ^ 
@@ -54,6 +54,7 @@ zbus file system targets to support Unicast, Multicast and Broadcast messaging m
 	            +---------------+  
             
 
+Both Index and QueueReader share the common format of mapped file for extension and mask/updated_ts/created_ts
 
 
 						 Common MappedFile Header(1024)
@@ -88,9 +89,9 @@ BlockCount is the number of block available to read in the index.
 
 BlockStart is the start block number which is valid to read/write, initialized as 0, incremented if any history blocks deleted.   The real slot in the index file is mapped by **blockNumber%MaxBlockCount**
 
-MessageCount is total message counter since Index created.
+MessageNumber is total message counter since Index created.
 
-Flag is used by the application to set special meaning
+Mask is used by the application to set special meaning
 
 Extension is managed as key-value pairs, such as storing index's creator information.
 
@@ -104,7 +105,7 @@ DiskMessage's tag is employed to filter on reading message, which is useful for 
 
 * **BlockNumber**, the slot number in Index
 * **Offset**, the next read offset in the block
-* **Filter**, filter on message's tag to read, default to null
+* **Filter**, filter on message's tag to read, default to null, very useful for pubsub on topic
 
 **QueueWriter**
 

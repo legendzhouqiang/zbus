@@ -18,8 +18,8 @@ import (
 type MessageQueue struct {
 	index   *diskq.Index
 	name    string
-	writer  *diskq.QueueWriter
-	readers map[string]*diskq.QueueReader
+	writer  *diskq.QueueWriter            //for Producer to write
+	readers map[string]*diskq.QueueReader //also known as ConsumeGroup
 }
 
 //LoadMqTable load MQ from based directory
