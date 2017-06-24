@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"net"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -136,4 +137,14 @@ func LocalIPAddress() (net.IP, error) {
 	}
 	sort.Sort(byIP(addresses))
 	return addresses[0], nil
+}
+
+//EnsureDir create dir if not exists
+func EnsureDir(dir string) error {
+	if _, err := os.Stat(dir); err != nil {
+		if err := os.MkdirAll(dir, 0644); err != nil {
+			return err
+		}
+	}
+	return nil
 }

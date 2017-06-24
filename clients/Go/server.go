@@ -12,9 +12,10 @@ import (
 
 	"time"
 
+	"io"
+
 	"./proto"
 	"./websocket"
-	"io"
 )
 
 // Session abstract socket connection
@@ -56,6 +57,10 @@ func (s *Session) WriteMessage(msg *Message, msgType *int) error {
 	buf := new(bytes.Buffer)
 	msg.EncodeMessage(buf)
 	if s.isWebsocket {
+		if msgType == nil {
+			msgType = &[]int{websocket.BinaryMessage}[0]
+			println("fucked====================================================================")
+		}
 		return s.wsConn.WriteMessage(*msgType, buf.Bytes())
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
@@ -101,7 +106,7 @@ outter:
 			if IsWebSocketUpgrade(req.Header) {
 				wsConn, err = upgrader.Upgrade(conn, req)
 				if err == nil {
-					log.Printf("Upgraded to websocket: %s\n", req)
+					//log.Printf("Upgraded to websocket: %s\n", req)
 					session.Upgrade(wsConn)
 					break outter
 				}
@@ -145,8 +150,9 @@ type Server struct {
 	TrackerList []string
 
 	infoVersion int64
-
 	trackerOnly bool
+
+	tracker *Tracker
 }
 
 func newServer() *Server {
@@ -168,6 +174,7 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 		info.TopicTable[key] = mq.TopicInfo()
 	}
 
+	proto.AddServerContext(info, s.ServerAddress)
 	return info
 }
 
@@ -178,51 +185,68 @@ func (s *Server) trackerInfo() *proto.TrackerInfo {
 	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
 	info.ServerTable = make(map[string]*proto.ServerInfo)
+	for key, serverInfo := range s.tracker.serverTable {
+		info.ServerTable[key] = serverInfo
+	}
 	if !s.trackerOnly {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
-
 	return info
+}
+
+//Options stores the conguration for server
+type Options struct {
+	Address      string
+	MqDir        string
+	LogDir       string
+	CertFileDir  string
+	LogToConsole bool
+	Verbose      bool
+	TrackOnly    bool
+	TrackerList  string
+}
+
+//NewOptions creates default configuration
+func NewOptions() *Options {
+	opt := &Options{}
+	opt.Address = "0.0.0.0:15555"
+	opt.MqDir = "/tmp/zbus"
+	opt.TrackOnly = false
+	opt.Verbose = true
+
+	return opt
 }
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
-	var (
-		addr        string
-		mqDir       string
-		logDir      string
-		trackerOnly bool
-		logToConsole bool
-		trackerList string
-	)
-	flag.StringVar(&addr, "addr", "0.0.0.0:15555", "Server address")
-	flag.StringVar(&mqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
-	flag.StringVar(&logDir, "logdir", "", "Log file location")
-	flag.StringVar(&trackerList, "tracker", "", "Tracker list")
-	flag.BoolVar(&trackerOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
-	flag.BoolVar(&logToConsole, "logconsole", true, "Log to console flag")
+	opt := NewOptions()
+	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
+	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
+	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list")
+	flag.BoolVar(&opt.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+
 	flag.Parse()
 
 	var logTargets []io.Writer
-	if logToConsole {
+	if opt.LogToConsole {
 		logTargets = append(logTargets, os.Stdout)
-	} 
-	if logDir != ""{  
 	}
-	if logTargets != nil{
+	if opt.LogDir != "" {
+
+	}
+	if logTargets != nil {
 		w := io.MultiWriter(logTargets...)
 		log.SetOutput(w)
 	}
 
-	if _, err := os.Stat(mqDir); err != nil {
-		if err := os.MkdirAll(mqDir, 0644); err != nil {
-			log.Println("MqDir creation failed:", err.Error())
-			return
-		}
+	if err := EnsureDir(opt.MqDir); err != nil {
+		log.Printf("MqDir(%s) creation failed:%s", opt.MqDir, err.Error())
+		return
 	}
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", opt.Address)
 	if err != nil {
 		log.Println("Error addres:", err.Error())
 		return
@@ -234,20 +258,24 @@ func main() {
 	}
 	defer fd.Close()
 
-	log.Println("Listening on " + addr)
-	addr = ServerAddress(addr) //get real server address if needs
+	log.Println("Listening on " + opt.Address)
+	addr := ServerAddress(opt.Address) //get real server address if needs
 	server := newServer()
-	server.MqDir = mqDir
-	server.trackerOnly = trackerOnly
+	server.MqDir = opt.MqDir
+	server.trackerOnly = opt.TrackOnly
 	server.ServerAddress = &proto.ServerAddress{addr, false}
-	server.TrackerList = SplitClean(trackerList, ";")
+	server.TrackerList = SplitClean(opt.TrackerList, ";")
 
-	mqTable, err := LoadMqTable(mqDir)
+	mqTable, err := LoadMqTable(server.MqDir)
 	if err != nil {
 		log.Println("Error loading MQ table: ", err.Error())
 		return
 	}
 	server.MqTable = mqTable
+
+	tracker := NewTracker(server)
+	tracker.JoinUpstreams(opt.TrackerList)
+	server.tracker = tracker
 
 	handler := NewServerHandler(server)
 	for {

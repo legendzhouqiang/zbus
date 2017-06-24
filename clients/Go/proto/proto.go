@@ -139,6 +139,12 @@ type ConsumeGroupInfo struct {
 	LastUpdatedTime int64    `json:"lastUpdatedTime"`
 }
 
+//ServerEvent updates to tracker
+type ServerEvent struct {
+	ServerInfo *ServerInfo `json:"serverInfo"`
+	Live       bool        `json:"live"`
+}
+
 //AddServerContext generic way TOFIX
 func AddServerContext(t interface{}, address *ServerAddress) {
 	switch t.(type) {

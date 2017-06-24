@@ -34,6 +34,7 @@ type ServerHandler struct {
 
 	serverAddress string
 	server        *Server
+	tracker       *Tracker
 }
 
 //NewServerHandler create ServerSessionHandler
@@ -43,6 +44,7 @@ func NewServerHandler(server *Server) *ServerHandler {
 		handlerTable:  make(map[string]func(*ServerHandler, *Message, *Session, *int)),
 		serverAddress: server.ServerAddress.Address,
 		server:        server,
+		tracker:       server.tracker,
 	}
 
 	s.handlerTable["favicon.ico"] = faviconHandler
@@ -73,11 +75,17 @@ func (s *ServerHandler) Created(sess *Session) {
 //ToDestroy when connection from client going to close
 func (s *ServerHandler) ToDestroy(sess *Session) {
 	log.Printf("Session(%s) Destroyed", sess)
+	s.cleanSession(sess)
 }
 
 //OnError when socket error occured
 func (s *ServerHandler) OnError(err error, sess *Session) {
 	log.Printf("Session(%s) Error: %s", sess, err)
+	s.cleanSession(sess)
+}
+
+func (s *ServerHandler) cleanSession(sess *Session) {
+	s.tracker.CleanSession(sess)
 }
 
 //OnMessage when message available on socket
@@ -444,8 +452,6 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res := NewMessage()
 	res.Status = 200
 	info := s.server.serverInfo()
-
-	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess, msgType)
 }

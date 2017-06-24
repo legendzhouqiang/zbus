@@ -155,6 +155,22 @@ func (c *MessageClient) Recv(msgid *string) (*Message, error) {
 	}
 }
 
+//EnsureConnected trying to connect the client util success
+func (c *MessageClient) EnsureConnected(notify chan bool) {
+	go func() {
+		for {
+			err := c.Connect()
+			if err == nil {
+				break
+			}
+			time.Sleep(c.timeout)
+		}
+		if notify != nil {
+			notify <- true
+		}
+	}()
+}
+
 //Start a goroutine to recv message from server
 func (c *MessageClient) Start(notify chan bool) {
 	c.autoReconnect = true
@@ -175,6 +191,9 @@ func (c *MessageClient) Start(notify chan bool) {
 			c.close()
 			if c.onDisconnected != nil {
 				c.onDisconnected(c)
+			}
+			if !c.autoReconnect {
+				break for_loop
 			}
 
 			time.Sleep(c.timeout)
