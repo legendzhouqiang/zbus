@@ -31,7 +31,7 @@ func isRestCommand(cmd string) bool {
 type ServerHandler struct {
 	SessionTable        SyncMap                                             //Safe
 	handlerTable        map[string]func(*ServerHandler, *Message, *Session) //readonly
-	consumeSessionTable map[string]map[string]*Session                      //topic=>consumeSession table
+	consumeSessionTable SyncMap                                             //topic=>consumeSession table
 
 	serverAddress string
 	server        *Server
@@ -42,7 +42,7 @@ type ServerHandler struct {
 func NewServerHandler(server *Server) *ServerHandler {
 	s := &ServerHandler{}
 	s.SessionTable.Map = make(map[string]interface{})
-	s.consumeSessionTable = make(map[string]map[string]*Session)
+	s.consumeSessionTable.Map = make(map[string]interface{})
 	s.handlerTable = make(map[string]func(*ServerHandler, *Message, *Session))
 	s.serverAddress = server.ServerAddress.Address
 	s.server = server
@@ -91,19 +91,19 @@ func (s *ServerHandler) OnError(err error, sess *Session) {
 
 func (s *ServerHandler) cleanSession(sess *Session) {
 	s.tracker.CleanSession(sess)
-	topic := sess.Attrs[proto.Topic]
+	topic, _ := sess.Attrs.Get(proto.Topic).(string)
 	if topic != "" {
 		s.tracker.Publish()
-		topicSessTable := s.consumeSessionTable[topic]
+		topicSessTable, _ := s.consumeSessionTable.Get(topic).(*SyncMap)
 		if topicSessTable != nil {
-			delete(topicSessTable, sess.ID)
+			topicSessTable.Remove(sess.ID)
 		}
 	}
 	s.SessionTable.Remove(sess.ID)
 }
 
 func (s *ServerHandler) cleanMq(topic string) {
-	delete(s.consumeSessionTable, topic)
+	s.consumeSessionTable.Remove(topic)
 }
 
 //OnMessage when message available on socket
@@ -213,56 +213,6 @@ func handleUrlRpc(msg *Message, rest string, kvstr string) {
 	msg.SetBody(data)
 }
 
-func renderFile(file string, contentType string, s *ServerHandler, msg *Message, sess *Session) {
-	res := NewMessage()
-	if file == "" {
-		url := msg.Url
-		bb := SplitClean(url, "/")
-		if len(bb) > 1 {
-			file = bb[1]
-		}
-	}
-
-	data, err := ReadAssetFile(file)
-	if err != nil {
-		res.Status = 404
-		res.SetBodyString("File(%s) error: %s", file, err)
-	} else {
-		res.Status = 200
-		res.SetBody(data)
-	}
-	res.SetHeader("content-type", contentType)
-	sess.WriteMessage(res)
-}
-
-func homeHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("home.htm", "text/html", s, msg, sess)
-}
-
-func faviconHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("logo.svg", "image/svg+xml", s, msg, sess)
-}
-
-func jsHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("", "application/javascript", s, msg, sess)
-}
-
-func cssHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("", "text/css", s, msg, sess)
-}
-
-func imgHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("", "image/svg+xml", s, msg, sess)
-}
-
-func pageHandler(s *ServerHandler, msg *Message, sess *Session) {
-	renderFile("", "text/html", s, msg, sess)
-}
-
-func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session) {
-	//just ignore
-}
-
 func auth(s *ServerHandler, msg *Message, sess *Session) bool {
 	return true
 }
@@ -313,21 +263,21 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 		group = topic
 	}
 	newConsumer := false
-	/*
-		topicSessTable := s.consumeSessionTable[topic]
+	topicSessTable, _ := s.consumeSessionTable.Get(topic).(*SyncMap)
 
-		if topicSessTable == nil {
+	if topicSessTable == nil {
+		newConsumer = true
+		topicSessTable = &SyncMap{Map: make(map[string]interface{})}
+		s.consumeSessionTable.Set(topic, topicSessTable)
+	} else {
+		consumeSess := topicSessTable.Get(sess.ID)
+		if consumeSess == nil {
 			newConsumer = true
-			topicSessTable = make(map[string]*Session)
-			s.consumeSessionTable[topic] = topicSessTable
-		} else {
-			consumeSess := topicSessTable[sess.ID]
-			if consumeSess == nil {
-				newConsumer = true
-			}
 		}
-		topicSessTable[sess.ID] = sess
-	*/
+	}
+	sess.Attrs.Set(proto.Topic, topic)
+	topicSessTable.Set(sess.ID, sess)
+
 	resp, status, err := mq.Read(group)
 	if err != nil {
 		resp = NewMessageStatus(status, err.Error())
@@ -360,12 +310,11 @@ func routeHandler(s *ServerHandler, req *Message, sess *Session) {
 		log.Printf("Warn: missing recver")
 		return //ignore
 	}
-	t := s.SessionTable.Get(recver)
-	if t == nil {
+	target, _ := s.SessionTable.Get(recver).(*Session)
+	if target == nil {
 		log.Printf("Warn: missing target(%s)", recver)
 		return //ignore
 	}
-	target := t.(*Session)
 
 	req.RemoveHeader(proto.Ack)
 	req.RemoveHeader(proto.Recver)
@@ -544,4 +493,87 @@ func replyJson(status int, msgid string, body string, sess *Session) {
 	resp.SetId(msgid)
 	resp.SetJsonBody(body)
 	sess.WriteMessage(resp)
+}
+
+func renderFile(file string, contentType string, s *ServerHandler, msg *Message, sess *Session) {
+	res := NewMessage()
+	if file == "" {
+		url := msg.Url
+		bb := SplitClean(url, "/")
+		if len(bb) > 1 {
+			file = bb[1]
+		}
+	}
+
+	data, err := ReadAssetFile(file)
+	if err != nil {
+		res.Status = 404
+		res.SetBodyString("File(%s) error: %s", file, err)
+	} else {
+		res.Status = 200
+		res.SetBody(data)
+	}
+	res.SetHeader("content-type", contentType)
+	sess.WriteMessage(res)
+}
+
+func homeHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("home.htm", "text/html", s, msg, sess)
+}
+
+func faviconHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("logo.svg", "image/svg+xml", s, msg, sess)
+}
+
+func jsHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "application/javascript", s, msg, sess)
+}
+
+func cssHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "text/css", s, msg, sess)
+}
+
+func imgHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "image/svg+xml", s, msg, sess)
+}
+
+func pageHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "text/html", s, msg, sess)
+}
+
+func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session) {
+	//just ignore
+}
+
+func (s *ServerHandler) addServerContext(t interface{}) {
+	switch t.(type) {
+	case *proto.TopicInfo:
+		info := t.(*proto.TopicInfo)
+		info.ServerAddress = s.server.ServerAddress
+		info.ServerVersion = proto.VersionValue
+
+		topicSessTable, _ := s.consumeSessionTable.Get(info.TopicName).(*SyncMap)
+		if topicSessTable == nil {
+			break
+		}
+
+	case *proto.ServerInfo:
+		info := t.(*proto.ServerInfo)
+		info.ServerAddress = s.server.ServerAddress
+		info.ServerVersion = proto.VersionValue
+		for _, topicInfo := range info.TopicTable {
+			s.addServerContext(topicInfo)
+		}
+	case *proto.TrackerInfo:
+		info := t.(*proto.TrackerInfo)
+		info.ServerAddress = s.server.ServerAddress
+		info.ServerVersion = proto.VersionValue
+		for _, serverInfo := range info.ServerTable {
+			s.addServerContext(serverInfo)
+		}
+	}
+}
+
+//topic=> consumeGroup =>
+type consumeSessionTable struct {
 }

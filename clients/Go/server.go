@@ -19,7 +19,7 @@ import (
 // Session abstract socket connection
 type Session struct {
 	ID    string
-	Attrs map[string]string
+	Attrs SyncMap
 
 	netConn     net.Conn
 	wsConn      websocket.Conn
@@ -30,7 +30,6 @@ type Session struct {
 func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess := &Session{}
 	sess.ID = uuid()
-	sess.Attrs = make(map[string]string)
 	if netConn != nil {
 		sess.isWebsocket = false
 		sess.netConn = *netConn
