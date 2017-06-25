@@ -109,7 +109,7 @@ outter:
 				}
 			}
 
-			handler.OnMessage(req, session)
+			go handler.OnMessage(req, session)
 		}
 	}
 
@@ -131,7 +131,7 @@ outter:
 			if IsWebSocketUpgrade(req.Header) {
 				continue
 			}
-			handler.OnMessage(req, session)
+			go handler.OnMessage(req, session)
 		}
 	}
 	handler.ToDestroy(session)

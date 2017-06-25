@@ -99,7 +99,7 @@ func (u *Upgrader) returnError(netConn net.Conn, status int, reason string) (*we
 
 	resp := NewMessage()
 	resp.Status = status
-	resp.Header["sec-websocket-version"] = "13"
+	resp.SetHeader("sec-websocket-version", "13")
 
 	bufWrite := new(bytes.Buffer)
 	resp.EncodeMessage(bufWrite)
@@ -137,7 +137,7 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 		return u.returnError(netConn, 403, "websocket: 'Origin' header value not allowed")
 	}
 
-	challengeKey := req.Header["sec-websocket-key"]
+	challengeKey := req.GetHeader("sec-websocket-key")
 	if challengeKey == "" {
 		return u.returnError(netConn, 400, "websocket: not a websocket handshake: `Sec-Websocket-Key' header is missing or blank")
 	}
@@ -151,11 +151,11 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 
 	resp := NewMessage()
 	resp.Status = 101
-	resp.Header["Upgrade"] = "websocket"
-	resp.Header["Connection"] = "Upgrade"
-	resp.Header["Sec-WebSocket-Accept"] = computeAcceptKey(challengeKey)
+	resp.SetHeader("Upgrade", "websocket")
+	resp.SetHeader("Connection", "Upgrade")
+	resp.SetHeader("Sec-WebSocket-Accept", computeAcceptKey(challengeKey))
 	if subprotocol != "" {
-		resp.Header["Sec-Websocket-Protocol"] = wsConn.Subprotocol()
+		resp.SetHeader("Sec-Websocket-Protocol", wsConn.Subprotocol())
 	}
 	netConn.SetDeadline(time.Time{})
 	if u.HandshakeTimeout > 0 {

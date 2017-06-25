@@ -188,6 +188,12 @@ func (m *Message) RemoveHeader(key string) {
 	delete(m.Header, key)
 }
 
+//InHeader test if key in header
+func (m *Message) InHeader(key string) bool {
+	_, ok := m.Header[key]
+	return ok
+}
+
 //Cmd key=cmd
 func (m *Message) Cmd() string {
 	return m.GetHeader(proto.Cmd)

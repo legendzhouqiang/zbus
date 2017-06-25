@@ -108,19 +108,18 @@ func (s *ServerHandler) cleanMq(topic string) {
 
 //OnMessage when message available on socket
 func (s *ServerHandler) OnMessage(msg *Message, sess *Session) {
-	msg.Header[proto.Sender] = sess.ID
-	msg.Header[proto.Host] = s.serverAddress
-	if _, ok := msg.Header[proto.Id]; !ok {
-		msg.Header[proto.Id] = uuid()
+	msg.SetHeader(proto.Sender, sess.ID)
+	msg.SetHeader(proto.Host, s.serverAddress)
+	if msg.Id() == "" {
+		msg.SetId(uuid())
 	}
-
 	if msg.Cmd() != proto.Heartbeat {
 		//log.Printf(msg.String())
 	}
 
 	handleUrlMessage(msg)
 
-	cmd := msg.Header[proto.Cmd]
+	cmd := msg.Cmd()
 	handler, ok := s.handlerTable[cmd]
 	if ok {
 		handler(s, msg, sess)
@@ -131,12 +130,11 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session) {
 }
 
 func handleUrlMessage(msg *Message) {
-	if _, ok := msg.Header[proto.Cmd]; ok {
+	if msg.InHeader(proto.Cmd) {
 		return
 	}
 	url := msg.Url
 	if url == "/" {
-		msg.Header[proto.Cmd] = ""
 		return
 	}
 	idx := strings.IndexByte(url, '?')
@@ -166,7 +164,7 @@ func handleUrlMessage(msg *Message) {
 			}
 		}
 	}
-	msg.Header[proto.Cmd] = strings.ToLower(cmd)
+	msg.SetCmd(strings.ToLower(cmd))
 
 	if cmd != proto.Rpc && kvstr != "" {
 		handleUrlKVs(msg, kvstr)
@@ -210,7 +208,7 @@ func handleUrlRpc(msg *Message, rest string, kvstr string) {
 	for i := 2; i < len(bb); i++ {
 		params = append(params, bb[i])
 	}
-	req := &request{method, params, msg.Header["module"]}
+	req := &request{method, params, msg.GetHeader("module")}
 	data, _ := json.Marshal(req)
 	msg.SetBody(data)
 }
@@ -233,7 +231,7 @@ func renderFile(file string, contentType string, s *ServerHandler, msg *Message,
 		res.Status = 200
 		res.SetBody(data)
 	}
-	res.Header["content-type"] = contentType
+	res.SetHeader("content-type", contentType)
 	sess.WriteMessage(res)
 }
 
@@ -362,11 +360,13 @@ func routeHandler(s *ServerHandler, req *Message, sess *Session) {
 		log.Printf("Warn: missing recver")
 		return //ignore
 	}
-	target := s.SessionTable.Get(recver).(*Session)
-	if target == nil {
+	t := s.SessionTable.Get(recver)
+	if t == nil {
 		log.Printf("Warn: missing target(%s)", recver)
 		return //ignore
 	}
+	target := t.(*Session)
+
 	req.RemoveHeader(proto.Ack)
 	req.RemoveHeader(proto.Recver)
 	req.RemoveHeader(proto.Cmd)
