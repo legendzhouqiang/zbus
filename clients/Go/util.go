@@ -179,7 +179,7 @@ func LocalIPAddress() (net.IP, error) {
 //EnsureDir create dir if not exists
 func EnsureDir(dir string) error {
 	if _, err := os.Stat(dir); err != nil {
-		if err := os.MkdirAll(dir, 0644); err != nil {
+		if err := os.MkdirAll(dir, 0777); err != nil {
 			return err
 		}
 	}

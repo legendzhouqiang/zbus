@@ -298,7 +298,7 @@ func (q *MessageQueue) findLatesReader() *diskq.QueueReader {
 }
 func (q *MessageQueue) loadReaders() error {
 	readerDir := q.index.ReaderDir()
-	if err := os.MkdirAll(readerDir, 0644); err != nil {
+	if err := os.MkdirAll(readerDir, 0777); err != nil {
 		return err
 	}
 	files, err := ioutil.ReadDir(readerDir)

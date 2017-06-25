@@ -239,10 +239,10 @@ type MappedBuf struct {
 //NewMappedBuf MappedBuf from file
 func NewMappedBuf(fileName string, length int) (*MappedBuf, error) {
 	dir := filepath.Dir(fileName)
-	if err := os.MkdirAll(dir, 0644); err != nil {
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
 	}
-	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		return nil, err
 	}

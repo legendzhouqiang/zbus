@@ -25,7 +25,7 @@ func init() {
 }
 
 func openFile(flags int) *os.File {
-	f, err := os.OpenFile(testPath, flags, 0644)
+	f, err := os.OpenFile(testPath, flags, 0777)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -108,7 +108,7 @@ func TestNonZeroOffset(t *testing.T) {
 
 	// Create a 2-page sized file
 	bigFilePath := filepath.Join(os.TempDir(), "nonzero")
-	fileobj, err := os.OpenFile(bigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	fileobj, err := os.OpenFile(bigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		panic(err.Error())
 	}

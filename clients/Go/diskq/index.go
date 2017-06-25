@@ -103,10 +103,10 @@ func (idx *Index) loadBlock(blockNo int64) (*Block, error) {
 	offset := idx.readOffset(blockNo)
 	blockName := fmt.Sprintf("%020d%s", offset.BaseOffset, BlockSuffix)
 	blockDir := filepath.Join(idx.dirPath, BlockDir)
-	if err := os.MkdirAll(blockDir, 0644); err != nil {
+	if err := os.MkdirAll(blockDir, 0777); err != nil {
 		return nil, err
 	}
-	file, err := os.OpenFile(filepath.Join(blockDir, blockName), os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(filepath.Join(blockDir, blockName), os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		return nil, err
 	}

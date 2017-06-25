@@ -35,10 +35,12 @@ func mmap(len int, inprot, inflags, fd uintptr, off int64) ([]byte, error) {
 }
 
 func flush(addr, len uintptr) error {
-	_, _, errno := syscall.Syscall(_SYS_MSYNC, addr, len, _MS_SYNC)
-	if errno != 0 {
-		return syscall.Errno(errno)
-	}
+	/*
+		_, _, errno := syscall.Syscall(_SYS_MSYNC, addr, len, _MS_SYNC)
+		if errno != 0 {
+			return syscall.Errno(errno)
+		}
+	*/
 	return nil
 }
 
