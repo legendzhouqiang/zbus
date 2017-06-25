@@ -7,14 +7,51 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
+
+//SyncMap safe map
+type SyncMap struct {
+	Map map[string]interface{}
+	sync.RWMutex
+}
+
+//Get by key
+func (m *SyncMap) Get(key string) interface{} {
+	m.RLock()
+	defer m.RUnlock()
+	return m.Map[key]
+}
+
+//Set key-value pair
+func (m *SyncMap) Set(key string, val interface{}) {
+	m.Lock()
+	defer m.Unlock()
+	m.Map[key] = val
+}
+
+//Remove key
+func (m *SyncMap) Remove(key string) interface{} {
+	m.Lock()
+	defer m.Unlock()
+	val := m.Map[key]
+	delete(m.Map, key)
+	return val
+}
+
+//Clear all key-values
+func (m *SyncMap) Clear() {
+	m.Lock()
+	defer m.Unlock()
+	m.Map = make(map[string]interface{})
+}
 
 //UUID generate psudo uuid string
 func uuid() string {
 	b := make([]byte, 16)
 	rand.Read(b)
-	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
 //CurrMillis returns current milliseconds of Unix time

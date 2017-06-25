@@ -16,10 +16,11 @@ import (
 
 //MessageQueue writer + N readers
 type MessageQueue struct {
-	index   *diskq.Index
-	name    string
-	writer  *diskq.QueueWriter            //for Producer to write
-	readers map[string]*diskq.QueueReader //also known as ConsumeGroup
+	index    *diskq.Index
+	name     string
+	writer   *diskq.QueueWriter //for Producer to write
+	readers  SyncMap            //also known as ConsumeGroup, string=>*diskq.QueueReader
+	avaiable chan bool
 }
 
 //LoadMqTable load MQ from based directory
@@ -58,6 +59,7 @@ func NewMessageQueue(baseDir string, name string) (*MessageQueue, error) {
 		return nil, err
 	}
 	q := &MessageQueue{}
+	q.avaiable = make(chan bool)
 	q.index = index
 	q.name = q.index.Name()
 	q.writer, err = diskq.NewQueueWriter(index)
@@ -65,7 +67,7 @@ func NewMessageQueue(baseDir string, name string) (*MessageQueue, error) {
 		q.Close()
 		return nil, err
 	}
-	q.readers = make(map[string]*diskq.QueueReader)
+	q.readers.Map = make(map[string]interface{})
 	err = q.loadReaders()
 	if err != nil {
 		q.Close()
@@ -80,14 +82,17 @@ func (q *MessageQueue) Close() {
 		q.writer.Close()
 		q.writer = nil
 	}
-	for _, r := range q.readers {
+	q.readers.Lock()
+	defer q.readers.Unlock()
+	for _, g := range q.readers.Map {
+		r := g.(*diskq.QueueReader)
 		r.Close()
 	}
 	if q.index != nil {
 		q.index.Close()
 		q.index = nil
 	}
-	q.readers = make(map[string]*diskq.QueueReader)
+	q.readers.Map = nil
 }
 
 //Produce a message to MQ
@@ -100,6 +105,16 @@ func (q *MessageQueue) Write(msg *Message) error {
 	data.Body = buf.Bytes()
 
 	_, err := q.writer.Write(data)
+
+	q.readers.Lock()
+	defer q.readers.Unlock()
+	for _, g := range q.readers.Map {
+		r := g.(*diskq.QueueReader)
+		select {
+		case r.Available <- true:
+		default: //ignore
+		}
+	}
 	return err
 }
 
@@ -129,7 +144,7 @@ func (q *MessageQueue) Read(group string) (*Message, int, error) {
 	if group == "" {
 		group = q.name //default to topic name
 	}
-	r := q.readers[group]
+	r, _ := q.readers.Get(group).(*diskq.QueueReader)
 	if r == nil {
 		return nil, 404, fmt.Errorf("ConsumeGroup(%s) not found", group)
 	}
@@ -138,7 +153,8 @@ func (q *MessageQueue) Read(group string) (*Message, int, error) {
 		return nil, 500, err
 	}
 	if data == nil {
-		return nil, 200, nil
+		<-r.Available //wait for signal
+		return q.Read(group)
 	}
 	buf := bytes.NewBuffer(data.Body)
 	return DecodeMessage(buf), 200, nil
@@ -150,12 +166,12 @@ func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInf
 	if groupName == "" {
 		groupName = q.name
 	}
-	g, _ := q.readers[groupName]
+	g, _ := q.readers.Get(groupName).(*diskq.QueueReader)
 	if g == nil { //Create new consume group reader
 		var g2 *diskq.QueueReader
 		var err error
 		if group.StartCopy != nil {
-			g2, _ = q.readers[*group.StartCopy]
+			g2, _ = q.readers.Get(*group.StartCopy).(*diskq.QueueReader)
 		}
 		if g2 == nil {
 			g2 = q.findLatesReader()
@@ -171,7 +187,7 @@ func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInf
 				return nil, err
 			}
 		}
-		q.readers[groupName] = g
+		q.readers.Set(groupName, g)
 	}
 
 	if group.Filter != nil {
@@ -187,13 +203,13 @@ func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInf
 
 //RemoveGroup remove a consume group
 func (q *MessageQueue) RemoveGroup(group string) error {
-	g, _ := q.readers[group]
+	g := q.readers.Remove(group)
 	if g == nil {
 		return nil
 	}
-	delete(q.readers, group)
-	groupFile := g.File()
-	g.Close()
+	r, _ := g.(*diskq.QueueReader)
+	groupFile := r.File()
+	r.Close()
 	return os.Remove(groupFile)
 }
 
@@ -214,7 +230,10 @@ func (q *MessageQueue) TopicInfo() *proto.TopicInfo {
 	info.CreatedTime = q.index.CreatedTime()
 	info.LastUpdatedTime = q.index.UpdatedTime()
 	info.ConsumeGroupList = []*proto.ConsumeGroupInfo{}
-	for _, r := range q.readers {
+	q.readers.RLock()
+	defer q.readers.RUnlock()
+	for _, g := range q.readers.Map {
+		r, _ := g.(*diskq.QueueReader)
 		groupInfo := q.groupInfo(r)
 		info.ConsumeGroupList = append(info.ConsumeGroupList, groupInfo)
 	}
@@ -224,7 +243,7 @@ func (q *MessageQueue) TopicInfo() *proto.TopicInfo {
 
 //GroupInfo returns consume group info
 func (q *MessageQueue) GroupInfo(group string) *proto.ConsumeGroupInfo {
-	g, _ := q.readers[group]
+	g, _ := q.readers.Get(group).(*diskq.QueueReader)
 	if g != nil {
 		return q.groupInfo(g)
 	}
@@ -233,7 +252,7 @@ func (q *MessageQueue) GroupInfo(group string) *proto.ConsumeGroupInfo {
 
 //ConsumeGroup returns reader for the consume group
 func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
-	g, _ := q.readers[group]
+	g, _ := q.readers.Get(group).(*diskq.QueueReader)
 	return g
 }
 
@@ -254,7 +273,11 @@ func (q *MessageQueue) groupInfo(g *diskq.QueueReader) *proto.ConsumeGroupInfo {
 
 func (q *MessageQueue) findLatesReader() *diskq.QueueReader {
 	var t *diskq.QueueReader
-	for _, r := range q.readers {
+	q.readers.RLock()
+	defer q.readers.RUnlock()
+	for _, g := range q.readers.Map {
+		r, _ := g.(*diskq.QueueReader)
+
 		if t == nil {
 			t = r
 			continue
@@ -295,7 +318,7 @@ func (q *MessageQueue) loadReaders() error {
 		if err != nil {
 			log.Printf("Reader %s load error: %s", fileName, err)
 		}
-		q.readers[name] = r
+		q.readers.Set(name, r)
 	}
 	return nil
 }

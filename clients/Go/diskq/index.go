@@ -43,7 +43,7 @@ type Index struct {
 	version    int32
 	blockCount int32
 	blockStart int64
-	msgNo      int64
+	msgNo      int64 //next message number to write, start from 0, so msgNo also means total count
 }
 
 //NewIndex create index file

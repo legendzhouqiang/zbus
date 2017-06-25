@@ -14,6 +14,7 @@ const (
 //QueueReader to read from Queue
 type QueueReader struct {
 	*MappedFile
+	Available chan bool
 
 	group       string
 	offset      int32
@@ -46,6 +47,7 @@ func newQueueReader(index *Index, copy *QueueReader, group string) (*QueueReader
 	r.MappedFile = m
 	r.group = group
 	r.index = index
+	r.Available = make(chan bool)
 
 	if copy == nil {
 		if r.newFile {
@@ -115,7 +117,11 @@ func (r *QueueReader) MsgNo() int64 {
 
 //MsgCount remaining message count
 func (r *QueueReader) MsgCount() int64 {
-	return r.index.MsgNo() - r.msgNo
+	c := r.index.MsgNo() - r.msgNo - 1
+	if c < 0 {
+		c = 0 //initialized index
+	}
+	return c
 }
 
 //Name returns reader/group name

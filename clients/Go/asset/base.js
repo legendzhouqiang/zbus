@@ -57,6 +57,11 @@ function showServerTable(serverInfoTable, filterServerList, trackerAddress){
 }  
 
 function consumeGroupList(groupList){ 
+	groupList.sort(function(g1, g2){
+		if (g1.groupName < g2.groupName) return -1;
+		if (g1.groupName > g2.groupName) return 1;
+		return 0;
+	});
 	var res = "";
 	for(var i in groupList){ 
 		var group = groupList[i];

@@ -63,8 +63,6 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 			event := &proto.ServerEvent{}
 			event.ServerInfo = t.server.serverInfo()
 			event.Live = true
-			//Add server address, ugly?!!
-			proto.AddServerContext(event.ServerInfo, t.server.ServerAddress)
 
 			t.updateToUpstream(c, event)
 			t.healthyUpstreams[trackerAddress] = c
@@ -85,21 +83,32 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 	}
 }
 
-//Publish TrackerInfo to all subscribers
-func (t *Tracker) Publish(msgType *int) {
+//Publish server info to subscribers/upstream trackers
+func (t *Tracker) Publish() {
+	if len(t.healthyUpstreams) > 0 {
+		event := &proto.ServerEvent{}
+		event.ServerInfo = t.server.serverInfo()
+		event.Live = true
+		for _, client := range t.healthyUpstreams {
+			t.updateToUpstream(client, event)
+		}
+	}
+
 	if len(t.subscribers) <= 0 {
 		return
 	}
 
+	//Publish tracker info to all subscribers
 	info := t.server.trackerInfo()
 	data, _ := json.Marshal(info)
 	msg := NewMessage()
 	msg.Status = 200
+	msg.SetCmd(proto.TrackPub)
 	msg.SetJsonBody(string(data))
 
 	var errSessions []*Session
 	for _, sess := range t.subscribers {
-		err := sess.WriteMessage(msg, msgType)
+		err := sess.WriteMessage(msg)
 		if err != nil {
 			errSessions = append(errSessions, sess)
 		}
@@ -144,18 +153,18 @@ func (t *Tracker) connectToServer(trackerAddress string) *MessageClient {
 
 /////////////////////////////Handlers for Tracker//////////////////////////////////
 //trackerHandler serve SrackerInfo request
-func trackerHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func trackerHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
 	info := s.server.trackerInfo()
 	data, _ := json.Marshal(info)
-	reply(200, req.Id(), string(data), sess, msgType)
+	reply(200, req.Id(), string(data), sess)
 }
 
 //trackPubHandler server publish of ServerInfo
-func trackPubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
 	event := &proto.ServerEvent{}
@@ -187,28 +196,34 @@ func trackPubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int
 		client.onConnected = func(c *MessageClient) {
 			log.Printf("Server(%s) in track", serverInfo.ServerAddress.String())
 			tracker.downstreams[addressKey] = client
-			tracker.Publish(msgType)
+			tracker.Publish()
 		}
 		client.onDisconnected = func(c *MessageClient) {
 			log.Printf("Server(%s) lost of tracking", serverInfo.ServerAddress.String())
 			delete(tracker.serverTable, addressKey)
-			tracker.Publish(msgType)
+			tracker.Publish()
 			client.Close()
 		}
 		client.Start(nil)
 	}
 
-	tracker.Publish(msgType) //publish to subscribers
+	tracker.Publish() //publish to subscribers
 }
 
 //trackSubHandler serve TrackSub request
-func trackSubHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func trackSubHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
 	s.tracker.subscribers[sess.ID] = sess
 
 	info := s.server.trackerInfo()
 	data, _ := json.Marshal(info)
-	replyJson(200, req.Id(), string(data), sess, msgType)
+
+	resp := NewMessage()
+	resp.Status = 200
+	resp.SetCmd(proto.TrackPub)
+	resp.SetId(req.Id())
+	resp.SetJsonBody(string(data))
+	sess.WriteMessage(resp)
 }

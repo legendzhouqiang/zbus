@@ -145,7 +145,10 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	}
 	for i := 1; i < len(header); i++ {
 		s := string(header[i])
-		kv := strings.Split(s, ":")
+		kv := strings.SplitN(s, ":", 2)
+		if len(kv) < 2 {
+			continue //ignore
+		}
 		key := strings.ToLower(strings.TrimSpace(kv[0]))
 		val := strings.TrimSpace(kv[1])
 		m.Header[key] = val
@@ -178,6 +181,11 @@ func (m *Message) SetHeader(key string, value string) {
 		return
 	}
 	m.Header[key] = value
+}
+
+//RemoveHeader key
+func (m *Message) RemoveHeader(key string) {
+	delete(m.Header, key)
 }
 
 //Cmd key=cmd
@@ -355,6 +363,21 @@ func (m *Message) SetOriginUrl(value string) {
 	m.SetHeader(proto.OriginUrl, value)
 }
 
+//OriginStatus origin_status
+func (m *Message) OriginStatus() *int {
+	s, ok := m.Header[proto.OriginStatus]
+	if !ok {
+		return nil
+	}
+	value, _ := strconv.ParseInt(s, 10, 32)
+	return &[]int{int(value)}[0]
+}
+
+//SetOriginStatus origin_status
+func (m *Message) SetOriginStatus(value int) {
+	m.SetHeader(proto.OriginStatus, fmt.Sprintf("%d", value))
+}
+
 //Token key=token
 func (m *Message) Token() string {
 	return m.GetHeader(proto.Token)
@@ -378,4 +401,14 @@ func (m *Message) TopicMask() *int32 {
 //SetTopicMask key=topic_mask
 func (m *Message) SetTopicMask(value int32) {
 	m.SetHeader(proto.TopicMask, strconv.Itoa(int(value)))
+}
+
+//Recver key=recver
+func (m *Message) Recver() string {
+	return m.GetHeader(proto.Recver)
+}
+
+//SetRecver key=recver
+func (m *Message) SetRecver(value string) {
+	m.SetHeader(proto.Recver, value)
 }

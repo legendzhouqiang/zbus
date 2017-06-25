@@ -5,14 +5,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
 	"sync/atomic"
-
 	"time"
-
-	"io"
 
 	"./proto"
 	"./websocket"
@@ -20,7 +18,9 @@ import (
 
 // Session abstract socket connection
 type Session struct {
-	ID          string
+	ID    string
+	Attrs map[string]string
+
 	netConn     net.Conn
 	wsConn      websocket.Conn
 	isWebsocket bool
@@ -30,6 +30,7 @@ type Session struct {
 func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess := &Session{}
 	sess.ID = uuid()
+	sess.Attrs = make(map[string]string)
 	if netConn != nil {
 		sess.isWebsocket = false
 		sess.netConn = *netConn
@@ -53,15 +54,11 @@ func (s *Session) String() string {
 }
 
 //WriteMessage write message to underlying connection
-func (s *Session) WriteMessage(msg *Message, msgType *int) error {
+func (s *Session) WriteMessage(msg *Message) error {
 	buf := new(bytes.Buffer)
 	msg.EncodeMessage(buf)
 	if s.isWebsocket {
-		if msgType == nil {
-			msgType = &[]int{websocket.BinaryMessage}[0]
-			println("fucked====================================================================")
-		}
-		return s.wsConn.WriteMessage(*msgType, buf.Bytes())
+		return s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
 	return err
@@ -71,7 +68,7 @@ func (s *Session) WriteMessage(msg *Message, msgType *int) error {
 type SessionHandler interface {
 	Created(sess *Session)
 	ToDestroy(sess *Session)
-	OnMessage(msg *Message, sess *Session, msgType *int) //msgType only used for websocket
+	OnMessage(msg *Message, sess *Session)
 	OnError(err error, sess *Session)
 }
 
@@ -112,14 +109,14 @@ outter:
 				}
 			}
 
-			handler.OnMessage(req, session, nil)
+			handler.OnMessage(req, session)
 		}
 	}
 
 	if wsConn != nil { //upgraded to Websocket
 		bufRead = new(bytes.Buffer)
 		for {
-			msgtype, data, err := wsConn.ReadMessage()
+			_, data, err := wsConn.ReadMessage()
 			if err != nil {
 				handler.OnError(err, session)
 				break
@@ -134,11 +131,10 @@ outter:
 			if IsWebSocketUpgrade(req.Header) {
 				continue
 			}
-			handler.OnMessage(req, session, &msgtype)
+			handler.OnMessage(req, session)
 		}
 	}
 	handler.ToDestroy(session)
-	conn.Close()
 }
 
 //Server = MqServer + Tracker
@@ -172,6 +168,10 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	info.TopicTable = make(map[string]*proto.TopicInfo)
 	for key, mq := range s.MqTable {
 		info.TopicTable[key] = mq.TopicInfo()
+	}
+	for _, address := range s.TrackerList {
+		sa := &proto.ServerAddress{Address: address, SslEnabled: false}
+		info.TrackerList = append(info.TrackerList, *sa)
 	}
 
 	proto.AddServerContext(info, s.ServerAddress)

@@ -29,8 +29,9 @@ func isRestCommand(cmd string) bool {
 
 //ServerHandler manages session from clients
 type ServerHandler struct {
-	SessionTable map[string]*Session
-	handlerTable map[string]func(*ServerHandler, *Message, *Session, *int)
+	SessionTable        SyncMap                                             //Safe
+	handlerTable        map[string]func(*ServerHandler, *Message, *Session) //readonly
+	consumeSessionTable map[string]map[string]*Session                      //topic=>consumeSession table
 
 	serverAddress string
 	server        *Server
@@ -39,15 +40,16 @@ type ServerHandler struct {
 
 //NewServerHandler create ServerSessionHandler
 func NewServerHandler(server *Server) *ServerHandler {
-	s := &ServerHandler{
-		SessionTable:  make(map[string]*Session),
-		handlerTable:  make(map[string]func(*ServerHandler, *Message, *Session, *int)),
-		serverAddress: server.ServerAddress.Address,
-		server:        server,
-		tracker:       server.tracker,
-	}
+	s := &ServerHandler{}
+	s.SessionTable.Map = make(map[string]interface{})
+	s.consumeSessionTable = make(map[string]map[string]*Session)
+	s.handlerTable = make(map[string]func(*ServerHandler, *Message, *Session))
+	s.serverAddress = server.ServerAddress.Address
+	s.server = server
+	s.tracker = server.tracker
 
 	s.handlerTable["favicon.ico"] = faviconHandler
+	s.handlerTable[proto.Heartbeat] = heartbeatHandler
 
 	s.handlerTable[proto.Home] = homeHandler
 	s.handlerTable[proto.Js] = jsHandler
@@ -56,6 +58,8 @@ func NewServerHandler(server *Server) *ServerHandler {
 	s.handlerTable[proto.Page] = pageHandler
 	s.handlerTable[proto.Produce] = produceHandler
 	s.handlerTable[proto.Consume] = consumeHandler
+	s.handlerTable[proto.Rpc] = rpcHandler
+	s.handlerTable[proto.Route] = routeHandler
 	s.handlerTable[proto.Declare] = declareHandler
 	s.handlerTable[proto.Query] = queryHandler
 	s.handlerTable[proto.Remove] = removeHandler
@@ -70,6 +74,7 @@ func NewServerHandler(server *Server) *ServerHandler {
 //Created when new session from client joined
 func (s *ServerHandler) Created(sess *Session) {
 	log.Printf("Session(%s) Created", sess)
+	s.SessionTable.Set(sess.ID, sess)
 }
 
 //ToDestroy when connection from client going to close
@@ -86,14 +91,31 @@ func (s *ServerHandler) OnError(err error, sess *Session) {
 
 func (s *ServerHandler) cleanSession(sess *Session) {
 	s.tracker.CleanSession(sess)
+	topic := sess.Attrs[proto.Topic]
+	if topic != "" {
+		s.tracker.Publish()
+		topicSessTable := s.consumeSessionTable[topic]
+		if topicSessTable != nil {
+			delete(topicSessTable, sess.ID)
+		}
+	}
+	s.SessionTable.Remove(sess.ID)
+}
+
+func (s *ServerHandler) cleanMq(topic string) {
+	delete(s.consumeSessionTable, topic)
 }
 
 //OnMessage when message available on socket
-func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
+func (s *ServerHandler) OnMessage(msg *Message, sess *Session) {
 	msg.Header[proto.Sender] = sess.ID
 	msg.Header[proto.Host] = s.serverAddress
 	if _, ok := msg.Header[proto.Id]; !ok {
 		msg.Header[proto.Id] = uuid()
+	}
+
+	if msg.Cmd() != proto.Heartbeat {
+		//log.Printf(msg.String())
 	}
 
 	handleUrlMessage(msg)
@@ -101,11 +123,11 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session, msgType *int) {
 	cmd := msg.Header[proto.Cmd]
 	handler, ok := s.handlerTable[cmd]
 	if ok {
-		handler(s, msg, sess, msgType)
+		handler(s, msg, sess)
 		return
 	}
 	res := NewMessageStatus(400, "Bad format: command(%s) not support", cmd)
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(res)
 }
 
 func handleUrlMessage(msg *Message) {
@@ -161,7 +183,11 @@ func handleUrlKVs(msg *Message, kvstr string) {
 		if len(bb) != 2 {
 			continue
 		}
-		msg.SetHeaderIfNone(bb[0], bb[1])
+		key, val := bb[0], bb[1]
+		if strings.EqualFold(key, "body") && msg.body == nil {
+			msg.SetBodyString(string(val))
+		}
+		msg.SetHeaderIfNone(key, val)
 	}
 }
 
@@ -189,7 +215,7 @@ func handleUrlRpc(msg *Message, rest string, kvstr string) {
 	msg.SetBody(data)
 }
 
-func renderFile(file string, contentType string, s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+func renderFile(file string, contentType string, s *ServerHandler, msg *Message, sess *Session) {
 	res := NewMessage()
 	if file == "" {
 		url := msg.Url
@@ -208,61 +234,61 @@ func renderFile(file string, contentType string, s *ServerHandler, msg *Message,
 		res.SetBody(data)
 	}
 	res.Header["content-type"] = contentType
-	sess.WriteMessage(res, msgType)
+	sess.WriteMessage(res)
 }
 
-func homeHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("home.htm", "text/html", s, msg, sess, msgType)
+func homeHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("home.htm", "text/html", s, msg, sess)
 }
 
-func faviconHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("logo.svg", "image/svg+xml", s, msg, sess, msgType)
+func faviconHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("logo.svg", "image/svg+xml", s, msg, sess)
 }
 
-func jsHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("", "application/javascript", s, msg, sess, msgType)
+func jsHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "application/javascript", s, msg, sess)
 }
 
-func cssHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("", "text/css", s, msg, sess, msgType)
+func cssHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "text/css", s, msg, sess)
 }
 
-func imgHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("", "image/svg+xml", s, msg, sess, msgType)
+func imgHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "image/svg+xml", s, msg, sess)
 }
 
-func pageHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
-	renderFile("", "text/html", s, msg, sess, msgType)
+func pageHandler(s *ServerHandler, msg *Message, sess *Session) {
+	renderFile("", "text/html", s, msg, sess)
 }
 
-func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session, msgType *int) {
+func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session) {
 	//just ignore
 }
 
-func auth(s *ServerHandler, msg *Message, sess *Session, msgType *int) bool {
+func auth(s *ServerHandler, msg *Message, sess *Session) bool {
 	return true
 }
 
-func findMQ(s *ServerHandler, req *Message, sess *Session, msgType *int) *MessageQueue {
+func findMQ(s *ServerHandler, req *Message, sess *Session) *MessageQueue {
 	topic := req.Topic()
 	if topic == "" {
-		reply(400, req.Id(), "Missing topic", sess, msgType)
+		reply(400, req.Id(), "Missing topic", sess)
 		return nil
 	}
 	mq := s.server.MqTable[topic]
 	if mq == nil {
 		body := fmt.Sprintf("Topic(%s) not found", topic)
-		reply(404, req.Id(), body, sess, msgType)
+		reply(404, req.Id(), body, sess)
 		return nil
 	}
 	return mq
 }
 
-func produceHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func produceHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
-	mq := findMQ(s, req, sess, msgType)
+	mq := findMQ(s, req, sess)
 	if mq == nil {
 		return
 	}
@@ -271,50 +297,97 @@ func produceHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 
 	if req.Ack() {
 		body := fmt.Sprintf("%d", CurrMillis())
-		reply(200, req.Id(), body, sess, msgType)
+		reply(200, req.Id(), body, sess)
 	}
 }
 
-func consumeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
-	mq := findMQ(s, req, sess, msgType)
+	mq := findMQ(s, req, sess)
 	if mq == nil {
 		return
 	}
+	topic := mq.Name()
 	group := req.ConsumeGroup()
 	if group == "" {
-		group = mq.Name()
+		group = topic
 	}
+	newConsumer := false
+	/*
+		topicSessTable := s.consumeSessionTable[topic]
 
+		if topicSessTable == nil {
+			newConsumer = true
+			topicSessTable = make(map[string]*Session)
+			s.consumeSessionTable[topic] = topicSessTable
+		} else {
+			consumeSess := topicSessTable[sess.ID]
+			if consumeSess == nil {
+				newConsumer = true
+			}
+		}
+		topicSessTable[sess.ID] = sess
+	*/
 	resp, status, err := mq.Read(group)
 	if err != nil {
 		resp = NewMessageStatus(status, err.Error())
-		sess.WriteMessage(resp, msgType)
-		return
 	}
 	if resp == nil {
-		//to wait ... TODO!!!!
-		return
+		resp = NewMessageStatus(500, "mq.Read error")
 	}
 
 	resp.SetOriginId(resp.Id())
 	resp.SetId(req.Id())
 	if resp.Status == 0 {
+		resp.Status = 200
 		resp.SetOriginUrl(resp.Url)
 	}
-	resp.Status = 200
-	sess.WriteMessage(resp, msgType)
+	sess.WriteMessage(resp)
+
+	if newConsumer {
+		s.tracker.Publish() //new consumer
+	}
 }
 
-func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func rpcHandler(s *ServerHandler, req *Message, sess *Session) {
+	req.SetAck(false)
+	produceHandler(s, req, sess)
+}
+
+func routeHandler(s *ServerHandler, req *Message, sess *Session) {
+	recver := req.Recver()
+	if recver == "" {
+		log.Printf("Warn: missing recver")
+		return //ignore
+	}
+	target := s.SessionTable.Get(recver).(*Session)
+	if target == nil {
+		log.Printf("Warn: missing target(%s)", recver)
+		return //ignore
+	}
+	req.RemoveHeader(proto.Ack)
+	req.RemoveHeader(proto.Recver)
+	req.RemoveHeader(proto.Cmd)
+
+	req.Status = 200
+	originStatus := req.OriginStatus()
+	if originStatus != nil {
+		req.Status = *originStatus
+		req.RemoveHeader(proto.OriginStatus)
+	}
+
+	target.WriteMessage(req)
+}
+
+func declareHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
 	topic := req.Topic()
 	if topic == "" {
-		reply(400, req.Id(), "Missing topic", sess, msgType)
+		reply(400, req.Id(), "Missing topic", sess)
 		return
 	}
 	g := &ConsumeGroup{}
@@ -332,7 +405,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 		mq, err = NewMessageQueue(s.server.MqDir, topic)
 		if err != nil {
 			body := fmt.Sprintf("Delcare Topic error: %s", err.Error())
-			reply(500, req.Id(), body, sess, msgType)
+			reply(500, req.Id(), body, sess)
 			return
 		}
 		mq.SetCreator(req.Token()) //token as creator, TODO
@@ -345,7 +418,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 		info, err = mq.DeclareGroup(g)
 		if err != nil {
 			body := fmt.Sprintf("Delcare ConsumeGroup error: %s", err.Error())
-			reply(500, req.Id(), body, sess, msgType)
+			reply(500, req.Id(), body, sess)
 			return
 		}
 	} else {
@@ -358,7 +431,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 			info, err = mq.DeclareGroup(g)
 			if err != nil {
 				body := fmt.Sprintf("Delcare ConsumeGroup error: %s", err.Error())
-				reply(500, req.Id(), body, sess, msgType)
+				reply(500, req.Id(), body, sess)
 				return
 			}
 		}
@@ -370,14 +443,16 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session, msgType *int)
 
 	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
-	replyJson(200, req.Id(), string(data), sess, msgType)
+	replyJson(200, req.Id(), string(data), sess)
+
+	s.tracker.Publish()
 }
 
-func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func queryHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
-	mq := findMQ(s, req, sess, msgType)
+	mq := findMQ(s, req, sess)
 	if mq == nil {
 		return
 	}
@@ -390,7 +465,7 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 		groupInfo := mq.GroupInfo(group)
 		if groupInfo == nil {
 			body := fmt.Sprintf("ConsumeGroup(%s) not found", group)
-			reply(404, req.Id(), body, sess, msgType)
+			reply(404, req.Id(), body, sess)
 			return
 		}
 		info = groupInfo
@@ -398,14 +473,14 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
 
 	proto.AddServerContext(info, s.server.ServerAddress)
 	data, _ := json.Marshal(info)
-	replyJson(200, req.Id(), string(data), sess, msgType)
+	replyJson(200, req.Id(), string(data), sess)
 }
 
-func removeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func removeHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
-	mq := findMQ(s, req, sess, msgType)
+	mq := findMQ(s, req, sess)
 	if mq == nil {
 		return
 	}
@@ -416,36 +491,38 @@ func removeHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 		err := mq.Destroy()
 		if err != nil {
 			body := fmt.Sprintf("Remove topic(%s) error: %s", topic, err.Error())
-			reply(500, req.Id(), body, sess, msgType)
+			reply(500, req.Id(), body, sess)
 			return
 		}
 	} else {
 		if mq.ConsumeGroup(group) == nil {
 			body := fmt.Sprintf("ConsumeGroup(%s) not found", group)
-			reply(404, req.Id(), body, sess, msgType)
+			reply(404, req.Id(), body, sess)
 			return
 		}
 
 		err := mq.RemoveGroup(group)
 		if err != nil {
 			body := fmt.Sprintf("Remove ConsumeGroup(%s) error: %s", group, err.Error())
-			reply(500, req.Id(), body, sess, msgType)
+			reply(500, req.Id(), body, sess)
 			return
 		}
 	}
 
-	reply(200, req.Id(), fmt.Sprintf("%d", CurrMillis()), sess, msgType)
+	reply(200, req.Id(), fmt.Sprintf("%d", CurrMillis()), sess)
+
+	s.tracker.Publish()
 }
 
-func emptyHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func emptyHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
-	reply(500, req.Id(), "Not Implemented", sess, msgType)
+	reply(500, req.Id(), "Not Implemented", sess)
 }
 
-func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) {
-	if !auth(s, req, sess, msgType) {
+func serverHandler(s *ServerHandler, req *Message, sess *Session) {
+	if !auth(s, req, sess) {
 		return
 	}
 
@@ -453,18 +530,18 @@ func serverHandler(s *ServerHandler, req *Message, sess *Session, msgType *int) 
 	res.Status = 200
 	info := s.server.serverInfo()
 	data, _ := json.Marshal(info)
-	replyJson(200, req.Id(), string(data), sess, msgType)
+	replyJson(200, req.Id(), string(data), sess)
 }
 
-func reply(status int, msgid string, body string, sess *Session, msgType *int) {
+func reply(status int, msgid string, body string, sess *Session) {
 	resp := NewMessageStatus(status, body)
 	resp.SetId(msgid)
-	sess.WriteMessage(resp, msgType)
+	sess.WriteMessage(resp)
 }
 
-func replyJson(status int, msgid string, body string, sess *Session, msgType *int) {
+func replyJson(status int, msgid string, body string, sess *Session) {
 	resp := NewMessageStatus(status)
 	resp.SetId(msgid)
 	resp.SetJsonBody(body)
-	sess.WriteMessage(resp, msgType)
+	sess.WriteMessage(resp)
 }
