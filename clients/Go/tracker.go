@@ -100,6 +100,7 @@ func (t *Tracker) Publish() {
 
 	//Publish tracker info to all subscribers
 	info := t.server.trackerInfo()
+
 	data, _ := json.Marshal(info)
 	msg := NewMessage()
 	msg.Status = 200

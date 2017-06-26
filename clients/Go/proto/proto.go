@@ -144,27 +144,3 @@ type ServerEvent struct {
 	ServerInfo *ServerInfo `json:"serverInfo"`
 	Live       bool        `json:"live"`
 }
-
-//AddServerContext generic way TOFIX
-func AddServerContext(t interface{}, address *ServerAddress) {
-	switch t.(type) {
-	case *TopicInfo:
-		info := t.(*TopicInfo)
-		info.ServerAddress = address
-		info.ServerVersion = VersionValue
-	case *ServerInfo:
-		info := t.(*ServerInfo)
-		info.ServerAddress = address
-		info.ServerVersion = VersionValue
-		for _, topicInfo := range info.TopicTable {
-			AddServerContext(topicInfo, address)
-		}
-	case *TrackerInfo:
-		info := t.(*TrackerInfo)
-		info.ServerAddress = address
-		info.ServerVersion = VersionValue
-		for _, serverInfo := range info.ServerTable {
-			AddServerContext(serverInfo, address)
-		}
-	}
-}

@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"sync"
+
 	"./proto"
 	"./websocket"
 )
@@ -24,12 +26,14 @@ type Session struct {
 	netConn     net.Conn
 	wsConn      websocket.Conn
 	isWebsocket bool
+	wsMutex     sync.Mutex
 }
 
 //NewSession create session
 func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess := &Session{}
 	sess.ID = uuid()
+	sess.Attrs.Map = make(map[string]interface{})
 	if netConn != nil {
 		sess.isWebsocket = false
 		sess.netConn = *netConn
@@ -57,6 +61,8 @@ func (s *Session) WriteMessage(msg *Message) error {
 	buf := new(bytes.Buffer)
 	msg.EncodeMessage(buf)
 	if s.isWebsocket {
+		s.wsMutex.Lock()
+		defer s.wsMutex.Unlock()
 		return s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
@@ -140,6 +146,7 @@ outter:
 type Server struct {
 	ServerAddress *proto.ServerAddress
 	MqTable       map[string]*MessageQueue
+	consumerTable *consumerTable
 
 	MqDir       string
 	TrackerList []string
@@ -152,6 +159,7 @@ type Server struct {
 
 func newServer() *Server {
 	s := &Server{}
+	s.consumerTable = newConsumerTable()
 	s.infoVersion = time.Now().UnixNano() / int64(time.Millisecond)
 	s.trackerOnly = false
 	return s
@@ -172,8 +180,7 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 		sa := &proto.ServerAddress{Address: address, SslEnabled: false}
 		info.TrackerList = append(info.TrackerList, *sa)
 	}
-
-	proto.AddServerContext(info, s.ServerAddress)
+	s.addServerContext(info)
 	return info
 }
 
@@ -191,6 +198,33 @@ func (s *Server) trackerInfo() *proto.TrackerInfo {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
 	return info
+}
+
+func (s *Server) addServerContext(t interface{}) {
+	switch t.(type) {
+	case *proto.TopicInfo:
+		info := t.(*proto.TopicInfo)
+		info.ServerAddress = s.ServerAddress
+		info.ServerVersion = proto.VersionValue
+		info.ConsumerCount = int32(s.consumerTable.countForTopic(info.TopicName))
+		for _, groupInfo := range info.ConsumeGroupList {
+			groupInfo.ConsumerCount = int32(s.consumerTable.countForGroup(info.TopicName, groupInfo.GroupName))
+		}
+	case *proto.ServerInfo:
+		info := t.(*proto.ServerInfo)
+		info.ServerAddress = s.ServerAddress
+		info.ServerVersion = proto.VersionValue
+		for _, topicInfo := range info.TopicTable {
+			s.addServerContext(topicInfo)
+		}
+	case *proto.TrackerInfo:
+		info := t.(*proto.TrackerInfo)
+		info.ServerAddress = s.ServerAddress
+		info.ServerVersion = proto.VersionValue
+		for _, serverInfo := range info.ServerTable {
+			s.addServerContext(serverInfo)
+		}
+	}
 }
 
 //Options stores the conguration for server

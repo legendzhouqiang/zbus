@@ -29,9 +29,9 @@ func isRestCommand(cmd string) bool {
 
 //ServerHandler manages session from clients
 type ServerHandler struct {
-	SessionTable        SyncMap                                             //Safe
-	handlerTable        map[string]func(*ServerHandler, *Message, *Session) //readonly
-	consumeSessionTable SyncMap                                             //topic=>consumeSession table
+	SessionTable  SyncMap                                             //Safe
+	handlerTable  map[string]func(*ServerHandler, *Message, *Session) //readonly
+	consumerTable *consumerTable
 
 	serverAddress string
 	server        *Server
@@ -42,7 +42,7 @@ type ServerHandler struct {
 func NewServerHandler(server *Server) *ServerHandler {
 	s := &ServerHandler{}
 	s.SessionTable.Map = make(map[string]interface{})
-	s.consumeSessionTable.Map = make(map[string]interface{})
+	s.consumerTable = server.consumerTable
 	s.handlerTable = make(map[string]func(*ServerHandler, *Message, *Session))
 	s.serverAddress = server.ServerAddress.Address
 	s.server = server
@@ -91,19 +91,19 @@ func (s *ServerHandler) OnError(err error, sess *Session) {
 
 func (s *ServerHandler) cleanSession(sess *Session) {
 	s.tracker.CleanSession(sess)
-	topic, _ := sess.Attrs.Get(proto.Topic).(string)
-	if topic != "" {
-		s.tracker.Publish()
-		topicSessTable, _ := s.consumeSessionTable.Get(topic).(*SyncMap)
-		if topicSessTable != nil {
-			topicSessTable.Remove(sess.ID)
-		}
-	}
 	s.SessionTable.Remove(sess.ID)
+
+	topic, _ := sess.Attrs.Get(proto.Topic).(string)
+	group, _ := sess.Attrs.Get(proto.ConsumeGroup).(string)
+	if topic != "" && group != "" {
+		s.consumerTable.removeSession(sess, topic, group)
+
+		s.tracker.Publish()
+	}
 }
 
 func (s *ServerHandler) cleanMq(topic string) {
-	s.consumeSessionTable.Remove(topic)
+	s.consumerTable.removeSession(nil, topic, "")
 }
 
 //OnMessage when message available on socket
@@ -262,23 +262,20 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	if group == "" {
 		group = topic
 	}
+
 	newConsumer := false
-	topicSessTable, _ := s.consumeSessionTable.Get(topic).(*SyncMap)
-
-	if topicSessTable == nil {
+	if sess.Attrs.Get(proto.Topic) == nil {
+		s.consumerTable.addSession(sess, topic, group)
+		sess.Attrs.Set(proto.Topic, topic)
+		sess.Attrs.Set(proto.ConsumeGroup, group)
 		newConsumer = true
-		topicSessTable = &SyncMap{Map: make(map[string]interface{})}
-		s.consumeSessionTable.Set(topic, topicSessTable)
-	} else {
-		consumeSess := topicSessTable.Get(sess.ID)
-		if consumeSess == nil {
-			newConsumer = true
-		}
 	}
-	sess.Attrs.Set(proto.Topic, topic)
-	topicSessTable.Set(sess.ID, sess)
 
-	resp, status, err := mq.Read(group)
+	if newConsumer {
+		go s.tracker.Publish()
+	}
+
+	resp, status, err := mq.Read(group) //TODO break properly
 	if err != nil {
 		resp = NewMessageStatus(status, err.Error())
 	}
@@ -293,10 +290,6 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 		resp.SetOriginUrl(resp.Url)
 	}
 	sess.WriteMessage(resp)
-
-	if newConsumer {
-		s.tracker.Publish() //new consumer
-	}
 }
 
 func rpcHandler(s *ServerHandler, req *Message, sess *Session) {
@@ -390,7 +383,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session) {
 		info = mq.TopicInfo()
 	}
 
-	proto.AddServerContext(info, s.server.ServerAddress)
+	s.server.addServerContext(info) //require server info attach
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess)
 
@@ -420,7 +413,7 @@ func queryHandler(s *ServerHandler, req *Message, sess *Session) {
 		info = groupInfo
 	}
 
-	proto.AddServerContext(info, s.server.ServerAddress)
+	s.server.addServerContext(info)
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess)
 }
@@ -545,35 +538,82 @@ func heartbeatHandler(s *ServerHandler, msg *Message, sess *Session) {
 	//just ignore
 }
 
-func (s *ServerHandler) addServerContext(t interface{}) {
-	switch t.(type) {
-	case *proto.TopicInfo:
-		info := t.(*proto.TopicInfo)
-		info.ServerAddress = s.server.ServerAddress
-		info.ServerVersion = proto.VersionValue
+//topic=> { group => {SessId => Session} }
+type consumerTable struct {
+	SyncMap
+}
 
-		topicSessTable, _ := s.consumeSessionTable.Get(info.TopicName).(*SyncMap)
-		if topicSessTable == nil {
-			break
-		}
+func newConsumerTable() *consumerTable {
+	c := &consumerTable{}
+	c.Map = make(map[string]interface{})
+	return c
+}
 
-	case *proto.ServerInfo:
-		info := t.(*proto.ServerInfo)
-		info.ServerAddress = s.server.ServerAddress
-		info.ServerVersion = proto.VersionValue
-		for _, topicInfo := range info.TopicTable {
-			s.addServerContext(topicInfo)
-		}
-	case *proto.TrackerInfo:
-		info := t.(*proto.TrackerInfo)
-		info.ServerAddress = s.server.ServerAddress
-		info.ServerVersion = proto.VersionValue
-		for _, serverInfo := range info.ServerTable {
-			s.addServerContext(serverInfo)
-		}
+func (t *consumerTable) addSession(sess *Session, topic string, group string) bool {
+	t.Lock()
+	groups, _ := t.Map[topic].(*SyncMap)
+	if groups == nil {
+		groups = &SyncMap{Map: make(map[string]interface{})}
+		t.Map[topic] = groups
+	}
+	t.Unlock()
+
+	groups.Lock()
+	groupSessTable, _ := groups.Map[group].(*SyncMap)
+	if groupSessTable == nil {
+		groupSessTable = &SyncMap{Map: make(map[string]interface{})}
+		groups.Map[group] = groupSessTable
+	}
+	groups.Unlock()
+	newSession := groupSessTable.Get(sess.ID) == nil
+	groupSessTable.Set(sess.ID, sess)
+	return newSession
+}
+
+func (t *consumerTable) removeSession(sess *Session, topic string, group string) {
+	groups := t.Get(topic).(*SyncMap)
+	if groups == nil {
+		return //ignore
+	}
+	if group == "" {
+		t.Remove(topic)
+		return
+	}
+	groupSessTable := groups.Get(group).(*SyncMap)
+	if groupSessTable == nil {
+		return
+	}
+	if sess != nil {
+		groupSessTable.Remove(sess.ID)
 	}
 }
 
-//topic=> consumeGroup =>
-type consumeSessionTable struct {
+func (t *consumerTable) countForTopic(topic string) int {
+	groups, _ := t.Get(topic).(*SyncMap)
+	if groups == nil {
+		return 0
+	}
+	groups.RLock()
+	n := 0
+	for _, g := range groups.Map {
+		groupSessTable, _ := g.(*SyncMap)
+		if groupSessTable == nil {
+			continue
+		}
+		n += len(groupSessTable.Map)
+	}
+	groups.RUnlock()
+	return n
+}
+
+func (t *consumerTable) countForGroup(topic string, group string) int {
+	groups, _ := t.Get(topic).(*SyncMap)
+	if groups == nil {
+		return 0
+	}
+	groupSessTable, _ := groups.Get(group).(*SyncMap)
+	if groupSessTable == nil {
+		return 0
+	}
+	return len(groupSessTable.Map)
 }
