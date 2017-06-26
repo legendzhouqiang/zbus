@@ -251,6 +251,7 @@ func NewOptions() *Options {
 }
 
 func main() {
+	printBanner()
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
 	opt := NewOptions()
@@ -319,4 +320,19 @@ func main() {
 		}
 		go handleConnection(conn, handler)
 	}
+}
+
+func printBanner() {
+	fmt.Println(`
+                /\\\       
+                \/\\\        
+                 \/\\\    
+     /\\\\\\\\\\\ \/\\\         /\\\    /\\\  /\\\\\\\\\\     
+     \///////\\\/  \/\\\\\\\\\  \/\\\   \/\\\ \/\\\//////     
+           /\\\/    \/\\\////\\\ \/\\\   \/\\\ \/\\\\\\\\\\    
+          /\\\/      \/\\\  \/\\\ \/\\\   \/\\\ \////////\\\  
+         /\\\\\\\\\\\ \/\\\\\\\\\  \//\\\\\\\\\   /\\\\\\\\\\  
+         \///////////  \/////////    \/////////   \////////// 
+		
+		`)
 }
