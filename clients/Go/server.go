@@ -22,6 +22,7 @@ import (
 type Session struct {
 	ID          string
 	ConsumerCtx SyncMap
+	Broken      chan bool
 
 	netConn     net.Conn
 	wsConn      *websocket.Conn
@@ -34,6 +35,8 @@ func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess := &Session{}
 	sess.ID = uuid()
 	sess.ConsumerCtx.Map = make(map[string]interface{})
+	sess.Broken = make(chan bool)
+
 	if netConn != nil {
 		sess.isWebsocket = false
 		sess.netConn = *netConn
@@ -63,9 +66,16 @@ func (s *Session) WriteMessage(msg *Message) error {
 	if s.isWebsocket {
 		s.wsMutex.Lock()
 		defer s.wsMutex.Unlock()
-		return s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
+		err := s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
+		if err != nil {
+			s.Broken <- true // Write failed, socket broken?!
+		}
+		return err
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
+	if err != nil {
+		s.Broken <- true // Write failed, socket broken?!
+	}
 	return err
 }
 

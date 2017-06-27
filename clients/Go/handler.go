@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -90,6 +91,10 @@ func (s *ServerHandler) ToDestroy(sess *Session) {
 //OnError when socket error occured
 func (s *ServerHandler) OnError(err error, sess *Session) {
 	log.Printf("Session(%s) Error: %s", sess, err)
+	select {
+	case sess.Broken <- true:
+	default: //ignore
+	}
 	s.cleanSession(sess)
 }
 
@@ -290,22 +295,42 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 		go s.tracker.Publish()
 	}
 
-	resp, status, err := mq.Read(group) //TODO break properly
-	if err != nil {
-		resp = NewMessageStatus(status, err.Error())
-	}
-	if resp == nil {
-		resp = NewMessageStatus(500, "mq.Read error")
+	reader := mq.ConsumeGroup(group)
+	if reader == nil {
+		reply(404, req.Id(), fmt.Sprintf("ConsumeGroup(%s) not found", group), sess)
+		return
 	}
 
-	resp.SetOriginId(resp.Id())
-	msgid, _ := sess.getConsumerCtx(topic, group).(string)
-	resp.SetId(msgid)
-	if resp.Status == 0 {
-		resp.Status = 200
-		resp.SetOriginUrl(resp.Url)
+consumeRead:
+	for {
+		data, err := reader.Read()
+		if err != nil {
+			reply(500, req.Id(), fmt.Sprintf("Consume read error: %s", err.Error()), sess)
+			return
+		}
+
+		if data == nil {
+			select { //TODO timeout!
+			case <-sess.Broken:
+				break consumeRead
+			case <-reader.Available:
+			}
+			continue
+		}
+
+		buf := bytes.NewBuffer(data.Body)
+		resp := DecodeMessage(buf)
+
+		resp.SetOriginId(resp.Id())
+		msgid, _ := sess.getConsumerCtx(topic, group).(string)
+		resp.SetId(msgid)
+		if resp.Status == 0 {
+			resp.Status = 200
+			resp.SetOriginUrl(resp.Url)
+		}
+		sess.WriteMessage(resp)
+		break
 	}
-	sess.WriteMessage(resp)
 }
 
 func rpcHandler(s *ServerHandler, req *Message, sess *Session) {

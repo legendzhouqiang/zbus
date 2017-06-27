@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
-
 	"strings"
-
 	"time"
 
 	"./proto"

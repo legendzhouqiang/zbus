@@ -1,14 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"bytes"
 
 	"./diskq"
 	"./proto"
@@ -160,6 +159,12 @@ func (q *MessageQueue) Read(group string) (*Message, int, error) {
 	return DecodeMessage(buf), 200, nil
 }
 
+//ConsumeGroup returns reader for the consume group
+func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
+	g, _ := q.readers.Get(group).(*diskq.QueueReader)
+	return g
+}
+
 //DeclareGroup create/update a consume group
 func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInfo, error) {
 	groupName := group.GroupName
@@ -237,7 +242,6 @@ func (q *MessageQueue) TopicInfo() *proto.TopicInfo {
 		groupInfo := q.groupInfo(r)
 		info.ConsumeGroupList = append(info.ConsumeGroupList, groupInfo)
 	}
-	//TODO ConsumerCount missing
 	return info
 }
 
@@ -248,12 +252,6 @@ func (q *MessageQueue) GroupInfo(group string) *proto.ConsumeGroupInfo {
 		return q.groupInfo(g)
 	}
 	return nil
-}
-
-//ConsumeGroup returns reader for the consume group
-func (q *MessageQueue) ConsumeGroup(group string) *diskq.QueueReader {
-	g, _ := q.readers.Get(group).(*diskq.QueueReader)
-	return g
 }
 
 func (q *MessageQueue) groupInfo(g *diskq.QueueReader) *proto.ConsumeGroupInfo {
