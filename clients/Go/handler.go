@@ -9,6 +9,10 @@ import (
 	"./proto"
 )
 
+const (
+	lastConsumeMsgIDKey = "msgid"
+)
+
 var restCommands = []string{
 	proto.Produce,
 	proto.Consume,
@@ -262,7 +266,7 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	if group == "" {
 		group = topic
 	}
-
+	sess.Attrs.Set(lastConsumeMsgIDKey, req.Id())
 	newConsumer := false
 	if sess.Attrs.Get(proto.Topic) == nil {
 		s.consumerTable.addSession(sess, topic, group)
@@ -284,7 +288,8 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	}
 
 	resp.SetOriginId(resp.Id())
-	resp.SetId(req.Id())
+	msgID, _ := sess.Attrs.Get(lastConsumeMsgIDKey).(string)
+	resp.SetId(msgID)
 	if resp.Status == 0 {
 		resp.Status = 200
 		resp.SetOriginUrl(resp.Url)
