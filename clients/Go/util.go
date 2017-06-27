@@ -21,7 +21,11 @@ type SyncMap struct {
 func (m *SyncMap) Get(key string) interface{} {
 	m.RLock()
 	defer m.RUnlock()
-	return m.Map[key]
+	val, ok := m.Map[key]
+	if !ok {
+		return nil
+	}
+	return val
 }
 
 //Set key-value pair
@@ -38,6 +42,29 @@ func (m *SyncMap) Remove(key string) interface{} {
 	val := m.Map[key]
 	delete(m.Map, key)
 	return val
+}
+
+//Copy as map[string]string
+func (m *SyncMap) Copy() map[string]string {
+	m.RLock()
+	defer m.RUnlock()
+
+	res := make(map[string]string)
+	for key, val := range m.Map {
+		value, ok := val.(string)
+		if ok {
+			res[key] = value
+		}
+	}
+	return res
+}
+
+//Contains check key exists
+func (m *SyncMap) Contains(key string) bool {
+	m.RLock()
+	defer m.RUnlock()
+	_, ok := m.Map[key]
+	return ok
 }
 
 //Clear all key-values

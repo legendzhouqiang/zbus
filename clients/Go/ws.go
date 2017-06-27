@@ -61,7 +61,7 @@ func Subprotocols(header map[string]string) []string {
 
 // IsWebSocketUpgrade returns true if the client requested upgrade to the
 // WebSocket protocol.
-func IsWebSocketUpgrade(header map[string]string) bool {
+func IsWebSocketUpgrade(header *SyncMap) bool {
 	return tokenListContainsValue(header, "connection", "upgrade") &&
 		tokenListContainsValue(header, "upgrade", "websocket")
 }
@@ -120,20 +120,21 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 		return u.returnError(netConn, 405, "websocket: not a websocket handshake: request method is not GET")
 	}
 
-	if !tokenListContainsValue(req.Header, "connection", "upgrade") {
+	if !tokenListContainsValue(&req.Header, "connection", "upgrade") {
 		return u.returnError(netConn, 400, "websocket: not a websocket handshake: 'upgrade' token not found in 'Connection' header")
 	}
 
-	if !tokenListContainsValue(req.Header, "upgrade", "websocket") {
+	if !tokenListContainsValue(&req.Header, "upgrade", "websocket") {
 		return u.returnError(netConn, 400, "websocket: not a websocket handshake: 'websocket' token not found in 'Upgrade' header")
 	}
 
-	if !tokenListContainsValue(req.Header, "sec-websocket-version", "13") {
+	if !tokenListContainsValue(&req.Header, "sec-websocket-version", "13") {
 		return u.returnError(netConn, 400, "websocket: unsupported version: 13 not found in 'Sec-Websocket-Version' header")
 	}
 
+	header := req.Header.Copy()
 	checkOrigin := u.CheckOrigin
-	if checkOrigin != nil && !checkOrigin(req.Header) {
+	if checkOrigin != nil && !checkOrigin(header) {
 		return u.returnError(netConn, 403, "websocket: 'Origin' header value not allowed")
 	}
 
@@ -142,7 +143,7 @@ func (u *Upgrader) Upgrade(netConn net.Conn, req *Message) (*websocket.Conn, err
 		return u.returnError(netConn, 400, "websocket: not a websocket handshake: `Sec-Websocket-Key' header is missing or blank")
 	}
 
-	subprotocol := u.selectSubprotocol(req.Header)
+	subprotocol := u.selectSubprotocol(header)
 	var (
 		err error
 	)
@@ -251,11 +252,18 @@ func nextToken(s string) (token, rest string) {
 
 // tokenListContainsValue returns true if the 1#token header with the given
 // name contains token.
-func tokenListContainsValue(header map[string]string, name string, value string) bool {
-	s, ok := header[name]
+func tokenListContainsValue(header *SyncMap, name string, value string) bool {
+	header.RLock()
+	defer header.RUnlock()
+	val, ok := header.Map[name]
 	if !ok {
 		return false
 	}
+	s, ok := val.(string)
+	if !ok {
+		return false
+	}
+
 	for {
 		var t string
 		t, s = nextToken(skipSpace(s))

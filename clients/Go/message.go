@@ -38,7 +38,7 @@ type Message struct {
 	Status int
 	Url    string
 	Method string
-	Header map[string]string
+	Header SyncMap
 
 	body []byte
 }
@@ -48,8 +48,8 @@ func NewMessage(args ...interface{}) *Message {
 	m := new(Message)
 	m.Url = "/"
 	m.Method = "GET"
-	m.Header = make(map[string]string)
-	m.Header["connection"] = "Keep-Alive"
+	m.Header.Map = make(map[string]interface{})
+	m.Header.Set("connection", "Keep-Alive")
 	m.SetBodyString(args...)
 	return m
 }
@@ -63,10 +63,10 @@ func NewMessageStatus(status int, args ...interface{}) *Message {
 
 //SetHeaderIfNone updates header by value if not set yet
 func (m *Message) SetHeaderIfNone(key string, val string) {
-	if _, ok := m.Header[key]; ok {
+	if m.Header.Contains(key) {
 		return
 	}
-	m.Header[key] = val
+	m.Header.Set(key, val)
 }
 
 //SetBody set binary body of Message
@@ -90,7 +90,7 @@ func (m *Message) SetBodyString(args ...interface{}) {
 //SetJsonBody set json body
 func (m *Message) SetJsonBody(body string) {
 	m.body = []byte(body)
-	m.Header["content-type"] = "application/json"
+	m.Header.Set("content-type", "application/json")
 }
 
 //EncodeMessage encodes Message to []byte
@@ -100,13 +100,20 @@ func (m *Message) EncodeMessage(buf *bytes.Buffer) {
 	} else {
 		buf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", m.Method, m.Url))
 	}
-	for k, v := range m.Header {
+
+	m.Header.RLock()
+	for k, v := range m.Header.Map {
 		k = strings.ToLower(k)
 		if k == "content-length" {
 			continue
 		}
-		buf.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
+		val, ok := v.(string)
+		if ok {
+			buf.WriteString(fmt.Sprintf("%s: %s\r\n", k, val))
+		}
 	}
+	m.Header.RUnlock()
+
 	bodyLen := 0
 	if m.body != nil {
 		bodyLen = len(m.body)
@@ -151,11 +158,12 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 		}
 		key := strings.ToLower(strings.TrimSpace(kv[0]))
 		val := strings.TrimSpace(kv[1])
-		m.Header[key] = val
+		m.SetHeader(key, val)
 	}
 	bodyLen := 0
-	if lenStr, ok := m.Header["content-length"]; ok {
-		bodyLen, _ = strconv.Atoi(lenStr)
+	lenStr := m.GetHeaderNil("content-length")
+	if lenStr != nil {
+		bodyLen, _ = strconv.Atoi(lenStr.(string))
 	}
 	if (buf.Len() - idx - 4) < bodyLen {
 		return nil
@@ -172,7 +180,16 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 
 //GetHeader key=value
 func (m *Message) GetHeader(key string) string {
-	return m.Header[key]
+	val := m.Header.Get(key)
+	if val == nil {
+		return ""
+	}
+	return val.(string)
+}
+
+//GetHeaderNil key=value
+func (m *Message) GetHeaderNil(key string) interface{} {
+	return m.Header.Get(key)
 }
 
 //SetHeader key=value
@@ -180,18 +197,12 @@ func (m *Message) SetHeader(key string, value string) {
 	if value == "" {
 		return
 	}
-	m.Header[key] = value
+	m.Header.Set(key, value)
 }
 
 //RemoveHeader key
 func (m *Message) RemoveHeader(key string) {
-	delete(m.Header, key)
-}
-
-//InHeader test if key in header
-func (m *Message) InHeader(key string) bool {
-	_, ok := m.Header[key]
-	return ok
+	m.Header.Remove(key)
 }
 
 //Cmd key=cmd
@@ -274,11 +285,11 @@ func (m *Message) SetConsumeGroup(value string) {
 
 //GroupFilter key=group_filter
 func (m *Message) GroupFilter() *string {
-	s, ok := m.Header[proto.GroupFilter]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupFilter)
+	if s == nil {
 		return nil
 	}
-	return &[]string{s}[0]
+	return &[]string{s.(string)}[0]
 }
 
 //SetGroupFilter key=group_filter
@@ -288,11 +299,11 @@ func (m *Message) SetGroupFilter(value string) {
 
 //GroupMask key=group_mask
 func (m *Message) GroupMask() *int32 {
-	s, ok := m.Header[proto.GroupMask]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupMask)
+	if s == nil {
 		return nil
 	}
-	value, _ := strconv.Atoi(s)
+	value, _ := strconv.Atoi(s.(string))
 	return &[]int32{int32(value)}[0]
 }
 
@@ -303,11 +314,11 @@ func (m *Message) SetGroupMask(value int32) {
 
 //GroupStartCopy key=group_start_copy
 func (m *Message) GroupStartCopy() *string {
-	s, ok := m.Header[proto.GroupStartCopy]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupStartCopy)
+	if s == nil {
 		return nil
 	}
-	return &[]string{s}[0]
+	return &[]string{s.(string)}[0]
 }
 
 //SetGroupStartCopy key=group_start_copy
@@ -317,11 +328,11 @@ func (m *Message) SetGroupStartCopy(value string) {
 
 //GroupStartOffset group_start_offset
 func (m *Message) GroupStartOffset() *int64 {
-	s, ok := m.Header[proto.GroupStartOffset]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupStartOffset)
+	if s == nil {
 		return nil
 	}
-	value, _ := strconv.ParseInt(s, 10, 64)
+	value, _ := strconv.ParseInt(s.(string), 10, 64)
 	return &[]int64{value}[0]
 }
 
@@ -332,11 +343,11 @@ func (m *Message) SetGroupStartOffset(value int64) {
 
 //GroupStartMsgid key=group_start_msgid
 func (m *Message) GroupStartMsgid() *string {
-	s, ok := m.Header[proto.GroupStartMsgid]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupStartMsgid)
+	if s == nil {
 		return nil
 	}
-	return &[]string{s}[0]
+	return &[]string{s.(string)}[0]
 }
 
 //SetGroupStartMsgid key=group_start_msgid
@@ -346,11 +357,11 @@ func (m *Message) SetGroupStartMsgid(value string) {
 
 //GroupStartTime group_start_time
 func (m *Message) GroupStartTime() *int64 {
-	s, ok := m.Header[proto.GroupStartTime]
-	if !ok {
+	s := m.GetHeaderNil(proto.GroupStartTime)
+	if s == nil {
 		return nil
 	}
-	value, _ := strconv.ParseInt(s, 10, 64)
+	value, _ := strconv.ParseInt(s.(string), 10, 64)
 	return &[]int64{value}[0]
 }
 
@@ -371,11 +382,11 @@ func (m *Message) SetOriginUrl(value string) {
 
 //OriginStatus origin_status
 func (m *Message) OriginStatus() *int {
-	s, ok := m.Header[proto.OriginStatus]
-	if !ok {
+	s := m.GetHeaderNil(proto.OriginStatus)
+	if s == nil {
 		return nil
 	}
-	value, _ := strconv.ParseInt(s, 10, 32)
+	value, _ := strconv.ParseInt(s.(string), 10, 32)
 	return &[]int{int(value)}[0]
 }
 
@@ -396,11 +407,11 @@ func (m *Message) SetToken(value string) {
 
 //TopicMask key=topic_mask
 func (m *Message) TopicMask() *int32 {
-	s := m.GetHeader(proto.TopicMask)
-	if s == "" {
+	s := m.GetHeaderNil(proto.TopicMask)
+	if s == nil {
 		return nil
 	}
-	value, _ := strconv.Atoi(s)
+	value, _ := strconv.Atoi(s.(string))
 	return &[]int32{int32(value)}[0]
 }
 

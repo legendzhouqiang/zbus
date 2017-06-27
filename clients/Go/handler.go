@@ -97,11 +97,22 @@ func (s *ServerHandler) cleanSession(sess *Session) {
 	s.tracker.CleanSession(sess)
 	s.SessionTable.Remove(sess.ID)
 
-	topic, _ := sess.Attrs.Get(proto.Topic).(string)
-	group, _ := sess.Attrs.Get(proto.ConsumeGroup).(string)
-	if topic != "" && group != "" {
-		s.consumerTable.removeSession(sess, topic, group)
+	isConsumer := false
 
+	sess.ConsumerCtx.RLock()
+	for topic, g := range sess.ConsumerCtx.Map {
+		groups, _ := g.(*SyncMap)
+		if groups == nil {
+			continue
+		}
+		for group := range groups.Map {
+			s.consumerTable.removeSession(sess, topic, group)
+			isConsumer = true
+		}
+	}
+	sess.ConsumerCtx.RUnlock()
+
+	if isConsumer {
 		s.tracker.Publish()
 	}
 }
@@ -134,7 +145,7 @@ func (s *ServerHandler) OnMessage(msg *Message, sess *Session) {
 }
 
 func handleUrlMessage(msg *Message) {
-	if msg.InHeader(proto.Cmd) {
+	if msg.GetHeaderNil(proto.Cmd) != nil {
 		return
 	}
 	url := msg.Url
@@ -266,14 +277,14 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	if group == "" {
 		group = topic
 	}
-	sess.Attrs.Set(lastConsumeMsgIDKey, req.Id())
+
 	newConsumer := false
-	if sess.Attrs.Get(proto.Topic) == nil {
+	if sess.getConsumerCtx(topic, group) == nil {
 		s.consumerTable.addSession(sess, topic, group)
-		sess.Attrs.Set(proto.Topic, topic)
-		sess.Attrs.Set(proto.ConsumeGroup, group)
 		newConsumer = true
 	}
+
+	sess.setConsumerCtx(topic, group, req.Id())
 
 	if newConsumer {
 		go s.tracker.Publish()
@@ -288,8 +299,8 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	}
 
 	resp.SetOriginId(resp.Id())
-	msgID, _ := sess.Attrs.Get(lastConsumeMsgIDKey).(string)
-	resp.SetId(msgID)
+	msgid, _ := sess.getConsumerCtx(topic, group).(string)
+	resp.SetId(msgid)
 	if resp.Status == 0 {
 		resp.Status = 200
 		resp.SetOriginUrl(resp.Url)

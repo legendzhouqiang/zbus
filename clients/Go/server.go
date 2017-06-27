@@ -20,11 +20,11 @@ import (
 
 // Session abstract socket connection
 type Session struct {
-	ID    string
-	Attrs SyncMap
+	ID          string
+	ConsumerCtx SyncMap
 
 	netConn     net.Conn
-	wsConn      websocket.Conn
+	wsConn      *websocket.Conn
 	isWebsocket bool
 	wsMutex     sync.Mutex
 }
@@ -33,21 +33,21 @@ type Session struct {
 func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess := &Session{}
 	sess.ID = uuid()
-	sess.Attrs.Map = make(map[string]interface{})
+	sess.ConsumerCtx.Map = make(map[string]interface{})
 	if netConn != nil {
 		sess.isWebsocket = false
 		sess.netConn = *netConn
 	}
 	if wsConn != nil {
 		sess.isWebsocket = true
-		sess.wsConn = *wsConn
+		sess.wsConn = wsConn
 	}
 	return sess
 }
 
 //Upgrade session to be based on websocket
 func (s *Session) Upgrade(wsConn *websocket.Conn) {
-	s.wsConn = *wsConn
+	s.wsConn = wsConn
 	s.isWebsocket = true
 }
 
@@ -67,6 +67,25 @@ func (s *Session) WriteMessage(msg *Message) error {
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
 	return err
+}
+
+func (s *Session) setConsumerCtx(topic string, group string, ctx interface{}) {
+	s.ConsumerCtx.Lock()
+	defer s.ConsumerCtx.Unlock()
+	groups, _ := s.ConsumerCtx.Map[topic].(*SyncMap)
+	if groups == nil {
+		groups = &SyncMap{Map: make(map[string]interface{})}
+		s.ConsumerCtx.Map[topic] = groups
+	}
+	groups.Map[group] = ctx
+}
+
+func (s *Session) getConsumerCtx(topic string, group string) interface{} {
+	groups, _ := s.ConsumerCtx.Get(topic).(*SyncMap)
+	if groups == nil {
+		return nil
+	}
+	return groups.Get(group)
 }
 
 //SessionHandler handles session lifecyle
@@ -105,7 +124,7 @@ outter:
 			}
 
 			//upgrade to Websocket if requested
-			if IsWebSocketUpgrade(req.Header) {
+			if IsWebSocketUpgrade(&req.Header) {
 				wsConn, err = upgrader.Upgrade(conn, req)
 				if err == nil {
 					//log.Printf("Upgraded to websocket: %s\n", req)
@@ -133,7 +152,7 @@ outter:
 				handler.OnError(err, session)
 				break
 			}
-			if IsWebSocketUpgrade(req.Header) {
+			if IsWebSocketUpgrade(&req.Header) {
 				continue
 			}
 			go handler.OnMessage(req, session)
