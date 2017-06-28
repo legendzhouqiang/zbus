@@ -169,7 +169,7 @@ header key-value always take precedence over URL parse result.
 	/remove/topic/[group] 
 	/empty/topic/[group]
 	
-	/query/topic/[group]
+	/query/topic/[group] 
 	
 	/track_sub
 	/track_pub
