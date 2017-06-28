@@ -5,6 +5,21 @@ Zbus strives to make Message Queue and Remote Procedure Call fast, light-weighte
 QQ Discussion: **467741880**  
 Star this project if you like zbus:)
 
+## 0. Install
+
+In zbus/server directory
+
+go build  
+
+(No dependency)
+
+Clone clients in one command
+
+In zbus directory
+
+git submodule update --init --recursive  
+
+
 ## 1. Features
 
 - Fast Message Queue in persisted mode, capable of Unicast, Multicast and Broadcast messaging models.
