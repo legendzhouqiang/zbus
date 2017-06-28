@@ -10,10 +10,6 @@ import (
 	"./proto"
 )
 
-const (
-	lastConsumeMsgIDKey = "msgid"
-)
-
 var restCommands = []string{
 	proto.Produce,
 	proto.Consume,
@@ -269,6 +265,11 @@ func produceHandler(s *ServerHandler, req *Message, sess *Session) {
 	}
 }
 
+type consumeContext struct {
+	msgid      string
+	processing bool
+}
+
 func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	if !auth(s, req, sess) {
 		return
@@ -282,31 +283,37 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 	if group == "" {
 		group = topic
 	}
-
-	newConsumer := false
-	if sess.getConsumerCtx(topic, group) == nil {
-		s.consumerTable.addSession(sess, topic, group)
-		newConsumer = true
-	}
-
-	sess.setConsumerCtx(topic, group, req.Id())
-
-	if newConsumer {
-		go s.tracker.Publish()
-	}
-
 	reader := mq.ConsumeGroup(group)
 	if reader == nil {
 		reply(404, req.Id(), fmt.Sprintf("ConsumeGroup(%s) not found", group), sess)
 		return
 	}
 
+	newConsumer := false
+	ctx, _ := sess.getConsumerCtx(topic, group).(*consumeContext)
+	if ctx == nil {
+		s.consumerTable.addSession(sess, topic, group)
+		newConsumer = true
+		ctx = &consumeContext{req.Id(), false}
+		sess.setConsumerCtx(topic, group, ctx)
+	}
+	if newConsumer {
+		go s.tracker.Publish()
+	}
+
+	ctx.msgid = req.Id() //update msgid
+	if ctx.processing {
+		//return
+	}
+	//process
+	ctx.processing = true
+
 consumeRead:
 	for {
 		data, err := reader.Read()
 		if err != nil {
 			reply(500, req.Id(), fmt.Sprintf("Consume read error: %s", err.Error()), sess)
-			return
+			break consumeRead
 		}
 
 		if data == nil {
@@ -322,8 +329,8 @@ consumeRead:
 		resp := DecodeMessage(buf)
 
 		resp.SetOriginId(resp.Id())
-		msgid, _ := sess.getConsumerCtx(topic, group).(string)
-		resp.SetId(msgid)
+		ctx, _ := sess.getConsumerCtx(topic, group).(*consumeContext)
+		resp.SetId(ctx.msgid)
 		if resp.Status == 0 {
 			resp.Status = 200
 			resp.SetOriginUrl(resp.Url)
@@ -331,6 +338,7 @@ consumeRead:
 		sess.WriteMessage(resp)
 		break
 	}
+	ctx.processing = false
 }
 
 func rpcHandler(s *ServerHandler, req *Message, sess *Session) {
