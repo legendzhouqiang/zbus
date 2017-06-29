@@ -303,7 +303,7 @@ func consumeHandler(s *ServerHandler, req *Message, sess *Session) {
 
 	ctx.msgid = req.Id() //update msgid
 	if ctx.processing {
-		//return
+		return
 	}
 	//process
 	ctx.processing = true
@@ -324,7 +324,7 @@ consumeRead:
 			}
 			continue
 		}
-
+		ctx.processing = false
 		buf := bytes.NewBuffer(data.Body)
 		resp := DecodeMessage(buf)
 
@@ -338,7 +338,6 @@ consumeRead:
 		sess.WriteMessage(resp)
 		break
 	}
-	ctx.processing = false
 }
 
 func rpcHandler(s *ServerHandler, req *Message, sess *Session) {

@@ -280,7 +280,7 @@ func NewOptions() *Options {
 }
 
 func main() {
-	//printBanner()
+	printBanner()
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
 	opt := NewOptions()
