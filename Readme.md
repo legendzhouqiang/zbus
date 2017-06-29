@@ -1,15 +1,24 @@
-# ZBUS = MQ + RPC  
+                /\\\       
+                \/\\\        
+                 \/\\\    
+     /\\\\\\\\\\\ \/\\\         /\\\    /\\\  /\\\\\\\\\\     
+     \///////\\\/  \/\\\\\\\\\  \/\\\   \/\\\ \/\\\//////     
+           /\\\/    \/\\\////\\\ \/\\\   \/\\\ \/\\\\\\\\\\    
+          /\\\/      \/\\\  \/\\\ \/\\\   \/\\\ \////////\\\  
+         /\\\\\\\\\\\ \/\\\\\\\\\  \//\\\\\\\\\   /\\\\\\\\\\  
+         \///////////  \/////////    \/////////   \////////// 
 
-Zbus strives to make Message Queue and Remote Procedure Call fast, light-weighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
+# ZBUS = MQ + RPC  
+zbus strives to make Message Queue and Remote Procedure Call fast, light-weighted and easy to build your own elastic and micro-service oriented bus for many different platforms. Simply put, ZBUS = MQ + RPC.
 
 QQ Discussion: **467741880**  
 Star this project if you like zbus:)
 
-## 0. Install
+## Installation
 
 In zbus/server directory
 
-go build  
+	go build  
 
 (No dependency)
 
@@ -17,10 +26,10 @@ Clone clients in one command
 
 In zbus directory
 
-git submodule update --init --recursive  
+	git submodule update --init --recursive  
 
 
-## 1. Features
+## Features
 
 - Fast Message Queue in persisted mode, capable of Unicast, Multicast and Broadcast messaging models.
 - Language agnostic RPC support out of box.
@@ -31,7 +40,7 @@ git submodule update --init --recursive
 - Extremely light-weighted, single executable file without any dependency(~1M zipped).
 
  
-## 2. Architecture
+## Architecture
 
 
 ![Archit](https://git.oschina.net/uploads/images/2017/0517/183402_0efce626_7458.png "Archit")
@@ -43,10 +52,10 @@ Producer = Broker = Consumer
 
 
  
-### 2.1 Topic
+### Topic
 
  
-### 2.2 ConsumeGroup
+### ConsumeGroup
 
 ConsumeGroup plays an important role of MQ in zbus. It is mainly designed to support different messaging models in applications.
 
@@ -57,7 +66,7 @@ Regarding to a topic, no matter how many consume-groups exists, there is only on
 - Multicast -- Multiple groups of Consumers, in each group, consumers share one same consume-group.
 
  
-### 2.3 MqClient
+### MqClient
 
 MqClient is a TCP based client to control topic and consume-group in MqServer:
 
@@ -70,11 +79,11 @@ MqClient is a TCP based client to control topic and consume-group in MqServer:
 - empty topic and consume-group
 
  
-### 2.4 MqServer
+### MqServer
 
 
  
-### 2.5 Broker
+### Broker
 
 Producer-Broker-Consumer PBC model is the high level view of a Messaging Queue system.
 Broker refers to a MQ server, however, from the client point of view, Broker in client is an abstraction 
@@ -120,7 +129,7 @@ with special selection algorithm.
  
 
 
-## 3. Protocol
+## Protocol
 
 *Common headers*
 
@@ -210,7 +219,7 @@ Exampels:
 
   
 
-## 4. Monitoring
+## Monitoring
 
 ![Monitor](https://git.oschina.net/uploads/images/2017/0517/184806_39bb1fc9_7458.png "Monitor")
  
