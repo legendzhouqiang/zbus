@@ -123,7 +123,7 @@ func SplitClean(s string, sep string) []string {
 
 //ServerAddress find the real address
 func ServerAddress(addr string) string {
-	bb := SplitClean(addr, ":")
+	bb := strings.Split(addr, ":")
 	host := bb[0]
 	port := "80"
 	if len(bb) > 1 {

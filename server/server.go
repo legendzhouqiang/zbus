@@ -10,7 +10,6 @@ import (
 	"net"
 	"os"
 	"sync/atomic"
-	"time"
 
 	"sync"
 
@@ -189,7 +188,7 @@ type Server struct {
 func newServer() *Server {
 	s := &Server{}
 	s.consumerTable = newConsumerTable()
-	s.infoVersion = time.Now().UnixNano() / int64(time.Millisecond)
+	s.infoVersion = CurrMillis()
 	s.trackerOnly = false
 	return s
 }
@@ -202,8 +201,8 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	info.InfoVersion = s.infoVersion
 	info.TrackerList = []proto.ServerAddress{}
 	info.TopicTable = make(map[string]*proto.TopicInfo)
-	for key, mq := range s.MqTable {
-		info.TopicTable[key] = mq.TopicInfo()
+	for _, mq := range s.MqTable {
+		info.TopicTable[mq.Name()] = mq.TopicInfo()
 	}
 	for _, address := range s.TrackerList {
 		sa := &proto.ServerAddress{Address: address, SslEnabled: false}

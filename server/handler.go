@@ -239,7 +239,7 @@ func findMQ(s *ServerHandler, req *Message, sess *Session) *MessageQueue {
 		reply(400, req.Id(), "Missing topic", sess)
 		return nil
 	}
-	mq := s.server.MqTable[topic]
+	mq := s.server.MqTable[strings.ToLower(topic)]
 	if mq == nil {
 		body := fmt.Sprintf("Topic(%s) not found", topic)
 		reply(404, req.Id(), body, sess)
