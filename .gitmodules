@@ -1,0 +1,19 @@
+
+[submodule "clients/zbus-cpp"]
+	path = clients/zbus-cpp
+	url = https://gitee.com/rushmore/zbus-cpp
+[submodule "clients/zbus-java"]
+	path = clients/zbus-java
+	url = https://gitee.com/rushmore/zbus-java
+[submodule "clients/zbus-dotnet"]
+	path = clients/zbus-dotnet
+	url = https://gitee.com/rushmore/zbus-dotnet
+[submodule "clients/zbus-javascript"]
+	path = clients/zbus-javascript
+	url = https://gitee.com/rushmore/zbus-javascript
+[submodule "clients/zbus-python"]
+	path = clients/zbus-python
+	url = https://gitee.com/rushmore/zbus-python
+[submodule "clients/zbus-php"]
+	path = clients/zbus-php
+	url = https://gitee.com/rushmore/zbus-php
