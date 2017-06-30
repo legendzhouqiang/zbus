@@ -21,6 +21,14 @@ zbus strives to make Message Queue and Remote Procedure Call fast, light-weighte
 - Based on simple protocol: HTTP-header extension, and browser access friendly
 
 
+## Performance
+
+	Single Mac i7 box with SSD, with apache ab -k -c 32 -n 4000000 URL
+
+	Produce:  ~70,000/s
+	Consume:  ~60,000/s
+	RPC: ~20,000/s (java service)
+
 ## Getting started
 ### Installation
 - Build from source
@@ -110,19 +118,17 @@ ConsumeGroup is super light-weighted in zbus, it is just like a pointer to the m
 applications can form unicast, multicast, and broadcast messaging models.
 
 ## Protocol
-Extend HTTP header, link coming soon
 
 
 ## Internal Design
 
-DiskQueue Design, link coming soon
+Broker Design
 
-## Performance
+DiskQueue Design
 
-	Single Mac i7 box with SSD, with apache ab -k -c 32 -n 4000000 URL
+RPC Design
 
-	Produce:  ~70,000/s
-	Consume:  ~60,000/s
-	RPC: ~20,000/s (Java service)
 
-More detailed tests are comming soon...	
+
+
+ 

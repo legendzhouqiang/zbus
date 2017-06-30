@@ -1,4 +1,4 @@
-##Rpc Design
+## RPC Design
 
 	Request {
 		+ method: string   <required>
