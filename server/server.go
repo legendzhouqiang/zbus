@@ -219,9 +219,13 @@ func (s *Server) trackerInfo() *proto.TrackerInfo {
 	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
 	info.ServerTable = make(map[string]*proto.ServerInfo)
-	for key, serverInfo := range s.tracker.serverTable {
+
+	s.tracker.serverTable.RLock()
+	for key, sinfo := range s.tracker.serverTable.Map {
+		serverInfo, _ := sinfo.(*proto.ServerInfo)
 		info.ServerTable[key] = serverInfo
 	}
+	s.tracker.serverTable.RUnlock()
 	if !s.trackerOnly {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
@@ -351,7 +355,7 @@ func main() {
 }
 
 func printBanner() {
-	fmt.Println(`
+	fmt.Printf(`
                 /\\\       
                 \/\\\        
                  \/\\\    
@@ -359,8 +363,8 @@ func printBanner() {
      \///////\\\/  \/\\\\\\\\\  \/\\\   \/\\\ \/\\\//////     
            /\\\/    \/\\\////\\\ \/\\\   \/\\\ \/\\\\\\\\\\    
           /\\\/      \/\\\  \/\\\ \/\\\   \/\\\ \////////\\\  
-         /\\\\\\\\\\\ \/\\\\\\\\\  \//\\\\\\\\\   /\\\\\\\\\\  
-         \///////////  \/////////    \/////////   \////////// 
+         /\\\\\\\\\\\ \/\\\\\\\\\  \//\\\\\\\\\   /\\\\\\\\\\
+         \///////////  \/////////    \/////////   \//////////     Version: %s
 		
-		`)
+		`, proto.VersionValue)
 }

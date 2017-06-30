@@ -16,12 +16,12 @@ import (
 type Tracker struct {
 	infoVersion int64
 
-	upstreams        map[string]*MessageClient //Client mode: connect to upstream Trackers
-	healthyUpstreams map[string]*MessageClient //Client mode: connected upstream Trackers
-	downstreams      map[string]*MessageClient //Server mode: connected downstream MqServer
+	upstreams        SyncMap // map[string]*MessageClient, Client mode: connect to upstream Trackers
+	healthyUpstreams SyncMap // map[string]*MessageClient, Client mode: connected upstream Trackers
+	downstreams      SyncMap // map[string]*MessageClient, Server mode: connected downstream MqServer
 
-	subscribers map[string]*Session
-	serverTable map[string]*proto.ServerInfo
+	subscribers SyncMap // map[string]*Session
+	serverTable SyncMap // map[string]*proto.ServerInfo
 
 	reconnectInterval time.Duration
 	server            *Server
@@ -32,11 +32,11 @@ func NewTracker(server *Server) *Tracker {
 	t := &Tracker{}
 	t.infoVersion = CurrMillis()
 
-	t.upstreams = make(map[string]*MessageClient)
-	t.healthyUpstreams = make(map[string]*MessageClient)
-	t.downstreams = make(map[string]*MessageClient)
-	t.subscribers = make(map[string]*Session)
-	t.serverTable = make(map[string]*proto.ServerInfo)
+	t.upstreams.Map = make(map[string]interface{})
+	t.healthyUpstreams.Map = make(map[string]interface{})
+	t.downstreams.Map = make(map[string]interface{})
+	t.subscribers.Map = make(map[string]interface{})
+	t.serverTable.Map = make(map[string]interface{})
 	t.server = server
 	t.reconnectInterval = 3000 * time.Millisecond
 	return t
@@ -51,7 +51,7 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 
 	addressList := SplitClean(trackerList, ";")
 	for _, trackerAddress := range addressList {
-		client := t.upstreams[trackerAddress]
+		client, _ := t.upstreams.Get(trackerAddress).(*MessageClient)
 		if client != nil {
 			continue //already exists
 		}
@@ -63,19 +63,19 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 			event.Live = true
 
 			t.updateToUpstream(c, event)
-			t.healthyUpstreams[trackerAddress] = c
+			t.healthyUpstreams.Set(trackerAddress, c)
 		}
 
 		client.onDisconnected = func(c *MessageClient) {
 			log.Printf("Disconnected from Tracker(%s)\n", trackerAddress)
-			delete(t.healthyUpstreams, trackerAddress)
+			t.healthyUpstreams.Remove(trackerAddress)
 			time.Sleep(t.reconnectInterval)
 
 			notify := make(chan bool)
 			c.EnsureConnected(notify)
 			<-notify
 		}
-		t.upstreams[trackerAddress] = client
+		t.upstreams.Set(trackerAddress, client)
 
 		client.EnsureConnected(nil)
 	}
@@ -83,16 +83,20 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 
 //Publish server info to subscribers/upstream trackers
 func (t *Tracker) Publish() {
-	if len(t.healthyUpstreams) > 0 {
+	if t.healthyUpstreams.Size() > 0 {
 		event := &proto.ServerEvent{}
 		event.ServerInfo = t.server.serverInfo()
 		event.Live = true
-		for _, client := range t.healthyUpstreams {
+
+		t.healthyUpstreams.RLock()
+		for _, c := range t.healthyUpstreams.Map {
+			client, _ := c.(*MessageClient)
 			t.updateToUpstream(client, event)
 		}
+		t.healthyUpstreams.RUnlock()
 	}
 
-	if len(t.subscribers) <= 0 {
+	if t.subscribers.Size() <= 0 {
 		return
 	}
 
@@ -106,33 +110,42 @@ func (t *Tracker) Publish() {
 	msg.SetJsonBody(string(data))
 
 	var errSessions []*Session
-	for _, sess := range t.subscribers {
+	t.subscribers.RLock()
+	for _, s := range t.subscribers.Map {
+		sess, _ := s.(*Session)
 		err := sess.WriteMessage(msg)
 		if err != nil {
 			errSessions = append(errSessions, sess)
 		}
 	}
+	t.subscribers.RUnlock()
 	for _, sess := range errSessions {
-		delete(t.subscribers, sess.ID)
+		t.subscribers.Remove(sess.ID)
 	}
 }
 
 //CleanSession remove session from subscribers
 func (t *Tracker) CleanSession(sess *Session) {
-	delete(t.subscribers, sess.ID)
+	t.subscribers.Remove(sess.ID)
 }
 
 //Close clean the tracker
 func (t *Tracker) Close() {
-	for _, client := range t.upstreams {
+	t.upstreams.RLock()
+	for _, c := range t.upstreams.Map {
+		client, _ := c.(*MessageClient)
 		client.Close()
 	}
-	t.upstreams = make(map[string]*MessageClient)
+	t.upstreams.RUnlock()
+	t.upstreams.Clear()
 
-	for _, client := range t.downstreams {
+	t.downstreams.RLock()
+	for _, c := range t.downstreams.Map {
+		client, _ := c.(*MessageClient)
 		client.Close()
 	}
-	t.downstreams = make(map[string]*MessageClient)
+	t.downstreams.RUnlock()
+	t.downstreams.Clear()
 }
 
 func (t *Tracker) updateToUpstream(upstream *MessageClient, event *proto.ServerEvent) {
@@ -178,13 +191,13 @@ func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
 	}
 	tracker := s.tracker
 	addressKey := serverInfo.ServerAddress.Address
-	client := tracker.downstreams[addressKey]
+	client, _ := tracker.downstreams.Get(addressKey).(*MessageClient)
 	if event.Live {
-		tracker.serverTable[addressKey] = serverInfo
+		tracker.serverTable.Set(addressKey, serverInfo)
 	} else {
-		delete(tracker.serverTable, addressKey)
+		tracker.serverTable.Remove(addressKey)
 		if client != nil {
-			delete(tracker.downstreams, addressKey)
+			tracker.downstreams.Remove(addressKey)
 			client.Close()
 		}
 	}
@@ -194,12 +207,13 @@ func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
 
 		client.onConnected = func(c *MessageClient) {
 			log.Printf("Server(%s) in track", serverInfo.ServerAddress.String())
-			tracker.downstreams[addressKey] = client
+			tracker.downstreams.Set(addressKey, client)
 			tracker.Publish()
 		}
 		client.onDisconnected = func(c *MessageClient) {
 			log.Printf("Server(%s) lost of tracking", serverInfo.ServerAddress.String())
-			delete(tracker.serverTable, addressKey)
+			tracker.serverTable.Remove(addressKey)
+			tracker.downstreams.Remove(addressKey)
 			tracker.Publish()
 			client.Close()
 		}
@@ -214,7 +228,7 @@ func trackSubHandler(s *ServerHandler, req *Message, sess *Session) {
 	if !auth(s, req, sess) {
 		return
 	}
-	s.tracker.subscribers[sess.ID] = sess
+	s.tracker.subscribers.Set(sess.ID, sess)
 
 	info := s.server.trackerInfo()
 	data, _ := json.Marshal(info)
