@@ -163,6 +163,7 @@ func (c *MessageClient) EnsureConnected(notify chan bool) {
 			if err == nil {
 				break
 			}
+			log.Printf("Connection to(%s) failed: %s", c.address, err.Error())
 			time.Sleep(c.timeout)
 		}
 		if notify != nil {

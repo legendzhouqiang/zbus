@@ -290,7 +290,7 @@ func main() {
 	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
 	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
 	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
-	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list")
+	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&opt.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
 
 	flag.Parse()
@@ -355,7 +355,7 @@ func main() {
 }
 
 func printBanner() {
-	fmt.Printf(`
+	logo := fmt.Sprintf(`
                 /\\\       
                 \/\\\        
                  \/\\\    
@@ -365,6 +365,6 @@ func printBanner() {
           /\\\/      \/\\\  \/\\\ \/\\\   \/\\\ \////////\\\  
          /\\\\\\\\\\\ \/\\\\\\\\\  \//\\\\\\\\\   /\\\\\\\\\\
          \///////////  \/////////    \/////////   \//////////     Version: %s
-		
 		`, proto.VersionValue)
+	fmt.Println(logo)
 }

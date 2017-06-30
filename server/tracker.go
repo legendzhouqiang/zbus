@@ -76,8 +76,7 @@ func (t *Tracker) JoinUpstreams(trackerList string) {
 			<-notify
 		}
 		t.upstreams.Set(trackerAddress, client)
-
-		client.EnsureConnected(nil)
+		client.Start(nil)
 	}
 }
 
