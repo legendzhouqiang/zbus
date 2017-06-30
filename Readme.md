@@ -47,7 +47,7 @@ On your favorite OS, run the built zbus binary, access the monitor address
 
 You can change the default configuration, in console, type 
 
-	zbus.exe -h             (change the binary name to 'zbus' if by default is 'server')
+	zbus -h             (change the binary name to 'zbus' if by default is 'server')
 
 all self-explained, with configurable items listed such as port to listen, directory to store MQ and log etc.
 
@@ -119,9 +119,8 @@ DiskQueue Design, link coming soon
 
 ## Performance
 
-	Single Mac i7 box with SSD
+	Single Mac i7 box with SSD, with apache ab -k -c 32 -n 4000000 URL
 
-	Rough figure:
 	Produce:  ~70,000/s
 	Consume:  ~60,000/s
 	RPC: ~20,000/s (Java service)
