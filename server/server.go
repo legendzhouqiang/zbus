@@ -262,6 +262,7 @@ func (s *Server) addServerContext(t interface{}) {
 //Options stores the conguration for server
 type Options struct {
 	Address      string
+	ServerName   string //override Address if provided
 	MqDir        string
 	LogDir       string
 	CertFileDir  string
@@ -288,6 +289,7 @@ func main() {
 
 	opt := NewOptions()
 	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&opt.ServerName, "name", "", "Server public server name, e.g. zbus.io")
 	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
 	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
 	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
@@ -325,10 +327,17 @@ func main() {
 	defer fd.Close()
 
 	log.Println("Listening on " + opt.Address)
-	addr := ServerAddress(opt.Address) //get real server address if needs
+
+	host, port := ServerAddress(opt.Address) //get real server address if needs
+	if opt.ServerName != "" {
+		host = opt.ServerName
+	}
+	addr := fmt.Sprintf("%s:%d", host, port)
+
 	server := newServer()
 	server.MqDir = opt.MqDir
 	server.trackerOnly = opt.TrackOnly
+
 	server.ServerAddress = &proto.ServerAddress{addr, false}
 	server.TrackerList = SplitClean(opt.TrackerList, ";")
 

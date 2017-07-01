@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -58,12 +59,12 @@ func SplitClean(s string, sep string) []string {
 }
 
 //ServerAddress find the real address
-func ServerAddress(addr string) string {
+func ServerAddress(addr string) (string, int) {
 	bb := strings.Split(addr, ":")
 	host := bb[0]
-	port := "80"
+	port := 80
 	if len(bb) > 1 {
-		port = bb[1]
+		port, _ = strconv.Atoi(bb[1])
 	}
 	if host == "0.0.0.0" || host == "" {
 		ip, err := LocalIPAddress()
@@ -71,7 +72,7 @@ func ServerAddress(addr string) string {
 			host = ip.String()
 		}
 	}
-	return fmt.Sprintf("%s:%s", host, port)
+	return host, port
 }
 
 type byIP []net.IP
