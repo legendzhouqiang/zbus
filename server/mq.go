@@ -18,7 +18,7 @@ type MessageQueue struct {
 	index    *diskq.Index
 	name     string
 	writer   *diskq.QueueWriter //for Producer to write
-	readers  SyncMap            //also known as ConsumeGroup, string=>*diskq.QueueReader
+	readers  SyncMap            //map[string]*diskq.QueueReader, consume-groups
 	avaiable chan bool
 }
 
