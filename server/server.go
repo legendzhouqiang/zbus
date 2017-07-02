@@ -13,6 +13,8 @@ import (
 
 	"sync"
 
+	"time"
+
 	"./proto"
 	"./websocket"
 )
@@ -27,6 +29,7 @@ type Session struct {
 	wsConn      *websocket.Conn
 	isWebsocket bool
 	wsMutex     sync.Mutex
+	active      bool
 }
 
 //NewSession create session
@@ -35,6 +38,7 @@ func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 	sess.ID = uuid()
 	sess.ConsumerCtx.Map = make(map[string]interface{})
 	sess.Broken = make(chan bool)
+	sess.active = true
 
 	if netConn != nil {
 		sess.isWebsocket = false
@@ -45,6 +49,16 @@ func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
 		sess.wsConn = wsConn
 	}
 	return sess
+}
+
+//Close Change status to inactive, send channel message
+func (s *Session) Close() {
+	s.active = false
+	select {
+	case s.Broken <- true:
+	default:
+		//ignore is alredy broken
+	}
 }
 
 //Upgrade session to be based on websocket
@@ -67,13 +81,15 @@ func (s *Session) WriteMessage(msg *Message) error {
 		defer s.wsMutex.Unlock()
 		err := s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 		if err != nil {
-			s.Broken <- true // Write failed, socket broken?!
+			log.Printf("Write error(%s): %s", s.ID, err.Error())
+			s.Close() //send signal
 		}
 		return err
 	}
 	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
 	if err != nil {
-		s.Broken <- true // Write failed, socket broken?!
+		log.Printf("Write error(%s): %s", s.ID, err.Error())
+		s.Close() //send signal
 	}
 	return err
 }
@@ -103,11 +119,12 @@ type SessionHandler interface {
 	ToDestroy(sess *Session)
 	OnMessage(msg *Message, sess *Session)
 	OnError(err error, sess *Session)
+	OnIdle(sess *Session)
 }
 
 var upgrader = Upgrader{}
 
-func handleConnection(conn net.Conn, handler SessionHandler) {
+func handleConnection(s *Server, conn net.Conn, handler SessionHandler) {
 	defer conn.Close()
 	bufRead := new(bytes.Buffer)
 	var wsConn *websocket.Conn
@@ -116,8 +133,18 @@ func handleConnection(conn net.Conn, handler SessionHandler) {
 outter:
 	for {
 		data := make([]byte, 1024)
+		conn.SetReadDeadline(time.Now().Add(s.Config.IdleTimeout))
 		n, err := conn.Read(data)
 		if err != nil {
+			if err, ok := err.(net.Error); ok && err.Timeout() {
+				handler.OnIdle(session)
+				if session.active {
+					continue
+				} else {
+					break
+				}
+			}
+
 			handler.OnError(err, session)
 			break
 		}
@@ -141,7 +168,6 @@ outter:
 					break outter
 				}
 			}
-
 			go handler.OnMessage(req, session)
 		}
 	}
@@ -151,6 +177,14 @@ outter:
 		for {
 			_, data, err := wsConn.ReadMessage()
 			if err != nil {
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					handler.OnIdle(session)
+					if session.active {
+						continue
+					} else {
+						break
+					}
+				}
 				handler.OnError(err, session)
 				break
 			}
@@ -168,12 +202,15 @@ outter:
 		}
 	}
 	handler.ToDestroy(session)
+	conn.Close() //make sure to close the underlying socket
 }
 
 //Server = MqServer + Tracker
 type Server struct {
 	ServerAddress *proto.ServerAddress
-	MqTable       map[string]*MessageQueue
+	MqTable       SyncMap // map[string]*MessageQueue
+	Config        *Options
+
 	consumerTable *consumerTable
 
 	MqDir       string
@@ -187,6 +224,7 @@ type Server struct {
 
 func newServer() *Server {
 	s := &Server{}
+	s.MqTable.Map = make(map[string]interface{})
 	s.consumerTable = newConsumerTable()
 	s.infoVersion = CurrMillis()
 	s.trackerOnly = false
@@ -201,9 +239,14 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	info.InfoVersion = s.infoVersion
 	info.TrackerList = []proto.ServerAddress{}
 	info.TopicTable = make(map[string]*proto.TopicInfo)
-	for _, mq := range s.MqTable {
+
+	s.MqTable.RLock()
+	for _, m := range s.MqTable.Map {
+		mq, _ := m.(*MessageQueue)
 		info.TopicTable[mq.Name()] = mq.TopicInfo()
 	}
+	s.MqTable.RUnlock()
+
 	for _, address := range s.TrackerList {
 		sa := &proto.ServerAddress{Address: address, SslEnabled: false}
 		info.TrackerList = append(info.TrackerList, *sa)
@@ -270,15 +313,24 @@ type Options struct {
 	Verbose      bool
 	TrackOnly    bool
 	TrackerList  string
+	IdleTimeout  time.Duration
 }
 
-//NewOptions creates default configuration
-func NewOptions() *Options {
+//ParseOptions from command line or config file
+func ParseOptions() *Options {
 	opt := &Options{}
-	opt.Address = "0.0.0.0:15555"
-	opt.MqDir = "/tmp/zbus"
-	opt.TrackOnly = false
-	opt.Verbose = true
+	idleTime := 30
+	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&opt.ServerName, "name", "", "Server public server name, e.g. zbus.io")
+	flag.IntVar(&idleTime, "idle", 120, "Idle detection timeout in seconds") //default to 120 seconds
+	opt.IdleTimeout = time.Duration(idleTime) * time.Second
+
+	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
+	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
+	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
+	flag.BoolVar(&opt.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+
+	flag.Parse()
 
 	return opt
 }
@@ -287,15 +339,7 @@ func main() {
 	printBanner()
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
-	opt := NewOptions()
-	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
-	flag.StringVar(&opt.ServerName, "name", "", "Server public server name, e.g. zbus.io")
-	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
-	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
-	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
-	flag.BoolVar(&opt.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
-
-	flag.Parse()
+	opt := ParseOptions()
 
 	var logTargets []io.Writer
 	if opt.LogToConsole {
@@ -335,6 +379,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", host, port)
 
 	server := newServer()
+	server.Config = opt
 	server.MqDir = opt.MqDir
 	server.trackerOnly = opt.TrackOnly
 
@@ -346,7 +391,9 @@ func main() {
 		log.Println("Error loading MQ table: ", err.Error())
 		return
 	}
-	server.MqTable = mqTable
+	for key, val := range mqTable {
+		server.MqTable.Set(key, val)
+	}
 
 	tracker := NewTracker(server)
 	tracker.JoinUpstreams(opt.TrackerList)
@@ -359,7 +406,7 @@ func main() {
 			log.Println("Error accepting: ", err.Error())
 			return
 		}
-		go handleConnection(conn, handler)
+		go handleConnection(server, conn, handler)
 	}
 }
 

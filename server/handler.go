@@ -94,7 +94,15 @@ func (s *ServerHandler) OnError(err error, sess *Session) {
 	s.cleanSession(sess)
 }
 
+//OnIdle when connection from client idled
+func (s *ServerHandler) OnIdle(sess *Session) {
+	log.Printf("Session(%s) Idled", sess)
+	s.cleanSession(sess)
+}
+
 func (s *ServerHandler) cleanSession(sess *Session) {
+	sess.Close()
+
 	s.tracker.CleanSession(sess)
 	s.SessionTable.Remove(sess.ID)
 
@@ -239,7 +247,7 @@ func findMQ(s *ServerHandler, req *Message, sess *Session) *MessageQueue {
 		reply(400, req.Id(), "Missing topic", sess)
 		return nil
 	}
-	mq := s.server.MqTable[strings.ToLower(topic)]
+	mq, _ := s.server.MqTable.Get(strings.ToLower(topic)).(*MessageQueue)
 	if mq == nil {
 		body := fmt.Sprintf("Topic(%s) not found", topic)
 		reply(404, req.Id(), body, sess)
@@ -390,7 +398,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session) {
 	var err error
 	var info interface{}
 
-	mq := s.server.MqTable[topic]
+	mq, _ := s.server.MqTable.Get(strings.ToLower(topic)).(*MessageQueue)
 	if mq == nil {
 		mq, err = NewMessageQueue(s.server.MqDir, topic)
 		if err != nil {
@@ -403,7 +411,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session) {
 		if mask != nil {
 			mq.SetMask(*mask)
 		}
-		s.server.MqTable[topic] = mq
+		s.server.MqTable.Set(strings.ToLower(topic), mq)
 
 		info, err = mq.DeclareGroup(g)
 		if err != nil {
@@ -477,7 +485,7 @@ func removeHandler(s *ServerHandler, req *Message, sess *Session) {
 	topic := mq.Name()
 	group := req.ConsumeGroup()
 	if group == "" {
-		delete(s.server.MqTable, mq.Name())
+		s.server.MqTable.Remove(strings.ToLower(topic))
 		err := mq.Destroy()
 		if err != nil {
 			body := fmt.Sprintf("Remove topic(%s) error: %s", topic, err.Error())
