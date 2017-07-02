@@ -7,6 +7,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"./proto"
 )
 
 //MessageClient TCP client using Message type
@@ -17,10 +19,13 @@ type MessageClient struct {
 	certFile   string
 	bufRead    *bytes.Buffer
 
-	msgTable      map[string]*Message
+	msgTable      SyncMap //map[string]*Message
 	timeout       time.Duration
 	autoReconnect bool
-	mutex         *sync.Mutex
+	mutex         sync.Mutex
+
+	heartbeatInterval time.Duration
+	stopHeartbeat     chan bool
 
 	onConnected    func(*MessageClient)
 	onDisconnected func(*MessageClient)
@@ -32,14 +37,38 @@ func NewMessageClient(address string, certFile *string) *MessageClient {
 	c := &MessageClient{}
 	c.address = address
 	c.bufRead = new(bytes.Buffer)
-	c.msgTable = make(map[string]*Message)
 	c.timeout = 3000 * time.Millisecond
-	c.mutex = &sync.Mutex{}
+	c.heartbeatInterval = 30 * time.Second
+
+	c.msgTable.Map = make(map[string]interface{})
 	if certFile != nil {
 		c.sslEnabled = true
 		c.certFile = *certFile
 	}
+	go c.heartbeat() //start heatbeat by default
 	return c
+}
+
+func (c *MessageClient) heartbeat() {
+hearbeat:
+	for {
+		select {
+		case <-time.After(c.heartbeatInterval):
+		case <-c.stopHeartbeat:
+			break hearbeat
+		}
+
+		if c.conn == nil {
+			continue
+		}
+		msg := NewMessage()
+		msg.SetCmd(proto.Heartbeat)
+
+		err := c.Send(msg)
+		if err != nil {
+			log.Printf("Sending heartbeat error: %s", err.Error())
+		}
+	}
 }
 
 //Connect to server
@@ -48,16 +77,18 @@ func (c *MessageClient) Connect() error {
 		return nil
 	}
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	if c.conn != nil {
+		c.mutex.Unlock()
 		return nil
 	}
 
 	log.Printf("Trying connect to %s\n", c.address)
 	conn, err := net.DialTimeout("tcp", c.address, c.timeout)
 	if err != nil {
+		c.mutex.Unlock()
 		return err
 	}
+	c.mutex.Unlock()
 	c.conn = conn.(*net.TCPConn)
 	if c.onConnected != nil {
 		c.onConnected(c)
@@ -70,10 +101,14 @@ func (c *MessageClient) Connect() error {
 //Close client
 func (c *MessageClient) Close() {
 	c.autoReconnect = false
-	c.close()
+	select {
+	case c.stopHeartbeat <- true:
+	default:
+	}
+	c.closeConn()
 }
 
-func (c *MessageClient) close() {
+func (c *MessageClient) closeConn() {
 	if c.conn == nil {
 		return
 	}
@@ -126,9 +161,9 @@ func (c *MessageClient) Recv(msgid *string) (*Message, error) {
 	}
 	for {
 		if msgid != nil {
-			msg := c.msgTable[*msgid]
+			msg, _ := c.msgTable.Get(*msgid).(*Message)
 			if msg != nil {
-				delete(c.msgTable, *msgid)
+				c.msgTable.Remove(*msgid)
 				return msg, nil
 			}
 		}
@@ -151,7 +186,7 @@ func (c *MessageClient) Recv(msgid *string) (*Message, error) {
 		if msgid == nil || respId == "" || respId == *msgid {
 			return resp, nil
 		}
-		c.msgTable[respId] = resp
+		c.msgTable.Set(respId, resp)
 	}
 }
 
@@ -189,7 +224,7 @@ func (c *MessageClient) Start(notify chan bool) {
 			if err, ok := err.(net.Error); ok && err.Timeout() {
 				continue
 			}
-			c.close()
+			c.closeConn()
 			if c.onDisconnected != nil {
 				c.onDisconnected(c)
 			}

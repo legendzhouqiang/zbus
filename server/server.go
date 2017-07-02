@@ -322,7 +322,7 @@ func ParseOptions() *Options {
 	idleTime := 30
 	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
 	flag.StringVar(&opt.ServerName, "name", "", "Server public server name, e.g. zbus.io")
-	flag.IntVar(&idleTime, "idle", 120, "Idle detection timeout in seconds") //default to 120 seconds
+	flag.IntVar(&idleTime, "idle", 60, "Idle detection timeout in seconds") //default to 1 minute
 	opt.IdleTimeout = time.Duration(idleTime) * time.Second
 
 	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")

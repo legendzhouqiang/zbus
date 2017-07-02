@@ -237,5 +237,8 @@ func trackSubHandler(s *ServerHandler, req *Message, sess *Session) {
 	resp.SetCmd(proto.TrackPub)
 	resp.SetId(req.Id())
 	resp.SetJsonBody(string(data))
-	sess.WriteMessage(resp)
+	err := sess.WriteMessage(resp)
+	if err != nil {
+		log.Printf("TrackSub write error: %s", err.Error())
+	}
 }
