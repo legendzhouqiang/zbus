@@ -10,225 +10,118 @@ import (
 	"net"
 	"os"
 	"sync/atomic"
-
-	"sync"
-
 	"time"
 
 	"./proto"
 	"./websocket"
 )
 
-// Session abstract socket connection
-type Session struct {
-	ID          string
-	ConsumerCtx SyncMap
-	Broken      chan bool
-
-	netConn     net.Conn
-	wsConn      *websocket.Conn
-	isWebsocket bool
-	wsMutex     sync.Mutex
-	active      bool
-}
-
-//NewSession create session
-func NewSession(netConn *net.Conn, wsConn *websocket.Conn) *Session {
-	sess := &Session{}
-	sess.ID = uuid()
-	sess.ConsumerCtx.Map = make(map[string]interface{})
-	sess.Broken = make(chan bool)
-	sess.active = true
-
-	if netConn != nil {
-		sess.isWebsocket = false
-		sess.netConn = *netConn
-	}
-	if wsConn != nil {
-		sess.isWebsocket = true
-		sess.wsConn = wsConn
-	}
-	return sess
-}
-
-//Close Change status to inactive, send channel message
-func (s *Session) Close() {
-	s.active = false
-	select {
-	case s.Broken <- true:
-	default:
-		//ignore is alredy broken
-	}
-}
-
-//Upgrade session to be based on websocket
-func (s *Session) Upgrade(wsConn *websocket.Conn) {
-	s.wsConn = wsConn
-	s.isWebsocket = true
-}
-
-//String get string value of session
-func (s *Session) String() string {
-	return fmt.Sprintf("%s-%s", s.ID, s.netConn.RemoteAddr())
-}
-
-//WriteMessage write message to underlying connection
-func (s *Session) WriteMessage(msg *Message) error {
-	buf := new(bytes.Buffer)
-	msg.EncodeMessage(buf)
-	if s.isWebsocket {
-		s.wsMutex.Lock()
-		defer s.wsMutex.Unlock()
-		err := s.wsConn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
-		if err != nil {
-			log.Printf("Write error(%s): %s", s.ID, err.Error())
-			s.Close() //send signal
-		}
-		return err
-	}
-	_, err := s.netConn.Write(buf.Bytes()) //TODO write may return 0 without err
-	if err != nil {
-		log.Printf("Write error(%s): %s", s.ID, err.Error())
-		s.Close() //send signal
-	}
-	return err
-}
-
-func (s *Session) setConsumerCtx(topic string, group string, ctx interface{}) {
-	s.ConsumerCtx.Lock()
-	defer s.ConsumerCtx.Unlock()
-	groups, _ := s.ConsumerCtx.Map[topic].(*SyncMap)
-	if groups == nil {
-		groups = &SyncMap{Map: make(map[string]interface{})}
-		s.ConsumerCtx.Map[topic] = groups
-	}
-	groups.Map[group] = ctx
-}
-
-func (s *Session) getConsumerCtx(topic string, group string) interface{} {
-	groups, _ := s.ConsumerCtx.Get(topic).(*SyncMap)
-	if groups == nil {
-		return nil
-	}
-	return groups.Get(group)
-}
-
-//SessionHandler handles session lifecyle
-type SessionHandler interface {
-	Created(sess *Session)
-	ToDestroy(sess *Session)
-	OnMessage(msg *Message, sess *Session)
-	OnError(err error, sess *Session)
-	OnIdle(sess *Session)
-}
-
-var upgrader = Upgrader{}
-
-func handleConnection(s *Server, conn net.Conn, handler SessionHandler) {
-	defer conn.Close()
-	bufRead := new(bytes.Buffer)
-	var wsConn *websocket.Conn
-	session := NewSession(&conn, nil)
-	handler.Created(session)
-outter:
-	for {
-		data := make([]byte, 1024)
-		conn.SetReadDeadline(time.Now().Add(s.Config.IdleTimeout))
-		n, err := conn.Read(data)
-		if err != nil {
-			if err, ok := err.(net.Error); ok && err.Timeout() {
-				handler.OnIdle(session)
-				if session.active {
-					continue
-				} else {
-					break
-				}
-			}
-
-			handler.OnError(err, session)
-			break
-		}
-		bufRead.Write(data[0:n])
-
-		for {
-			req := DecodeMessage(bufRead)
-			if req == nil {
-				bufRead2 := new(bytes.Buffer)
-				bufRead2.Write(bufRead.Bytes())
-				bufRead = bufRead2
-				break
-			}
-
-			//upgrade to Websocket if requested
-			if IsWebSocketUpgrade(&req.Header) {
-				wsConn, err = upgrader.Upgrade(conn, req)
-				if err == nil {
-					//log.Printf("Upgraded to websocket: %s\n", req)
-					session.Upgrade(wsConn)
-					break outter
-				}
-			}
-			go handler.OnMessage(req, session)
-		}
-	}
-
-	if wsConn != nil { //upgraded to Websocket
-		bufRead = new(bytes.Buffer)
-		for {
-			_, data, err := wsConn.ReadMessage()
-			if err != nil {
-				if err, ok := err.(net.Error); ok && err.Timeout() {
-					handler.OnIdle(session)
-					if session.active {
-						continue
-					} else {
-						break
-					}
-				}
-				handler.OnError(err, session)
-				break
-			}
-			bufRead.Write(data)
-			req := DecodeMessage(bufRead)
-			if req == nil {
-				err = errors.New("Websocket invalid message: " + string(data))
-				handler.OnError(err, session)
-				break
-			}
-			if IsWebSocketUpgrade(&req.Header) {
-				continue
-			}
-			go handler.OnMessage(req, session)
-		}
-	}
-	handler.ToDestroy(session)
-	conn.Close() //make sure to close the underlying socket
+//Config stores the conguration for server
+type Config struct {
+	Address      string
+	ServerName   string //override Address if provided
+	MqDir        string
+	LogDir       string
+	CertFileDir  string
+	LogToConsole bool
+	Verbose      bool
+	TrackOnly    bool
+	TrackerList  []string
+	IdleTimeout  time.Duration
 }
 
 //Server = MqServer + Tracker
 type Server struct {
+	Config        *Config
 	ServerAddress *proto.ServerAddress
 	MqTable       SyncMap // map[string]*MessageQueue
-	Config        *Options
+
+	listener net.Listener
 
 	consumerTable *consumerTable
-
-	MqDir       string
-	TrackerList []string
-
-	infoVersion int64
-	trackerOnly bool
+	infoVersion   int64
 
 	tracker *Tracker
+	handler SessionHandler
+
+	wsUpgrader *Upgrader // upgrade TCP to websocket
 }
 
-func newServer() *Server {
+//NewServer create a zbus server
+func NewServer(config *Config) *Server {
 	s := &Server{}
+	s.Config = config
+
+	host, port := ServerAddress(config.Address) //get real server address if needs
+	if config.ServerName != "" {
+		host = config.ServerName
+	}
+	addr := fmt.Sprintf("%s:%d", host, port)
+	s.ServerAddress = &proto.ServerAddress{addr, false} //TODO Support SSL
+
 	s.MqTable.Map = make(map[string]interface{})
 	s.consumerTable = newConsumerTable()
 	s.infoVersion = CurrMillis()
-	s.trackerOnly = false
+	s.wsUpgrader = &Upgrader{}
+
+	//init at last
+	s.tracker = NewTracker(s)
+	s.handler = NewServerHandler(s)
 	return s
+}
+
+//Start zbus server(MqServer + Tracker)
+func (s *Server) Start() error {
+	var err error
+	if s.listener != nil {
+		log.Printf("No need to start again")
+		return nil
+	}
+
+	s.listener, err = net.Listen("tcp", s.Config.Address)
+	if err != nil {
+		log.Println("Error listening:", err.Error())
+		return err
+	}
+	log.Println("Listening on " + s.Config.Address)
+
+	log.Println("Trying to load MqTable...")
+	if err = s.LoadMqTable(); err != nil { //load MQ table
+		return err
+	}
+	log.Println("MqTable loaded")
+	s.tracker.JoinUpstreams(s.Config.TrackerList)
+
+	for {
+		conn, err := s.listener.Accept()
+		if err != nil {
+			log.Println("Error accepting: ", err.Error())
+			return err
+		}
+		go s.handleConnection(conn)
+	}
+}
+
+//Close server
+func (s *Server) Close() {
+	s.listener.Close() //TODO more release may required
+}
+
+//LoadMqTable from disk
+func (s *Server) LoadMqTable() error {
+	if err := EnsureDir(s.Config.MqDir); err != nil {
+		log.Printf("MqDir(%s) creation failed:%s", s.Config.MqDir, err.Error())
+		return err
+	}
+	mqTable, err := LoadMqTable(s.Config.MqDir)
+	if err != nil {
+		log.Println("Error loading MQ table: ", err.Error())
+		return err
+	}
+	for key, val := range mqTable {
+		s.MqTable.Set(key, val)
+	}
+	return nil
 }
 
 func (s *Server) serverInfo() *proto.ServerInfo {
@@ -247,7 +140,7 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	}
 	s.MqTable.RUnlock()
 
-	for _, address := range s.TrackerList {
+	for _, address := range s.Config.TrackerList {
 		sa := &proto.ServerAddress{Address: address, SslEnabled: false}
 		info.TrackerList = append(info.TrackerList, *sa)
 	}
@@ -269,7 +162,7 @@ func (s *Server) trackerInfo() *proto.TrackerInfo {
 		info.ServerTable[key] = serverInfo
 	}
 	s.tracker.serverTable.RUnlock()
-	if !s.trackerOnly {
+	if !s.Config.TrackOnly {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
 	return info
@@ -302,112 +195,126 @@ func (s *Server) addServerContext(t interface{}) {
 	}
 }
 
-//Options stores the conguration for server
-type Options struct {
-	Address      string
-	ServerName   string //override Address if provided
-	MqDir        string
-	LogDir       string
-	CertFileDir  string
-	LogToConsole bool
-	Verbose      bool
-	TrackOnly    bool
-	TrackerList  string
-	IdleTimeout  time.Duration
+func (s *Server) handleConnection(conn net.Conn) {
+	defer conn.Close()
+	bufRead := new(bytes.Buffer)
+	var wsConn *websocket.Conn
+	session := NewSession(&conn, nil)
+	s.handler.Created(session)
+outter:
+	for {
+		data := make([]byte, 1024)
+		conn.SetReadDeadline(time.Now().Add(s.Config.IdleTimeout))
+		n, err := conn.Read(data)
+		if err != nil {
+			if err, ok := err.(net.Error); ok && err.Timeout() {
+				s.handler.OnIdle(session)
+				if session.active {
+					continue
+				} else {
+					break
+				}
+			}
+
+			s.handler.OnError(err, session)
+			break
+		}
+		bufRead.Write(data[0:n])
+
+		for {
+			req := DecodeMessage(bufRead)
+			if req == nil {
+				bufRead2 := new(bytes.Buffer)
+				bufRead2.Write(bufRead.Bytes())
+				bufRead = bufRead2
+				break
+			}
+
+			//upgrade to Websocket if requested
+			if IsWebSocketUpgrade(&req.Header) {
+				wsConn, err = s.wsUpgrader.Upgrade(conn, req)
+				if err == nil {
+					//log.Printf("Upgraded to websocket: %s\n", req)
+					session.Upgrade(wsConn)
+					break outter
+				}
+			}
+			go s.handler.OnMessage(req, session)
+		}
+	}
+
+	if wsConn != nil { //upgraded to Websocket
+		bufRead = new(bytes.Buffer)
+		for {
+			_, data, err := wsConn.ReadMessage()
+			if err != nil {
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					s.handler.OnIdle(session)
+					if session.active {
+						continue
+					} else {
+						break
+					}
+				}
+				s.handler.OnError(err, session)
+				break
+			}
+			bufRead.Write(data)
+			req := DecodeMessage(bufRead)
+			if req == nil {
+				err = errors.New("Websocket invalid message: " + string(data))
+				s.handler.OnError(err, session)
+				break
+			}
+			if IsWebSocketUpgrade(&req.Header) {
+				continue
+			}
+			go s.handler.OnMessage(req, session)
+		}
+	}
+	s.handler.ToDestroy(session)
+	conn.Close() //make sure to close the underlying socket
 }
 
-//ParseOptions from command line or config file
-func ParseOptions() *Options {
-	opt := &Options{}
-	idleTime := 30
-	flag.StringVar(&opt.Address, "addr", "0.0.0.0:15555", "Server address")
-	flag.StringVar(&opt.ServerName, "name", "", "Server public server name, e.g. zbus.io")
-	flag.IntVar(&idleTime, "idle", 60, "Idle detection timeout in seconds") //default to 1 minute
-	opt.IdleTimeout = time.Duration(idleTime) * time.Second
+//ParseConfig from command line or config file
+func ParseConfig() *Config {
+	cfg := &Config{}
+	var idleTime int
+	var trackerList string
 
-	flag.StringVar(&opt.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
-	flag.StringVar(&opt.LogDir, "logdir", "", "Log file location")
-	flag.StringVar(&opt.TrackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
-	flag.BoolVar(&opt.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+	flag.StringVar(&cfg.Address, "addr", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&cfg.ServerName, "name", "", "Server public server name, e.g. zbus.io")
+	flag.IntVar(&idleTime, "idle", 60, "Idle detection timeout in seconds") //default to 1 minute
+	flag.StringVar(&cfg.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
+	flag.StringVar(&cfg.LogDir, "logdir", "", "Log file location")
+	flag.StringVar(&trackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
+	flag.BoolVar(&cfg.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
 
 	flag.Parse()
 
-	return opt
+	cfg.IdleTimeout = time.Duration(idleTime) * time.Second
+	cfg.TrackerList = SplitClean(trackerList, ";")
+	return cfg
 }
 
 func main() {
-	printBanner()
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
+	printBanner()
 
-	opt := ParseOptions()
-
+	config := ParseConfig()
 	var logTargets []io.Writer
-	if opt.LogToConsole {
+	if config.LogToConsole {
 		logTargets = append(logTargets, os.Stdout)
 	}
-	if opt.LogDir != "" {
-
+	if config.LogDir != "" {
 	}
 	if logTargets != nil {
 		w := io.MultiWriter(logTargets...)
 		log.SetOutput(w)
 	}
 
-	if err := EnsureDir(opt.MqDir); err != nil {
-		log.Printf("MqDir(%s) creation failed:%s", opt.MqDir, err.Error())
-		return
-	}
-
-	tcpAddr, err := net.ResolveTCPAddr("tcp", opt.Address)
-	if err != nil {
-		log.Println("Error addres:", err.Error())
-		return
-	}
-	fd, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		log.Println("Error listening:", err.Error())
-		return
-	}
-	defer fd.Close()
-
-	log.Println("Listening on " + opt.Address)
-
-	host, port := ServerAddress(opt.Address) //get real server address if needs
-	if opt.ServerName != "" {
-		host = opt.ServerName
-	}
-	addr := fmt.Sprintf("%s:%d", host, port)
-
-	server := newServer()
-	server.Config = opt
-	server.MqDir = opt.MqDir
-	server.trackerOnly = opt.TrackOnly
-
-	server.ServerAddress = &proto.ServerAddress{addr, false}
-	server.TrackerList = SplitClean(opt.TrackerList, ";")
-
-	mqTable, err := LoadMqTable(server.MqDir)
-	if err != nil {
-		log.Println("Error loading MQ table: ", err.Error())
-		return
-	}
-	for key, val := range mqTable {
-		server.MqTable.Set(key, val)
-	}
-
-	tracker := NewTracker(server)
-	tracker.JoinUpstreams(opt.TrackerList)
-	server.tracker = tracker
-
-	handler := NewServerHandler(server)
-	for {
-		conn, err := fd.AcceptTCP()
-		if err != nil {
-			log.Println("Error accepting: ", err.Error())
-			return
-		}
-		go handleConnection(server, conn, handler)
-	}
+	server := NewServer(config)
+	server.Start()
 }
 
 func printBanner() {

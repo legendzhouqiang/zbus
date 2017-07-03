@@ -400,7 +400,7 @@ func declareHandler(s *ServerHandler, req *Message, sess *Session) {
 
 	mq, _ := s.server.MqTable.Get(strings.ToLower(topic)).(*MessageQueue)
 	if mq == nil {
-		mq, err = NewMessageQueue(s.server.MqDir, topic)
+		mq, err = NewMessageQueue(s.server.Config.MqDir, topic)
 		if err != nil {
 			body := fmt.Sprintf("Delcare Topic error: %s", err.Error())
 			reply(500, req.Id(), body, sess)

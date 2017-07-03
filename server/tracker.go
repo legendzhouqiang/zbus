@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"strings"
 	"time"
 
 	"./proto"
@@ -43,14 +42,8 @@ func NewTracker(server *Server) *Tracker {
 }
 
 //JoinUpstreams connects to upstream trackers
-func (t *Tracker) JoinUpstreams(trackerList string) {
-	trackerList = strings.TrimSpace(trackerList)
-	if trackerList == "" {
-		return
-	}
-
-	addressList := SplitClean(trackerList, ";")
-	for _, trackerAddress := range addressList {
+func (t *Tracker) JoinUpstreams(trackerList []string) {
+	for _, trackerAddress := range trackerList {
 		client, _ := t.upstreams.Get(trackerAddress).(*MessageClient)
 		if client != nil {
 			continue //already exists
