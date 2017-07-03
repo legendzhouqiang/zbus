@@ -171,7 +171,7 @@ func (q *MessageQueue) DeclareGroup(group *ConsumeGroup) (*proto.ConsumeGroupInf
 				return nil, err
 			}
 		}
-		q.readers.Set(groupName, g)
+		q.readers.Set(strings.ToLower(groupName), g)
 	}
 
 	if group.Filter != nil {
