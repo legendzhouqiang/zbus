@@ -157,17 +157,17 @@ func (t *Tracker) connectToServer(trackerAddress string) *MessageClient {
 
 /////////////////////////////Handlers for Tracker//////////////////////////////////
 //trackerHandler serve SrackerInfo request
-func trackerHandler(s *ServerHandler, req *Message, sess *Session) {
+func trackerHandler(s *Server, req *Message, sess *Session) {
 	if !auth(s, req, sess) {
 		return
 	}
-	info := s.server.trackerInfo()
+	info := s.trackerInfo()
 	data, _ := json.Marshal(info)
 	reply(200, req.Id(), string(data), sess)
 }
 
 //trackPubHandler server publish of ServerInfo
-func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
+func trackPubHandler(s *Server, req *Message, sess *Session) {
 	if !auth(s, req, sess) {
 		return
 	}
@@ -178,7 +178,7 @@ func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
 		return
 	}
 	serverInfo := event.ServerInfo
-	if serverInfo.ServerAddress == s.server.ServerAddress {
+	if serverInfo.ServerAddress == s.ServerAddress {
 		return //no need to hanle data from same server
 	}
 	tracker := s.tracker
@@ -216,13 +216,13 @@ func trackPubHandler(s *ServerHandler, req *Message, sess *Session) {
 }
 
 //trackSubHandler serve TrackSub request
-func trackSubHandler(s *ServerHandler, req *Message, sess *Session) {
+func trackSubHandler(s *Server, req *Message, sess *Session) {
 	if !auth(s, req, sess) {
 		return
 	}
 	s.tracker.subscribers.Set(sess.ID, sess)
 
-	info := s.server.trackerInfo()
+	info := s.trackerInfo()
 	data, _ := json.Marshal(info)
 
 	resp := NewMessage()

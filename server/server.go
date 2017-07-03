@@ -35,14 +35,16 @@ type Server struct {
 	Config        *Config
 	ServerAddress *proto.ServerAddress
 	MqTable       SyncMap // map[string]*MessageQueue
+	SessionTable  SyncMap //Safe
+
+	handlerTable  map[string]func(*Server, *Message, *Session) //readonly
+	consumerTable *ConsumerTable
 
 	listener net.Listener
 
-	consumerTable *consumerTable
-	infoVersion   int64
+	infoVersion int64
 
 	tracker *Tracker
-	handler SessionHandler
 
 	wsUpgrader *Upgrader // upgrade TCP to websocket
 }
@@ -51,6 +53,8 @@ type Server struct {
 func NewServer(config *Config) *Server {
 	s := &Server{}
 	s.Config = config
+	s.SessionTable.Map = make(map[string]interface{})
+	s.handlerTable = make(map[string]func(*Server, *Message, *Session))
 
 	host, port := ServerAddress(config.Address) //get real server address if needs
 	if config.ServerName != "" {
@@ -66,7 +70,8 @@ func NewServer(config *Config) *Server {
 
 	//init at last
 	s.tracker = NewTracker(s)
-	s.handler = NewServerHandler(s)
+	s.initServerHandler()
+
 	return s
 }
 
@@ -200,7 +205,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	bufRead := new(bytes.Buffer)
 	var wsConn *websocket.Conn
 	session := NewSession(&conn, nil)
-	s.handler.Created(session)
+	s.Created(session)
 outter:
 	for {
 		data := make([]byte, 1024)
@@ -208,7 +213,7 @@ outter:
 		n, err := conn.Read(data)
 		if err != nil {
 			if err, ok := err.(net.Error); ok && err.Timeout() {
-				s.handler.OnIdle(session)
+				s.OnIdle(session)
 				if session.active {
 					continue
 				} else {
@@ -216,7 +221,7 @@ outter:
 				}
 			}
 
-			s.handler.OnError(err, session)
+			s.OnError(err, session)
 			break
 		}
 		bufRead.Write(data[0:n])
@@ -239,7 +244,7 @@ outter:
 					break outter
 				}
 			}
-			go s.handler.OnMessage(req, session)
+			go s.OnMessage(req, session)
 		}
 	}
 
@@ -249,30 +254,30 @@ outter:
 			_, data, err := wsConn.ReadMessage()
 			if err != nil {
 				if err, ok := err.(net.Error); ok && err.Timeout() {
-					s.handler.OnIdle(session)
+					s.OnIdle(session)
 					if session.active {
 						continue
 					} else {
 						break
 					}
 				}
-				s.handler.OnError(err, session)
+				s.OnError(err, session)
 				break
 			}
 			bufRead.Write(data)
 			req := DecodeMessage(bufRead)
 			if req == nil {
 				err = errors.New("Websocket invalid message: " + string(data))
-				s.handler.OnError(err, session)
+				s.OnError(err, session)
 				break
 			}
 			if IsWebSocketUpgrade(&req.Header) {
 				continue
 			}
-			go s.handler.OnMessage(req, session)
+			go s.OnMessage(req, session)
 		}
 	}
-	s.handler.ToDestroy(session)
+	s.ToDestroy(session)
 	conn.Close() //make sure to close the underlying socket
 }
 
