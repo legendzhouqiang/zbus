@@ -66,10 +66,18 @@ function consumeGroupList(groupList){
 	for(var i in groupList){ 
 		var group = groupList[i];
 		res += "<tr>";
-		res += "<td>" + group.groupName + "</td>";
-		res += "<td>" + group.messageCount + "</td>";
-		res += "<td>" + group.consumerCount + "</td>"; 
-		res += "<td>" + (group.filter || "") + "</td>";
+		res += "<td><div class='td'>" + group.groupName + "</div>\
+		<div class='op'>\
+			<div><a class='op-del' href='#'>&#8722;</a></div>\
+			<div><a class='op-add' href='#'>&#9998;</a></div>\
+		</div></td>";
+		var numClass = "";
+		if (group.messageCount > 0) {
+			numClass = "num";
+		}
+		res += "<td><div class='td " + numClass + "'>" + group.messageCount + "</div></td>";
+		res += "<td><div class='td'>" + group.consumerCount + "</div></td>"; 
+		res += "<td><div class='td'>" + (group.filter || "") + "</div></td>";
 		res += "</tr>"
 	} 
 	return res;
@@ -88,10 +96,14 @@ function topicServerList(topicInfoList, filterServerList){
 		}
 		res += "<tr>";
 		//link td
-		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a></td>";
+		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a>\
+		<div class='op'>\
+			<div><a class='op-del' href='#'>&#8722;</a></div>\
+			<div><a class='op-add' href='#'>&#43;</a></div>\
+		</div></td>";
 		
 		//message depth td
-		res += "<td>" + topicInfo.messageDepth + "</td>"; 
+		res += "<td><div class='td'>" + topicInfo.messageDepth + "</div></td>"; 
 		
 		//consume group td
 		res += "<td> <table class='table-nested cgroup'> " + consumeGroupList(topicInfo.consumeGroupList) + "</table></td>";
@@ -115,7 +127,11 @@ function showTopicTable(topicTable, filterServerList){
 		if(!serverList) continue;
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
-				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a></td>\
+				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a>\
+				<div class='op'>\
+					<div><a class='op-del' href='#'>&#8722;</a></div>\
+					<div><a class='op-add' href='#'>&#43;</a></div>\
+				</div></td>\
 				<td><table class='table-nested sgroup'>"+ serverList + "</table></td>\
 			</tr>"
    		); 

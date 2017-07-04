@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>Home - zbus</title>
+<title>zbus - mq & rpc</title>
 <script type="text/javascript" src="/js/jquery.js"></script>
 <script type="text/javascript" src="/js/jquery-ui.js"></script>
 <script type="text/javascript" src="/js/bootstrap.js"></script>
@@ -25,16 +25,16 @@
                 <span class="icon-bar"></span>
             </button>  
             <a class="navbar-brand" href="/"> 
-            	<img src="/img/logo.svg"></img> 
-            	<span>ZBUS = MQ + RPC</span>
+                <img src="/img/logo.svg"/>
+            	<span>zbus = mq + rpc</span>
             </a> 
         </div>
         <div class="collapse navbar-collapse" id="navbar">
              <ul class="nav navbar-nav">  
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a target="_blank" href="http://zbus.io/">Documentation</a></li>
-                <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitosc</a></li>
+                <li><a target="_blank" href="http://zbus.io/">Document</a></li>
+                <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitee</a></li>
                 <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
                 <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
             </ul> 
@@ -43,7 +43,7 @@
 </nav>
 </div>
  
-<div class="nodes container-fluid">   
+<div class="nodes container-fluid" style="margin-bottom:30px;">   
   
   
 <div class="row">
@@ -70,7 +70,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <span class="label label-primary">Topic Table</span>
+        <div class="cap"><span class="label label-primary">Message Queues</span></div> <div class="op2"><a href='#'>&#43;</a></div>
     </div>
 </div> 
  
@@ -80,19 +80,19 @@
         <table id="topic-list" class="table-outter tgroup"> 
 			<tbody>  
 				<tr class="header-ctrl">
-					<td>Topic</td>
+					<td><div class="td">Topic</div></td>
 					<td>
 						<table class="table-nested sgroup">
 							<tr>
-								<td>In Server</td>
-								<td>Msg Depth</td> 
+								<td><div class="td">In Server</div></td>
+								<td><div class="td">Message Depth</div></td> 
 								<td>
 									<table class="table-nested cgroup">
 									<tr>
-										<td>ConsumeGroup</td>
-										<td>Msg Unconsumed</td> 
-										<td>Consumer (Waiting)</td> 
-										<td>Msg Filter</td>  
+										<td><div class="td">ConsumeGroup</div></td>
+										<td><div class="td">Message Unconsumed</div></td> 
+										<td><div class="td">Consumer</div></td> 
+										<td><div class="td">Message Filter</div></td>  
 									</tr> 
 								</table>  
 								</td> 
@@ -109,8 +109,7 @@
 
  
 
-</div>
- 
+</div> 
  
 <script type="text/javascript"> 
 
