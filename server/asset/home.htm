@@ -70,7 +70,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div class="cap"><span class="label label-primary">Message Queues</span></div> <div class="op2"><a href='#'>&#43;</a></div>
+        <div class="cap"><span class="label label-primary">Message Queues</span></div> <div class="op2"><a class='topic' data-toggle='modal' data-target='#topic-modal'>&#43;</a></div>
     </div>
 </div> 
  
@@ -110,6 +110,35 @@
  
 
 </div> 
+
+
+<div id="topic-modal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg add-topic-modal" role="document">
+    <div class="modal-content"> 
+    	<div class="modal-header"> 
+    		<div class="caption"><span id="modal-topic"></span> 
+    		</div>  
+    		<div class="close-box"><span class="topic label label-info" data-dismiss="modal" aria-label="Close">x</span></div>
+     	</div>      
+        <div class="add-topic-content"> 
+            <div>
+                <span>Topic:</span> 
+                <input type="text" class="topic-item" id="name" value="" class="text">
+            </div> 
+            <div>
+                <span>Mask:</span> 
+                <input type="text" class="topic-item" id="mask" placeholder="optional" value="" class="text"> 
+                
+                <button onclick="declareTopic()">Declare</button>
+            </div> 
+            <hr />
+            <span>Servers:</span> 
+            <div class="target-server-list">  
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
  
 <script type="text/javascript"> 
 
@@ -117,14 +146,16 @@
 $(document).ready(function(){  
 	
 var broker = null;
-var filterServerList = null;
+var filterServerList = [];
 
 function updateTrackerInfo(){
 	filterServerList = [];
     $("#server-list input.server").each(function(data){
     	var checked = $(this).is(":checked");
-    	if(checked){
-    		filterServerList.push($(this).val());
+    	if(checked){ 
+            var ssl = $(this).attr("sslEnabled");
+            var address = $(this).val(); 
+    		filterServerList.push({address:address, sslEnabled: ssl=="true"});
     	} 
     });  
     
@@ -152,15 +183,45 @@ $("#server-list").on("change", "input.server", function() {
 
 $.getJSON('/tracker',function(trackerInfo){   
 	$("#version").text(trackerInfo.serverVersion); 
+    filterServerList = [];
+    for(var key in trackerInfo.serverTable){
+        var serverInfo = trackerInfo.serverTable[key];
+        filterServerList.push(serverInfo.serverAddress);
+    }
+
 	var trackerAddress = trackerInfo.serverAddress;
 	broker = new Broker();   
 	broker.onServerUpdated = function(){
 		showServerTable(broker.routeTable.serverTable, filterServerList, trackerAddress);
 		showTopicTable(broker.routeTable.topicTable, filterServerList); 
-	}; 
+	};  
 	
 	broker.addTracker(trackerAddress);  
 });    
+
+
+////////////////////modal actions/////////////////////
+
+$("#topic-modal").draggable({ handle:'.modal-header'}); 
+$("#topic-modal").on("show.bs.modal", function(e){  
+	$(this).find('.modal-content').css({
+        width:'auto', //probably not needed
+        height:'auto', //probably not needed  
+        'max-height':'100%'
+	});  
+	$("#modal-topic").text("Declare Topic");   
+    $(".target-server-list div").remove();
+    for(var i in filterServerList){
+        var server = filterServerList[i];
+        $(".target-server-list").append("\
+            <div>\
+            <input type='checkbox' checked='checked value=''>\
+            <a class='link'>" + server.address + "</a>\
+            </div>\
+        ");
+    } 
+});
+
 
 
 });

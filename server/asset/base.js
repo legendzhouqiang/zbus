@@ -6,6 +6,16 @@ function httpFullAddress(serverAddress){
 	return scheme + serverAddress.address;
 }
 
+function containsServerAddress(serverList, address){
+	for(var i in serverList){
+		var serverAddress = serverList[i];
+		if(serverAddress.address == address.address && serverAddress.sslEnabled == address.sslEnabled){
+			return true;
+		}
+	}
+	return false;
+}
+
 function serverTopicList(topicTable){
 	var res = "";
 	var keys = Object.keys(topicTable);
@@ -22,7 +32,7 @@ function showServerTable(serverInfoTable, filterServerList, trackerAddress){
 	$("#server-list").find("tr:gt(0)").remove();
 	 
 	var serverList = [];
-	for(var key in serverInfoTable){
+	for(var key in serverInfoTable){ 
 		serverList.push(key);
 	}
 	serverList.sort();
@@ -31,19 +41,22 @@ function showServerTable(serverInfoTable, filterServerList, trackerAddress){
 		var serverInfo = serverInfoTable[server];
 		var topicList = serverTopicList(serverInfo.topicTable); 
 		var checked ="checked=checked"; 
-		if(filterServerList && !filterServerList.includes(key)){
+		if(!containsServerAddress(filterServerList, serverInfo.serverAddress)){
 			checked = "";
 		}
 		var tag = "";
 		if(trackerAddress && serverInfo.serverAddress.address == trackerAddress.address){
 			tag = "<span>*</span>";
 		}
-		var fullAddr = httpFullAddress(serverInfo.serverAddress); 
+		var serverAddresss = serverInfo.serverAddress;
+		var fullAddr = httpFullAddress(serverAddress); 
+		
 		$("#server-list").append(
 			"<tr>\
-				<td><a class='link' target='_blank' href='" + fullAddr + "'>" + serverInfo.serverAddress.address + "</a>\
-					"+ tag + "<div class='filter-box'>\
-	            		<input class='server' type='checkbox' "+ checked +" value='"+fullAddr + "'>\
+				<td>\
+					<a class='link' target='_blank' href='" + fullAddr + "'>" + serverAddresss.address + "</a>"+ tag + "\
+					<div class='filter-box'>\
+	            		<input class='server' sslEnabled=" + serverAddress.sslEnabled + " type='checkbox' "+ checked +" value='"+ serverAddresss.address + "'>\
 	            	</div>\
             	</td>\
 				<td>" + serverInfo.serverVersion + "</td>\
@@ -91,7 +104,7 @@ function topicServerList(topicInfoList, filterServerList){
 		var linkAddr = topicInfo.serverAddress; 
 		var linkFullAddr = httpFullAddress(linkAddr);
 		
-		if(filterServerList && !filterServerList.includes(linkFullAddr)){
+		if(!containsServerAddress(filterServerList, linkAddr)){
 			continue;
 		}
 		res += "<tr>";
@@ -137,3 +150,7 @@ function showTopicTable(topicTable, filterServerList){
    		); 
 	}  
 }  
+
+function declareTopic(){
+	alert("OK");
+}
