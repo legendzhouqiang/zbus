@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-<title>zbus - mq & rpc</title>
+<title>zbus = mq + rpc</title>
 <script type="text/javascript" src="/js/jquery.js"></script>
 <script type="text/javascript" src="/js/jquery-ui.js"></script>
 <script type="text/javascript" src="/js/bootstrap.js"></script>
@@ -24,16 +24,18 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>  
-            <a class="navbar-brand" href="/"> 
-                <img src="/img/logo.svg"/>
-            	<span>zbus = mq + rpc</span>
+            <a class="navbar-brand" href="/">  
+            <span id="symbol" style="font-weight: bold; color: #aaa; visibility: visible; display: inline-block; clear: both; float: left; font-size: 32px; line-height: 32px; white-space: nowrap; position: relative; padding: 0px;  top: 0px;">
+		        zbus
+	        </span>
+                &#x022C8;
             </a> 
         </div>
         <div class="collapse navbar-collapse" id="navbar">
              <ul class="nav navbar-nav">  
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a target="_blank" href="http://zbus.io/">Document</a></li>
+                <li><a target="_blank" href="http://zbus.io/">Docs</a></li>
                 <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitee</a></li>
                 <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
                 <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
@@ -230,7 +232,7 @@ $("#server-list").on("change", "input.server", function() {
 
 
 $.getJSON('/tracker',function(trackerInfo){   
-	$("#version").text(trackerInfo.serverVersion); 
+	$("#version").text("v"+trackerInfo.serverVersion); 
     filterServerList = [];
     for(var key in trackerInfo.serverTable){
         var serverInfo = trackerInfo.serverTable[key];
