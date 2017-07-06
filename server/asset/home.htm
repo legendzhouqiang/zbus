@@ -70,7 +70,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div class="cap"><span class="label label-primary">Message Queues</span></div> <div class="op2"><a class='topic' data-toggle='modal' data-target='#topic-modal'>&#43;</a></div>
+        <div class="cap"><span class="label label-primary">Message Queues</span></div> <div class="op2"><a class='topic' data-toggle='modal' data-target='#add-topic-modal'>&#43;</a></div>
     </div>
 </div> 
  
@@ -112,24 +112,46 @@
 </div> 
 
 
-<div id="topic-modal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
+<div id="add-topic-modal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg add-topic-modal" role="document">
     <div class="modal-content"> 
     	<div class="modal-header"> 
-    		<div class="caption"><span id="modal-topic"></span> 
+    		<div class="caption"><span id="add-topic-caption"></span> 
     		</div>  
     		<div class="close-box"><span class="topic label label-info" data-dismiss="modal" aria-label="Close">x</span></div>
      	</div>      
         <div class="add-topic-content"> 
             <div>
                 <span>Topic:</span> 
-                <input type="text" class="topic-item" id="name" value="" class="text">
+                <input type="text" class="topic-item" id="topic-name" value="" class="text">
             </div> 
             <div>
                 <span>Mask:</span> 
-                <input type="text" class="topic-item" id="mask" placeholder="optional" value="" class="text"> 
-                
-                <button onclick="declareTopic()">Declare</button>
+                <input type="text" class="topic-item" id="topic-mask" placeholder="optional" value="" class="text">  
+                <button onclick="mqDeclare()">Declare</button>
+            </div> 
+            <hr />
+            <span>Servers:</span> 
+            <div class="target-server-list">  
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="remove-topic-modal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg add-topic-modal" role="document">
+    <div class="modal-content"> 
+    	<div class="modal-header"> 
+    		<div class="caption"><span id="remove-topic-caption"></span> 
+    		</div>  
+    		<div class="close-box"><span class="topic label label-info" data-dismiss="modal" aria-label="Close">x</span></div>
+     	</div>  
+        <div class="add-topic-content">  
+            <div> 
+                <input id="remove-topic-name" value="" type="hidden"/>
+                <button class="btn btn-danger" onclick="mqRemove()">Delete</button>
             </div> 
             <hr />
             <span>Servers:</span> 
@@ -141,12 +163,38 @@
 </div>
  
 <script type="text/javascript"> 
-
-
-$(document).ready(function(){  
-	
 var broker = null;
-var filterServerList = [];
+var filterServerList = []; 
+ 
+function mqDeclare(){ 
+	var topic = $("input#topic-name").val();
+    if(topic == ""){
+        alert("topic empty");
+        return;
+    }
+    var mask = $("input#topic-mask").val();
+    var msg = { topic: topic };
+    if(mask != null && mask != ""){
+        msg.topicMask = mask;
+    }
+    var admin = new MqAdmin(broker);
+    admin.declare(msg); 
+
+    $("#add-topic-modal").modal("hide");
+} 
+
+function mqRemove(){  
+    var topic = $("input#remove-topic-name").val();
+    var msg = { topic: topic }; 
+    var admin = new MqAdmin(broker);
+    admin.remove(msg); 
+
+    $("#remove-topic-modal").modal("hide");
+} 
+ 
+ 
+
+$(document).ready(function(){   
 
 function updateTrackerInfo(){
 	filterServerList = [];
@@ -202,14 +250,37 @@ $.getJSON('/tracker',function(trackerInfo){
 
 ////////////////////modal actions/////////////////////
 
-$("#topic-modal").draggable({ handle:'.modal-header'}); 
-$("#topic-modal").on("show.bs.modal", function(e){  
+$("#add-topic-modal").draggable({ handle:'.modal-header'}); 
+$("#add-topic-modal").on("show.bs.modal", function(e){  
 	$(this).find('.modal-content').css({
         width:'auto', //probably not needed
         height:'auto', //probably not needed  
         'max-height':'100%'
 	});  
-	$("#modal-topic").text("Declare Topic");   
+	$("#add-topic-caption").text("Declare Topic");   
+    $(".target-server-list div").remove();
+    for(var i in filterServerList){
+        var server = filterServerList[i];
+        $(".target-server-list").append("\
+            <div>\
+            <input type='checkbox' checked='checked value=''>\
+            <a class='link'>" + server.address + "</a>\
+            </div>\
+        ");
+    } 
+});
+
+$("#remove-topic-modal").draggable({ handle:'.modal-header'}); 
+$("#remove-topic-modal").on("show.bs.modal", function(e){  
+	$(this).find('.modal-content').css({
+        width:'auto', //probably not needed
+        height:'auto', //probably not needed  
+        'max-height':'100%'
+	});  
+    var link = $(e.relatedTarget);
+    var topic = link.data('topic');
+	$("#remove-topic-caption").text("Remove topic: " + topic);  
+    $("#remove-topic-name").val(topic);
     $(".target-server-list div").remove();
     for(var i in filterServerList){
         var server = filterServerList[i];

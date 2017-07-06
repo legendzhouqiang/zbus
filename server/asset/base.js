@@ -140,9 +140,9 @@ function showTopicTable(topicTable, filterServerList){
 		if(!serverList) continue;
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
-				<td><a class='topic' data-toggle='modal' data-target='#topic-modal'>" +topicName + "</a>\
+				<td><a class='topic'>" +topicName + "</a>\
 				<div class='op'>\
-					<div><a class='op-del' href='#'>&#8722;</a></div>\
+					<div><a href='#' class='op-del' data-topic='" + topicName + "' data-toggle='modal' data-target='#remove-topic-modal'>&#8722;</a></div>\
 					<div><a class='op-add' href='#'>&#43;</a></div>\
 				</div></td>\
 				<td><table class='table-nested sgroup'>"+ serverList + "</table></td>\
@@ -151,6 +151,3 @@ function showTopicTable(topicTable, filterServerList){
 	}  
 }  
 
-function declareTopic(){
-	alert("OK");
-}
