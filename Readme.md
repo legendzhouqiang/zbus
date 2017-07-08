@@ -9,7 +9,13 @@
          \///////////  \/////////    \/////////   \//////////       QQ Group: 467741880
 
 # ZBUS = MQ + RPC  
-zbus strives to make Message Queue and Remote Procedure Call fast, light-weighted and easy to build your own elastic and micro-service oriented architecture to interoperate many different platforms. Simply put, ZBUS = MQ + RPC.
+zbus strives to make Message Queue and Remote Procedure Call fast, light-weighted and easy to build your own service-oriented architecture for many different platforms. Simply put, zbus = mq + rpc.
+
+zbus carefully designed on its protocol and components to embrace KISS(Keep It Simple and Stupid) principle, but in all it delivers power and elasticity. 
+
+Working as MQ, compare it to RabbitMQ, ActiveMQ.
+
+Working as RPC, compare it to many more.
 
 ## Features
 - Fast MQ on disk, capable of unicast, multicast and broadcast messaging models
