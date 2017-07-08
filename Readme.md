@@ -13,9 +13,8 @@ zbus strives to make Message Queue and Remote Procedure Call fast, light-weighte
 
 zbus carefully designed on its protocol and components to embrace KISS(Keep It Simple and Stupid) principle, but in all it delivers power and elasticity. 
 
-Working as MQ, compare it to RabbitMQ, ActiveMQ.
-
-Working as RPC, compare it to many more.
+- Working as MQ, compare it to RabbitMQ, ActiveMQ.
+- Working as RPC, compare it to many more.
 
 ## Features
 - Fast MQ on disk, capable of unicast, multicast and broadcast messaging models
