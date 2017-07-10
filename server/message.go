@@ -145,11 +145,15 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 	meta := string(header[0])
 	metaFields := strings.Fields(meta)
 	if strings.HasPrefix(strings.ToUpper(metaFields[0]), "HTTP") {
-		m.Status, _ = strconv.Atoi(metaFields[1])
+		m.Status = -1
 	} else {
 		m.Method = metaFields[0]
-		m.Url = metaFields[1]
+		m.Url = "/"
+		if len(metaFields) > 1 {
+			m.Url = metaFields[1]
+		}
 	}
+
 	for i := 1; i < len(header); i++ {
 		s := string(header[i])
 		kv := strings.SplitN(s, ":", 2)
