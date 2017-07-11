@@ -289,7 +289,7 @@ func ParseConfig() *Config {
 
 	flag.StringVar(&cfg.Address, "addr", "0.0.0.0:15555", "Server address")
 	flag.StringVar(&cfg.ServerName, "name", "", "Server public server name, e.g. zbus.io")
-	flag.IntVar(&idleTime, "idle", 60, "Idle detection timeout in seconds") //default to 1 minute
+	flag.IntVar(&idleTime, "idle", 180, "Idle detection timeout in seconds") //default to 3 minute
 	flag.StringVar(&cfg.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
 	flag.StringVar(&cfg.LogDir, "logdir", "", "Log file location")
 	flag.StringVar(&trackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
