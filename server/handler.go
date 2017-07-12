@@ -313,7 +313,11 @@ consumeRead:
 		}
 		ctx.processing = false
 		buf := bytes.NewBuffer(data.Body)
-		resp := DecodeMessage(buf)
+		resp, err := DecodeMessage(buf)
+		if err != nil {
+			reply(500, req.Id(), fmt.Sprintf("Consume read error: %s", err.Error()), sess)
+			break consumeRead
+		}
 
 		resp.SetOriginId(resp.Id())
 		ctx, _ := sess.getConsumerCtx(topic, group).(*consumeContext)

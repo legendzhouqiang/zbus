@@ -134,24 +134,28 @@ func (m *Message) String() string {
 }
 
 //DecodeMessage decode Message from Buffer, nil returned if not enought in buffer
-func DecodeMessage(buf *bytes.Buffer) *Message {
+func DecodeMessage(buf *bytes.Buffer) (*Message, error) {
 	bb := buf.Bytes()
 	idx := bytes.Index(bb, []byte("\r\n\r\n"))
 	if idx == -1 {
-		return nil
+		return nil, nil
 	}
 	m := NewMessage()
 	header := bytes.Split(bb[:idx], []byte("\r\n"))
+	if len(header) < 1 {
+		return nil, fmt.Errorf("HTTP format: Missing first line")
+	}
 	meta := string(header[0])
 	metaFields := strings.Fields(meta)
+	if len(metaFields) < 2 {
+		return nil, fmt.Errorf("HTTP format: first line invalid")
+	}
 	if strings.HasPrefix(strings.ToUpper(metaFields[0]), "HTTP") {
 		m.Status = -1
 	} else {
 		m.Method = metaFields[0]
 		m.Url = "/"
-		if len(metaFields) > 1 {
-			m.Url = metaFields[1]
-		}
+		m.Url = metaFields[1]
 	}
 
 	for i := 1; i < len(header); i++ {
@@ -170,14 +174,14 @@ func DecodeMessage(buf *bytes.Buffer) *Message {
 		bodyLen, _ = strconv.Atoi(lenStr.(string))
 	}
 	if (buf.Len() - idx - 4) < bodyLen {
-		return nil
+		return nil, nil
 	}
 	if bodyLen > 0 {
 		m.SetBody(bb[idx+4 : idx+4+bodyLen])
 	}
 	data := make([]byte, idx+4+bodyLen)
 	buf.Read(data)
-	return m
+	return m, nil
 }
 
 //////////////////////////////The following are all helper Getter/Setter of Header///////////////////////////

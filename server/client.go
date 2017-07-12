@@ -174,7 +174,10 @@ func (c *MessageClient) Recv(msgid *string) (*Message, error) {
 			return nil, err
 		}
 		c.bufRead.Write(data[0:n])
-		resp := DecodeMessage(c.bufRead)
+		resp, err := DecodeMessage(c.bufRead)
+		if err != nil {
+			return nil, err
+		}
 		if resp == nil {
 			bufRead2 := new(bytes.Buffer)
 			bufRead2.Write(c.bufRead.Bytes())

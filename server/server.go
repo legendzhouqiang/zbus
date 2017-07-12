@@ -227,7 +227,10 @@ outter:
 		bufRead.Write(data[0:n])
 
 		for {
-			req := DecodeMessage(bufRead)
+			req, err := DecodeMessage(bufRead)
+			if err != nil {
+				break //message invalid, close
+			}
 			if req == nil {
 				bufRead2 := new(bytes.Buffer)
 				bufRead2.Write(bufRead.Bytes())
@@ -265,7 +268,10 @@ outter:
 				break
 			}
 			bufRead.Write(data)
-			req := DecodeMessage(bufRead)
+			req, err := DecodeMessage(bufRead)
+			if err != nil {
+				break //message invalid, close
+			}
 			if req == nil {
 				err = errors.New("Websocket invalid message: " + string(data))
 				s.OnError(err, session)
