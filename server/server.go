@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -18,16 +19,19 @@ import (
 
 //Config stores the conguration for server
 type Config struct {
-	Address      string
-	ServerName   string //override Address if provided
-	MqDir        string
-	LogDir       string
-	CertFileDir  string
-	LogToConsole bool
-	Verbose      bool
-	TrackOnly    bool
-	TrackerList  []string
-	IdleTimeout  time.Duration
+	Address        string
+	ServerName     string //override Address if provided
+	MqDir          string
+	LogDir         string
+	CertFileDir    string
+	LogToConsole   bool
+	Verbose        bool
+	TrackOnly      bool
+	TrackerList    []string
+	IdleTimeout    time.Duration
+	SslEnabled     bool
+	ServerCertFile string
+	ServerCertKey  string
 }
 
 //Server = MqServer + Tracker
@@ -61,7 +65,7 @@ func NewServer(config *Config) *Server {
 		host = config.ServerName
 	}
 	addr := fmt.Sprintf("%s:%d", host, port)
-	s.ServerAddress = &proto.ServerAddress{addr, false} //TODO Support SSL
+	s.ServerAddress = &proto.ServerAddress{addr, config.SslEnabled}
 
 	s.MqTable.Map = make(map[string]interface{})
 	s.consumerTable = newConsumerTable()
@@ -82,8 +86,18 @@ func (s *Server) Start() error {
 		log.Printf("No need to start again")
 		return nil
 	}
+	if s.Config.SslEnabled {
+		cert, err := tls.LoadX509KeyPair(s.Config.ServerCertFile, s.Config.ServerCertKey)
+		if err != nil {
+			log.Println("Error loading certificate file and key:", err.Error())
+			return err
+		}
+		certConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+		s.listener, err = tls.Listen("tcp", s.Config.Address, certConfig)
+	} else {
+		s.listener, err = net.Listen("tcp", s.Config.Address)
+	}
 
-	s.listener, err = net.Listen("tcp", s.Config.Address)
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		return err
@@ -208,7 +222,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	s.Created(session)
 outter:
 	for {
-		data := make([]byte, 1024)
+		data := make([]byte, 10240)
 		conn.SetReadDeadline(time.Now().Add(s.Config.IdleTimeout))
 		n, err := conn.Read(data)
 		if err != nil {
@@ -300,6 +314,9 @@ func ParseConfig() *Config {
 	flag.StringVar(&cfg.LogDir, "logdir", "", "Log file location")
 	flag.StringVar(&trackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+	flag.BoolVar(&cfg.SslEnabled, "ssl", false, "Enable SSL")
+	flag.StringVar(&cfg.ServerCertFile, "certfile", "", "Certificate file path")
+	flag.StringVar(&cfg.ServerCertKey, "certkey", "", "Certificate key path")
 
 	flag.Parse()
 

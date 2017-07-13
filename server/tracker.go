@@ -49,6 +49,7 @@ func (t *Tracker) JoinUpstreams(trackerList []string) {
 			continue //already exists
 		}
 		client = t.connectToServer(trackerAddress)
+
 		client.onConnected = func(c *MessageClient) {
 			log.Printf("Connected to Tracker(%s)\n", trackerAddress)
 			event := &proto.ServerEvent{}
@@ -57,6 +58,7 @@ func (t *Tracker) JoinUpstreams(trackerList []string) {
 
 			t.updateToUpstream(c, event)
 			t.healthyUpstreams.Set(trackerAddress, c)
+			t.upstreams.Set(trackerAddress, client) //TODO trackerAddress should be real address
 		}
 
 		client.onDisconnected = func(c *MessageClient) {
@@ -68,21 +70,23 @@ func (t *Tracker) JoinUpstreams(trackerList []string) {
 			c.EnsureConnected(notify)
 			<-notify
 		}
-		t.upstreams.Set(trackerAddress, client)
 		client.Start(nil)
 	}
 }
 
 //Publish server info to subscribers/upstream trackers
-func (t *Tracker) Publish() {
+func (t *Tracker) Publish(trigger *proto.ServerAddress) {
 	if t.healthyUpstreams.Size() > 0 {
 		event := &proto.ServerEvent{}
 		event.ServerInfo = t.server.serverInfo()
 		event.Live = true
 
 		t.healthyUpstreams.RLock()
-		for _, c := range t.healthyUpstreams.Map {
+		for key, c := range t.healthyUpstreams.Map {
 			client, _ := c.(*MessageClient)
+			if key == trigger.String() {
+				continue
+			}
 			t.updateToUpstream(client, event)
 		}
 		t.healthyUpstreams.RUnlock()
@@ -177,15 +181,15 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 		log.Printf("TrackPub message format error\n")
 		return
 	}
-	serverInfo := event.ServerInfo
-	if serverInfo.ServerAddress == s.ServerAddress {
+	pubServer := event.ServerInfo
+	if pubServer.ServerAddress == s.ServerAddress {
 		return //no need to hanle data from same server
 	}
 	tracker := s.tracker
-	addressKey := serverInfo.ServerAddress.Address
+	addressKey := pubServer.ServerAddress.Address
 	client, _ := tracker.downstreams.Get(addressKey).(*MessageClient)
 	if event.Live {
-		tracker.serverTable.Set(addressKey, serverInfo)
+		tracker.serverTable.Set(addressKey, pubServer)
 	} else {
 		tracker.serverTable.Remove(addressKey)
 		if client != nil {
@@ -195,24 +199,24 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 	}
 
 	if event.Live && client == nil { //new downstream server joined
-		client := tracker.connectToServer(serverInfo.ServerAddress.Address)
+		client := tracker.connectToServer(pubServer.ServerAddress.Address)
 
 		client.onConnected = func(c *MessageClient) {
-			log.Printf("Server(%s) in track", serverInfo.ServerAddress.String())
+			log.Printf("Server(%s) in track", pubServer.ServerAddress.String())
 			tracker.downstreams.Set(addressKey, client)
-			tracker.Publish()
+			tracker.Publish(pubServer.ServerAddress)
 		}
 		client.onDisconnected = func(c *MessageClient) {
-			log.Printf("Server(%s) lost of tracking", serverInfo.ServerAddress.String())
+			log.Printf("Server(%s) lost of tracking", pubServer.ServerAddress.String())
 			tracker.serverTable.Remove(addressKey)
 			tracker.downstreams.Remove(addressKey)
-			tracker.Publish()
+			tracker.Publish(pubServer.ServerAddress)
 			client.Close()
 		}
 		client.Start(nil)
 	}
 
-	tracker.Publish() //publish to subscribers
+	tracker.Publish(pubServer.ServerAddress) //publish to subscribers
 }
 
 //trackSubHandler serve TrackSub request

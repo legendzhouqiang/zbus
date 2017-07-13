@@ -101,7 +101,7 @@ func (s *Server) cleanSession(sess *Session) {
 	sess.ConsumerCtx.RUnlock()
 
 	if isConsumer {
-		s.tracker.Publish()
+		s.tracker.Publish(s.ServerAddress)
 	}
 }
 
@@ -285,7 +285,7 @@ func consumeHandler(s *Server, req *Message, sess *Session) {
 		sess.setConsumerCtx(topic, group, ctx)
 	}
 	if newConsumer {
-		go s.tracker.Publish()
+		go s.tracker.Publish(s.ServerAddress)
 	}
 
 	ctx.msgid = req.Id() //update msgid
@@ -426,7 +426,7 @@ func declareHandler(s *Server, req *Message, sess *Session) {
 	data, _ := json.Marshal(info)
 	replyJson(200, req.Id(), string(data), sess)
 
-	s.tracker.Publish()
+	s.tracker.Publish(s.ServerAddress)
 }
 
 func queryHandler(s *Server, req *Message, sess *Session) {
@@ -492,7 +492,7 @@ func removeHandler(s *Server, req *Message, sess *Session) {
 
 	reply(200, req.Id(), fmt.Sprintf("%d", CurrMillis()), sess)
 
-	s.tracker.Publish()
+	s.tracker.Publish(s.ServerAddress)
 }
 
 func emptyHandler(s *Server, req *Message, sess *Session) {
