@@ -10,24 +10,24 @@ zbus is a TCP server favors HTTP-alike protocol, but **NO** HTTP standard module
 ## High Aavailability 
         
 
-                          +-------------------+
-                          |   Client(Broker)  |
-                          +-------------------+ 
-                                |      | 
-                    track_sub   |      |   track_sub
-                 +--------------+      +--------------+
-                 |                                    |
-                 v                                    v
-         +----------------+                   +----------------+
-         |     Tracker1   |                   |     Tracker2   |
-         +----------------+                   +----------------+ 
-                  ^                                    ^
-                  |                                    |
-                  +------------------------------------+
-                  |  track_pub              track_pub  |
-            +----------------+             +----------------+
-            |     MqServer1  |             |     MqServer2  |
-            +----------------+             +----------------+
+                       +-----------------+                                       +-----------------+
+                       |  Client(Broker) |                                       |  Client(Broker) |
+                       +-----------------+                                       +-----------------+ 
+                             |     |                                                   |     |
+                  track_sub  |     |   track_sub                            track_sub  |     |   track_sub
+                +------------+     +-------------+                        +------------+     +-------------+
+                |                                |                        |                                |
+                v                                v                        v                                v
+         +-------------+                 +--------------+          +-------------+                 +--------------+
+         |  Tracker1   |                 |   Tracker2   |   ==>    |     zbus1   | <--track_pub--> |      zbus2   |
+         +-------------+                 +--------------+          +-------------+                 +--------------+
+                ^                                ^  
+                |                                |
+                +--------------------------------+   Tracker+MqServer in One
+                |  track_pub          track_pub  |
+           +--------------+             +--------------+
+           |   MqServer1  |             |   MqServer2  |
+           +--------------+             +--------------+
 
 ### Tracker in Server
 zbus generates two types of info for topology of Topic/ConsumeGroup
