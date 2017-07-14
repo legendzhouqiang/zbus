@@ -73,6 +73,7 @@ A client like *Broker* (client point view) may subscribe to multiple Trackers, w
         }
 
       4) Build new TopicTable based on purged ServerTable 
+      
       return removed serverInfos
 
 
