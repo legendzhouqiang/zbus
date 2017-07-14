@@ -56,29 +56,23 @@ A client like *Broker* (client point view) may subscribe to multiple Trackers, w
   
       1) Update VotesTable
 
-        case: trackerInfo new, add to VotesTable
-
+        case: trackerInfo new, add to VotesTable 
         case: trackerInfo exists, update if InfoVersion is higher
 
       2) Merge ServerTable
 
-        for each serverInfo in trackerInfo {
-
-          update to ServerTable only if serverInfo's InfoVersion is higher than existing one
-
+        for each serverInfo in trackerInfo { 
+          update to ServerTable only if serverInfo's InfoVersion is higher than existing one 
         }
-        
+
       3) Purge ServerTable/TopicTable
 
-        for each serverInfo in ServerTable {
-
-          count #votedTracker via VotesTable
-
-          remove serverInfo if #votedTracker/#totalTracker < VoteFactor
-
+        for each serverInfo in ServerTable { 
+          count #votedTracker via VotesTable 
+          remove serverInfo if #votedTracker/#totalTracker < VoteFactor 
         }
 
-      Build new TopicTable based on purged ServerTable
+      4) Build new TopicTable based on purged ServerTable
 
       return removed serverInfos
 
@@ -86,7 +80,8 @@ A client like *Broker* (client point view) may subscribe to multiple Trackers, w
 - removeTracker
 
       1) Remove tracker in VotesTable 
-      3) Purge ServerTable/TopicTable 
+      
+      2) Purge ServerTable/TopicTable 
 
 
 
