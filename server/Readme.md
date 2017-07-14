@@ -23,7 +23,7 @@ zbus is a TCP server favors HTTP-alike protocol, but **NO** HTTP standard module
          +-------------+                 +--------------+          +-------------+                 +--------------+
                 ^                                ^  
                 |                                |
-                +--------------------------------+   Tracker+MqServer in One
+                +--------------------------------+                            Tracker + MqServer =>  zbus
                 |  track_pub          track_pub  |
            +--------------+             +--------------+
            |   MqServer1  |             |   MqServer2  |
