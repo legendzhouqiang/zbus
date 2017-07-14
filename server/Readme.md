@@ -52,22 +52,22 @@ To prevent *Split Brain* of same ServerInfo, Client's *BrokerRouteTable* only ac
 
 A client like *Broker* (client point view) may subscribe to multiple Trackers, which publish TrackerInfo. Trackers may come and go, or get updated from tracked servers, all of which subsequently trigger the events of updateTracker and removeTracker.
 
-- updateTracker (trackerInfo)
-
+- updateTracker (trackerInfo) 
+  
       1) Update VotesTable
         case: trackerInfo new, add to VotesTable
         case: trackerInfo exists, update if InfoVersion is higher
       2) Merge ServerTable
         for each serverInfo in trackerInfo {
-          update only if serverInfo's InfoVersion is higher than existing one
+          update to ServerTable only if serverInfo's InfoVersion is higher than existing one
         }
       3) Purge ServerTable/TopicTable
         for each serverInfo in ServerTable {
           count #votedTracker via VotesTable
-          remove serverInfo if #votedTracker/#totalTracker
+          remove serverInfo if #votedTracker/#totalTracker < VoteFactor
         }
-        Build new TopicTable based on purged ServerTable
-      
+      Build new TopicTable based on purged ServerTable
+
       return removed serverInfos
 
 
