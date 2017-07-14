@@ -8,6 +8,26 @@ zbus is a TCP server favors HTTP-alike protocol, but **NO** HTTP standard module
 ## Topic-ConsumeGroup Disk Queue
 
 ## High Aavailability 
+        
+
+                          +-------------------+
+                          |   Client(Broker)  |
+                          +-------------------+ 
+                                |      | 
+                    track_sub   |      |   track_sub
+                 +--------------+      +--------------+
+                 |                                    |
+                 v                                    v
+         +----------------+                   +----------------+
+         |     Tracker1   |                   |     Tracker2   |
+         +----------------+                   +----------------+ 
+                  ^                                    ^
+                  |                                    |
+                  +------------------------------------+
+                  |  track_pub              track_pub  |
+            +----------------+             +----------------+
+            |     MqServer1  |             |     MqServer2  |
+            +----------------+             +----------------+
 
 ### Tracker in Server
 zbus generates two types of info for topology of Topic/ConsumeGroup
@@ -73,7 +93,7 @@ A client like *Broker* (client point view) may subscribe to multiple Trackers, w
         }
 
       4) Build new TopicTable based on purged ServerTable 
-      
+
       return removed serverInfos
 
 
