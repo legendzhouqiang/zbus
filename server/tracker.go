@@ -74,24 +74,26 @@ func (t *Tracker) JoinUpstreams(trackerList []string) {
 	}
 }
 
-//Publish server info to subscribers/upstream trackers
-func (t *Tracker) Publish(trigger *proto.ServerAddress) {
+//PubToAll publish ServerInfo to both Trackers and Subscribers
+func (t *Tracker) PubToAll() {
 	if t.healthyUpstreams.Size() > 0 {
 		event := &proto.ServerEvent{}
 		event.ServerInfo = t.server.serverInfo()
 		event.Live = true
 
 		t.healthyUpstreams.RLock()
-		for key, c := range t.healthyUpstreams.Map {
+		for _, c := range t.healthyUpstreams.Map {
 			client, _ := c.(*MessageClient)
-			if key == trigger.String() {
-				continue
-			}
 			t.updateToUpstream(client, event)
 		}
 		t.healthyUpstreams.RUnlock()
 	}
 
+	t.PubToSubscribers()
+}
+
+//PubToSubscribers only publish ServerInfo to subscriber clients
+func (t *Tracker) PubToSubscribers() {
 	if t.subscribers.Size() <= 0 {
 		return
 	}
@@ -204,19 +206,19 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 		client.onConnected = func(c *MessageClient) {
 			log.Printf("Server(%s) in track", pubServer.ServerAddress.String())
 			tracker.downstreams.Set(addressKey, client)
-			tracker.Publish(pubServer.ServerAddress)
+			tracker.PubToSubscribers()
 		}
 		client.onDisconnected = func(c *MessageClient) {
 			log.Printf("Server(%s) lost of tracking", pubServer.ServerAddress.String())
 			tracker.serverTable.Remove(addressKey)
 			tracker.downstreams.Remove(addressKey)
-			tracker.Publish(pubServer.ServerAddress)
+			tracker.PubToSubscribers()
 			client.Close()
 		}
 		client.Start(nil)
 	}
 
-	tracker.Publish(pubServer.ServerAddress) //publish to subscribers
+	tracker.PubToSubscribers()
 }
 
 //trackSubHandler serve TrackSub request
