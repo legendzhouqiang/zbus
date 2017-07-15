@@ -15,8 +15,8 @@ import (
 	"./proto"
 )
 
-//MessageClient TCP client using Message type
-type MessageClient struct {
+//MqClient TCP client using Message type
+type MqClient struct {
 	conn       *net.TCPConn
 	address    string
 	sslEnabled bool
@@ -31,14 +31,16 @@ type MessageClient struct {
 	heartbeatInterval time.Duration
 	stopHeartbeat     chan bool
 
-	onConnected    func(*MessageClient)
-	onDisconnected func(*MessageClient)
-	onMessage      func(*MessageClient, *Message)
+	onConnected    func(*MqClient)
+	onDisconnected func(*MqClient)
+	onMessage      func(*MqClient, *Message)
+
+	token string
 }
 
-//NewMessageClient create message client, if sslEnabled, certFile should be provided
-func NewMessageClient(address string, certFile *string) *MessageClient {
-	c := &MessageClient{}
+//NewMqClient create message client, if sslEnabled, certFile should be provided
+func NewMqClient(address string, certFile *string) *MqClient {
+	c := &MqClient{}
 	c.address = address
 	c.bufRead = new(bytes.Buffer)
 	c.timeout = 3000 * time.Millisecond
@@ -53,7 +55,7 @@ func NewMessageClient(address string, certFile *string) *MessageClient {
 	return c
 }
 
-func (c *MessageClient) heartbeat() {
+func (c *MqClient) heartbeat() {
 hearbeat:
 	for {
 		select {
@@ -76,7 +78,7 @@ hearbeat:
 }
 
 //Connect to server
-func (c *MessageClient) Connect() error {
+func (c *MqClient) Connect() error {
 	if c.conn != nil {
 		return nil
 	}
@@ -103,7 +105,7 @@ func (c *MessageClient) Connect() error {
 }
 
 //Close client
-func (c *MessageClient) Close() {
+func (c *MqClient) Close() {
 	c.autoReconnect = false
 	select {
 	case c.stopHeartbeat <- true:
@@ -112,7 +114,7 @@ func (c *MessageClient) Close() {
 	c.closeConn()
 }
 
-func (c *MessageClient) closeConn() {
+func (c *MqClient) closeConn() {
 	if c.conn == nil {
 		return
 	}
@@ -121,7 +123,7 @@ func (c *MessageClient) closeConn() {
 }
 
 //Invoke message to server and get reply matching msgid
-func (c *MessageClient) Invoke(req *Message) (*Message, error) {
+func (c *MqClient) Invoke(req *Message) (*Message, error) {
 	err := c.Send(req)
 	if err != nil {
 		return nil, err
@@ -131,7 +133,7 @@ func (c *MessageClient) Invoke(req *Message) (*Message, error) {
 }
 
 //Send Message
-func (c *MessageClient) Send(req *Message) error {
+func (c *MqClient) Send(req *Message) error {
 	err := c.Connect() //connect if needs
 	if err != nil {
 		return err
@@ -158,7 +160,7 @@ func (c *MessageClient) Send(req *Message) error {
 }
 
 //Recv Message
-func (c *MessageClient) Recv(msgid *string) (*Message, error) {
+func (c *MqClient) Recv(msgid *string) (*Message, error) {
 	err := c.Connect() //connect if needs
 	if err != nil {
 		return nil, err
@@ -198,7 +200,7 @@ func (c *MessageClient) Recv(msgid *string) (*Message, error) {
 }
 
 //EnsureConnected trying to connect the client util success
-func (c *MessageClient) EnsureConnected(notify chan bool) {
+func (c *MqClient) EnsureConnected(notify chan bool) {
 	go func() {
 		for {
 			err := c.Connect()
@@ -215,7 +217,7 @@ func (c *MessageClient) EnsureConnected(notify chan bool) {
 }
 
 //Start a goroutine to recv message from server
-func (c *MessageClient) Start(notify chan bool) {
+func (c *MqClient) Start(notify chan bool) {
 	c.autoReconnect = true
 	go func() {
 	for_loop:
@@ -253,19 +255,6 @@ func (c *MessageClient) Start(notify chan bool) {
 	}()
 }
 
-//MqClient support commands to MqServer, such as declare/produce/consume
-type MqClient struct {
-	*MessageClient
-	token string
-}
-
-//NewMqClient creates MqClient
-func NewMqClient(address string, certFile *string) *MqClient {
-	client := &MqClient{}
-	client.MessageClient = NewMessageClient(address, certFile)
-	return client
-}
-
 func (c *MqClient) invokeCmd(req *Message, info interface{}) error {
 	req.SetToken(c.token)
 	resp, err := c.Invoke(req)
@@ -281,9 +270,11 @@ func (c *MqClient) invokeCmd(req *Message, info interface{}) error {
 			return err
 		}
 	} else {
-		err = json.Unmarshal(resp.body, info)
-		if err != nil {
-			return err
+		if info != nil {
+			err = json.Unmarshal(resp.body, info)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -359,4 +350,114 @@ func (c *MqClient) DeclareTopic(topic string, mask *int32) (*proto.TopicInfo, er
 		return nil, err
 	}
 	return info, err
+}
+
+//DeclareGroup creator or update consume-group
+func (c *MqClient) DeclareGroup(topic string, group *ConsumeGroup) (*proto.ConsumeGroupInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Declare)
+	req.SetTopic(topic)
+	if group != nil {
+		group.WriteTo(req)
+	} else {
+		req.SetConsumeGroup(topic) //default to topic name
+	}
+
+	info := &proto.ConsumeGroupInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
+}
+
+//RemoveTopic remove topic
+func (c *MqClient) RemoveTopic(topic string) error {
+	req := NewMessage()
+	req.SetCmd(proto.Remove)
+	req.SetTopic(topic)
+
+	err := c.invokeCmd(req, nil)
+	return err
+}
+
+//RemoveGroup remove consume-group
+func (c *MqClient) RemoveGroup(topic string, group string) error {
+	req := NewMessage()
+	req.SetCmd(proto.Remove)
+	req.SetTopic(topic)
+	req.SetConsumeGroup(group)
+
+	err := c.invokeCmd(req, nil)
+	return err
+}
+
+//EmptyTopic clear message in topic
+func (c *MqClient) EmptyTopic(topic string) error {
+	req := NewMessage()
+	req.SetCmd(proto.Empty)
+	req.SetTopic(topic)
+
+	err := c.invokeCmd(req, nil)
+	return err
+}
+
+//EmptyGroup clear message in consume-group
+func (c *MqClient) EmptyGroup(topic string, group string) error {
+	req := NewMessage()
+	req.SetCmd(proto.Empty)
+	req.SetTopic(topic)
+	req.SetConsumeGroup(group)
+
+	err := c.invokeCmd(req, nil)
+	return err
+}
+
+//Produce message to zbus server
+//request set Ack false, get nil returned
+func (c *MqClient) Produce(req *Message) (*Message, error) {
+	req.SetCmd(proto.Produce)
+	if req.Ack() {
+		return c.Invoke(req)
+	}
+	return nil, c.Send(req)
+}
+
+//Consume consumes a message from zbus
+func (c *MqClient) Consume(topic string, group *string, window *int32) (*Message, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Consume)
+	req.SetTopic(topic)
+	if group != nil {
+		req.SetConsumeGroup(*group)
+	}
+	if window != nil {
+		req.SetWindow(*window)
+	}
+
+	resp, err := c.Invoke(req)
+	if err != nil {
+		return nil, err
+	}
+	resp.SetId(resp.OriginId())
+	resp.RemoveHeader(proto.OriginId)
+	if resp.Status == 200 {
+		url := resp.OriginUrl()
+		if url != "" {
+			resp.Url = url
+			resp.Status = -1
+			resp.RemoveHeader(proto.OriginUrl)
+		}
+	}
+	return resp, nil
+}
+
+//Route sends route message to zbus to target client, for RPC purpose
+func (c *MqClient) Route(msg *Message) error {
+	msg.SetCmd(proto.Route)
+	if msg.Status > 0 {
+		msg.SetOriginStatus(msg.Status)
+		msg.Status = -1 //make it as request
+	}
+	return c.Send(msg)
 }

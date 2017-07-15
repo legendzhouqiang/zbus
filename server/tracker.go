@@ -44,13 +44,13 @@ func NewTracker(server *Server) *Tracker {
 //JoinUpstreams connects to upstream trackers
 func (t *Tracker) JoinUpstreams(trackerList []string) {
 	for _, trackerAddress := range trackerList {
-		client, _ := t.upstreams.Get(trackerAddress).(*MessageClient)
+		client, _ := t.upstreams.Get(trackerAddress).(*MqClient)
 		if client != nil {
 			continue //already exists
 		}
 		client = t.connectToServer(trackerAddress)
 
-		client.onConnected = func(c *MessageClient) {
+		client.onConnected = func(c *MqClient) {
 			log.Printf("Connected to Tracker(%s)\n", trackerAddress)
 			event := &proto.ServerEvent{}
 			event.ServerInfo = t.server.serverInfo()
@@ -61,7 +61,7 @@ func (t *Tracker) JoinUpstreams(trackerList []string) {
 			t.upstreams.Set(trackerAddress, client) //TODO trackerAddress should be real address
 		}
 
-		client.onDisconnected = func(c *MessageClient) {
+		client.onDisconnected = func(c *MqClient) {
 			log.Printf("Disconnected from Tracker(%s)\n", trackerAddress)
 			t.healthyUpstreams.Remove(trackerAddress)
 			time.Sleep(t.reconnectInterval)
@@ -83,7 +83,7 @@ func (t *Tracker) PubToAll() {
 
 		t.healthyUpstreams.RLock()
 		for _, c := range t.healthyUpstreams.Map {
-			client, _ := c.(*MessageClient)
+			client, _ := c.(*MqClient)
 			t.updateToUpstream(client, event)
 		}
 		t.healthyUpstreams.RUnlock()
@@ -131,7 +131,7 @@ func (t *Tracker) CleanSession(sess *Session) {
 func (t *Tracker) Close() {
 	t.upstreams.RLock()
 	for _, c := range t.upstreams.Map {
-		client, _ := c.(*MessageClient)
+		client, _ := c.(*MqClient)
 		client.Close()
 	}
 	t.upstreams.RUnlock()
@@ -139,14 +139,14 @@ func (t *Tracker) Close() {
 
 	t.downstreams.RLock()
 	for _, c := range t.downstreams.Map {
-		client, _ := c.(*MessageClient)
+		client, _ := c.(*MqClient)
 		client.Close()
 	}
 	t.downstreams.RUnlock()
 	t.downstreams.Clear()
 }
 
-func (t *Tracker) updateToUpstream(upstream *MessageClient, event *proto.ServerEvent) {
+func (t *Tracker) updateToUpstream(upstream *MqClient, event *proto.ServerEvent) {
 	msg := NewMessage()
 	msg.SetCmd(proto.TrackPub)
 	data, _ := json.Marshal(event)
@@ -156,8 +156,8 @@ func (t *Tracker) updateToUpstream(upstream *MessageClient, event *proto.ServerE
 	upstream.Send(msg)
 }
 
-func (t *Tracker) connectToServer(trackerAddress string) *MessageClient {
-	client := NewMessageClient(trackerAddress, nil) //TODO handle SSL
+func (t *Tracker) connectToServer(trackerAddress string) *MqClient {
+	client := NewMqClient(trackerAddress, nil) //TODO handle SSL
 	return client
 }
 
@@ -189,7 +189,7 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 	}
 	tracker := s.tracker
 	addressKey := pubServer.ServerAddress.Address
-	client, _ := tracker.downstreams.Get(addressKey).(*MessageClient)
+	client, _ := tracker.downstreams.Get(addressKey).(*MqClient)
 	if event.Live {
 		tracker.serverTable.Set(addressKey, pubServer)
 	} else {
@@ -203,12 +203,12 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 	if event.Live && client == nil { //new downstream server joined
 		client := tracker.connectToServer(pubServer.ServerAddress.Address)
 
-		client.onConnected = func(c *MessageClient) {
+		client.onConnected = func(c *MqClient) {
 			log.Printf("Server(%s) in track", pubServer.ServerAddress.String())
 			tracker.downstreams.Set(addressKey, client)
 			tracker.PubToSubscribers()
 		}
-		client.onDisconnected = func(c *MessageClient) {
+		client.onDisconnected = func(c *MqClient) {
 			log.Printf("Server(%s) lost of tracking", pubServer.ServerAddress.String())
 			tracker.serverTable.Remove(addressKey)
 			tracker.downstreams.Remove(addressKey)

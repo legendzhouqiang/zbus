@@ -342,7 +342,9 @@ type ConsumeGroup struct {
 
 //WriteTo message
 func (g *ConsumeGroup) WriteTo(m *Message) {
-	m.SetConsumeGroup(g.GroupName)
+	if g.GroupName != "" {
+		m.SetConsumeGroup(g.GroupName)
+	}
 	if g.Filter != nil {
 		m.SetGroupFilter(*g.Filter)
 	}

@@ -51,8 +51,9 @@ const (
 	OriginUrl    = "origin_url"
 	OriginStatus = "origin_status"
 
-	//Security
+	Window = "window"
 
+	//Security
 	Token = "token"
 
 	MaskPause        = 1 << 0

@@ -103,7 +103,7 @@ func (m *Message) SetJsonBody(body string) {
 
 //EncodeMessage encodes Message to []byte
 func (m *Message) EncodeMessage(buf *bytes.Buffer) {
-	if m.Status != 0 {
+	if m.Status > 0 {
 		buf.WriteString(fmt.Sprintf("HTTP/1.1 %d %s\r\n", m.Status, StatusText(m.Status)))
 	} else {
 		buf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", m.Method, m.Url))
@@ -318,7 +318,10 @@ func (m *Message) GroupMask() *int32 {
 	if s == nil {
 		return nil
 	}
-	value, _ := strconv.Atoi(s.(string))
+	value, err := strconv.Atoi(s.(string))
+	if err != nil {
+		return nil
+	}
 	return &[]int32{int32(value)}[0]
 }
 
@@ -347,7 +350,10 @@ func (m *Message) GroupStartOffset() *int64 {
 	if s == nil {
 		return nil
 	}
-	value, _ := strconv.ParseInt(s.(string), 10, 64)
+	value, err := strconv.ParseInt(s.(string), 10, 64)
+	if err != nil {
+		return nil
+	}
 	return &[]int64{value}[0]
 }
 
@@ -376,7 +382,10 @@ func (m *Message) GroupStartTime() *int64 {
 	if s == nil {
 		return nil
 	}
-	value, _ := strconv.ParseInt(s.(string), 10, 64)
+	value, err := strconv.ParseInt(s.(string), 10, 64)
+	if err != nil {
+		return nil
+	}
 	return &[]int64{value}[0]
 }
 
@@ -426,13 +435,34 @@ func (m *Message) TopicMask() *int32 {
 	if s == nil {
 		return nil
 	}
-	value, _ := strconv.Atoi(s.(string))
+	value, err := strconv.Atoi(s.(string))
+	if err != nil {
+		return nil
+	}
 	return &[]int32{int32(value)}[0]
 }
 
 //SetTopicMask key=topic_mask
 func (m *Message) SetTopicMask(value int32) {
 	m.SetHeader(proto.TopicMask, strconv.Itoa(int(value)))
+}
+
+//Window key=window
+func (m *Message) Window() *int32 {
+	s := m.GetHeaderNil(proto.Window)
+	if s == nil {
+		return nil
+	}
+	value, err := strconv.Atoi(s.(string))
+	if err != nil {
+		return nil
+	}
+	return &[]int32{int32(value)}[0]
+}
+
+//SetWindow key=window
+func (m *Message) SetWindow(value int32) {
+	m.SetHeader(proto.Window, strconv.Itoa(int(value)))
 }
 
 //Recver key=recver
