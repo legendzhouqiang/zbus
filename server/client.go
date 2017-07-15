@@ -2,15 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"sync"
 	"time"
-
-	"fmt"
-
-	"encoding/json"
 
 	"./proto"
 )
@@ -120,6 +118,11 @@ func (c *MqClient) closeConn() {
 	}
 	c.conn.Close()
 	c.conn = nil
+}
+
+//SetToken set security token
+func (c *MqClient) SetToken(token string) {
+	c.token = token
 }
 
 //Invoke message to server and get reply matching msgid

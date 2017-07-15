@@ -108,7 +108,7 @@ type TrackerInfo struct {
 type ServerInfo struct {
 	TrackItem   `json:""`
 	InfoVersion int64                 `json:"infoVersion"`
-	TrackerList []ServerAddress       `json:"trackerList"`
+	TrackerList []*ServerAddress      `json:"trackerList"`
 	TopicTable  map[string]*TopicInfo `json:"topicTable"`
 }
 

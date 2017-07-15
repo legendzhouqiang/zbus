@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"path"
 	"time"
 
 	"./proto"
@@ -42,28 +43,35 @@ func NewTracker(server *Server) *Tracker {
 }
 
 //JoinUpstreams connects to upstream trackers
-func (t *Tracker) JoinUpstreams(trackerList []string) {
+func (t *Tracker) JoinUpstreams(trackerList []*proto.ServerAddress) {
 	for _, trackerAddress := range trackerList {
-		client, _ := t.upstreams.Get(trackerAddress).(*MqClient)
+		key := trackerAddress.String()
+		client, _ := t.upstreams.Get(key).(*MqClient)
 		if client != nil {
 			continue //already exists
 		}
+
 		client = t.connectToServer(trackerAddress)
 
 		client.onConnected = func(c *MqClient) {
-			log.Printf("Connected to Tracker(%s)\n", trackerAddress)
+			info, err := client.QueryServer()
+			if err != nil {
+				trackerAddress = info.ServerAddress
+			}
+			log.Printf("Connected to Tracker(%s)\n", trackerAddress.String())
+
 			event := &proto.ServerEvent{}
 			event.ServerInfo = t.server.serverInfo()
 			event.Live = true
 
 			t.updateToUpstream(c, event)
-			t.healthyUpstreams.Set(trackerAddress, c)
-			t.upstreams.Set(trackerAddress, client) //TODO trackerAddress should be real address
+			t.healthyUpstreams.Set(trackerAddress.String(), c)
+			t.upstreams.Set(trackerAddress.String(), client)
 		}
 
 		client.onDisconnected = func(c *MqClient) {
-			log.Printf("Disconnected from Tracker(%s)\n", trackerAddress)
-			t.healthyUpstreams.Remove(trackerAddress)
+			log.Printf("Disconnected from Tracker(%s)\n", trackerAddress.String())
+			t.healthyUpstreams.Remove(trackerAddress.String())
 			time.Sleep(t.reconnectInterval)
 
 			notify := make(chan bool)
@@ -156,8 +164,19 @@ func (t *Tracker) updateToUpstream(upstream *MqClient, event *proto.ServerEvent)
 	upstream.Send(msg)
 }
 
-func (t *Tracker) connectToServer(trackerAddress string) *MqClient {
-	client := NewMqClient(trackerAddress, nil) //TODO handle SSL
+func (t *Tracker) connectToServer(trackerAddress *proto.ServerAddress) *MqClient {
+	var certFile *string
+	if trackerAddress.SslEnabled {
+		config := t.server.Config
+		if file, ok := config.CertFileTable[trackerAddress.Address]; ok {
+			fileFullPath := path.Join(config.CertFileDir, file)
+			certFile = &fileFullPath
+		} else {
+			log.Printf("Missing certificate file to TLS/SSL connecting to (%s)", trackerAddress.Address)
+			return nil
+		}
+	}
+	client := NewMqClient(trackerAddress.Address, certFile)
 	return client
 }
 
@@ -201,7 +220,7 @@ func trackPubHandler(s *Server, req *Message, sess *Session) {
 	}
 
 	if event.Live && client == nil { //new downstream server joined
-		client := tracker.connectToServer(pubServer.ServerAddress.Address)
+		client := tracker.connectToServer(pubServer.ServerAddress)
 
 		client.onConnected = func(c *MqClient) {
 			log.Printf("Server(%s) in track", pubServer.ServerAddress.String())

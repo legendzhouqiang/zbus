@@ -7,11 +7,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"sync/atomic"
 	"time"
+
+	"encoding/json"
 
 	"./proto"
 	"./websocket"
@@ -19,25 +22,29 @@ import (
 
 //Config stores the conguration for server
 type Config struct {
-	Address        string
-	ServerName     string //override Address if provided
-	MqDir          string
-	LogDir         string
-	CertFileDir    string
-	LogToConsole   bool
-	Verbose        bool
-	TrackOnly      bool
-	TrackerList    []string
-	IdleTimeout    time.Duration
-	SslEnabled     bool
-	ServerCertFile string
-	ServerCertKey  string
+	ServerAddress string        `json:"serverAddress,omitempty"`
+	ServerName    string        `json:"serverName,omitempty"` //override Address if provided
+	MqDir         string        `json:"mqDir,omitempty"`
+	LogDir        string        `json:"logDir,omitempty"`
+	LogToConsole  bool          `json:"logToConsole,omitempty"`
+	Verbose       bool          `json:"verbose,omitempty"`
+	TrackerOnly   bool          `json:"trackerOnly,omitempty"`
+	TrackerList   string        `json:"trackerList,omitempty"`
+	IdleTimeout   time.Duration `json:"idleTimeout,omitempty"`
+	SslEnabled    bool          `json:"sslEnabled,omitempty"`
+
+	ServerCertFile  string            `json:"serverCertFile,omitempty"`
+	ServerCertKey   string            `json:"serverCertKey,omitempty"`
+	CertFileDir     string            `json:"certFileDir,omitempty"`
+	DefaultCertFile string            `json:"defaultCertFile,omitempty"`
+	CertFileTable   map[string]string `json:"certFileTable,omitempty"` //readonly after init
 }
 
 //Server = MqServer + Tracker
 type Server struct {
 	Config        *Config
 	ServerAddress *proto.ServerAddress
+	TrackerList   []*proto.ServerAddress
 	MqTable       SyncMap // map[string]*MessageQueue
 	SessionTable  SyncMap //Safe
 
@@ -60,12 +67,13 @@ func NewServer(config *Config) *Server {
 	s.SessionTable.Map = make(map[string]interface{})
 	s.handlerTable = make(map[string]func(*Server, *Message, *Session))
 
-	host, port := ServerAddress(config.Address) //get real server address if needs
+	host, port := ServerAddress(config.ServerAddress) //get real server address if needs
 	if config.ServerName != "" {
 		host = config.ServerName
 	}
 	addr := fmt.Sprintf("%s:%d", host, port)
 	s.ServerAddress = &proto.ServerAddress{addr, config.SslEnabled}
+	s.TrackerList = ParseServerAddressList(config.TrackerList)
 
 	s.MqTable.Map = make(map[string]interface{})
 	s.consumerTable = newConsumerTable()
@@ -93,23 +101,24 @@ func (s *Server) Start() error {
 			return err
 		}
 		certConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
-		s.listener, err = tls.Listen("tcp", s.Config.Address, certConfig)
+		s.listener, err = tls.Listen("tcp", s.Config.ServerAddress, certConfig)
 	} else {
-		s.listener, err = net.Listen("tcp", s.Config.Address)
+		s.listener, err = net.Listen("tcp", s.Config.ServerAddress)
 	}
 
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		return err
 	}
-	log.Println("Listening on " + s.Config.Address)
+	log.Println("Listening on " + s.Config.ServerAddress)
 
 	log.Println("Trying to load MqTable...")
 	if err = s.LoadMqTable(); err != nil { //load MQ table
 		return err
 	}
 	log.Println("MqTable loaded")
-	s.tracker.JoinUpstreams(s.Config.TrackerList)
+
+	s.tracker.JoinUpstreams(s.TrackerList)
 
 	for {
 		conn, err := s.listener.Accept()
@@ -149,7 +158,7 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	info.ServerVersion = proto.VersionValue
 	atomic.AddInt64(&s.infoVersion, 1)
 	info.InfoVersion = s.infoVersion
-	info.TrackerList = []proto.ServerAddress{}
+	info.TrackerList = s.TrackerList
 	info.TopicTable = make(map[string]*proto.TopicInfo)
 
 	s.MqTable.RLock()
@@ -159,10 +168,6 @@ func (s *Server) serverInfo() *proto.ServerInfo {
 	}
 	s.MqTable.RUnlock()
 
-	for _, address := range s.Config.TrackerList {
-		sa := &proto.ServerAddress{Address: address, SslEnabled: false}
-		info.TrackerList = append(info.TrackerList, *sa)
-	}
 	s.addServerContext(info)
 	return info
 }
@@ -181,7 +186,7 @@ func (s *Server) trackerInfo() *proto.TrackerInfo {
 		info.ServerTable[key] = serverInfo
 	}
 	s.tracker.serverTable.RUnlock()
-	if !s.Config.TrackOnly {
+	if !s.Config.TrackerOnly {
 		info.ServerTable[s.ServerAddress.String()] = s.serverInfo()
 	}
 	return info
@@ -304,24 +309,42 @@ outter:
 //ParseConfig from command line or config file
 func ParseConfig() *Config {
 	cfg := &Config{}
+	cfg.CertFileTable = make(map[string]string)
 	var idleTime int
-	var trackerList string
 
-	flag.StringVar(&cfg.Address, "addr", "0.0.0.0:15555", "Server address")
-	flag.StringVar(&cfg.ServerName, "name", "", "Server public server name, e.g. zbus.io")
-	flag.IntVar(&idleTime, "idle", 180, "Idle detection timeout in seconds") //default to 3 minute
-	flag.StringVar(&cfg.MqDir, "mqdir", "/tmp/zbus", "Message Queue directory")
-	flag.StringVar(&cfg.LogDir, "logdir", "", "Log file location")
-	flag.StringVar(&trackerList, "tracker", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
-	flag.BoolVar(&cfg.TrackOnly, "trackonly", false, "True--Work as Tracker only, False--MqServer+Tracker")
-	flag.BoolVar(&cfg.SslEnabled, "ssl", false, "Enable SSL")
-	flag.StringVar(&cfg.ServerCertFile, "certfile", "", "Certificate file path")
-	flag.StringVar(&cfg.ServerCertKey, "certkey", "", "Certificate key path")
+	flag.StringVar(&cfg.ServerAddress, "serverAddress", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&cfg.ServerName, "serverName", "", "Server public server name, e.g. zbus.io")
+	flag.IntVar(&idleTime, "idleTimeout", 180, "Idle detection timeout in seconds") //default to 3 minute
+	flag.StringVar(&cfg.MqDir, "mqDir", "/tmp/zbus", "Message Queue directory")
+	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
+	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
+	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
+	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", false, "Enable SSL")
+	flag.StringVar(&cfg.ServerCertFile, "serverCertFile", "", "Server certificate file full path")
+	flag.StringVar(&cfg.ServerCertKey, "serverCertKey", "", "Server certificate key path")
+	flag.StringVar(&cfg.CertFileDir, "certFileDir", "", "Client certificate directory to lookup, when connecting to other servers")
+	flag.StringVar(&cfg.DefaultCertFile, "defaultCertFile", "", "Client certificate directory to lookup, when connecting to other servers")
 
 	flag.Parse()
+	cfg.IdleTimeout = time.Duration(idleTime)
 
-	cfg.IdleTimeout = time.Duration(idleTime) * time.Second
-	cfg.TrackerList = SplitClean(trackerList, ";")
+	var configFile string
+	if flag.NArg() == 1 { //if only one argument, assume to be configuration file,
+		configFile = flag.Args()[0]
+		jsonData, err := ioutil.ReadFile(configFile)
+		if err != nil {
+			log.Fatalf("Read config file error: %s", err.Error())
+			os.Exit(-1)
+		}
+
+		err = json.Unmarshal(jsonData, cfg)
+		if err != nil {
+			log.Fatalf("Read config file error: %s", err.Error())
+			os.Exit(-1)
+		}
+	}
+
+	cfg.IdleTimeout = time.Duration(cfg.IdleTimeout) * time.Second
 	return cfg
 }
 

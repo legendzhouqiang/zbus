@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"./proto"
 )
 
 //UUID generate psudo uuid string
@@ -148,4 +150,30 @@ func EnsureDir(dir string) error {
 		}
 	}
 	return nil
+}
+
+//ParseServerAddressList parse server address list
+func ParseServerAddressList(addr string) []*proto.ServerAddress {
+	addrList := SplitClean(addr, ";")
+	var res []*proto.ServerAddress
+	for _, addr := range addrList {
+		if addr == "" {
+			continue
+		}
+		serverAddr := &proto.ServerAddress{}
+		if strings.HasPrefix(strings.ToUpper(addr), "[SSL]") {
+			addr = addr[5:len(addr)]
+			serverAddr.Address = addr
+			serverAddr.SslEnabled = true
+		} else {
+			serverAddr.Address = addr
+			serverAddr.SslEnabled = false
+		}
+		res = append(res, serverAddr)
+	}
+	if res == nil {
+		return []*proto.ServerAddress{}
+	}
+
+	return res
 }
