@@ -69,6 +69,14 @@ func (m *Message) SetHeaderIfNone(key string, val string) {
 	m.Header.Set(key, val)
 }
 
+//Body returns body as string, nil as "" empty string
+func (m *Message) Body() string {
+	if m.body == nil {
+		return ""
+	}
+	return string(m.body)
+}
+
 //SetBody set binary body of Message
 func (m *Message) SetBody(body []byte) {
 	m.body = body
@@ -151,10 +159,9 @@ func DecodeMessage(buf *bytes.Buffer) (*Message, error) {
 		return nil, fmt.Errorf("HTTP format: first line invalid")
 	}
 	if strings.HasPrefix(strings.ToUpper(metaFields[0]), "HTTP") {
-		m.Status = -1
+		m.Status, _ = strconv.Atoi(metaFields[1])
 	} else {
 		m.Method = metaFields[0]
-		m.Url = "/"
 		m.Url = metaFields[1]
 	}
 

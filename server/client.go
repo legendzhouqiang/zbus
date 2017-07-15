@@ -8,6 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"fmt"
+
+	"encoding/json"
+
 	"./proto"
 )
 
@@ -247,4 +251,112 @@ func (c *MessageClient) Start(notify chan bool) {
 			notify <- true
 		}
 	}()
+}
+
+//MqClient support commands to MqServer, such as declare/produce/consume
+type MqClient struct {
+	*MessageClient
+	token string
+}
+
+//NewMqClient creates MqClient
+func NewMqClient(address string, certFile *string) *MqClient {
+	client := &MqClient{}
+	client.MessageClient = NewMessageClient(address, certFile)
+	return client
+}
+
+func (c *MqClient) invokeCmd(req *Message, info interface{}) error {
+	req.SetToken(c.token)
+	resp, err := c.Invoke(req)
+	if err != nil {
+		return err
+	}
+	if resp.Status != 200 {
+		err = fmt.Errorf("Status=%d, Error=%s", resp.Status, string(resp.body))
+		errInfo, _ := info.(*proto.ErrInfo)
+		if errInfo != nil {
+			errInfo.Error = err
+		} else {
+			return err
+		}
+	} else {
+		err = json.Unmarshal(resp.body, info)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//QueryTracker read tracker info from Tracker
+func (c *MqClient) QueryTracker() (*proto.TrackerInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Tracker)
+
+	info := &proto.TrackerInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
+}
+
+//QueryServer read server info from MqServer
+func (c *MqClient) QueryServer() (*proto.ServerInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Server)
+
+	info := &proto.ServerInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
+}
+
+//QueryTopic read topic info from MqServer
+func (c *MqClient) QueryTopic(topic string) (*proto.TopicInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Query)
+	req.SetTopic(topic)
+
+	info := &proto.TopicInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
+}
+
+//QueryGroup read consume-group info from MqServer
+func (c *MqClient) QueryGroup(topic string, group string) (*proto.ConsumeGroupInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Query)
+	req.SetTopic(topic)
+	req.SetConsumeGroup(group)
+
+	info := &proto.ConsumeGroupInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
+}
+
+//DeclareTopic creator or update topic
+func (c *MqClient) DeclareTopic(topic string, mask *int32) (*proto.TopicInfo, error) {
+	req := NewMessage()
+	req.SetCmd(proto.Declare)
+	req.SetTopic(topic)
+	if mask != nil {
+		req.SetTopicMask(*mask)
+	}
+
+	info := &proto.TopicInfo{}
+	err := c.invokeCmd(req, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, err
 }

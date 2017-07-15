@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"encoding/json"
+
 	"./proto"
 )
 
@@ -59,4 +61,62 @@ func TestMessageClient_Invoke(t *testing.T) {
 		t.Fail()
 	}
 	fmt.Println(resp)
+}
+
+func TestMessageClient_Close(t *testing.T) {
+	c := NewMessageClient("localhost:15550", nil)
+
+	notify := make(chan bool)
+	c.EnsureConnected(notify)
+
+	c.Close()
+	<-notify
+}
+
+func TestMqClient_QueryTracker(t *testing.T) {
+	c := NewMqClient("localhost:15555", nil)
+	info, err := c.QueryTracker()
+	if err != nil {
+		println(err)
+		t.Fail()
+	}
+	s, _ := json.Marshal(info)
+	fmt.Println(string(s))
+	c.Close()
+}
+
+func TestMqClient_QueryServer(t *testing.T) {
+	c := NewMqClient("localhost:15555", nil)
+	info, err := c.QueryServer()
+	if err != nil {
+		println(err)
+		t.Fail()
+	}
+	s, _ := json.Marshal(info)
+	fmt.Println(string(s))
+	c.Close()
+}
+
+func TestMqClient_QueryTopic(t *testing.T) {
+	c := NewMqClient("localhost:15555", nil)
+	info, err := c.QueryTopic("hong")
+	if err != nil {
+		println(err)
+		t.Fail()
+	}
+	s, _ := json.Marshal(info)
+	fmt.Println(string(s))
+	c.Close()
+}
+
+func TestMqClient_QueryConsumeGroup(t *testing.T) {
+	c := NewMqClient("localhost:15555", nil)
+	info, err := c.QueryGroup("hong", "hong")
+	if err != nil {
+		println(err)
+		t.Fail()
+	}
+	s, _ := json.Marshal(info)
+	fmt.Println(string(s))
+	c.Close()
 }
