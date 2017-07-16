@@ -320,7 +320,7 @@ func ParseConfig() *Config {
 	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
 	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
-	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", true, "Enable SSL")
+	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", false, "Enable SSL")
 	flag.StringVar(&cfg.ServerCertFile, "serverCertFile", "./conf/ssl/zbus.crt", "Server certificate file full path")
 	flag.StringVar(&cfg.ServerKeyFile, "serverKeyFile", "./conf/ssl/zbus.key", "Server certificate key path")
 	flag.StringVar(&cfg.CertFileDir, "certFileDir", "./conf/ssl", "Client certificate directory to lookup, when connecting to other servers")
