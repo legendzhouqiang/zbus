@@ -3,14 +3,14 @@
 	"serverName": "",                
 	"mqDir": "/tmp/zbus",       
 
-	"trackerList": "localhost:15556", 
+	"trackerList": "", 
 
 	"idleTimeout": 180, 
 	"logDir": "",
 	"trackerOnly": false,  
 
 
-	"sslEnabled": false,
+	"sslEnabled": true,
 	"serverCertFile": "./conf/ssl/zbus.crt",
 	"serverKeyFile": "./conf/ssl/zbus.key",    
 	

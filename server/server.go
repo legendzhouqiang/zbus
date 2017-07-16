@@ -34,7 +34,7 @@ type Config struct {
 	SslEnabled    bool          `json:"sslEnabled,omitempty"`
 
 	ServerCertFile  string            `json:"serverCertFile,omitempty"`
-	ServerCertKey   string            `json:"serverCertKey,omitempty"`
+	ServerKeyFile   string            `json:"serverKeyFile,omitempty"`
 	CertFileDir     string            `json:"certFileDir,omitempty"`
 	DefaultCertFile string            `json:"defaultCertFile,omitempty"`
 	CertFileTable   map[string]string `json:"certFileTable,omitempty"` //readonly after init
@@ -95,7 +95,7 @@ func (s *Server) Start() error {
 		return nil
 	}
 	if s.Config.SslEnabled {
-		cert, err := tls.LoadX509KeyPair(s.Config.ServerCertFile, s.Config.ServerCertKey)
+		cert, err := tls.LoadX509KeyPair(s.Config.ServerCertFile, s.Config.ServerKeyFile)
 		if err != nil {
 			log.Println("Error loading certificate file and key:", err.Error())
 			return err
@@ -311,6 +311,7 @@ func ParseConfig() *Config {
 	cfg := &Config{}
 	cfg.CertFileTable = make(map[string]string)
 	var idleTime int
+	var configFile string
 
 	flag.StringVar(&cfg.ServerAddress, "serverAddress", "0.0.0.0:15555", "Server address")
 	flag.StringVar(&cfg.ServerName, "serverName", "", "Server public server name, e.g. zbus.io")
@@ -319,18 +320,19 @@ func ParseConfig() *Config {
 	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
 	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
-	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", false, "Enable SSL")
-	flag.StringVar(&cfg.ServerCertFile, "serverCertFile", "", "Server certificate file full path")
-	flag.StringVar(&cfg.ServerCertKey, "serverCertKey", "", "Server certificate key path")
-	flag.StringVar(&cfg.CertFileDir, "certFileDir", "", "Client certificate directory to lookup, when connecting to other servers")
-	flag.StringVar(&cfg.DefaultCertFile, "defaultCertFile", "", "Client certificate directory to lookup, when connecting to other servers")
+	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", true, "Enable SSL")
+	flag.StringVar(&cfg.ServerCertFile, "serverCertFile", "./conf/ssl/zbus.crt", "Server certificate file full path")
+	flag.StringVar(&cfg.ServerKeyFile, "serverKeyFile", "./conf/ssl/zbus.key", "Server certificate key path")
+	flag.StringVar(&cfg.CertFileDir, "certFileDir", "./conf/ssl", "Client certificate directory to lookup, when connecting to other servers")
+	flag.StringVar(&cfg.DefaultCertFile, "defaultCertFile", "zbus.crt", "Client certificate directory to lookup, when connecting to other servers")
 
 	flag.Parse()
 	cfg.IdleTimeout = time.Duration(idleTime)
 
-	var configFile string
 	if flag.NArg() == 1 { //if only one argument, assume to be configuration file,
 		configFile = flag.Args()[0]
+	}
+	if configFile != "" {
 		jsonData, err := ioutil.ReadFile(configFile)
 		if err != nil {
 			log.Fatalf("Read config file error: %s", err.Error())

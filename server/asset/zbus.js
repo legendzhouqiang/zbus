@@ -942,10 +942,7 @@ Broker.prototype._createClient = function (serverAddress, certFile) {
         }
         if (!certFile) {
             certFile = this.defaultSslCertFile;
-        }
-        if (!certFile) {
-            throw new "Missing certificate file for Server: " + serverAddress.address;
-        }
+        } 
     }
     return new MqClient(serverAddress, certFile);
 } 

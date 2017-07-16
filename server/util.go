@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"sort"
@@ -29,7 +30,7 @@ var fileMap map[string][]byte
 
 //ReadAssetFile read asset file via go binary data or direct io
 func ReadAssetFile(file string) ([]byte, error) {
-	//return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
+	return ioutil.ReadFile(fmt.Sprintf("asset/%s", file))
 
 	if fileMap == nil {
 		fileMap = make(map[string][]byte)
