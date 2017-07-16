@@ -145,6 +145,8 @@ var Events = require('events');
 var Buffer = require("buffer").Buffer;
 var Socket = require("net");
 var inherits = require("util").inherits;
+var tls = require("tls");
+var fs = require("fs");
     
 function string2Uint8Array(str, encoding) {
     var buf = Buffer.from(str, encoding); 
@@ -435,7 +437,16 @@ inherits(MessageClient, Events.EventEmitter);
 
 MessageClient.prototype.connect = function (connectedHandler) { 
     console.log("Trying to connect: " + this.serverHost + ":" + this.serverPort);
-    this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort }); 
+    var certFile = this.certFile;
+    if(this.serverAddress.sslEnabled) { 
+        console.log("cert:" + this.certFile);
+        this.socket = tls.connect(this.serverPort, {  
+            cert: fs.readFileSync(certFile),  
+            ca: fs.readFileSync(certFile),
+        });
+    } else {
+        this.socket = Socket.connect({ host: this.serverHost, port: this.serverPort }); 
+    } 
 
     var client = this;
     this.socket.on("connect", function () {
@@ -791,8 +802,7 @@ BrokerRouteTable.prototype._rebuildTopicTable = function () {
 function Broker(trackerAddressList) {
     this.trackerSubscribers = {};
     this.clientTable = {};
-    this.routeTable = new BrokerRouteTable();
-
+    this.routeTable = new BrokerRouteTable();  
 
     this.sslCertFileTable = {};
     this.defaultSslCertFile = null;
@@ -848,12 +858,31 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
     this.trackerSubscribers[fullAddr] = client;
 
     var broker = this; 
+    var remoteTrackerAddress = trackerAddress;
+    client.connect(function (event) {
+        var msg = {};
+        msg.cmd = Protocol.TRACK_SUB;
+        client.sendMessage(msg);
+    });
+
+    client.onDisconnected = function(){
+        var toRemove = broker.routeTable.removeTracker(remoteTrackerAddress);
+        for (var i in toRemove) {
+            var serverAddress = toRemove[i];
+            broker._removeServer(serverAddress); 
+        }
+    }
+
     client.onMessage = function (msg) {
         if (msg.status != "200") {
             console.log("Warn: " + msg);
             return;
         }
         var trackerInfo = msg.body; 
+        //update tracker address
+        remoteTrackerAddress = trackerInfo.serverAddress;
+        broker.sslCertFileTable[trackerInfo.serverAddress.address] = certFile
+
         var toRemove = broker.routeTable.updateTracker(trackerInfo);
         if (!broker.readyTriggered) {
             broker.readyServerRequired = hashSize(trackerInfo.serverTable);
@@ -870,13 +899,7 @@ Broker.prototype.addTracker = function (trackerAddress, certFile) {
         if (broker.onServerUpdated) {
             broker.onServerUpdated();
         }
-    }
-
-    client.connect(function (event) {
-        var msg = {};
-        msg.cmd = Protocol.TRACK_SUB;
-        client.sendMessage(msg);
-    });
+    } 
 
     setTimeout(function () {
         if (!broker.readyTriggered) {
