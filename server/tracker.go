@@ -91,8 +91,10 @@ func (t *Tracker) PubToAll() {
 
 		t.healthyUpstreams.RLock()
 		for _, c := range t.healthyUpstreams.Map {
-			client, _ := c.(*MqClient)
-			t.updateToUpstream(client, event)
+			client, ok := c.(*MqClient)
+			if ok {
+				t.updateToUpstream(client, event)
+			}
 		}
 		t.healthyUpstreams.RUnlock()
 	}

@@ -39,24 +39,26 @@ function showServerTable(serverInfoTable, filterServerList, trackerAddress){
 	for(var i in serverList){
 		var server = serverList[i];
 		var serverInfo = serverInfoTable[server];
+
+		var serverAddress = serverInfo.serverAddress;
 		var topicList = serverTopicList(serverInfo.topicTable); 
 		var checked ="checked=checked"; 
-		if(!containsServerAddress(filterServerList, serverInfo.serverAddress)){
+		if(!containsServerAddress(filterServerList, serverAddress)){
 			checked = "";
 		}
 		var tag = "";
-		if(trackerAddress && serverInfo.serverAddress.address == trackerAddress.address){
+		if(trackerAddress && serverAddress.address == trackerAddress.address){
 			tag = "<span>*</span>";
 		}
-		var serverAddresss = serverInfo.serverAddress;
+		
 		var fullAddr = httpFullAddress(serverAddress); 
 		
 		$("#server-list").append(
 			"<tr>\
 				<td>\
-					<a class='link' target='_blank' href='" + fullAddr + "'>" + serverAddresss.address + "</a>"+ tag + "\
+					<a class='link' target='_blank' href='" + fullAddr + "'>" + serverAddress.address + "</a>"+ tag + "\
 					<div class='filter-box'>\
-	            		<input class='server' sslEnabled=" + serverAddress.sslEnabled + " type='checkbox' "+ checked +" value='"+ serverAddresss.address + "'>\
+	            		<input class='server' sslEnabled=" + serverAddress.sslEnabled + " type='checkbox' "+ checked +" value='"+ serverAddress.address + "'>\
 	            	</div>\
             	</td>\
 				<td>" + serverInfo.serverVersion + "</td>\

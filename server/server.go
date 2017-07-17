@@ -313,12 +313,12 @@ func ParseConfig() *Config {
 	var idleTime int
 	var configFile string
 
-	flag.StringVar(&cfg.ServerAddress, "serverAddress", "0.0.0.0:15555", "Server address")
+	flag.StringVar(&cfg.ServerAddress, "serverAddress", "0.0.0.0:15558", "Server address")
 	flag.StringVar(&cfg.ServerName, "serverName", "", "Server public server name, e.g. zbus.io")
 	flag.IntVar(&idleTime, "idleTimeout", 180, "Idle detection timeout in seconds") //default to 3 minute
 	flag.StringVar(&cfg.MqDir, "mqDir", "/tmp/zbus", "Message Queue directory")
 	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
-	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
+	flag.StringVar(&cfg.TrackerList, "trackerList", "localhost:15555;localhost:15556", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
 	flag.BoolVar(&cfg.SslEnabled, "sslEnabled", false, "Enable SSL")
 	flag.StringVar(&cfg.ServerCertFile, "serverCertFile", "./conf/ssl/zbus.crt", "Server certificate file full path")
@@ -352,7 +352,7 @@ func ParseConfig() *Config {
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
-	printBanner()
+	//printBanner()
 
 	config := ParseConfig()
 	var logTargets []io.Writer
