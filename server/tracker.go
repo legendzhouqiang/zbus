@@ -54,19 +54,22 @@ func (t *Tracker) JoinUpstreams(trackerList []*proto.ServerAddress) {
 		client = t.connectToServer(trackerAddress)
 
 		client.onConnected = func(c *MqClient) {
-			info, err := client.QueryServer()
+			info, err := client.QueryTracker()
 			if err != nil {
-				trackerAddress = info.ServerAddress
+				log.Printf("Query tracker's server info error: %s", err.Error())
+				return
 			}
-			log.Printf("Connected to Tracker(%s)\n", trackerAddress.String())
+			trackerAddress = info.ServerAddress
+
+			log.Printf("Connected to Tracker(%s)\n", info.ServerAddress.String())
 
 			event := &proto.ServerEvent{}
 			event.ServerInfo = t.server.serverInfo()
 			event.Live = true
 
 			t.updateToUpstream(c, event)
-			t.healthyUpstreams.Set(trackerAddress.String(), c)
-			t.upstreams.Set(trackerAddress.String(), client)
+			t.healthyUpstreams.Set(info.ServerAddress.String(), c)
+			t.upstreams.Set(info.ServerAddress.String(), c)
 		}
 
 		client.onDisconnected = func(c *MqClient) {
@@ -88,11 +91,10 @@ func (t *Tracker) PubToAll() {
 		event := &proto.ServerEvent{}
 		event.ServerInfo = t.server.serverInfo()
 		event.Live = true
-
 		t.healthyUpstreams.RLock()
 		for _, c := range t.healthyUpstreams.Map {
-			client, ok := c.(*MqClient)
-			if ok {
+			client, _ := c.(*MqClient)
+			if client != nil {
 				t.updateToUpstream(client, event)
 			}
 		}
