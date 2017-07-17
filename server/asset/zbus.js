@@ -1065,8 +1065,8 @@ Consumer.prototype.consumeToServer = function (clientInBrokerTable) {
     var consumer = this;
     for (var i = 0; i < this.connectionCount; i++) {
         var consumeClient = clientInBrokerTable.fork();
-        consumingClients.push(consumeClient);
-        consumer.consume(consumeClient, consumer.consumeCtrl); 
+        consumingClients.push(consumeClient); 
+        consumer.consume(consumeClient, consumer.consumeCtrl);  
     }
     this.consumeClientTable[addr] = consumingClients; 
 }
@@ -1139,9 +1139,15 @@ Consumer.prototype.consume = function(client, consumeCtrl) {
         } 
     }
     client.connect(function(){
-        client.consume(consumeCtrl, function (res) {
-            consumeCallback(consumeCtrl,res);
-        }) 
+        client.declare(consumeCtrl, function(res){
+            if (res.status != 200) {
+                console.log("declare error: " + res);
+                return;
+            }
+            client.consume(consumeCtrl, function (res) {
+                consumeCallback(consumeCtrl,res);
+            });
+        }); 
     })
 }
 
