@@ -579,8 +579,7 @@ MessageClient.prototype.connect = function (connectedHandler) {
     this.socket.onclose = function (event) {
         clearInterval(client.heartbeatInterval);
         if (client.onDisconnected) {
-            client.onDisconnected();
-            return;
+            client.onDisconnected(); 
         }
         if (client.autoReconnect) {
             setTimeout(function () {
