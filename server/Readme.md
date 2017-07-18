@@ -1,7 +1,36 @@
-# Code Dissect
+# Roles
 zbus is a TCP server favors HTTP-alike protocol, but **NO** HTTP standard module in Golang involved.
 
-## Networking Server
+
+*Working as MQ server*
+- Produce
+- Consume 
+- ConsumeGroup + MessageFilter
+
+    
+*Working as RPC server*
+- Produce + Route
+
+
+*Working as Push server*
+
+- Consume + Route 
+ 
+ *Wroking as service bus*
+
+                  HTTP(Browser)/TCP, Java/.NET/JS...
+                                ||
+                             SSL + Token
+        ---------------------front server-------------------
+                //       \\                        ||  
+               //         \\                       ||
+        Service Orchestra(JS/Python Dynamic)      MQ(Push)
+              ||           ||       
+        -----Micro-service server-----   
+            ||   ||   ||   ||   ||
+         Java/.NET/JS/Python/C++/GO/PHP
+
+## Networking
 
 ## Message Protocol
 
