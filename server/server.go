@@ -321,7 +321,7 @@ func ParseConfig() *Config {
 	flag.StringVar(&cfg.ServerName, "serverName", "", "Server public server name, e.g. zbus.io")
 	flag.IntVar(&idleTime, "idleTimeout", 180, "Idle detection timeout in seconds")
 	flag.IntVar(&broadcastInterval, "broadcastInterval", 30, "Broadcast ServerInfo in seconds")
-	flag.StringVar(&cfg.MqDir, "mqDir", "", "Message Queue directory")
+	flag.StringVar(&cfg.MqDir, "mqDir", "/tmp/zbus", "Message Queue directory")
 	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
 	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
