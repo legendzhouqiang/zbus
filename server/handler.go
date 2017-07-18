@@ -181,10 +181,14 @@ func handleUrlKVs(msg *Message, kvstr string) {
 	kvs := SplitClean(kvstr, "&")
 	for _, kv := range kvs {
 		bb := SplitClean(kv, "=")
-		if len(bb) != 2 {
+		if len(bb) < 1 {
 			continue
 		}
-		key, val := bb[0], bb[1]
+		key := bb[0]
+		val := ""
+		if len(bb) > 1 {
+			val = bb[1]
+		}
 		if strings.EqualFold(key, "body") && msg.body == nil {
 			msg.SetBodyString(string(val))
 		}
