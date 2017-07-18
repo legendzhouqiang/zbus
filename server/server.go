@@ -22,16 +22,17 @@ import (
 
 //Config stores the configuration for server
 type Config struct {
-	ServerAddress string        `json:"serverAddress,omitempty"`
-	ServerName    string        `json:"serverName,omitempty"` //override Address if provided
-	MqDir         string        `json:"mqDir,omitempty"`
-	LogDir        string        `json:"logDir,omitempty"`
-	LogToConsole  bool          `json:"logToConsole,omitempty"`
-	Verbose       bool          `json:"verbose,omitempty"`
-	TrackerOnly   bool          `json:"trackerOnly,omitempty"`
-	TrackerList   string        `json:"trackerList,omitempty"`
-	IdleTimeout   time.Duration `json:"idleTimeout,omitempty"`
-	SslEnabled    bool          `json:"sslEnabled,omitempty"`
+	ServerAddress     string        `json:"serverAddress,omitempty"`
+	ServerName        string        `json:"serverName,omitempty"` //override Address if provided
+	MqDir             string        `json:"mqDir,omitempty"`
+	LogDir            string        `json:"logDir,omitempty"`
+	LogToConsole      bool          `json:"logToConsole,omitempty"`
+	Verbose           bool          `json:"verbose,omitempty"`
+	TrackerOnly       bool          `json:"trackerOnly,omitempty"`
+	TrackerList       string        `json:"trackerList,omitempty"`
+	BroadcastInterval time.Duration `json:"broadcastInterval,omitempty"`
+	IdleTimeout       time.Duration `json:"idleTimeout,omitempty"`
+	SslEnabled        bool          `json:"sslEnabled,omitempty"`
 
 	ServerCertFile  string            `json:"serverCertFile,omitempty"`
 	ServerKeyFile   string            `json:"serverKeyFile,omitempty"`
@@ -55,7 +56,8 @@ type Server struct {
 
 	infoVersion int64
 
-	tracker *Tracker
+	tracker          *Tracker
+	trackerBroadCast chan bool
 
 	wsUpgrader *Upgrader // upgrade TCP to websocket
 }
@@ -119,7 +121,7 @@ func (s *Server) Start() error {
 	log.Println("MqTable loaded")
 
 	s.tracker.JoinUpstreams(s.TrackerList)
-
+	s.tracker.startTrackerBroadcast(s.trackerBroadCast)
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
@@ -132,6 +134,7 @@ func (s *Server) Start() error {
 
 //Close server
 func (s *Server) Close() {
+	s.trackerBroadCast <- true
 	s.listener.Close() //TODO more release may required
 }
 
@@ -311,12 +314,14 @@ func ParseConfig() *Config {
 	cfg := &Config{}
 	cfg.CertFileTable = make(map[string]string)
 	var idleTime int
+	var broadcastInterval int
 	var configFile string
 
 	flag.StringVar(&cfg.ServerAddress, "serverAddress", "0.0.0.0:15555", "Server address")
 	flag.StringVar(&cfg.ServerName, "serverName", "", "Server public server name, e.g. zbus.io")
-	flag.IntVar(&idleTime, "idleTimeout", 180, "Idle detection timeout in seconds") //default to 3 minute
-	flag.StringVar(&cfg.MqDir, "mqDir", "/tmp/zbus4", "Message Queue directory")
+	flag.IntVar(&idleTime, "idleTimeout", 180, "Idle detection timeout in seconds")
+	flag.IntVar(&broadcastInterval, "broadcastInterval", 30, "Broadcast ServerInfo in seconds")
+	flag.StringVar(&cfg.MqDir, "mqDir", "", "Message Queue directory")
 	flag.StringVar(&cfg.LogDir, "logDir", "", "Log file location")
 	flag.StringVar(&cfg.TrackerList, "trackerList", "", "Tracker list, e.g.: localhost:15555;localhost:15556")
 	flag.BoolVar(&cfg.TrackerOnly, "trackerOnly", false, "True--Work as Tracker only, False--MqServer+Tracker")
@@ -328,6 +333,7 @@ func ParseConfig() *Config {
 
 	flag.Parse()
 	cfg.IdleTimeout = time.Duration(idleTime)
+	cfg.BroadcastInterval = time.Duration(broadcastInterval)
 
 	if flag.NArg() == 1 { //if only one argument, assume to be configuration file,
 		configFile = flag.Args()[0]
@@ -346,7 +352,9 @@ func ParseConfig() *Config {
 		}
 	}
 
+	//make time duration correct
 	cfg.IdleTimeout = time.Duration(cfg.IdleTimeout) * time.Second
+	cfg.BroadcastInterval = time.Duration(cfg.BroadcastInterval) * time.Second
 	return cfg
 }
 

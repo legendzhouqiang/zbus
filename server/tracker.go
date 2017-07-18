@@ -184,6 +184,20 @@ func (t *Tracker) connectToServer(trackerAddress *proto.ServerAddress) *MqClient
 	return client
 }
 
+func (t *Tracker) startTrackerBroadcast(quit chan bool) {
+	go func() {
+	broadcast:
+		for {
+			t.PubToAll()
+			select {
+			case <-time.After(t.server.Config.BroadcastInterval):
+			case <-quit:
+				break broadcast
+			}
+		}
+	}()
+}
+
 /////////////////////////////Handlers for Tracker//////////////////////////////////
 //trackerHandler serve SrackerInfo request
 func trackerHandler(s *Server, req *Message, sess *Session) {
