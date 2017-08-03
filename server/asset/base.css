@@ -2,11 +2,24 @@
   padding-top: 8px;	
 }
 .navbar-brand > img {
-  width: 32px;
-  height: 32px;  
+  width: 36px;
+  height: 36px;  
   display: inline;
 } 
  
+.navbar-brand > span {
+	color: rgb(145, 220, 90); 
+	font-weight: bold;
+	visibility: visible; 
+	display: inline-block; 
+	clear: both; 
+	font-size: 24px; 
+	line-height: 24px; 
+	white-space: nowrap; 
+	position: relative; 
+	padding: 0px;  
+	top: 4px;
+}
 .topic {
 	margin: 3px;
 	cursor: pointer;

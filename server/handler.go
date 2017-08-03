@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"./proto"
@@ -549,7 +550,20 @@ func renderFile(file string, contentType string, s *Server, msg *Message, sess *
 		res.Status = 200
 		res.SetBody(data)
 	}
-	res.SetHeader("content-type", contentType)
+	if contentType == "" {
+		ext := filepath.Ext(file)
+		switch ext {
+		case ".png":
+			contentType = "image/png"
+		case ".jpeg":
+			contentType = "image/jpeg"
+		case ".svg":
+			contentType = "image/svg+xml"
+		}
+	}
+	if contentType != "" {
+		res.SetHeader("content-type", contentType)
+	}
 	sess.WriteMessage(res)
 }
 
@@ -570,7 +584,7 @@ func cssHandler(s *Server, msg *Message, sess *Session) {
 }
 
 func imgHandler(s *Server, msg *Message, sess *Session) {
-	renderFile("", "image/svg+xml", s, msg, sess)
+	renderFile("", "", s, msg, sess)
 }
 
 func pageHandler(s *Server, msg *Message, sess *Session) {

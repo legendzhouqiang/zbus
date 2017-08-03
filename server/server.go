@@ -360,7 +360,7 @@ func ParseConfig() *Config {
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
-	//printBanner()
+	printBanner()
 
 	config := ParseConfig()
 	var logTargets []io.Writer
