@@ -50,6 +50,8 @@ func (s *Server) initServerHandler() {
 	s.handlerTable[proto.Server] = serverHandler
 	s.handlerTable[proto.TrackPub] = trackPubHandler
 	s.handlerTable[proto.TrackSub] = trackSubHandler
+
+	s.handlerTable["ping"] = pingHandler
 }
 
 //Created when new session from client joined
@@ -593,6 +595,13 @@ func pageHandler(s *Server, msg *Message, sess *Session) {
 
 func heartbeatHandler(s *Server, msg *Message, sess *Session) {
 	//just ignore
+}
+func pingHandler(s *Server, msg *Message, sess *Session) {
+	//just ignore
+	msg = NewMessage()
+	msg.Status = 200
+	msg.SetBody([]byte("OK"))
+	sess.WriteMessage(msg)
 }
 
 //ConsumerTable topic=> { group => {SessId => Session} }
