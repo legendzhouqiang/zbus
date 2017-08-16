@@ -7,7 +7,7 @@ import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.rpc.RpcProcessor;
 
-public class RpcProcessorExample {
+public class RpcService {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   

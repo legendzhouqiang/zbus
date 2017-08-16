@@ -13,7 +13,7 @@ import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcInvoker;
 
-public class RpcTestCases {
+public class TestCases {
 	public static User getUser(String name) {
 		User user = new User();
 		user.setName(name);

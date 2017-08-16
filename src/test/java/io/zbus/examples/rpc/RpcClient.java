@@ -7,7 +7,7 @@ import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.transport.ResultCallback;
 
-public class RpcInvokerExample {
+public class RpcClient {
 
 	public static void main(String[] args) throws Exception { 
 		//Broker broker = new Broker("localhost:15555");   
