@@ -14,3 +14,6 @@
 [submodule "clients/zbus-php"]
 	path = clients/zbus-php
 	url = https://gitee.com/rushmore/zbus-php
+[submodule "clients/zbus-go"]
+	path = clients/zbus-go
+	url = https://gitee.com/rushmore/zbus-go
