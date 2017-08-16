@@ -22,6 +22,7 @@ import io.zbus.kit.NetKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
@@ -150,12 +151,7 @@ public class MqServer extends TcpServer {
 
 	public MqServerConfig getConfig() {
 		return config;
-	}   
-	
-	public MqAdaptor getMqAdaptor() {
-		return mqAdaptor;
-	}
-	 
+	}    
 
 	public Tracker getTracker() {
 		return tracker;

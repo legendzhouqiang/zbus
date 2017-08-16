@@ -15,7 +15,7 @@ public class MessageServerExample {
 		
 		MessageAdaptor adaptor = new MessageAdaptor();
 		
-		adaptor.cmd("", new MessageHandler<Message>() { 
+		adaptor.url("/", new MessageHandler<Message>() { 
 			@Override
 			public void handle(Message msg, Session session) throws IOException {  
 				Message res = new Message();
@@ -24,7 +24,7 @@ public class MessageServerExample {
 				res.setBody("Hello world");
 				session.write(res);
 			}
-		}); 
+		});  
 		
 		MessageServer server = new MessageServer();   
 		server.start(80, adaptor);  

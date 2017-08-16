@@ -1,4 +1,4 @@
-package io.zbus.mq.server;
+package io.zbus.mq;
 
 import java.io.Closeable;
 import java.io.File;
@@ -16,17 +16,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.mq.ConsumeGroup;
-import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
+import io.zbus.mq.server.ReplyKit;
 import io.zbus.transport.Session;
 
 
@@ -38,17 +38,13 @@ public class DiskQueue implements MessageQueue{
 	protected long lastUpdateTime = System.currentTimeMillis(); 
 	
 	private final String name; 
-	private final QueueWriter writer;
+	private final QueueWriter writer; 
 	
-	public DiskQueue(Index index) throws IOException{
-		this.index = index;
+	public DiskQueue(File dir) throws IOException {  
+		this.index = new Index(dir);
 		this.name = index.getName();
 		this.writer = new QueueWriter(this.index);
 		loadConsumeGroups();
-	}
-	
-	public DiskQueue(File dir) throws IOException { 
-		this(new Index(dir));
 	}
 	
 	private void loadConsumeGroups() throws IOException{ 
@@ -337,7 +333,7 @@ public class DiskQueue implements MessageQueue{
 		info.topicName = name;
 		info.createdTime = index.getCreatedTime();
 		info.lastUpdatedTime = lastUpdateTime;
-		info.creator = getCreator();
+		//info.creator = getCreator();  //ignore creator
 		info.mask = getMask();
 		info.messageDepth = index.getMessageCount();  
 		info.consumerCount = 0;
@@ -398,5 +394,47 @@ public class DiskQueue implements MessageQueue{
 			}
 			return info;
 		}
-	} 
+	}
+	
+	class PullSession { 
+		Session session;
+	    Message pullMessage;  
+	   
+	    final ReentrantLock lock = new ReentrantLock(); 
+		final BlockingQueue<Message> msgQ = new LinkedBlockingQueue<Message>(); 
+		
+		public PullSession(Session sess, Message pullMessage) { 
+			this.session = sess;
+			this.setPullMessage(pullMessage);
+		}  
+		public Session getSession() {
+			return session;
+		}
+		
+		public void setSession(Session session) {
+			this.session = session;
+		}
+		
+		public Message getPullMessage() {
+			return this.pullMessage;
+		}
+		
+		public void setPullMessage(Message msg) { 
+			this.lock.lock();
+			this.pullMessage = msg;
+			if(msg == null){
+				this.lock.unlock();
+				return; 
+			} 
+			this.lock.unlock();
+		}  
+
+		public BlockingQueue<Message> getMsgQ() {
+			return msgQ;
+		}
+		
+		public String getConsumerAddress(){
+			return session.remoteAddress();   
+		}
+	}
 }

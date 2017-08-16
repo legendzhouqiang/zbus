@@ -50,6 +50,13 @@ public class MessageAdaptor extends ServerAdaptor{
 	public void cmd(String command, MessageHandler<Message> handler){
     	this.handlerMap.put(command, handler);
     }
+	
+	public void url(String url, MessageHandler<Message> handler){
+		if(url.startsWith("/")){
+			url = url.substring(1);
+		}
+    	this.handlerMap.put(url, handler);
+    }
 	 
     public void registerFilterHandler(MessageHandler<Message> filterHandler) {
 		this.filterHandler = filterHandler;

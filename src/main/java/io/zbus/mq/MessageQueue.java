@@ -1,10 +1,8 @@
 
-package io.zbus.mq.server;
+package io.zbus.mq;
 
 import java.io.IOException;
 
-import io.zbus.mq.ConsumeGroup;
-import io.zbus.mq.Message;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.transport.Session;
