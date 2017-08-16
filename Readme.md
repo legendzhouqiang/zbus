@@ -22,51 +22,52 @@ zbus carefully designed on its protocol and components to embrace KISS(Keep It S
 - TCP/HTTP/WebSocket, Monitor, all in one port, support DMZ deployment
 - Based on simple protocol: HTTP-header extension, and browser access friendly
 
+## Clients
 
-## Performance
+[zbus-java](https://gitee.com/rushmore/zbus)
 
-	Single Mac i7 box with SSD, with apache ab -k -c 32 -n 4000000 URL
+[zbus-dotnet](https://gitee.com/rushmore/zbus-dotnet)
 
-	Produce:  ~80,000/s
-	Consume:  ~90,000/s
-	RPC: ~20,000/s (java service)
+[zbus-javascript](https://gitee.com/rushmore/zbus-javascript)
 
-## Getting started
-### Installation
-- Build from source
+[zbus-python](https://gitee.com/rushmore/zbus-python)
 
-Download the source, in server directory
+[zbus-php](https://gitee.com/rushmore/zbus-php)
 
-	go build  
+[zbus-cpp](https://gitee.com/rushmore/zbus-cpp)
 
-No dependency just Go!
-
-- Download executable
-
-Directly download from the prebuilt binary.
+[zbus-go](https://gitee.com/rushmore/zbus-go)
 
 
+## Getting started 
+In zbus-dist directory, just run zbus.bat/sh, JDK6+ required.
 
 Incase you may interest in the client projects, go to zbus source root directory
 
 	git submodule update --init --recursive  
 
-On your favorite OS, run the built zbus binary, access the monitor address
+## Performance
+Fast performance test (Apache Benchmark)
 
-[http://localhost:15555](http://localhost:15555) 
+	Declare MQ: http://localhost:15555/declare/MyTopic
+	
+	Produce 
+	ab -k -c 32 -n 1000000 http://localhost:15555/produce/MyTopic
+	Consume 
+	ab -k -c 32 -n 1000000 http://localhost:15555/consume/MyTopic
 
-You can change the default configuration, in console, type 
+	Single Mac i7 box with SSD 
+	Produce:  ~80,000/s
+	Consume:  ~90,000/s
+	RPC: ~20,000/s
 
-	zbus -h             (change the binary name to 'zbus' if by default is 'server')
 
-all self-explained, with configurable items listed such as port to listen, directory to store MQ and log etc.
 
+
+## MQ and RPC at a glance
+
+In the monitor page [http://localhost:15555](http://localhost:15555) , as you can see, there are two sections
 ![Monitor](https://git.oschina.net/uploads/images/2017/0630/162232_543dc692_7458.png "Monitor")
-
-
-### MQ and RPC at a glance
-
-In the monitor page, as you can see, there are two sections
 1. Tracked Servers
 
 	List all the MqServer joined.

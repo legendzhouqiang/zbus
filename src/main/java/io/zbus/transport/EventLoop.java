@@ -24,7 +24,7 @@ public class EventLoop implements Closeable {
 	
 	private SslContext sslContext; 
 	private int idleTimeInSeconds = 180; //180s 
-	private int packageSizeLimit = 1024*1024*32; //maximum of 32M
+	private int packageSizeLimit = 1024*1024*1024; //maximum of 1G
 
 	public EventLoop() {
 		try {
