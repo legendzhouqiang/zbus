@@ -1,4 +1,6 @@
-package io.zbus.mq.server;
+package io.zbus.unittests.mq.server;
+
+import io.zbus.mq.server.MqServer;
 
 public class MqServerTest {
 

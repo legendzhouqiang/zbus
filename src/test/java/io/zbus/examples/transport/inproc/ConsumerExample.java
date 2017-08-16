@@ -1,4 +1,4 @@
-package io.zbus.examples.inproc;
+package io.zbus.examples.transport.inproc;
 
 import io.zbus.mq.Message;
 import io.zbus.mq.MqClient;

@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.transport.Client.MsgHandler;
+import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session;
 
 public class MessageAdaptor extends ServerAdaptor{     
-	protected MsgHandler<Message> filterHandler;   
-	protected Map<String, MsgHandler<Message>> handlerMap = new ConcurrentHashMap<String, MsgHandler<Message>>();  
+	protected MessageHandler<Message> filterHandler;   
+	protected Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();  
 	
 	public MessageAdaptor(){ 
 		this(null);
@@ -40,18 +40,18 @@ public class MessageAdaptor extends ServerAdaptor{
 	
 	public MessageAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable);
-		this.cmd(Message.HEARTBEAT, new MsgHandler<Message>() { 
+		this.cmd(Message.HEARTBEAT, new MessageHandler<Message>() { 
 			public void handle(Message msg, Session sess) throws IOException { 
 				//ignore
 			}
 		});
 	}
 	 
-	public void cmd(String command, MsgHandler<Message> handler){
+	public void cmd(String command, MessageHandler<Message> handler){
     	this.handlerMap.put(command, handler);
     }
 	 
-    public void registerFilterHandler(MsgHandler<Message> filterHandler) {
+    public void registerFilterHandler(MessageHandler<Message> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
@@ -66,7 +66,7 @@ public class MessageAdaptor extends ServerAdaptor{
     	
     	String cmd = msg.getCommand();
     	if(cmd != null){ //cmd
-    		MsgHandler<Message> handler = handlerMap.get(cmd);
+    		MessageHandler<Message> handler = handlerMap.get(cmd);
         	if(handler != null){
         		handler.handle(msg, sess);
         		return;

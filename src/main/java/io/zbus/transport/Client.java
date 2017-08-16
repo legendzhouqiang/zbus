@@ -23,7 +23,7 @@ public interface Client<REQ extends Id, RES extends Id> extends Invoker<REQ, RES
 	void ensureConnectedAsync(); 
 	
 	void sendMessage(REQ req) throws IOException, InterruptedException;; 
-	void onMessage(MsgHandler<RES> msgHandler);
+	void onMessage(MessageHandler<RES> messageHandler);
 	void onError(ErrorHandler errorHandler);
     void onConnected(ConnectedHandler connectedHandler);
     void onDisconnected(DisconnectedHandler disconnectedHandler);
@@ -42,9 +42,5 @@ public interface Client<REQ extends Id, RES extends Id> extends Invoker<REQ, RES
 	
 	public static interface ErrorHandler { 
 		void onError(Throwable e, Session session) throws IOException;   
-	}
-	
-	public static interface MsgHandler<T> { 
-		void handle(T msg, Session session) throws IOException;   
 	}  
 }

@@ -18,8 +18,8 @@ import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
-import io.zbus.transport.Client.MsgHandler;
 import io.zbus.transport.EventLoop;
+import io.zbus.transport.MessageHandler;
 import io.zbus.transport.Session;
 
 public class Broker implements Closeable { 
@@ -120,7 +120,7 @@ public class Broker implements Closeable {
 			}
 		}); 
 		
-		client.onMessage(new MsgHandler<Message>() {  
+		client.onMessage(new MessageHandler<Message>() {  
 			@Override
 			public void handle(Message msg, Session session) throws IOException { 
 				if(Protocol.TRACK_PUB.equals(msg.getCommand())){  

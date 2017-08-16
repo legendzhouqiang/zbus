@@ -1,4 +1,4 @@
-package io.zbus.mq.disk;
+package io.zbus.unittests.mq.disk;
 
 import static org.junit.Assert.*;
 
@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.zbus.mq.disk.MappedFile;
  
 
 public class MappedFileTest {

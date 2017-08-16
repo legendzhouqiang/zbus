@@ -1,4 +1,4 @@
-package io.zbus.transport.tcp;
+package io.zbus.examples.transport.tcp;
 
 import org.junit.Test;
 

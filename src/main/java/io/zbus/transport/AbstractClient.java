@@ -19,7 +19,7 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 	protected CountDownLatch activeLatch = new CountDownLatch(1);    
 	protected final Sync<REQ, RES> sync = new Sync<REQ, RES>();    
 	
-	protected volatile MsgHandler<RES> msgHandler; 
+	protected volatile MessageHandler<RES> msgHandler; 
 	protected volatile ErrorHandler errorHandler;
 	protected volatile ConnectedHandler connectedHandler;
 	protected volatile DisconnectedHandler disconnectedHandler;  
@@ -121,7 +121,7 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 		}   
 	}
 	
-	public void onMessage(MsgHandler<RES> msgHandler){
+	public void onMessage(MessageHandler<RES> msgHandler){
     	this.msgHandler = msgHandler;
     }
     

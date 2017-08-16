@@ -88,7 +88,7 @@ public class CompositeClient<REQ extends Id, RES extends Id> implements Client<R
 	}
 
 	@Override
-	public void onMessage(io.zbus.transport.Client.MsgHandler<RES> msgHandler) {
+	public void onMessage(io.zbus.transport.MessageHandler<RES> msgHandler) {
 		support.onMessage(msgHandler);
 	}
 
