@@ -1,4 +1,4 @@
-package io.zbus.examples.producer;
+package io.zbus.examples.mq.producer;
 
 import io.zbus.mq.Broker;
 import io.zbus.mq.Message;
@@ -9,11 +9,11 @@ public class ProducerExample {
 		Broker broker = new Broker("localhost:15555"); 
 		  
 		Producer p = new Producer(broker);
-		p.declareTopic("hong"); 
+		p.declareTopic("MyTopic"); 
 		 
 		Message msg = new Message();
-		msg.setTopic("hong");
-		msg.setTag("group1.xxx");
+		msg.setTopic("MyTopic");
+		//msg.setTag("group1.xxx");
 		msg.setBody("hello " + System.currentTimeMillis()); 
 		
 		Message res = p.publish(msg);

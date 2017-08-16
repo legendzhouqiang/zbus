@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc.api;
+package io.zbus.examples.rpc.biz;
 
 import java.util.Arrays;
 import java.util.List;

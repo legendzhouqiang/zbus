@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.examples.rpc.api.InterfaceExample;
-import io.zbus.examples.rpc.api.MyEnum;
-import io.zbus.examples.rpc.api.Order;
-import io.zbus.examples.rpc.api.User;
+import io.zbus.examples.rpc.biz.InterfaceExample;
+import io.zbus.examples.rpc.biz.MyEnum;
+import io.zbus.examples.rpc.biz.Order;
+import io.zbus.examples.rpc.biz.User;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcInvoker;

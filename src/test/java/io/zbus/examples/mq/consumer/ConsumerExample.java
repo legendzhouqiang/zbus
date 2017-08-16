@@ -1,4 +1,4 @@
-package io.zbus.examples.consumer;
+package io.zbus.examples.mq.consumer;
 
 import java.io.IOException;
 

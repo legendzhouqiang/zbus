@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc.api;
+package io.zbus.examples.rpc.biz;
 
 public enum MyEnum {
 	Monday,
