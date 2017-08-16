@@ -1,17 +1,16 @@
-package io.zbus.performance.transport;
+package io.zbus.transport.inproc;
 
 import java.io.IOException;
 
 import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
 import io.zbus.transport.http.MessageAdaptor;
+import io.zbus.transport.http.MessageClient;
 import io.zbus.transport.http.MessageHandler;
 import io.zbus.transport.http.MessageServer;
-import io.zbus.transport.inproc.InprocClient;
 
-public class ServerInprocClientPerf {
-
-	@SuppressWarnings("resource")
+public class MessageClientExample {
+ 
 	public static void main(String[] args) throws Exception {   
 		MessageAdaptor adaptor = new MessageAdaptor();
 		
@@ -25,23 +24,16 @@ public class ServerInprocClientPerf {
 				session.write(res);
 			}
 		});
-
+		 
 		MessageServer server = new MessageServer();   
 		server.start(80, adaptor);  
-		
-		
-		InprocClient<Message , Message> client = new InprocClient<Message, Message>(adaptor);
-		
-		int N = 1000000;
-		long start = System.currentTimeMillis();
-		for(int i=0;i<N;i++){
-			Message req = new Message(); 
-			client.invokeSync(req); 
-		}
-		long end = System.currentTimeMillis();
-		System.out.println(N*1000.0/(end-start));
+		 
+		MessageClient client = new MessageClient(adaptor); 
+		Message req = new Message(); 
+		Message res = client.invokeSync(req);   
+		System.out.println(res);
 		
 		client.close();
-		server.stop();
+		server.close();
 	} 
 }

@@ -10,6 +10,7 @@ import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.CompositeClient;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.IoAdaptor;
+import io.zbus.transport.Server;
 import io.zbus.transport.inproc.InprocClient;
 import io.zbus.transport.tcp.TcpClient;
 import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
@@ -43,6 +44,10 @@ public class MessageClient extends CompositeClient<Message, Message>{
 	
 	public MessageClient(IoAdaptor serverIoAdaptor){ 
 		support = new InprocClient<Message, Message>(serverIoAdaptor);
+	} 
+	
+	public MessageClient(Server server){ 
+		support = new InprocClient<Message, Message>(server.getIoAdatpr());
 	} 
 	
 	//IPC support TODO 

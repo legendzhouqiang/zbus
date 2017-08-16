@@ -4,7 +4,7 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MqClient;
 import io.zbus.mq.server.MqServer;
 
-public class InprocConsumerExample {   
+public class ConsumerExample {   
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {     

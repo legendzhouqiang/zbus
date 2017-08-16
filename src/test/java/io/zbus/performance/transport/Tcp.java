@@ -10,7 +10,7 @@ import io.zbus.transport.http.MessageClient;
 import io.zbus.transport.http.MessageHandler;
 import io.zbus.transport.http.MessageServer;
 
-public class ServerTcpClientPerf {
+public class Tcp {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
