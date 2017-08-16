@@ -17,7 +17,7 @@ zbus carefully designed on its protocol and components to embrace KISS(Keep It S
 - Fast MQ on disk, capable of unicast, multicast and broadcast messaging models
 - Easy RPC support out of box, language agnostic
 - Officially support Java/.NET/Javascript/C_C++/Python/Go/PHP clients
-- Extremely light-weighted, (~1M zipped executable, no dependency)
+- Extremely light-weighted
 - High Availability inside, able to join or leave any distributed components
 - TCP/HTTP/WebSocket, Monitor, all in one port, support DMZ deployment
 - Based on simple protocol: HTTP-header extension, and browser access friendly
@@ -27,8 +27,8 @@ zbus carefully designed on its protocol and components to embrace KISS(Keep It S
 
 	Single Mac i7 box with SSD, with apache ab -k -c 32 -n 4000000 URL
 
-	Produce:  ~70,000/s
-	Consume:  ~60,000/s
+	Produce:  ~80,000/s
+	Consume:  ~90,000/s
 	RPC: ~20,000/s (java service)
 
 ## Getting started
