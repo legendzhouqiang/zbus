@@ -2,9 +2,6 @@
 [submodule "clients/zbus-cpp"]
 	path = clients/zbus-cpp
 	url = https://gitee.com/rushmore/zbus-cpp
-[submodule "clients/zbus-java"]
-	path = clients/zbus-java
-	url = https://gitee.com/rushmore/zbus-java
 [submodule "clients/zbus-dotnet"]
 	path = clients/zbus-dotnet
 	url = https://gitee.com/rushmore/zbus-dotnet
