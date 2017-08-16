@@ -36,7 +36,7 @@ public class JsonRpcCodec implements RpcCodec {
 		Message msg = new Message();  
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
 		msg.setEncoding(encoding);
-		msg.setBody(JsonKit.toJSONBytes(request, encoding));
+		msg.setBody(JsonKit.toJSONBytesWithType(request, encoding));
 		return msg;
 	}
 	
@@ -57,7 +57,7 @@ public class JsonRpcCodec implements RpcCodec {
 		msg.setStatus(200);
 		msg.setEncoding(encoding); 
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
-		msg.setBody(JsonKit.toJSONBytes(response, encoding)); 
+		msg.setBody(JsonKit.toJSONBytesWithType(response, encoding)); 
 		return msg; 
 	}
 	
