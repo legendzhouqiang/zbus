@@ -36,10 +36,10 @@ public class MqServerConfig implements Cloneable {
 	public String sslKeyFile;
 	public boolean sslEnabled;
 	
-	public boolean trackerModeOnly = false;
+	public boolean trackerOnly = false;
 	public boolean verbose = false;
 	public String storePath = "/tmp/zbus";  
-	public String serverName = serverHost+":"+serverPort;
+	public String serverName;
 	
 	public long cleanMqInterval = 3000;       //3 seconds
 	public long trackReportInterval = 30000;  //30 seconds
@@ -141,11 +141,11 @@ public class MqServerConfig implements Cloneable {
 	}
 
 	public boolean isTrackerModeOnly() {
-		return trackerModeOnly;
+		return trackerOnly;
 	}
 
 	public void setTrackerModeOnly(boolean trackerModeOnly) {
-		this.trackerModeOnly = trackerModeOnly;
+		this.trackerOnly = trackerModeOnly;
 	}
 
 	public void loadFromXml(InputStream stream) throws Exception{

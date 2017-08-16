@@ -85,7 +85,11 @@ public class MqServer extends TcpServer {
 		}
 		String address = host+":"+config.serverPort;
 		if(!StrKit.isEmpty(config.serverName)){
-			address = config.serverName + ":"+config.serverPort; 
+			if(config.serverName.contains(":")){
+				address = config.serverName; 
+			} else {
+				address = config.serverName + ":"+config.serverPort; 
+			}
 		} 
 		serverAddress = new ServerAddress(address, loop.isSslEnabled()); 
 		
@@ -101,7 +105,7 @@ public class MqServer extends TcpServer {
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS);  
 		
 		tracker = new Tracker(this, config.sslCertFileTable, 
-				!config.trackerModeOnly, config.trackReportInterval);
+				!config.trackerOnly, config.trackReportInterval);
 		
 		mqAdaptor = new MqAdaptor(this);   
 	} 
@@ -127,6 +131,7 @@ public class MqServer extends TcpServer {
 	public void close() throws IOException {   
 		scheduledExecutor.shutdown();   
 		mqAdaptor.close();  
+		tracker.close();
 		
 		super.close();
 	}  

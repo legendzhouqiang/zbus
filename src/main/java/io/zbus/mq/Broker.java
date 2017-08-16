@@ -33,7 +33,7 @@ public class Broker implements Closeable {
 	
 	
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
-	private EventLoop eventDriver;  
+	private EventLoop eventLoop;  
 	private final int clientPoolSize; 
 	private Map<String, String> sslCertFileTable;
 	private String defaultSslCertFile;
@@ -46,7 +46,7 @@ public class Broker implements Closeable {
 	} 
 	
 	public Broker(BrokerConfig config){
-		this.eventDriver = new EventLoop(); 
+		this.eventLoop = new EventLoop(); 
 		this.clientPoolSize = config.getClientPoolSize();  
 		this.sslCertFileTable = config.getSslCertFileTable();
 		this.defaultSslCertFile = config.getDefaultSslCertFile(); 
@@ -58,7 +58,7 @@ public class Broker implements Closeable {
 	}   
 	
 	public Broker(String trackerList){
-		this.eventDriver = new EventLoop(); 
+		this.eventLoop = new EventLoop(); 
 		this.clientPoolSize = 32;
 		
 		String[] bb = trackerList.split("[,; ]");
@@ -174,12 +174,12 @@ public class Broker implements Closeable {
 		}   
 		
 		final MqClientPool createdPool = pool;
-		eventDriver.getGroup().submit(new Runnable() { 
+		eventLoop.getGroup().submit(new Runnable() { 
 			@Override
 			public void run() {  
 				try { 
 					for(final ServerNotifyListener listener : listeners){
-						eventDriver.getGroup().submit(new Runnable() { 
+						eventLoop.getGroup().submit(new Runnable() { 
 							@Override
 							public void run() {  
 								listener.onServerJoin(createdPool);
@@ -200,7 +200,7 @@ public class Broker implements Closeable {
 			if(pool == null) return;   
 		}    
 		
-		eventDriver.getGroup().schedule(new Runnable() { 
+		eventLoop.getGroup().schedule(new Runnable() { 
 			@Override
 			public void run() {
 				try {
@@ -212,7 +212,7 @@ public class Broker implements Closeable {
 		}, 1000, TimeUnit.MILLISECONDS); //delay 1s to close to wait other service depended on this broker
 		
 		for(final ServerNotifyListener listener : listeners){
-			eventDriver.getGroup().submit(new Runnable() { 
+			eventLoop.getGroup().submit(new Runnable() { 
 				@Override
 				public void run() { 
 					listener.onServerLeave(serverAddress);
@@ -234,7 +234,7 @@ public class Broker implements Closeable {
 			poolTable.clear();
 		}  
 		
-		eventDriver.close();
+		eventLoop.close();
 	}   
 	
 	public MqClientPool[] selectClient(ServerSelector selector, Message msg) {
@@ -290,7 +290,7 @@ public class Broker implements Closeable {
 	}
 
 	private MqClient connectToServer(ServerAddress serverAddress){
-		EventLoop driver = eventDriver.duplicate(); //duplicated, no need to close
+		EventLoop driver = eventLoop.duplicate(); //duplicated, no need to close
 		if(serverAddress.sslEnabled){
 			String certPath = sslCertFileTable.get(serverAddress.address);
 			if(certPath == null) certPath = defaultSslCertFile;
@@ -305,7 +305,7 @@ public class Broker implements Closeable {
 	}
 	
 	private MqClientPool createMqClientPool(ServerAddress remoteServerAddress, ServerAddress serverAddress){
-		EventLoop driver = eventDriver.duplicate(); //duplicated, no need to close
+		EventLoop driver = eventLoop.duplicate(); //duplicated, no need to close
 		if(serverAddress.sslEnabled){
 			String certPath = sslCertFileTable.get(remoteServerAddress.address);
 			if(certPath == null) certPath = sslCertFileTable.get(serverAddress.address);

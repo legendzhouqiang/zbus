@@ -2,10 +2,10 @@ package io.zbus.transport.tcp;
 
 import java.io.IOException;
 
+import io.zbus.transport.Client.MsgHandler;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
 import io.zbus.transport.http.MessageAdaptor;
-import io.zbus.transport.http.MessageHandler;
 import io.zbus.transport.http.MessageServer;
 
 public class MessageServerExample {
@@ -14,7 +14,7 @@ public class MessageServerExample {
 	public static void main(String[] args) {   
 		MessageAdaptor adaptor = new MessageAdaptor();
 		
-		adaptor.cmd("", new MessageHandler() { 
+		adaptor.cmd("", new MsgHandler<Message>() { 
 			@Override
 			public void handle(Message msg, Session session) throws IOException {  
 				Message res = new Message();
