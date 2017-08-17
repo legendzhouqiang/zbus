@@ -47,7 +47,7 @@ public class RpcInvoker {
 	private boolean verbose;
 	
 	private RpcCodec codec; 
- 
+	
 	public RpcInvoker(Broker broker, String topic){
 		this(new RpcConfig(broker, topic));
 	}
@@ -68,6 +68,16 @@ public class RpcInvoker {
 		this.verbose = config.isVerbose();
 		
 		this.producer = new Producer(config); 
+	}
+	
+	public RpcInvoker(RpcInvoker other){
+		this.topic = other.topic;
+		this.codec = other.codec;
+		this.module = other.module;
+		this.encoding = other.encoding;
+		this.timeout = other.timeout;
+		this.verbose = other.verbose;
+		this.producer = other.producer;
 	}
 	
 	private Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
@@ -213,7 +223,9 @@ public class RpcInvoker {
 		Constructor<RpcInvocationHandler> rpcInvokerCtor;
 		try {
 			rpcInvokerCtor = RpcInvocationHandler.class.getConstructor(new Class[] {RpcInvoker.class });
-			RpcInvocationHandler rpcInvokerHandler = rpcInvokerCtor.newInstance(this); 
+			RpcInvoker rpcInvoker = new RpcInvoker(this);
+			rpcInvoker.module = clazz.getName();
+			RpcInvocationHandler rpcInvokerHandler = rpcInvokerCtor.newInstance(rpcInvoker); 
 			Class<T>[] interfaces = new Class[] { clazz }; 
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			return (T) Proxy.newProxyInstance(classLoader, interfaces, rpcInvokerHandler);
