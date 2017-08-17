@@ -3,10 +3,10 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 
-import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.transport.ClientFactory;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.Pool;
+import io.zbus.transport.ServerAddress;
 
 public class MqClientPool implements Closeable {
 	private Pool<MqClient> pool; 

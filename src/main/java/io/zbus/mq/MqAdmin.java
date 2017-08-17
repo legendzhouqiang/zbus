@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import io.zbus.mq.Broker.ServerSelector;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
-import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.transport.ServerAddress;
  
 
 public class MqAdmin {      

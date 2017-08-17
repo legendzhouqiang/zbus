@@ -3,7 +3,9 @@ package io.zbus.mq;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap; 
+import java.util.concurrent.ConcurrentHashMap;
+
+import io.zbus.transport.ServerAddress; 
 
 public class Protocol {  
 	public static final String VERSION_VALUE = "0.9.0";      
@@ -73,56 +75,6 @@ public class Protocol {
 	public static final int MASK_RPC    	    = 1<<1; 
 	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
 	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
-	
-	public static class ServerAddress{
-		public String address;
-		public boolean sslEnabled;
-		
-		public ServerAddress(){
-			
-		}
-		public ServerAddress(String address){
-			this.address = address;
-		}
-		
-		public ServerAddress(String address, boolean sslEnabled) {
-			this.address = address;
-			this.sslEnabled = sslEnabled;
-		}
-		
-		@Override
-		public String toString() {
-			return sslEnabled? "[SSL]"+address : address;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((address == null) ? 0 : address.hashCode());
-			result = prime * result + (sslEnabled ? 1231 : 1237);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			ServerAddress other = (ServerAddress) obj;
-			if (address == null) {
-				if (other.address != null)
-					return false;
-			} else if (!address.equals(other.address))
-				return false;
-			if (sslEnabled != other.sslEnabled)
-				return false;
-			return true;
-		}  
-	}  
 	
 	public static class ServerEvent{  
 		//public ServerAddress serverAddress;

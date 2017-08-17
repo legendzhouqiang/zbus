@@ -2,7 +2,6 @@ package io.zbus.performance.transport;
 
 import java.io.IOException;
 
-import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
@@ -11,8 +10,7 @@ import io.zbus.transport.http.MessageClient;
 import io.zbus.transport.http.MessageServer;
 
 public class Tcp {
-
-	@SuppressWarnings("resource")
+ 
 	public static void main(String[] args) throws Exception {   
 		MessageAdaptor adaptor = new MessageAdaptor();
 		
@@ -30,10 +28,8 @@ public class Tcp {
 		MessageServer server = new MessageServer();   
 		server.start(80, adaptor);  
 		
-		
-		Thread.sleep(1000); 
-		EventLoop loop = new EventLoop();
-		MessageClient client = new MessageClient("localhost:80", loop);
+		 
+		MessageClient client = new MessageClient("localhost", server.getEventLoop());
 		
 		int N = 10000;
 		long start = System.currentTimeMillis();
@@ -45,6 +41,6 @@ public class Tcp {
 		System.out.println(N*1000.0/(end-start));
 		
 		client.close();
-		server.stop();
+		server.close();
 	} 
 }

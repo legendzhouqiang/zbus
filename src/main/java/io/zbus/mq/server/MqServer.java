@@ -23,10 +23,10 @@ import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.MessageQueue;
-import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.transport.CodecInitializer;
+import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session;
 import io.zbus.transport.tcp.TcpServer;
 

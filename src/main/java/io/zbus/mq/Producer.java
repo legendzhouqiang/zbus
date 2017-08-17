@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import io.zbus.mq.Broker.ServerSelector;
-import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.transport.ResultCallback;
+import io.zbus.transport.ServerAddress;
  
 
 public class Producer extends MqAdmin{  

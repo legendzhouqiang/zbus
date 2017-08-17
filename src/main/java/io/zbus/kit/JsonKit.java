@@ -52,13 +52,12 @@ public class JsonKit {
 	
 	public static byte[] toJSONBytes(Object value, String encoding) {
 		return toJSONBytes(value, encoding, 
-				SerializerFeature.WriteMapNullValue, 
+				//SerializerFeature.WriteMapNullValue, 
 				SerializerFeature.DisableCircularReferenceDetect); 
 	} 
 	
 	public static byte[] toJSONBytesWithType(Object value, String encoding) {
 		return toJSONBytes(value, encoding, 
-				SerializerFeature.WriteMapNullValue, 
 				SerializerFeature.DisableCircularReferenceDetect,
 				SerializerFeature.WriteClassName); 
 	} 

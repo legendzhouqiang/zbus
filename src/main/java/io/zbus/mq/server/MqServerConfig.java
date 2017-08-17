@@ -23,7 +23,7 @@ import org.xml.sax.InputSource;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
-import io.zbus.mq.Protocol.ServerAddress;
+import io.zbus.transport.ServerAddress;
 
 public class MqServerConfig implements Cloneable {   
 	public String serverHost = "0.0.0.0";

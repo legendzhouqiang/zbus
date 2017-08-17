@@ -6,7 +6,6 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -29,6 +28,7 @@ import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.Server;
+import io.zbus.transport.ServerAddress;
 
 public class TcpServer implements Server {
 	private static final Logger log = LoggerFactory.getLogger(TcpServer.class); 
@@ -37,6 +37,7 @@ public class TcpServer implements Server {
 	protected EventLoop loop;
 	protected boolean ownLoop; 
 	protected IoAdaptor defaultIoAdaptor;
+	protected ServerAddress defaultServerAddress;
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> listenTable = new ConcurrentHashMap<Integer, ServerInfo>();
   
@@ -74,7 +75,7 @@ public class TcpServer implements Server {
 		
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(bossGroup, workerGroup)
-		 .option(ChannelOption.SO_BACKLOG, 10240) //TODO make it configurable
+		 .option(ChannelOption.SO_BACKLOG, 102400) //TODO make it configurable
 		 .channel(NioServerSocketChannel.class) 
 		 .handler(new LoggingHandler(LogLevel.INFO))
 		 .childHandler(new SocketChannelInitializer(ioAdaptor));
@@ -96,25 +97,18 @@ public class TcpServer implements Server {
 		
 		if(isDefault){
 			this.defaultIoAdaptor = ioAdaptor;
+			this.defaultServerAddress = new ServerAddress(host+":"+port, loop.isSslEnabled());
 		}
 	} 
 	
 	@Override
 	public void close() throws IOException {
 		if(ownLoop && loop != null){
-			loop.close();
+			loop.close(); 
 			loop = null;
 		}
 	} 
-	
-	@Override
-	public void stop() throws InterruptedException {
-		for(Entry<Integer, ServerInfo> e : listenTable.entrySet()){
-			ChannelFuture cf = e.getValue().serverChanneFuture;
-			cf.sync().channel().closeFuture().sync();
-		}
-	}
-	
+	 
 	public int getRealPort(int bindPort) throws InterruptedException{
 		if(!listenTable.containsKey(bindPort)){
 			return -1; //indicates not found;
@@ -137,6 +131,11 @@ public class TcpServer implements Server {
 	@Override
 	public IoAdaptor getIoAdatpr() { 
 		return this.defaultIoAdaptor;
+	}
+	
+	@Override
+	public ServerAddress getServerAddress() {
+		return defaultServerAddress;
 	}
 	
 	static class ServerInfo{

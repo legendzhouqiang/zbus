@@ -13,13 +13,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.mq.Protocol.ServerAddress;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
+import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session;
 
 public class Broker implements Closeable { 
@@ -290,22 +290,22 @@ public class Broker implements Closeable {
 	}
 
 	private MqClient connectToServer(ServerAddress serverAddress){
-		EventLoop driver = eventLoop.duplicate(); //duplicated, no need to close
+		EventLoop loop = eventLoop.duplicate(); //duplicated, no need to close
 		if(serverAddress.sslEnabled){
 			String certPath = sslCertFileTable.get(serverAddress.address);
 			if(certPath == null) certPath = defaultSslCertFile;
 			if(certPath == null){
 				throw new IllegalStateException(serverAddress + " certificate file not found");
 			}
-			driver.setClientSslContext(certPath); 
+			loop.setClientSslContext(certPath); 
 		}
 		
-		final MqClient client = new MqClient(serverAddress.address, driver);  
+		final MqClient client = new MqClient(serverAddress.address, loop);  
 		return client;
 	}
 	
 	private MqClientPool createMqClientPool(ServerAddress remoteServerAddress, ServerAddress serverAddress){
-		EventLoop driver = eventLoop.duplicate(); //duplicated, no need to close
+		EventLoop loop = eventLoop.duplicate(); //duplicated, no need to close
 		if(serverAddress.sslEnabled){
 			String certPath = sslCertFileTable.get(remoteServerAddress.address);
 			if(certPath == null) certPath = sslCertFileTable.get(serverAddress.address);
@@ -314,9 +314,9 @@ public class Broker implements Closeable {
 			if(certPath == null){
 				throw new IllegalStateException(serverAddress + " certificate file not found");
 			}
-			driver.setClientSslContext(certPath);
+			loop.setClientSslContext(certPath);
 		}
-		return new MqClientPool(serverAddress.address, clientPoolSize, driver);   
+		return new MqClientPool(serverAddress.address, clientPoolSize, loop);   
 	} 
 	
 	public void setDefaultSslCertFile(String defaultSslCertFile) {

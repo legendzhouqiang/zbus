@@ -13,7 +13,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker.ServerNotifyListener;
 import io.zbus.mq.Broker.ServerSelector;
-import io.zbus.mq.Protocol.ServerAddress; 
+import io.zbus.transport.ServerAddress; 
 
 public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class);  

@@ -23,11 +23,10 @@ import org.xml.sax.InputSource;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
-import io.zbus.mq.Protocol.ServerAddress;
+import io.zbus.transport.ServerAddress;
 
 public class BrokerConfig implements Cloneable {   
-	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>();
-	public List<ServerAddress> serverList = new ArrayList<ServerAddress>();
+	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>(); 
 	public Map<String, String> sslCertFileTable = new HashMap<String, String>(); 
 	public String defaultSslCertFile;  
 	public int clientPoolSize = 32; 
@@ -71,25 +70,7 @@ public class BrokerConfig implements Cloneable {
 	public void addTracker(String trackerAddress){
 		addTracker(trackerAddress, null);
 	} 
-	
-	public void addServer(ServerAddress serverAddress){
-		if(!serverList.contains(serverAddress)){
-			serverList.add(serverAddress);
-		}
-	} 
-	
-	public void addServer(String address, String certFile) { 
-		ServerAddress serverAddress = new ServerAddress(address);
-		if(certFile != null){
-			serverAddress.sslEnabled = true;
-			sslCertFileTable.put(address, certFile);
-		}
-		serverList.add(serverAddress);
-	}
-	
-	public void addServer(String address){
-		addServer(address, null);
-	}
+	  
 	
 	public void addSslCertFile(String address, String certPath){
 		sslCertFileTable.put(address, certPath);
@@ -97,16 +78,7 @@ public class BrokerConfig implements Cloneable {
 	
 	public List<ServerAddress> getTrackerList() {
 		return trackerList;
-	}   
-
-	public List<ServerAddress> getServerList() {
-		return serverList;
-	}
-
-	public void setServerList(List<ServerAddress> serverList) {
-		this.serverList = serverList;
-	}
-
+	}    
 	public Map<String, String> getSslCertFileTable() {
 		return sslCertFileTable;
 	}
@@ -159,24 +131,7 @@ public class BrokerConfig implements Cloneable {
 			    } 
 			    trackerList.add(serverAddress); 
 			}
-		}   
-		
-		list = (NodeList) xpath.compile("/zbus/serverList/*").evaluate(doc, XPathConstants.NODESET);
-		if(list != null && list.getLength()> 0){ 
-			for (int i = 0; i < list.getLength(); i++) {
-			    Node node = list.item(i);    
-			    String address = xpath.evaluate("address", node);
-			    String sslEnabled = xpath.evaluate("sslEnabled", node);  
-			    String certFile = xpath.evaluate("sslEnabled/@certFile", node);  
-			    if(StrKit.isEmpty(address)) continue; 
-			    
-			    ServerAddress serverAddress = new ServerAddress(address, valueOf(sslEnabled, false));
-			    if(!StrKit.isEmpty(certFile)){ 
-			    	sslCertFileTable.put(address, certFile);
-			    } 
-			    serverList.add(serverAddress); 
-			}
-		}   
+		}    
 		
 		list = (NodeList) xpath.compile("/zbus/sslCertFileTable/*").evaluate(doc, XPathConstants.NODESET);
 		if(list != null && list.getLength()> 0){ 

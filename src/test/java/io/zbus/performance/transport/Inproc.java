@@ -41,6 +41,6 @@ public class Inproc {
 		System.out.println(N*1000.0/(end-start));
 		
 		client.close();
-		server.stop();
+		server.close();
 	} 
 }
