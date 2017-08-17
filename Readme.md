@@ -46,6 +46,15 @@ Incase you may interest in the client projects, go to zbus source root directory
 
 	git submodule update --init --recursive  
 
+
+Maven
+
+	<dependency>
+		<groupId>io.zbus</groupId>
+		<artifactId>zbus</artifactId>
+		<version>0.9.0-SNAPSHOT</version>
+	</dependency>
+
 ## Performance
 Fast performance test (Apache Benchmark)
 
