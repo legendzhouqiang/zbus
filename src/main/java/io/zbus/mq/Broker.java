@@ -14,6 +14,7 @@ import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Protocol.ServerInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.mq.server.MqServer;
 import io.zbus.transport.Client.ConnectedHandler;
@@ -77,31 +78,20 @@ public class Broker implements Closeable {
 	
 	public void addTracker(MqServer server){
 		ServerAddress trackerAddress = new ServerAddress();
-		trackerAddress.server = server;
-		addTracker(trackerAddress);
+		trackerAddress.server = server; 
+		addTracker(trackerAddress);  
 	} 
- 
+  
+	 
 	public void addTracker(String trackerAddress){
-		addTracker(trackerAddress, null);
+		ServerAddress serverAddress = new ServerAddress(trackerAddress); 
+		
+		addTracker(serverAddress);
 	} 
 	
 	public void addTracker(final ServerAddress trackerAddress){
-		addTracker(trackerAddress, null);
-	}
-	
-	public void addTracker(String trackerAddress, String certPath){
-		ServerAddress serverAddress = new ServerAddress(trackerAddress);
-		serverAddress.sslEnabled = certPath != null; 
-		
-		addTracker(serverAddress, certPath);
-	} 
-	
-	public void addTracker(final ServerAddress trackerAddress, String certPath){
 		if(trackerSubscribers.containsKey(trackerAddress)) return; 
-		
-		if(certPath != null && trackerAddress.address != null){
-			sslCertFileTable.put(trackerAddress.address, certPath);
-		} 
+		 
 		final AtomicReference<ServerAddress> remoteTrackerAddress = new AtomicReference<ServerAddress>(trackerAddress);
 		final MqClient client = connectToServer(trackerAddress); 
 		client.onDisconnected(new DisconnectedHandler() { 
@@ -147,6 +137,19 @@ public class Broker implements Closeable {
 						}
 					} 
 					
+					if(trackerAddress.server != null){ //InProc 
+						String tcpKey = trackerInfo.serverAddress.toString();
+						if(trackerInfo.serverTable.containsKey(tcpKey)){
+							ServerInfo serverInfo = trackerInfo.serverTable.remove(tcpKey);
+							serverInfo.serverAddress = trackerAddress;
+							trackerInfo.serverTable.put(trackerAddress.toString(), serverInfo);
+							for(TopicInfo topicInfo : serverInfo.topicTable.values()){
+								topicInfo.serverAddress = trackerAddress;
+							}
+						}
+						trackerInfo.serverAddress = trackerAddress;
+					}
+					
 					List<ServerAddress> toRemove = routeTable.updateTracker(trackerInfo);
 					for(ServerInfo serverInfo : routeTable.serverTable().values()){
 						addServer(serverInfo);
@@ -169,9 +172,8 @@ public class Broker implements Closeable {
 		trackerSubscribers.put(trackerAddress, client); 
 	} 
 	
-	private void addServer(final ServerInfo serverInfo) throws IOException {   
+	private void addServer(final ServerAddress serverAddress) throws IOException { 
 		MqClientPool pool = null;  
-		final ServerAddress serverAddress = serverInfo.serverAddress;
 		synchronized (poolTable) {
 			pool = poolTable.get(serverAddress);
 			if(pool != null) return; 
@@ -203,6 +205,10 @@ public class Broker implements Closeable {
 				}  
 			}
 		}); 
+	}
+	
+	private void addServer(final ServerInfo serverInfo) throws IOException {  
+		addServer(serverInfo.serverAddress);
 	}  
 	 
 	private void removeServer(final ServerAddress serverAddress) { 

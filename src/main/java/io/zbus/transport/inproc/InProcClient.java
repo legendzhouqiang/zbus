@@ -13,20 +13,20 @@ import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.Server;
 import io.zbus.transport.Session;
 
-public class InprocClient<REQ extends Id, RES extends Id> extends AbstractClient<REQ, RES> {
-	private static final Logger log = LoggerFactory.getLogger(InprocClient.class);
+public class InProcClient<REQ extends Id, RES extends Id> extends AbstractClient<REQ, RES> {
+	private static final Logger log = LoggerFactory.getLogger(InProcClient.class);
 	private final IoAdaptor serverIoAdaptor;
 	
-	public InprocClient(IoAdaptor serverIoAdaptor) {
+	public InProcClient(IoAdaptor serverIoAdaptor) {
 		this.serverIoAdaptor = serverIoAdaptor;
 	}
 	
-	public InprocClient(Server server) {
+	public InProcClient(Server server) {
 		this.serverIoAdaptor = server.getIoAdatpr();
 	}
 
 	protected String serverAddress() {
-		return "Server-InsideProcess";
+		return "Server-InProc";
 	}
  
 	public synchronized void connectAsync() {
@@ -90,16 +90,16 @@ public class InprocClient<REQ extends Id, RES extends Id> extends AbstractClient
 		}
 
 		public String remoteAddress() {
-			return "Inproc-Server-" + id();
+			return "InProc-Client-" + id();
 		}
 
 		public String localAddress() {
-			return "Inproc-Local-" + id();
+			return "InProc-Server-" + id();
 		}
 
 		public void write(Object msg) {
 			try {
-				InprocClient.this.onMessage(msg, this);
+				InProcClient.this.onMessage(msg, this);
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			}

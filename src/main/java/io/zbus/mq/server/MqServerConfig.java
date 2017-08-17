@@ -140,12 +140,12 @@ public class MqServerConfig implements Cloneable {
 		this.sslKeyFile = sslKeyFile;
 	}
 
-	public boolean isTrackerModeOnly() {
+	public boolean isTrackerOnly() {
 		return trackerOnly;
 	}
 
-	public void setTrackerModeOnly(boolean trackerModeOnly) {
-		this.trackerOnly = trackerModeOnly;
+	public void setTrackerOnly(boolean trackerOnly) {
+		this.trackerOnly = trackerOnly;
 	}
 
 	public void loadFromXml(InputStream stream) throws Exception{

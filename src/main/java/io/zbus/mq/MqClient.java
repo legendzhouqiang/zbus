@@ -18,7 +18,7 @@ import io.zbus.transport.CompositeClient;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.ResultCallback;
 import io.zbus.transport.ServerAddress;
-import io.zbus.transport.inproc.InprocClient;
+import io.zbus.transport.inproc.InProcClient;
 import io.zbus.transport.tcp.TcpClient;
 import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
  
@@ -50,7 +50,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 	
 	private void buildSupport(ServerAddress serverAddress, final EventLoop loop){
 		if(serverAddress.server != null){
-			support = new InprocClient<Message, Message>(serverAddress.server);
+			support = new InProcClient<Message, Message>(serverAddress.server);
 			return;
 		} 
 		String address = serverAddress.address;
