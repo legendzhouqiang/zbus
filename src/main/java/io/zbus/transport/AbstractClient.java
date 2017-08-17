@@ -139,15 +139,15 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
   
 
 	@Override
-	public void sessionCreated(Session sess) throws IOException { 
-		this.session = sess;
+	public void sessionCreated(Session session) throws IOException { 
+		this.session = session;
 		activeLatch.countDown();
 		if(connectedHandler != null){
 			connectedHandler.onConnected();
 		}
 	}
 
-	public void sessionToDestroy(Session sess) throws IOException {
+	public void sessionToDestroy(Session session) throws IOException {
 		if(this.session != null){
 			this.session.close(); 
 			this.session = null;

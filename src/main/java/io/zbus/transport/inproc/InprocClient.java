@@ -32,8 +32,11 @@ public class InprocClient<REQ extends Id, RES extends Id> extends AbstractClient
 	public synchronized void connectAsync() {
 		if(this.session != null) return; 
 		this.session = new InprocSession();
-		activeLatch.countDown();
-		
+		try {
+			sessionCreated(this.session);
+		} catch (IOException e) {
+			//ignore
+		}  
 	}
 	
 

@@ -77,7 +77,7 @@ public class TcpServer implements Server {
 		b.group(bossGroup, workerGroup)
 		 .option(ChannelOption.SO_BACKLOG, 102400) //TODO make it configurable
 		 .channel(NioServerSocketChannel.class) 
-		 .handler(new LoggingHandler(LogLevel.INFO))
+		 .handler(new LoggingHandler(LogLevel.DEBUG))
 		 .childHandler(new SocketChannelInitializer(ioAdaptor));
 		
 		ServerInfo info = new ServerInfo(); 

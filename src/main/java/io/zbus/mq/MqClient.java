@@ -17,6 +17,7 @@ import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.CompositeClient;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.ResultCallback;
+import io.zbus.transport.ServerAddress;
 import io.zbus.transport.inproc.InprocClient;
 import io.zbus.transport.tcp.TcpClient;
 import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
@@ -27,8 +28,47 @@ public class MqClient extends CompositeClient<Message, Message>{
 	protected int invokeTimeout = 3000;
 	protected int hearbeatInterval = 60000; //60s
 	
-	public MqClient(String serverAddress, final EventLoop loop){
-		TcpClient<Message, Message> tcp = new TcpClient<Message, Message>(serverAddress, loop);
+	public MqClient(String address, final EventLoop loop){
+		ServerAddress serverAddress = new ServerAddress(address);
+		buildSupport(serverAddress, loop);
+	}   
+	
+	/**
+	 * In-Process MqClient, optimized for speed.
+	 * 
+	 * @param mqServer MqServer instance in the process, no need to start 
+	 */
+	public MqClient(MqServer mqServer) {
+		ServerAddress serverAddress = new ServerAddress();
+		serverAddress.server = mqServer;
+		buildSupport(serverAddress, null);
+	} 
+	
+	public MqClient(ServerAddress serverAddress, final EventLoop loop){  
+		buildSupport(serverAddress, loop);
+	}
+	
+	private void buildSupport(ServerAddress serverAddress, final EventLoop loop){
+		if(serverAddress.server != null){
+			support = new InprocClient<Message, Message>(serverAddress.server);
+			return;
+		} 
+		String address = serverAddress.address;
+		if(address == null){
+			throw new IllegalArgumentException("ServerAddress missing address property");
+		}
+		
+		if (address.startsWith("ipc://")) {
+			throw new IllegalArgumentException("IPC not implemented yet!");
+			//TODO IPC client support
+		}
+		
+		//default to TCP 
+		if(address.startsWith("tcp://")){
+			address.substring("tcp://".length());
+		}
+			
+		TcpClient<Message, Message> tcp = new TcpClient<Message, Message>(address, loop);
 		support = tcp;
 		tcp.codec(new CodecInitializer() {
 			@Override
@@ -48,19 +88,9 @@ public class MqClient extends CompositeClient<Message, Message>{
 				hbt.setCommand(Message.HEARTBEAT);
 				return hbt;
 			}
-		});
-	}   
-	
-	/**
-	 * In-Process MqClient, optimized for speed.
-	 * 
-	 * @param mqServer MqServer instance in the process, no need to start 
-	 */
-	public MqClient(MqServer mqServer) {
-		support = new InprocClient<Message, Message>(mqServer);
+		});  
 	}
 	
-	//TODO IPC client support
 	
 	public void setInvokeTimeout(int invokeTimeout) {
 		this.invokeTimeout = invokeTimeout;

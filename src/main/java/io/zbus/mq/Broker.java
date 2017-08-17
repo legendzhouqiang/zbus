@@ -15,6 +15,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
+import io.zbus.mq.server.MqServer;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
@@ -34,7 +35,7 @@ public class Broker implements Closeable {
 	
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventLoop eventLoop;  
-	private final int clientPoolSize; 
+	private int clientPoolSize = 32; 
 	private Map<String, String> sslCertFileTable;
 	private String defaultSslCertFile;
 	
@@ -43,7 +44,8 @@ public class Broker implements Closeable {
 	
 	public Broker(){
 		this(new BrokerConfig());
-	} 
+	}  
+	
 	
 	public Broker(BrokerConfig config){
 		this.eventLoop = new EventLoop(); 
@@ -58,8 +60,7 @@ public class Broker implements Closeable {
 	}   
 	
 	public Broker(String trackerList){
-		this.eventLoop = new EventLoop(); 
-		this.clientPoolSize = 32;
+		this.eventLoop = new EventLoop();  
 		
 		String[] bb = trackerList.split("[,; ]");
 		for(String tracker : bb){
@@ -67,6 +68,17 @@ public class Broker implements Closeable {
 			if(tracker.isEmpty()) continue; 
 			addTracker(tracker);
 		}
+	} 
+	
+	public Broker(MqServer server){
+		this.eventLoop = new EventLoop();
+		this.addTracker(server);
+	}
+	
+	public void addTracker(MqServer server){
+		ServerAddress trackerAddress = new ServerAddress();
+		trackerAddress.server = server;
+		addTracker(trackerAddress);
 	} 
  
 	public void addTracker(String trackerAddress){
@@ -87,7 +99,7 @@ public class Broker implements Closeable {
 	public void addTracker(final ServerAddress trackerAddress, String certPath){
 		if(trackerSubscribers.containsKey(trackerAddress)) return; 
 		
-		if(certPath != null){
+		if(certPath != null && trackerAddress.address != null){
 			sslCertFileTable.put(trackerAddress.address, certPath);
 		} 
 		final AtomicReference<ServerAddress> remoteTrackerAddress = new AtomicReference<ServerAddress>(trackerAddress);
@@ -300,8 +312,7 @@ public class Broker implements Closeable {
 			loop.setClientSslContext(certPath); 
 		}
 		
-		final MqClient client = new MqClient(serverAddress.address, loop);  
-		return client;
+		return new MqClient(serverAddress, loop);   
 	}
 	
 	private MqClientPool createMqClientPool(ServerAddress remoteServerAddress, ServerAddress serverAddress){
@@ -316,7 +327,7 @@ public class Broker implements Closeable {
 			}
 			loop.setClientSslContext(certPath);
 		}
-		return new MqClientPool(serverAddress.address, clientPoolSize, loop);   
+		return new MqClientPool(serverAddress, clientPoolSize, loop);   
 	} 
 	
 	public void setDefaultSslCertFile(String defaultSslCertFile) {

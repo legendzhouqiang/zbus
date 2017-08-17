@@ -13,21 +13,12 @@ public class MqClientPool implements Closeable {
 	private MqClientFactory factory; 
 	 
 	private ServerAddress serverAddress;
-	private final int clientPoolSize;
-	private EventLoop loop;   
+	private int clientPoolSize;
+	private EventLoop loop;    
 	
-	public MqClientPool(String serverAddress, int clientPoolSize, EventLoop loop){   
-		this.clientPoolSize = clientPoolSize;
-		if(loop != null){
-			this.loop = loop.duplicate();
-		} else {
-			this.loop = new EventLoop();
-		}
-		this.serverAddress = new ServerAddress(serverAddress, this.loop.isSslEnabled());
-		
-		this.factory = new MqClientFactory(serverAddress, loop);
-		this.pool = new Pool<MqClient>(factory, this.clientPoolSize); 
-		 
+	public MqClientPool(String address, int clientPoolSize, EventLoop loop){    
+		this.serverAddress = new ServerAddress(address, this.loop.isSslEnabled());
+		buildPool(this.serverAddress, clientPoolSize, loop);
 	}
 	
 	public MqClientPool(String serverAddress, int clientPoolSize){
@@ -37,6 +28,23 @@ public class MqClientPool implements Closeable {
 	public MqClientPool(String serverAddress){
 		this(serverAddress, 64);
 	}  
+	
+	public MqClientPool(ServerAddress serverAddress, int clientPoolSize, EventLoop loop){    
+		buildPool(serverAddress, clientPoolSize, loop); 
+	}
+	
+	private void buildPool(ServerAddress serverAddress, int clientPoolSize, EventLoop loop){    
+		this.serverAddress = serverAddress;
+		this.clientPoolSize = clientPoolSize; 
+		if(loop != null){
+			this.loop = loop.duplicate(); 
+		} else {
+			this.loop = new EventLoop(); 
+		}
+		
+		this.factory = new MqClientFactory(serverAddress, this.loop);
+		this.pool = new Pool<MqClient>(factory, this.clientPoolSize);  
+	}
 
 	public MqClient borrowClient(){
 		try {
@@ -72,16 +80,14 @@ public class MqClientPool implements Closeable {
 	}
 	
 	private static class MqClientFactory extends ClientFactory<Message, Message, MqClient>{ 
-		public MqClientFactory(String serverAddress) {
-			super(serverAddress); 
-		}
-		
-		public MqClientFactory(String serverAddress, EventLoop driver){
-			super(serverAddress, driver); 
+		private EventLoop loop;  
+		public MqClientFactory(ServerAddress serverAddress, EventLoop loop){ 
+			super(serverAddress);
+			this.loop = loop;
 		} 
 		
 		public MqClient createObject() { 
-			return new MqClient(serverAddress, eventDriver);
+			return new MqClient(serverAddress, loop);
 		}  
 	} 
 }
