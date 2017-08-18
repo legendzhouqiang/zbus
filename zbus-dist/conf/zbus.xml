@@ -11,14 +11,14 @@
 	<storePath>/tmp/zbus</storePath> 
 	<verbose>false</verbose>   
 	
-	<!-- --> 
+	<!-- 
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15556</address>  
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress>   
 	</trackerList>  
-	
+	--> 
 	
 </zbus>
 
