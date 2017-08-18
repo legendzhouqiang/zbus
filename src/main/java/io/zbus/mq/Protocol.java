@@ -72,7 +72,7 @@ public class Protocol {
 	
 	
 	public static final int MASK_PAUSE    	    = 1<<0; 
-	public static final int MASK_RPC    	    = 1<<1; 
+	public static final int MASK_MEMORY    	    = 1<<1; 
 	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
 	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
 	

@@ -19,7 +19,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Consumer.class);  
 	private ServerSelector consumeServerSelector; 
 	
-	protected String topic;
+	protected String topic; 
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow; 
 	protected int consumeTimeout; 
@@ -28,7 +28,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private MessageHandler messageHandler;
 	private int connectionCount;
 	private int consumeRunnerPoolSize; 
-	private int maxInFlightMessage;  
+	private int maxInFlightMessage;   
 	
 	private boolean started;
 	
@@ -37,8 +37,16 @@ public class Consumer extends MqAdmin implements Closeable {
 	public Consumer(ConsumerConfig config) {
 		super(config); 
 		
-		this.topic = config.getTopic();
+		this.topic = config.getTopic(); 
 		this.consumeGroup = config.getConsumeGroup();
+		if(this.consumeGroup == null){
+			this.consumeGroup = new ConsumeGroup();
+			this.consumeGroup.setGroupName(this.topic);
+		}
+		
+		if(this.consumeGroup.getMask() == null){ //TODO
+			this.consumeGroup.setMask(config.getTopicMask());
+		}
 		this.consumeWindow = config.getConsumeWindow();
 		this.consumeTimeout = config.getConsumeTimeout();
 		
@@ -137,7 +145,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				ConsumeThread thread = threads[i] = new ConsumeThread(clieint);
 				thread.setConsumeHandler(messageHandler); 
 				
-				thread.setTopic(topic);
+				thread.setTopic(topic); 
 				thread.setConsumeGroup(consumeGroup);
 
 				thread.setToken(token);

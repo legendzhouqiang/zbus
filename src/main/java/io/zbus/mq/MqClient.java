@@ -117,11 +117,11 @@ public class MqClient extends CompositeClient<Message, Message>{
 	public Message consume(String topic, String group) throws IOException, InterruptedException {
 		return consume(topic, group, null);
 	}
-	
+	 
 	public Message consume(String topic, String group, Integer window) throws IOException, InterruptedException {
 		Message msg = new Message();
 		msg.setCommand(Protocol.CONSUME);
-		msg.setTopic(topic); 
+		msg.setTopic(topic);
 		msg.setConsumeGroup(group);  
 		msg.setConsumeWindow(window); 
 		

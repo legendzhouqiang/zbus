@@ -21,6 +21,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
 import io.zbus.mq.DiskQueue;
+import io.zbus.mq.MemoryQueue;
 import io.zbus.mq.Message;
 import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol;
@@ -110,12 +111,6 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			final MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
-			if((mq.getMask()&Protocol.MASK_RPC) != 0){ 
-				if(mq.consumerCount(null) == 0){ //default consumerGroup
-					ReplyKit.reply502(msg, sess);
-					return;
-				}
-			} 
 			
 			final boolean ack = msg.isAck();  
 			msg.removeHeader(Protocol.COMMAND);
@@ -192,7 +187,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	private MessageHandler<Message> declareHandler = new MessageHandler<Message>() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			String topic = msg.getTopic();  
+			String topic = msg.getTopic();   
 			if(StrKit.isEmpty(topic)){ 
 				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
@@ -203,20 +198,23 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				return;
 			}   
 			  
-			
+			Integer topicMask = msg.getTopicMask();  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
     			mq = mqTable.get(topic);  
     			if(mq == null){ 
-	    			mq = new DiskQueue(new File(config.storePath, topic));  
+    				if(topicMask != null && (topicMask&Protocol.MASK_MEMORY) != 0){
+    					mq = new MemoryQueue(topic);
+    				} else {
+    					mq = new DiskQueue(new File(config.storePath, topic));  
+    				} 
 	    			mq.setCreator(msg.getToken()); 
 	    			mqTable.put(topic, mq);
 	    			log.info("MQ Created: %s", mq);
     			}
     		} 
 			
-			try {
-				Integer topicMask = msg.getTopicMask();   
+			try { 
 				if(topicMask != null){
 					mq.setMask(topicMask);
 				}

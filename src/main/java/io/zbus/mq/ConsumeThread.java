@@ -12,7 +12,7 @@ public class ConsumeThread extends Thread implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(ConsumeThread.class);  
 	protected final MqClient client;
 	
-	protected String topic; 
+	protected String topic;  
 	protected String token;
 	protected ConsumeGroup consumeGroup;
 	protected int consumeTimeout = 10000;
@@ -146,8 +146,8 @@ public class ConsumeThread extends Thread implements Closeable{
 
 	public void setTopic(String topic) {
 		this.topic = topic;
-	} 
-
+	}  
+	
 	public String getToken() {
 		return token;
 	}

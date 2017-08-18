@@ -5,6 +5,7 @@ import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
+import io.zbus.mq.Protocol;
 import io.zbus.mq.server.MqServer;
 import io.zbus.rpc.RpcProcessor;
 
@@ -24,7 +25,9 @@ public class RpcServiceInproc {
 		Broker broker = new Broker(server);     
 		ConsumerConfig config = new ConsumerConfig(broker); 
 		config.setTopic("MyRpc");
+		config.setTopicMask(Protocol.MASK_MEMORY); //RPC, choose memory queue to boost speed
 		config.setMessageHandler(processor);    
+		
 		Consumer consumer = new Consumer(config);  
 		consumer.start(); 
 	} 
