@@ -68,7 +68,7 @@ Fast performance test (Apache Benchmark)
 	Single Mac i7 box with SSD 
 	Produce:  ~80,000/s
 	Consume:  ~90,000/s
-	RPC: ~20,000/s
+	RPC InProc: ~60,000/s
 
 
 
