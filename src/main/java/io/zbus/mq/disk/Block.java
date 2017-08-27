@@ -173,23 +173,25 @@ class Block implements Closeable {
     }
     
     protected static boolean isMatched(List<String[]> tagPartsList, String target){
+    	if(target == null){
+    		if(tagPartsList.isEmpty()) return true;
+    		return false;
+    	}
+    	String[] targetParts = target.split("[.]");
     	for(String[] tagParts : tagPartsList){
-    		if(isMatched(tagParts, target)){
+    		if(isMatched(tagParts, targetParts)){
     			return true;
     		}
     	}
     	return false;
     }
      
-    protected static boolean isMatched(String[] tagParts, String target){
-    	if(target == null){
-    		if(tagParts == null) return true;
-    		return false;
-    	}
-    	String[] targetParts = target.split("[.]");
+    protected static boolean isMatched(String[] tagParts, String[] targetParts){ 
+    	
     	for(int i=0;i<tagParts.length;i++){
     		String tagPart = tagParts[i];
     		if(i >= targetParts.length){
+    			if(tagParts[i].equals("#")) return true; //last #
     			return false;
     		}
     		String targetPart = targetParts[i];

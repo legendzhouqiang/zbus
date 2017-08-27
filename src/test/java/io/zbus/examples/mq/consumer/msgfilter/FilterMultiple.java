@@ -3,11 +3,10 @@ package io.zbus.examples.mq.consumer.msgfilter;
 import java.io.IOException;
 
 import io.zbus.mq.Broker;
-import io.zbus.mq.ConsumeGroup;
-import io.zbus.mq.MessageHandler;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Message;
+import io.zbus.mq.MessageHandler;
 import io.zbus.mq.MqClient;
  
 
@@ -18,12 +17,8 @@ public class FilterMultiple {
 		Broker broker = new Broker("localhost:15555");    
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
-		config.setTopic("MyTopic");        
-		ConsumeGroup group = new ConsumeGroup();
-		group.setGroupName("MultipleFilterGroup");
-		group.setFilter("type1.#;*.account.*");  //Filter is ConsumeGroup wide, it influence other consumers on same ConsumeGroup
-		
-		config.setConsumeGroup(group); 
+		config.setTopic("MyTopic");     
+		config.setConsumeGroup("MsgFilterGroup", "*.account.#");  
 		
 		config.setMessageHandler(new MessageHandler() {  
 			@Override
