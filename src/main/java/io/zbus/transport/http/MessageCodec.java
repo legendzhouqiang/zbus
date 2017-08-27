@@ -44,7 +44,7 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 		if(handshaker != null){//websocket step in, Message To WebSocketFrame
 			ByteBuf buf = Unpooled.wrappedBuffer(msg.toBytes());
 			WebSocketFrame frame = new TextWebSocketFrame(buf);
-			out.add(frame);
+			out.add(frame); 
 			return;
 		}
 		

@@ -50,6 +50,13 @@ public class ConsumeThread extends Thread implements Closeable{
 		}  
 		this.client.setToken(token);
 		this.client.setInvokeTimeout(consumeTimeout);
+		try {
+			this.client.declareGroup(topic, consumeGroup);
+		} catch (IOException e) { 
+			log.error(e.getMessage(), e);
+		} catch (InterruptedException e) { 
+			log.error(e.getMessage(), e);
+		}
 		
 		super.start();
 	}

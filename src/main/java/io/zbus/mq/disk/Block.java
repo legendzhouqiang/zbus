@@ -183,10 +183,10 @@ class Block implements Closeable {
     			return false;
     		}
     		String targetPart = targetParts[i];
-    		if("+".equals(tagPart)){
+    		if("*".equals(tagPart)){
     			continue;
     		}
-    		if("*".equals(tagPart)){
+    		if("#".equals(tagPart)){
     			return true;
     		}
     		if(targetPart.equals(tagPart)){

@@ -13,7 +13,7 @@ public class ProducerExample {
 		 
 		Message msg = new Message();
 		msg.setTopic("MyTopic");
-		//msg.setTag("group1.xxx");
+		msg.setTag("oo.account.pp");
 		msg.setBody("hello " + System.currentTimeMillis()); 
 		
 		Message res = p.publish(msg);

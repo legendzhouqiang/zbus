@@ -2,6 +2,8 @@ package io.zbus.mq.disk;
 
 import java.io.File;
 import java.io.IOException;
+
+import io.zbus.kit.StrKit;
  
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
@@ -177,17 +179,18 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		try{  
 			this.filter = filter;
 			int len = 0;
-			if(filter != null){
+			if(StrKit.isEmpty(filter)){ //clear
+				buffer.position(FITER_POS);
+				buffer.put((byte)0); 
+				filterParts = null;
+				
+			} else {
 				len = filter.length();
 				buffer.position(FITER_POS);
 				buffer.put((byte)len); 
 				buffer.put(this.filter.getBytes());
 				
 				filterParts = this.filter.split("[.]");
-			} else { //clear
-				buffer.position(FITER_POS);
-				buffer.put((byte)0); 
-				filterParts = null;
 			}
 		} finally {
 			lock.unlock();
