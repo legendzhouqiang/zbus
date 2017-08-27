@@ -72,7 +72,23 @@ public class ConsumeThread extends Thread implements Closeable{
 				return take();
 			}
 			
-			if (status == 200) {
+			if (status == 200) { 
+				String originUrl = res.getOriginUrl();
+				if(originUrl != null){ 
+					res.removeHeader(Protocol.ORIGIN_URL);
+					res.setUrl(originUrl);   
+					res.setStatus(null);
+					return res;
+				}
+				
+				Integer originStatus = res.getOriginStatus();
+				if(originStatus != null){ 
+					res.removeHeader(Protocol.ORIGIN_STATUS);  
+					res.setStatus(originStatus);
+					return res;
+				}
+				
+				res.setStatus(null);//default to request type
 				return res;
 			}
 			

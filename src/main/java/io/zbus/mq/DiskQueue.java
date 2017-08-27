@@ -234,14 +234,16 @@ public class DiskQueue implements MessageQueue{
 				
 				writeMsg.setOriginId(msg.getId());  
 				writeMsg.setId(pullMsg.getId());
-				if(writeMsg.getStatus() == null){
+				Integer status = writeMsg.getStatus();
+				if(status == null){
 					if(!"/".equals(writeMsg.getUrl())){
 						writeMsg.setOriginUrl(writeMsg.getUrl()); 
-					}
-					writeMsg.setStatus(200); //default to 200
-				}
-				pull.getSession().write(writeMsg); 
-			
+					} 
+				} else {
+					writeMsg.setOriginStatus(status);
+				} 
+				writeMsg.setStatus(200); //status meaning changed to 'consume-status'
+				pull.getSession().write(writeMsg);  
 			} catch (Exception ex) {   
 				log.error(ex.getMessage(), ex);  
 			} 

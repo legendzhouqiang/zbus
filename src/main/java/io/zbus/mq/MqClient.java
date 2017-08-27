@@ -129,16 +129,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 		if (res == null) return res;
 		
 		res.setId(res.getOriginId());
-		res.removeHeader(Protocol.ORIGIN_ID);
-		if (res.getStatus() == 200){
-			String originUrl = res.getOriginUrl();
-			if(originUrl == null){
-				originUrl = "/";
-			} else {
-				res.removeHeader(Protocol.ORIGIN_URL);
-			}
-			res.setUrl(originUrl); 
-		}
+		res.removeHeader(Protocol.ORIGIN_ID); 
 		return res;
 	}  
 	
