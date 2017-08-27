@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -170,6 +171,15 @@ class Block implements Closeable {
 			lock.unlock();
 		}
     }
+    
+    protected static boolean isMatched(List<String[]> tagPartsList, String target){
+    	for(String[] tagParts : tagPartsList){
+    		if(isMatched(tagParts, target)){
+    			return true;
+    		}
+    	}
+    	return false;
+    }
      
     protected static boolean isMatched(String[] tagParts, String target){
     	if(target == null){
@@ -197,10 +207,10 @@ class Block implements Closeable {
     	return targetParts.length == tagParts.length;
     }
     
-    public DiskMessage readByFilter(int pos, String[] filterParts) throws IOException{ 
+    public DiskMessage readByFilter(int pos, List<String[]> filterParts) throws IOException{ 
     	try{
 			lock.lock(); 
-			if(filterParts == null){ 
+			if(filterParts.size() < 1){ 
 				return readFullyUnsafe(pos);
 			}
 			

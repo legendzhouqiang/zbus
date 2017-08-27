@@ -2,6 +2,8 @@ package io.zbus.mq.disk;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.zbus.kit.StrKit;
  
@@ -17,7 +19,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private int offset = 0; 
 	private String filter; //max: 127 bytes, filter on Messsage's tag
 	
-	private String[] filterParts;
+	private List<String[]> filterParts = new ArrayList<String[]>();
 	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
 	  
 	
@@ -107,7 +109,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		this.messageNumber = data.messageNumber - 1;  
 	}
 	
-	private DiskMessage readUnsafe(String[] filterParts) throws IOException{
+	private DiskMessage readUnsafe(List<String[]> filterParts) throws IOException{
 		if(block.isEndOfBlock(this.offset)){  
 			if(index.overflow(blockNumber+1)){
 				return null;
@@ -150,7 +152,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		int tagLen = tag[0];
 		if(tagLen > 0){
 			this.filter = new String(tag, 1, tagLen);
-			this.filterParts = this.filter.split("[.]");
+			calcFilter(this.filter); 
 		} 
 	}
 	
@@ -181,8 +183,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			int len = 0;
 			if(StrKit.isEmpty(filter)){ //clear
 				buffer.position(FITER_POS);
-				buffer.put((byte)0); 
-				filterParts = null;
+				buffer.put((byte)0);  
 				
 			} else {
 				len = filter.length();
@@ -190,12 +191,23 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 				buffer.put((byte)len); 
 				buffer.put(this.filter.getBytes());
 				
-				filterParts = this.filter.split("[.]");
+				calcFilter(filter);
 			}
 		} finally {
 			lock.unlock();
 		}  
 	} 
+	
+	private void calcFilter(String filter){
+		filterParts.clear();
+		for(String filterGroup : this.filter.split("[;]")){
+			if(StrKit.isEmpty(filterGroup)){
+				continue;
+			}
+			String[] parts = filterGroup.split("[.]");
+			filterParts.add(parts);
+		} 
+	}
 
 	public long getMessageNumber() {
 		return messageNumber;
