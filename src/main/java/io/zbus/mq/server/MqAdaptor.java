@@ -683,12 +683,25 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	    	}
     	}
     	
-    	Message res = new Message();
-    	res.setId(msg.getId()); 
-    	res.setStatus(400);
-    	String text = String.format("Bad format: command(%s) not support", cmd);
-    	res.setBody(text); 
-    	sess.write(res); 
+    	String topic = cmd; //treat cmd as topic to support proxy URL
+    	MessageQueue mq = null;
+    	if(topic != null){
+    		mq = mqTable.get(topic); 
+    	}
+    	if(mq == null || cmd == null){
+    		Message res = new Message();
+        	res.setId(msg.getId()); 
+        	res.setStatus(400);
+        	String text = String.format("Bad format: command(%s) not support", cmd);
+        	res.setBody(text); 
+        	sess.write(res);
+        	return;
+    	}
+    	  
+    	msg.setTopic(topic);
+    	msg.setCommand(Protocol.PRODUCE);
+    	msg.setAck(false);
+    	produceHandler.handle(msg, sess);  
     }  
 	
     private MessageQueue findMQ(Message msg, Session sess) throws IOException{
