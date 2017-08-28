@@ -23,6 +23,11 @@ console.log(res);
 var res = await rpc.plus(1, 2);
 console.log(res);
 
+
+rpc.plus(1,2).then(res=>{
+    console.log(res);
+});
+
 //broker.close(); //close the connections
 
 }
