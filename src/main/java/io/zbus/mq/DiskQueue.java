@@ -121,6 +121,15 @@ public class DiskQueue implements MessageQueue{
 	}   
 	
 	@Override
+	public ConsumeGroupInfo consumeGroup(String groupName) {
+		DiskConsumeGroup group = consumeGroups.get(groupName); 
+		if(group == null){
+			return null;
+		}
+		return group.getConsumeGroupInfo();
+	}
+	
+	@Override
 	public void removeGroup(String groupName) throws IOException {
 		DiskConsumeGroup group = consumeGroups.remove(groupName); 
 		if(group == null){

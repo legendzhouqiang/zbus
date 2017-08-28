@@ -20,6 +20,8 @@ public interface MessageQueue {
 	
 	ConsumeGroupInfo declareGroup(ConsumeGroup consumeGroup) throws Exception;
 	
+	ConsumeGroupInfo consumeGroup(String groupName);
+	
 	void removeGroup(String groupName) throws IOException; 
 	
 	void removeTopic() throws IOException; 

@@ -145,6 +145,13 @@ public class MemoryQueue implements MessageQueue {
 		}
 		return group.getConsumeGroupInfo();
 	}
+	
+	@Override
+	public ConsumeGroupInfo consumeGroup(String groupName) {
+		MemoryConsumeGroup group = consumeGroups.get(groupName); 
+		if(group == null) return null;
+		return group.getConsumeGroupInfo();
+	}
 
 	@Override
 	public void removeGroup(String groupName) throws IOException { 
