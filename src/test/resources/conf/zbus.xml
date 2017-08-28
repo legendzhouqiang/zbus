@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus>  
+
+<server>
+	<!-- MqServer host, change to public IP if you are using Aliyun -->
+	<host>0.0.0.0</host>
+	<!-- MqServer port -->
+	<port>15555</port>
+	
+	<!-- HA mode, specify TrackServer list, e.g. 127.0.0.1:16666;127.0.0.1:16667 
+	Just leave it blank in single mode.
+	-->
+	<trackServerList></trackServerList>  
+	
+	<verbose>false</verbose>
+	<mqStore>./store</mqStore> 
+	<registerToken></registerToken>
+	
+	<!-- Support MQ filter if set to true, to support message with same keys enqueue only once -->
+	<mqFitler>false</mqFitler>
+	
+	<!-- If ip is set to 0.0.0.0, the MqServer server identity(IP) can choose preference
+	default: *>10>172>192>127
+	-->
+	<mainIpOrder></mainIpOrder>
+	
+	<!-- SSL support configure, add SSL cert and private file full path name -->
+	<sslCertificateFile></sslCertificateFile>
+	<sslPrivateKeyFile></sslPrivateKeyFile>
+</server> 
+
+<http-proxy>
+<!--  -->
+	<proxy>
+		<name>HttpProxyExample</name>
+		<target>localhost:8080</target>
+	</proxy>
+
+</http-proxy> 
+
+</zbus>
+
