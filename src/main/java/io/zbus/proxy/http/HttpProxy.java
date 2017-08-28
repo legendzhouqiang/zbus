@@ -42,7 +42,8 @@ public class HttpProxy implements MessageHandler, Closeable {
 	
 	private final String entry;
 	private final String prefix;
-	private final String target;
+	private final String targetServer;
+	private final String targetUrl;
 	private int connectionCount;
 	private Broker broker;
 	private boolean ownBroker = false;
@@ -54,7 +55,19 @@ public class HttpProxy implements MessageHandler, Closeable {
 		this.connectionCount = config.connectionCount;
 		this.entry = config.entry;
 		this.prefix = "/" + entry;
-		this.target = config.target;
+		
+		String target = config.target;
+		if(target.startsWith("http://")){
+			target  = target.substring("http://".length());
+		}
+		String[] bb = target.split("[//]",2);
+		this.targetServer = bb[0].trim();
+		String url = "";
+		if(bb.length>1){
+			url = bb[1].trim();
+		} 
+		this.targetUrl = url;
+		
 		if (config.broker != null) {
 			this.broker = config.broker;
 		} else {
@@ -96,6 +109,11 @@ public class HttpProxy implements MessageHandler, Closeable {
 				url = "/" + url;
 			}
 		}  
+		url = targetUrl + url;
+		if (!url.startsWith("/")) {
+			url = "/" + url;
+		}
+		
 		msg.setUrl(url);
 		
 		Message res = null;
@@ -110,7 +128,7 @@ public class HttpProxy implements MessageHandler, Closeable {
 				res.setBody(e.getMessage() + " Not Found");
 			} else {
 				res.setStatus(500);
-				String error = String.format("Target(%s) invoke error, reason: %s", target, e.toString());
+				String error = String.format("Target(%s/%s) invoke error, reason: %s", targetServer, targetUrl, e.toString());
 				res.setBody(error);
 			}
 		}   
@@ -136,7 +154,7 @@ public class HttpProxy implements MessageHandler, Closeable {
 		Map<String, Context> requestTable = new ConcurrentHashMap<String, Context>();
 		
 		HttpClient() { 
-			client = new MqClient(target, broker.getEventLoop());
+			client = new MqClient(targetServer, broker.getEventLoop());
 			client.onMessage(new io.zbus.transport.MessageHandler<Message>() { 
 				@Override
 				public void handle(Message res, Session session) throws IOException {
@@ -202,7 +220,7 @@ public class HttpProxy implements MessageHandler, Closeable {
 	public static void main(String[] args) throws IOException {
 		ProxyConfig config = new ProxyConfig();
 		config.entry = ConfigKit.option(args, "-mq", "http");
-		config.target = ConfigKit.option(args, "-t", "127.0.0.1:80");
+		config.target = ConfigKit.option(args, "-t", "http://127.0.0.1:15555/server");
 		String address = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		config.brokerConfig = new BrokerConfig();
 		config.brokerConfig.addTracker(address);
