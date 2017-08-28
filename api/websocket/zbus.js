@@ -568,6 +568,37 @@ Consumer.prototype.route = function(msg){
     this.broker.invokeAsync(msg);
 }; 
 
+ 
+
+function Rpc(client, mq){
+	MqAdmin.call(this, client, mq);  
+    this.module = "";
+    this.encoding = "utf-8";
+}
+inherits(Rpc, MqAdmin); 
+
+function uint8Array2String(buf, encoding) {
+	var decoder = new TextDecoder(encoding);
+	return decoder.decode(buf);
+}
+
+Rpc.prototype.invoke = function(jsonReq, callback){
+    if(!jsonReq.module){
+        jsonReq.module = this.module;
+    }
+    var msg = new Message();
+    msg.setBody(JSON.stringify(jsonReq));
+    
+    msg.setCmd(Proto.Produce);
+    msg.setMq(this.mq); 
+    msg.setAck(false);
+    this.broker.invokeAsync(msg, function(msg){ 
+    	var jsonString = uint8Array2String(msg.getBody(), 'utf8');
+    	console.log(jsonString);
+    	var object = JSON.parse(jsonString);
+    	callback(object);
+    });
+}; 
 
 
 
