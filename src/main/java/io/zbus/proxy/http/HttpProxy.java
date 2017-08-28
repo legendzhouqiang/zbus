@@ -223,7 +223,12 @@ public class HttpProxy implements MessageHandler, Closeable {
 		config.target = ConfigKit.option(args, "-t", "http://127.0.0.1:15555/server");
 		String address = ConfigKit.option(args, "-b", "127.0.0.1:15555");
 		config.brokerConfig = new BrokerConfig();
-		config.brokerConfig.addTracker(address);
+		String[] bb = address.split("[;, ]");
+		for(String tracker : bb){
+			tracker = tracker.trim();
+			if(tracker.equals("")) continue;
+			config.brokerConfig.addTracker(tracker);
+		}
 
 		HttpProxy proxy = new HttpProxy(config);
 		proxy.start();
