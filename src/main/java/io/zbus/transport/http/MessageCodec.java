@@ -12,7 +12,7 @@ import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -86,7 +86,7 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 		
 		HttpMessage httpMsg = (HttpMessage) obj;
 		Message msg = new Message();
-		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
+		Iterator<Entry<String, String>> iter = httpMsg.headers().iterator();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
 			msg.setHeader(e.getKey().toLowerCase(), e.getValue());
@@ -94,11 +94,11 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 
 		if (httpMsg instanceof HttpRequest) {
 			HttpRequest req = (HttpRequest) httpMsg;
-			msg.setMethod(req.method().name());
-			msg.setUrl(req.uri());
+			msg.setMethod(req.getMethod().name());
+			msg.setUrl(req.getUri());
 		} else if (httpMsg instanceof HttpResponse) {
 			HttpResponse resp = (HttpResponse) httpMsg;
-			int status = resp.status().code();
+			int status = resp.getStatus().code();
 			msg.setStatus(status);
 		}
 
@@ -175,7 +175,7 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 	}
 
 	private static String getWebSocketLocation(HttpMessage req, ChannelHandlerContext ctx) {
-		String location = req.headers().get(HttpHeaderNames.HOST) + WEBSOCKET_PATH;
+		String location = req.headers().get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH;
 		if (ctx.pipeline().get(SslHandler.class) != null) {
 			return "wss://" + location;
 		} else {
