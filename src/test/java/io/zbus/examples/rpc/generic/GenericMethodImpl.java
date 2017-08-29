@@ -1,5 +1,6 @@
 package io.zbus.examples.rpc.generic;
 
+
 public class GenericMethodImpl implements GenericMethod{
 
 	@Override

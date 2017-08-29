@@ -10,7 +10,7 @@ public class RpcService {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {    
 		RpcProcessor processor = new RpcProcessor();  
-		processor.addModule(new GenericMethodImpl());
+		processor.addModule(GenericMethodImpl.class);
 		
 		Broker broker = new Broker("localhost:15555");    
 		ConsumerConfig config = new ConsumerConfig(broker); 

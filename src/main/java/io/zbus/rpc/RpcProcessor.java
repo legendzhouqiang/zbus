@@ -28,6 +28,7 @@ public class RpcProcessor implements MessageHandler{
 	 
 	public void addModule(Object... services){
 		for(Object obj : services){
+			if(obj == null) continue;
 			for(Class<?> intf : getAllInterfaces(obj.getClass())){
 				addModule(intf.getSimpleName(), obj);
 				addModule(intf.getName(), obj);
@@ -42,6 +43,32 @@ public class RpcProcessor implements MessageHandler{
 		for(Object service: services){
 			this.initCommandTable(module, service);
 		}
+	} 
+	
+	public void addModule(Class<?>... clazz){
+		Object[] services = new Object[clazz.length];
+		for(int i=0;i<clazz.length;i++){
+			Class<?> c = clazz[i];
+			try {
+				services[i] = c.newInstance();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} 
+		} 
+		addModule(services);
+	}
+	
+	public void addModule(String module, Class<?>... clazz){
+		Object[] services = new Object[clazz.length];
+		for(int i=0;i<clazz.length;i++){
+			Class<?> c = clazz[i];
+			try {
+				services[i] = c.newInstance();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} 
+		} 
+		addModule(module, services);
 	} 
 	
 	public void removeModule(Object... services){

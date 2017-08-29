@@ -9,28 +9,7 @@ import java.util.Random;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-  
 
-class PrivateRuntimeException extends RuntimeException{  
-	private static final long serialVersionUID = 4587336984841564800L;
-
-	public PrivateRuntimeException() {
-		super(); 
-	}
-
-	public PrivateRuntimeException(String message, Throwable cause) {
-		super(message, cause); 
-	}
-
-	public PrivateRuntimeException(String message) {
-		super(message); 
-	}
-
-	public PrivateRuntimeException(Throwable cause) {
-		super(cause); 
-	}
-	
-}
 public class InterfaceExampleImpl implements InterfaceExample{
  
 	@Override 
@@ -187,4 +166,27 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public String nullParam(String nullStr) { 
 		return nullStr;
 	}
+}
+
+
+
+class PrivateRuntimeException extends RuntimeException{  
+	private static final long serialVersionUID = 4587336984841564800L;
+
+	public PrivateRuntimeException() {
+		super(); 
+	}
+
+	public PrivateRuntimeException(String message, Throwable cause) {
+		super(message, cause); 
+	}
+
+	public PrivateRuntimeException(String message) {
+		super(message); 
+	}
+
+	public PrivateRuntimeException(Throwable cause) {
+		super(cause); 
+	}
+	
 }
