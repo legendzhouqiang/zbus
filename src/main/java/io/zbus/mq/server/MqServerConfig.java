@@ -215,5 +215,35 @@ public class MqServerConfig implements Cloneable {
 			return null;
 		}
 	}
+
+	public Map<String, String> getSslCertFileTable() {
+		return sslCertFileTable;
+	}
+
+	public void setSslCertFileTable(Map<String, String> sslCertFileTable) {
+		this.sslCertFileTable = sslCertFileTable;
+	}
+
+	public String getDefaultSslCertFile() {
+		return defaultSslCertFile;
+	}
+
+	public void setDefaultSslCertFile(String defaultSslCertFile) {
+		this.defaultSslCertFile = defaultSslCertFile;
+	}
+
+	public boolean isSslEnabled() {
+		return sslEnabled;
+	}
+
+	public void setSslEnabled(boolean sslEnabled) {
+		this.sslEnabled = sslEnabled;
+	}
+
+	public void setTrackerList(List<ServerAddress> trackerList) {
+		this.trackerList = trackerList;
+	}
+	
+	
 	
 }
