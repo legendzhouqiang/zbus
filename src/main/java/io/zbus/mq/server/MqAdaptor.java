@@ -72,7 +72,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.RPC, rpcHandler);
 		
 		//Topic/ConsumerGroup 
-		registerHandler(Protocol.DECLARE, declareHandler); 
+		registerHandler(Protocol.DECLARE, declareHandler);  
 		registerHandler(Protocol.QUERY, queryHandler);
 		registerHandler(Protocol.REMOVE, removeHandler); 
 		
@@ -94,6 +94,11 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.PING, pingHandler);   
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);    
+		
+		//Compatible to zbus7 
+		registerHandler(Fix.CreateMQ, declareHandler); 
+		registerHandler(Fix.QueryMQ, queryHandler); 
+		registerHandler(Fix.RemoveMQ, removeHandler); 
 		
 	}   
 	
@@ -187,7 +192,8 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	private MessageHandler<Message> declareHandler = new MessageHandler<Message>() {  
 		@Override
 		public void handle(Message msg, Session sess) throws IOException { 
-			String topic = msg.getTopic();   
+			String topic = msg.getTopic();    
+			
 			if(StrKit.isEmpty(topic)){ 
 				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;

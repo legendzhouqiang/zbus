@@ -271,7 +271,7 @@ public class RpcProcessor implements MessageHandler{
 	
 	@Override
 	public void handle(Message msg, MqClient client) throws IOException {
-		final String mq = msg.getTopic();
+		final String topic = msg.getTopic();
 		final String msgId  = msg.getId();
 		final String sender = msg.getSender();
 		 
@@ -279,7 +279,7 @@ public class RpcProcessor implements MessageHandler{
 		
 		if(res != null){
 			res.setId(msgId);
-			res.setTopic(mq);  
+			res.setTopic(topic);  
 			res.setReceiver(sender);  
 			//route back message
 			client.route(res);
