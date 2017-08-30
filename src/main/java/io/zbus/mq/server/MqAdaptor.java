@@ -95,7 +95,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);    
 		
-		//Compatible to zbus7 
+		//Compatible to older zbus
 		registerHandler(Fix.CreateMQ, declareHandler); 
 		registerHandler(Fix.QueryMQ, queryHandler); 
 		registerHandler(Fix.RemoveMQ, removeHandler); 

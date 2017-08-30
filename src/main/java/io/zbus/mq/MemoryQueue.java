@@ -138,7 +138,7 @@ public class MemoryQueue implements MessageQueue {
 		
 		MemoryConsumeGroup group = consumeGroups.get(consumeGroup); 
 		if(group == null){
-			group = new MemoryConsumeGroup(ctrl.getGroupName());
+			group = new MemoryConsumeGroup(consumeGroup);
 			group.filter = ctrl.getFilter();
 			group.mask = ctrl.getMask();
 			this.consumeGroups.put(consumeGroup, group);

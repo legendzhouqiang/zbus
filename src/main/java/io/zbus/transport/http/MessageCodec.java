@@ -123,7 +123,7 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 			//check if websocket upgrade encountered
 			if(req.headers().contains("Upgrade") || req.headers().contains("upgrade")) {
 				WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-						getWebSocketLocation(req, ctx), null, true, 10 * 1024 * 1024);
+						getWebSocketLocation(req, ctx), null, true, 1024 * 1024 * 1024);
 				handshaker = wsFactory.newHandshaker(req);
 				if (handshaker == null) {
 					WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
