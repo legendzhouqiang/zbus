@@ -52,7 +52,6 @@ import io.zbus.mq.server.Fix;
 public class Message extends io.zbus.transport.http.Message {    
 	
 	public Message() {
-		setVersion(Protocol.VERSION_VALUE);
 	}
 	
 	public Message(io.zbus.transport.http.Message raw){
@@ -62,6 +61,7 @@ public class Message extends io.zbus.transport.http.Message {
 	public String getVersion(){
 		return this.getHeader(VERSION); 
 	} 
+	
 	public Message setVersion(String value) {
 		this.setHeader(VERSION, value);
 		return this;

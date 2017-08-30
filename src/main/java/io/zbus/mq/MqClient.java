@@ -265,6 +265,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 		if(msg.getToken() == null){
 			msg.setToken(this.token);
 		}
+		msg.setVersion(Protocol.VERSION_VALUE); //Set Version
 	}
 	
 	private void checkResult(Message msg){
