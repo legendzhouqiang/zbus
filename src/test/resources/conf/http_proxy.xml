@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zbus>   
+	<!-- HttpProxy requires zbus server, capable of working in DMZ network enviornment -->
+	<httpProxy> 
+		<proxy>
+			<urlPrefix>http</urlPrefix> 
+			<target>http://localhost:15555/server</target> 
+			<zbusServer>localhost:15555</zbusServer> <!-- where the proxy begins -->
+		</proxy> 
+		<!-- you may add multiple proxies -->
+	</httpProxy> 
+	
+</zbus>
+

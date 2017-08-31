@@ -19,7 +19,25 @@
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress>   
 	</trackerList>  
-	--> 
+	-->  
+	
+	
+	<!-- HttpProxy requires zbus server, capable of working in DMZ network enviornment -->
+	<httpProxy>  
+		<proxy>
+			<urlPrefix>http</urlPrefix> 
+			<target>http://localhost:15555/server</target> 
+			<zbusServer></zbusServer> <!-- empty means connection inproc -->
+		</proxy> 
+	</httpProxy>
+	
+	<!-- TcpProxy, no need zbus server -->
+	<tcpProxy>  
+		<server>0.0.0.0:80</server>
+		<target>localhost:15555</target>
+		<connectTimeout>3000</connectTimeout>
+		<readTimeout>10000</readTimeout> 
+	</tcpProxy>
 	
 </zbus>
 

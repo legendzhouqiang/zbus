@@ -8,20 +8,45 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.transport.EventLoop;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session;
 import io.zbus.transport.tcp.TcpServer;
 
 public class TcpProxy extends ServerAdaptor implements Closeable {
-	protected static final Logger log = LoggerFactory.getLogger(TcpProxy.class);
-	private int port; 
-	private String targetHost;
-	private int targetPort = 80;
-	private TcpServer server;   
+	private static final Logger log = LoggerFactory.getLogger(TcpProxy.class);  
+	String proxyHost = "0.0.0.0";
+	int proxyPort; 
 	
-	public TcpProxy(int port, String target) { 
-		this.port = port;
-		String[] bb = target.split("[:]");
+	String targetHost;
+	int targetPort = 80;
+	
+	int connectTimeout = 3000;  
+	int idleTimeout = 60000; 
+	
+	TcpServer server;    
+	EventLoop loop;
+	
+	public TcpProxy(ProxyConfig config){
+		this.proxyHost = config.getProxyHost();
+		this.proxyPort = config.getProxyPort();
+		
+		String[] bb = config.getTargetAddress().split("[:]");
+		if(bb.length > 0){
+			this.targetHost = bb[0].trim();
+		}
+		if(bb.length > 1){
+			this.targetPort = Integer.valueOf(bb[1].trim());
+		}  
+		this.connectTimeout = config.getConnectTimeout();
+		this.idleTimeout = config.getIdleTimeout();
+		loop = new EventLoop();
+		loop.setIdleTimeInSeconds(this.idleTimeout/1000);
+	}
+	
+	public TcpProxy(int proxyPort, String targetAddress) { 
+		this.proxyPort = proxyPort;
+		String[] bb = targetAddress.split("[:]");
 		if(bb.length > 0){
 			this.targetHost = bb[0].trim();
 		}
@@ -34,7 +59,7 @@ public class TcpProxy extends ServerAdaptor implements Closeable {
 	public void sessionCreated(Session sess) throws IOException { 
 		super.sessionCreated(sess); //add to session table
 		
-		ProxyClient client = new ProxyClient(sess, targetHost, targetPort, server.getEventLoop()); 
+		ProxyClient client = new ProxyClient(sess, this); 
 		sess.attr("downClient", client);
 	} 
 	 
@@ -69,19 +94,20 @@ public class TcpProxy extends ServerAdaptor implements Closeable {
 	@Override
 	public void close() throws IOException { 
 		server.close(); 
+		loop.close();
 	}
 	
 	public void start(){
-		server = new TcpServer();   
-		server.start(port, this);
+		server = new TcpServer(loop);   
+		server.start(proxyPort, this);
 	}
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
-		int port = ConfigKit.option(args, "-p", 80);
-		String target = ConfigKit.option(args, "-t", "127.0.0.1:15555"); 
-		
-		TcpProxy proxy = new TcpProxy(port, target);
+		String configFile = ConfigKit.option(args, "-conf", "conf/tcp_proxy.xml"); 
+		ProxyConfig config = new ProxyConfig();
+		config.loadFromXml(configFile);  
+		TcpProxy proxy = new TcpProxy(config);
 		proxy.start();
 	} 
 }

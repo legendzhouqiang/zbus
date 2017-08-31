@@ -194,8 +194,7 @@ public class MqServerConfig implements Cloneable {
 			throw new IllegalArgumentException(configFile + " not found");
 		}
 		try { 
-			loadFromXml(stream);
-			stream.close();
+			loadFromXml(stream); 
 		} catch (Exception e) { 
 			throw new IllegalArgumentException(configFile + " load error", e);
 		} finally {

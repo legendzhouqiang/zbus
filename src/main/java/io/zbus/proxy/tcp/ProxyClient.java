@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Queue;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -18,13 +19,21 @@ import io.zbus.transport.Session;
 import io.zbus.transport.tcp.NettyAdaptor;
 
 class ProxyClient implements IoAdaptor, Closeable {
-	protected static final Logger log = LoggerFactory.getLogger(ProxyClient.class);
-	private Bootstrap bootstrap;
-	private Session upstream;
-	private Session downstream;
-	ProxyClient(Session upstream, String host, int port, EventLoop loop) { 
+	static final Logger log = LoggerFactory.getLogger(ProxyClient.class);
+	Bootstrap bootstrap;
+	Session upstream;
+	Session downstream;
+	int connectTimeout;
+	int readTimeout; 
+	 
+	ProxyClient(Session upstream, final TcpProxy proxy) { 
 		this.upstream = upstream;
 		this.bootstrap = new Bootstrap(); 
+		
+		EventLoop loop = proxy.server.getEventLoop();
+		this.connectTimeout = proxy.connectTimeout;
+		this.readTimeout = proxy.idleTimeout;
+		
 		
 		final SslContext sslCtx = loop.getSslContext(); 
 		bootstrap.group(loop.getGroup()) 
@@ -40,8 +49,32 @@ class ProxyClient implements IoAdaptor, Closeable {
 				p.addLast(nettyToIoAdaptor);
 			}
 		});  
-		
-		bootstrap.connect(host, port);
+		 
+		final ChannelFuture connFuture = bootstrap.connect(proxy.targetHost, proxy.targetPort); 
+		loop.getGroup().submit(new Runnable() {
+			
+			@Override
+			public void run() { 
+				try {
+					connFuture.sync().await(ProxyClient.this.connectTimeout);
+					if(connFuture.channel().isActive()) return;
+					log.warn("Connection to target timeout");
+					try {
+						ProxyClient.this.upstream.close();
+					} catch (IOException ex) {
+						//ignore
+					}
+				} catch (InterruptedException e) { 
+					log.error(e.getMessage(), e);
+				} catch (Exception e) { 
+					try {
+						ProxyClient.this.upstream.close();
+					} catch (IOException ex) {
+						//ignore
+					}
+				} 
+			}
+		});
 	} 
 	
 	@Override
