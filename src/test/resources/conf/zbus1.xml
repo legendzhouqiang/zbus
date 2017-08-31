@@ -9,7 +9,8 @@
 	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
 
 	<storePath>/tmp/zbus</storePath> 
-	<verbose>false</verbose>   
+	<verbose>false</verbose>  
+	<compatible>true</compatible>  <!-- Enable compatible to zbus7 -->
 	
 	<!-- 
 	<trackerList>

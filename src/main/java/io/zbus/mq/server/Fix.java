@@ -10,6 +10,8 @@ import io.zbus.mq.Protocol;
  *
  */
 public class Fix {
+	public static boolean Enabled = Boolean.valueOf(System.getProperty("zbus7", "false"));
+	
 	public static final String QueryMQ   = "query_mq";  //NEW: query
 	public static final String CreateMQ  = "create_mq"; //NEW: declare
 	public static final String RemoveMQ  = "remove_mq"; //NEW: remove
@@ -26,6 +28,8 @@ public class Fix {
 	public static final int RPC = 1<<3; 
 	
 	public static String getTopic(Message msg){ 
+		if(!Enabled) return null;
+		
 		String topic = msg.getHeader(Topic); 
 		String mq = msg.getHeader(MQ); //OLD
 				
@@ -40,6 +44,8 @@ public class Fix {
 	}
 	
 	public static Integer getTopicMask(Message msg){ 
+		if(!Enabled) return null;
+		
 		String value = msg.getHeader(MqMode);
 		if(value != null && (Integer.valueOf(value)&RPC) != 0 ){
 			return Protocol.MASK_MEMORY; //RPC => memory message queue
@@ -48,27 +54,33 @@ public class Fix {
 		return null;
 	}
 	
-	public static String getOriginId(Message msg){  
+	public static String getOriginId(Message msg){ 
+		if(!Enabled) return null;
+		
 		return msg.getHeader(Fix.OriginId); 
 	}
 	
 	public static void setOriginId(Message msg, String value){ 
-		if(msg.getVersion() == null){  
-			msg.setHeader(Fix.OriginId, value); 
-		} 
+		if(!Enabled) return;
+		
+		msg.setHeader(Fix.OriginId, value);  
 	}
 	
-	public static String getOriginUrl(Message msg){   
+	public static String getOriginUrl(Message msg){  
+		if(!Enabled) return null;
+		
 		return msg.getHeader(Fix.OriginUrl); 
 	}
 	
 	public static void setOriginUrl(Message msg, String value){ 
-		if(msg.getVersion() == null){   
-			msg.setHeader(Fix.OriginUrl, value); 
-		} 
+		if(!Enabled) return;
+		
+		msg.setHeader(Fix.OriginUrl, value); 
 	}
 	
 	public static Integer getOriginStatus(Message msg){   
+		if(!Enabled) return null;
+		
 		String value = msg.getHeader(Fix.OriginStatus); 
 		if(value != null) Integer.valueOf(value); 
 		
@@ -76,8 +88,8 @@ public class Fix {
 	}
 	
 	public static void setOriginStatus(Message msg, Integer value){  
-		if(msg.getVersion() == null){  
-			msg.setHeader(Fix.OriginUrl, value); 
-		} 
+		if(!Enabled) return;
+		
+		msg.setHeader(Fix.OriginStatus, value); 
 	}
 }

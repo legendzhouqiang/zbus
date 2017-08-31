@@ -44,6 +44,8 @@ public class MqServerConfig implements Cloneable {
 	public long cleanMqInterval = 3000;       //3 seconds
 	public long trackReportInterval = 30000;  //30 seconds
 	
+	public boolean compatible = false;  //set protocol compatible to zbus7 if true
+	
 	public MqServerConfig(){ }
 	
 	public MqServerConfig(String configXmlFile) {
@@ -160,7 +162,8 @@ public class MqServerConfig implements Cloneable {
 		
 		this.serverName = valueOf(xpath.evaluate("/zbus/serverName", doc), null); 
 		this.storePath = valueOf(xpath.evaluate("/zbus/storePath", doc), "/tmp/zbus");
-		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);   
+		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);  
+		this.compatible = valueOf(xpath.evaluate("/zbus/compatible", doc), false);
 		
 		this.defaultSslCertFile = valueOf(xpath.evaluate("/zbus/defaultSslCertFile", doc), null);
 		this.sslEnabled = valueOf(xpath.evaluate("/zbus/sslEnabled", doc), false);
@@ -243,7 +246,12 @@ public class MqServerConfig implements Cloneable {
 	public void setTrackerList(List<ServerAddress> trackerList) {
 		this.trackerList = trackerList;
 	}
-	
-	
-	
+
+	public boolean isCompatible() {
+		return compatible;
+	}
+
+	public void setCompatible(boolean compatible) {
+		this.compatible = compatible;
+	}  
 }

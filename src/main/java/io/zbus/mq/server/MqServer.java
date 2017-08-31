@@ -56,6 +56,7 @@ public class MqServer extends TcpServer {
 	public MqServer(MqServerConfig config){  
 		super();
 		this.config = config.clone();    
+		Fix.Enabled = config.compatible;
 		
 		codec(new CodecInitializer() {
 			@Override

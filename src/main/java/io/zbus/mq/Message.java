@@ -177,7 +177,7 @@ public class Message extends io.zbus.transport.http.Message {
 	
 	public String getTopic(){
 		String topic = getHeader(Protocol.TOPIC);
-		if(topic != null && getVersion() != null) return topic;
+		if(topic != null) return topic;
 		
 		return Fix.getTopic(this); 
 	} 

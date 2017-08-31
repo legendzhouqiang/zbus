@@ -10,6 +10,7 @@
 
 	<storePath>/tmp/zbus2</storePath> 
 	<verbose>false</verbose>   
+	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
 	
 	<!-- --> 
 	<trackerList>
