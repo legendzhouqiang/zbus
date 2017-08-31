@@ -3,7 +3,9 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -20,6 +22,8 @@ public class ConsumeThread extends Thread implements Closeable{
 	
 	protected ExecutorService consumeRunner;
 	protected MessageHandler consumeHandler;
+	
+	protected AtomicReference<CountDownLatch> pause = new AtomicReference<CountDownLatch>(new CountDownLatch(0));
 	 
 	 
 	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
@@ -61,6 +65,14 @@ public class ConsumeThread extends Thread implements Closeable{
 		super.start();
 	}
 	
+	public void pauseConsume(){
+		pause.set(new CountDownLatch(1));
+	}
+	
+	public void resumeConsume(){
+		pause.get().countDown();
+	}
+	
 	public Message take() throws IOException, InterruptedException {  
 		Message res = null;
 		try {  
@@ -100,10 +112,17 @@ public class ConsumeThread extends Thread implements Closeable{
 	
 	@Override
 	public void run() {  
+		try {
+			client.declareGroup(topic, consumeGroup);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} 
+		
 		while (true) {
 			try { 
 				final Message msg;
 				try {
+					pause.get().await(); //check is paused
 					msg = take();
 					if(msg == null) continue;
 					

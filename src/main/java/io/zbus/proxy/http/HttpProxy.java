@@ -63,8 +63,7 @@ public class HttpProxy implements Closeable {
 						 broker, config.getConnectionCount());
 				 handlers.add(handler);
 				 try{
-					 handler.start();
-					 
+					 handler.start(); 
 				 } catch (Exception ex) { 
 					 log.error(ex.getMessage(), ex);
 				 }

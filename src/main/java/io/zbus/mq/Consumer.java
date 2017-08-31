@@ -103,6 +103,18 @@ public class Consumer extends MqAdmin implements Closeable {
 		started = true;
 	} 
 	
+	public void pause(){
+		for(ConsumeThreadGroup consumerThreadGroup : consumeThreadGroupMap.values()){
+			consumerThreadGroup.pause();
+		}
+	}
+	
+	public void resume(){
+		for(ConsumeThreadGroup consumerThreadGroup : consumeThreadGroupMap.values()){
+			consumerThreadGroup.resume();
+		}
+	}
+	
 	private void startConsumeThreadGroup(MqClientPool pool){
 		if(consumeThreadGroupMap.containsKey(pool.serverAddress())){
 			return;
@@ -156,8 +168,20 @@ public class Consumer extends MqAdmin implements Closeable {
 		}
 		
 		public void start(){
-			for(Thread thread : threads){
+			for(ConsumeThread thread : threads){
 				thread.start();
+			}
+		}
+		
+		public void pause(){
+			for(ConsumeThread thread : threads){
+				thread.pauseConsume();
+			}
+		}
+		
+		public void resume(){
+			for(ConsumeThread thread : threads){
+				thread.resumeConsume();
 			}
 		}
 		

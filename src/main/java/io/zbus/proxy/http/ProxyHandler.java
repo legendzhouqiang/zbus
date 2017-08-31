@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -38,7 +40,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	private Consumer consumer; 
 	private List<HttpClient> targetClients;
 	private int currentClient = 0;  
-	
+	private final AtomicReference<CountDownLatch> ready = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
+	private Thread readyThread;
 	public ProxyHandler(String entry, String target, Broker broker, int connectionCount) {
 		this.connectionCount = connectionCount;
 		this.entry = entry;
@@ -58,31 +61,59 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		targetClients = new ArrayList<HttpClient>();
 		for(int i=0;i<this.connectionCount;i++){
-			HttpClient client = new HttpClient();
-			try {
-				client.connect();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-			}
+			HttpClient client = new HttpClient(); 
 			targetClients.add(client);
 		}
 	}
 
-	public synchronized void start() throws IOException {
-		if (consumer != null) return;
+	public synchronized void start() {
+		if (consumer != null) return; 
 		ConsumerConfig config = new ConsumerConfig(this.broker);
 		config.setTopic(entry);
 		config.setConnectionCount(this.connectionCount);
 		config.setTopicMask(Protocol.MASK_MEMORY);
 		config.setMaxInFlightMessage(1); //run each time
 		consumer = new Consumer(config);
-		consumer.setMessageHandler(this); 
-		consumer.start();
+		consumer.setMessageHandler(this);
+		
+		//wait for downstream ready to start
+		readyThread = new Thread(new Runnable() { 
+			public void run() { 
+				try {
+					ready.get().await();
+				} catch (InterruptedException e) { 
+					return;
+				}
+				
+				try {
+					log.info("Start consuming");
+					consumer.start();
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}); 
+		
+		readyThread.start();
+		
+		for(HttpClient client : targetClients){ 
+			try {
+				client.ensureConnectedAsync();
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			} 
+		}
 	}
 	
 
 	@Override
 	public void handle(Message msg, MqClient client) throws IOException {  
+		try {
+			ready.get().await();
+		} catch (InterruptedException e) {
+			return;
+		}
+		
 		String url = msg.getUrl();
 
 		if (url == null) {
@@ -135,16 +166,17 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		HttpClient() { 
 			client = new MqClient(targetServer, broker.getEventLoop());
-			client.onDisconnected(new DisconnectedHandler() { 
-				@Override
+			client.onDisconnected(new DisconnectedHandler() {  
 				public void onDisconnected() throws IOException { 
+					ready.set(new CountDownLatch(1));
+					consumer.pause();
 				}
 			});
 			
-			client.onConnected(new ConnectedHandler() {
-				
-				@Override
-				public void onConnected() throws IOException {   
+			client.onConnected(new ConnectedHandler() { 
+				public void onConnected() throws IOException {  
+					ready.get().countDown();
+					consumer.resume();
 				}
 			}); 
 			
@@ -201,8 +233,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			client.sendMessage(msg); 
 		}
 		
-		void connect() throws IOException{
-			client.connectAsync();  
+		void ensureConnectedAsync() throws IOException{
+			client.ensureConnectedAsync();
 		}
 		
 		class Context{
