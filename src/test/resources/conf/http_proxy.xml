@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zbus>   
-	<!-- HttpProxy requires zbus server, capable of working in DMZ network enviornment -->
-	<httpProxy> 
-		<proxy>
-			<urlPrefix>http</urlPrefix> 
-			<target>http://localhost:15555/server</target> 
-			<zbusServer>localhost:15555</zbusServer> <!-- where the proxy begins -->
-		</proxy> 
+	<!-- HttpProxy, capable of working in DMZ network enviornment -->
+	
+	<!-- Can be multiple zbus servers, for HA -->
+	<httpProxy zbus="localhost:15555" connectionCount="1">
+		<proxy entry="http">
+			<target>http://localhost:15555/server</target> <!-- Can be multiple -->
+			<target>http://localhost:15556/server</target>
+		</proxy>
 		<!-- you may add multiple proxies -->
 	</httpProxy> 
 	
