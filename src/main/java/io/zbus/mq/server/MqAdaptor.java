@@ -70,6 +70,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.CONSUME, consumeHandler);  
 		registerHandler(Protocol.ROUTE, routeHandler); 
 		registerHandler(Protocol.RPC, rpcHandler);
+		registerHandler(Protocol.UNCONSUME, unconsumeHandler); 
 		
 		//Topic/ConsumerGroup 
 		registerHandler(Protocol.DECLARE, declareHandler);  
@@ -154,6 +155,25 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			if(!msg.getTopic().equalsIgnoreCase(topic)){
 				sess.attr(Protocol.TOPIC, mq.getTopic()); //mark
 				
+				tracker.myServerChanged(); 
+			} 
+		}
+	}; 
+	
+	private MessageHandler<Message> unconsumeHandler = new MessageHandler<Message>() { 
+		@Override
+		public void handle(Message msg, Session sess) throws IOException { 
+			if(!auth(msg)){ 
+				ReplyKit.reply403(msg, sess);
+				return;
+			}
+			
+			MessageQueue mq = findMQ(msg, sess);
+			if(mq == null) return; 
+			
+			mq.unconsume(msg, sess);  
+			String topic = sess.attr(Protocol.TOPIC);
+			if(msg.getTopic().equalsIgnoreCase(topic)){ 
 				tracker.myServerChanged(); 
 			} 
 		}

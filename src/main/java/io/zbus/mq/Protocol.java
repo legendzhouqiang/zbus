@@ -13,9 +13,12 @@ public class Protocol {
 	//=============================[1] Command Values================================================
 	//MQ Produce/Consume
 	public static final String PRODUCE       = "produce";   
-	public static final String CONSUME       = "consume";  
+	public static final String CONSUME       = "consume";   
 	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC 
 	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
+	
+	
+	public static final String UNCONSUME     = "unconsume"; //leave consume status
 	
 	//Topic control
 	public static final String DECLARE = "declare";  

@@ -18,6 +18,8 @@ public interface MessageQueue {
 	
 	void consume(Message message, Session session) throws IOException;  
 	
+	void unconsume(Message message, Session session) throws IOException;  
+	
 	ConsumeGroupInfo declareGroup(ConsumeGroup consumeGroup) throws Exception;
 	
 	ConsumeGroupInfo consumeGroup(String groupName);

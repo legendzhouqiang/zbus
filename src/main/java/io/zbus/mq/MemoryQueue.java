@@ -51,6 +51,24 @@ public class MemoryQueue implements MessageQueue {
 	public Message consume(String consumeGroup, Integer window) throws IOException {
 		return queue.poll();
 	}
+	
+	@Override
+	public void unconsume(Message message, Session session) throws IOException {
+		String consumeGroup = message.getConsumeGroup();
+		if(consumeGroup == null){
+			consumeGroup = this.topic;
+		}  
+		
+		MemoryConsumeGroup group = consumeGroups.get(consumeGroup);
+		if(group == null){
+			message.setBody(consumeGroup + " not found");
+			ReplyKit.reply404(message, session, "ConsumeGroup(" + consumeGroup + ") Not Found");
+			return;
+		}   
+		group.removeSession(session);
+		
+		ReplyKit.reply200(message, session);
+	}
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
@@ -280,6 +298,17 @@ public class MemoryQueue implements MessageQueue {
 		
 		public MemoryConsumeGroup(String groupName){
 			this.groupName = groupName;
+		}
+		
+		public void removeSession(Session session){
+			pullSessions.remove(session.id());
+			Iterator<PullSession> iter = pullQ.iterator();
+			while(iter.hasNext()){
+				if(iter.next().session == session){
+					iter.remove();
+					break;
+				}
+			}
 		}
 		
 		@Override

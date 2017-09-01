@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
-public class ConsumeThread extends Thread implements Closeable{
+public class ConsumeThread implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(ConsumeThread.class);  
 	protected final MqClient client;
 	
@@ -21,10 +21,11 @@ public class ConsumeThread extends Thread implements Closeable{
 	protected Integer consumeWindow;
 	
 	protected ExecutorService consumeRunner;
-	protected MessageHandler consumeHandler;
+	protected MessageHandler messageHandler;
 	
 	protected AtomicReference<CountDownLatch> pause = new AtomicReference<CountDownLatch>(new CountDownLatch(0));
-	 
+	
+	protected Thread consumeThread;
 	 
 	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
 		this.client = client;
@@ -39,13 +40,12 @@ public class ConsumeThread extends Thread implements Closeable{
 	public ConsumeThread(MqClient client){
 		this(client, null);
 	}
-	
-	@Override
+	 
 	public synchronized void start() {
 		if(this.topic == null){
 			throw new IllegalStateException("Missing topic");
 		}
-		if(this.consumeHandler == null){
+		if(this.messageHandler == null){
 			throw new IllegalStateException("Missing consumeHandler");
 		}
 		if(this.consumeGroup == null){
@@ -62,14 +62,27 @@ public class ConsumeThread extends Thread implements Closeable{
 			log.error(e.getMessage(), e);
 		}
 		
-		super.start();
+		
+		consumeThread = new Thread(new Runnable() { 
+			@Override
+			public void run() { 
+				ConsumeThread.this.run();
+			}
+		});
+		consumeThread.start();
 	}
 	
-	public void pauseConsume(){
+	public void pause(){
+		try {
+			client.unconsume(topic, this.consumeGroup.getGroupName()); //stop consuming in serverside
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}  
+		
 		pause.set(new CountDownLatch(1));
 	}
 	
-	public void resumeConsume(){
+	public void resume(){
 		pause.get().countDown();
 	}
 	
@@ -109,9 +122,8 @@ public class ConsumeThread extends Thread implements Closeable{
 			throw new InterruptedException(e.getMessage());
 		}   
 	} 
-	
-	@Override
-	public void run() {  
+	 
+	protected void run() {  
 		try {
 			client.declareGroup(topic, consumeGroup);
 		} catch (Exception e) {
@@ -126,13 +138,13 @@ public class ConsumeThread extends Thread implements Closeable{
 					msg = take();
 					if(msg == null) continue;
 					
-					if(consumeHandler == null){
+					if(messageHandler == null){
 						throw new IllegalStateException("Missing ConsumeHandler");
 					}
 					
 					if(consumeRunner == null){
 						try{
-							consumeHandler.handle(msg, client);
+							messageHandler.handle(msg, client);
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
@@ -141,7 +153,7 @@ public class ConsumeThread extends Thread implements Closeable{
 							@Override
 							public void run() {
 								try{
-									consumeHandler.handle(msg, client);
+									messageHandler.handle(msg, client);
 								} catch (Exception e) {
 									log.error(e.getMessage(), e);
 								}
@@ -163,7 +175,7 @@ public class ConsumeThread extends Thread implements Closeable{
 
 	@Override
 	public void close() throws IOException {
-		interrupt();  
+		consumeThread.interrupt();  
 	} 
 
 	public ExecutorService getConsumeRunner() {
@@ -178,8 +190,8 @@ public class ConsumeThread extends Thread implements Closeable{
 		this.consumeTimeout = consumeTimeout;
 	}
 
-	public void setConsumeHandler(MessageHandler consumeHandler) {
-		this.consumeHandler = consumeHandler;
+	public void setMessageHandler(MessageHandler messageHandler) {
+		this.messageHandler = messageHandler;
 	} 
 	
 	public String getTopic() {
@@ -210,8 +222,8 @@ public class ConsumeThread extends Thread implements Closeable{
 		return consumeTimeout;
 	}
 
-	public MessageHandler getConsumeHandler() {
-		return consumeHandler;
+	public MessageHandler getMessageHandler() {
+		return messageHandler;
 	}
 
 	public Integer getConsumeWindow() {

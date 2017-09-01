@@ -163,6 +163,24 @@ public class DiskQueue implements MessageQueue{
 	public Message consume(String consumeGroup, Integer window) throws IOException {
 		throw new IllegalStateException("Not implemented yet");
 	}
+	
+	@Override
+	public void unconsume(Message message, Session session) throws IOException {
+		String consumeGroup = message.getConsumeGroup();
+		if(consumeGroup == null){
+			consumeGroup = this.name;
+		}  
+		
+		DiskConsumeGroup group = consumeGroups.get(consumeGroup);
+		if(group == null){
+			message.setBody(consumeGroup + " not found");
+			ReplyKit.reply404(message, session, "ConsumeGroup(" + consumeGroup + ") Not Found");
+			return;
+		}   
+		group.removeSession(session);
+		
+		ReplyKit.reply200(message, session);
+	}
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
@@ -376,6 +394,17 @@ public class DiskQueue implements MessageQueue{
 		public DiskConsumeGroup(QueueReader reader, String groupName) throws IOException{ 
 			this.groupName = groupName;
 			this.reader = new QueueReader(reader, groupName);
+		}
+		
+		public void removeSession(Session session){
+			pullSessions.remove(session.id());
+			Iterator<PullSession> iter = pullQ.iterator();
+			while(iter.hasNext()){
+				if(iter.next().session == session){
+					iter.remove();
+					break;
+				}
+			}
 		}
 		
 		@Override

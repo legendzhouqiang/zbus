@@ -154,16 +154,14 @@ public class Consumer extends MqAdmin implements Closeable {
 			threads = new ConsumeThread[connectionCount];
 			for(int i=0;i<connectionCount;i++){
 				MqClient clieint = pool.createClient();
-				ConsumeThread thread = threads[i] = new ConsumeThread(clieint);
-				thread.setConsumeHandler(messageHandler); 
-				
+				ConsumeThread thread = threads[i] = new ConsumeThread(clieint); 
 				thread.setTopic(topic); 
-				thread.setConsumeGroup(consumeGroup);
-
-				thread.setToken(token);
-				
+				thread.setConsumeGroup(consumeGroup); 
+				thread.setToken(token); 
 				thread.setConsumeRunner(consumeRunner); 
 				thread.setConsumeTimeout(consumeTimeout);
+				
+				thread.setMessageHandler(messageHandler); 
 			}
 		}
 		
@@ -175,13 +173,13 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		public void pause(){
 			for(ConsumeThread thread : threads){
-				thread.pauseConsume();
+				thread.pause();
 			}
 		}
 		
 		public void resume(){
 			for(ConsumeThread thread : threads){
-				thread.resumeConsume();
+				thread.resume();
 			}
 		}
 		
@@ -191,8 +189,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				thread.getClient().close();
 			}
 		} 
-	}
-
+	} 
 
 	public ServerSelector getConsumeServerSelector() {
 		return consumeServerSelector;

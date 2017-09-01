@@ -83,10 +83,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 					ready.get().await();
 				} catch (InterruptedException e) { 
 					return;
-				}
-				
-				try {
-					log.info("Start consuming");
+				} 
+				try { 
 					consumer.start();
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);
