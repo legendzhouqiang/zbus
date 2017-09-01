@@ -88,7 +88,7 @@ public class ProxyConfig {
 			    NodeList targetList = (NodeList) xpath.compile("./*").evaluate(node, XPathConstants.NODESET);
 			    for (int j = 0; j < targetList.getLength(); j++) {
 				    Node targetNode = targetList.item(j);    
-				    String target = targetNode.getFirstChild().getNodeValue();
+				    String target = valueOf(xpath.evaluate("text()", targetNode), ""); 
 				    entry.targetList.add(target);
 			    } 
 			    

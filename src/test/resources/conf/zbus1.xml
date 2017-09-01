@@ -10,7 +10,7 @@
 
 	<storePath>/tmp/zbus</storePath> 
 	<verbose>false</verbose>  
-	<compatible>true</compatible>  <!-- Enable compatible to zbus7 -->
+	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
 	
 	<!-- 
 	<trackerList>
@@ -20,6 +20,25 @@
 		</serverAddress>   
 	</trackerList>  
 	-->   
+	
+	<auth enabled="true">
+		<token value="XXX" acl="admin,declare,produce,consume"> 
+			<topic value="MyRpc">	
+				<consumeGroup>MyRpcGroup</consumeGroup>
+				<consumeGroup>MyRpcGroup2</consumeGroup>
+			</topic>
+		</token> 
+		
+		<token value="YYY" acl="produce">
+			<topic value="MyTopic"/>
+			<topic value="*"/>
+		</token>  
+	</auth> 
+	
+	<ipFilter> 
+		<allow topic="xxxx,yyyy,zzzz">10.0.0.*</allow>
+		<deny>89.01.2.10</deny>
+	</ipFilter>
 	
 </zbus>
 
