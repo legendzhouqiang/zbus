@@ -2,10 +2,13 @@ package io.zbus.mq.server.auth;
  
 
 public enum Operation { 
+	ADMIN,
 	PRODUCE,
 	CONSUME,
-	DECLARE,
-	ADMIN;
+	ROUTE,
+	DECLARE, 
+	EMPTY,
+	REMOVE; 
 	
 	private final int mask;
 	

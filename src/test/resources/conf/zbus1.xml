@@ -22,22 +22,22 @@
 	-->   
 	
 	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
-	
-		<token value="admin" acl="admin"> 
-			<topic value="*"/>
-		</token> 
-		
-		<token value="prod" acl="produce"> 
-			<topic value="*"/>
+		<token value="group" operation="declare,produce,consume"> 
+			<topic value="MyTopic">	
+				<consumeGroup>Group1</consumeGroup> 
+			</topic>
 		</token>  
 		
-		<token value="group" acl="declare,produce,consume"> 
-			<topic value="MyTopic">	
-				<consumeGroup>MyRpcGroup</consumeGroup>
-				<consumeGroup>MyRpcGroup2</consumeGroup>
-			</topic>
-		</token> 
-		 
+		<token value="admin" operation="admin"/>   
+		
+		<token value="prod" operation="produce"> <!-- rpc = produce -->
+			<topic value="*"/>
+		</token>    
+		
+		<token value="svc_token" operation="consume,route"> <!-- route required to reply -->
+			<topic value="MyRpc"/>
+		</token>  
+		
 	</auth> 
 	
 	<ipFilter> 

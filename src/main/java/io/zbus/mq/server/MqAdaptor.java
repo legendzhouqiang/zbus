@@ -126,6 +126,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			final boolean ack = msg.isAck();  
 			msg.removeHeader(Protocol.COMMAND);
 			msg.removeHeader(Protocol.ACK);  
+			msg.removeHeader(Protocol.TOKEN);
 			mq.produce(msg);  
 			
 			if(ack){

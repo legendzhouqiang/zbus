@@ -27,6 +27,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.DefaultAuthProvider;
+import io.zbus.mq.server.auth.XmlAuthProvider;
 import io.zbus.transport.ServerAddress;
 
 public class MqServerConfig implements Cloneable {  
@@ -199,7 +200,7 @@ public class MqServerConfig implements Cloneable {
 		
 		String authClass = valueOf(xpath.evaluate("/zbus/auth/@class", doc), "");
 		if(authClass.equals("")){
-			DefaultAuthProvider provider = new DefaultAuthProvider();
+			XmlAuthProvider provider = new XmlAuthProvider();
 			provider.loadFromXml(doc);
 			this.setAuthProvider(provider);
 		} else {
