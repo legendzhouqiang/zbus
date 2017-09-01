@@ -153,7 +153,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			mq.consume(msg, sess);  
 			String topic = sess.attr(Protocol.TOPIC);
 			if(!msg.getTopic().equalsIgnoreCase(topic)){
-				sess.attr(Protocol.TOPIC, mq.getTopic()); //mark
+				sess.attr(Protocol.TOPIC, mq.topic()); //mark
 				
 				tracker.myServerChanged(); 
 			} 
@@ -251,14 +251,13 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				if(groupName != null){   
 					ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
 					ConsumeGroupInfo info = mq.declareGroup(consumeGroup); 
-					ReplyKit.replyJson(msg, sess, info);
-					log.info("ConsumeGroup declared: %s", consumeGroup); 
+					ReplyKit.replyJson(msg, sess, info); 
 				} else { 
-					if(mq.consumeGroup(topic) == null){
+					if(mq.groupInfo(topic) == null){
 						ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
 						mq.declareGroup(consumeGroup); 
 					}
-					TopicInfo topicInfo = mq.getInfo();
+					TopicInfo topicInfo = mq.topicInfo();
 			    	topicInfo.serverAddress = mqServer.getServerAddress();  
 					ReplyKit.replyJson(msg, sess, topicInfo);
 				}  
@@ -284,7 +283,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	    		ReplyKit.reply404(msg, sess);
 				return;
 			}
-	    	TopicInfo topicInfo = mq.getInfo();
+	    	TopicInfo topicInfo = mq.topicInfo();
 	    	topicInfo.serverAddress = mqServer.getServerAddress(); 
 	    	
 			String group = msg.getConsumeGroup();
@@ -336,9 +335,9 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				return;
 			}  
 			
-			mq = mqTable.remove(mq.getTopic());
+			mq = mqTable.remove(mq.topic());
 			if(mq != null){
-				mq.removeTopic();
+				mq.destroy();
 				tracker.myServerChanged(); 
 				ReplyKit.reply200(msg, sess);
 			} else {

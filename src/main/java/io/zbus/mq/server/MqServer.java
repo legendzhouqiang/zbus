@@ -161,7 +161,7 @@ public class MqServer extends TcpServer {
 	public ServerInfo serverInfo() {
 		Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
 		for (Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()) {
-			TopicInfo info = e.getValue().getInfo();
+			TopicInfo info = e.getValue().topicInfo();
 			info.serverAddress = serverAddress;
 			table.put(e.getKey(), info);
 		}
