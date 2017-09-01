@@ -23,9 +23,15 @@ import org.xml.sax.InputSource;
 
 import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.server.auth.AuthProvider;
+import io.zbus.mq.server.auth.DefaultAuthProvider;
 import io.zbus.transport.ServerAddress;
 
-public class MqServerConfig implements Cloneable {   
+public class MqServerConfig implements Cloneable {  
+	private static final Logger log = LoggerFactory.getLogger(MqServerConfig.class); 
+	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;   
 	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>();
@@ -44,6 +50,7 @@ public class MqServerConfig implements Cloneable {
 	public long cleanMqInterval = 3000;       //3 seconds
 	public long trackReportInterval = 30000;  //30 seconds
 	
+	public AuthProvider authProvider = new DefaultAuthProvider();  
 	public boolean compatible = false;  //set protocol compatible to zbus7 if true
 	
 	public MqServerConfig(){ }
@@ -149,14 +156,17 @@ public class MqServerConfig implements Cloneable {
 	public void setTrackerOnly(boolean trackerOnly) {
 		this.trackerOnly = trackerOnly;
 	}
+	
+	public AuthProvider getAuthProvider() {
+		return authProvider;
+	}
 
-	public void loadFromXml(InputStream stream) throws Exception{
+	public void setAuthProvider(AuthProvider authProvider) {
+		this.authProvider = authProvider;
+	}
+
+	public void loadFromXml(Document doc) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();     
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		InputSource source = new InputSource(stream); 
-		Document doc = db.parse(source); 
-		 
 		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
 		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
 		
@@ -186,6 +196,33 @@ public class MqServerConfig implements Cloneable {
 			    trackerList.add(serverAddress); 
 			}
 		}   
+		
+		String authClass = valueOf(xpath.evaluate("/zbus/auth/@class", doc), "");
+		if(authClass.equals("")){
+			DefaultAuthProvider provider = new DefaultAuthProvider();
+			provider.loadFromXml(doc);
+			this.setAuthProvider(provider);
+		} else {
+			try{
+				Class<?> clazz = Class.forName(authClass);
+				Object auth = clazz.newInstance();
+				if(auth instanceof AuthProvider){
+					this.setAuthProvider((AuthProvider)auth);
+				} else {
+					log.warn("auth class is not AuthProvider type");
+				}
+			} catch (Exception e) { 
+				log.error("Load AuthProvider error: " + e);
+			}
+		}
+	}
+
+	public void loadFromXml(InputStream stream) throws Exception{ 
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		InputSource source = new InputSource(stream); 
+		Document doc = db.parse(source); 
+		loadFromXml(doc);
 	}
 	 
 	public void loadFromXml(String configFile) { 

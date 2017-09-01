@@ -77,12 +77,8 @@ public class DefaultAuthProvider implements AuthProvider {
 		return false;
 	}   
 	
-	public void loadFromXml(InputStream stream) throws Exception{
-		XPath xpath = XPathFactory.newInstance().newXPath();     
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		InputSource source = new InputSource(stream); 
-		Document doc = db.parse(source); 
+	public void loadFromXml(Document doc) throws Exception{
+		XPath xpath = XPathFactory.newInstance().newXPath();
 		
 		boolean enabled = valueOf(xpath.evaluate("/zbus/auth/@enabled", doc), false);
 		tokenTable.setEnabled(enabled);
@@ -119,6 +115,14 @@ public class DefaultAuthProvider implements AuthProvider {
 			    this.tokenTable.put(token.token, token);
 			} 
 		}   
+	}
+	
+	public void loadFromXml(InputStream stream) throws Exception{  
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		InputSource source = new InputSource(stream); 
+		Document doc = db.parse(source); 
+		loadFromXml(doc); 
 	}
 	
 	public void loadFromXml(String configFile) { 

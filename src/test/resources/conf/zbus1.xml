@@ -21,18 +21,23 @@
 	</trackerList>  
 	-->   
 	
-	<auth enabled="true">
-		<token value="XXX" acl="admin,declare,produce,consume"> 
-			<topic value="MyRpc">	
+	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
+	
+		<token value="admin" acl="admin"> 
+			<topic value="*"/>
+		</token> 
+		
+		<token value="prod" acl="produce"> 
+			<topic value="*"/>
+		</token>  
+		
+		<token value="group" acl="declare,produce,consume"> 
+			<topic value="MyTopic">	
 				<consumeGroup>MyRpcGroup</consumeGroup>
 				<consumeGroup>MyRpcGroup2</consumeGroup>
 			</topic>
 		</token> 
-		
-		<token value="YYY" acl="produce">
-			<topic value="MyTopic"/>
-			<topic value="*"/>
-		</token>  
+		 
 	</auth> 
 	
 	<ipFilter> 

@@ -29,6 +29,7 @@ import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
+import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.rpc.Request;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAdaptor;
@@ -44,6 +45,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
 	private final Tracker tracker; 
+	private AuthProvider authProvider;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 	private Set<String> restUrlCommands = new HashSet<String>(); 
@@ -52,6 +54,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		super(mqServer.getSessionTable());
 		
 		this.config = mqServer.getConfig();
+		this.authProvider = this.config.getAuthProvider();
 		
 		this.mqServer = mqServer; 
 		this.mqTable = mqServer.getMqTable();  
@@ -549,16 +552,12 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	} 
 	
 	private boolean auth(Message msg){  
-		//String token = msg.getToken(); 
-		//TODO add authentication
-		return true;
+		return authProvider.auth(msg);
 	}
 	
     public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}  
-     
-   
     
 	public void loadDiskQueue() throws IOException {
 		log.info("Loading DiskQueues...");
