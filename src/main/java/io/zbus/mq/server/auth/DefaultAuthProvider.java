@@ -4,8 +4,6 @@ import static io.zbus.kit.ConfigKit.valueOf;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +20,7 @@ import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.server.auth.Token.TopicResource;
 
 public class DefaultAuthProvider implements AuthProvider {  
 	private TokenTable tokenTable = new TokenTable();
@@ -37,41 +36,44 @@ public class DefaultAuthProvider implements AuthProvider {
 		if(token == null) {
 			return false;
 		}
-		if(token.allowAll) return true;
 		
-		String topic = message.getTopic();
-		if(!token.topics.contains(topic)){ //topic not in token's list
-			return false;
-		} 
-		String group = message.getConsumeGroup(); 
-		if(!StrKit.isEmpty(group)){
-			Set<String> groups = token.consumeGroups.get(topic);
-			if(groups != null){
-				if(!groups.contains(group)) return false;
-			}
-		}
-		//now check ACL
-		if(Operation.isEnabled(token.acl, Operation.ADMIN)){
+		//1) ACL operation check
+		if(Operation.isEnabled(token.acl, Operation.ADMIN)){ //no need to check resource
 			return true;
-		}
+		}  	
 		
 		String cmd = message.getCommand();
 		if(Protocol.PRODUCE.equals(cmd)){
-			if(Operation.isEnabled(token.acl, Operation.PRODUCE)){
-				return true;
+			if(!Operation.isEnabled(token.acl, Operation.PRODUCE)){
+				return false;
 			}
 		}
 		
 		if(Protocol.CONSUME.equals(cmd) || Protocol.UNCONSUME.equals(cmd)){
-			if(Operation.isEnabled(token.acl, Operation.CONSUME)){
-				return true;
+			if(!Operation.isEnabled(token.acl, Operation.CONSUME)){
+				return false;
 			}
 		}
 		
 		if(Protocol.DECLARE.equals(cmd)){
-			if(Operation.isEnabled(token.acl, Operation.DECLARE)){
-				return true;
+			if(!Operation.isEnabled(token.acl, Operation.DECLARE)){
+				return false;
 			}
+		}  
+		
+		if(token.allTopics) return true; 
+		
+		String topic = message.getTopic();
+		if(!token.topics.containsKey(topic)){ //topic not in token's list
+			return false;
+		} 
+		String group = message.getConsumeGroup(); 
+		if(StrKit.isEmpty(group)) return true;
+		
+		TopicResource topicResource = token.topics.get(topic); 
+		if(topicResource != null){
+			if(topicResource.allGroups) return true;
+			if(!topicResource.consumeGroups.contains(group)) return false;
 		} 
 		
 		return false;
@@ -99,18 +101,23 @@ public class DefaultAuthProvider implements AuthProvider {
 				    Node topicNode = topicList.item(j);     
 				    String topic = valueOf(xpath.evaluate("@value", topicNode), ""); 
 				    if(topic.equals("*")){
-				    	token.allowAll = true;
+				    	token.allTopics = true;
 				    	continue;
-				    }  
-				    Set<String> consumeGroups = new HashSet<String>(); 
+				    } 
+				    TopicResource topicResource = new TopicResource();
+				    topicResource.topic = topic;
+				     
 				    NodeList groupList = (NodeList) xpath.compile("./*").evaluate(topicNode, XPathConstants.NODESET);
 				    for (int k = 0; k < groupList.getLength(); k++) {
 				    	Node groupNode = groupList.item(k);     
 					    String group = valueOf(xpath.evaluate("text()", groupNode), ""); 
 					    if(group.equals("")) continue;
-					    consumeGroups.add(group);
+					    topicResource.consumeGroups.add(group);
+				    } 
+				    
+				    if(topicResource.consumeGroups.isEmpty()){
+				    	topicResource.allGroups = true; //no group set, means all groups allowded
 				    }
-				    token.consumeGroups.put(topic, consumeGroups);
 			    }  
 			    this.tokenTable.put(token.token, token);
 			} 
