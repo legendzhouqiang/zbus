@@ -681,9 +681,8 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     	//handle RPC
     	if(Protocol.RPC.equalsIgnoreCase(cmd) && msg.getBody() == null){ 
     		handlUrlRpcMessage(msg); 
-    	} else {
-    		msg.urlToHead(); 
     	}
+    	msg.urlToHead();  
 	}
      
     
