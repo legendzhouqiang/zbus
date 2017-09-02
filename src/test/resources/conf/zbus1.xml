@@ -23,7 +23,7 @@
 	
 	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
 		
-		<token value="MyTopic_Group1" operation="declare,produce,consume"> 
+		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>
@@ -31,15 +31,15 @@
 		
 		<token value="admin" operation="admin"/>   
 		
-		<token value="produce_all" operation="produce"> <!-- rpc = produce -->
+		<token value="produce_all" operation="produce,track_sub"> <!-- rpc = produce -->
 			<topic value="*"/>
 		</token>    
 		
-		<token value="myrpc_client" operation="produce"> 
+		<token value="myrpc_client" operation="produce, track_sub"> 
 			<topic value="MyRpc"/>
 		</token>   
 		
-		<token value="myrpc_service" operation="declare,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_service" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
 			<topic value="MyRpc"/>
 		</token>  
 		
@@ -50,6 +50,8 @@
 		<token value="tracker" operation="track_sub"> 
 			<topic value="*"/>
 		</token>  
+		
+		<token value="" operation="js, css, img, tracker, track_sub"/>   
 				
 	</auth>  
 	

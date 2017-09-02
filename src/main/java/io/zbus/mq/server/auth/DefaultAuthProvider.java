@@ -43,13 +43,17 @@ public class DefaultAuthProvider implements AuthProvider {
 	
 	public boolean authOperation(String cmd, Token token){ 
 		if(token.allOperations) return true;
+		Operation op = Operation.find(cmd);
+		if(op == null) return true; //command not found, no need to auth
 		
-		return Operation.isEnabled(token.operation, cmd); 
+		return Operation.isEnabled(token.operation, op); 
 	} 
 	
 	public boolean authResource(Message message, Token token){ 
 		if(token.allTopics) return true; 
 		String topic = message.getTopic();
+		if(StrKit.isEmpty(topic)) return true; //no need to check
+		
 		TopicResource topicResource = token.topics.get(topic);
 		if(topicResource == null){ //topic not in token's list
 			return false;
@@ -62,7 +66,7 @@ public class DefaultAuthProvider implements AuthProvider {
 		
 		String consumeGroup = message.getConsumeGroup();
 		if(StrKit.isEmpty(consumeGroup)){ 
-			consumeGroup = topic; //default to topic
+			consumeGroup = topic; //default to topic, TODO
 		}
 		
 		if(!topicResource.consumeGroups.contains(consumeGroup)) return false; 

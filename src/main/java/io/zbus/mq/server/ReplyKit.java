@@ -3,6 +3,7 @@ package io.zbus.mq.server;
 import java.io.IOException;
 
 import io.zbus.kit.JsonKit;
+import io.zbus.kit.StrKit;
 import io.zbus.mq.Message;
 import io.zbus.transport.Session;
 
@@ -73,12 +74,21 @@ public class ReplyKit {
 
 	public static void reply403(Message msg, Session session) throws IOException {
 		Message res = new Message();
-		String mqName = msg.getTopic();
+		String topic = msg.getTopic();
+		String cmd = msg.getCommand();
 		res.setId(msg.getId());
 		res.setStatus(403);
-		res.setTopic(mqName);
-		res.setBody(String.format("403: Topic(%s) Forbbiden", mqName));
-
+		res.setTopic(topic);
+		
+		String text = "403: ";
+		if(!StrKit.isEmpty(cmd)){
+			text += "Command("+cmd+") ";
+		}
+		if(!StrKit.isEmpty(topic)){
+			text += "Topic(" + topic+") ";
+		}
+		text += "Forbbiden";
+		res.setBody(text); 
 		session.write(res);
 	} 
 	

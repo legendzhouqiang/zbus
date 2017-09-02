@@ -50,14 +50,15 @@ public enum Operation {
 		table.put(Protocol.SERVER, Operation.SERVER);
 	}  
     
-	public static Operation fromCommand(String command){ //use instead of valueOf
+	public static Operation find(String command){ //use instead of valueOf
+		if(command == null) return null;
 		return table.get(command);
 	}
 	
     public static boolean isEnabled(int mask, Operation operation) {
         return (mask & operation.getMask()) != 0;
-    } 
-    
+    }  
+     
     public static boolean isEnabled(int mask, String op) {
     	Operation operation = table.get(op.toLowerCase()); //case in-sensitive
     	if(operation == null) return false;

@@ -112,12 +112,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		@Override
 		public void handle(final Message msg, final Session sess) throws IOException {  
 			boolean ok = validateMessage(msg,sess);
-			if(!ok) return;
-			
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}
+			if(!ok) return; 
 			
 			final MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
@@ -145,12 +140,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> consumeHandler = new MessageHandler<Message>() { 
 		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}
-			
+		public void handle(Message msg, Session sess) throws IOException {  
 			MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
@@ -166,12 +156,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> unconsumeHandler = new MessageHandler<Message>() { 
 		@Override
-		public void handle(Message msg, Session sess) throws IOException { 
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}
-			
+		public void handle(Message msg, Session sess) throws IOException {  
 			MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
@@ -224,12 +209,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
 			}
-			topic = topic.trim(); 
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			}   
-			  
+			topic = topic.trim();  
 			Integer topicMask = msg.getTopicMask();  
     		MessageQueue mq = null;
     		synchronized (mqTable) {
@@ -314,13 +294,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				ReplyKit.reply400(msg, sess, "Missing topic");
 				return;
 			} 
-			topic = topic.trim(); 
-			
-			if(!auth(msg)){ 
-				ReplyKit.reply403(msg, sess);
-				return;
-			} 
-			
+			topic = topic.trim();   
 			MessageQueue mq = mqTable.get(topic);
 			if(mq == null){ 
 				ReplyKit.reply404(msg, sess);
@@ -701,6 +675,11 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		
 		handleUrlMessage(msg); 
+		
+		if(!auth(msg)){
+			ReplyKit.reply403(msg, sess);
+			return;
+		}
 		
 		String cmd = msg.getCommand(); 
 		

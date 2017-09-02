@@ -130,6 +130,10 @@ public class Broker implements Closeable {
 		client.onMessage(new MessageHandler<Message>() {  
 			@Override
 			public void handle(Message msg, Session session) throws IOException { 
+				if(msg.getStatus() != 200){
+					log.error(msg.getBodyString());
+					return;
+				}
 				if(Protocol.TRACK_PUB.equals(msg.getCommand())){  
 					TrackerInfo trackerInfo = JsonKit.parseObject(msg.getBodyString(), TrackerInfo.class);
 					

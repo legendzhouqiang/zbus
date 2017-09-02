@@ -123,13 +123,7 @@ public class ConsumeThread implements Closeable{
 		}   
 	} 
 	 
-	protected void run() {  
-		try {
-			client.declareGroup(topic, consumeGroup);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} 
-		
+	protected void run() {   
 		while (true) {
 			try { 
 				final Message msg;

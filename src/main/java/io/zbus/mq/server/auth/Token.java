@@ -42,7 +42,8 @@ public class Token {
 			if(cmd.equals("")) continue;
 			
 			try{
-				Operation operation = Operation.fromCommand(cmd.toLowerCase());
+				Operation operation = Operation.find(cmd.toLowerCase());
+				if(operation == null) continue;
 				this.operation |= operation.getMask();
 			} catch (Exception e) {
 				log.warn(e.getMessage(), e);
