@@ -30,6 +30,7 @@ public class BrokerConfig implements Cloneable {
 	public Map<String, String> sslCertFileTable = new HashMap<String, String>(); 
 	public String defaultSslCertFile;  
 	public int clientPoolSize = 32; 
+	public String token;
 	
 	public BrokerConfig(){}
 	  
@@ -105,6 +106,14 @@ public class BrokerConfig implements Cloneable {
 
 	public void setTrackerList(List<ServerAddress> trackerList) {
 		this.trackerList = trackerList;
+	} 
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 
 	public void loadFromXml(InputStream stream) throws Exception{

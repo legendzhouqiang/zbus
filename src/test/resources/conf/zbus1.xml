@@ -22,7 +22,8 @@
 	-->   
 	
 	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
-		<token value="group" operation="declare,produce,consume"> 
+		
+		<token value="MyTopic_Group1" operation="declare,produce,consume"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>
@@ -30,20 +31,20 @@
 		
 		<token value="admin" operation="admin"/>   
 		
-		<token value="prod" operation="produce"> <!-- rpc = produce -->
+		<token value="produce_all" operation="produce"> <!-- rpc = produce -->
 			<topic value="*"/>
 		</token>    
 		
-		<token value="svc_token" operation="consume,route"> <!-- route required to reply -->
+		<token value="MyRpc_Client" operation="produce"> 
 			<topic value="MyRpc"/>
 		</token>  
 		
-	</auth> 
-	
-	<ipFilter> 
-		<allow topic="xxxx,yyyy,zzzz">10.0.0.*</allow>
-		<deny>89.01.2.10</deny>
-	</ipFilter>
+		<token value="MyRpc_Service" operation="declare,consume,route"> <!-- route required to reply -->
+			<topic value="MyRpc"/>
+		</token>  
+		
+				
+	</auth>  
 	
 </zbus>
 

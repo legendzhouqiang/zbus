@@ -32,8 +32,7 @@ public class XmlAuthProvider extends DefaultAuthProvider {
 			for (int i = 0; i < entryList.getLength(); i++) {
 			    Node tokenNode = entryList.item(i);    
 			    Token token = new Token();
-			    String tokenValue = valueOf(xpath.evaluate("@value", tokenNode), ""); 
-			    if (tokenValue.equals("")) continue; //ignore 
+			    String tokenValue = valueOf(xpath.evaluate("@value", tokenNode), "");  
 			    token.token = tokenValue;
 			    String op = valueOf(xpath.evaluate("@operation", tokenNode), ""); 
 			    token.setOperation(op);

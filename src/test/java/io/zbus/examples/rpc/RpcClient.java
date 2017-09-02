@@ -2,18 +2,28 @@ package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
+import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.transport.ResultCallback;
 
 public class RpcClient {
 
-	public static void main(String[] args) throws Exception { 
-		//Broker broker = new Broker("localhost:15555");   
-		Broker broker = new Broker("localhost:15555;localhost:15556");   //HA Configuration, Simple?!!!
+	public static void main(String[] args) throws Exception {  
+		
+		BrokerConfig brokerConfig = new BrokerConfig();
+		brokerConfig.setTrackerList("localhost:15555");
+		brokerConfig.setToken("MyRpc_Client"); 
+		Broker broker = new Broker(brokerConfig);
 	
-		RpcInvoker rpc = new RpcInvoker(broker, "MyRpc");
+		RpcConfig config = new RpcConfig();
+		config.setBroker(broker);
+		config.setTopic("MyRpc");
+		config.setToken(brokerConfig.getToken()); 
+		
+		RpcInvoker rpc = new RpcInvoker(config);
 		
 		//Way 1) Raw request
 		Request req = new Request();

@@ -9,8 +9,9 @@
 	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
 
 	<storePath>/tmp/zbus</storePath> 
-	<verbose>false</verbose>   
+	<verbose>false</verbose>  
 	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
+	
 	<!-- 
 	<trackerList>
 		<serverAddress>
@@ -18,7 +19,33 @@
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 		</serverAddress>   
 	</trackerList>  
-	--> 
+	-->   
+	
+	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
+		
+		<token value="MyTopic_Group1" operation="declare,produce,consume"> 
+			<topic value="MyTopic">	
+				<consumeGroup>Group1</consumeGroup> 
+			</topic>
+		</token>  
+		
+		<token value="admin" operation="admin"/>   
+		
+		<token value="produce_all" operation="produce"> <!-- rpc = produce -->
+			<topic value="*"/>
+		</token>    
+		
+		<token value="MyRpc_Client" operation="produce"> 
+			<topic value="MyRpc"/>
+		</token>  
+		
+		<token value="MyRpc_Service" operation="declare,consume,route"> <!-- route required to reply -->
+			<topic value="MyRpc"/>
+		</token>  
+		
+		<token value="" operation="admin"/>   <!-- Should remove this rule, it allows all just like auth disabled -->
+		
+	</auth>  
 	
 </zbus>
 

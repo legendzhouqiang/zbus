@@ -3,6 +3,7 @@ package io.zbus.examples.rpc;
 import io.zbus.examples.rpc.biz.BaseExtImpl;
 import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Protocol;
@@ -20,10 +21,16 @@ public class RpcService {
 		
 		
 		//The following is same as a simple Consumer setup process
-		Broker broker = new Broker("localhost:15555");   
-		//Broker broker = new Broker("localhost:15555;localhost:15556"); //Why not test HA?
+		String topic = "MyRpc";
+		String token = "MyRpc_Service"; 
+		BrokerConfig brokerConfig = new BrokerConfig();
+		brokerConfig.setTrackerList("localhost:15555");
+		brokerConfig.setToken(token); 
+		Broker broker = new Broker(brokerConfig);  
+		
 		ConsumerConfig config = new ConsumerConfig(broker); 
-		config.setTopic("MyRpc");
+		config.setTopic(topic);
+		config.setToken(token); //access control
 		config.setTopicMask(Protocol.MASK_MEMORY); //RPC, choose memory queue to boost speed
 		config.setMessageHandler(processor);   
 		
