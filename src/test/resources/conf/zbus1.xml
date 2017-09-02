@@ -21,7 +21,7 @@
 	</trackerList>  
 	-->   
 	
-	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
+	<auth enabled="true" class="">
 		
 		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
 			<topic value="MyTopic">	
@@ -51,7 +51,8 @@
 			<topic value="*"/>
 		</token>  
 		
-		<token value="" operation="js, css, img, tracker, track_sub"/>   
+		<token value="" operation="js, css, img, tracker, track_sub, track_pub"/>   
+		<token value="track_pub_token" operation="track_pub"/>   
 				
 	</auth>  
 	

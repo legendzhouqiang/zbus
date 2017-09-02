@@ -39,7 +39,13 @@ public class DefaultAuthProvider implements AuthProvider {
 		if(!authOperation(cmd, token)) return false;
 		 
 		return authResource(message, token); 
-	}    
+	}   
+	
+	@Override
+	public Token getToken(String token) { 
+		if(token == null) return null;
+		return tokenTable.get(token);
+	}
 	
 	public boolean authOperation(String cmd, Token token){ 
 		if(token.allOperations) return true;

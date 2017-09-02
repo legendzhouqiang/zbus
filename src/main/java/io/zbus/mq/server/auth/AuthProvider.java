@@ -14,4 +14,6 @@ public interface AuthProvider {
 	 * @return true if passed auth, false otherwise
 	 */
 	boolean auth(Message message); 
+	
+	Token getToken(String token);
 }

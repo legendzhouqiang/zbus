@@ -22,11 +22,13 @@ import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
+import io.zbus.mq.server.auth.AuthProvider;
+import io.zbus.mq.server.auth.Token;
+import io.zbus.transport.Client.ConnectedHandler;
+import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.ServerAddress;
-import io.zbus.transport.Session;
-import io.zbus.transport.Client.ConnectedHandler;
-import io.zbus.transport.Client.DisconnectedHandler; 
+import io.zbus.transport.Session; 
  
 
 public class Tracker implements Closeable{
@@ -46,6 +48,7 @@ public class Tracker implements Closeable{
 	private boolean myServerInTrack; 
 	
 	private Map<String, String> sslCertFileTable;
+	protected AuthProvider authProvider;
 	
 	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
@@ -58,6 +61,7 @@ public class Tracker implements Closeable{
 		this.loop = this.mqServer.getEventLoop(); 
 		this.myServerInTrack = myServerInTrack; 
 		this.sslCertFileTable = sslCertFileTable;
+		this.authProvider = mqServer.getConfig().getAuthProvider();
 		
 		this.heartbeator.scheduleAtFixedRate(new Runnable() {
 			public void run() {
@@ -65,7 +69,7 @@ public class Tracker implements Closeable{
 				    for(MqClient client : upstreamTrackers.values()){ 
 						try{
 							ServerEvent event = new ServerEvent();
-		    				event.serverInfo = serverInfo();
+		    				event.serverInfo = serverInfo(null); //TODO
 		    				event.live = true;
 		    				
 		    				notifyUpstream(client, event);
@@ -80,7 +84,7 @@ public class Tracker implements Closeable{
 		}, trackReportIntervalMs, trackReportIntervalMs, TimeUnit.MILLISECONDS);
 	} 
 	
-	public ServerInfo serverInfo(){
+	public ServerInfo serverInfo(Token token){
 		return mqServer.serverInfo();
 	}
 	
@@ -88,11 +92,11 @@ public class Tracker implements Closeable{
 		return new ArrayList<ServerAddress>(this.upstreamTrackers.keySet());
 	}
 	 
-	public TrackerInfo trackerInfo(){  
+	public TrackerInfo trackerInfo(Token token){  
 		List<ServerAddress> serverList = new ArrayList<ServerAddress>(this.downstreamTrackers.keySet()); 
 		if(myServerInTrack){
 			serverList.add(myServerAddress);
-			serverTable.put(myServerAddress.toString(), serverInfo());
+			serverTable.put(myServerAddress.toString(), serverInfo(token));
 		}
 		TrackerInfo trackerInfo = new TrackerInfo(); 
 		trackerInfo.infoVersion = infoVersion.getAndIncrement();
@@ -128,7 +132,7 @@ public class Tracker implements Closeable{
     				log.info("Connected to Tracker(%s)", trackerAddress.address);
     				healthyUpstreamTrackers.put(trackerAddress, client);
     				ServerEvent event = new ServerEvent();
-    				event.serverInfo = serverInfo();
+    				event.serverInfo = serverInfo(null); //TODO
     				event.live = true;
     				notifyUpstream(client, event);
     			}
@@ -220,7 +224,7 @@ public class Tracker implements Closeable{
 	
 	public void myServerChanged() {
 		ServerEvent event = new ServerEvent();
-		event.serverInfo = serverInfo();
+		event.serverInfo = serverInfo(null); //TODO
 		event.live = true;
 		
 		for(MqClient tracker : healthyUpstreamTrackers.values()){
@@ -262,7 +266,7 @@ public class Tracker implements Closeable{
 	private Message trackerInfoPubMessage(){
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
-		message.setJsonBody(JsonKit.toJSONString(trackerInfo()));
+		message.setJsonBody(JsonKit.toJSONString(trackerInfo(null))); //TODO
 		message.setStatus(200);// server to client
 		return message;
 	}

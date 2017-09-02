@@ -17,6 +17,7 @@
 		<serverAddress>
 			<address>localhost:15555</address>  
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
+			<authToken></authToken>
 		</serverAddress>   
 	</trackerList>  
 	

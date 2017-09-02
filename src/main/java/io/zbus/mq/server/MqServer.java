@@ -26,6 +26,7 @@ import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.transport.CodecInitializer;
+import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session;
 import io.zbus.transport.tcp.TcpServer;
@@ -109,19 +110,24 @@ public class MqServer extends TcpServer {
 		tracker = new Tracker(this, config.sslCertFileTable, 
 				!config.trackerOnly, config.trackReportInterval);
 		
-		mqAdaptor = new MqAdaptor(this);   
-	} 
-	
-	public void start() throws Exception{  
-		log.info("Zbus starting...");
-		long start = System.currentTimeMillis();  
-		this.start(config.serverHost, config.serverPort, mqAdaptor);  
-		mqAdaptor.setVerbose(config.verbose);
+		mqAdaptor = new MqAdaptor(this); 
+		mqAdaptor.setVerbose(config.verbose); 
 		try {
 			mqAdaptor.loadDiskQueue();
 		} catch (IOException e) {
 			log.error("Load Message Queue Error: " + e);
 		}   
+	} 
+	
+	@Override
+	public IoAdaptor getIoAdatpr() {
+		return this.mqAdaptor;
+	}
+	
+	public void start() throws Exception{  
+		log.info("Zbus starting...");
+		long start = System.currentTimeMillis();  
+		this.start(config.serverHost, config.serverPort, mqAdaptor);   
 		 
 		tracker.joinUpstream(config.getTrackerList());   
 		 

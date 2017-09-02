@@ -501,7 +501,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			ReplyKit.replyJson(msg, session, tracker.trackerInfo()); 
+			ReplyKit.replyJson(msg, session, tracker.trackerInfo(null)); //TODO
 		}
 	}; 
 	
@@ -525,10 +525,6 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		tracker.cleanSubscriberSession(sess);  
 	} 
-	
-	private boolean auth(Message msg){  
-		return authProvider.auth(msg);
-	}
 	
     public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
@@ -676,7 +672,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		handleUrlMessage(msg); 
 		
-		if(!auth(msg)){
+		if(!authProvider.auth(msg)){
 			ReplyKit.reply403(msg, sess);
 			return;
 		}
