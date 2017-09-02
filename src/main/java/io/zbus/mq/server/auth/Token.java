@@ -28,20 +28,22 @@ public class Token {
 	public String token;
 	//Operation
 	public int operation;
-	//Resource
-	public boolean allTopics = false; 
+	public boolean allOperations = false;
+	
+	//Resource 
 	public Map<String, TopicResource> topics = new TreeMap<String, TopicResource>(String.CASE_INSENSITIVE_ORDER);
-
+	public boolean allTopics = false; 
+	
 	public void setOperation(String op){
 		this.operation = 0;
 		String[] bb = op.split("[,; ]");
-		for(String opstr : bb){
-			opstr = opstr.trim();
-			if(opstr.equals("")) continue;
+		for(String cmd : bb){
+			cmd = cmd.trim();
+			if(cmd.equals("")) continue;
 			
 			try{
-				Operation operation = Operation.valueOf(opstr.toUpperCase());
-				this.operation |= operation.intValue();
+				Operation operation = Operation.fromCommand(cmd.toLowerCase());
+				this.operation |= operation.getMask();
 			} catch (Exception e) {
 				log.warn(e.getMessage(), e);
 				//ignore

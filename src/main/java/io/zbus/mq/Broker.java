@@ -33,7 +33,7 @@ public class Broker implements Closeable {
 	private Map<ServerAddress, MqClient> trackerSubscribers = new ConcurrentHashMap<ServerAddress, MqClient>(); 
 	
 	
-	
+	private String token;
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
 	private EventLoop eventLoop;  
 	private int clientPoolSize = 32; 
@@ -52,7 +52,8 @@ public class Broker implements Closeable {
 		this.eventLoop = new EventLoop(); 
 		this.clientPoolSize = config.getClientPoolSize();  
 		this.sslCertFileTable = config.getSslCertFileTable();
-		this.defaultSslCertFile = config.getDefaultSslCertFile(); 
+		this.defaultSslCertFile = config.getDefaultSslCertFile();
+		this.token = config.getToken();
 		
 		List<ServerAddress> trackerList = config.getTrackerList(); 
 		for(ServerAddress serverAddress : trackerList){ 
@@ -120,8 +121,8 @@ public class Broker implements Closeable {
 				log.info("Connected to tracker(%s)", trackerAddress);  
 				
 				Message req = new Message();  
-				req.setCommand(Protocol.TRACK_SUB);
-				req.setAck(false); 
+				req.setCommand(Protocol.TRACK_SUB); 
+				req.setToken(token);
 				client.invokeAsync(req, null);
 			}
 		}); 

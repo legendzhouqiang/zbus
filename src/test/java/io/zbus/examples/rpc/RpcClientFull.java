@@ -13,7 +13,7 @@ public class RpcClientFull {
 	public static void main(String[] args) throws Exception { 
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setTrackerList("localhost:15555");
-		brokerConfig.setToken("MyRpc_Client"); 
+		brokerConfig.setToken("myrpc_client"); 
 		Broker broker = new Broker(brokerConfig);
 	
 		RpcConfig config = new RpcConfig();

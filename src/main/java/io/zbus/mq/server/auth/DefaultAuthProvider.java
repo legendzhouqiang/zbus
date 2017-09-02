@@ -42,43 +42,9 @@ public class DefaultAuthProvider implements AuthProvider {
 	}    
 	
 	public boolean authOperation(String cmd, Token token){ 
-		if(Protocol.PRODUCE.equals(cmd) || Protocol.RPC.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.PRODUCE)){
-				return false;
-			}
-		}
+		if(token.allOperations) return true;
 		
-		if(Protocol.CONSUME.equals(cmd) || Protocol.UNCONSUME.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.CONSUME)){
-				return false;
-			}
-		}
-		
-		if(Protocol.ROUTE.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.ROUTE)){
-				return false;
-			}
-		}  
-		
-		if(Protocol.DECLARE.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.DECLARE)){
-				return false;
-			}
-		}  
-		
-		if(Protocol.EMPTY.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.EMPTY)){
-				return false;
-			}
-		}  
-		
-		if(Protocol.REMOVE.equals(cmd)){
-			if(!Operation.isEnabled(token.operation, Operation.REMOVE)){
-				return false;
-			}
-		}  
-		
-		return true;  
+		return Operation.isEnabled(token.operation, cmd); 
 	} 
 	
 	public boolean authResource(Message message, Token token){ 

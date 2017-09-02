@@ -35,14 +35,21 @@
 			<topic value="*"/>
 		</token>    
 		
-		<token value="MyRpc_Client" operation="produce"> 
+		<token value="myrpc_client" operation="produce"> 
+			<topic value="MyRpc"/>
+		</token>   
+		
+		<token value="myrpc_service" operation="declare,consume,route"> <!-- route required to reply -->
 			<topic value="MyRpc"/>
 		</token>  
 		
-		<token value="MyRpc_Service" operation="declare,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_all" operation="*"> 
 			<topic value="MyRpc"/>
 		</token>  
 		
+		<token value="tracker" operation="track_sub"> 
+			<topic value="*"/>
+		</token>  
 				
 	</auth>  
 	

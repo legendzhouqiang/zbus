@@ -22,7 +22,7 @@ public class RpcService {
 		
 		//The following is same as a simple Consumer setup process
 		String topic = "MyRpc";
-		String token = "MyRpc_Service"; 
+		String token = "myrpc_service"; 
 		BrokerConfig brokerConfig = new BrokerConfig();
 		brokerConfig.setTrackerList("localhost:15555");
 		brokerConfig.setToken(token); 

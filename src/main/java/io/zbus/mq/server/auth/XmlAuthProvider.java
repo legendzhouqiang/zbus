@@ -35,15 +35,19 @@ public class XmlAuthProvider extends DefaultAuthProvider {
 			    String tokenValue = valueOf(xpath.evaluate("@value", tokenNode), "");  
 			    token.token = tokenValue;
 			    String op = valueOf(xpath.evaluate("@operation", tokenNode), ""); 
-			    token.setOperation(op);
+			    if(op.equals("*")){
+			    	token.allOperations = true; 
+			    }  else {
+			    	token.setOperation(op);
+			    }
+			    
 			    
 			    NodeList topicList = (NodeList) xpath.compile("./*").evaluate(tokenNode, XPathConstants.NODESET);
 			    for (int j = 0; j < topicList.getLength(); j++) {
 				    Node topicNode = topicList.item(j);     
 				    String topic = valueOf(xpath.evaluate("@value", topicNode), ""); 
 				    if(topic.equals("*")){
-				    	token.allTopics = true;
-				    	continue;
+				    	token.allTopics = true; 
 				    } 
 				    TopicResource topicResource = new TopicResource();
 				    topicResource.topic = topic;
