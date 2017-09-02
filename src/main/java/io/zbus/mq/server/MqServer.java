@@ -25,6 +25,7 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
@@ -54,10 +55,10 @@ public class MqServer extends TcpServer {
 		this(new MqServerConfig(configFile));
 	}
 	
-	public MqServer(MqServerConfig config){  
-		super();
-		this.config = config.clone();    
-		Fix.Enabled = config.compatible;
+	public MqServer(MqServerConfig config){   
+		this.config = config;
+		
+		Fix.Enabled = config.isCompatible();
 		
 		codec(new CodecInitializer() {
 			@Override
@@ -69,10 +70,11 @@ public class MqServer extends TcpServer {
 			}
 		}); 
 		
-		if (config.sslEnabled){
-			if(!StrKit.isEmpty(config.sslCertFile) && !StrKit.isEmpty(config.sslKeyFile)){  
+		SslConfig ssl = config.sslConfig;
+		if (ssl.isEnabled()){
+			if(!StrKit.isEmpty(ssl.getServerCertFile()) && !StrKit.isEmpty(ssl.getServerKeyFile())){  
 				try{
-					loop.setServerSslContext(config.sslCertFile, config.sslKeyFile);
+					loop.setServerSslContext(ssl.getServerCertFile(), ssl.getServerKeyFile());
 				} catch (Exception e) {
 					e.printStackTrace();
 					log.error("SSL disabled: " + e.getMessage());
@@ -105,11 +107,11 @@ public class MqServer extends TcpServer {
 		    		mq.cleanSession(null); //null to clean all inactive sessions
 		    	}
 			}
-		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS);  
+		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS);   
 		
-		tracker = new Tracker(this, config.sslCertFileTable, 
-				!config.trackerOnly, config.trackReportInterval);
+		tracker = new Tracker(this, ssl.getCertFileTable(), !config.trackerOnly, config.trackReportInterval);
 		
+		//adaptor needs tracker built first
 		mqAdaptor = new MqAdaptor(this); 
 		mqAdaptor.setVerbose(config.verbose); 
 		try {
@@ -120,7 +122,7 @@ public class MqServer extends TcpServer {
 	} 
 	
 	@Override
-	public IoAdaptor getIoAdatpr() {
+	public IoAdaptor getIoAdaptor() {
 		return this.mqAdaptor;
 	}
 	
@@ -164,7 +166,7 @@ public class MqServer extends TcpServer {
 		return tracker;
 	} 
 	
-	public ServerInfo serverInfo() {
+	public ServerInfo serverInfo(Token token) {
 		Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
 		for (Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()) {
 			TopicInfo info = e.getValue().topicInfo();

@@ -2,28 +2,34 @@
 <zbus>   
 	<serverHost>0.0.0.0</serverHost>  
 	<serverPort>15556</serverPort>  
-	<serverName></serverName> <!-- Public IP/Domain name -->  
-	
-	<defaultSslCertFile>ssl/zbus.crt</defaultSslCertFile> 
-	
-	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
+	<serverName></serverName> <!-- Public IP/Domain name -->   
 
 	<storePath>/tmp/zbus2</storePath> 
-	<verbose>false</verbose>   
+	<verbose>false</verbose>  
 	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
-	
-	<!-- --> 
+	 
 	<trackerList>
-		<serverAddress>
+		<trackerAddress>
 			<address>localhost:15555</address>  
-			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
-			<authToken></authToken>
-		</serverAddress>   
-	</trackerList>  
+			<sslEnabled certFile="zbus.crt">false</sslEnabled> 
+			<token></token>
+		</trackerAddress>   
+	</trackerList>   
 	
-	<auth enabled="true" class=""> <!-- class to replace io.zbus.mq.server.auth.DefaultAuthProvider -->
+	<ssl enabled="false">
+		<storePath>/tmp/ssl</storePath>
+		<defaultCertFile>zbus.crt</defaultCertFile> 
+		<serverCertFile>zbus.crt</serverCertFile> 
+		<serverKeyFile>zbus.key</serverKeyFile> 
+		<certFileTable>
+			<add server="localhost:15555" certFile="zbus.crt"/>
+			<add server="localhost:15556" certFile="zbus.crt"/>
+		</certFileTable>
+	</ssl> 
+	
+	<auth enabled="true" class="">
 		
-		<token value="MyTopic_Group1" operation="declare,produce,consume"> 
+		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>
@@ -31,19 +37,31 @@
 		
 		<token value="admin" operation="admin"/>   
 		
-		<token value="produce_all" operation="produce"> <!-- rpc = produce -->
+		<token value="produce_all" operation="produce,track_sub"> <!-- rpc = produce -->
 			<topic value="*"/>
 		</token>    
 		
-		<token value="MyRpc_Client" operation="produce"> 
+		<token value="myrpc_client" operation="produce, track_sub"> 
+			<topic value="MyRpc"/>
+		</token>   
+		
+		<token value="myrpc_service" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
 			<topic value="MyRpc"/>
 		</token>  
 		
-		<token value="MyRpc_Service" operation="declare,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_all" operation="*"> 
 			<topic value="MyRpc"/>
 		</token>  
 		
-		<token value="" operation="admin"/>   <!-- Should remove this rule, it allows all just like auth disabled -->
+		<token value="tracker" operation="track_sub"> 
+			<topic value="*"/>
+		</token>  
 		
+		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub"/>   
+		
+		<token value="track_pub_token" operation="track_pub"/>   
+				
 	</auth>  
+	
 </zbus>
+

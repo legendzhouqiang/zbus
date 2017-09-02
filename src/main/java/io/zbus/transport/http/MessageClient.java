@@ -47,7 +47,7 @@ public class MessageClient extends CompositeClient<Message, Message>{
 	} 
 	
 	public MessageClient(Server server){ 
-		support = new InProcClient<Message, Message>(server.getIoAdatpr());
+		support = new InProcClient<Message, Message>(server.getIoAdaptor());
 	} 
 	
 	//IPC support TODO 

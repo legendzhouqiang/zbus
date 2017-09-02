@@ -22,7 +22,8 @@ public enum Operation {
 	TRACK_PUB(8),
 	TRACK_SUB(9),
 	TRACKER(10),
-	SERVER(11);    
+	SERVER(11),
+	SSL(12);    
 	
 	private final int mask; 
 	private Operation(int bit){ 
@@ -48,6 +49,7 @@ public enum Operation {
 		table.put(Protocol.TRACK_SUB, Operation.TRACK_SUB);
 		table.put(Protocol.TRACKER, Operation.TRACKER);
 		table.put(Protocol.SERVER, Operation.SERVER);
+		table.put(Protocol.SSL, Operation.SSL);
 	}  
     
 	public static Operation find(String command){ //use instead of valueOf

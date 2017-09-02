@@ -32,6 +32,9 @@ public class Protocol {
 	public static final String TRACKER     = "tracker";  
 	public static final String SERVER      = "server";  
 	
+	//SSL/TLS
+	public static final String SSL         = "ssl"; 
+	
 	public static final String TRACE         = "trace";   //trace latest message in server 
 	public static final String VERSION       = "version";
 	public static final String JS            = "js";      //serve javascript file
@@ -70,7 +73,7 @@ public class Protocol {
 	public static final String ORIGIN_URL   		= "origin_url";
 	public static final String ORIGIN_STATUS 		= "origin_status";
 	
-	//Security 
+	//Security  
 	public static final String TOKEN   				= "token"; 
 	
 	

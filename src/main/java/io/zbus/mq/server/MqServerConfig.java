@@ -3,15 +3,9 @@ package io.zbus.mq.server;
 
 import static io.zbus.kit.ConfigKit.valueOf;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -19,29 +13,23 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
-import io.zbus.kit.FileKit;
+import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.TrackerAddress;
 import io.zbus.mq.server.auth.AuthProvider;
-import io.zbus.mq.server.auth.DefaultAuthProvider;
 import io.zbus.mq.server.auth.XmlAuthProvider;
-import io.zbus.transport.ServerAddress;
 
-public class MqServerConfig implements Cloneable {  
+public class MqServerConfig extends XmlConfig  {  
 	private static final Logger log = LoggerFactory.getLogger(MqServerConfig.class); 
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;   
-	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>();
-	public Map<String, String> sslCertFileTable = new HashMap<String, String>();
+	public List<TrackerAddress> trackerList = new ArrayList<TrackerAddress>(); 
 	
-	public String defaultSslCertFile;
-	public String sslCertFile;
-	public String sslKeyFile;
-	public boolean sslEnabled;
+	public SslConfig sslConfig = new SslConfig();
 	
 	public boolean trackerOnly = false;
 	public boolean verbose = false;
@@ -51,31 +39,82 @@ public class MqServerConfig implements Cloneable {
 	public long cleanMqInterval = 3000;       //3 seconds
 	public long trackReportInterval = 30000;  //30 seconds
 	
-	public AuthProvider authProvider = new DefaultAuthProvider();  
+	public AuthProvider authProvider = new XmlAuthProvider();  
+	
 	public boolean compatible = false;  //set protocol compatible to zbus7 if true
 	
-	public MqServerConfig(){ }
+	public MqServerConfig(){ 
+		
+	}
 	
 	public MqServerConfig(String configXmlFile) {
 		loadFromXml(configXmlFile);
 	}
 	
-	public void addTracker(String trackerAddress, String certPath){
-		ServerAddress address = new ServerAddress(trackerAddress);
-		address.sslEnabled = certPath != null;
+	public void loadFromXml(Document doc) throws Exception{
+		XPath xpath = XPathFactory.newInstance().newXPath();     
+		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
+		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
+		
+		this.serverName = valueOf(xpath.evaluate("/zbus/serverName", doc), null); 
+		this.storePath = valueOf(xpath.evaluate("/zbus/storePath", doc), "/tmp/zbus");
+		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);  
+		this.compatible = valueOf(xpath.evaluate("/zbus/compatible", doc), false);
+		
+		this.sslConfig.loadFromXml(doc);
+		 
+		NodeList list = (NodeList) xpath.compile("/zbus/trackerList/*").evaluate(doc, XPathConstants.NODESET);
+		if(list != null && list.getLength()> 0){ 
+			for (int i = 0; i < list.getLength(); i++) {
+			    Node node = list.item(i);    
+			    String address = xpath.evaluate("address", node);
+			    String sslEnabled = xpath.evaluate("sslEnabled", node);   
+			    String certFile = xpath.evaluate("sslEnabled/@certFile", node);  
+			    String token = xpath.evaluate("token", node); 
+			    if(StrKit.isEmpty(address)) continue; 
+			    
+			    TrackerAddress trackerAddress = new TrackerAddress(address, valueOf(sslEnabled, false));
+			    trackerAddress.setToken(token);
+			    
+			    if(!StrKit.isEmpty(certFile)){ 
+			    	sslConfig.certFileTable.put(address, certFile);
+			    } 
+			    trackerList.add(trackerAddress); 
+			}
+		}   
+		
+		String authClass = valueOf(xpath.evaluate("/zbus/auth/@class", doc), "");
+		if(authClass.equals("")){
+			XmlAuthProvider provider = new XmlAuthProvider();
+			provider.loadFromXml(doc);
+			this.setAuthProvider(provider);
+		} else {
+			try{
+				Class<?> clazz = Class.forName(authClass);
+				Object auth = clazz.newInstance();
+				if(auth instanceof AuthProvider){
+					this.setAuthProvider((AuthProvider)auth);
+				} else {
+					log.warn("auth class is not AuthProvider type");
+				}
+			} catch (Exception e) { 
+				log.error("Load AuthProvider error: " + e);
+			}
+		}
+	} 
+	
+	public void addTracker(String trackerAddress, String certFile){
+		TrackerAddress address = new TrackerAddress(trackerAddress);
+		address.sslEnabled = certFile != null;
 		
 		if(!trackerList.contains(address)){
 			trackerList.add(address);
 		}
-		sslCertFileTable.put(trackerAddress, certPath);
+		sslConfig.certFileTable.put(trackerAddress, certFile);
 	}
 	
 	public void addTracker(String trackerAddress){
 		addTracker(trackerAddress, null);
-	} 
-	
-	public List<ServerAddress> getTrackerList() {
-		return trackerList;
 	} 
 
 	public String getServerHost() {
@@ -93,6 +132,30 @@ public class MqServerConfig implements Cloneable {
 	public void setServerPort(int serverPort) {
 		this.serverPort = serverPort;
 	} 
+	
+	public List<TrackerAddress> getTrackerList() {
+		return trackerList;
+	}
+
+	public void setTrackerList(List<TrackerAddress> trackerList) {
+		this.trackerList = trackerList;
+	}
+
+	public SslConfig getSslConfig() {
+		return sslConfig;
+	}
+
+	public void setSslConfig(SslConfig sslConfig) {
+		this.sslConfig = sslConfig;
+	}
+
+	public boolean isTrackerOnly() {
+		return trackerOnly;
+	}
+
+	public void setTrackerOnly(boolean trackerOnly) {
+		this.trackerOnly = trackerOnly;
+	}
 
 	public boolean isVerbose() {
 		return verbose;
@@ -108,7 +171,7 @@ public class MqServerConfig implements Cloneable {
 
 	public void setStorePath(String storePath) {
 		this.storePath = storePath;
-	}  
+	}
 
 	public String getServerName() {
 		return serverName;
@@ -132,156 +195,14 @@ public class MqServerConfig implements Cloneable {
 
 	public void setTrackReportInterval(long trackReportInterval) {
 		this.trackReportInterval = trackReportInterval;
-	} 
- 
-	public String getSslCertFile() {
-		return sslCertFile;
 	}
 
-	public void setSslCertFile(String sslCertFile) {
-		this.sslCertFile = sslCertFile;
-	}
-
-	public String getSslKeyFile() {
-		return sslKeyFile;
-	}
-
-	public void setSslKeyFile(String sslKeyFile) {
-		this.sslKeyFile = sslKeyFile;
-	}
-
-	public boolean isTrackerOnly() {
-		return trackerOnly;
-	}
-
-	public void setTrackerOnly(boolean trackerOnly) {
-		this.trackerOnly = trackerOnly;
-	}
-	
 	public AuthProvider getAuthProvider() {
 		return authProvider;
 	}
 
 	public void setAuthProvider(AuthProvider authProvider) {
 		this.authProvider = authProvider;
-	}
-
-	public void loadFromXml(Document doc) throws Exception{
-		XPath xpath = XPathFactory.newInstance().newXPath();     
-		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
-		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
-		
-		this.serverName = valueOf(xpath.evaluate("/zbus/serverName", doc), null); 
-		this.storePath = valueOf(xpath.evaluate("/zbus/storePath", doc), "/tmp/zbus");
-		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);  
-		this.compatible = valueOf(xpath.evaluate("/zbus/compatible", doc), false);
-		
-		this.defaultSslCertFile = valueOf(xpath.evaluate("/zbus/defaultSslCertFile", doc), null);
-		this.sslEnabled = valueOf(xpath.evaluate("/zbus/sslEnabled", doc), false);
-		this.sslCertFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@certFile", doc), null);
-		this.sslKeyFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@keyFile", doc), null); 
-		 
-		NodeList list = (NodeList) xpath.compile("/zbus/trackerList/*").evaluate(doc, XPathConstants.NODESET);
-		if(list != null && list.getLength()> 0){ 
-			for (int i = 0; i < list.getLength(); i++) {
-			    Node node = list.item(i);    
-			    String address = xpath.evaluate("address", node);
-			    String sslEnabled = xpath.evaluate("sslEnabled", node);  
-			    String certFile = xpath.evaluate("sslEnabled/@certFile", node);  
-			    if(StrKit.isEmpty(address)) continue; 
-			    
-			    ServerAddress serverAddress = new ServerAddress(address, valueOf(sslEnabled, false));
-			    if(!StrKit.isEmpty(certFile)){ 
-			    	sslCertFileTable.put(address, certFile);
-			    } 
-			    trackerList.add(serverAddress); 
-			}
-		}   
-		
-		String authClass = valueOf(xpath.evaluate("/zbus/auth/@class", doc), "");
-		if(authClass.equals("")){
-			XmlAuthProvider provider = new XmlAuthProvider();
-			provider.loadFromXml(doc);
-			this.setAuthProvider(provider);
-		} else {
-			try{
-				Class<?> clazz = Class.forName(authClass);
-				Object auth = clazz.newInstance();
-				if(auth instanceof AuthProvider){
-					this.setAuthProvider((AuthProvider)auth);
-				} else {
-					log.warn("auth class is not AuthProvider type");
-				}
-			} catch (Exception e) { 
-				log.error("Load AuthProvider error: " + e);
-			}
-		}
-	}
-
-	public void loadFromXml(InputStream stream) throws Exception{ 
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		InputSource source = new InputSource(stream); 
-		Document doc = db.parse(source); 
-		loadFromXml(doc);
-	}
-	 
-	public void loadFromXml(String configFile) { 
-		InputStream stream = FileKit.inputStream(configFile);
-		if(stream == null){
-			throw new IllegalArgumentException(configFile + " not found");
-		}
-		try { 
-			loadFromXml(stream); 
-		} catch (Exception e) { 
-			throw new IllegalArgumentException(configFile + " load error", e);
-		} finally {
-			if(stream != null){
-				try {
-					stream.close();
-				} catch (IOException e) {
-					//ignore
-				}
-			}
-		}
-	} 
-	 
-	
-	@Override
-	public MqServerConfig clone() { 
-		try {
-			return (MqServerConfig)super.clone();
-		} catch (CloneNotSupportedException e) {
-			return null;
-		}
-	}
-
-	public Map<String, String> getSslCertFileTable() {
-		return sslCertFileTable;
-	}
-
-	public void setSslCertFileTable(Map<String, String> sslCertFileTable) {
-		this.sslCertFileTable = sslCertFileTable;
-	}
-
-	public String getDefaultSslCertFile() {
-		return defaultSslCertFile;
-	}
-
-	public void setDefaultSslCertFile(String defaultSslCertFile) {
-		this.defaultSslCertFile = defaultSslCertFile;
-	}
-
-	public boolean isSslEnabled() {
-		return sslEnabled;
-	}
-
-	public void setSslEnabled(boolean sslEnabled) {
-		this.sslEnabled = sslEnabled;
-	}
-
-	public void setTrackerList(List<ServerAddress> trackerList) {
-		this.trackerList = trackerList;
 	}
 
 	public boolean isCompatible() {

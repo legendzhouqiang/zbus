@@ -22,6 +22,7 @@ import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
+import io.zbus.mq.TrackerAddress;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.Client.ConnectedHandler;
@@ -85,7 +86,7 @@ public class Tracker implements Closeable{
 	} 
 	
 	public ServerInfo serverInfo(Token token){
-		return mqServer.serverInfo();
+		return mqServer.serverInfo(token);
 	}
 	
 	public List<ServerAddress> liveTrackerList(){
@@ -106,7 +107,7 @@ public class Tracker implements Closeable{
 		return trackerInfo;
 	}  
 	
-	public void joinUpstream(List<ServerAddress> trackerList){
+	public void joinUpstream(List<TrackerAddress> trackerList){
 		if(trackerList == null || trackerList.isEmpty()) return; 
 		
     	for(final ServerAddress trackerAddress : trackerList){  

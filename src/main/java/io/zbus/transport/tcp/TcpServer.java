@@ -129,7 +129,7 @@ public class TcpServer implements Server {
 	} 
 	
 	@Override
-	public IoAdaptor getIoAdatpr() { 
+	public IoAdaptor getIoAdaptor() { 
 		return this.defaultIoAdaptor;
 	}
 	

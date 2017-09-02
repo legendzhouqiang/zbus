@@ -87,6 +87,8 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		registerHandler(Protocol.SERVER, serverHandler); 
 		
+		registerHandler(Protocol.SSL, sslHandler); 
+		
 		
 		//Monitor/Management
 		registerHandler("", homeHandler);  
@@ -258,7 +260,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	private MessageHandler<Message> queryHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(msg.getTopic() == null){  
-				ReplyKit.replyJson(msg, sess, mqServer.serverInfo()); 
+				ReplyKit.replyJson(msg, sess, mqServer.serverInfo(null)); //TODO
 				return;
 			} 
 			
@@ -464,6 +466,16 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 	};  
 	
+	private MessageHandler<Message> sslHandler = new MessageHandler<Message>() {
+		public void handle(Message msg, Session sess) throws IOException {
+			Message res = handleFileRequest("/js/", msg.getUrl());
+			if(res.getStatus() == 200){
+				res.setHeader("content-type", "application/javascript");
+			}
+			sess.write(res); 
+		}
+	};
+	
 	private MessageHandler<Message> heartbeatHandler = new MessageHandler<Message>() {
 		@Override
 		public void handle(Message msg, Session sess) throws IOException {
@@ -507,7 +519,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> serverHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
-			ReplyKit.replyJson(msg, sess, mqServer.serverInfo());  
+			ReplyKit.replyJson(msg, sess, mqServer.serverInfo(null));  //TODO
 		}
 	}; 
 	
