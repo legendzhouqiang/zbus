@@ -211,4 +211,8 @@ public class FileKit {
 			file.delete(); 
 		}  
 	}
+	
+	public static String fullPath(String parent, String child){
+		return new File(parent, child).toString();
+	}
 }

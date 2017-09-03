@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ConfigKit;
+import io.zbus.kit.FileKit;
 import io.zbus.kit.NetKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
@@ -74,17 +75,16 @@ public class MqServer extends TcpServer {
 		
 		SslConfig ssl = config.sslConfig;
 		if (ssl.isEnabled()){
-			if(!StrKit.isEmpty(ssl.getServerCertFile()) && !StrKit.isEmpty(ssl.getServerKeyFile())){  
-				try{
-					SslContext sslContext = SslKit.buildServerSsl(ssl.getServerCertFile(), ssl.getServerKeyFile());
-					loop.setSslContext(sslContext);
-				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("SSL disabled: " + e.getMessage());
-				}
-			} else {
-				log.warn("SSL disabled, since SSL certificate file and private file not configured properly");
-			}
+			String certFile = FileKit.fullPath(ssl.getStorePath(), ssl.getServerCertFile());
+			String keyFile = FileKit.fullPath(ssl.getStorePath(), ssl.getServerKeyFile());
+			 
+			try{ 
+				SslContext sslContext = SslKit.buildServerSsl(certFile, keyFile);
+				loop.setSslContext(sslContext); 
+			} catch (Exception e) { 
+				log.error("SSL init error: " + e.getMessage());
+				throw new IllegalStateException(e.getMessage(), e.getCause());
+			} 
 		}
 		
 		String host = config.serverHost;

@@ -9,15 +9,15 @@
 	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
 	 
 	<trackerList>
-		<trackerAddress>
+		<serverAddress>
 			<address>localhost:15555</address>  
 			<sslEnabled certFile="zbus.crt">false</sslEnabled> 
 			<token></token>
-		</trackerAddress>   
+		</serverAddress>   
 	</trackerList>   
 	
 	<ssl enabled="false">
-		<storePath>/tmp/ssl</storePath>
+		<storePath>./ssl</storePath>
 		<defaultCertFile>zbus.crt</defaultCertFile> 
 		<serverCertFile>zbus.crt</serverCertFile> 
 		<serverKeyFile>zbus.key</serverKeyFile> 
