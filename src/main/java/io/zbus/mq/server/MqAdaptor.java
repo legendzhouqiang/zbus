@@ -40,7 +40,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 
 	private final Map<String, MessageQueue> mqTable; 
 	private final Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();
-	
+	private final Map<String, String> sslCertTable;
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
@@ -57,6 +57,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		this.authProvider = this.config.getAuthProvider();
 		
 		this.mqServer = mqServer; 
+		this.sslCertTable = mqServer.sslCertTable;
 		this.mqTable = mqServer.getMqTable();  
 		this.tracker = mqServer.getTracker(); 
 		
@@ -467,11 +468,22 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	};  
 	
 	private MessageHandler<Message> sslHandler = new MessageHandler<Message>() {
-		public void handle(Message msg, Session sess) throws IOException {
-			Message res = handleFileRequest("/js/", msg.getUrl());
-			if(res.getStatus() == 200){
-				res.setHeader("content-type", "application/javascript");
+		public void handle(Message msg, Session sess) throws IOException { 
+			String server = msg.getHeader("server");
+			if(StrKit.isEmpty(server)){
+				server = mqServer.getServerAddress().address;
 			}
+			
+			String certContent = sslCertTable.get(server);
+			if(certContent == null){
+				ReplyKit.reply404(msg, sess, "Certificate("+server+") Not Found");
+				return;
+			}
+			
+			Message res = new Message();
+			res.setId(msg.getId());
+			res.setStatus(200); 
+			res.setBody(certContent);
 			sess.write(res); 
 		}
 	};

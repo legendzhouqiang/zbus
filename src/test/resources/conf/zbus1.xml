@@ -4,9 +4,11 @@
 	<serverPort>15555</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->   
 
+	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
+	
 	<storePath>/tmp/zbus</storePath> 
 	<verbose>false</verbose>  
-	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
+	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->  
 	
 	<!-- 
 	<trackerList>
@@ -16,17 +18,7 @@
 			<token></token>
 		</serverAddress>   
 	</trackerList>  
-	-->    
-	
-	<ssl enabled="false"> 
-		<defaultCertFile>ssl/zbus.crt</defaultCertFile> 
-		<serverCertFile>ssl/zbus.crt</serverCertFile> 
-		<serverKeyFile>ss/zbus.key</serverKeyFile> 
-		<certFileTable>
-			<add server="localhost:15555" certFile="zbus.crt"/>
-			<add server="localhost:15556" certFile="zbus.crt"/>
-		</certFileTable>
-	</ssl> 
+	-->  
 	
 	<auth enabled="true" class="">
 		

@@ -28,8 +28,7 @@ import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.ServerAddress;
-import io.zbus.transport.Session;
-import io.zbus.transport.SslKit; 
+import io.zbus.transport.Session; 
  
 
 public class Tracker implements Closeable{
@@ -47,8 +46,7 @@ public class Tracker implements Closeable{
 	private EventLoop loop; 
 	private final ServerAddress myServerAddress;
 	private boolean myServerInTrack; 
-	
-	private Map<String, String> sslCertFileTable;
+	 
 	protected AuthProvider authProvider;
 	
 	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
@@ -56,12 +54,11 @@ public class Tracker implements Closeable{
 	protected volatile ScheduledExecutorService heartbeator = Executors.newSingleThreadScheduledExecutor();
 
 	
-	public Tracker(MqServer mqServer, Map<String, String> sslCertFileTable, boolean myServerInTrack, long trackReportIntervalMs){ 
+	public Tracker(MqServer mqServer, boolean myServerInTrack, long trackReportIntervalMs){ 
 		this.mqServer = mqServer;
 		this.myServerAddress = this.mqServer.getServerAddress();
-		this.loop = this.mqServer.getEventLoop(); 
-		this.myServerInTrack = myServerInTrack; 
-		this.sslCertFileTable = sslCertFileTable;
+		this.loop = this.mqServer.getEventLoop();  
+		this.myServerInTrack = myServerInTrack;  
 		this.authProvider = mqServer.getConfig().getAuthProvider();
 		
 		this.heartbeator.scheduleAtFixedRate(new Runnable() {
@@ -112,7 +109,7 @@ public class Tracker implements Closeable{
 		
     	for(final ServerAddress trackerAddress : trackerList){  
     		log.info("Connecting to Tracker(%s)", trackerAddress.toString());  
-    		final MqClient client = connectToServer(trackerAddress);  
+    		final MqClient client = new MqClient(trackerAddress, loop);  
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
@@ -142,18 +139,7 @@ public class Tracker implements Closeable{
     		client.ensureConnectedAsync();
     	}  
 	}
-	
-	private MqClient connectToServer(ServerAddress serverAddress){
-		EventLoop loop = this.loop.duplicate(); //duplicated, no need to close
-		if(serverAddress.sslEnabled){
-			String certPath = sslCertFileTable.get(serverAddress.address);
-			if(certPath != null){ 
-				loop.setSslContext(SslKit.buildClientSslFromFile(certPath)); 
-			}
-		}
-		final MqClient client = new MqClient(serverAddress.address, loop);  
-		return client;
-	}
+	 
 	
 	private void notifyUpstream(MqClient client, ServerEvent event){ 
 		Message message = new Message();  
@@ -180,7 +166,7 @@ public class Tracker implements Closeable{
 		}
 		
 		if(event.live && !downstreamTrackers.containsKey(serverAddress)){ //new downstream tracker
-			final MqClient client = connectToServer(serverAddress);  
+			final MqClient client = new MqClient(serverAddress, loop);  
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 

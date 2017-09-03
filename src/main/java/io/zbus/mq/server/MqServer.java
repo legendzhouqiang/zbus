@@ -40,6 +40,8 @@ public class MqServer extends TcpServer {
 	
 	private final Map<String, Session> sessionTable = new ConcurrentHashMap<String, Session>();
 	private final Map<String, MessageQueue> mqTable = new ConcurrentSkipListMap<String, MessageQueue>(String.CASE_INSENSITIVE_ORDER);
+	final Map<String, String> sslCertTable = new ConcurrentHashMap<String, String>(); 
+	
 	private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	
 	private MqServerConfig config;   
@@ -73,13 +75,12 @@ public class MqServer extends TcpServer {
 			}
 		}); 
 		
-		SslConfig ssl = config.sslConfig;
-		if (ssl.isEnabled()){
-			String certFile = FileKit.fullPath(ssl.getStorePath(), ssl.getServerCertFile());
-			String keyFile = FileKit.fullPath(ssl.getStorePath(), ssl.getServerKeyFile());
-			 
+		boolean sslEnabled = config.isSslEnabled();
+		String certFileContent = "";
+		if (sslEnabled){  
 			try{ 
-				SslContext sslContext = SslKit.buildServerSsl(certFile, keyFile);
+				certFileContent = FileKit.loadFileString(config.getSslCertFile());
+				SslContext sslContext = SslKit.buildServerSsl(config.getSslCertFile(), config.getSslKeyFile());
 				loop.setSslContext(sslContext); 
 			} catch (Exception e) { 
 				log.error("SSL init error: " + e.getMessage());
@@ -99,7 +100,10 @@ public class MqServer extends TcpServer {
 				address = config.serverName + ":"+config.serverPort; 
 			}
 		} 
-		serverAddress = new ServerAddress(address, loop.isSslEnabled()); 
+		serverAddress = new ServerAddress(address, sslEnabled); 
+		if(sslEnabled) { //Add current server's SSL certificate file to table
+			sslCertTable.put(serverAddress.getAddress(), certFileContent);
+		}
 		
 		this.scheduledExecutor.scheduleAtFixedRate(new Runnable() { 
 			public void run() {  
@@ -112,7 +116,7 @@ public class MqServer extends TcpServer {
 			}
 		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS);   
 		
-		tracker = new Tracker(this, ssl.getCertFileTable(), !config.trackerOnly, config.trackReportInterval);
+		tracker = new Tracker(this, !config.trackerOnly, config.trackReportInterval);
 		
 		//adaptor needs tracker built first
 		mqAdaptor = new MqAdaptor(this); 

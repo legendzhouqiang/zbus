@@ -3,6 +3,7 @@ package io.zbus.mq.server;
 
 import static io.zbus.kit.ConfigKit.valueOf;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import org.w3c.dom.NodeList;
 import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory; 
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.XmlAuthProvider;
 import io.zbus.transport.ServerAddress;
@@ -27,9 +28,11 @@ public class MqServerConfig extends XmlConfig  {
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;   
-	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>(); 
+	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>();  
 	
-	public SslConfig sslConfig = new SslConfig();
+	public boolean sslEnabled = false;  
+	public String sslCertFile;
+	public String sslKeyFile;
 	
 	public boolean trackerOnly = false;
 	public boolean verbose = false;
@@ -61,7 +64,9 @@ public class MqServerConfig extends XmlConfig  {
 		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);  
 		this.compatible = valueOf(xpath.evaluate("/zbus/compatible", doc), false);
 		
-		this.sslConfig.loadFromXml(doc);
+		this.sslEnabled = valueOf(xpath.evaluate("/zbus/sslEnabled", doc), false);
+		this.sslCertFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@certFile", doc), null);
+		this.sslKeyFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@keyFile", doc), null);
 		 
 		NodeList list = (NodeList) xpath.compile("/zbus/trackerList/*").evaluate(doc, XPathConstants.NODESET);
 		if(list != null && list.getLength()> 0){ 
@@ -75,9 +80,8 @@ public class MqServerConfig extends XmlConfig  {
 			    
 			    ServerAddress trackerAddress = new ServerAddress(address, valueOf(sslEnabled, false));
 			    trackerAddress.setToken(token);
-			    
-			    if(!StrKit.isEmpty(certFile)){ 
-			    	sslConfig.certFileTable.put(address, certFile);
+			    if(trackerAddress.isSslEnabled()){
+			    	trackerAddress.setCertFile(certFile);
 			    } 
 			    trackerList.add(trackerAddress); 
 			}
@@ -103,18 +107,24 @@ public class MqServerConfig extends XmlConfig  {
 		}
 	} 
 	
-	public void addTracker(String trackerAddress, String certFile){
+	public void addTracker(String trackerAddress, String certFile) throws IOException{
 		ServerAddress address = new ServerAddress(trackerAddress);
-		address.sslEnabled = certFile != null;
+		if(certFile != null){
+			address.setSslEnabled(true);
+			address.setCertFile(certFile);
+		} 
 		
 		if(!trackerList.contains(address)){
 			trackerList.add(address);
-		}
-		sslConfig.certFileTable.put(trackerAddress, certFile);
+		} 
 	}
 	
 	public void addTracker(String trackerAddress){
-		addTracker(trackerAddress, null);
+		try {
+			addTracker(trackerAddress, null);
+		} catch (IOException e) {
+			// ignore
+		}
 	} 
 
 	public String getServerHost() {
@@ -140,13 +150,30 @@ public class MqServerConfig extends XmlConfig  {
 	public void setTrackerList(List<ServerAddress> trackerList) {
 		this.trackerList = trackerList;
 	}
-
-	public SslConfig getSslConfig() {
-		return sslConfig;
+	
+	
+	public boolean isSslEnabled() {
+		return sslEnabled;
 	}
 
-	public void setSslConfig(SslConfig sslConfig) {
-		this.sslConfig = sslConfig;
+	public void setSslEnabled(boolean sslEnabled) {
+		this.sslEnabled = sslEnabled;
+	}
+
+	public String getSslCertFile() {
+		return sslCertFile;
+	}
+
+	public void setSslCertFile(String sslCertFile) {
+		this.sslCertFile = sslCertFile;
+	}
+
+	public String getSslKeyFile() {
+		return sslKeyFile;
+	}
+
+	public void setSslKeyFile(String sslKeyFile) {
+		this.sslKeyFile = sslKeyFile;
 	}
 
 	public boolean isTrackerOnly() {
