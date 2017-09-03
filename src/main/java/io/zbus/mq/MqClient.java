@@ -166,6 +166,19 @@ public class MqClient extends CompositeClient<Message, Message>{
 		return parseResult(res, ServerInfo.class); 
 	}
 	
+	
+	public String querySslCertificate(String server) throws IOException, InterruptedException{
+		Message msg = new Message();
+		msg.setCommand(Protocol.SSL); 
+		msg.setHeader("server", server);
+		  
+		Message res = invokeSync(msg, invokeTimeout); 
+		if(res.getStatus() != 200){
+			return null;
+		}
+		return res.getBodyString();
+	}
+	
 	 
 	public TopicInfo queryTopic(String topic) throws IOException, InterruptedException {
 		Message msg = new Message();

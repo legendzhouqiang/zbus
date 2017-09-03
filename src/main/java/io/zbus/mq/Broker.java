@@ -153,7 +153,7 @@ public class Broker implements Closeable {
 				
 				List<ServerAddress> toRemove = routeTable.updateTracker(trackerInfo);
 				for(ServerInfo serverInfo : routeTable.serverTable().values()){
-					addServer(serverInfo);
+					addServer(serverInfo, trackerAddress);
 				}
 				
 				if(!toRemove.isEmpty()){ 
@@ -171,13 +171,22 @@ public class Broker implements Closeable {
 		client.ensureConnectedAsync(); 
 	} 
 	
-	private void addServer(final ServerAddress serverAddress) throws IOException { 
+	private void addServer(final ServerAddress serverAddress, ServerAddress trackerAddress) throws IOException { 
 		MqClientPool pool = null;  
 		synchronized (poolTable) {
 			pool = poolTable.get(serverAddress);
 			if(pool != null) return; 
 			 
-			try{
+			try {
+				if(serverAddress.isSslEnabled()){ 
+					MqClient client = new MqClient(trackerAddress, this.eventLoop);
+					String certificate = client.querySslCertificate(serverAddress.getAddress());
+					client.close();
+					if(certificate == null){
+						throw new IllegalStateException("MqServer SSL enabled, but certificate not found");
+					}
+					serverAddress.setCertificate(certificate);
+				}
 				pool = new MqClientPool(serverAddress, clientPoolSize, this.eventLoop);   
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -206,8 +215,8 @@ public class Broker implements Closeable {
 		}); 
 	}
 	
-	private void addServer(final ServerInfo serverInfo) throws IOException {  
-		addServer(serverInfo.serverAddress);
+	private void addServer(final ServerInfo serverInfo, ServerAddress trackerAddress) throws IOException {  
+		addServer(serverInfo.serverAddress, trackerAddress);
 	}  
 	 
 	private void removeServer(final ServerAddress serverAddress) { 

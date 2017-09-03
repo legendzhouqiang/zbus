@@ -22,8 +22,8 @@ public class RpcService {
 		
 		//The following is same as a simple Consumer setup process
 		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
-		//trackerAddress.setCertFile("ssl/zbus.crt");
-		//trackerAddress.setSslEnabled(true); 
+		trackerAddress.setCertFile("ssl/zbus.crt");
+		trackerAddress.setSslEnabled(true); 
 		trackerAddress.setToken("myrpc_service"); //Token for tracker,  
 		
 		

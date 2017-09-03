@@ -4,28 +4,21 @@
 	<serverPort>15556</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->   
 
+	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
+	
 	<storePath>/tmp/zbus2</storePath> 
 	<verbose>false</verbose>  
-	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->
-	 
+	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->  
+	
+	<!-- -->  
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15555</address>  
-			<sslEnabled certFile="zbus.crt">false</sslEnabled> 
+			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
 			<token></token>
 		</serverAddress>   
-	</trackerList>   
+	</trackerList>  
 	
-	<ssl enabled="false">
-		<storePath>./ssl</storePath>
-		<defaultCertFile>zbus.crt</defaultCertFile> 
-		<serverCertFile>zbus.crt</serverCertFile> 
-		<serverKeyFile>zbus.key</serverKeyFile> 
-		<certFileTable>
-			<add server="localhost:15555" certFile="zbus.crt"/>
-			<add server="localhost:15556" certFile="zbus.crt"/>
-		</certFileTable>
-	</ssl> 
 	
 	<auth enabled="true" class="">
 		
@@ -60,6 +53,10 @@
 		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub"/>   
 		
 		<token value="track_pub_token" operation="track_pub"/>   
+		
+		<token value="rpc_service" operation="declare,track_sub,consume,route"> 
+			<topic value="*"/>
+		</token>  
 				
 	</auth>  
 	

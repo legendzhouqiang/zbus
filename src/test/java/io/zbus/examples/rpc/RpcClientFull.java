@@ -10,9 +10,11 @@ import io.zbus.transport.ServerAddress;
 
 public class RpcClientFull {
 
-	public static void main(String[] args) throws Exception { 
+	public static void main(String[] args) throws Exception {  
 		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
-		trackerAddress.setToken("myrpc_client"); //Token for tracker, 
+		trackerAddress.setCertFile("ssl/zbus.crt");
+		trackerAddress.setSslEnabled(true); 
+		trackerAddress.setToken("myrpc_client"); //Token for tracker,  
 		
 		Broker broker = new Broker();
 		broker.addTracker(trackerAddress);

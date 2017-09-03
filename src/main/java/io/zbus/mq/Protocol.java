@@ -85,6 +85,7 @@ public class Protocol {
 	public static class ServerEvent{  
 		//public ServerAddress serverAddress;
 		public ServerInfo serverInfo;
+		public String certificate;
 		public boolean live = true;  
 	}
 	 

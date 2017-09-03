@@ -102,6 +102,7 @@ public class MqServer extends TcpServer {
 		} 
 		serverAddress = new ServerAddress(address, sslEnabled); 
 		if(sslEnabled) { //Add current server's SSL certificate file to table
+			serverAddress.setCertificate(certFileContent);
 			sslCertTable.put(serverAddress.getAddress(), certFileContent);
 		}
 		

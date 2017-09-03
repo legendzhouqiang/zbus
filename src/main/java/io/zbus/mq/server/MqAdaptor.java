@@ -40,7 +40,6 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 
 	private final Map<String, MessageQueue> mqTable; 
 	private final Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();
-	private final Map<String, String> sslCertTable;
 	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
@@ -56,8 +55,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		this.config = mqServer.getConfig();
 		this.authProvider = this.config.getAuthProvider();
 		
-		this.mqServer = mqServer; 
-		this.sslCertTable = mqServer.sslCertTable;
+		this.mqServer = mqServer;  
 		this.mqTable = mqServer.getMqTable();  
 		this.tracker = mqServer.getTracker(); 
 		
@@ -474,7 +472,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				server = mqServer.getServerAddress().address;
 			}
 			
-			String certContent = sslCertTable.get(server);
+			String certContent = mqServer.sslCertTable.get(server);
 			if(certContent == null){
 				ReplyKit.reply404(msg, sess, "Certificate("+server+") Not Found");
 				return;

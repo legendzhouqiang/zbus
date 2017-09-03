@@ -130,7 +130,8 @@ public class Tracker implements Closeable{
     				log.info("Connected to Tracker(%s)", trackerAddress.address);
     				healthyUpstreamTrackers.put(trackerAddress, client);
     				ServerEvent event = new ServerEvent();
-    				event.serverInfo = serverInfo(null); //TODO
+    				event.serverInfo = serverInfo(null); //TODO 
+    				event.certificate = mqServer.getServerAddress().getCertificate();
     				event.live = true;
     				notifyUpstream(client, event);
     			}
@@ -156,7 +157,12 @@ public class Tracker implements Closeable{
 	
 	
 	public void onDownstreamNotified(final ServerEvent event){  
-		final ServerAddress serverAddress = event.serverInfo.serverAddress;
+		final ServerAddress serverAddress = event.serverInfo.serverAddress.clone(); 
+		if(event.certificate != null){ //update certifcate of tracked server if SSL enabled
+			serverAddress.setCertificate(event.certificate);
+			mqServer.sslCertTable.put(serverAddress.getAddress(), event.certificate);
+		}
+		
 		if(myServerAddress.equals(serverAddress)){//myServer changes, just ignore
 			return;
 		}   
