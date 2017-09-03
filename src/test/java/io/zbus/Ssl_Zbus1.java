@@ -2,7 +2,7 @@ package io.zbus;
 
 import io.zbus.mq.server.MqServer;
 
-public class Zbus1_Ssl {   
+public class Ssl_Zbus1 {   
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {     

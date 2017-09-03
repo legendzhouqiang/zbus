@@ -219,7 +219,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     				if(topicMask != null && (topicMask&Protocol.MASK_MEMORY) != 0){
     					mq = new MemoryQueue(topic);
     				} else {
-    					mq = new DiskQueue(new File(config.storePath, topic));  
+    					mq = new DiskQueue(new File(config.getMqPath(), topic));  
     				} 
 	    			mq.setCreator(msg.getToken()); 
 	    			mqTable.put(topic, mq);
@@ -259,7 +259,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	private MessageHandler<Message> queryHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
 			if(msg.getTopic() == null){  
-				ReplyKit.replyJson(msg, sess, mqServer.serverInfo(null)); //TODO
+				ReplyKit.replyJson(msg, sess, tracker.serverInfo(null)); //TODO
 				return;
 			} 
 			
@@ -500,7 +500,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			try{
 				boolean ack = msg.isAck();
 				ServerEvent event = JsonKit.parseObject(msg.getBodyString(), ServerEvent.class);   
-				tracker.onDownstreamNotified(event); 
+				tracker.serverInTrackUpdated(event); 
 				
 				if(ack){
 					ReplyKit.reply200(msg, session);
@@ -515,7 +515,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			tracker.subscribe(msg, session);
+			tracker.clientSubcribe(msg, session);
 		}
 	}; 
 	
@@ -529,7 +529,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> serverHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
-			ReplyKit.replyJson(msg, sess, mqServer.serverInfo(null));  //TODO
+			ReplyKit.replyJson(msg, sess, tracker.serverInfo(null));  //TODO
 		}
 	}; 
 	
@@ -545,7 +545,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			}
 		}
 		
-		tracker.cleanSubscriberSession(sess);  
+		tracker.cleanSession(sess);  
 	} 
 	
     public void setVerbose(boolean verbose) {
@@ -556,7 +556,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		log.info("Loading DiskQueues...");
 		mqTable.clear();
 		
-		File[] mqDirs = new File(config.storePath).listFiles(new FileFilter() {
+		File[] mqDirs = new File(config.getMqPath()).listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {
 				return pathname.isDirectory();

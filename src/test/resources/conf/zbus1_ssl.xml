@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<zbus>   
+<zbus compatible="false">   
 	<serverHost>0.0.0.0</serverHost>  
 	<serverPort>15555</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->   
 
 	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
 	
-	<storePath>/tmp/zbus</storePath> 
-	<verbose>false</verbose>  
-	<compatible>false</compatible>  <!-- Enable compatible to zbus7 -->  
+	<mqPath>/tmp/zbus</mqPath> 
+	<verbose>false</verbose>    
 	
+	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->
+	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds -->
 	<!-- 
 	<trackerList>
 		<serverAddress>

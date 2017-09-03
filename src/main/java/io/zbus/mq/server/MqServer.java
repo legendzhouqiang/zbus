@@ -27,7 +27,6 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
-import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
@@ -60,8 +59,8 @@ public class MqServer extends TcpServer {
 		this(new MqServerConfig(configFile));
 	}
 	
-	public MqServer(MqServerConfig config){   
-		this.config = config;
+	public MqServer(MqServerConfig serverConfig){   
+		config = serverConfig.clone(); 
 		
 		Fix.Enabled = config.isCompatible();
 		
@@ -88,16 +87,17 @@ public class MqServer extends TcpServer {
 			} 
 		}
 		
-		String host = config.serverHost;
+		String host = config.getServerHost();
 		if("0.0.0.0".equals(host)){
 			host = NetKit.getLocalIp();
 		}
-		String address = host+":"+config.serverPort;
-		if(!StrKit.isEmpty(config.serverName)){
-			if(config.serverName.contains(":")){
-				address = config.serverName; 
+		String address = host+":"+config.getServerPort();
+		String serverName = config.getServerName();
+		if(!StrKit.isEmpty(serverName)){
+			if(serverName.contains(":")){
+				address = serverName; 
 			} else {
-				address = config.serverName + ":"+config.serverPort; 
+				address = serverName + ":"+config.getServerPort(); 
 			}
 		} 
 		serverAddress = new ServerAddress(address, sslEnabled); 
@@ -115,13 +115,13 @@ public class MqServer extends TcpServer {
 		    		mq.cleanSession(null); //null to clean all inactive sessions
 		    	}
 			}
-		}, 1000, config.cleanMqInterval, TimeUnit.MILLISECONDS);   
+		}, 1000, config.getCleanMqInterval(), TimeUnit.MILLISECONDS);   
 		
-		tracker = new Tracker(this, !config.trackerOnly, config.trackReportInterval);
+		tracker = new Tracker(this);
 		
 		//adaptor needs tracker built first
 		mqAdaptor = new MqAdaptor(this); 
-		mqAdaptor.setVerbose(config.verbose); 
+		mqAdaptor.setVerbose(config.isVerbose()); 
 		try {
 			mqAdaptor.loadDiskQueue();
 		} catch (IOException e) {
@@ -137,9 +137,9 @@ public class MqServer extends TcpServer {
 	public void start() throws Exception{  
 		log.info("Zbus starting...");
 		long start = System.currentTimeMillis();  
-		this.start(config.serverHost, config.serverPort, mqAdaptor);   
+		this.start(config.getServerHost(), config.getServerPort(), mqAdaptor);   
 		 
-		tracker.joinUpstream(config.getTrackerList());   
+		tracker.joinTracker(config.getTrackerList());   
 		 
 		long end = System.currentTimeMillis();
 		log.info("Zbus(%s) started sucessfully in %d ms", serverAddress, (end-start)); 
@@ -174,7 +174,7 @@ public class MqServer extends TcpServer {
 		return tracker;
 	} 
 	
-	public ServerInfo serverInfo(Token token) {
+	public ServerInfo serverInfo() {
 		Map<String, TopicInfo> table = new HashMap<String, TopicInfo>();
 		for (Map.Entry<String, MessageQueue> e : this.mqTable.entrySet()) {
 			TopicInfo info = e.getValue().topicInfo();
@@ -184,7 +184,7 @@ public class MqServer extends TcpServer {
 		ServerInfo info = new ServerInfo(); 
 		info.infoVersion = infoVersion.getAndIncrement();
 		info.serverAddress = serverAddress;
-		info.trackerList = this.tracker.liveTrackerList();
+		info.trackerList = this.tracker.trackerList();
 		info.topicTable = table; 
  
 		return info;

@@ -23,28 +23,28 @@ import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.XmlAuthProvider;
 import io.zbus.transport.ServerAddress;
 
-public class MqServerConfig extends XmlConfig  {  
+public class MqServerConfig extends XmlConfig implements Cloneable  {  
 	private static final Logger log = LoggerFactory.getLogger(MqServerConfig.class); 
 	
-	public String serverHost = "0.0.0.0";
-	public int serverPort = 15555;   
-	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>();  
+	private String serverHost = "0.0.0.0";
+	private int serverPort = 15555;   
+	private List<ServerAddress> trackerList = new ArrayList<ServerAddress>();  
 	
-	public boolean sslEnabled = false;  
-	public String sslCertFile;
-	public String sslKeyFile;
+	private boolean sslEnabled = false;  
+	private String sslCertFile;
+	private String sslKeyFile;
 	
-	public boolean trackerOnly = false;
-	public boolean verbose = false;
-	public String storePath = "/tmp/zbus";  
-	public String serverName;
+	private boolean trackerOnly = false;
+	private boolean verbose = false;
+	private String mqPath = "/tmp/zbus";  
+	private String serverName;
 	
-	public long cleanMqInterval = 3000;       //3 seconds
-	public long trackReportInterval = 30000;  //30 seconds
+	private long cleanMqInterval = 3000;           //3 seconds
+	private long reportToTrackerInterval = 30000;  //30 seconds 
+	 
+	private boolean compatible = false;  //set protocol compatible to zbus7 if true
 	
-	public AuthProvider authProvider = new XmlAuthProvider();  
-	
-	public boolean compatible = false;  //set protocol compatible to zbus7 if true
+	private AuthProvider authProvider = new XmlAuthProvider();  
 	
 	public MqServerConfig(){ 
 		
@@ -56,17 +56,22 @@ public class MqServerConfig extends XmlConfig  {
 	
 	public void loadFromXml(Document doc) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();     
+		this.compatible = valueOf(xpath.evaluate("/zbus/@compatible", doc), false);
+		
 		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
 		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
 		
 		this.serverName = valueOf(xpath.evaluate("/zbus/serverName", doc), null); 
-		this.storePath = valueOf(xpath.evaluate("/zbus/storePath", doc), "/tmp/zbus");
-		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);  
-		this.compatible = valueOf(xpath.evaluate("/zbus/compatible", doc), false);
+		this.mqPath = valueOf(xpath.evaluate("/zbus/mqPath", doc), "/tmp/zbus");
+		this.verbose = valueOf(xpath.evaluate("/zbus/verbose", doc), false);   
+		this.trackerOnly = valueOf(xpath.evaluate("/zbus/trackerOnly", doc), false);  
 		
 		this.sslEnabled = valueOf(xpath.evaluate("/zbus/sslEnabled", doc), false);
 		this.sslCertFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@certFile", doc), null);
 		this.sslKeyFile = valueOf(xpath.evaluate("/zbus/sslEnabled/@keyFile", doc), null);
+		
+		this.cleanMqInterval = valueOf(xpath.evaluate("/zbus/cleanMqInterval", doc), 3000);
+		this.reportToTrackerInterval = valueOf(xpath.evaluate("/zbus/reportToTrackerInterval", doc), 30000);
 		 
 		NodeList list = (NodeList) xpath.compile("/zbus/trackerList/*").evaluate(doc, XPathConstants.NODESET);
 		if(list != null && list.getLength()> 0){ 
@@ -192,12 +197,12 @@ public class MqServerConfig extends XmlConfig  {
 		this.verbose = verbose;
 	}
 
-	public String getStorePath() {
-		return storePath;
+	public String getMqPath() {
+		return mqPath;
 	}
 
-	public void setStorePath(String storePath) {
-		this.storePath = storePath;
+	public void setMqPath(String mqPath) {
+		this.mqPath = mqPath;
 	}
 
 	public String getServerName() {
@@ -217,11 +222,11 @@ public class MqServerConfig extends XmlConfig  {
 	}
 
 	public long getTrackReportInterval() {
-		return trackReportInterval;
+		return reportToTrackerInterval;
 	}
 
 	public void setTrackReportInterval(long trackReportInterval) {
-		this.trackReportInterval = trackReportInterval;
+		this.reportToTrackerInterval = trackReportInterval;
 	}
 
 	public AuthProvider getAuthProvider() {
@@ -239,4 +244,12 @@ public class MqServerConfig extends XmlConfig  {
 	public void setCompatible(boolean compatible) {
 		this.compatible = compatible;
 	}  
+	
+	public MqServerConfig clone() { 
+		try {
+			return (MqServerConfig)super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
+	}
 }
