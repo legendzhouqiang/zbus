@@ -1,9 +1,17 @@
 package io.zbus.transport;
 
+import java.io.IOException;
+
+import io.zbus.kit.FileKit;
+
 public class ServerAddress{
-	public String address;
+	public String address;  //<Host>:<Port>, default to 80 if port missing
 	public boolean sslEnabled;
-	public Server server; //InProc server
+	public transient String certificate;  //if ssl/tls enabled, certificate represents the string bytes of certificate file
+	
+	public transient Server server; //InProc server
+	
+	public transient String token;  //May need for authentication
 	
 	public ServerAddress(){
 		
@@ -15,6 +23,42 @@ public class ServerAddress{
 	public ServerAddress(String address, boolean sslEnabled) {
 		this.address = address;
 		this.sslEnabled = sslEnabled;
+	}  
+	
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	public boolean isSslEnabled() {
+		return sslEnabled;
+	}
+	public void setSslEnabled(boolean sslEnabled) {
+		this.sslEnabled = sslEnabled;
+	}
+	public String getCertificate() {
+		return certificate;
+	}
+	public void setCertificate(String certificate) {
+		this.certificate = certificate;
+	}
+	
+	public void setCertFile(String certFilePath) throws IOException{
+		this.certificate = FileKit.loadFileString(certFilePath); 
+	}
+	
+	public Server getServer() {
+		return server;
+	}
+	public void setServer(Server server) {
+		this.server = server;
+	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
 	}
 	
 	@Override

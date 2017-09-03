@@ -119,7 +119,9 @@ public class FileKit {
 
 	public static String loadFileString(String resource) throws IOException {
 		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);
-		if (in == null) return null;
+		if (in == null) {
+			throw new IOException(resource + " not found");
+		}
 
 		Writer writer = new StringWriter();
 		char[] buffer = new char[1024];
@@ -130,12 +132,12 @@ public class FileKit {
 				writer.write(buffer, 0, n);
 			}
 		} catch (UnsupportedEncodingException e) { 
-			e.printStackTrace();
+			//ignore
 		} finally {
 			try {
 				in.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				//ignore
 			}
 		}
 		return writer.toString();

@@ -3,8 +3,9 @@
 	<!-- HttpProxy, capable of working in DMZ network enviornment -->
 	
 	<!-- Can be multiple zbus servers, for HA -->
-	<httpProxy zbus="localhost:15555" connectionCount="1">
-		<proxy entry="http">
+	<!-- Token settings is for zbus authentication -->
+	<httpProxy zbus="localhost:15555" connectionCount="1" token="rpc_service">
+		<proxy entry="http" token="rpc_service">
 			<target>http://localhost:15555/server</target> <!-- Can be multiple -->
 			<target>http://localhost:15556/server</target>
 		</proxy>

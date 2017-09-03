@@ -23,6 +23,7 @@ import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session;
+import io.zbus.transport.SslKit;
 
 public class Broker implements Closeable { 
 	private static final Logger log = LoggerFactory.getLogger(Broker.class); 
@@ -323,8 +324,8 @@ public class Broker implements Closeable {
 			if(certPath == null) certPath = defaultSslCertFile;
 			if(certPath == null){
 				throw new IllegalStateException(serverAddress + " certificate file not found");
-			}
-			loop.setClientSslContext(certPath); 
+			} 
+			loop.setSslContext(SslKit.buildClientSslFromFile(certPath)); 
 		}
 		
 		return new MqClient(serverAddress, loop);   
@@ -340,7 +341,7 @@ public class Broker implements Closeable {
 			if(certPath == null){
 				throw new IllegalStateException(serverAddress + " certificate file not found");
 			}
-			loop.setClientSslContext(certPath);
+			loop.setSslContext(SslKit.buildClientSslFromFile(certPath));
 		}
 		return new MqClientPool(serverAddress, clientPoolSize, loop);   
 	} 

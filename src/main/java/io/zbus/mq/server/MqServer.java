@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ConfigKit;
 import io.zbus.kit.NetKit;
 import io.zbus.kit.StrKit;
@@ -30,6 +31,7 @@ import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session;
+import io.zbus.transport.SslKit;
 import io.zbus.transport.tcp.TcpServer;
 
 public class MqServer extends TcpServer { 
@@ -74,7 +76,8 @@ public class MqServer extends TcpServer {
 		if (ssl.isEnabled()){
 			if(!StrKit.isEmpty(ssl.getServerCertFile()) && !StrKit.isEmpty(ssl.getServerKeyFile())){  
 				try{
-					loop.setServerSslContext(ssl.getServerCertFile(), ssl.getServerKeyFile());
+					SslContext sslContext = SslKit.buildServerSsl(ssl.getServerCertFile(), ssl.getServerKeyFile());
+					loop.setSslContext(sslContext);
 				} catch (Exception e) {
 					e.printStackTrace();
 					log.error("SSL disabled: " + e.getMessage());

@@ -62,6 +62,10 @@
 		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub"/>   
 		
 		<token value="track_pub_token" operation="track_pub"/>   
+		
+		<token value="rpc_service" operation="declare,track_sub,consume,route"> 
+			<topic value="*"/>
+		</token>  
 				
 	</auth>  
 	

@@ -22,14 +22,14 @@ import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
-import io.zbus.mq.TrackerAddress;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.ServerAddress;
-import io.zbus.transport.Session; 
+import io.zbus.transport.Session;
+import io.zbus.transport.SslKit; 
  
 
 public class Tracker implements Closeable{
@@ -107,7 +107,7 @@ public class Tracker implements Closeable{
 		return trackerInfo;
 	}  
 	
-	public void joinUpstream(List<TrackerAddress> trackerList){
+	public void joinUpstream(List<ServerAddress> trackerList){
 		if(trackerList == null || trackerList.isEmpty()) return; 
 		
     	for(final ServerAddress trackerAddress : trackerList){  
@@ -144,14 +144,14 @@ public class Tracker implements Closeable{
 	}
 	
 	private MqClient connectToServer(ServerAddress serverAddress){
-		EventLoop driver = loop.duplicate(); //duplicated, no need to close
+		EventLoop loop = this.loop.duplicate(); //duplicated, no need to close
 		if(serverAddress.sslEnabled){
 			String certPath = sslCertFileTable.get(serverAddress.address);
-			if(certPath != null){
-				driver.setClientSslContext(certPath);
+			if(certPath != null){ 
+				loop.setSslContext(SslKit.buildClientSslFromFile(certPath)); 
 			}
 		}
-		final MqClient client = new MqClient(serverAddress.address, driver);  
+		final MqClient client = new MqClient(serverAddress.address, loop);  
 		return client;
 	}
 	

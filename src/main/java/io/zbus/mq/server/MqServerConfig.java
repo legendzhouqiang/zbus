@@ -17,17 +17,17 @@ import org.w3c.dom.NodeList;
 import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.mq.TrackerAddress;
+import io.zbus.kit.logging.LoggerFactory; 
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.XmlAuthProvider;
+import io.zbus.transport.ServerAddress;
 
 public class MqServerConfig extends XmlConfig  {  
 	private static final Logger log = LoggerFactory.getLogger(MqServerConfig.class); 
 	
 	public String serverHost = "0.0.0.0";
 	public int serverPort = 15555;   
-	public List<TrackerAddress> trackerList = new ArrayList<TrackerAddress>(); 
+	public List<ServerAddress> trackerList = new ArrayList<ServerAddress>(); 
 	
 	public SslConfig sslConfig = new SslConfig();
 	
@@ -73,7 +73,7 @@ public class MqServerConfig extends XmlConfig  {
 			    String token = xpath.evaluate("token", node); 
 			    if(StrKit.isEmpty(address)) continue; 
 			    
-			    TrackerAddress trackerAddress = new TrackerAddress(address, valueOf(sslEnabled, false));
+			    ServerAddress trackerAddress = new ServerAddress(address, valueOf(sslEnabled, false));
 			    trackerAddress.setToken(token);
 			    
 			    if(!StrKit.isEmpty(certFile)){ 
@@ -104,7 +104,7 @@ public class MqServerConfig extends XmlConfig  {
 	} 
 	
 	public void addTracker(String trackerAddress, String certFile){
-		TrackerAddress address = new TrackerAddress(trackerAddress);
+		ServerAddress address = new ServerAddress(trackerAddress);
 		address.sslEnabled = certFile != null;
 		
 		if(!trackerList.contains(address)){
@@ -133,11 +133,11 @@ public class MqServerConfig extends XmlConfig  {
 		this.serverPort = serverPort;
 	} 
 	
-	public List<TrackerAddress> getTrackerList() {
+	public List<ServerAddress> getTrackerList() {
 		return trackerList;
 	}
 
-	public void setTrackerList(List<TrackerAddress> trackerList) {
+	public void setTrackerList(List<ServerAddress> trackerList) {
 		this.trackerList = trackerList;
 	}
 
