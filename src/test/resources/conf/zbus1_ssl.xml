@@ -4,7 +4,7 @@
 	<serverPort>15555</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->   
 
-	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
+	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
 	
 	<storePath>/tmp/zbus</storePath> 
 	<verbose>false</verbose>  
@@ -14,13 +14,13 @@
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15556</address>  
-			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
+			<sslEnabled certFile="ssl/zbus.crt">true</sslEnabled> 
 			<token></token>
 		</serverAddress>   
 	</trackerList>  
 	-->  
 	
-	<auth enabled="false" class="">
+	<auth enabled="true" class="">
 		
 		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
 			<topic value="MyTopic">	

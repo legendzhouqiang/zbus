@@ -7,8 +7,9 @@ import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Protocol;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.transport.ServerAddress;
 
-public class RpcService {
+public class RpcService_Ssl {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {   
@@ -19,12 +20,19 @@ public class RpcService {
 		processor.addModule(BaseExtImpl.class);
 		
 		
-		//The following is same as a simple Consumer setup process  
+		//The following is same as a simple Consumer setup process
+		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
+		trackerAddress.setCertFile("ssl/zbus.crt");
+		trackerAddress.setSslEnabled(true); 
+		trackerAddress.setToken("myrpc_service"); //Token for tracker,  
+		
+		
 		Broker broker = new Broker();
-		broker.addTracker("localhost:15555");
+		broker.addTracker(trackerAddress);
 	  
 		ConsumerConfig config = new ConsumerConfig(broker); 
-		config.setTopic("MyRpc"); 
+		config.setTopic("MyRpc");
+		config.setToken("myrpc_service"); //access control
 		config.setTopicMask(Protocol.MASK_MEMORY); //RPC, choose memory queue to boost speed
 		config.setMessageHandler(processor);   
 		
