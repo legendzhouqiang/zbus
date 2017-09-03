@@ -18,11 +18,10 @@
 	</trackerList>  
 	-->    
 	
-	<ssl enabled="true">
-		<storePath>./ssl</storePath>
-		<defaultCertFile>zbus.crt</defaultCertFile> 
-		<serverCertFile>zbus.crt</serverCertFile> 
-		<serverKeyFile>zbus.key</serverKeyFile> 
+	<ssl enabled="false"> 
+		<defaultCertFile>ssl/zbus.crt</defaultCertFile> 
+		<serverCertFile>ssl/zbus.crt</serverCertFile> 
+		<serverKeyFile>ss/zbus.key</serverKeyFile> 
 		<certFileTable>
 			<add server="localhost:15555" certFile="zbus.crt"/>
 			<add server="localhost:15556" certFile="zbus.crt"/>

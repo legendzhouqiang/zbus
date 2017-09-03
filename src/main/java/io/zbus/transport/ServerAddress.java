@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import io.zbus.kit.FileKit;
 
-public class ServerAddress{
+public class ServerAddress {
 	public String address;  //<Host>:<Port>, default to 80 if port missing
 	public boolean sslEnabled;
 	public transient String certificate;  //if ssl/tls enabled, certificate represents the string bytes of certificate file
@@ -23,6 +23,11 @@ public class ServerAddress{
 	public ServerAddress(String address, boolean sslEnabled) {
 		this.address = address;
 		this.sslEnabled = sslEnabled;
+	}  
+	
+	public ServerAddress(String address, String token) {
+		this.address = address;
+		this.token = token;
 	}  
 	
 	public String getAddress() {
@@ -102,5 +107,15 @@ public class ServerAddress{
 			return false;
 		return true;
 	}
-
+	
+	public ServerAddress clone(){
+		ServerAddress other = new ServerAddress();
+		other.address = address;
+		other.sslEnabled = sslEnabled;
+		other.certificate = certificate;
+		other.server = server;
+		other.token = token;
+		
+		return other;
+	} 
 }

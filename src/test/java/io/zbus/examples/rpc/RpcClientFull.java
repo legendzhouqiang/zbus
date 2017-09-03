@@ -4,22 +4,23 @@ import io.zbus.examples.rpc.biz.IBaseExt;
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.examples.rpc.biz.User;
 import io.zbus.mq.Broker;
-import io.zbus.mq.BrokerConfig;
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
+import io.zbus.transport.ServerAddress;
 
 public class RpcClientFull {
 
 	public static void main(String[] args) throws Exception { 
-		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setTrackerList("localhost:15555");
-		brokerConfig.setToken("myrpc_client"); 
-		Broker broker = new Broker(brokerConfig);
+		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
+		trackerAddress.setToken("myrpc_client"); //Token for tracker, 
+		
+		Broker broker = new Broker();
+		broker.addTracker(trackerAddress);
 	
 		RpcConfig config = new RpcConfig();
 		config.setBroker(broker);
 		config.setTopic("MyRpc");
-		config.setToken(brokerConfig.getToken()); 
+		config.setToken("myrpc_client");   //Token for RPC client 
 		
 		RpcInvoker rpc = new RpcInvoker(config);
 		  

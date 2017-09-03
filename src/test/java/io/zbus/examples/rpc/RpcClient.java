@@ -2,26 +2,26 @@ package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.mq.Broker;
-import io.zbus.mq.BrokerConfig;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.transport.ResultCallback;
+import io.zbus.transport.ServerAddress;
 
 public class RpcClient {
 
-	public static void main(String[] args) throws Exception {  
+	public static void main(String[] args) throws Exception {    
+		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
+		trackerAddress.setToken("myrpc_client"); //Token for tracker, 
 		
-		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setTrackerList("localhost:15555");
-		brokerConfig.setToken("myrpc_client"); 
-		Broker broker = new Broker(brokerConfig);
+		Broker broker = new Broker();
+		broker.addTracker(trackerAddress);
 	
 		RpcConfig config = new RpcConfig();
 		config.setBroker(broker);
 		config.setTopic("MyRpc");
-		config.setToken(brokerConfig.getToken()); 
+		config.setToken("myrpc_client");   //Token for RPC client 
 		
 		RpcInvoker rpc = new RpcInvoker(config);
 		

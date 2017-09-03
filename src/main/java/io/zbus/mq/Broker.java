@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
@@ -22,39 +21,33 @@ import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAddress;
-import io.zbus.transport.Session;
-import io.zbus.transport.SslKit;
+import io.zbus.transport.Session; 
 
 public class Broker implements Closeable { 
 	private static final Logger log = LoggerFactory.getLogger(Broker.class); 
+	private BrokerRouteTable routeTable = new BrokerRouteTable();  
 	
-	private Map<ServerAddress, MqClientPool> poolTable = new ConcurrentHashMap<ServerAddress, MqClientPool>();   
-	private BrokerRouteTable routeTable = new BrokerRouteTable(); 
-	
+	private Map<ServerAddress, MqClientPool> poolTable = new ConcurrentHashMap<ServerAddress, MqClientPool>();    
 	private Map<ServerAddress, MqClient> trackerSubscribers = new ConcurrentHashMap<ServerAddress, MqClient>(); 
-	
-	
-	private String token;
+	 
 	private List<ServerNotifyListener> listeners = new ArrayList<ServerNotifyListener>(); 
-	private EventLoop eventLoop;  
-	private int clientPoolSize = 32; 
-	private Map<String, String> sslCertFileTable;
-	private String defaultSslCertFile;
+	
+	private EventLoop eventLoop;
+	
+	private int clientPoolSize = 32;   
+	private int readyTimeout = 3000; //3 seconds
 	
 	private CountDownLatch ready = new CountDownLatch(1);
 	private boolean waitCheck = true;
 	
+	
 	public Broker(){
 		this(new BrokerConfig());
-	}  
-	
+	}   
 	
 	public Broker(BrokerConfig config){
 		this.eventLoop = new EventLoop(); 
-		this.clientPoolSize = config.getClientPoolSize();  
-		this.sslCertFileTable = config.getSslCertFileTable();
-		this.defaultSslCertFile = config.getDefaultSslCertFile();
-		this.token = config.getToken();
+		this.clientPoolSize = config.getClientPoolSize();
 		
 		List<ServerAddress> trackerList = config.getTrackerList(); 
 		for(ServerAddress serverAddress : trackerList){ 
@@ -73,37 +66,39 @@ public class Broker implements Closeable {
 		}
 	} 
 	
+	public Broker(ServerAddress trackerAddress){
+		this.eventLoop = new EventLoop();  
+		addTracker(trackerAddress); 
+	} 
+	
 	public Broker(MqServer server){
 		this.eventLoop = new EventLoop();
 		this.addTracker(server);
-	}
-	
-	public EventLoop getEventLoop() {
-		return eventLoop;
-	}
+	} 
 	
 	public void addTracker(MqServer server){
 		ServerAddress trackerAddress = new ServerAddress();
 		trackerAddress.server = server; 
 		addTracker(trackerAddress);  
-	} 
-  
+	}  
 	 
 	public void addTracker(String trackerAddress){
-		ServerAddress serverAddress = new ServerAddress(trackerAddress); 
-		
+		ServerAddress serverAddress = new ServerAddress(trackerAddress);  
 		addTracker(serverAddress);
 	} 
 	
-	public void addTracker(final ServerAddress trackerAddress){
-		if(trackerSubscribers.containsKey(trackerAddress)) return; 
-		 
-		final AtomicReference<ServerAddress> remoteTrackerAddress = new AtomicReference<ServerAddress>(trackerAddress);
-		final MqClient client = connectToServer(trackerAddress); 
+	
+	public void addTracker(ServerAddress serverAddress){
+		final ServerAddress trackerAddress = serverAddress.clone();
+		
+		if(trackerSubscribers.containsKey(trackerAddress)) return;   
+		
+		final MqClient client = new MqClient(trackerAddress, this.eventLoop);
+		trackerSubscribers.put(trackerAddress, client); 
+		
 		client.onDisconnected(new DisconnectedHandler() { 
 			@Override
-			public void onDisconnected() throws IOException { 
-				ServerAddress trackerAddress = remoteTrackerAddress.get();
+			public void onDisconnected() throws IOException {  
 				log.warn("Disconnected from tracker(%s)", trackerAddress);  
 				List<ServerAddress> toRemove = routeTable.removeTracker(trackerAddress);  
 				if(!toRemove.isEmpty()){ 
@@ -111,19 +106,19 @@ public class Broker implements Closeable {
 						removeServer(serverAddress);
 					}
 				}  
+				
 				client.ensureConnectedAsync(); 
 			}  
 		});
 		
 		client.onConnected(new ConnectedHandler() {
 			@Override
-			public void onConnected() throws IOException { 
-				ServerAddress trackerAddress = remoteTrackerAddress.get();
+			public void onConnected() throws IOException {  
 				log.info("Connected to tracker(%s)", trackerAddress);  
 				
 				Message req = new Message();  
 				req.setCommand(Protocol.TRACK_SUB); 
-				req.setToken(token);
+				req.setToken(trackerAddress.getToken());
 				client.invokeAsync(req, null);
 			}
 		}); 
@@ -135,51 +130,45 @@ public class Broker implements Closeable {
 					log.error(msg.getBodyString());
 					return;
 				}
-				if(Protocol.TRACK_PUB.equals(msg.getCommand())){  
-					TrackerInfo trackerInfo = JsonKit.parseObject(msg.getBodyString(), TrackerInfo.class);
-					
-					remoteTrackerAddress.set(trackerInfo.serverAddress);
-					//remote tracker's real address obtained, update ssl cert file mapping
-					if(trackerInfo.serverAddress.sslEnabled){
-						String sslCertFile = sslCertFileTable.get(trackerAddress.address);
-						if(sslCertFile != null){
-							sslCertFileTable.put(trackerInfo.serverAddress.address, sslCertFile);
+				if(!Protocol.TRACK_PUB.equals(msg.getCommand())){ 
+					log.error("Unknown message: " + msg);
+				}
+				 
+				TrackerInfo trackerInfo = JsonKit.parseObject(msg.getBodyString(), TrackerInfo.class); 
+				
+				trackerAddress.setAddress(trackerInfo.serverAddress.address); //!!update remote address!!
+				
+				if(trackerAddress.getServer() != null){ //InProc, change TrackerInfo
+					String tcpKey = trackerInfo.serverAddress.toString();
+					trackerInfo.serverAddress = trackerAddress;
+					if(trackerInfo.serverTable.containsKey(tcpKey)){
+						ServerInfo serverInfo = trackerInfo.serverTable.remove(tcpKey);
+						serverInfo.serverAddress = trackerAddress;
+						trackerInfo.serverTable.put(trackerAddress.toString(), serverInfo);
+						for(TopicInfo topicInfo : serverInfo.topicTable.values()){
+							topicInfo.serverAddress = trackerAddress;
 						}
 					} 
-					
-					if(trackerAddress.server != null){ //InProc 
-						String tcpKey = trackerInfo.serverAddress.toString();
-						if(trackerInfo.serverTable.containsKey(tcpKey)){
-							ServerInfo serverInfo = trackerInfo.serverTable.remove(tcpKey);
-							serverInfo.serverAddress = trackerAddress;
-							trackerInfo.serverTable.put(trackerAddress.toString(), serverInfo);
-							for(TopicInfo topicInfo : serverInfo.topicTable.values()){
-								topicInfo.serverAddress = trackerAddress;
-							}
-						}
-						trackerInfo.serverAddress = trackerAddress;
-					}
-					
-					List<ServerAddress> toRemove = routeTable.updateTracker(trackerInfo);
-					for(ServerInfo serverInfo : routeTable.serverTable().values()){
-						addServer(serverInfo);
-					}
-					
-					if(!toRemove.isEmpty()){ 
-						for(ServerAddress serverAddress : toRemove){
-							removeServer(serverAddress);
-						}
-					}  
-					
-					if(waitCheck){
-						ready.countDown();
-					}
 				}
-			}
+				
+				List<ServerAddress> toRemove = routeTable.updateTracker(trackerInfo);
+				for(ServerInfo serverInfo : routeTable.serverTable().values()){
+					addServer(serverInfo);
+				}
+				
+				if(!toRemove.isEmpty()){ 
+					for(ServerAddress serverAddress : toRemove){
+						removeServer(serverAddress);
+					}
+				}  
+				
+				if(waitCheck){
+					ready.countDown();
+				}
+			} 
 		});
 		
-		client.ensureConnectedAsync();
-		trackerSubscribers.put(trackerAddress, client); 
+		client.ensureConnectedAsync(); 
 	} 
 	
 	private void addServer(final ServerAddress serverAddress) throws IOException { 
@@ -189,7 +178,7 @@ public class Broker implements Closeable {
 			if(pool != null) return; 
 			 
 			try{
-				pool = createMqClientPool(serverAddress, serverAddress);
+				pool = new MqClientPool(serverAddress, clientPoolSize, this.eventLoop);   
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				return;
@@ -249,6 +238,10 @@ public class Broker implements Closeable {
 		}
 	}  
 	
+	public EventLoop getEventLoop() {
+		return eventLoop;
+	}
+	
 	@Override
 	public void close() throws IOException {
 		for(MqClient client : trackerSubscribers.values()){
@@ -290,13 +283,7 @@ public class Broker implements Closeable {
 		} 
 		return pools2;
 	} 
-	
-	
-	public void addSslCertFile(String address, String certPath){
-		sslCertFileTable.put(address, certPath);
-	}
-	
-	
+	 
 	public void addServerNotifyListener(ServerNotifyListener listener) {
 		this.listeners.add(listener);
 	}
@@ -309,47 +296,14 @@ public class Broker implements Closeable {
 	private void checkReady(){
 		if(waitCheck){
 			try {
-				ready.await(3000, TimeUnit.MILLISECONDS); 
+				ready.await(readyTimeout, TimeUnit.MILLISECONDS); 
 			} catch (InterruptedException e) {
 				//ignore 
 			}
 			waitCheck = false;
 		}
 	}
-
-	private MqClient connectToServer(ServerAddress serverAddress){
-		EventLoop loop = eventLoop.duplicate(); //duplicated, no need to close
-		if(serverAddress.sslEnabled){
-			String certPath = sslCertFileTable.get(serverAddress.address);
-			if(certPath == null) certPath = defaultSslCertFile;
-			if(certPath == null){
-				throw new IllegalStateException(serverAddress + " certificate file not found");
-			} 
-			loop.setSslContext(SslKit.buildClientSslFromFile(certPath)); 
-		}
-		
-		return new MqClient(serverAddress, loop);   
-	}
-	
-	private MqClientPool createMqClientPool(ServerAddress remoteServerAddress, ServerAddress serverAddress){
-		EventLoop loop = eventLoop.duplicate(); //duplicated, no need to close
-		if(serverAddress.sslEnabled){
-			String certPath = sslCertFileTable.get(remoteServerAddress.address);
-			if(certPath == null) certPath = sslCertFileTable.get(serverAddress.address);
-			if(certPath == null) certPath = defaultSslCertFile;
-			
-			if(certPath == null){
-				throw new IllegalStateException(serverAddress + " certificate file not found");
-			}
-			loop.setSslContext(SslKit.buildClientSslFromFile(certPath));
-		}
-		return new MqClientPool(serverAddress, clientPoolSize, loop);   
-	} 
-	
-	public void setDefaultSslCertFile(String defaultSslCertFile) {
-		this.defaultSslCertFile = defaultSslCertFile;
-	} 
-	
+  
 	public static interface ServerSelector { 
 		ServerAddress[] select(BrokerRouteTable table, Message message); 
 	} 

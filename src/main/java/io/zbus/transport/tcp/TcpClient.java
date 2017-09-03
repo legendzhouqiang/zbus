@@ -91,16 +91,15 @@ public class TcpClient<REQ extends Id, RES extends Id> extends AbstractClient<RE
 		synchronized (this) {
 			if(!hasConnected()){ 
 	    		connectAsync();
-	    		activeLatch.await(timeout,TimeUnit.MILLISECONDS);
+	    		activeLatch.await(timeout,TimeUnit.MILLISECONDS); 
 				
-				if(hasConnected()){ 
+	    		if(hasConnected()){ 
 					return;
-				}  
-				String msg = String.format("Connection(%s) timeout", serverAddress()); 
+				}   
+				 
+				String msg = String.format("Connection(%s) failed", serverAddress()); 
 				log.warn(msg);
-				cleanSession();
-				
-	    		channelFuture.sync();
+				cleanSession();  
 			}
 		} 
 	} 

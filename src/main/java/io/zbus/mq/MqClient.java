@@ -40,7 +40,8 @@ public class MqClient extends CompositeClient<Message, Message>{
 	 */
 	public MqClient(MqServer mqServer) {
 		ServerAddress serverAddress = new ServerAddress();
-		serverAddress.server = mqServer;
+		serverAddress.setServer(mqServer);
+		
 		buildSupport(serverAddress, null);
 	} 
 	
@@ -65,10 +66,10 @@ public class MqClient extends CompositeClient<Message, Message>{
 		
 		//default to TCP 
 		if(address.startsWith("tcp://")){
-			address.substring("tcp://".length());
+			serverAddress.address = address.substring("tcp://".length());
 		}
 			
-		TcpClient<Message, Message> tcp = new TcpClient<Message, Message>(address, loop);
+		TcpClient<Message, Message> tcp = new TcpClient<Message, Message>(serverAddress, loop);
 		support = tcp;
 		tcp.codec(new CodecInitializer() {
 			@Override

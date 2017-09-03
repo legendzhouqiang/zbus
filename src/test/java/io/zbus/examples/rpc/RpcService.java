@@ -3,11 +3,11 @@ package io.zbus.examples.rpc;
 import io.zbus.examples.rpc.biz.BaseExtImpl;
 import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
 import io.zbus.mq.Broker;
-import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Protocol;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.transport.ServerAddress;
 
 public class RpcService {
 
@@ -21,16 +21,18 @@ public class RpcService {
 		
 		
 		//The following is same as a simple Consumer setup process
-		String topic = "MyRpc";
-		String token = "myrpc_service"; 
-		BrokerConfig brokerConfig = new BrokerConfig();
-		brokerConfig.setTrackerList("localhost:15555");
-		brokerConfig.setToken(token); 
-		Broker broker = new Broker(brokerConfig);  
+		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
+		//trackerAddress.setCertFile("ssl/zbus.crt");
+		//trackerAddress.setSslEnabled(true); 
+		trackerAddress.setToken("myrpc_service"); //Token for tracker,  
 		
+		
+		Broker broker = new Broker();
+		broker.addTracker(trackerAddress);
+	  
 		ConsumerConfig config = new ConsumerConfig(broker); 
-		config.setTopic(topic);
-		config.setToken(token); //access control
+		config.setTopic("MyRpc");
+		config.setToken("myrpc_service"); //access control
 		config.setTopicMask(Protocol.MASK_MEMORY); //RPC, choose memory queue to boost speed
 		config.setMessageHandler(processor);   
 		

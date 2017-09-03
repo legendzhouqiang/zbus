@@ -72,6 +72,9 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 					while(!hasConnected()){
 						try{
 							connectSync(connectTimeout); 
+							if(!hasConnected()){
+								Thread.sleep(connectTimeout);
+							}
 						} catch (IOException e) {    
 							String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
 							log.warn(msg); 
@@ -97,7 +100,7 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 		if(!hasConnected()){
 			connectSync(connectTimeout);  
 			if(!hasConnected()){
-				String msg = String.format("Connection(%s) timeout", serverAddress()); 
+				String msg = String.format("Connection(%s) failed", serverAddress()); 
 				throw new IOException(msg);
 			}
 		}  
