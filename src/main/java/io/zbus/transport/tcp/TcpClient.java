@@ -3,6 +3,7 @@ package io.zbus.transport.tcp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -80,7 +81,7 @@ public class TcpClient<REQ extends Id, RES extends Id> extends AbstractClient<RE
 
 	public synchronized void connectAsync(){  
 		init(); 
-		
+		activeLatch = new CountDownLatch(1);
 		channelFuture = bootstrap.connect(host, port);
 	}   
 	
@@ -96,7 +97,7 @@ public class TcpClient<REQ extends Id, RES extends Id> extends AbstractClient<RE
 	    		if(hasConnected()){ 
 					return;
 				}   
-				 
+				channelFuture.sync();
 				String msg = String.format("Connection(%s) failed", serverAddress()); 
 				log.warn(msg);
 				cleanSession();  
