@@ -26,13 +26,13 @@
 	-->  
 	
 	<auth enabled="true" class="">
-		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  
+		<token value="" operation="js, css, img, ssl">  
 			<topic value="*"/>
 		</token>
 		
 		<token value="admin" operation="admin"/> 
 		
-		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
+		<token value="MyTopic_Group1" operation="*"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>

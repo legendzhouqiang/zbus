@@ -14,11 +14,10 @@ public class Protocol {
 	//MQ Produce/Consume
 	public static final String PRODUCE       = "produce";   
 	public static final String CONSUME       = "consume";   
-	public static final String ROUTE   	     = "route";     //route back message to sender, designed for RPC 
+	public static final String UNCONSUME     = "unconsume"; //leave consume status
+	public static final String ROUTE   	     = "route";     //route back message to sender
 	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
 	
-	
-	public static final String UNCONSUME     = "unconsume"; //leave consume status
 	
 	//Topic control
 	public static final String DECLARE = "declare";  
@@ -35,17 +34,19 @@ public class Protocol {
 	//SSL/TLS
 	public static final String SSL         = "ssl"; 
 	
-	public static final String TRACE         = "trace";   //trace latest message in server 
-	public static final String VERSION       = "version";
-	public static final String JS            = "js";      //serve javascript file
-	public static final String CSS           = "css";     //serve css file 
-	public static final String IMG           = "img";     //serve image file(SVG)
-	public static final String PAGE          = "page";    //serve image file(SVG)
 	
-	public static final String PING          = "ping";    //ping server, returning back server time
+	public static final String LOGIN       = "login"; 
+	public static final String LOGOUT      = "logout";   
+	public static final String JS          = "js";      
+	public static final String CSS         = "css";      
+	public static final String IMG         = "img";  
+	public static final String PAGE        = "page";     
 	
+	//Test connection
+	public static final String PING        = "ping";    //ping server, returning back server time  
 	
 	//=============================[2] Parameter Values================================================
+	public static final String VERSION       = "version";
 	public static final String COMMAND       		= "cmd";     
 	public static final String TOPIC         		= "topic";
 	public static final String TOPIC_MASK          	= "topic_mask"; 
@@ -74,11 +75,10 @@ public class Protocol {
 	public static final String ORIGIN_STATUS 		= "origin_status";
 	
 	//Security  
-	public static final String TOKEN   				= "token"; 
+	public static final String TOKEN   				= "token";  
 	
-	
-	public static final int MASK_PAUSE    	    = 1<<0; 
-	public static final int MASK_MEMORY    	    = 1<<1; 
+	public static final int MASK_MEMORY    	    = 1<<0;
+	public static final int MASK_PAUSE    	    = 1<<1;  
 	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
 	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
 	

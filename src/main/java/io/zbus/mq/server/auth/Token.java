@@ -75,23 +75,86 @@ public class Token {
 		}
 	}  
 	
-	public ServerInfo filter(ServerInfo info){  
-		if(Operation.isEnabled(operation, Operation.ADMIN)){
+	public static ConsumeGroupInfo filter(ConsumeGroupInfo info, Token token){
+		if(token == null) return null;
+		
+		if(Operation.isEnabled(token.operation, Operation.ADMIN)){
 			return info;
 		}
 		
-		if(this.allTopics){
+		if(token.allTopics){
+			return info;
+		} 
+		
+		TopicResource topicResource = token.topics.get(info.topicName);
+		if(topicResource == null){  
+			return null;
+		} 
+		
+		if(topicResource.allGroups){
+			return info;
+		}
+		
+		if(topicResource.consumeGroups.contains(info.groupName)){
+			return info;
+		}
+		
+		return null;
+	}
+	
+	public static TopicInfo filter(TopicInfo info, Token token){
+		if(token == null) return null;
+		
+		if(Operation.isEnabled(token.operation, Operation.ADMIN)){
+			return info;
+		}
+		
+		if(token.allTopics){
+			return info;
+		} 
+		
+		TopicResource topicResource = token.topics.get(info.topicName);
+		if(topicResource == null){  
+			return null;
+		} 
+		
+		if(topicResource.allGroups){
+			return info;
+		}
+		
+		TopicInfo newInfo = info.clone();
+		newInfo.consumeGroupList = new ArrayList<ConsumeGroupInfo>();
+		for(ConsumeGroupInfo groupInfo : info.consumeGroupList){
+			if(topicResource.consumeGroups.contains(groupInfo.groupName)){
+				newInfo.consumeGroupList.add(groupInfo);
+			}
+		}
+		return newInfo; 
+	}
+	
+	public static ServerInfo filter(ServerInfo info, Token token){
+		if(token == null){
+			ServerInfo newInfo = info.clone();
+			newInfo.topicTable = new HashMap<String, TopicInfo>();
+			return newInfo;
+		}
+		
+		if(Operation.isEnabled(token.operation, Operation.ADMIN)){
+			return info;
+		}
+		
+		if(token.allTopics){
 			return info;
 		}
 		ServerInfo newInfo = info.clone();
 		newInfo.topicTable = new HashMap<String, TopicInfo>(); 
-		if(this.denyAll){  
+		if(token.denyAll){  
 			return newInfo;
 		}  
 		for(Entry<String, TopicInfo> e : info.topicTable.entrySet()){
 			String topic = e.getKey(); 
 			TopicInfo topicInfo = e.getValue();
-			TopicResource topicResource = this.topics.get(topic);
+			TopicResource topicResource = token.topics.get(topic);
 			if(topicResource == null){ 
 				continue;
 			} 
@@ -110,5 +173,6 @@ public class Token {
 			newInfo.topicTable.put(topic, newTopicInfo); 
 		} 
 		return newInfo;
-	}
+	} 
+	 
 }

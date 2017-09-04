@@ -43,6 +43,9 @@ public class DefaultAuthProvider implements AuthProvider {
 	
 	@Override
 	public Token getToken(String token) { 
+		if(!tokenTable.isEnabled()){
+			return Token.ALLOW; 
+		}
 		//token not set, default to empty
 		if(token == null) token = "";
 		return tokenTable.get(token);

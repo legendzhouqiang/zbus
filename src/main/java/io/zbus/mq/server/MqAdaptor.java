@@ -14,6 +14,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.zbus.kit.FileKit;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
@@ -27,6 +31,7 @@ import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.ServerEvent;
+import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.server.auth.AuthProvider;
@@ -92,10 +97,13 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		//Monitor/Management
 		registerHandler("", homeHandler);  
+		registerHandler("favicon.ico", faviconHandler);
+		
+		registerHandler(Protocol.LOGIN, loginHandler);  
+		registerHandler(Protocol.LOGOUT, logoutHandler);  
 		registerHandler(Protocol.JS, jsHandler); 
 		registerHandler(Protocol.CSS, cssHandler);
-		registerHandler(Protocol.IMG, imgHandler);
-		registerHandler("favicon.ico", faviconHandler);
+		registerHandler(Protocol.IMG, imgHandler); 
 		registerHandler(Protocol.PAGE, pageHandler);
 		registerHandler(Protocol.PING, pingHandler);   
 		
@@ -259,8 +267,16 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> queryHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
-			if(msg.getTopic() == null){  
-				ReplyKit.replyJson(msg, sess, tracker.serverInfo(null)); //TODO
+			Token token = authProvider.getToken(msg.getToken());
+			if(msg.getTopic() == null){   
+				ServerInfo info = mqServer.serverInfo();
+				info = Token.filter(info, token);
+				if(info == null){
+					ReplyKit.reply404(msg, sess);
+				} else {
+					ReplyKit.replyJson(msg, sess, tracker.serverInfo(token));
+				}
+				
 				return;
 			} 
 			
@@ -274,7 +290,12 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	    	
 			String group = msg.getConsumeGroup();
 			if(group == null){
-				ReplyKit.replyJson(msg, sess, topicInfo);
+				topicInfo = Token.filter(topicInfo, token);
+				if(topicInfo == null){
+					ReplyKit.reply404(msg, sess);
+				} else {
+					ReplyKit.replyJson(msg, sess, topicInfo);
+				}
 				return;
 			}
 	    	
@@ -353,6 +374,54 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 	};  
 	
+	private MessageHandler<Message> loginHandler = new MessageHandler<Message>() {
+		public void handle(Message msg, Session sess) throws IOException { 
+			String msgId = msg.getId();
+			if("GET".equals(msg.getMethod())){
+				Message res = new Message();
+				res.setStatus(200);
+				res.setId(msgId);
+				res.setHeader("content-type", "text/html"); 
+				res.setBody(FileKit.loadFileString("login.htm"));
+				sess.write(res);
+				return;
+			} 
+			
+			Map<String, String> data = StrKit.kvp(msg.getBodyString()); 
+			String token = null;
+			if(data.containsKey(Protocol.TOKEN)) {
+				token = data.get(Protocol.TOKEN);
+			}
+			Message res = new Message();
+			res.setStatus(200);
+			if(token != null){
+				Cookie cookie = new DefaultCookie(Protocol.TOKEN, token); 
+				res.setHeader("Set-Cookie", ServerCookieEncoder.STRICT.encode(cookie));
+			}
+			
+			res.setHeader("content-type", "text/html");
+			String body = FileKit.loadFileString("home.htm");
+			res.setBody(body);
+			sess.write(res);
+		}
+	};  
+	
+	private MessageHandler<Message> logoutHandler = new MessageHandler<Message>() {
+		public void handle(Message msg, Session sess) throws IOException {
+			String msgId = msg.getId();
+			msg = new Message();
+			msg.setStatus(200);
+			msg.setId(msgId);
+			msg.setHeader("content-type", "text/html");
+			String body = FileKit.loadFileString("logout.htm");
+			if ("".equals(body)) {
+				body = "<strong>zbus.htm file missing</strong>";
+			}
+			msg.setBody(body);
+			sess.write(msg);
+		}
+	};  
+	
 	private Message handleTemplateRequest(String prefixPath, String url){
 		Message res = new Message(); 
 		if(!url.startsWith(prefixPath)){
@@ -418,7 +487,11 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> pageHandler = new MessageHandler<Message>() {
 		public void handle(Message msg, Session sess) throws IOException { 
-			Message res = handleTemplateRequest("/page/", msg.getUrl());
+			String url = msg.getUrl();
+			if(url != null && !url.endsWith(".htm")){
+				url += ".htm";
+			}
+			Message res = handleTemplateRequest("/page/", url);
 			if("200".equals(res.getStatus())){
 				res.setHeader("content-type", "text/html");
 			}
@@ -682,6 +755,19 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     	}
     	msg.urlToHead();  
 	}
+    
+    private void parseCookieToken(Message msg){
+    	String cookieString = msg.getHeader("cookie");
+        if (cookieString != null) {
+            Cookie cookie = ClientCookieDecoder.STRICT.decode(cookieString);
+            if(Protocol.TOKEN.equals(cookie.name().toLowerCase())){
+            	if(msg.getToken() == null){
+            		msg.setToken(cookie.value());
+            	}
+            	msg.removeHeader("cookie");
+            } 
+        }
+    }
      
     
     public void onMessage(Object obj, Session sess) throws IOException {  
@@ -692,6 +778,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		if(msg.getId() == null){
 			msg.setId(UUID.randomUUID().toString());
 		}
+		parseCookieToken(msg);
 		
 		if(verbose){
 			log.info("\n%s", msg);

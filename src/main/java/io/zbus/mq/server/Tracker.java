@@ -23,7 +23,6 @@ import io.zbus.mq.MqClient;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
-import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
@@ -85,7 +84,7 @@ public class Tracker implements Closeable{
 	
 	public ServerInfo serverInfo(Token token){
 		ServerInfo info = mqServer.serverInfo(); 
-		return filterServerInfo(info, token);
+		return Token.filter(info, token);
 	}   
 	 
 	public TrackerInfo trackerInfo(Token token){  
@@ -102,20 +101,12 @@ public class Tracker implements Closeable{
 		trackerInfo.serverTable = new HashMap<String, ServerInfo>(); 
 		for(Entry<String, ServerInfo> e : serverInfoTable.entrySet()){
 			ServerInfo serverInfo = e.getValue();
-			trackerInfo.serverTable.put(e.getKey(), filterServerInfo(serverInfo, token));
+			trackerInfo.serverTable.put(e.getKey(), Token.filter(serverInfo, token));
 		}  
 		
 		return trackerInfo;
 	}  
-	
-	private ServerInfo filterServerInfo(ServerInfo info, Token token){
-		if(token == null){
-			info = info.clone();
-			info.topicTable = new HashMap<String, TopicInfo>();
-			return info;
-		}
-		return token.filter(info);
-	}
+	 
 	
 	public List<ServerAddress> trackerList(){
 		return new ArrayList<ServerAddress>(this.trackers.keySet());
