@@ -30,6 +30,7 @@ import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.server.auth.AuthProvider;
+import io.zbus.mq.server.auth.Token;
 import io.zbus.rpc.Request;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAdaptor;
@@ -498,8 +499,12 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		@Override
 		public void handle(Message msg, Session session) throws IOException {  
 			try{
-				boolean ack = msg.isAck();
+				boolean ack = msg.isAck(); 
 				ServerEvent event = JsonKit.parseObject(msg.getBodyString(), ServerEvent.class);   
+				if(event == null){
+					ReplyKit.reply400(msg, session, Protocol.TRACK_PUB + " json required");
+					return;
+				}
 				tracker.serverInTrackUpdated(event); 
 				
 				if(ack){
@@ -519,17 +524,18 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 	}; 
 	
-	private MessageHandler<Message> trackerHandler = new MessageHandler<Message>() {
-		
+	private MessageHandler<Message> trackerHandler = new MessageHandler<Message>() { 
 		@Override
 		public void handle(Message msg, Session session) throws IOException { 
-			ReplyKit.replyJson(msg, session, tracker.trackerInfo(null)); //TODO
+			Token token = authProvider.getToken(msg.getToken()); 
+			ReplyKit.replyJson(msg, session, tracker.trackerInfo(token)); 
 		}
 	}; 
 	
 	private MessageHandler<Message> serverHandler = new MessageHandler<Message>() {
-		public void handle(Message msg, Session sess) throws IOException { 
-			ReplyKit.replyJson(msg, sess, tracker.serverInfo(null));  //TODO
+		public void handle(Message msg, Session sess) throws IOException {  
+			Token token = authProvider.getToken(msg.getToken()); 
+			ReplyKit.replyJson(msg, sess, tracker.serverInfo(token)); 
 		}
 	}; 
 	

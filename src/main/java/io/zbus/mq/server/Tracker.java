@@ -3,9 +3,11 @@ package io.zbus.mq.server;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -21,7 +23,9 @@ import io.zbus.mq.MqClient;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.Protocol.ServerEvent;
 import io.zbus.mq.Protocol.ServerInfo;
+import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.Protocol.TrackerInfo;
+import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
@@ -47,12 +51,14 @@ public class Tracker implements Closeable{
 	
 	private Map<String, ServerInfo> serverInfoTable = new ConcurrentHashMap<String, ServerInfo>();  
 	
-	private MqServer mqServer;   
+	private MqServer mqServer;  
+	private AuthProvider authProvider;
 	private ScheduledExecutorService reportToTracker = Executors.newSingleThreadScheduledExecutor();
 
 	
 	public Tracker(final MqServer mqServer){ 
 		this.mqServer = mqServer;   
+		this.authProvider = mqServer.getConfig().getAuthProvider();
 		
 		long reportToTrackerInterval = mqServer.getConfig().getTrackReportInterval();
 		this.reportToTracker.scheduleAtFixedRate(new Runnable() {
@@ -62,7 +68,7 @@ public class Tracker implements Closeable{
 						try{
 							ServerEvent event = new ServerEvent();
 							event.certificate = mqServer.getServerAddress().getCertificate();
-		    				event.serverInfo = serverInfo(null); //TODO
+		    				event.serverInfo = mqServer.serverInfo();
 		    				event.live = true;
 		    				
 		    				publishToTracker(client, event);
@@ -78,23 +84,38 @@ public class Tracker implements Closeable{
 	} 
 	
 	public ServerInfo serverInfo(Token token){
-		return mqServer.serverInfo();
-	} 
+		ServerInfo info = mqServer.serverInfo(); 
+		return filterServerInfo(info, token);
+	}   
 	 
 	public TrackerInfo trackerInfo(Token token){  
 		List<ServerAddress> serverList = new ArrayList<ServerAddress>(this.serversInTrack.keySet()); 
 		ServerAddress trackerAddress = mqServer.getServerAddress();
 		if(!mqServer.getConfig().isTrackerOnly()){
 			serverList.add(mqServer.getServerAddress());
-			serverInfoTable.put(trackerAddress.toString(), serverInfo(token));
+			serverInfoTable.put(trackerAddress.toString(), mqServer.serverInfo());
 		}
+		
 		TrackerInfo trackerInfo = new TrackerInfo(); 
 		trackerInfo.infoVersion = infoVersion.getAndIncrement();
-		trackerInfo.serverAddress = trackerAddress; 
-		trackerInfo.serverTable = serverInfoTable; 
+		trackerInfo.serverAddress = trackerAddress;   
+		trackerInfo.serverTable = new HashMap<String, ServerInfo>(); 
+		for(Entry<String, ServerInfo> e : serverInfoTable.entrySet()){
+			ServerInfo serverInfo = e.getValue();
+			trackerInfo.serverTable.put(e.getKey(), filterServerInfo(serverInfo, token));
+		}  
 		
 		return trackerInfo;
 	}  
+	
+	private ServerInfo filterServerInfo(ServerInfo info, Token token){
+		if(token == null){
+			info = info.clone();
+			info.topicTable = new HashMap<String, TopicInfo>();
+			return info;
+		}
+		return token.filter(info);
+	}
 	
 	public List<ServerAddress> trackerList(){
 		return new ArrayList<ServerAddress>(this.trackers.keySet());
@@ -106,6 +127,8 @@ public class Tracker implements Closeable{
     	for(final ServerAddress trackerAddress : trackerList){  
     		log.info("Connecting to Tracker(%s)", trackerAddress.toString());  
     		final MqClient client = new MqClient(trackerAddress, mqServer.getEventLoop());  
+    		client.attr("tracker", trackerAddress);
+    		
     		client.onDisconnected(new DisconnectedHandler() { 
 				@Override
 				public void onDisconnected() throws IOException { 
@@ -126,9 +149,10 @@ public class Tracker implements Closeable{
     				log.info("Connected to Tracker(%s)", trackerAddress.address);
     				healthyTrackers.put(trackerAddress, client);
     				ServerEvent event = new ServerEvent();
-    				event.serverInfo = serverInfo(null); //TODO 
+    				event.serverInfo = mqServer.serverInfo();
     				event.certificate = mqServer.getServerAddress().getCertificate();
     				event.live = true;
+    				
     				publishToTracker(client, event);
     			}
 			});
@@ -196,11 +220,16 @@ public class Tracker implements Closeable{
 		publishToClient();  
 	}
 	
-	private void publishToTracker(MqClient client, ServerEvent event){ 
+	private void publishToTracker(MqClient client, ServerEvent event){  
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
 		message.setJsonBody(JsonKit.toJSONString(event));  
 		message.setAck(false); 
+		
+		ServerAddress trackerAddress = client.attr("tracker");
+		if(trackerAddress != null){
+			message.setToken(trackerAddress.getToken());
+		}
 		
 		try {  
 			client.invokeAsync(message, null);
@@ -211,7 +240,8 @@ public class Tracker implements Closeable{
 	
 	public void myServerChanged() {
 		ServerEvent event = new ServerEvent();
-		event.serverInfo = serverInfo(null); //TODO
+		event.serverInfo = mqServer.serverInfo();
+		event.certificate = mqServer.getServerAddress().getCertificate();
 		event.live = true;
 		
 		for(MqClient tracker : healthyTrackers.values()){
@@ -226,9 +256,11 @@ public class Tracker implements Closeable{
 	 
 	 
 	public void clientSubcribe(Message msg, Session session){
-		subscribedClients.add(session);  
+		subscribedClients.add(session); 
+		Token token = authProvider.getToken(msg.getToken()); 
+		session.attr("token", token);
 		
-		Message message = trackerInfoPubMessage();
+		Message message = trackerInfoPubMessage(token);
 		try {  
 			session.write(message);
 		} catch (Exception ex) { 
@@ -237,11 +269,12 @@ public class Tracker implements Closeable{
 	}  
 	 
 	public void publishToClient(){
-		if(subscribedClients.isEmpty()) return;
+		if(subscribedClients.isEmpty()) return; 
 		
-		Message message = trackerInfoPubMessage();
 		for(Session session : subscribedClients){
 			try{
+				Token token = session.attr("token");
+				Message message = trackerInfoPubMessage(token); 
 				session.write(message);
 			} catch (Exception e) { 
 				log.error(e.getMessage(), e);
@@ -250,10 +283,10 @@ public class Tracker implements Closeable{
 		}
 	} 
 	
-	private Message trackerInfoPubMessage(){
+	private Message trackerInfoPubMessage(Token token){
 		Message message = new Message();  
 		message.setCommand(Protocol.TRACK_PUB);
-		message.setJsonBody(JsonKit.toJSONString(trackerInfo(null))); //TODO
+		message.setJsonBody(JsonKit.toJSONString(trackerInfo(token))); 
 		message.setStatus(200);// server to client
 		return message;
 	}

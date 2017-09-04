@@ -43,7 +43,8 @@ public class DefaultAuthProvider implements AuthProvider {
 	
 	@Override
 	public Token getToken(String token) { 
-		if(token == null) return null;
+		//token not set, default to empty
+		if(token == null) token = "";
 		return tokenTable.get(token);
 	}
 	
@@ -91,5 +92,5 @@ public class DefaultAuthProvider implements AuthProvider {
 		
 		//otherwise, no need to check by default
 		return false;
-	}
+	}  
 }

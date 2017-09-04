@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import io.zbus.kit.FileKit;
 
-public class ServerAddress {
+public class ServerAddress implements Cloneable {
 	public String address;  //<Host>:<Port>, default to 80 if port missing
 	public boolean sslEnabled;
 	public transient String certificate;  //if ssl/tls enabled, certificate represents the string bytes of certificate file

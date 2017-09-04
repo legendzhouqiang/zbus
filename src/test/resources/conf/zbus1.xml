@@ -25,15 +25,18 @@
 	</trackerList>  
 	-->  
 	
-	<auth enabled="false" class="">
+	<auth enabled="true" class="">
+		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  
+			<topic value="*"/>
+		</token>
+		
+		<token value="admin" operation="admin"/> 
 		
 		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>
-		</token>  
-		
-		<token value="admin" operation="admin"/>   
+		</token>   
 		
 		<token value="produce_all" operation="produce,track_sub"> <!-- rpc = produce -->
 			<topic value="*"/>
@@ -51,11 +54,11 @@
 			<topic value="MyRpc"/>
 		</token>  
 		
-		<token value="tracker" operation="track_sub"> 
-			<topic value="*"/>
-		</token>  
-		
-		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub"/>   
+		<token value="tracker" operation="server, tracker, track_sub">
+			<topic value="MyTopic">	
+				<consumeGroup>Group1</consumeGroup> 
+			</topic>
+		</token>    
 		
 		<token value="track_pub_token" operation="track_pub"/>   
 		

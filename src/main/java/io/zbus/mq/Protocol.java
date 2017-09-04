@@ -90,21 +90,37 @@ public class Protocol {
 	}
 	 
 	
-	public static class TrackItem {
+	public static class TrackItem implements Cloneable{
 		public ServerAddress serverAddress;  
 		public String serverVersion = VERSION_VALUE;  
 		public Exception error; //current item error encountered
+		
+		public TrackItem clone() { 
+			try {
+				return (TrackItem)super.clone();
+			} catch (CloneNotSupportedException e) {
+				return null;
+			}
+		}
 	}
 	
 	public static class TrackerInfo extends TrackItem {
 		public long infoVersion; 
 		public Map<String, ServerInfo> serverTable;
+		
+		public TrackerInfo clone() {  
+			return (TrackerInfo)super.clone();  
+		}
 	}
 	  
 	public static class ServerInfo extends TrackItem {    
 		public long infoVersion;
 		public List<ServerAddress> trackerList;  
-		public Map<String, TopicInfo> topicTable = new ConcurrentHashMap<String, TopicInfo>();  
+		public Map<String, TopicInfo> topicTable = new ConcurrentHashMap<String, TopicInfo>(); 
+		
+		public ServerInfo clone() { 
+			return (ServerInfo)super.clone();   
+		}
 	}
 	
 	public static class TopicInfo extends TrackItem { 
@@ -126,9 +142,13 @@ public class Protocol {
 			}
 			return null;
 		}
+		
+		public TopicInfo clone() { 
+			return (TopicInfo)super.clone();  
+		}
 	}  
 	
-	public static class ConsumeGroupInfo{ 
+	public static class ConsumeGroupInfo implements Cloneable{ 
 		public String topicName;
 		public String groupName;
 		public int mask; 
@@ -142,5 +162,13 @@ public class Protocol {
 		public long lastUpdatedTime;  
 		
 		public Exception error; //used only for batch operation indication
+		
+		public ConsumeGroupInfo clone() { 
+			try {
+				return (ConsumeGroupInfo)super.clone();
+			} catch (CloneNotSupportedException e) {
+				return null;
+			}
+		}
 	}  
 }
