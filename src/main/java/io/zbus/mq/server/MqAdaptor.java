@@ -757,12 +757,15 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     private void parseCookieToken(Message msg){
     	String cookieString = msg.getHeader("cookie");
         if (cookieString != null) {
-            Cookie cookie = ClientCookieDecoder.STRICT.decode(cookieString);
-            if(Protocol.TOKEN.equals(cookie.name().toLowerCase())){
-            	if(msg.getToken() == null){
-            		msg.setToken(cookie.value());
-            	}
-            	msg.removeHeader("cookie");
+            Cookie cookie = ClientCookieDecoder.STRICT.decode(cookieString); 
+            if(cookie != null && cookie.name() != null){
+            	String token = cookie.name().toLowerCase();
+            	if(Protocol.TOKEN.equals(token)){
+                	if(msg.getToken() == null){
+                		msg.setToken(cookie.value());
+                	}
+                	msg.removeHeader("cookie");
+                } 
             } 
         }
     }
