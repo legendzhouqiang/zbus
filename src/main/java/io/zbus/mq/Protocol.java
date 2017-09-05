@@ -36,7 +36,8 @@ public class Protocol {
 	
 	
 	public static final String LOGIN       = "login"; 
-	public static final String LOGOUT      = "logout";   
+	public static final String LOGOUT      = "logout";  
+	public static final String HOME        = "home";
 	public static final String JS          = "js";      
 	public static final String CSS         = "css";      
 	public static final String IMG         = "img";  

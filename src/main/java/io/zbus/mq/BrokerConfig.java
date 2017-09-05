@@ -48,7 +48,7 @@ public class BrokerConfig extends XmlConfig {
 			    
 			    ServerAddress serverAddress = new ServerAddress(address, valueOf(sslEnabled, false));
 			    if(serverAddress.isSslEnabled()){
-			    	String certificate = FileKit.loadFileString(certFile);
+			    	String certificate = FileKit.renderFile(certFile);
 			    	serverAddress.setCertificate(certificate);
 			    }
 			    trackerList.add(serverAddress); 

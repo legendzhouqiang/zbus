@@ -39,6 +39,7 @@
                 <li><a target="_blank" href="http://git.oschina.net/rushmore/zbus">Gitee</a></li>
                 <li><a target="_blank" href="http://github.com/rushmore/zbus">Github</a></li>
                 <li class="hidden-xs"><p class="navbar-text"><span class="label label-success" id="version"></span></p></li>
+            	{{token}}
             </ul> 
         </div>
     </div>
@@ -167,7 +168,8 @@
 <script type="text/javascript"> 
 var broker = null;
 var filterServerList = []; 
- 
+var token = getCookie('token');
+
 function mqDeclare(){ 
 	var topic = $("input#topic-name").val();
     if(topic == ""){
@@ -175,7 +177,7 @@ function mqDeclare(){
         return;
     }
     var mask = $("input#topic-mask").val();
-    var msg = { topic: topic };
+    var msg = { topic: topic, token: token };
     if(mask != null && mask != ""){
         msg.topicMask = mask;
     }
@@ -187,7 +189,7 @@ function mqDeclare(){
 
 function mqRemove(){  
     var topic = $("input#remove-topic-name").val();
-    var msg = { topic: topic }; 
+    var msg = { topic: topic, token: token }; 
     var admin = new MqAdmin(broker);
     admin.remove(msg); 
 
@@ -196,7 +198,7 @@ function mqRemove(){
  
  
 
-$(document).ready(function(){   
+$(document).ready(function(){    
 
 function updateTrackerInfo(){
 	filterServerList = [];
@@ -227,11 +229,11 @@ $("#server-list").on("change", "input.server", function() {
 	$(this).prop("checked", checked);  
    
     updateTrackerInfo(); 
-}); 
-  
+});  
 
 
-$.getJSON('/tracker',function(trackerInfo){   
+var trackerUrl = '/tracker?token=' + token;
+$.getJSON(trackerUrl,function(trackerInfo){   
 	$("#version").text("v"+trackerInfo.serverVersion); 
     filterServerList = [];
     for(var key in trackerInfo.serverTable){
@@ -246,6 +248,7 @@ $.getJSON('/tracker',function(trackerInfo){
 		showTopicTable(broker.routeTable.topicTable, filterServerList); 
 	};  
 	
+	trackerAddress.token = token;
 	broker.addTracker(trackerAddress);  
 });    
 

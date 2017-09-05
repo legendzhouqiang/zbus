@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +97,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		
 		//Monitor/Management
-		registerHandler("", homeHandler);  
+		registerHandler(Protocol.HOME, homeHandler);  
 		registerHandler("favicon.ico", faviconHandler);
 		
 		registerHandler(Protocol.LOGIN, loginHandler);  
@@ -359,66 +360,63 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	 	 
 	
 	private MessageHandler<Message> homeHandler = new MessageHandler<Message>() {
-		public void handle(Message msg, Session sess) throws IOException {
-			String msgId = msg.getId();
-			msg = new Message();
-			msg.setStatus(200);
-			msg.setId(msgId);
-			msg.setHeader("content-type", "text/html");
-			String body = FileKit.loadFileString("home.htm");
-			if ("".equals(body)) {
-				body = "<strong>zbus.htm file missing</strong>";
+		public void handle(Message msg, Session sess) throws IOException {  
+			String tokenStr = msg.getToken();
+			Token token = authProvider.getToken(tokenStr);
+			Map<String, Object> model = new HashMap<String, Object>();
+			String tokenShow = null;
+			if(token != null && tokenStr != null){
+				tokenShow = String.format("<li><a href='/logout'>%s Logout</a></li>", token.name);
 			}
-			msg.setBody(body);
-			sess.write(msg);
+			model.put("token", tokenShow);
+			
+			ReplyKit.replyTemplate(msg, sess, "home.htm", model);
 		}
 	};  
 	
 	private MessageHandler<Message> loginHandler = new MessageHandler<Message>() {
-		public void handle(Message msg, Session sess) throws IOException { 
-			String msgId = msg.getId();
+		public void handle(Message msg, Session sess) throws IOException {  
 			if("GET".equals(msg.getMethod())){
-				Message res = new Message();
-				res.setStatus(200);
-				res.setId(msgId);
-				res.setHeader("content-type", "text/html"); 
-				res.setBody(FileKit.loadFileString("login.htm"));
-				sess.write(res);
+				ReplyKit.replyTemplate(msg, sess, "login.htm"); 
 				return;
 			} 
 			
 			Map<String, String> data = StrKit.kvp(msg.getBodyString()); 
-			String token = null;
+			String tokenstr = null;
 			if(data.containsKey(Protocol.TOKEN)) {
-				token = data.get(Protocol.TOKEN);
+				tokenstr = data.get(Protocol.TOKEN);
 			}
-			Message res = new Message();
-			res.setStatus(200);
-			if(token != null){
-				Cookie cookie = new DefaultCookie(Protocol.TOKEN, token); 
-				res.setHeader("Set-Cookie", ServerCookieEncoder.STRICT.encode(cookie));
-			}
+			Token token = authProvider.getToken(tokenstr); 
 			
-			res.setHeader("content-type", "text/html");
-			String body = FileKit.loadFileString("home.htm");
-			res.setBody(body);
+			Message res = new Message(); 
+			if(token == null){
+				res.setHeader("location", "/login"); 
+				res.setStatus(302); 
+				sess.write(res);
+				return;
+			} 
+			
+			if(token != null){
+				Cookie cookie = new DefaultCookie(Protocol.TOKEN, tokenstr); 
+				res.setHeader("Set-Cookie", ServerCookieEncoder.STRICT.encode(cookie));
+			} 
+			res.setHeader("location", "/"); 
+			res.setStatus(302); //redirect to home page
 			sess.write(res);
 		}
 	};  
 	
 	private MessageHandler<Message> logoutHandler = new MessageHandler<Message>() {
-		public void handle(Message msg, Session sess) throws IOException {
-			String msgId = msg.getId();
-			msg = new Message();
-			msg.setStatus(200);
-			msg.setId(msgId);
-			msg.setHeader("content-type", "text/html");
-			String body = FileKit.loadFileString("logout.htm");
-			if ("".equals(body)) {
-				body = "<strong>zbus.htm file missing</strong>";
-			}
-			msg.setBody(body);
-			sess.write(msg);
+		public void handle(Message msg, Session sess) throws IOException {  
+			Message res = new Message();  
+			res.setId(msg.getId());
+			res.setHeader("location", "/login"); 
+			
+			Cookie cookie = new DefaultCookie(Protocol.TOKEN, "");
+			cookie.setMaxAge(0);
+			res.setHeader("Set-Cookie", ServerCookieEncoder.STRICT.encode(cookie)); 
+			res.setStatus(302); 
+			sess.write(res); 
 		}
 	};  
 	
@@ -440,7 +438,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 		String body = null;
 		try{
-			body = FileKit.loadTemplate(fileName, model);
+			body = FileKit.renderFile(fileName, model);
 			if(body == null){
 				res.setStatus(404);
 				body = "404: File (" + fileName +") Not Found";
@@ -712,7 +710,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     	} 
     	String url = msg.getUrl(); 
     	if(url == null || "/".equals(url)){
-    		msg.setCommand("");
+    		msg.setCommand(Protocol.HOME);
     		return;
     	} 
     	int idx = url.indexOf('?');
@@ -787,12 +785,20 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		handleUrlMessage(msg); 
 		
-		if(!authProvider.auth(msg)){
-			ReplyKit.reply403(msg, sess);
-			return;
+		String cmd = msg.getCommand();
+		boolean auth = true;
+		if(!Protocol.LOGIN.equals(cmd)){
+			auth = authProvider.auth(msg);
 		}
 		
-		String cmd = msg.getCommand(); 
+		if(!auth){ 
+			if(Protocol.HOME.equals(cmd)){
+				ReplyKit.reply302(msg, sess, "/login");
+			} else { 
+				ReplyKit.reply403(msg, sess);
+			} 
+			return;
+		} 
 		
     	if(cmd != null){
     		MessageHandler<Message> handler = handlerMap.get(cmd);

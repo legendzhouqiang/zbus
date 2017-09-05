@@ -50,7 +50,7 @@ public class ServerAddress implements Cloneable {
 	}
 	
 	public void setCertFile(String certFilePath) throws IOException{
-		this.certificate = FileKit.loadFileString(certFilePath); 
+		this.certificate = FileKit.renderFile(certFilePath); 
 	}
 	
 	public Server getServer() {

@@ -1,22 +1,32 @@
 package io.zbus.mq.server;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.zbus.kit.FileKit;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.mq.Message;
 import io.zbus.transport.Session;
 
 public class ReplyKit { 
-	
-	public static void reply(Message req, Message res, Session session) throws IOException {
+	private static final Map<String, Object> EMPTY_MODEL = new HashMap<String, Object>(); 
+	public static void replyTemplate(Message req, Session session, 
+			String fileName, Map<String, Object> model) throws IOException {
+		Message res = new Message();
+		res.setStatus(200);
 		res.setId(req.getId());
-		res.setTopic(req.getTopic());  
-		if(res.getStatus() == null){
-			res.setStatus(200);
-		}
-		session.write(res);
+		res.setHeader("content-type", "text/html"); 
+		String body = FileKit.renderFile(fileName, model);
+		res.setBody(body);
+		session.write(res);  
 	}
+	
+	public static void replyTemplate(Message req, Session session, String fileName) throws IOException {
+		replyTemplate(req, session, fileName, EMPTY_MODEL);
+	}
+			
 	
 	public static void reply200(Message message, Session session) throws IOException {
 		Message res = new Message();
@@ -89,6 +99,14 @@ public class ReplyKit {
 		}
 		text += "Forbbiden";
 		res.setBody(text); 
+		session.write(res);
+	} 
+	
+	public static void reply302(Message msg, Session session, String location) throws IOException {
+		Message res = new Message(); 
+		res.setId(msg.getId());
+		res.setStatus(302); 
+		res.setHeader("Location", location); 
 		session.write(res);
 	} 
 	

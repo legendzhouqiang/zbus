@@ -34,6 +34,7 @@ public class Token {
 	public final static Token DENY = new Token(false);
 	
 	public String token;
+	public String name = ""; //no use for authorization test, only for display if needed
 	public boolean denyAll = false;
 	//Operation
 	public int operation;

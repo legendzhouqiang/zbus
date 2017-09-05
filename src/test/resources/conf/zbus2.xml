@@ -20,37 +20,40 @@
 		<serverAddress>
 			<address>localhost:15555</address>  
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
-			<token></token>
+			<token>admin</token>
 		</serverAddress>   
 	</trackerList>  
 	 
 	
-	<auth enabled="true" class="">
-		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  
-			<topic value="*"/>
-		</token>
+	<auth enabled="true">
+	
+		<token value="" name="Default" operation="js,css,img,page"/>
 		
-		<token value="admin" operation="admin"/> 
+		<token value="admin" name="Admin" operation="admin"/> 
 		
-		<token value="MyTopic_Group1" operation="declare,produce,consume,track_sub"> 
+		<token value="mytopic_group1" name="MyTopicGroup1" operation="*"> 
 			<topic value="MyTopic">	
 				<consumeGroup>Group1</consumeGroup> 
 			</topic>
 		</token>   
 		
-		<token value="produce_all" operation="produce,track_sub"> <!-- rpc = produce -->
+		<token value="mytopic" name="MyTopic" operation="*"> 
+			<topic value="MyTopic"/>
+		</token>   
+		
+		<token value="produce_all" name="ProduceAll" operation="produce,track_sub">
 			<topic value="*"/>
 		</token>    
 		
-		<token value="myrpc_client" operation="produce, track_sub"> 
+		<token value="myrpc_client" name="MyRpcClient" operation="produce, track_sub"> 
 			<topic value="MyRpc"/>
 		</token>   
 		
-		<token value="myrpc_service" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_service" name="MyRpcService" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
 			<topic value="MyRpc"/>
 		</token>  
 		
-		<token value="myrpc_all" operation="*"> 
+		<token value="myrpc_all" name="MyRpcAll" operation="*"> 
 			<topic value="MyRpc"/>
 		</token>  
 		

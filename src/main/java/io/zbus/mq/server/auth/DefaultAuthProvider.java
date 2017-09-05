@@ -76,7 +76,7 @@ public class DefaultAuthProvider implements AuthProvider {
 		
 		String consumeGroup = message.getConsumeGroup();
 		if(StrKit.isEmpty(consumeGroup)){ 
-			consumeGroup = topic; //default to topic, TODO
+			consumeGroup = topic;
 		}
 		
 		if(!topicResource.consumeGroups.contains(consumeGroup)) return false; 
