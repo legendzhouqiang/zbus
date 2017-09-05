@@ -829,6 +829,11 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     	msg.setTopic(topic);
     	msg.setCommand(Protocol.PRODUCE);
     	msg.setAck(false);
+    	
+    	if(!authProvider.auth(msg)){
+    		ReplyKit.reply403(msg, sess);
+    		return;
+    	}
     	produceHandler.handle(msg, sess);  
     }  
 	

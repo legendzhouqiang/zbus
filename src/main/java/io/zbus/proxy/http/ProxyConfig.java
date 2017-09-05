@@ -19,20 +19,35 @@ import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.mq.Broker;
 
 public class ProxyConfig extends XmlConfig { 
-	public Broker broker; 
-	public String brokerAddress;
-	public int connectionCount = 4; //Number of connections to zbus broker per consumer 
-	public Map<String, ProxyEntry> entryTable = new HashMap<String, ProxyEntry>(); 
+	private Broker broker; 
+	private String brokerAddress;
+	private int connectionCount = 4; //Number of connections to zbus broker per consumer 
+	private int consumeTimeout = 10000;
+	private String token;
+	private Map<String, ProxyEntry> entryTable = new HashMap<String, ProxyEntry>(); 
 
 	public static class ProxyEntry {
-		public String entry;
+		public String topic;
+		public String token;
 		public List<String> targetList = new ArrayList<String>();
 	} 
+	
+	public static class ProxyHandlerConfig{
+		public String topic;
+		public String targetUrl;
+		
+		public String token;
+		public Broker broker; 
+		public int connectionCount;
+		public int consumeTimeout;
+	}
 
 	public void loadFromXml(Document doc) throws Exception{
 		XPath xpath = XPathFactory.newInstance().newXPath();  
 		this.brokerAddress = valueOf(xpath.evaluate("/zbus/httpProxy/@zbus", doc), "localhost:15555");  
 		this.connectionCount = valueOf(xpath.evaluate("/zbus/httpProxy/@connectionCount", doc), 4);   
+		this.consumeTimeout = valueOf(xpath.evaluate("/zbus/httpProxy/@consumeTimeout", doc), 10000);   
+		this.token = valueOf(xpath.evaluate("/zbus/httpProxy/@token", doc), null);   
 		 
 		NodeList entryList = (NodeList) xpath.compile("/zbus/httpProxy/*").evaluate(doc, XPathConstants.NODESET);
 		if(entryList != null && entryList.getLength()> 0){ 
@@ -40,8 +55,9 @@ public class ProxyConfig extends XmlConfig {
 			    Node node = entryList.item(i);    
 			    ProxyEntry entry = new ProxyEntry();
 			    String entryName = valueOf(xpath.evaluate("@entry", node), ""); 
+			    entry.token = valueOf(xpath.evaluate("@token", node), ""); 
 			    if (entryName.equals("")) continue;
-			    entry.entry = entryName;
+			    entry.topic = entryName;
 			    
 			    NodeList targetList = (NodeList) xpath.compile("./*").evaluate(node, XPathConstants.NODESET);
 			    for (int j = 0; j < targetList.getLength(); j++) {
@@ -86,5 +102,21 @@ public class ProxyConfig extends XmlConfig {
 
 	public void setEntryTable(Map<String, ProxyEntry> entryTable) {
 		this.entryTable = entryTable;
+	} 
+
+	public int getConsumeTimeout() {
+		return consumeTimeout;
+	} 
+
+	public void setConsumeTimeout(int consumeTimeout) {
+		this.consumeTimeout = consumeTimeout;
+	} 
+
+	public String getToken() {
+		return token;
+	} 
+	
+	public void setToken(String token) {
+		this.token = token;
 	} 
 }

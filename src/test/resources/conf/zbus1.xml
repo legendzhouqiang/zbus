@@ -68,7 +68,10 @@
 		<token value="rpc_service" operation="declare,track_sub,consume,route"> 
 			<topic value="*"/>
 		</token>  
-				
+		
+		<token value="proxy" name="Proxy" operation="*"> 
+			<topic value="http"/>
+		</token>    		
 	</auth>  
 	
 </zbus>

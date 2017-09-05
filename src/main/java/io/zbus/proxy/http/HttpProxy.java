@@ -13,6 +13,8 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker;
 import io.zbus.proxy.http.ProxyConfig.ProxyEntry;
+import io.zbus.proxy.http.ProxyConfig.ProxyHandlerConfig;
+import io.zbus.transport.ServerAddress;
 
 /**
  * HttpProxy works like Nginx/Apache's proxy at first sight, but the
@@ -36,8 +38,8 @@ public class HttpProxy implements Closeable {
 	
 	public HttpProxy(ProxyConfig config) throws IOException { 
 		this.config = config;
-		if (config.broker != null) {
-			this.broker = config.broker;
+		if (config.getBroker() != null) {
+			this.broker = config.getBroker();
 		} else {
 			String address = config.getBrokerAddress();
 			if (address == null) {
@@ -47,7 +49,9 @@ public class HttpProxy implements Closeable {
 			String[] bb = address.split("[;, ]");
 			for(String tracker : bb){
 				if(tracker.equals("")) continue;
-				this.broker.addTracker(tracker);
+				ServerAddress trackerAddress = new ServerAddress(tracker);
+				trackerAddress.setToken(config.getToken());
+				this.broker.addTracker(trackerAddress);
 			} 
 			this.ownBroker = true;
 		}   
@@ -55,12 +59,19 @@ public class HttpProxy implements Closeable {
 
 	public synchronized void start() throws IOException {
 		 for(Entry<String, ProxyEntry> e : this.config.getEntryTable().entrySet()){
-			 String entryName = e.getKey();
+			 String topic = e.getKey();
 			 ProxyEntry entry = e.getValue();
 			 List<ProxyHandler> handlers = new ArrayList<ProxyHandler>();
 			 for(String target : entry.targetList){
-				 ProxyHandler handler = new ProxyHandler(entryName, target,
-						 broker, config.getConnectionCount());
+				 ProxyHandlerConfig handlerConfig = new ProxyHandlerConfig();
+				 handlerConfig.topic = topic;
+				 handlerConfig.token = entry.token;
+				 handlerConfig.targetUrl = target;
+				 handlerConfig.broker = broker;
+				 handlerConfig.connectionCount = this.config.getConnectionCount();
+				 handlerConfig.consumeTimeout = this.config.getConsumeTimeout();
+				 
+				 ProxyHandler handler = new ProxyHandler(handlerConfig);
 				 handlers.add(handler);
 				 try{
 					 handler.start(); 
@@ -68,7 +79,7 @@ public class HttpProxy implements Closeable {
 					 log.error(ex.getMessage(), ex);
 				 }
 			 }
-			 entryHandlerTable.put(entryName, handlers);
+			 entryHandlerTable.put(topic, handlers);
 		 }
 	}
  

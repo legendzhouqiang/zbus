@@ -4,8 +4,8 @@
 	
 	<!-- Can be multiple zbus servers, for HA -->
 	<!-- Token settings is for zbus authentication -->
-	<httpProxy zbus="localhost:15555" connectionCount="1" token="rpc_service">
-		<proxy entry="http" token="rpc_service">
+	<httpProxy zbus="localhost:15555" connectionCount="1" consumeTimeout="10000" token="proxy">
+		<proxy entry="http" token="proxy">
 			<target>http://localhost:80</target> <!-- Can be multiple -->
 			<!-- <target>http://localhost:8080</target>  -->
 		</proxy>

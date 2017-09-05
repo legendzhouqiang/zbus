@@ -23,6 +23,7 @@ import io.zbus.mq.Message;
 import io.zbus.mq.MessageHandler;
 import io.zbus.mq.MqClient;
 import io.zbus.mq.Protocol;
+import io.zbus.proxy.http.ProxyConfig.ProxyHandlerConfig;
 import io.zbus.transport.Client.ConnectedHandler;
 import io.zbus.transport.Client.DisconnectedHandler;
 import io.zbus.transport.Session;
@@ -31,22 +32,24 @@ import io.zbus.transport.Session;
 public class ProxyHandler implements MessageHandler, Closeable {
 	protected static final Logger log = LoggerFactory.getLogger(ProxyHandler.class);
 	
-	private final String entry;
+	private final String topic;
 	private final String prefix;
 	private final String targetServer;
-	private final String targetUrl;
-	private int connectionCount;
+	private final String targetUrl; 
 	private Broker broker; 
 	private Consumer consumer; 
 	private List<HttpClient> targetClients;
 	private int currentClient = 0;  
 	private final AtomicReference<CountDownLatch> ready = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
-	private Thread readyThread;
-	public ProxyHandler(String entry, String target, Broker broker, int connectionCount) {
-		this.connectionCount = connectionCount;
-		this.entry = entry;
-		this.prefix = "/" + entry;
-		this.broker = broker;
+	private Thread readyThread;  
+	private ProxyHandlerConfig config;
+	
+	public ProxyHandler(ProxyHandlerConfig config) {  
+		this.config = config;
+		this.topic = config.topic;
+		this.prefix = "/" + topic;
+		this.broker = config.broker; 
+		String target = config.targetUrl;
 		 
 		if(target.startsWith("http://")){
 			target  = target.substring("http://".length());
@@ -60,7 +63,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		this.targetUrl = url; 
 		
 		targetClients = new ArrayList<HttpClient>();
-		for(int i=0;i<this.connectionCount;i++){
+		for(int i=0;i<config.connectionCount;i++){
 			HttpClient client = new HttpClient(); 
 			targetClients.add(client);
 		}
@@ -68,12 +71,15 @@ public class ProxyHandler implements MessageHandler, Closeable {
 
 	public synchronized void start() {
 		if (consumer != null) return; 
-		ConsumerConfig config = new ConsumerConfig(this.broker);
-		config.setTopic(entry);
-		config.setConnectionCount(this.connectionCount);
-		config.setTopicMask(Protocol.MASK_MEMORY);
-		config.setMaxInFlightMessage(1); //run each time
-		consumer = new Consumer(config);
+		ConsumerConfig consumeConfig = new ConsumerConfig(this.broker);
+		consumeConfig.setTopic(topic);
+		consumeConfig.setConnectionCount(config.connectionCount);
+		consumeConfig.setTopicMask(Protocol.MASK_MEMORY);
+		consumeConfig.setMaxInFlightMessage(1); //run each time
+		consumeConfig.setConsumeTimeout(config.consumeTimeout);
+		consumeConfig.setToken(config.token);
+		
+		consumer = new Consumer(consumeConfig);
 		consumer.setMessageHandler(this);
 		
 		//wait for downstream ready to start
@@ -133,7 +139,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		Message res = null;
 		try { 
-			currentClient = (currentClient+1)%connectionCount;
+			currentClient = (currentClient+1)%targetClients.size();
 			HttpClient targetClient = targetClients.get(currentClient);
 			targetClient.sendMessage(client, msg); 
 		} catch (Exception e) {
@@ -151,6 +157,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	 
 	@Override
 	public void close() throws IOException {
+		readyThread.interrupt();
+		
 		if (consumer != null) {
 			consumer.close();
 			consumer = null;
