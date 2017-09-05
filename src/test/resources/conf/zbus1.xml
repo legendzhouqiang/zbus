@@ -25,7 +25,7 @@
 	</trackerList>  
 	-->  
 	
-	<auth enabled="true">
+	<auth enabled="false">
 	
 		<token value="" name="Default" operation="js,css,img,page"/>
 		

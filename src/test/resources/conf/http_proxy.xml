@@ -6,8 +6,8 @@
 	<!-- Token settings is for zbus authentication -->
 	<httpProxy zbus="localhost:15555" connectionCount="1" token="rpc_service">
 		<proxy entry="http" token="rpc_service">
-			<target>http://localhost:15555/server</target> <!-- Can be multiple -->
-			<target>http://localhost:15556/server</target>
+			<target>http://localhost:80</target> <!-- Can be multiple -->
+			<!-- <target>http://localhost:8080</target>  -->
 		</proxy>
 		<!-- you may add multiple proxies -->
 	</httpProxy> 

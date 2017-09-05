@@ -168,6 +168,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 				public void onDisconnected() throws IOException { 
 					ready.set(new CountDownLatch(1));
 					consumer.pause();
+					client.ensureConnectedAsync();
 				}
 			});
 			
