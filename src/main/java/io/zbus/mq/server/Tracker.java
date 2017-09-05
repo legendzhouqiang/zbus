@@ -59,7 +59,7 @@ public class Tracker implements Closeable{
 		this.mqServer = mqServer;   
 		this.authProvider = mqServer.getConfig().getAuthProvider();
 		
-		long reportToTrackerInterval = mqServer.getConfig().getTrackReportInterval();
+		long reportToTrackerInterval = mqServer.getConfig().getReportToTrackerInterval();
 		this.reportToTracker.scheduleAtFixedRate(new Runnable() {
 			public void run() {
 				try {

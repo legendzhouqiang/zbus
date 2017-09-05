@@ -21,6 +21,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.XmlAuthProvider;
+import io.zbus.proxy.http.ProxyConfig;
 import io.zbus.transport.ServerAddress;
 
 public class MqServerConfig extends XmlConfig implements Cloneable  {  
@@ -45,6 +46,8 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	private boolean compatible = false;  //set protocol compatible to zbus7 if true
 	
 	private AuthProvider authProvider = new XmlAuthProvider();  
+	
+	private ProxyConfig httpProxyConfig;
 	
 	public MqServerConfig(){ 
 		
@@ -110,6 +113,9 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 				log.error("Load AuthProvider error: " + e);
 			}
 		}
+		
+		this.httpProxyConfig = new ProxyConfig();
+		this.httpProxyConfig.loadFromXml(doc);
 	} 
 	
 	public void addTracker(String trackerAddress, String certFile) throws IOException{
@@ -221,12 +227,12 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 		this.cleanMqInterval = cleanMqInterval;
 	}
 
-	public long getTrackReportInterval() {
+	public long getReportToTrackerInterval() {
 		return reportToTrackerInterval;
 	}
 
-	public void setTrackReportInterval(long trackReportInterval) {
-		this.reportToTrackerInterval = trackReportInterval;
+	public void setReportToTrackerInterval(long reportToTrackerInterval) {
+		this.reportToTrackerInterval = reportToTrackerInterval;
 	}
 
 	public AuthProvider getAuthProvider() {
@@ -243,8 +249,17 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 
 	public void setCompatible(boolean compatible) {
 		this.compatible = compatible;
-	}  
-	
+	}   
+	 
+
+	public ProxyConfig getHttpProxyConfig() {
+		return httpProxyConfig;
+	}
+
+	public void setHttpProxyConfig(ProxyConfig httpProxyConfig) {
+		this.httpProxyConfig = httpProxyConfig;
+	}
+
 	public MqServerConfig clone() { 
 		try {
 			return (MqServerConfig)super.clone();

@@ -24,9 +24,12 @@ import io.zbus.kit.NetKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.Broker;
 import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.proxy.http.HttpProxy;
+import io.zbus.proxy.http.ProxyConfig;
 import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
@@ -48,6 +51,7 @@ public class MqServer extends TcpServer {
 	 
 	private MqAdaptor mqAdaptor;  
 	private Tracker tracker; 
+	private HttpProxy httpProxy;
 	
 	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
@@ -127,7 +131,22 @@ public class MqServer extends TcpServer {
 		} catch (IOException e) {
 			log.error("Load Message Queue Error: " + e);
 		}   
+		
+		loadHttpProxy(config.getHttpProxyConfig());
 	} 
+	
+	private void loadHttpProxy(ProxyConfig config){ 
+		if(config == null || config.getEntryTable().isEmpty()) return; 
+		
+		try {
+			Broker broker = new Broker(this);
+			config.setBroker(broker); //InProc broker
+			httpProxy = new HttpProxy(config);
+			httpProxy.start();
+		} catch (IOException e) {
+			log.error(e.getMessage(), e.getCause());
+		}
+	}
 	
 	@Override
 	public IoAdaptor getIoAdaptor() {
@@ -150,6 +169,9 @@ public class MqServer extends TcpServer {
 		scheduledExecutor.shutdown();   
 		mqAdaptor.close();  
 		tracker.close();
+		if(httpProxy != null){
+			httpProxy.close();
+		}
 		
 		super.close();
 	}  
