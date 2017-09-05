@@ -76,7 +76,7 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 								Thread.sleep(connectTimeout);
 							}
 						} catch (IOException e) {    
-							String msg = String.format("Trying again in %.1f seconds", connectTimeout/1000.0); 
+							String msg = String.format("Trying again(%s) in %.1f seconds", serverAddress(), connectTimeout/1000.0); 
 							log.warn(msg); 
 							Thread.sleep(connectTimeout);
 						} catch (InterruptedException e) {

@@ -60,8 +60,12 @@ public class Consumer extends MqAdmin implements Closeable {
 			this.consumeServerSelector = new DefaultConsumeServerSelector();
 		}
 	} 
+	
+	public synchronized void start() throws IOException{
+		start(false);
+	}
 
-	public synchronized void start() throws IOException{  
+	public synchronized void start(final boolean pauseOnStart) throws IOException{  
 		if(started) return;
 		
 		if(this.messageHandler == null){
@@ -78,7 +82,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		MqClientPool[] pools = broker.selectClient(consumeServerSelector, msg); 
 		
 		for(MqClientPool pool : pools){
-			startConsumeThreadGroup(pool);
+			startConsumeThreadGroup(pool, pauseOnStart);
 		}
 		
 		broker.addServerNotifyListener(new ServerNotifyListener() { 
@@ -96,7 +100,7 @@ public class Consumer extends MqAdmin implements Closeable {
 			} 
 			@Override
 			public void onServerJoin(MqClientPool pool) { 
-				startConsumeThreadGroup(pool);
+				startConsumeThreadGroup(pool, pauseOnStart);
 			}
 		});
 		
@@ -114,14 +118,14 @@ public class Consumer extends MqAdmin implements Closeable {
 			consumerThreadGroup.resume();
 		}
 	}
-	
-	private void startConsumeThreadGroup(MqClientPool pool){
+	 
+	private void startConsumeThreadGroup(MqClientPool pool, boolean pasuseOnStart){
 		if(consumeThreadGroupMap.containsKey(pool.serverAddress())){
 			return;
 		}
 		ConsumeThreadGroup group = new ConsumeThreadGroup(pool);
 		consumeThreadGroupMap.put(pool.serverAddress(), group);
-		group.start(); 
+		group.start(pasuseOnStart); 
 	}
 	
 	public void start(MessageHandler consumerHandler) throws IOException{
@@ -163,11 +167,11 @@ public class Consumer extends MqAdmin implements Closeable {
 				
 				thread.setMessageHandler(messageHandler); 
 			}
-		}
+		} 
 		
-		public void start(){
+		public void start(boolean pauseOnStart){
 			for(ConsumeThread thread : threads){
-				thread.start();
+				thread.start(pauseOnStart);
 			}
 		}
 		

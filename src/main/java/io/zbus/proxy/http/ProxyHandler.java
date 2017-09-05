@@ -41,7 +41,6 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	private List<HttpClient> targetClients;
 	private int currentClient = 0;  
 	private final AtomicReference<CountDownLatch> ready = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
-	private Thread readyThread;  
 	private ProxyHandlerConfig config;
 	
 	public ProxyHandler(ProxyHandlerConfig config) {  
@@ -60,13 +59,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		if(bb.length>1){
 			url = bb[1].trim();
 		} 
-		this.targetUrl = url; 
-		
-		targetClients = new ArrayList<HttpClient>();
-		for(int i=0;i<config.connectionCount;i++){
-			HttpClient client = new HttpClient(); 
-			targetClients.add(client);
-		}
+		this.targetUrl = url;  
 	}
 
 	public synchronized void start() {
@@ -80,25 +73,20 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		consumeConfig.setToken(config.token);
 		
 		consumer = new Consumer(consumeConfig);
-		consumer.setMessageHandler(this);
+		consumer.setMessageHandler(this); 
+		try {
+			boolean pauseOnStart = true;
+			consumer.start(pauseOnStart);
+		} catch (IOException e) { 
+			log.error(e.getMessage(), e);
+			return;
+		}
 		
-		//wait for downstream ready to start
-		readyThread = new Thread(new Runnable() { 
-			public void run() { 
-				try {
-					ready.get().await();
-				} catch (InterruptedException e) { 
-					return;
-				} 
-				try { 
-					consumer.start();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		}); 
-		
-		readyThread.start();
+		targetClients = new ArrayList<HttpClient>();
+		for(int i=0;i<config.connectionCount;i++){
+			HttpClient client = new HttpClient(); 
+			targetClients.add(client);
+		}
 		
 		for(HttpClient client : targetClients){ 
 			try {
@@ -156,21 +144,22 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	}
 	 
 	@Override
-	public void close() throws IOException {
-		readyThread.interrupt();
-		
+	public void close() throws IOException {   
+		for(HttpClient client : targetClients){ 
+			client.close();
+		}
 		if (consumer != null) {
 			consumer.close();
 			consumer = null;
 		} 
 	}   
     
-	class HttpClient {
+	class HttpClient implements Closeable {
 		MqClient client; 
 		Queue<Context> requests = new ConcurrentLinkedQueue<Context>();
 		Map<String, Context> requestTable = new ConcurrentHashMap<String, Context>();
 		
-		HttpClient() { 
+		HttpClient() {   
 			client = new MqClient(targetServer, broker.getEventLoop());
 			client.onDisconnected(new DisconnectedHandler() {  
 				public void onDisconnected() throws IOException { 
@@ -242,6 +231,11 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		void ensureConnectedAsync() throws IOException{
 			client.ensureConnectedAsync();
+		}
+		
+		@Override
+		public void close() throws IOException {
+			client.close();
 		}
 		
 		class Context{

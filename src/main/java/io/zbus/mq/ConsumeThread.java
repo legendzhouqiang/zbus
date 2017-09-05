@@ -42,12 +42,20 @@ public class ConsumeThread implements Closeable{
 	}
 	 
 	public synchronized void start() {
+		start(false);
+	}
+	
+	public synchronized void start(boolean pauseOnStart) {
 		if(this.topic == null){
 			throw new IllegalStateException("Missing topic");
 		}
 		if(this.messageHandler == null){
 			throw new IllegalStateException("Missing consumeHandler");
 		}
+		if(pauseOnStart){
+			pause.set(new CountDownLatch(1));
+		}
+		
 		if(this.consumeGroup == null){
 			this.consumeGroup = new ConsumeGroup();
 			consumeGroup.setGroupName(this.topic);
