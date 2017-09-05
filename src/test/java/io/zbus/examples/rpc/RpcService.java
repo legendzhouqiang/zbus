@@ -13,18 +13,17 @@ public class RpcService {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		boolean enableSsl = false;
-		// With RpcProcessor, we only care about the moudles and bussiness
-		// logic, nothing related to zbus
+		
+		// With RpcProcessor, we only care about the moudles and bussiness  logic, nothing related to zbus
 		RpcProcessor processor = new RpcProcessor();
 		processor.addModule(InterfaceExampleImpl.class); // By default interface full name, empty are used as  module name
-		// processor.addModule(module, services); //You can define module name,
-		// it is optional
+		// processor.addModule(module, services); //You can define module name,  it is optional
 		processor.addModule(BaseExtImpl.class);
 
 		
 		
 		// The following is same as a simple Consumer setup process 
+		boolean enableSsl = false;
 		ServerAddress trackerAddress = new ServerAddress("localhost:15555");
 		if(enableSsl){
 			trackerAddress.setCertFile("ssl/zbus.crt");
