@@ -15,6 +15,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import io.zbus.kit.ClassKit;
 import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.mq.Broker;
 
@@ -29,6 +30,8 @@ public class ProxyConfig extends XmlConfig {
 	public static class ProxyEntry {
 		public String topic;
 		public String token;
+		public MessageFilter sendFilter;
+		public MessageFilter recvFilter;
 		public List<String> targetList = new ArrayList<String>();
 	} 
 	
@@ -40,6 +43,9 @@ public class ProxyConfig extends XmlConfig {
 		public Broker broker; 
 		public int connectionCount;
 		public int consumeTimeout;
+		
+		public MessageFilter sendFilter;
+		public MessageFilter recvFilter;
 	}
 
 	public void loadFromXml(Document doc) throws Exception{
@@ -57,6 +63,16 @@ public class ProxyConfig extends XmlConfig {
 			    String entryName = valueOf(xpath.evaluate("@entry", node), ""); 
 			    entry.token = valueOf(xpath.evaluate("@token", node), ""); 
 			    if (entryName.equals("")) continue;
+			    
+			    String sendFilterClass = valueOf(xpath.evaluate("@sendFilter", node), ""); 
+			    String recvFilterClass = valueOf(xpath.evaluate("@sendFilter", node), ""); 
+			    if(!sendFilterClass.equals("")){
+			    	entry.sendFilter = ClassKit.newInstance(sendFilterClass); 
+			    }
+			    if(!recvFilterClass.equals("")){ 
+			    	entry.recvFilter = ClassKit.newInstance(recvFilterClass);
+			    }
+			    
 			    entry.topic = entryName;
 			    
 			    NodeList targetList = (NodeList) xpath.compile("./*").evaluate(node, XPathConstants.NODESET);
@@ -118,5 +134,5 @@ public class ProxyConfig extends XmlConfig {
 	
 	public void setToken(String token) {
 		this.token = token;
-	} 
+	}  
 }

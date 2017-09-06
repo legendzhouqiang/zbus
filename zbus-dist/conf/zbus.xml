@@ -25,7 +25,7 @@
 	</trackerList>  
 	-->  
 	
-	<auth enabled="false" class="">
+	<auth enabled="true" class="">
 		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  
 			<topic value="*"/>
 		</token>

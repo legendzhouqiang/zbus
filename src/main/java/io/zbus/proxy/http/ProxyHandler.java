@@ -127,8 +127,13 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		Message res = null;
 		try { 
+			if(config.sendFilter != null){
+				if(config.sendFilter.filter(msg, client) == false){
+					return;
+				}
+			}
 			currentClient = (currentClient+1)%targetClients.size();
-			HttpClient targetClient = targetClients.get(currentClient);
+			HttpClient targetClient = targetClients.get(currentClient); 
 			targetClient.sendMessage(client, msg); 
 		} catch (Exception e) {
 			res = new Message();
@@ -202,6 +207,12 @@ public class ProxyHandler implements MessageHandler, Closeable {
 					
 					if(ctx == null){ 
 						return; //ignore
+					}
+					
+					if(config.recvFilter != null){
+						if( config.recvFilter.filter(res, ctx.senderClient) == false){
+							return;
+						}
 					}
 					
 					res.setId(ctx.msgId);

@@ -70,6 +70,8 @@ public class HttpProxy implements Closeable {
 				 handlerConfig.broker = broker;
 				 handlerConfig.connectionCount = this.config.getConnectionCount();
 				 handlerConfig.consumeTimeout = this.config.getConsumeTimeout();
+				 handlerConfig.sendFilter = entry.sendFilter;
+				 handlerConfig.recvFilter = entry.recvFilter;
 				 
 				 ProxyHandler handler = new ProxyHandler(handlerConfig);
 				 handlers.add(handler);
