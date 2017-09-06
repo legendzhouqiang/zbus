@@ -45,8 +45,22 @@ public class StrKit {
 	}
 	
 	public static Map<String, String> kvp(String value){
+		return kvp(value, "&");
+	}
+	
+	public static Map<String, String> kvp(String value, String delim){
+		if(isEmpty(delim)) {
+			delim = "[ ;]";
+		}
+		if(!(delim.startsWith("[") && delim.endsWith("]"))){
+			delim = String.format("[%s]", delim);
+		}
+		
 		Map<String, String> res = new HashMap<String, String>();
-		String[] kvs = value.split("[&]");
+		if(isEmpty(value)) return res;
+		
+		
+		String[] kvs = value.split(delim);
 		for(String kv : kvs){
 			kv = kv.trim();
 			if(kv.equals("")) continue;

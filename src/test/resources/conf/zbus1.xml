@@ -34,7 +34,7 @@
 	</httpProxy> 
 	-->
 	
-	<auth enabled="false">
+	<auth enabled="true">
 	
 		<token value="" name="Default" operation="js,css,img,page"/>
 		

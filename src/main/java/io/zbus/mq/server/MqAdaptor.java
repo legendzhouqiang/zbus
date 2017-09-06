@@ -15,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
@@ -381,7 +380,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				return;
 			} 
 			
-			Map<String, String> data = StrKit.kvp(msg.getBodyString()); 
+			Map<String, String> data = StrKit.kvp(msg.getBodyString(), "&"); 
 			String tokenstr = null;
 			if(data.containsKey(Protocol.TOKEN)) {
 				tokenstr = data.get(Protocol.TOKEN);
@@ -757,16 +756,12 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     private void parseCookieToken(Message msg){
     	String cookieString = msg.getHeader("cookie");
         if (cookieString != null) {
-            Cookie cookie = ClientCookieDecoder.STRICT.decode(cookieString); 
-            if(cookie != null && cookie.name() != null){
-            	String token = cookie.name().toLowerCase();
-            	if(Protocol.TOKEN.equals(token)){
-                	if(msg.getToken() == null){
-                		msg.setToken(cookie.value());
-                	}
-                	msg.removeHeader("cookie");
-                } 
-            } 
+        	Map<String, String> cookies = StrKit.kvp(cookieString, "[;]");
+        	if(cookies.containsKey(Protocol.TOKEN)){
+        		if(msg.getToken() == null){
+        			msg.setToken(cookies.get(Protocol.TOKEN));
+        		} 
+        	} 
         }
     }
      
