@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc.inheritance;
+package io.zbus.examples.rpc.biz.inheritance;
 
 public class BaseServiceImpl<T> implements BaseService<T> {
 	@Override

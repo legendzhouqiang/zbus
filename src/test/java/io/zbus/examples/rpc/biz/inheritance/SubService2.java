@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc.inheritance;
+package io.zbus.examples.rpc.biz.inheritance;
 
 
 public class SubService2 extends BaseServiceImpl<String> implements SubServiceInterface2 {

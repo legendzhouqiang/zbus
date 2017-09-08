@@ -7,21 +7,15 @@ import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.transport.ResultCallback;
-import io.zbus.transport.ServerAddress;
 
-public class RpcClient {
+public class RpcClientSimple {
 
-	public static void main(String[] args) throws Exception {    
-		ServerAddress trackerAddress = new ServerAddress("localhost:15555"); 
-		trackerAddress.setToken("myrpc_client"); //Token for tracker, 
-		
-		Broker broker = new Broker();
-		broker.addTracker(trackerAddress);
+	public static void main(String[] args) throws Exception {   
+		Broker broker = new Broker("localhost:15555;localhost:15556"); 
 	
 		RpcConfig config = new RpcConfig();
 		config.setBroker(broker);
-		config.setTopic("MyRpc");
-		config.setToken("myrpc_client");   //Token for RPC client 
+		config.setTopic("MyRpc"); 
 		
 		RpcInvoker rpc = new RpcInvoker(config);
 		

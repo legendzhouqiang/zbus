@@ -2,6 +2,9 @@ package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.BaseExtImpl;
 import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
+import io.zbus.examples.rpc.biz.generic.GenericMethodImpl;
+import io.zbus.examples.rpc.biz.inheritance.SubService1;
+import io.zbus.examples.rpc.biz.inheritance.SubService2;
 import io.zbus.mq.Broker;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
@@ -19,6 +22,9 @@ public class RpcService {
 		processor.addModule(InterfaceExampleImpl.class); // By default interface full name, empty are used as  module name
 		// processor.addModule(module, services); //You can define module name,  it is optional
 		processor.addModule(BaseExtImpl.class);
+		processor.addModule(GenericMethodImpl.class);
+		processor.addModule(SubService1.class);
+		processor.addModule(SubService2.class);
 
 		
 		
