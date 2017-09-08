@@ -82,6 +82,7 @@ public class Protocol {
 	public static final int MASK_PAUSE    	    = 1<<1;  
 	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
 	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
+	public static final int MASK_RPC    	    = 1<<4;
 	
 	public static class ServerEvent{  
 		//public ServerAddress serverAddress;

@@ -1,23 +1,21 @@
 package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
-import io.zbus.mq.Broker;
+import io.zbus.rpc.ClientBootstrap;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
-import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.transport.ResultCallback;
 
 public class RpcClientSimple {
 
 	public static void main(String[] args) throws Exception {   
-		Broker broker = new Broker("localhost:15555;localhost:15556"); 
-	
-		RpcConfig config = new RpcConfig();
-		config.setBroker(broker);
-		config.setTopic("MyRpc"); 
+		ClientBootstrap b = new ClientBootstrap(); 
+		b.serviceAddress("localhost:15555")
+		 .serviceName("MyRpc")
+		 .serviceToken("myrpc_client"); 
 		
-		RpcInvoker rpc = new RpcInvoker(config);
+		RpcInvoker rpc = b.invoker();
 		
 		//Way 1) Raw request
 		Request req = new Request();
@@ -49,7 +47,7 @@ public class RpcClientSimple {
 		System.out.println("proxy class: " + result);
 		
 		
-		broker.close(); 
+		b.close(); 
 	}
 
 }

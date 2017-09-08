@@ -130,6 +130,12 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 		} 
 	}
 	
+	public void addTracker(ServerAddress trackerAddress) {
+		if(!trackerList.contains(trackerAddress)){
+			trackerList.add(trackerAddress);
+		} 
+	}
+	
 	public void addTracker(String trackerAddress){
 		try {
 			addTracker(trackerAddress, null);

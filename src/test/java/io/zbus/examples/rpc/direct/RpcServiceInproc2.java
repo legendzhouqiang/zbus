@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc;
+package io.zbus.examples.rpc.direct;
 
 import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
 import io.zbus.examples.rpc.biz.generic.GenericMethodImpl;
@@ -6,10 +6,10 @@ import io.zbus.examples.rpc.biz.inheritance.SubService1;
 import io.zbus.examples.rpc.biz.inheritance.SubService2;
 import io.zbus.rpc.ServiceBootstrap;
 
-public class RpcService {
+public class RpcServiceInproc2 {
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {  
+	public static void main(String[] args) throws Exception {   
 		ServiceBootstrap b = new ServiceBootstrap();
 
 		b.addModule(InterfaceExampleImpl.class); 
@@ -17,17 +17,9 @@ public class RpcService {
 		b.addModule(SubService1.class);
 		b.addModule(SubService2.class); 
 
-		
-		//Enable SSL + Token based security 
-		
-		//ServerAddress serverAddress = new ServerAddress("localhost:15555");
-		//serverAddress.setCertFile("ssl/zbus.crt");
-		//serverAddress.setSslEnabled(true);	 
-		//serverAddress.setToken("myrpc_service"); 
-		
 		b.serviceName("MyRpc")
-		 .serviceToken("myrpc_service") 
-		 .serviceAddress("localhost:15555") //connect to remote server
+		 .serviceToken("myrpc_service")
+		 .port(15556) //start server inside
 		 .start();
-	}
+	} 
 }
