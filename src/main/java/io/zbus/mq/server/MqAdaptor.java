@@ -79,7 +79,8 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		exemptAuthCommands.add(Protocol.IMG);
 		exemptAuthCommands.add(Protocol.LOGIN);
 		exemptAuthCommands.add(Protocol.LOGOUT);
-		exemptAuthCommands.add(Protocol.PAGE);
+		exemptAuthCommands.add(Protocol.PAGE); 
+		exemptAuthCommands.add("favicon.ico"); 
 		
 		
 		//Produce/Consume

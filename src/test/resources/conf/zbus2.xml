@@ -25,10 +25,7 @@
 	</trackerList>  
 	 
 	
-	<auth enabled="false">
-	
-		<token value="" name="Default" operation="js,css,img,page"/>
-		
+	<auth enabled="false">  
 		<token value="admin" name="Admin" operation="admin"/> 
 		
 		<token value="mytopic_group1" name="MyTopicGroup1" operation="*"> 
@@ -49,7 +46,7 @@
 			<topic value="MyRpc"/>
 		</token>   
 		
-		<token value="myrpc_service" name="MyRpcService" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_service" name="MyRpcService" operation="*"> 
 			<topic value="MyRpc"/>
 		</token>  
 		
@@ -68,7 +65,10 @@
 		<token value="rpc_service" operation="declare,track_sub,consume,route"> 
 			<topic value="*"/>
 		</token>  
-				
+		
+		<token value="proxy" name="Proxy" operation="*"> 
+			<topic value="http"/>
+		</token>    		
 	</auth>  
 	
 </zbus>

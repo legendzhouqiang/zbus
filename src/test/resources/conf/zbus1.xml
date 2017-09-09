@@ -34,7 +34,7 @@
 	</httpProxy> 
 	-->
 	
-	<auth enabled="true">  
+	<auth enabled="false">  
 		<token value="admin" name="Admin" operation="admin"/> 
 		
 		<token value="mytopic_group1" name="MyTopicGroup1" operation="*"> 
@@ -55,7 +55,7 @@
 			<topic value="MyRpc"/>
 		</token>   
 		
-		<token value="myrpc_service" name="MyRpcService" operation="declare,track_sub,consume,route"> <!-- route required to reply -->
+		<token value="myrpc_service" name="MyRpcService" operation="*"> 
 			<topic value="MyRpc"/>
 		</token>  
 		

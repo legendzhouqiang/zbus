@@ -189,7 +189,7 @@ public class Broker implements Closeable {
 			 
 			try {
 				if(serverAddress.isSslEnabled()){ 
-					MqClient client = new MqClient(trackerAddress, this.eventLoop);
+					MqClient client = new MqClient(trackerAddress, this.eventLoop); 
 					String certificate = client.querySslCertificate(serverAddress.getAddress());
 					client.close();
 					if(certificate == null){

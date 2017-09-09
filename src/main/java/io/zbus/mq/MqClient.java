@@ -50,6 +50,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 	}
 	
 	private void buildSupport(ServerAddress serverAddress, final EventLoop loop){
+		this.token = serverAddress.getToken();
 		if(serverAddress.server != null){
 			support = new InProcClient<Message, Message>(serverAddress.server);
 			return;

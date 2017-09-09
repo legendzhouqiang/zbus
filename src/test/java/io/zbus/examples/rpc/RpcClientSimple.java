@@ -13,7 +13,7 @@ public class RpcClientSimple {
 		ClientBootstrap b = new ClientBootstrap(); 
 		b.serviceAddress("localhost:15555")
 		 .serviceName("MyRpc")
-		 .serviceToken("myrpc_client"); 
+		 .serviceToken("myrpc_service"); 
 		
 		RpcInvoker rpc = b.invoker();
 		

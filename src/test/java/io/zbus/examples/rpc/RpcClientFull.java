@@ -12,14 +12,15 @@ public class RpcClientFull {
 		//Enable SSL + Token based security 
 		
 		//ServerAddress serverAddress = new ServerAddress("localhost:15555"); 
-		//serverAddress.setToken("myrpc_client");
-		//trackerAddress.setCertFile("ssl/zbus.crt");  
-		//trackerAddress.setSslEnabled(true); 
+		//serverAddress.setToken("myrpc_service");
+		//serverAddress.setCertFile("ssl/zbus.crt");  
+		//serverAddress.setSslEnabled(true); 
 		
 		ClientBootstrap b = new ClientBootstrap(); 
-		b.serviceAddress("localhost:15555;localhost:15556")
+		//b.serviceAddress(serverAddress)
+		b.serviceAddress("localhost:15555;localhost:15556") //Multiple servers, HA support!
 		 .serviceName("MyRpc")
-		 .serviceToken("myrpc_client"); 
+		 .serviceToken("myrpc_service"); 
 		  
 		InterfaceExample api = b.createProxy(InterfaceExample.class); 
 		TestCases.testDynamicProxy(api);  //fully test on all cases of parameter types

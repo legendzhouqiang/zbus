@@ -38,13 +38,21 @@ public class ClientBootstrap implements Closeable{
 		return this;
 	}
 	 
-	public ClientBootstrap serviceToken(String token){ 
+	public ClientBootstrap serviceToken(String token){  
 		rpcConfig.setToken(token);
 		return this;
 	}  
 	
 	public RpcInvoker invoker(){
 		if(broker == null){
+			String token = rpcConfig.getToken();
+			if(token != null){
+				for(ServerAddress address : brokerConfig.getTrackerList()){
+					if(address.getToken() == null){
+						address.setToken(token);
+					}
+				}
+			}
 			broker = new Broker(brokerConfig);
 		} 
 		rpcConfig.setBroker(broker);

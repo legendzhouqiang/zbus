@@ -131,10 +131,20 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	}  
 	
-	public ServiceBootstrap addModule(Class<?> clazz){
+	public ServiceBootstrap addModule(Class<?>... clazz){
 		processor.addModule(clazz);
 		return this;
 	}  
+	
+	public ServiceBootstrap addModule(String module, Object... services){
+		processor.addModule(module, services);
+		return this;
+	}
+	
+	public ServiceBootstrap addModule(Object... services){
+		processor.addModule(services);
+		return this;
+	}
 	
 	
 	@Override
