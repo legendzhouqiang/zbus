@@ -34,10 +34,7 @@
 	</httpProxy> 
 	-->
 	
-	<auth enabled="true">
-	
-		<token value="" name="Default" operation="js,css,img,page"/>
-		
+	<auth enabled="true">  
 		<token value="admin" name="Admin" operation="admin"/> 
 		
 		<token value="mytopic_group1" name="MyTopicGroup1" operation="*"> 

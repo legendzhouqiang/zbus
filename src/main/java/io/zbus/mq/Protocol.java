@@ -46,6 +46,8 @@ public class Protocol {
 	//Test connection
 	public static final String PING        = "ping";    //ping server, returning back server time  
 	
+	public static final String HEARTBEAT   = "heartbeat";  
+	
 	//=============================[2] Parameter Values================================================
 	public static final String VERSION       = "version";
 	public static final String COMMAND       		= "cmd";     

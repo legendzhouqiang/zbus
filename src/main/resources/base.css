@@ -232,3 +232,11 @@ td div.td {
 td div.num{
 	font-weight: bold;
 }
+
+.login input {
+	font-size: 16px;
+}
+
+.login .token{
+	width: 300px;
+}

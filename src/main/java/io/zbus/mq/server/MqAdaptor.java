@@ -54,6 +54,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 	private Set<String> restUrlCommands = new HashSet<String>(); 
+	private Set<String> exemptAuthCommands = new HashSet<String>(); 
  
 	public MqAdaptor(MqServer mqServer){
 		super(mqServer.getSessionTable());
@@ -71,6 +72,14 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		restUrlCommands.add(Protocol.QUERY);
 		restUrlCommands.add(Protocol.REMOVE); 
 		restUrlCommands.add(Protocol.EMPTY);
+		
+		exemptAuthCommands.add(Protocol.HEARTBEAT);
+		exemptAuthCommands.add(Protocol.JS);
+		exemptAuthCommands.add(Protocol.CSS);
+		exemptAuthCommands.add(Protocol.IMG);
+		exemptAuthCommands.add(Protocol.LOGIN);
+		exemptAuthCommands.add(Protocol.LOGOUT);
+		exemptAuthCommands.add(Protocol.PAGE);
 		
 		
 		//Produce/Consume
@@ -785,7 +794,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		String cmd = msg.getCommand();
 		boolean auth = true;
-		if(!Protocol.LOGIN.equals(cmd)){
+		if(!exemptAuthCommands.contains(cmd)){
 			auth = authProvider.auth(msg);
 		}
 		

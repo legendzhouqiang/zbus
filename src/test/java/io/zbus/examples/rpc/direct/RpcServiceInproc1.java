@@ -20,7 +20,7 @@ public class RpcServiceInproc1 {
 		b.serviceName("MyRpc") 
 		 .serviceToken("myrpc_service")  //Enable Token authentication
 		 .port(15555) //start server inside
-		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL 
+		 .ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL 
 		 
 		 .start();
 	} 

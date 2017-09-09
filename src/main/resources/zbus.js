@@ -1142,10 +1142,12 @@ class Broker {
                 server: serverAddress.address,
                 token: trackerAddress.token,
             }
-            sslClient.ssl(req).then(certificate=>{
-                serverAddress.certificate = certificate;
-                this._addServerWithReadyAddress(serverInfo, serverAddress, readyCount);
-            }); 
+            sslClient.connect(()=>{
+                sslClient.ssl(req).then(certificate=>{
+                    serverAddress.certificate = certificate;
+                    this._addServerWithReadyAddress(serverInfo, serverAddress, readyCount);
+                }); 
+            }) 
         } else {
             this._addServerWithReadyAddress(serverInfo, serverAddress, readyCount);
         } 
