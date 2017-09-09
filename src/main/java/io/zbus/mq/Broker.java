@@ -72,13 +72,23 @@ public class Broker implements Closeable {
 	} 
 	
 	public Broker(MqServer server){
-		this.eventLoop = new EventLoop();
-		this.addTracker(server);
+		this(server, null);
 	} 
 	
+	public Broker(MqServer server, String token){
+		this.eventLoop = new EventLoop();
+		this.addTracker(server, token);
+	} 
+	
+	
 	public void addTracker(MqServer server){
+		addTracker(server, null);
+	}  
+	
+	public void addTracker(MqServer server, String token){
 		ServerAddress trackerAddress = new ServerAddress();
-		trackerAddress.server = server; 
+		trackerAddress.server = server;  
+		trackerAddress.token = token;
 		addTracker(trackerAddress);  
 	}  
 	 

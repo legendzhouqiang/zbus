@@ -51,6 +51,16 @@ public class DefaultAuthProvider implements AuthProvider {
 		return tokenTable.get(token);
 	}
 	
+	@Override
+	public void addToken(Token token) {
+		tokenTable.put(token.token, token); 
+	} 
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		tokenTable.setEnabled(enabled);
+	}
+	
 	public boolean authOperation(String cmd, Token token){ 
 		if(token.allOperations) return true;
 		Operation op = Operation.find(cmd);

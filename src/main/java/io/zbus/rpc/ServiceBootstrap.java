@@ -3,6 +3,7 @@ package io.zbus.rpc;
 import java.io.Closeable;
 import java.io.IOException;
 
+import io.zbus.kit.StrKit;
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
@@ -36,7 +37,18 @@ public class ServiceBootstrap implements Closeable{
 		}
 		serverConfig.setServerHost(host);
 		return this;
-	} 
+	}  
+	
+	public ServiceBootstrap ssl(String certFile, String keyFile){
+		if(serverConfig == null){
+			serverConfig = new MqServerConfig();
+		}
+		serverConfig.setSslCertFile(certFile);
+		serverConfig.setSslKeyFile(keyFile);
+		serverConfig.setSslEnabled(true);
+		return this;
+	}  
+	
 	
 	public ServiceBootstrap serviceAddress(ServerAddress... tracker){
 		if(brokerConfig == null){
@@ -57,8 +69,7 @@ public class ServiceBootstrap implements Closeable{
 			serviceAddress(serverAddress);
 		}
 		return this;
-	}
-	
+	} 
 	
 	public ServiceBootstrap serviceName(String topic){
 		consumerConfig.setTopic(topic);
@@ -70,7 +81,7 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	}
 	
-	public ServiceBootstrap serviceToken(String token){ 
+	public ServiceBootstrap serviceToken(String token){  
 		consumerConfig.setToken(token);
 		return this;
 	} 
@@ -80,11 +91,28 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	} 
 	
+	private void validate(){
+		String topic = consumerConfig.getTopic();
+		if(StrKit.isEmpty(topic)){
+			throw new IllegalStateException("serviceName required");
+		}
+		if(serverConfig == null && brokerConfig.getTrackerList().isEmpty()){
+			throw new IllegalStateException("serviceAddress is missing");
+		}
+	}
+	
 	public ServiceBootstrap start() throws Exception{
+		validate();
+		
 		if(serverConfig != null){
+			String token = consumerConfig.getToken();
+			if(token != null){
+				serverConfig.addToken(token, consumerConfig.getTopic());
+				serverConfig.getAuthProvider().setEnabled(true); //enable auth
+			} 
 			mqServer = new MqServer(serverConfig); 
 			mqServer.start();
-			broker = new Broker(mqServer);  
+			broker = new Broker(mqServer, token);  
 		} else {
 			broker = new Broker(brokerConfig);
 		}
@@ -111,7 +139,19 @@ public class ServiceBootstrap implements Closeable{
 	
 	@Override
 	public void close() throws IOException { 
+		if(consumer != null){
+			consumer.close();
+			consumer = null;
+		}
 		
+		if(broker != null){
+			broker.close();
+			broker = null;
+		}
+		
+		if(mqServer != null){
+			mqServer.close();
+		}
 	} 
 	
 }

@@ -20,7 +20,9 @@ import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.server.auth.AuthProvider;
+import io.zbus.mq.server.auth.Token;
 import io.zbus.mq.server.auth.XmlAuthProvider;
+import io.zbus.mq.server.auth.Token.TopicResource;
 import io.zbus.proxy.http.ProxyConfig;
 import io.zbus.transport.ServerAddress;
 
@@ -257,6 +259,22 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 		this.compatible = compatible;
 	}   
 	 
+	public void addToken(String token, String topic){
+		Token t = new Token();
+		t.token = token;
+		t.name = token;
+		t.allOperations = true;
+		TopicResource resource = new TopicResource();
+		resource.topic = topic;
+		resource.allGroups = true;
+		t.topics.put(topic, resource); 
+		
+		addToken(t);
+	}
+	
+	public void addToken(Token token){
+		authProvider.addToken(token);
+	}
 
 	public ProxyConfig getHttpProxyConfig() {
 		return httpProxyConfig;

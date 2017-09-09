@@ -16,4 +16,8 @@ public interface AuthProvider {
 	boolean auth(Message message); 
 	
 	Token getToken(String token);
+	
+	void addToken(Token token);
+	
+	void setEnabled(boolean enabled);
 }

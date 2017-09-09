@@ -17,7 +17,7 @@ public class RpcClientFull {
 		//trackerAddress.setSslEnabled(true); 
 		
 		ClientBootstrap b = new ClientBootstrap(); 
-		b.serviceAddress("localhost:15555")
+		b.serviceAddress("localhost:15555;localhost:15556")
 		 .serviceName("MyRpc")
 		 .serviceToken("myrpc_client"); 
 		  
