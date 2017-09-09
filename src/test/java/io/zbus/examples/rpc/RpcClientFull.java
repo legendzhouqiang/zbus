@@ -21,7 +21,7 @@ public class RpcClientFull {
 		b.serviceAddress("localhost:15555;localhost:15556") //Multiple servers, HA support!
 		 .serviceName("MyRpc")
 		 .serviceToken("myrpc_service"); 
-		  
+
 		InterfaceExample api = b.createProxy(InterfaceExample.class); 
 		TestCases.testDynamicProxy(api);  //fully test on all cases of parameter types
 		
@@ -32,7 +32,7 @@ public class RpcClientFull {
 		TestCases.testInheritGeneric1(service1);
 		
 		SubServiceInterface2 service2 = b.createProxy(SubServiceInterface2.class); 
-		TestCases.testInheritGeneric2(service2); 
+		TestCases.testInheritGeneric2(service2);  
 		
 		b.close(); 
 	} 

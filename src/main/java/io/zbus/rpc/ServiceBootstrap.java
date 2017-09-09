@@ -49,6 +49,13 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	}  
 	
+	public ServiceBootstrap storePath(String mqPath){
+		if(serverConfig == null){
+			serverConfig = new MqServerConfig();
+		}
+		serverConfig.setMqPath(mqPath);
+		return this;
+	}   
 	
 	public ServiceBootstrap serviceAddress(ServerAddress... tracker){
 		if(brokerConfig == null){

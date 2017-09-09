@@ -27,7 +27,7 @@ public class RpcService {
 		
 		b.serviceName("MyRpc")
 		 .serviceToken("myrpc_service") 
-		 .serviceAddress("localhost:15555") //connect to remote server
+		 .serviceAddress("localhost:15555;localhost:15556") //connect to remote server
 		 .start();
 	}
 }
