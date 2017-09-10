@@ -1,6 +1,8 @@
 package io.zbus.rpc.bootstrap;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -24,6 +26,20 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 			processor.addModule(remoteInstance);
 		}
 	} 
+	
+	public void setModuleList(List<Object> instances){
+		if(instances == null) return;
+		for(Object instance : instances){
+			processor.addModule(instance);
+		}
+	}
+	
+	public void setModuleTable(Map<String, Object> instances){
+		if(instances == null) return;
+		for(Entry<String, Object> e : instances.entrySet()){
+			processor.addModule(e.getKey(), e.getValue());
+		}
+	}
 	
 	public void setPort(int port){
 		port(port);
@@ -68,4 +84,8 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	public void setConnectionCount(int connectionCount){ 
 		connectionCount(connectionCount);
 	} 
+	 
+	public void setAutoDiscover(boolean autoDiscover) {
+		autoDiscover(autoDiscover);
+	}
 }

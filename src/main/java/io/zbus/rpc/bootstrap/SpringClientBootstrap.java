@@ -8,7 +8,7 @@ public class SpringClientBootstrap extends ClientBootstrap {
 		serviceAddress(tracker);
 	}
 	
-	public void seServiceAddress(String tracker){
+	public void setServiceAddress(String tracker){
 		serviceAddress(tracker);
 	}
 	
