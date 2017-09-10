@@ -4,7 +4,7 @@ import io.zbus.examples.rpc.biz.InterfaceExampleImpl;
 import io.zbus.examples.rpc.biz.generic.GenericMethodImpl;
 import io.zbus.examples.rpc.biz.inheritance.SubService1;
 import io.zbus.examples.rpc.biz.inheritance.SubService2;
-import io.zbus.rpc.ServiceBootstrap;
+import io.zbus.rpc.bootstrap.ServiceBootstrap;
 
 public class RpcServiceInproc2 {
 
@@ -17,9 +17,11 @@ public class RpcServiceInproc2 {
 		b.addModule(SubService1.class);
 		b.addModule(SubService2.class); 
 
-		b.serviceName("MyRpc")
-		 .serviceToken("myrpc_service")
-		 .port(15556) //start server inside
+		b.serviceName("MyRpc") 
+		 .port(15556)    //start server inside
+		 .storePath("/tmp/zbus2")
+		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
+		 //.serviceToken("myrpc_service")
 		 .start();
 	} 
 }

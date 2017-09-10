@@ -1,10 +1,10 @@
 package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
-import io.zbus.rpc.ClientBootstrap;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcInvoker;
+import io.zbus.rpc.bootstrap.ClientBootstrap;
 import io.zbus.transport.ResultCallback;
 
 public class RpcClientSimple {

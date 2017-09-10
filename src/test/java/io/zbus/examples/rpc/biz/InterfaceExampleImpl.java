@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.rpc.Remote;
 
+@Remote
 public class InterfaceExampleImpl implements InterfaceExample{
  
 	@Override 
@@ -140,25 +140,15 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public void testTimeout() {
 		try {
 			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		} catch (InterruptedException e) { 
 			e.printStackTrace();
 		}
 	}
-	
-	private static final Logger log = LoggerFactory.getLogger(InterfaceExampleImpl.class);
-	int timeBiggerThan100ms = 0;
+	  
 	@Override
 	public int getUserScore() { 
 		Random r = new Random(System.currentTimeMillis());
-		int time = 10 + r.nextInt(100);
-		try { Thread.sleep(time); } catch (InterruptedException e) {}
-		if(time > 100){
-			timeBiggerThan100ms++;
-			if(timeBiggerThan100ms % 100 == 0){
-				log.info("Got %d requests cost > 100ms", timeBiggerThan100ms);
-			}
-		}
+		int time = 10 + r.nextInt(100); 
 		return time;
 	}
 	

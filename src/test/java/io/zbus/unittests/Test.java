@@ -1,18 +1,20 @@
 package io.zbus.unittests;
 
-import io.zbus.kit.JsonKit;
-import io.zbus.transport.ServerAddress;
+import java.util.Set;
+
+import io.zbus.kit.ClassKit;
+import io.zbus.rpc.Remote;
 
 public class Test {
 
-	public static void main(String[] args) { 
-		ServerAddress sa = new ServerAddress();
-		sa.address = "localhost:15555";
-		sa.certificate = "xxx";
-		sa.token = "abc";
+	public static void main(String[] args) throws Exception {   
+		Set<Class<?>> all = ClassKit.scan(Remote.class); 
 		
-		String json = JsonKit.toJSONString(sa);
-		System.out.println(json);
+		for(Class<?> c : all){
+			System.out.println(c);
+		}
+		
+		System.out.println(all.size());
 	}
 
 }

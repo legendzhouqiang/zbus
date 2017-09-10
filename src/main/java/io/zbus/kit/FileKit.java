@@ -193,7 +193,14 @@ public class FileKit {
 		}  
 	}
 	
-	public static String fullPath(String parent, String child){
-		return new File(parent, child).toString();
+	public static File classBaseDir(){
+		return classBaseDir(FileKit.class);
+	}
+	
+	public static File classBaseDir(Class<?> clazz){
+		if(clazz == null){
+			clazz = FileKit.class;
+		}
+		return new File(clazz.getProtectionDomain().getCodeSource().getLocation().getPath());
 	}
 }

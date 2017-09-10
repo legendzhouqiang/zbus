@@ -55,6 +55,13 @@
 			<artifactId>fastjson</artifactId>
 			<version>1.2.24</version> 
 		</dependency> 
+		
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-context</artifactId>
+		    <version>4.3.10.RELEASE</version>
+		    <scope>compile</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>

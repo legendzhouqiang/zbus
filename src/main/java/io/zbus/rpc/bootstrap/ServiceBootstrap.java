@@ -1,8 +1,10 @@
-package io.zbus.rpc;
+package io.zbus.rpc.bootstrap;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Set;
 
+import io.zbus.kit.ClassKit;
 import io.zbus.kit.StrKit;
 import io.zbus.mq.Broker;
 import io.zbus.mq.BrokerConfig;
@@ -11,17 +13,27 @@ import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
+import io.zbus.rpc.Remote;
+import io.zbus.rpc.RpcProcessor;
 import io.zbus.transport.ServerAddress;
 
+/**
+ * Bootstrap to setup Rpc Service
+ * Spring friendly setters
+ * 
+ * @author Rushmore
+ *
+ */
 public class ServiceBootstrap implements Closeable{ 
-	MqServerConfig serverConfig = null;
-	BrokerConfig brokerConfig = null;
-	ConsumerConfig consumerConfig = new ConsumerConfig(); 
+	protected MqServerConfig serverConfig = null;
+	protected BrokerConfig brokerConfig = null;
+	protected ConsumerConfig consumerConfig = new ConsumerConfig(); 
 	
-	MqServer mqServer = null;
-	Broker broker;
-	Consumer consumer;
-	RpcProcessor processor = new RpcProcessor();
+	protected MqServer mqServer = null;
+	protected Broker broker;
+	protected Consumer consumer;
+	protected RpcProcessor processor = new RpcProcessor(); 
+	protected boolean autoDiscover = false;
 	
 	public ServiceBootstrap port(int port){
 		if(serverConfig == null){
@@ -30,7 +42,7 @@ public class ServiceBootstrap implements Closeable{
 		serverConfig.setServerPort(port);
 		return this;
 	} 
-	
+	 
 	public ServiceBootstrap host(String host){
 		if(serverConfig == null){
 			serverConfig = new MqServerConfig();
@@ -38,6 +50,7 @@ public class ServiceBootstrap implements Closeable{
 		serverConfig.setServerHost(host);
 		return this;
 	}  
+	 
 	
 	public ServiceBootstrap ssl(String certFile, String keyFile){
 		if(serverConfig == null){
@@ -48,6 +61,12 @@ public class ServiceBootstrap implements Closeable{
 		serverConfig.setSslEnabled(true);
 		return this;
 	}  
+	 
+	public ServiceBootstrap autoDiscover(boolean autoDiscover) {
+		this.autoDiscover = autoDiscover;
+		return this;
+	}
+	
 	
 	public ServiceBootstrap storePath(String mqPath){
 		if(serverConfig == null){
@@ -56,6 +75,7 @@ public class ServiceBootstrap implements Closeable{
 		serverConfig.setMqPath(mqPath);
 		return this;
 	}   
+	 
 	
 	public ServiceBootstrap serviceAddress(ServerAddress... tracker){
 		if(brokerConfig == null){
@@ -108,9 +128,17 @@ public class ServiceBootstrap implements Closeable{
 		}
 	}
 	
+	protected void initProcessor(){ 
+		if(autoDiscover){
+			Set<Class<?>> classes = ClassKit.scan(Remote.class);
+			for(Class<?> clazz : classes){
+				processor.addModule(clazz);
+			} 
+		}
+	}
+	 
 	public ServiceBootstrap start() throws Exception{
-		validate();
-		
+		validate(); 
 		if(serverConfig != null){
 			String token = consumerConfig.getToken();
 			if(token != null){
@@ -122,7 +150,9 @@ public class ServiceBootstrap implements Closeable{
 			broker = new Broker(mqServer, token);  
 		} else {
 			broker = new Broker(brokerConfig);
-		}
+		} 
+		
+		initProcessor();
 		
 		consumerConfig.setBroker(broker);  
 		Integer mask = consumerConfig.getTopicMask();
@@ -169,6 +199,5 @@ public class ServiceBootstrap implements Closeable{
 		if(mqServer != null){
 			mqServer.close();
 		}
-	} 
-	
+	}   
 }
