@@ -35,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -141,20 +140,7 @@ public class FileKit {
 		
 		return template;
 	}
-	
-	public static Map<String, Object> parseKeyValuePairs(String params){
-		Map<String, Object> model = new HashMap<String, Object>();
-		String[] kvs = params.split("&&");
-		for(String kv : kvs){
-			kv = kv.trim();
-			String[] bb = kv.split("=");
-			if(bb.length < 2) continue;
-			String key = bb[0].trim();
-			String val = bb[1].trim();
-			model.put(key, val);
-		}
-		return model;
-	}
+	 
 	
 	public static byte[] loadFileBytes(String resource) throws IOException {
 		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);

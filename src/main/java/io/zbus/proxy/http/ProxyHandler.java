@@ -67,7 +67,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		ConsumerConfig consumeConfig = new ConsumerConfig(this.broker);
 		consumeConfig.setTopic(topic);
 		consumeConfig.setConnectionCount(config.connectionCount);
-		consumeConfig.setTopicMask(Protocol.MASK_MEMORY);
+		consumeConfig.setTopicMask(Protocol.MASK_MEMORY|Protocol.MASK_PROXY);
 		consumeConfig.setMaxInFlightMessage(1); //run each time
 		consumeConfig.setConsumeTimeout(config.consumeTimeout);
 		consumeConfig.setToken(config.token);
@@ -117,14 +117,19 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			if (!url.startsWith("/")) {
 				url = "/" + url;
 			}
-		}  
-		url = targetUrl + url;
-		if (!url.startsWith("/")) {
-			url = "/" + url;
+		} else {
+			log.error("Url unmatched");
+			return;
+		} 
+		String newUrl = targetUrl;
+		if(!"/".equals(url)){
+			newUrl += url;
 		}
+		if (!newUrl.startsWith("/")) {
+			newUrl = "/" + newUrl;
+		}  
 		
-		msg.setUrl(url);
-		
+		msg.setUrl(newUrl); 
 		Message res = null;
 		try { 
 			if(config.sendFilter != null){

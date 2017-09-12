@@ -40,7 +40,7 @@ public class Protocol {
 	public static final String HOME        = "home";
 	public static final String JS          = "js";      
 	public static final String CSS         = "css";      
-	public static final String IMG         = "img";  
+	public static final String IMG         = "img"; 
 	public static final String PAGE        = "page";     
 	
 	//Test connection
@@ -81,10 +81,12 @@ public class Protocol {
 	public static final String TOKEN   				= "token";  
 	
 	public static final int MASK_MEMORY    	    = 1<<0;
-	public static final int MASK_PAUSE    	    = 1<<1;  
-	public static final int MASK_EXCLUSIVE 	    = 1<<2;  
-	public static final int MASK_DELETE_ON_EXIT = 1<<3; 
-	public static final int MASK_RPC    	    = 1<<4;
+	public static final int MASK_RPC    	    = 1<<1;
+	public static final int MASK_PROXY    	    = 1<<2; 
+	public static final int MASK_PAUSE    	    = 1<<3;  
+	public static final int MASK_EXCLUSIVE 	    = 1<<4;  
+	public static final int MASK_DELETE_ON_EXIT = 1<<5; 
+	
 	
 	public static class ServerEvent{  
 		//public ServerAddress serverAddress;
