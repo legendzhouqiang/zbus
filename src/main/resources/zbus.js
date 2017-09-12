@@ -50,12 +50,14 @@ Protocol.ORIGIN_STATUS = "origin_status";
 //Security 
 Protocol.TOKEN = "token"; 
 
-Protocol.HEARTBEAT = 'heartbeat';
- 
-Protocol.MASK_MEMORY         = 1 << 0;
-Protocol.MASK_PAUSE          = 1 << 1;
-Protocol.MASK_EXCLUSIVE      = 1 << 2;
-Protocol.MASK_DELETE_ON_EXIT = 1 << 3;
+Protocol.HEARTBEAT = 'heartbeat'; 
+
+Protocol.MASK_MEMORY    	 = 1<<0;
+Protocol.MASK_RPC    	     = 1<<1;
+Protocol.MASK_PROXY    	     = 1<<2; 
+Protocol.MASK_PAUSE    	     = 1<<3;  
+Protocol.MASK_EXCLUSIVE 	 = 1<<4;  
+Protocol.MASK_DELETE_ON_EXIT = 1<<5; 
 
 ////////////////////////////////////////////////////////////
 function hashSize(obj) {
@@ -1003,29 +1005,7 @@ class Broker {
             broker.onReady = resolve;
         });
 
-        if(trackerAddressList){
-            if(trackerAddressList.constructor == String){
-                var bb = trackerAddressList.split(";");
-                for(var i in bb){
-                    var trackerAddress = bb[i];
-                    if(trackerAddress.trim() == "") continue; 
-                    this.addTracker(trackerAddress);
-                } 
-            }
-            if(trackerAddressList.constructor == Array){
-                for(var i in trackerAddressList){
-                    var trackerAddress = trackerAddressList[i];
-                    trackerAddress = new ServerAddress(trackerAddress);
-                    this.addTracker(trackerAddress);
-                }
-            }
-            if(trackerAddressList.constructor == ServerAddress){
-                var trackerAddress = trackerAddressList;
-                this.addTracker(trackerAddress);
-            } 
-            this.addTracker(trackerAddressList);
-        } 
-        
+        this._addTracker(trackerAddressList); 
 
         this.readyTimeoutFn = setTimeout(function () {
             if (!broker.readyTriggered) {
@@ -1132,6 +1112,31 @@ class Broker {
             }
         }  
     } 
+
+    _addTracker(trackerAddressList){
+        if(trackerAddressList){
+            if(trackerAddressList.constructor == String){
+                var bb = trackerAddressList.split(";");
+                for(var i in bb){
+                    var trackerAddress = bb[i];
+                    if(trackerAddress.trim() == "") continue; 
+                    this.addTracker(trackerAddress);
+                } 
+            }
+            if(trackerAddressList.constructor == Array){
+                for(var i in trackerAddressList){
+                    var trackerAddress = trackerAddressList[i];
+                    trackerAddress = new ServerAddress(trackerAddress);
+                    this.addTracker(trackerAddress);
+                }
+            }
+            if(trackerAddressList.constructor == ServerAddress){
+                var trackerAddress = trackerAddressList;
+                this.addTracker(trackerAddress);
+            } 
+            this.addTracker(trackerAddressList);
+        } 
+    }
 
     _addServer(serverInfo, readyCount, trackerAddress) {
         var serverAddress = serverInfo.serverAddress;  
@@ -1350,7 +1355,13 @@ class Consumer extends MqAdmin {
             var client = clientInBrokerTable.fork(); //create new connections
             clients.push(client);   
             client.connect((client) => { //web browser need 
-                consumer.consume(client);
+                var ctrl = clone(consumer.consumeCtrl);
+                client.declare(ctrl).then(res=>{
+                    if (res.error) { 
+                        throw new Error("declare error: " + res.error);
+                    } 
+                    consumer.consume(client);
+                });
             });  
         }  
         this.consumeClientTable[addr] = clients; 
@@ -1562,6 +1573,95 @@ class RpcProcessor {
         }
     }
 }
+
+class ServiceBootstrap {
+    constructor(){
+        this.processor = new RpcProcessor();
+        this.broker = new Broker(); 
+        this.connectionSize = 1;
+    }  
+
+    start () {
+        if(this.consumer) return; 
+        if(!this.topic){
+            throw new Error("Missing serviceName");
+        }  
+        var consumeCtrl = {
+            topic: this.topic,
+            topic_mask: Protocol.MASK_MEMORY | Protocol.MASK_RPC,
+            token: this.token
+        };
+        this.consumer = new Consumer(this.broker, consumeCtrl);
+        this.consumer.messageHandler = this.processor.messageHandler;
+        this.consumer.connectionCount = this.connectionSize; 
+        this.consumer.start(); 
+    } 
+
+    close() {
+        if(this.consumer){
+            this.consumer.close();
+            this.consumer = null;
+        }
+        if(this.broker){
+            this.broker.close();
+            this.broker = null;
+        }
+    }
+
+    serviceAddress(address){
+        this.broker._addTracker(address);
+        return this;
+    }
+    serviceName(name) {
+        this.topic = name;
+        return this;
+    } 
+    serviceToken(token){
+        this.token = token;
+        return this;
+    }   
+    connectionCount(count){
+        this.connectionSize = count;
+        return this;
+    } 
+    addModule(serviceObj, moduleName){
+        this.processor.addModule(serviceObj, moduleName);
+        return this;
+    } 
+}
+
+
+
+class ClientBootstrap {
+    constructor(){ 
+        this.broker = new Broker();  
+    }   
+    serviceAddress(address){
+        this.broker._addTracker(address);
+        return this;
+    }
+    serviceName(name) {
+        this.topic = name;
+        return this;
+    } 
+    serviceToken(token){
+        this.token = token;
+        return this;
+    }   
+    invoker(){
+        var ctrl = {
+            topic: this.topic,
+            token: this.token
+        };
+        return new RpcInvoker(this.broker, ctrl);
+    }
+    close() { 
+        if(this.broker){
+            this.broker.close();
+            this.broker = null;
+        }
+    }
+}
   
 if (__NODEJS__) {
     module.exports.Protocol = Protocol; 
@@ -1573,6 +1673,8 @@ if (__NODEJS__) {
     module.exports.Consumer = Consumer;
     module.exports.RpcInvoker = RpcInvoker;
     module.exports.RpcProcessor = RpcProcessor;
+    module.exports.ServiceBootstrap = ServiceBootstrap;
+    module.exports.ClientBootstrap = ClientBootstrap;
     module.exports.Logger = Logger;
     module.exports.logger = logger;
 }
