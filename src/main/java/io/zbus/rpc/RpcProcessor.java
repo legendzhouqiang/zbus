@@ -116,6 +116,7 @@ public class RpcProcessor implements MessageHandler{
 		List<RpcMethod> rpcMethods = new ArrayList<RpcMethod>();
 		object2Methods.put(serviceKey,rpcMethods);
 		for (Method m : methods) { 
+			if(m.getDeclaringClass() == Object.class) continue;
 			String method = m.getName();
 			Remote cmd = m.getAnnotation(Remote.class);
 			if(cmd != null){ 
