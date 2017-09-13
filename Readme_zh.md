@@ -295,3 +295,9 @@ zbus的代理能力还体现在其扩展性，sendFilter与recvFilter提供了�
 	</zbus>
 
 本地启动80端口服务，所有访问80的端口的数据转发到15555端口上。
+
+
+## 监控
+
+启动起来，监控可以直接访问[http://localhost:15555](http://localhost:15555)
+![Monitor](/doc/monitor.png?raw=true "Monitor")
