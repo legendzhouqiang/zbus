@@ -71,6 +71,10 @@ Maven官方下载
 
 各个语言都包括大量使用例子代码，最好的起步了解方法是直接跑示例。
 
+**监控**
+
+启动起来，监控可以直接访问[http://localhost:15555](http://localhost:15555)
+![Monitor](/doc/monitor.png?raw=true "Monitor")
 
 ## 消息队列（MQ）
 
@@ -296,8 +300,3 @@ zbus的代理能力还体现在其扩展性，sendFilter与recvFilter提供了�
 
 本地启动80端口服务，所有访问80的端口的数据转发到15555端口上。
 
-
-## 监控
-
-启动起来，监控可以直接访问[http://localhost:15555](http://localhost:15555)
-![Monitor](/doc/monitor.png?raw=true "Monitor")
