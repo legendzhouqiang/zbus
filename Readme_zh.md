@@ -9,7 +9,7 @@
          \///////////  \/////////    \/////////   \//////////       QQ Group: 467741880
 
 # ZBUS  
-zbus核心是一个独立实现的小巧极速的消息队列（MQ），支持持久化与内存队列， 支持单播、广播、组播等多种消息通信模式；在MQ之上zbus完备地支持了RPC服务，RPC可以独立伺服，也可以挂接Broker，编程模型不变；同时zbus支持代理服务，基于MQ的HttpProxy实现了类Nginx的HTTP代理服务（支持DMZ网络结构），TcpProxy则支持透明的TCP协议代理，可以代理任何基于TCP的协议，比如MySQL数据库代理。
+zbus核心是一个独立实现的小巧极速的消息队列（MQ），支持持久化与内存队列， 支持单播、广播、组播等多种消息通信模式；在MQ之上 zbus 完备地支持了RPC服务，RPC可以独立伺服，也可以挂接Broker，编程模型不变；同时zbus支持代理服务，基于MQ的HttpProxy实现了类 Nginx 的HTTP代理服务（支持DMZ网络结构），TcpProxy则支持透明的TCP协议代理，可以代理任何基于TCP的协议，比如MySQL数据库代理。
 
 zbus支持分布式高可用（HA），内置Tracker解决单点问题；Java/.NET/JS/C++/PHP等主流语言接入为zbus充当SOA服务总线提供跨平台支持；
 
