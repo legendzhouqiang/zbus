@@ -57,8 +57,22 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 			httpMsg = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
-
+		//content-type and encoding
+		String contentType = msg.getHeader(Message.CONTENT_TYPE);
+		if(contentType == null) {
+			contentType = "text/plain";
+		}
+		String encoding = msg.getHeader(Message.ENCODING);
+		if(encoding == null){
+			encoding = "utf-8";
+		}
+		contentType += "; charset=" + encoding;
+		httpMsg.headers().set(Message.CONTENT_TYPE, contentType);
+		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
+			if(e.getKey().equalsIgnoreCase(Message.CONTENT_TYPE)) continue;
+			if(e.getKey().equalsIgnoreCase(Message.ENCODING)) continue;
+			
 			httpMsg.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
 		if (msg.getBody() != null) {
@@ -89,7 +103,15 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 		Iterator<Entry<String, String>> iter = httpMsg.headers().iterator();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
-			msg.setHeader(e.getKey().toLowerCase(), e.getValue());
+			if(e.getKey().equalsIgnoreCase(Message.CONTENT_TYPE)){ //encoding and type
+				String[] typeInfo = httpContentType(e.getValue());
+				msg.setHeader(Message.CONTENT_TYPE, typeInfo[0]);
+				if(msg.getHeader(Message.ENCODING) == null) {
+					msg.setHeader(Message.ENCODING, typeInfo[1]);
+				}
+			} else {
+				msg.setHeader(e.getKey().toLowerCase(), e.getValue());
+			} 
 		}
 
 		if (httpMsg instanceof HttpRequest) {
@@ -113,6 +135,21 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 		}
 
 		out.add(msg);
+	}
+	 
+	private static String[] httpContentType(String value){
+		String type="text/plain", charset="utf-8";
+		String[] bb = value.split(";");
+		if(bb.length>0){
+			type = bb[0].trim();
+		}
+		if(bb.length>1){
+			String[] bb2 = bb[1].trim().split("=");
+			if(bb2[0].trim().equalsIgnoreCase("charset")){
+				charset = bb2[1].trim();
+			}
+		}
+		return new String[]{type, charset};
 	}
 
 	@Override

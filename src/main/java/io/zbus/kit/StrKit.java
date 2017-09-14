@@ -103,5 +103,5 @@ public class StrKit {
     		info.params = kvp(params, "&");
     	} 
 		return info;
-	}
+	} 
 }

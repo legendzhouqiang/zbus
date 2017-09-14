@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.junit.Assert;
+
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.examples.rpc.biz.MyEnum;
 import io.zbus.examples.rpc.biz.Order;
@@ -74,6 +76,8 @@ public class TestCases {
 		Object[] array = new Object[] { getUser("rushmore"), "hong", true, 1,
 				String.class };
 		
+		String encoding = biz.testEncoding();
+		Assert.assertEquals(encoding, "中文");
 		
 		int saved = biz.saveObjectArray(array);
 		System.out.println(saved);

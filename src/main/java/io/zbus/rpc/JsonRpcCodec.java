@@ -62,7 +62,13 @@ public class JsonRpcCodec implements RpcCodec {
 		msg.setStatus(200);
 		msg.setEncoding(encoding); 
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
-		msg.setBody(JsonKit.toJSONBytesWithType(response, encoding)); 
+		String json;
+		if(response.getError() != null){
+			json = String.format("{\"error\": %s}", JsonKit.toJSONStringWithTykpe(response.getError(), encoding));
+		} else {
+			json = String.format("{\"result\": %s}", JsonKit.toJSONStringWithTykpe(response.getResult(), encoding));
+		} 
+		msg.setBody(json); 
 		return msg; 
 	}
 	

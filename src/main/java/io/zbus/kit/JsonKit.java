@@ -56,6 +56,15 @@ public class JsonKit {
 		}
 	}
 	
+	public static String toJSONStringWithTykpe(Object value, String encoding) {
+		byte[] data = toJSONBytesWithType(value, encoding);
+		try {
+			return new String(data, encoding);
+		} catch (UnsupportedEncodingException e) {
+			return new String(data);
+		}
+	}
+	
 	public static byte[] toJSONBytes(Object value, String encoding) {
 		return toJSONBytes(value, encoding, 
 				//SerializerFeature.WriteMapNullValue, 
