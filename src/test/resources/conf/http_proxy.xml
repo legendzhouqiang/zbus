@@ -5,7 +5,7 @@
 	<!-- Can be multiple zbus servers, for HA -->
 	<!-- Token settings is for zbus authentication -->
 	<httpProxy zbus="localhost:15555" connectionCount="1" consumeTimeout="10000" token="admin">
-		<proxy entry="http" token="admin" sendFilter="io.zbus.examples.proxy.ForbbidenMessageFilter" recvFilter=""> <!-- class name of filter -->
+		<proxy entry="http" token="admin" sendFilter="io.zbus.examples.proxy.MyMessageFilter" recvFilter=""> <!-- class name of filter -->
 			<target>http://localhost:15555/?cmd=server</target> <!-- Can be multiple -->
 			<target>http://localhost:15556/?cmd=server</target>
 		</proxy>
