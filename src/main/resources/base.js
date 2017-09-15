@@ -82,10 +82,10 @@ function consumeGroupList(groupList){
 		var group = groupList[i];
 		res += "<tr>";
 		res += "<td><div class='td'>" + group.groupName + "</div>\
-		<div class='op'>\
-			<div><a class='op-del' href='#'>&#8722;</a></div>\
-			<div><a class='op-add' href='#'>&#9998;</a></div>\
-		</div></td>";
+		<div class='op'>"+
+			//<div><a class='op-del' href='#'>&#8722;</a></div>\
+			//<div><a class='op-add' href='#'>&#9998;</a></div>\
+		"</div></td>";
 		var numClass = "";
 		if (group.messageCount > 0) {
 			numClass = "num";
@@ -112,10 +112,10 @@ function topicServerList(topicInfoList, filterServerList){
 		res += "<tr>";
 		//link td
 		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a>\
-		<div class='op'>\
-			<div><a class='op-del' href='#'>&#8722;</a></div>\
-			<div><a class='op-add' href='#'>&#43;</a></div>\
-		</div></td>";
+		<div class='op'>"+
+			//<div><a class='op-del' href='#'>&#8722;</a></div>\
+			//<div><a class='op-add' href='#'>&#43;</a></div>\
+		"</div></td>";
 		
 		//message depth td
 		res += "<td><div class='td'>" + topicInfo.messageDepth + "</div></td>"; 
@@ -145,11 +145,11 @@ function showTopicTable(topicTable, filterServerList){
 				<td><a class='topic'>" +topicName + "</a>\
 				<div class='op'>\
 					<div><a href='#' class='op-del' data-topic='" + topicName + "' data-toggle='modal' data-target='#remove-topic-modal'>&#8722;</a></div>\
-					<div><a class='op-add' href='#'>&#43;</a></div>\
-				</div></td>\
+					</div></td>\
 				<td><table class='table-nested sgroup'>"+ serverList + "</table></td>\
 			</tr>"
    		); 
+		//<div><a class='op-add' href='#'>&#43;</a></div>\
 	}  
 }  
 
