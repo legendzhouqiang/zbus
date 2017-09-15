@@ -65,7 +65,7 @@ public class ProxyConfig extends XmlConfig {
 			    if (entryName.equals("")) continue;
 			    
 			    String sendFilterClass = valueOf(xpath.evaluate("@sendFilter", node), ""); 
-			    String recvFilterClass = valueOf(xpath.evaluate("@sendFilter", node), ""); 
+			    String recvFilterClass = valueOf(xpath.evaluate("@recvFilter", node), ""); 
 			    if(!sendFilterClass.equals("")){
 			    	entry.sendFilter = ClassKit.newInstance(sendFilterClass); 
 			    }
