@@ -22,7 +22,9 @@
 }
 .topic {
 	margin: 3px; 
+	cursor: pointer;
 } 
+ 
 
 .filter-box{
 	float: right; 
