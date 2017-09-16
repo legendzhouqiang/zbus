@@ -84,8 +84,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		//Produce/Consume
 		registerHandler(Protocol.PRODUCE, produceHandler); 
 		registerHandler(Protocol.CONSUME, consumeHandler);  
-		registerHandler(Protocol.ROUTE, routeHandler); 
-		registerHandler(Protocol.RPC, rpcHandler);
+		registerHandler(Protocol.ROUTE, routeHandler);  
 		registerHandler(Protocol.UNCONSUME, unconsumeHandler); 
 		
 		//Topic/ConsumerGroup 
@@ -150,15 +149,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				ReplyKit.reply200(msg, sess);
 			}
 		}
-	}; 
-	
-	private MessageHandler<Message> rpcHandler = new MessageHandler<Message>() { 
-		@Override
-		public void handle(final Message msg, final Session sess) throws IOException {  
-			msg.setAck(false);
-			produceHandler.handle(msg, sess);
-		}
-	};
+	};  
 	
 	private MessageHandler<Message> consumeHandler = new MessageHandler<Message>() { 
 		@Override

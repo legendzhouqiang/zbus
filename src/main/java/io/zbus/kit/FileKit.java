@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class FileKit {  
 	private final static Map<String, String> cache = new ConcurrentHashMap<String, String>();
-	private static boolean enableCache = true;
+	private static boolean enableCache = false;
 	
 	public static InputStream inputStream(String filePath){
 		File file = new File(filePath);

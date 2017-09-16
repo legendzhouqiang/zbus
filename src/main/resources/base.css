@@ -21,8 +21,7 @@
 	top: 4px;
 }
 .topic {
-	margin: 3px;
-	cursor: pointer;
+	margin: 3px; 
 } 
 
 .filter-box{
@@ -178,6 +177,10 @@ input.topic-item{
 }
 .sgroup tr>td:nth-child(3) {	
 	width: 70%;
+}
+
+.sgroup td span {
+	margin-right: 4px;
 }
 
 

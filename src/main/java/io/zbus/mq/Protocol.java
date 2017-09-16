@@ -16,8 +16,6 @@ public class Protocol {
 	public static final String CONSUME       = "consume";   
 	public static final String UNCONSUME     = "unconsume"; //leave consume status
 	public static final String ROUTE   	     = "route";     //route back message to sender
-	public static final String RPC   	     = "rpc";       //the same as produce command except rpc set ack false by default
-	
 	
 	//Topic control
 	public static final String DECLARE = "declare";  
@@ -49,7 +47,7 @@ public class Protocol {
 	public static final String HEARTBEAT   = "heartbeat";  
 	
 	//=============================[2] Parameter Values================================================
-	public static final String VERSION       = "version";
+	public static final String VERSION              = "version";
 	public static final String COMMAND       		= "cmd";     
 	public static final String TOPIC         		= "topic";
 	public static final String TOPIC_MASK          	= "topic_mask"; 

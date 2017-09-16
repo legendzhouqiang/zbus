@@ -109,10 +109,24 @@ function topicServerList(topicInfoList, filterServerList){
 		if(!containsServerAddress(filterServerList, linkAddr)){
 			continue;
 		}
+		var mask = topicInfo.mask;
+		var maskLabel = "";
+		if(mask & Protocol.MASK_MEMORY){
+			maskLabel += "<span class=\"label label-warning\">mem</span>";
+		} else {
+			maskLabel += "<span class=\"label label-info\">disk</span>";
+		} 
+		if(mask & Protocol.MASK_RPC){
+			maskLabel += "<span class=\"label label-primary\">rpc</span>";
+		}  
+		if(mask & Protocol.MASK_PROXY){
+			maskLabel += "<span class=\"label label-primary\">proxy</span>";
+		}
+		
 		res += "<tr>";
 		//link td
-		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a>\
-		<div class='op'>"+
+		res += "<td><a class='topic' target='_blank' href='" + linkFullAddr + "'>" + linkAddr.address + "</a>" +
+		maskLabel + "<div class='op'>"+
 			//<div><a class='op-del' href='#'>&#8722;</a></div>\
 			//<div><a class='op-add' href='#'>&#43;</a></div>\
 		"</div></td>";
@@ -142,7 +156,7 @@ function showTopicTable(topicTable, filterServerList){
 		if(!serverList) continue;
 		$("#topic-list").append(
 			"<tr id="+topicName+">\
-				<td><a class='topic'>" +topicName + "</a>\
+				<td><span class='topic'>" +topicName + "</span>\
 				<div class='op'>\
 					<div><a href='#' class='op-del' data-topic='" + topicName + "' data-toggle='modal' data-target='#remove-topic-modal'>&#8722;</a></div>\
 					</div></td>\

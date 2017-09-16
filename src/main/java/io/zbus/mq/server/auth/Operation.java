@@ -8,8 +8,7 @@ import io.zbus.mq.Protocol;
 public enum Operation { 
 	ADMIN(0),
 	
-	PRODUCE(1),
-	RPC(1),       //same order as produce
+	PRODUCE(1), 
 	
 	CONSUME(2),
 	UNCONSUME(2), //same order as consume
@@ -37,8 +36,7 @@ public enum Operation {
 	private static final Map<String, Operation> table = new HashMap<String, Operation>(); 
 	static {
 		table.put("admin", Operation.ADMIN);
-		table.put(Protocol.PRODUCE, Operation.PRODUCE);
-		table.put(Protocol.RPC, Operation.RPC);
+		table.put(Protocol.PRODUCE, Operation.PRODUCE); 
 		table.put(Protocol.CONSUME, Operation.CONSUME);
 		table.put(Protocol.UNCONSUME, Operation.UNCONSUME);
 		table.put(Protocol.ROUTE, Operation.ROUTE);
