@@ -73,7 +73,7 @@ Maven官方下载
 
 **监控**
 
-启动起来，监控可以直接访问[http://localhost:15555](http://localhost:15555)
+启动起来(下载后找到zbus-dist目录，直接启动zbus.bat/zbus.sh)，监控可以直接访问[http://localhost:15555](http://localhost:15555)
 ![Monitor](/doc/monitor.png?raw=true "Monitor")
 
 ## 消息队列（MQ）
