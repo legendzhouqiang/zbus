@@ -1,6 +1,8 @@
-# Changes log
+# Change Log
 
-since 0.9.0
+## 0.9.1
 
+- io.zbus.transport.http.MessageCodec remove default Content-Type
 - MqClient.unconsume get ack from server
 - HttpProxy add configurable hearbeat interval to target server
+- zbus-dist/conf/zbus.xml default to no trackerList
