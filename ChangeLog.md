@@ -6,3 +6,7 @@
 - MqClient.unconsume get ack from server
 - HttpProxy add configurable hearbeat interval to target server
 - zbus-dist/conf/zbus.xml default to no trackerList
+
+## 0.9.2
+
+- RpcCodec return correct json+charset

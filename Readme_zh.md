@@ -62,7 +62,7 @@ Maven官方下载
 	<dependency>
 		<groupId>io.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>0.9.1</version>
+		<version>0.9.0</version>
 	</dependency>
  
  Clone项目到本地后，默认客户端模块不下载，如果对客户端感兴趣，请执行
