@@ -58,16 +58,18 @@ public class MessageCodec extends MessageToMessageCodec<Object, Message> {
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 		//content-type and encoding
-		String contentType = msg.getHeader(Message.CONTENT_TYPE);
-		if(contentType == null) {
-			contentType = "text/plain";
-		}
+		String contentType = msg.getHeader(Message.CONTENT_TYPE); 
 		String encoding = msg.getHeader(Message.ENCODING);
-		if(encoding == null){
+		if(encoding != null){
 			encoding = "utf-8";
+			if(contentType == null) {
+				contentType = "text/plain";
+			}
+			contentType += "; charset=" + encoding;
 		}
-		contentType += "; charset=" + encoding;
-		httpMsg.headers().set(Message.CONTENT_TYPE, contentType);
+		if(contentType != null){
+			httpMsg.headers().set(Message.CONTENT_TYPE, contentType);
+		}
 		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
 			if(e.getKey().equalsIgnoreCase(Message.CONTENT_TYPE)) continue;
