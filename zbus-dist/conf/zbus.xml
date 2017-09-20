@@ -15,7 +15,7 @@
 	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->
 	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds -->
 	
-	<!-- --> 
+	<!-- 
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15556</address>  
@@ -23,7 +23,7 @@
 			<token></token>
 		</serverAddress>   
 	</trackerList>  
-	 
+	--> 
 	
 	<auth enabled="false" class="">
 		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  

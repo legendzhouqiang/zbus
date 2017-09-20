@@ -26,12 +26,17 @@ import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
 public class MqClient extends CompositeClient<Message, Message>{         
 	protected String token;      
 	protected int invokeTimeout = 3000;
-	protected int hearbeatInterval = 60000; //60s
+	protected int heartbeatInterval = 60000; //60s
 	
 	public MqClient(String address, final EventLoop loop){
 		ServerAddress serverAddress = new ServerAddress(address);
-		buildSupport(serverAddress, loop);
+		buildSupport(serverAddress, loop, heartbeatInterval);
 	}   
+	
+	public MqClient(String address, final EventLoop loop, int heartbeatInterval){
+		ServerAddress serverAddress = new ServerAddress(address);
+		buildSupport(serverAddress, loop, heartbeatInterval);
+	}
 	
 	/**
 	 * In-Process MqClient, optimized for speed.
@@ -42,14 +47,18 @@ public class MqClient extends CompositeClient<Message, Message>{
 		ServerAddress serverAddress = new ServerAddress();
 		serverAddress.setServer(mqServer);
 		
-		buildSupport(serverAddress, null);
+		buildSupport(serverAddress, null, heartbeatInterval);
 	} 
 	
 	public MqClient(ServerAddress serverAddress, final EventLoop loop){  
-		buildSupport(serverAddress, loop);
+		buildSupport(serverAddress, loop, heartbeatInterval);
 	}
 	
-	private void buildSupport(ServerAddress serverAddress, final EventLoop loop){
+	public MqClient(ServerAddress serverAddress, final EventLoop loop, int heartbeatInterval){  
+		buildSupport(serverAddress, loop, heartbeatInterval);
+	}
+	
+	private void buildSupport(ServerAddress serverAddress, final EventLoop loop, int heartbeatInterval){
 		this.token = serverAddress.getToken();
 		if(serverAddress.server != null){
 			support = new InProcClient<Message, Message>(serverAddress.server);
@@ -83,7 +92,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 			}
 		}); 
 		
-		tcp.startHeartbeat(hearbeatInterval, new HeartbeatMessageBuilder<Message>() { 
+		tcp.startHeartbeat(heartbeatInterval, new HeartbeatMessageBuilder<Message>() { 
 			@Override
 			public Message build() { 
 				Message hbt = new Message();

@@ -33,6 +33,7 @@ public class ProxyConfig extends XmlConfig {
 		public MessageFilter sendFilter;
 		public MessageFilter recvFilter;
 		public List<String> targetList = new ArrayList<String>();
+		public int heartbeatInterval;
 	} 
 	
 	public static class ProxyHandlerConfig{
@@ -43,6 +44,7 @@ public class ProxyConfig extends XmlConfig {
 		public Broker broker; 
 		public int connectionCount;
 		public int consumeTimeout;
+		public int heartbeatInterval;
 		
 		public MessageFilter sendFilter;
 		public MessageFilter recvFilter;
@@ -72,7 +74,7 @@ public class ProxyConfig extends XmlConfig {
 			    if(!recvFilterClass.equals("")){ 
 			    	entry.recvFilter = ClassKit.newInstance(recvFilterClass);
 			    }
-			    
+			    entry.heartbeatInterval = valueOf(xpath.evaluate("@heartbeat", node), 10)*1000;  //default to 10 seconds
 			    entry.topic = entryName;
 			    
 			    NodeList targetList = (NodeList) xpath.compile("./*").evaluate(node, XPathConstants.NODESET);

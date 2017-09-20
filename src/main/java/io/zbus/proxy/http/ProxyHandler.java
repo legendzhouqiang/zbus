@@ -170,7 +170,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		Map<String, Context> requestTable = new ConcurrentHashMap<String, Context>();
 		
 		HttpClient() {   
-			client = new MqClient(targetServer, broker.getEventLoop());
+			client = new MqClient(targetServer, broker.getEventLoop(), config.heartbeatInterval);
 			client.onDisconnected(new DisconnectedHandler() {  
 				public void onDisconnected() throws IOException { 
 					ready.set(new CountDownLatch(1));
