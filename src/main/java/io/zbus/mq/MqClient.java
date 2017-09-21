@@ -144,20 +144,16 @@ public class MqClient extends CompositeClient<Message, Message>{
 		return res;
 	}  
 	
-	public Message unconsume(String topic) throws IOException, InterruptedException {
-		return unconsume(topic, null);
+	public void unconsume(String topic) throws IOException, InterruptedException {
+		unconsume(topic, null);
 	}
 	
-	public Message unconsume(String topic, String group) throws IOException, InterruptedException {
+	public void unconsume(String topic, String group) throws IOException, InterruptedException {
 		Message msg = new Message();
 		msg.setCommand(Protocol.UNCONSUME);
 		msg.setTopic(topic);
 		msg.setConsumeGroup(group);   
-		
-		Message res = invokeSync(msg, invokeTimeout);
-		res.setId(res.getOriginId());
-		res.removeHeader(Protocol.ORIGIN_ID); 
-		return res;
+		invokeAsync(msg, null); 
 	}
 	
 	public TrackerInfo queryTracker() throws IOException, InterruptedException{

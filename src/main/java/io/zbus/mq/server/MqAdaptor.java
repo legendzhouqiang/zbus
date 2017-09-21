@@ -173,10 +173,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			MessageQueue mq = findMQ(msg, sess);
 			if(mq == null) return; 
 			
-			mq.unconsume(msg, sess);  
-			if(msg.isAck()){
-				ReplyKit.reply200(msg, sess);
-			}
+			mq.unconsume(msg, sess);   
 			
 			String topic = sess.attr(Protocol.TOPIC);
 			if(msg.getTopic().equalsIgnoreCase(topic)){ 
