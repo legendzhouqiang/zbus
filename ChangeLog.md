@@ -14,3 +14,4 @@
 ## 0.9.3
 
 - MqClient.unconsume change to async with no return
+- RpcCodec.encodeResponse remove class info
