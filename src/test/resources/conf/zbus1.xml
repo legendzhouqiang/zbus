@@ -5,7 +5,7 @@
 	<serverPort>15555</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->   
  
- 	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
+ 	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">true</sslEnabled> 
  
 	<mqPath>/tmp/zbus</mqPath> 
 	
