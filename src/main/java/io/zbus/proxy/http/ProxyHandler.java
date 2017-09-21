@@ -130,6 +130,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		}  
 		
 		msg.setUrl(newUrl); 
+		msg.removeHeader(Protocol.TOPIC);
 		Message res = null;
 		try { 
 			if(config.sendFilter != null){
