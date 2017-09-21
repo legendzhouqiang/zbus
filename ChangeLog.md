@@ -10,3 +10,7 @@
 ## 0.9.2
 
 - RpcCodec return correct json+charset
+
+## 0.9.3
+
+- MqClient.unconsume change to async with no return
