@@ -34,6 +34,7 @@ public class ProxyConfig extends XmlConfig {
 		public MessageFilter recvFilter;
 		public List<String> targetList = new ArrayList<String>();
 		public int heartbeatInterval;
+		public boolean targetKeepAlive;
 	} 
 	
 	public static class ProxyHandlerConfig{
@@ -45,6 +46,7 @@ public class ProxyConfig extends XmlConfig {
 		public int connectionCount;
 		public int consumeTimeout;
 		public int heartbeatInterval;
+		public boolean targetKeepAlive;
 		
 		public MessageFilter sendFilter;
 		public MessageFilter recvFilter;
@@ -74,6 +76,7 @@ public class ProxyConfig extends XmlConfig {
 			    if(!recvFilterClass.equals("")){ 
 			    	entry.recvFilter = ClassKit.newInstance(recvFilterClass);
 			    }
+			    entry.targetKeepAlive = valueOf(xpath.evaluate("@keepAlive", node), false);
 			    entry.heartbeatInterval = valueOf(xpath.evaluate("@heartbeat", node), 10)*1000;  //default to 10 seconds
 			    entry.topic = entryName;
 			    

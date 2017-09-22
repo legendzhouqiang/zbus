@@ -17,3 +17,4 @@
 - RpcCodec.encodeResponse remove class info
 - fix SpringServiceBootstrap ssl config bug
 - fix Consumer.pause/resume bug
+- HttpProxy support short connection to target

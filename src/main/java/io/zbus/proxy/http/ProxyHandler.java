@@ -1,8 +1,12 @@
 package io.zbus.proxy.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -83,7 +87,11 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		}
 		
 		targetClients = new ArrayList<HttpClient>();
-		for(int i=0;i<config.connectionCount;i++){
+		int targetCount = config.connectionCount; //same as consumer's connection count
+		if(!config.targetKeepAlive){
+			targetCount = 1; //only need one to detect connectivity
+		}
+		for(int i=0;i<targetCount;i++){
 			HttpClient client = new HttpClient(); 
 			targetClients.add(client);
 		}
@@ -138,9 +146,15 @@ public class ProxyHandler implements MessageHandler, Closeable {
 					return;
 				}
 			}
-			currentClient = (currentClient+1)%targetClients.size();
-			HttpClient targetClient = targetClients.get(currentClient); 
-			targetClient.sendMessage(client, msg); 
+			
+			if(config.targetKeepAlive){
+				currentClient = (currentClient+1)%targetClients.size();
+				HttpClient targetClient = targetClients.get(currentClient); 
+				targetClient.sendMessage(client, msg); 
+			} else {
+				shortHttp(client, msg, targetServer);
+			} 
+			
 		} catch (Exception e) {
 			res = new Message();
 			if (e instanceof FileNotFoundException) {
@@ -164,6 +178,86 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			consumer = null;
 		} 
 	}   
+	
+	
+	void shortHttp(MqClient senderClient, Message req, String server) throws IOException {  
+		final String msgId = req.getId();
+		final String topic = req.getTopic();
+		final String sender = req.getSender();
+		
+		String format = "http://%s%s";
+		if(server.startsWith("http://")){
+			format = "%s%s";
+		}
+		String urlString = String.format(format, server, req.getUrl());
+		URL url = new URL(urlString);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		for(Entry<String, String> e : req.getHeaders().entrySet()){
+			conn.setRequestProperty(e.getKey(), e.getValue());
+		}
+		conn.setRequestMethod(req.getMethod());
+		
+		if(req.getBody() != null && req.getBody().length > 0){
+			conn.setDoOutput(true);
+			conn.getOutputStream().write(req.getBody());
+		}
+		
+		int code = conn.getResponseCode();
+		Message res = new Message();
+		res.setStatus(code);
+		
+		for (Entry<String, List<String>> header : conn.getHeaderFields().entrySet()){
+			String key = header.getKey();
+			if(key == null) continue;
+			key = key.toLowerCase();
+			if(key.equals("transfer-encoding")){ //ignore transfer-encoding
+				continue;
+			}
+			
+			List<String> values = header.getValue();
+			String value = null;
+			if(values.size() == 1){
+				value = values.get(0);
+			} else if(values.size() > 1){
+				value = "[";
+				for(int i=0; i<values.size(); i++){
+					if(i == value.length()-1){
+						value += values.get(i);
+					} else {
+						value += values.get(i) + ",";
+					}
+				}
+			} 
+			res.setHeader(key, value);
+		}
+		InputStream bodyStream = conn.getInputStream();
+		if(bodyStream != null){
+			ByteArrayOutputStream sink = new ByteArrayOutputStream();
+			byte[] buf = new byte[1024];
+			int len = 0;
+			while((len=bodyStream.read(buf))>=0){
+				sink.write(buf, 0, len);
+			}
+			res.setBody(sink.toByteArray()); 
+		} 
+		conn.disconnect(); 
+
+		
+		if(config.recvFilter != null){
+			if( config.recvFilter.filter(res, senderClient) == false){
+				return;
+			}
+		}
+		
+		res.setId(msgId);
+		res.setTopic(topic);
+		res.setReceiver(sender); 
+		try {
+			senderClient.route(res);
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
+	}
     
 	class HttpClient implements Closeable {
 		MqClient client; 
@@ -204,14 +298,14 @@ public class ProxyHandler implements MessageHandler, Closeable {
 							while(iter.hasNext()){
 								Entry<String, Context> e = iter.next();
 								if(e.getValue() == ctx){
-									iter.remove();
+									iter.remove(); 
 									break;
 								}
 							}
 						}
 					}
 					
-					if(ctx == null){ 
+					if(ctx == null){  
 						return; //ignore
 					}
 					
