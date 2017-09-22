@@ -3,10 +3,9 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 
+import io.zbus.kit.ThreadKit.ManualResetEvent;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
@@ -23,9 +22,9 @@ public class ConsumeThread implements Closeable{
 	protected ExecutorService consumeRunner;
 	protected MessageHandler messageHandler;
 	
-	protected AtomicReference<CountDownLatch> pause = new AtomicReference<CountDownLatch>(new CountDownLatch(0));
+	protected ManualResetEvent active = new ManualResetEvent(true); 
 	
-	protected Thread consumeThread;
+	protected RunningThread consumeThread;
 	 
 	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
 		this.client = client;
@@ -53,7 +52,7 @@ public class ConsumeThread implements Closeable{
 			throw new IllegalStateException("Missing consumeHandler");
 		}
 		if(pauseOnStart){
-			pause.set(new CountDownLatch(1));
+			active.reset();
 		}
 		
 		if(this.consumeGroup == null){
@@ -71,27 +70,27 @@ public class ConsumeThread implements Closeable{
 		}
 		
 		
-		consumeThread = new Thread(new Runnable() { 
-			@Override
-			public void run() { 
-				ConsumeThread.this.run();
-			}
-		});
+		consumeThread = new RunningThread();
 		consumeThread.start();
 	}
 	
 	public void pause(){
 		try {
 			client.unconsume(topic, this.consumeGroup.getGroupName()); //stop consuming in serverside
+			consumeThread.running = false;
+			consumeThread.interrupt();
+			
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}  
 		
-		pause.set(new CountDownLatch(1));
+		active.reset();
 	}
 	
-	public void resume(){
-		pause.get().countDown();
+	public void resume(){  
+		active.set();
+		consumeThread = new RunningThread();
+		consumeThread.start();
 	}
 	
 	public Message take() throws IOException, InterruptedException {  
@@ -130,50 +129,56 @@ public class ConsumeThread implements Closeable{
 			throw new InterruptedException(e.getMessage());
 		}   
 	} 
-	 
-	protected void run() {   
-		while (true) {
-			try { 
-				final Message msg;
-				try {
-					pause.get().await(); //check is paused
-					msg = take();
-					if(msg == null) continue;
-					
-					if(messageHandler == null){
-						throw new IllegalStateException("Missing ConsumeHandler");
-					}
-					
-					if(consumeRunner == null){
-						try{
-							messageHandler.handle(msg, client);
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
+	
+	
+	class RunningThread extends Thread {
+		volatile boolean running = true; 
+		
+		public void run() { 
+			while (running) {
+				try { 
+					final Message msg;
+					try {
+						active.await(); //check is paused
+						msg = take();
+						if(msg == null) continue;
+						if(!running) break;
+						
+						if(messageHandler == null){
+							throw new IllegalStateException("Missing ConsumeHandler");
 						}
-					} else {
-						consumeRunner.submit(new Runnable() { 
-							@Override
-							public void run() {
-								try{
-									messageHandler.handle(msg, client);
-								} catch (Exception e) {
-									log.error(e.getMessage(), e);
-								}
+						
+						if(consumeRunner == null){
+							try{
+								messageHandler.handle(msg, client);
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
 							}
-						});
-					}
+						} else {
+							consumeRunner.submit(new Runnable() { 
+								@Override
+								public void run() {
+									try{
+										messageHandler.handle(msg, client);
+									} catch (Exception e) {
+										log.error(e.getMessage(), e);
+									}
+								}
+							});
+						}
+						
+					} catch (InterruptedException e) {
+						client.close(); 
+						break;
+					}  
 					
-				} catch (InterruptedException e) {
-					client.close(); 
-					break;
-				}  
-				
-			} catch (IOException e) {  
-				log.error(e.getMessage(), e);  
+				} catch (IOException e) {  
+					log.error(e.getMessage(), e);  
+				}
 			}
 		}
-		
 	}
+	  
 
 	@Override
 	public void close() throws IOException {

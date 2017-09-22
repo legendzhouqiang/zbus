@@ -2,6 +2,7 @@ package io.zbus.examples.transport.tcp;
 
 import java.io.IOException;
 
+import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
@@ -27,7 +28,9 @@ public class MessageServerExample {
 			}
 		});  
 		
-		MessageServer server = new MessageServer();   
+		EventLoop loop = new EventLoop();
+		loop.setIdleTimeInSeconds(3); 
+		MessageServer server = new MessageServer(loop);   
 		server.start(80, adaptor);  
 	} 
 }

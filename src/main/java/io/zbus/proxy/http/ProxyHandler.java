@@ -11,9 +11,8 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
+import io.zbus.kit.ThreadKit.ManualResetEvent;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker;
@@ -40,7 +39,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	private Consumer consumer; 
 	private List<HttpClient> targetClients;
 	private int currentClient = 0;  
-	private final AtomicReference<CountDownLatch> ready = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
+	
+	private final ManualResetEvent ready = new ManualResetEvent(false);
 	private ProxyHandlerConfig config;
 	
 	public ProxyHandler(ProxyHandlerConfig config) {  
@@ -101,7 +101,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	@Override
 	public void handle(Message msg, MqClient client) throws IOException {  
 		try {
-			ready.get().await();
+			ready.await();
 		} catch (InterruptedException e) {
 			return;
 		}
@@ -174,7 +174,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			client = new MqClient(targetServer, broker.getEventLoop(), config.heartbeatInterval);
 			client.onDisconnected(new DisconnectedHandler() {  
 				public void onDisconnected() throws IOException { 
-					ready.set(new CountDownLatch(1));
+					ready.reset();
 					consumer.pause();
 					client.ensureConnectedAsync();
 				}
@@ -182,7 +182,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			
 			client.onConnected(new ConnectedHandler() { 
 				public void onConnected() throws IOException {  
-					ready.get().countDown();
+					ready.set();
 					consumer.resume();
 				}
 			}); 
@@ -261,5 +261,5 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			String sender;
 			MqClient senderClient;
 		}
-	} 
+	}  
 }

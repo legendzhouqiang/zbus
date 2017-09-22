@@ -16,3 +16,4 @@
 - MqClient.unconsume change to async with no return
 - RpcCodec.encodeResponse remove class info
 - fix SpringServiceBootstrap ssl config bug
+- fix Consumer.pause/resume bug

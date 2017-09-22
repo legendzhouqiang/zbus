@@ -156,9 +156,7 @@ abstract class AbstractQueue implements MessageQueue{
 			ReplyKit.reply404(message, session, "ConsumeGroup(" + consumeGroup + ") Not Found");
 			return;
 		}   
-		group.removeSession(session);
-		
-		ReplyKit.reply200(message, session);
+		group.removeSession(session); 
 	}
 
 	@Override
