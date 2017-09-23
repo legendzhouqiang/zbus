@@ -61,19 +61,18 @@ public class HttpProxy implements Closeable {
 			 String topic = e.getKey();
 			 ProxyEntry entry = e.getValue();
 			 List<ProxyHandler> handlers = new ArrayList<ProxyHandler>();
-			 for(String target : entry.targetList){
-				 
-				 ProxyHandlerConfig handlerConfig = new ProxyHandlerConfig();
-				 handlerConfig.topic = topic;
-				 handlerConfig.token = entry.token; 
-				 handlerConfig.broker = broker;
-				 handlerConfig.consumerCount = this.config.getConsumerCount();
-				 handlerConfig.consumeTimeout = this.config.getConsumeTimeout();
-				 handlerConfig.sendFilter = entry.sendFilter;
-				 handlerConfig.recvFilter = entry.recvFilter;
-				 handlerConfig.targetHeartbeat = entry.heartbeatInterval;
-				 handlerConfig.targetClientCount = entry.targetClientCount;
-				 
+			for (String target : entry.targetList) { 
+				ProxyHandlerConfig handlerConfig = new ProxyHandlerConfig();
+				handlerConfig.topic = topic;
+				handlerConfig.token = entry.token;
+				handlerConfig.broker = broker;
+				handlerConfig.consumerCount = this.config.getConsumerCount();
+				handlerConfig.consumeTimeout = this.config.getConsumeTimeout();
+				handlerConfig.sendFilter = entry.sendFilter;
+				handlerConfig.recvFilter = entry.recvFilter;
+				handlerConfig.targetHeartbeat = entry.heartbeatInterval;
+				handlerConfig.targetClientCount = entry.targetClientCount;
+
 				if (target.startsWith("http://")) {
 					target = target.substring("http://".length());
 				}
@@ -83,16 +82,22 @@ public class HttpProxy implements Closeable {
 				if (bb.length > 1) {
 					url = bb[1].trim();
 				}
-				handlerConfig.targetUrl = url;
-				 
-				 ProxyHandler handler = new ProxyHandler(handlerConfig);
-				 handlers.add(handler);
-				 try{
-					 handler.start(); 
-				 } catch (Exception ex) { 
-					 log.error(ex.getMessage(), ex);
-				 }
-			 }
+				if(!url.endsWith("/")){
+					url += "/";
+				}
+				if(!url.startsWith("/")){
+					url = "/"+url;
+				}
+				handlerConfig.targetUrl = url; // format: /xxx/
+
+				ProxyHandler handler = new ProxyHandler(handlerConfig);
+				handlers.add(handler);
+				try {
+					handler.start();
+				} catch (Exception ex) {
+					log.error(ex.getMessage(), ex);
+				}
+			}
 			 entryHandlerTable.put(topic, handlers);
 		 }
 	}

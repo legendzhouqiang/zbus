@@ -114,23 +114,16 @@ public class ProxyHandler implements MessageHandler, Closeable {
 			log.error("missing url");
 			return;
 		}
-		if (url.startsWith(prefix)) {
-			url = url.substring(prefix.length());
-			if (!url.startsWith("/")) {
-				url = "/" + url;
-			}
-		} else {
+		if (!url.startsWith(prefix)) {
 			log.error("Url unmatched");
 			return;
 		} 
-		String newUrl = config.targetUrl;
-		if(!"/".equals(url)){
-			newUrl += url;
-		}
-		if (!newUrl.startsWith("/")) {
-			newUrl = "/" + newUrl;
-		}  
+		url = url.substring(prefix.length());
+		if (url.startsWith("/")) {
+			url = url.substring(1);
+		} 
 		
+		String newUrl = config.targetUrl + url; 
 		msg.setUrl(newUrl); 
 		msg.removeHeader(Protocol.TOPIC); 
 		

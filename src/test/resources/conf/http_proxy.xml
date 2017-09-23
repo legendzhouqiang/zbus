@@ -7,7 +7,7 @@
 	<httpProxy zbus="localhost:15555" consumerCount="4" clientCount="4" token="admin">
 		<proxy entry="examples" token="admin" sendFilter=""  recvFilter=""> <!-- class name of filter -->
 			<!-- -->
-			<target>http://localhost:8080/examples/</target> 
+			<target>http://localhost:8080/examples</target> 
 			 
 		</proxy>
 		<!-- you may add multiple proxies -->
