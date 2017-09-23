@@ -24,7 +24,7 @@ import io.zbus.transport.tcp.TcpClient;
 public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zbus.transport.http.Message> { 
 	private static final Logger log = LoggerFactory.getLogger(ProxyClient.class); 
 	private Map<String, Context> requestTable = new ConcurrentHashMap<String, Context>();  
-	private boolean targetMessageIdentifiable = true;
+	private boolean targetMessageIdentifiable = false;
 	private MessageFilter recvFilter; 
 	private int defaultTimeout = 10000;
 	
@@ -38,7 +38,7 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 		MqClient senderClient;
 	}
 	
-	public ProxyClient(String address, final EventLoop loop, int heartbeatInterval) {  
+	public ProxyClient(String address, final EventLoop loop) {  
 		super(address, loop);     
 		
 		codec(new CodecInitializer() {
@@ -50,6 +50,21 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 				p.add(new MessageCodec());
 			}
 		});  
+		
+		onDisconnected(new DisconnectedHandler() { 
+			@Override
+			public void onDisconnected() throws IOException {
+				log.info("Disconnected from(%s) ID=%s", serverAddress(), clientId);
+				ProxyClient.this.close();
+			}
+		}); 
+		
+		onError(new ErrorHandler() { 
+			@Override
+			public void onError(Throwable e, Session session) throws IOException {
+				ProxyClient.this.close();
+			}
+		});
 	}
 	
 	@Override
@@ -59,62 +74,65 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 		String msgId = res.getId(); 
 		if(msgId == null){
 			targetMessageIdentifiable = false;
+		} else {
+			targetMessageIdentifiable = true;
 		}
 		Context ctx = null;
 		if(targetMessageIdentifiable){ 
 			ctx = requestTable.remove(msgId); 
-		} else {
-			synchronized (latestReturned) {
-				ctx = lastestContext;
-				lastestContext = null; //clear
-			} 
+		} else { 
+			ctx = lastestContext;
+			lastestContext = null; //clear 
 		}  
 		
 		if(ctx == null){  
 			return; //ignore
 		}
 		
+		res.setId(ctx.msgId);
+		res.setTopic(ctx.topic);
+		res.setReceiver(ctx.sender); 
+		latestReturned.set();
+		
 		if(recvFilter != null){
 			if( recvFilter.filter(res, ctx.senderClient) == false){
 				return;
 			}
-		} 
-		
-		res.setId(ctx.msgId);
-		res.setTopic(ctx.topic);
-		res.setReceiver(ctx.sender); 
+		}  
 		try {
 			ctx.senderClient.route(res);
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
-		} finally{
-			if(!targetMessageIdentifiable){
-				latestReturned.set();
-			}
-		} 
+		}  
 	} 
 	
 	public void sendMessage(Message msg, MqClient senderClient, int timeoutMs) 
 			throws IOException, InterruptedException{  
-		if(!targetMessageIdentifiable){ 
-			synchronized (latestReturned) {
-				latestReturned.await(timeoutMs, TimeUnit.MILLISECONDS);
-				if(!latestReturned.isSignalled()){
-					throw new IOException("waiting result timeout, should close connection");
-				}  
-			} 
+		if(targetMessageIdentifiable){ 
+			sendMessageUnsafe(msg, senderClient, timeoutMs);
+			return;
 		}
+		
+		synchronized (latestReturned) { 
+			sendMessageUnsafe(msg, senderClient, timeoutMs); 
+			latestReturned.await(timeoutMs, TimeUnit.MILLISECONDS);
+			if(!latestReturned.isSignalled()){
+				throw new IOException("waiting result timeout, should close connection");
+			}    
+		}   
+	}
+	
+	private void sendMessageUnsafe(Message msg, MqClient senderClient, int timeoutMs) 
+			throws IOException, InterruptedException{   
 		
 		Context ctx = new Context();
 		ctx.msgId = msg.getId();
 		ctx.topic = msg.getTopic();
 		ctx.sender = msg.getSender();
 		ctx.senderClient = senderClient;
-		
-		synchronized (latestReturned) {
-			lastestContext = ctx; 
-			latestReturned.reset();
-		} 
+		 
+		lastestContext = ctx; 
+		latestReturned.reset(); 
 		
 		if(targetMessageIdentifiable){
 			requestTable.put(ctx.msgId, ctx); 

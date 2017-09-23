@@ -2,8 +2,6 @@ package io.zbus.proxy.http;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.zbus.kit.ThreadKit.ManualResetEvent;
@@ -28,8 +26,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	
 	private Consumer consumer; 
 	private ProxyClient detectClient;
-	private List<ProxyClient> targetClients; 
-	private int currentClient = 0;  
+	private ProxyClientPool targetClients;  
 	
 	private final ManualResetEvent ready = new ManualResetEvent(false);
 	
@@ -42,7 +39,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	private void setupDetectClient(){
 		Broker broker = config.broker;
 		final AtomicLong connectedTime = new AtomicLong();
-		detectClient = new ProxyClient(config.targetServer, broker.getEventLoop(), config.targetHeartbeat);
+		detectClient = new ProxyClient(config.targetServer, broker.getEventLoop());
 		detectClient.onDisconnected(new DisconnectedHandler() { 
 			@Override
 			public void onDisconnected() throws IOException { 
@@ -97,16 +94,9 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		setupDetectClient();
 		
-		targetClients = new ArrayList<ProxyClient>();
-		int targetCount = config.targetClientCount;  
-		for(int i=0;i<targetCount;i++){
-			ProxyClient client = new ProxyClient(config.targetServer, config.broker.getEventLoop(), config.targetHeartbeat); 
-			targetClients.add(client);
-		}
+		targetClients = new ProxyClientPool(config.targetServer, 
+				config.targetClientCount, config.broker.getEventLoop());
 		
-		for(ProxyClient client : targetClients){ 
-			client.ensureConnectedAsync(); 
-		}
 	}
 	
 
@@ -143,35 +133,40 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		
 		msg.setUrl(newUrl); 
 		msg.removeHeader(Protocol.TOPIC); 
-		int idx = 0; 
-		try { 
-			if(config.sendFilter != null){
-				if(config.sendFilter.filter(msg, client) == false){
-					return;
-				}
+		
+		if(config.sendFilter != null){
+			if(config.sendFilter.filter(msg, client) == false){
+				return;
 			}
-			 
-			currentClient = (currentClient+1)%targetClients.size();
-			idx = currentClient;
-			ProxyClient targetClient = targetClients.get(idx); 
-			targetClient.sendMessage(msg, client);   
-			
-		} catch (Exception e) {
-			ProxyClient targetClient = targetClients.get(idx); 
-			ProxyClient newClient = new ProxyClient(config.targetServer, config.broker.getEventLoop(), config.targetHeartbeat); 
-			targetClients.set(idx, newClient); 
-			targetClient.close();
-			
-			String error = String.format("Target(%s/%s) error: %s", config.targetServer, config.targetUrl, e.toString());
-			log.warn(error); 
-		}   
+		}
+		
+		ProxyClient targetClient = null;
+		while(true){
+			try{
+				targetClient = targetClients.borrowClient();
+				targetClient.sendMessage(msg, client);   
+				//targetClient.close(); //short-term connection
+				break;
+			} catch (IOException e) {
+				log.warn(e.getMessage());
+				if(targetClient != null){
+					targetClient.close();
+				}
+				continue;
+			} catch (InterruptedException e) {
+				break;
+			} finally {
+				if(targetClient != null){
+					targetClients.returnClient(targetClient);
+				}
+			} 
+		}
 	}
 	 
 	@Override
 	public void close() throws IOException {   
-		for(ProxyClient client : targetClients){ 
-			client.close();
-		}
+		targetClients.close();
+		
 		if (consumer != null) {
 			consumer.close();
 			consumer = null;
