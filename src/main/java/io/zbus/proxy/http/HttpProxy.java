@@ -13,7 +13,6 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker;
 import io.zbus.proxy.http.ProxyConfig.ProxyEntry;
-import io.zbus.proxy.http.ProxyConfig.ProxyHandlerConfig;
 import io.zbus.transport.ServerAddress;
 
 /**
@@ -63,16 +62,28 @@ public class HttpProxy implements Closeable {
 			 ProxyEntry entry = e.getValue();
 			 List<ProxyHandler> handlers = new ArrayList<ProxyHandler>();
 			 for(String target : entry.targetList){
+				 
 				 ProxyHandlerConfig handlerConfig = new ProxyHandlerConfig();
 				 handlerConfig.topic = topic;
-				 handlerConfig.token = entry.token;
-				 handlerConfig.targetUrl = target;
+				 handlerConfig.token = entry.token; 
 				 handlerConfig.broker = broker;
-				 handlerConfig.connectionCount = this.config.getConnectionCount();
+				 handlerConfig.consumerCount = this.config.getConsumerCount();
 				 handlerConfig.consumeTimeout = this.config.getConsumeTimeout();
 				 handlerConfig.sendFilter = entry.sendFilter;
 				 handlerConfig.recvFilter = entry.recvFilter;
-				 handlerConfig.heartbeatInterval = entry.heartbeatInterval;
+				 handlerConfig.targetHeartbeat = entry.heartbeatInterval;
+				 handlerConfig.targetClientCount = entry.targetClientCount;
+				 
+				if (target.startsWith("http://")) {
+					target = target.substring("http://".length());
+				}
+				String[] bb = target.split("[//]", 2);
+				handlerConfig.targetServer = bb[0].trim();
+				String url = "";
+				if (bb.length > 1) {
+					url = bb[1].trim();
+				}
+				handlerConfig.targetUrl = url;
 				 
 				 ProxyHandler handler = new ProxyHandler(handlerConfig);
 				 handlers.add(handler);

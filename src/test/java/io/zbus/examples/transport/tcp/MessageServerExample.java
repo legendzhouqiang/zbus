@@ -19,7 +19,7 @@ public class MessageServerExample {
 		adaptor.url("/", new MessageHandler<Message>() { 
 			@Override
 			public void handle(Message msg, Session session) throws IOException {  
-				System.out.println(msg);
+				//System.out.println(msg);
 				Message res = new Message();
 				res.setId(msg.getId()); //match the ID for response
 				res.setStatus(200);
@@ -29,7 +29,7 @@ public class MessageServerExample {
 		});  
 		
 		EventLoop loop = new EventLoop();
-		loop.setIdleTimeInSeconds(3); 
+		loop.setIdleTimeInSeconds(30); 
 		MessageServer server = new MessageServer(loop);   
 		server.start(80, adaptor);  
 	} 

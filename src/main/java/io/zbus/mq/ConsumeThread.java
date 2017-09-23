@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.ThreadKit.ManualResetEvent;
 import io.zbus.kit.logging.Logger;
@@ -89,8 +90,10 @@ public class ConsumeThread implements Closeable{
 	
 	public void resume(){  
 		active.set();
-		consumeThread = new RunningThread();
-		consumeThread.start();
+		if(consumeThread == null || !consumeThread.running) {
+			consumeThread = new RunningThread();
+			consumeThread.start();
+		}
 	}
 	
 	public Message take() throws IOException, InterruptedException {  
@@ -139,7 +142,11 @@ public class ConsumeThread implements Closeable{
 				try { 
 					final Message msg;
 					try {
-						active.await(); //check is paused
+						while(running){
+							active.await(1000, TimeUnit.MILLISECONDS); 
+							if(active.isSignalled()) break;
+						}
+						if(!running) break; 
 						msg = take();
 						if(msg == null) continue;
 						if(!running) break;
