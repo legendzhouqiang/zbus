@@ -9,7 +9,9 @@
  
 	<mqPath>/tmp/zbus</mqPath> 
 	
-	<verbose>false</verbose>   
+	<verbose>false</verbose>  
+	
+	<messageLogger></messageLogger> 
 	
 	<trackerOnly>false</trackerOnly> 
 	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->

@@ -16,6 +16,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import io.zbus.kit.ConfigKit.XmlConfig;
+import io.zbus.kit.ClassKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -48,6 +49,7 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	private boolean compatible = false;  //set protocol compatible to zbus7 if true
 	
 	private AuthProvider authProvider = new XmlAuthProvider();  
+	private MessageLogger messageLogger;
 	
 	private ProxyConfig httpProxyConfig;
 	
@@ -95,7 +97,21 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 			    } 
 			    trackerList.add(trackerAddress); 
 			}
-		}   
+		} 
+		
+		String loggerClass = valueOf(xpath.evaluate("/zbus/messageLogger", doc), "");
+		if(!"".equals(loggerClass)){
+			try{
+				Object logger = ClassKit.newInstance(loggerClass);
+				if(logger instanceof MessageLogger){
+					this.setMessageLogger((MessageLogger)logger);
+				} else {
+					log.warn("class is not MessageLogger type");
+				}
+			} catch (Exception e) { 
+				log.error("Load MessageLogger error: " + e);
+			}
+		}
 		
 		String authClass = valueOf(xpath.evaluate("/zbus/auth/@class", doc), "");
 		if(authClass.equals("")){
@@ -103,9 +119,8 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 			provider.loadFromXml(doc);
 			this.setAuthProvider(provider);
 		} else {
-			try{
-				Class<?> clazz = Class.forName(authClass);
-				Object auth = clazz.newInstance();
+			try{ 
+				Object auth = ClassKit.newInstance(authClass);
 				if(auth instanceof AuthProvider){
 					this.setAuthProvider((AuthProvider)auth);
 				} else {
@@ -282,6 +297,14 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 
 	public void setHttpProxyConfig(ProxyConfig httpProxyConfig) {
 		this.httpProxyConfig = httpProxyConfig;
+	} 
+	
+	public MessageLogger getMessageLogger() {
+		return messageLogger;
+	}
+
+	public void setMessageLogger(MessageLogger messageLogger) {
+		this.messageLogger = messageLogger;
 	}
 
 	public MqServerConfig clone() { 

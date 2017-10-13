@@ -33,3 +33,4 @@
 ## 0.9.4-release notes
 - Message HTTP method reserved with header=origin-method
 - fix recvFilter bug
+- 增加MessageLogger接口，可以个性化扩展日志记录

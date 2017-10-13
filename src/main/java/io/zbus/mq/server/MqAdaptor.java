@@ -45,11 +45,11 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 
 	private final Map<String, MessageQueue> mqTable; 
 	private final Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();
-	private boolean verbose = false;    
 	private final MqServer mqServer;
 	private final MqServerConfig config;    
 	private final Tracker tracker; 
 	private AuthProvider authProvider;
+	private MessageLogger messageLogger;
 	
 	private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(16);
 	private Set<String> groupOptionalCommands = new HashSet<String>(); 
@@ -584,10 +584,6 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 		
 		tracker.cleanSession(sess);  
-	} 
-	
-    public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	}  
     
 	public void loadDiskQueue() throws IOException {
@@ -714,10 +710,9 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		}
 		parseCookieToken(msg);
 		
-		if(verbose){
-			log.info("\n%s", msg);
+		if(messageLogger != null){
+			messageLogger.log(msg);
 		} 
-		
 		
 		handleUrlMessage(msg); 
 		
@@ -793,5 +788,9 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     
     public void registerHandler(String command, MessageHandler<Message> handler){
     	this.handlerMap.put(command, handler);
-    } 
+    }
+
+	public void setMessageLogger(MessageLogger messageLogger) {
+		this.messageLogger = messageLogger;
+	}  
 }

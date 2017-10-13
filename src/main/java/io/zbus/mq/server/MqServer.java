@@ -25,6 +25,7 @@ import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker;
+import io.zbus.mq.Message;
 import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
@@ -125,7 +126,20 @@ public class MqServer extends TcpServer {
 		
 		//adaptor needs tracker built first
 		mqAdaptor = new MqAdaptor(this); 
-		mqAdaptor.setVerbose(config.isVerbose()); 
+		final boolean verbose = config.isVerbose();
+		if(config.getMessageLogger() == null){
+			mqAdaptor.setMessageLogger(new MessageLogger() { 
+				@Override
+				public void log(Message message) {
+					if(verbose){
+						log.info("\n%s", message);
+					} 
+				}
+			});
+		} else {
+			mqAdaptor.setMessageLogger(config.getMessageLogger());
+		}
+		
 		try {
 			mqAdaptor.loadDiskQueue();
 		} catch (IOException e) {
