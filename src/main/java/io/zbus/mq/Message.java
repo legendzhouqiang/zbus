@@ -23,28 +23,7 @@
 package io.zbus.mq;
  
 
-import static io.zbus.mq.Protocol.ACK;
-import static io.zbus.mq.Protocol.COMMAND;
-import static io.zbus.mq.Protocol.CONSUME_GROUP;
-import static io.zbus.mq.Protocol.CONSUME_WINDOW;
-import static io.zbus.mq.Protocol.GROUP_FILTER;
-import static io.zbus.mq.Protocol.GROUP_MASK;
-import static io.zbus.mq.Protocol.GROUP_START_COPY;
-import static io.zbus.mq.Protocol.GROUP_START_MSGID;
-import static io.zbus.mq.Protocol.GROUP_START_OFFSET;
-import static io.zbus.mq.Protocol.GROUP_START_TIME;
-import static io.zbus.mq.Protocol.HOST;
-import static io.zbus.mq.Protocol.OFFSET;
-import static io.zbus.mq.Protocol.ORIGIN_ID;
-import static io.zbus.mq.Protocol.ORIGIN_STATUS;
-import static io.zbus.mq.Protocol.ORIGIN_URL;
-import static io.zbus.mq.Protocol.RECVER;
-import static io.zbus.mq.Protocol.SENDER;
-import static io.zbus.mq.Protocol.TAG;
-import static io.zbus.mq.Protocol.TOKEN;
-import static io.zbus.mq.Protocol.TOPIC;
-import static io.zbus.mq.Protocol.TOPIC_MASK;
-import static io.zbus.mq.Protocol.VERSION;
+import static io.zbus.mq.Protocol.*;
 
 import io.zbus.mq.server.Fix;
  
@@ -148,6 +127,16 @@ public class Message extends io.zbus.transport.http.Message {
 	public Message setOriginUrl(String value) {
 		this.setHeader(ORIGIN_URL, value);
 		Fix.setOriginUrl(this, value);
+		return this;
+	}   
+	
+	public String getOriginMethod() {
+		String value = this.getHeader(ORIGIN_METHOD);   
+		return value;
+	} 
+	
+	public Message setOriginMethod(String value) {
+		this.setHeader(ORIGIN_METHOD, value); 
 		return this;
 	}   
 	

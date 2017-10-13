@@ -137,6 +137,7 @@ public class ProxyHandler implements MessageHandler, Closeable {
 		while(true){
 			try{
 				targetClient = targetClients.borrowClient();
+				targetClient.setRecvFilter(config.recvFilter); 
 				targetClient.sendMessage(msg, client);   
 				//targetClient.close(); //short-term connection
 				break;

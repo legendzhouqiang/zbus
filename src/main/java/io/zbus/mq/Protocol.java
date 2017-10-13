@@ -73,6 +73,7 @@ public class Protocol {
 	
 	public static final String ORIGIN_ID     		= "origin_id";
 	public static final String ORIGIN_URL   		= "origin_url";
+	public static final String ORIGIN_METHOD   		= "origin_method";
 	public static final String ORIGIN_STATUS 		= "origin_status";
 	
 	//Security  

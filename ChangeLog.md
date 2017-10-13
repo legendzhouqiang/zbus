@@ -29,3 +29,7 @@
 - 修复SpringServiceBootstrap中SSL设置bug
 - HttpProxy增强动态监测目标是否支持消息匹配，支持同步异步代理
 
+
+## 0.9.4-release notes
+- Message HTTP method reserved with header=origin-method
+- fix recvFilter bug

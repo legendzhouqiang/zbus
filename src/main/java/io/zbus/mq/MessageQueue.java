@@ -222,9 +222,10 @@ abstract class AbstractQueue implements MessageQueue{
 				writeMsg.setId(pullMsg.getId());
 				Integer status = writeMsg.getStatus();
 				if(status == null){
+					writeMsg.setOriginMethod(writeMsg.getMethod());
 					if(!"/".equals(writeMsg.getUrl())){
 						writeMsg.setOriginUrl(writeMsg.getUrl()); 
-					} 
+					}  
 				} else {
 					writeMsg.setOriginStatus(status);
 				} 
