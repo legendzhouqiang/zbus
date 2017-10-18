@@ -116,6 +116,7 @@ public class ConsumeThread implements Closeable{
 					String method = res.getOriginMethod();
 					if(method != null){
 						res.setMethod(method);
+						res.removeHeader(Protocol.ORIGIN_METHOD);
 					}
 					return res;
 				}
