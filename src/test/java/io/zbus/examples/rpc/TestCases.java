@@ -121,6 +121,7 @@ public class TestCases {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		System.out.println(biz.raw("hong"));
 		
 	}
 }

@@ -246,8 +246,12 @@ public class RpcProcessor implements MessageHandler{
 	
 	private void checkParamTypes(MethodInstance target, Request req){
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
-		
-		if(targetParamTypes.length !=  req.getParams().length){
+		int requiredLength = 0;
+		for(Class<?> clazz : targetParamTypes){
+			if(clazz == Message.class) continue; //ignore Message parameter
+			requiredLength++;
+		}
+		if(requiredLength !=  req.getParams().length){
 			String requiredParamTypeString = "";
 			for(int i=0;i<targetParamTypes.length;i++){
 				Class<?> paramType = targetParamTypes[i]; 
@@ -294,7 +298,7 @@ public class RpcProcessor implements MessageHandler{
 		try {
 			Object result = null;
 			Request req = codec.decodeRequest(msg);  
-			if(StrKit.isEmpty(req.getMethod())){
+			if(req == null || StrKit.isEmpty(req.getMethod())){
 				result = object2Methods;
 			} else {
 				MethodInstance target = matchMethod(req);
@@ -303,10 +307,23 @@ public class RpcProcessor implements MessageHandler{
 				Class<?>[] targetParamTypes = target.method.getParameterTypes();
 				Object[] invokeParams = new Object[targetParamTypes.length];  
 				Object[] reqParams = req.getParams(); 
-				for(int i=0; i<targetParamTypes.length; i++){   
-					invokeParams[i] = codec.convert(reqParams[i], targetParamTypes[i]);
+				int j = 0;
+				for(int i=0; i<targetParamTypes.length; i++){  
+					if(targetParamTypes[i] == Message.class){
+						invokeParams[i] = msg;
+					} else {
+						invokeParams[i] = codec.convert(reqParams[j++], targetParamTypes[i]);
+					}
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
+				if(result instanceof Message){ //special case for Message returned type
+					Message res = (Message)result;
+					res.setId(msgId);
+					if(res.getStatus() == null){
+						res.setStatus(200); //default to 200
+					}
+					return res;
+				}
 			} 
 			resp.setResult(result);  
 				

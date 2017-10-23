@@ -654,36 +654,36 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     		}
     	} 
     	
-    	boolean rpc = false; 
-    	MessageQueue mq = null;
-    	String topic = msg.getTopic();
-    	if(topic != null){
-    		mq = mqTable.get(topic);
-    	}
-    	if(mq != null){
-    		rpc = (mq.getMask()&Protocol.MASK_RPC) != 0;
-    	}
-    	if(rpc){
+    	//Possible URL RPC request
+    	if(info.path.size()>=3 && "GET".equalsIgnoreCase(msg.getMethod())){
     		// /<topic>/<method>/<param_1>/../<param_n>[?module=<module>&&<header_ext_kvs>]  
-    		String method = "";
-    		if(info.path.size()>=2){
-    			method = info.path.get(1);
-    		}
-    		
-    		Request req = new Request();
-        	req.setMethod(method); 
-        	if(info.params.containsKey("module")){
-        		req.setModule(info.params.get("module"));
-        	} 
-        	if(info.path.size()>2){
-        		Object[] params = new Object[info.path.size()-2];
-        		for(int i=0;i<params.length;i++){
-        			params[i] = info.path.get(2+i);
-        		}
-        		req.setParams(params); 
-        	}  
-        	msg.setAck(false);
-        	msg.setBody(JsonKit.toJSONString(req));
+    		boolean rpc = false; 
+        	MessageQueue mq = null;
+        	String topic = msg.getTopic();
+        	if(topic != null){
+        		mq = mqTable.get(topic);
+        	}
+        	if(mq != null){
+        		rpc = (mq.getMask()&Protocol.MASK_RPC) != 0;
+        	}
+        	if(rpc){ 
+	    		String module = info.path.get(1);
+	    		String method = info.path.get(2); 
+	    		
+	    		Request req = new Request();
+	    		req.setModule(module);
+	        	req.setMethod(method); 
+	        	
+	        	if(info.path.size()>3){
+	        		Object[] params = new Object[info.path.size()-3];
+	        		for(int i=0;i<params.length;i++){
+	        			params[i] = info.path.get(3+i);
+	        		}
+	        		req.setParams(params); 
+	        	}  
+	        	msg.setAck(false);
+	        	msg.setBody(JsonKit.toJSONString(req));
+        	}
     	} 
 	}
     

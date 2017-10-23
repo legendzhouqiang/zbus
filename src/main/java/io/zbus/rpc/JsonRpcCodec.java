@@ -52,7 +52,9 @@ public class JsonRpcCodec implements RpcCodec {
 		}
 		String jsonString = msg.getBodyString(encoding);
 		Request req = JsonKit.parseObject(jsonString, Request.class);
-		Request.normalize(req); 
+		if(req != null){
+			Request.normalize(req);
+		}
 		return req;
 	}
 

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.zbus.mq.Message;
 import io.zbus.rpc.Remote;
 
 @Remote
@@ -155,6 +156,34 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	@Override
 	public String nullParam(String nullStr) { 
 		return nullStr;
+	}
+	
+	@Override
+	public Message raw(String name) {
+		Message message = new Message();
+		message.setBody(name);
+		return message;
+	}
+	
+	@Override
+	public Message raw0(Message req) { 
+		req.setBody("raw requested " + System.currentTimeMillis());
+		return req;
+	}
+	
+	@Override
+	public Message raw1(int i, Message req) {
+		Message res = new Message();
+		res.setBody(i + ":" + req.getTopic());
+		return res;
+	}
+	
+	@Override
+	public Message redirect() {
+		Message res = new Message();
+		res.setStatus(302);
+		res.setHeader("location", "/");
+		return res;
 	}
 }
 
