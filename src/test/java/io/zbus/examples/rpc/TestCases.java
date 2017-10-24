@@ -15,7 +15,6 @@ import io.zbus.examples.rpc.biz.generic.GenericMethod;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface1;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface2;
 import io.zbus.rpc.Request;
-import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcInvoker;
 
 public class TestCases {
@@ -43,8 +42,8 @@ public class TestCases {
 		
 		Request req;
 		req = new Request().method("getOrder");
-		Response resp = rpc.invokeSync(req);
-		System.out.println(resp.getResult());
+		Object resp = rpc.invokeSync(req);
+		System.out.println(resp);
 		
 		Order order = rpc.invokeSync(Order.class, req);
 		System.out.println(order); 

@@ -18,13 +18,11 @@ import io.zbus.mq.MqClient;
 
 
 public class RpcProcessor implements MessageHandler{
-	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class); 
+	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);  
 	
 	private RpcCodec codec = new JsonRpcCodec();
-	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
-	
-	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
-	
+	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>(); 
+	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();	
 	 
 	public void addModule(Object... services){
 		for(Object obj : services){
@@ -286,17 +284,19 @@ public class RpcProcessor implements MessageHandler{
 			res.setId(msgId);
 			res.setTopic(topic);  
 			res.setReceiver(sender);  
+			if(res.getStatus() == null){
+				res.setStatus(200); //default to 200, if not set
+			}
 			//route back message
 			client.route(res);
 		}
 	}
 	
-	public Message process(Message msg){  
-		Response resp = new Response(); 
-		final String msgId = msg.getId();
+	public Message process(Message msg){   
 		String encoding = msg.getEncoding();
-		try {
-			Object result = null;
+		Object result = null;
+		int status = RpcCodec.STATUS_OK; //assumed to be sucessful
+		try { 
 			Request req = codec.decodeRequest(msg);  
 			if(req == null || StrKit.isEmpty(req.getMethod())){
 				result = object2Methods;
@@ -317,25 +317,19 @@ public class RpcProcessor implements MessageHandler{
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
 				if(result instanceof Message){ //special case for Message returned type
-					Message res = (Message)result;
-					res.setId(msgId);
-					if(res.getStatus() == null){
-						res.setStatus(200); //default to 200
-					}
-					return res;
+					return (Message)result;   
 				}
-			} 
-			resp.setResult(result);  
-				
+			}    
 		} catch (InvocationTargetException e) { 
-			resp.setError(e.getTargetException()); 
+			status = RpcCodec.STATUS_APP_ERROR;
+			result = e.getTargetException(); 
 		} catch (Throwable e) { 
-			resp.setError(e); 
+			status = RpcCodec.STATUS_APP_ERROR;
+			result = e; 
 		} 
 		try {
-			Message res = codec.encodeResponse(resp, encoding);
-			res.setId(msgId); 
-			res.setStatus(200);
+			Message res = codec.encodeResponse(result, encoding); 
+			res.setStatus(status);  
 			return res;
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

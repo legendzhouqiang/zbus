@@ -39,3 +39,4 @@
 - RPC增加原生HTTP消息返回，方便直接提供浏览器友好的HTTP服务
 - RPC参数列表可以任意顺序插入Message请求参数的申明，获取RPC请求上下文
 - 浏览器请求URL格式中module改为必填选，格式为 /{Topic}/{Module}/{Method}/{Param1}/{Param2}.....
+- RPC

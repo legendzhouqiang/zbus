@@ -132,9 +132,9 @@ public class RpcInvoker {
 		return extractResult(msg, Object.class);
 	} 
 	
-	public Response invokeSync(Request request){
-		Message msgRes = invokeSync0(request);  
-		return codec.decodeResponse(msgRes);
+	public Object invokeSync(Request request) {
+		Message msg = invokeSync0(request);  
+		return extractResult(msg, Object.class);
 	}
 	
 	public Message invokeSync0(Request request){
@@ -169,7 +169,7 @@ public class RpcInvoker {
 	}
 
 	
-	public <T> void invokeAsync(final Class<T> clazz, Request request,  final ResultCallback<T> callback){
+	public <T> void invokeAsync(final Class<T> clazz, Request request, final RpcCallback<T> callback){
 		final long start = System.currentTimeMillis();
 		final Message msgReq = codec.encodeRequest(request, encoding); 
 		if(verbose){
@@ -183,64 +183,43 @@ public class RpcInvoker {
 						long end = System.currentTimeMillis();
 						log.info("[REP]: Time cost=%dms\n%s",(end-start), result); 
 					} 
-					T res = extractResult(result, clazz);
-					if(callback != null){
-						callback.onReturn(res);
+					try{
+						T res = extractResult(result, clazz);
+						if(callback != null){
+							callback.onSuccess(res);
+						}
+					} catch (Exception e) {
+						callback.onError(e);
 					}
 				}
 			});
+			
 		} catch (IOException e) {
 			throw new RpcException(e.getMessage(), e);
 		}  
 	}
-	
-	public void invokeAsync(Request request, final ResultCallback<Response> callback){ 
-		final long start = System.currentTimeMillis();
-		final Message msgReq = codec.encodeRequest(request, encoding); 
-		if(verbose){
-			log.info("[REQ]: %s", msgReq);
-		}  
-		try {
-			invokeAsync(msgReq, new ResultCallback<Message>() { 
-				@Override
-				public void onReturn(Message result) { 
-					if(verbose){
-						long end = System.currentTimeMillis();
-						log.info("[REP]: Time cost=%dms\n%s",(end-start), result); 
-					} 
-					Response resp = codec.decodeResponse(result);
-					if(callback != null){
-						callback.onReturn(resp);
-					}
-				}
-			});
-		} catch (IOException e) {
-			throw new RpcException(e.getMessage(), e);
-		}  
-	}
-
+	 
 	 
 	@SuppressWarnings("unchecked")
-	private <T> T extractResult(Message result, Class<T> clazz){
-		if(clazz == Message.class) return (T)result; //special case
+	private <T> T extractResult(Message message, Class<T> clazz){
+		if(clazz == Message.class) return (T)message; //special case
 		
-		Response resp = codec.decodeResponse(result);
-		Object error = resp.getError();
-		if(error != null){ 
-			if(error instanceof RuntimeException){
-				throw (RuntimeException)error;
+		Object result = codec.decodeResponse(message);  
+		if(message.getStatus() != RpcCodec.STATUS_OK){
+			if(result instanceof RuntimeException){
+				throw (RuntimeException)result;
+			} else {
+				throw new RpcException(result.toString());
 			}
-			throw new RpcException(error.toString()); 
-		}  
+		}
 		
-		Object netObj = resp.getResult();
 		try { 
-			return (T) JsonKit.convert(netObj, clazz); 
+			return (T) JsonKit.convert(result, clazz); 
 		} catch (Exception e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
 	} 
-	
+	 
 	
 	@SuppressWarnings("unchecked")
 	public <T> T createProxy(Class<T> clazz){  

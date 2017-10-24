@@ -23,8 +23,6 @@
 package io.zbus.rpc;
  
 
-import java.util.Map;
-
 import io.zbus.kit.JsonKit;
 import io.zbus.mq.Message;
 import io.zbus.mq.server.Fix;
@@ -56,12 +54,10 @@ public class JsonRpcCodec implements RpcCodec {
 			Request.normalize(req);
 		}
 		return req;
-	}
-
+	} 
 	
-	public Message encodeResponse(Response response, String encoding) {
-		Message msg = new Message();  
-		msg.setStatus(200); 
+	public Message encodeResponse(Object response, String encoding) {
+		Message msg = new Message();   
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
 		msg.setEncoding(encoding);  
 		msg.setJsonBody(JsonKit.toJSONBytes(response, encoding));
@@ -69,34 +65,26 @@ public class JsonRpcCodec implements RpcCodec {
 	}
 	
  
-	public Response decodeResponse(Message msg){ 
+	public Object decodeResponse(Message msg){ 
 		String encoding = msg.getEncoding();
 		if(encoding == null){
 			encoding = DEFAULT_ENCODING;
 		}
 		String jsonString = msg.getBodyString(encoding);
-		Response res = null;
+		Object res = null; 
 		try{
-			res = JsonKit.parseObject(jsonString, Response.class);
-		} catch (Exception e){ //probably error can not be instantiated
-			res = new Response(); 
-			Map<String, Object> json = null;
+			res = JsonKit.parseObject(jsonString, Object.class);
+		} catch (Exception e){  
 			try{
-				jsonString = jsonString.replace("@type", "@class"); //disable desearialization by class name
-				json = JsonKit.parseObject(jsonString); 
+				jsonString = jsonString.replace("@type", "@class"); //trick: disable desearialization by class name
+				res = JsonKit.parseObject(jsonString); 
 			} catch(Exception ex){
 				String prefix = "";
 				if(msg.getStatus() == 200){ 
 					prefix = "JSON format invalid: ";
 				}
 				throw new RpcException(prefix + jsonString);
-			} 
-			if(json != null){  
-				if(json.containsKey("error") && json.get("error") != null){ 
-					throw new RpcException(json.get("error").toString());
-				}
-				res.setResult(json.get("result"));
-			}
+			}  
 		} 
 		return res;
 	} 
