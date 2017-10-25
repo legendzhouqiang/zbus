@@ -55,6 +55,7 @@ public class Protocol {
 	public static final String OFFSET        		= "offset";
 	
 	public static final String CONSUME_GROUP        = "consume_group";  
+	public static final String GROUP_NAME_RANDOM    = "group_name_random";  
 	public static final String GROUP_START_COPY     = "group_start_copy";  
 	public static final String GROUP_START_OFFSET   = "group_start_offset";
 	public static final String GROUP_START_MSGID    = "group_start_msgid";

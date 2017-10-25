@@ -47,11 +47,12 @@ public class DiskQueue extends AbstractQueue{
             }
         } 
 	}
+	 
 	  
 	public ConsumeGroupInfo declareGroup(ConsumeGroup ctrl) throws Exception{
 		String consumeGroup = ctrl.getGroupName();
-		if(consumeGroup == null){
-			consumeGroup = this.topic;
+		if(consumeGroup == null){ 
+			consumeGroup = nextGroupName();
 		}
 		DiskConsumeGroup group = (DiskConsumeGroup)consumeGroups.get(consumeGroup); 
 		if(group == null){
@@ -228,6 +229,10 @@ public class DiskQueue extends AbstractQueue{
 		
 		public void delete() throws IOException{
 			reader.delete();
+		}
+		
+		public Integer getMask(){
+			return reader.getMask();
 		}
 		
 		public ConsumeGroupInfo getConsumeGroupInfo(){

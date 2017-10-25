@@ -9,7 +9,7 @@ public class ConsumerConfig extends MqConfig {
 	protected int consumeTimeout = 120000;// 2 minutes  
 	
 	protected MessageHandler messageHandler;   
-	protected int connectionCount = 4;
+	protected int connectionCount = 1;
 	protected int consumeRunnerPoolSize = 64; 
 	protected int maxInFlightMessage = 100;
 	

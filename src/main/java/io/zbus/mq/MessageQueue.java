@@ -99,6 +99,8 @@ abstract class AbstractQueue implements MessageQueue{
 	protected Map<String, AbstractConsumeGroup> consumeGroups = new ConcurrentSkipListMap<String, AbstractConsumeGroup>(String.CASE_INSENSITIVE_ORDER); 
 	protected long lastUpdatedTime = System.currentTimeMillis();  
 	protected String topic;   
+	
+	protected long groupNumber = consumeGroups.size();
 	  
 	public AbstractQueue(){
 		
@@ -108,6 +110,19 @@ abstract class AbstractQueue implements MessageQueue{
 	}
 	
 	protected void loadConsumeGroups() throws IOException{ }
+	
+	protected String nextGroupName(){
+		if(!consumeGroups.containsKey(topic)) return topic;
+		
+		while(true){
+			String name = topic + groupNumber;
+			if(consumeGroups.containsKey(name)){
+				groupNumber++;
+				continue;
+			}
+			return name;
+		}
+	}
 	
 	@Override
 	public void destroy() throws IOException { 
@@ -173,7 +188,14 @@ abstract class AbstractQueue implements MessageQueue{
 			return;
 		}   
 		 
-		if(!group.pullSessions.containsKey(session.id())){
+		if(!group.pullSessions.containsKey(session.id())){ 
+			if (group.pullSessions.size() > 0) { //thread safty TODO
+				if((group.getMask() & Protocol.MASK_EXCLUSIVE) != 0){ 
+					ReplyKit.reply401(message, session, String.format("ConsumeGroup(%s) exclusive, forbbiden", 
+							consumeGroup));
+					return;
+				}
+			}
 			group.pullSessions.put(session.id(), session);
 		}   
 		
@@ -275,6 +297,16 @@ abstract class AbstractQueue implements MessageQueue{
 				break;
 			}
 		}
+		//remove group if masked as delete_on_exit
+		if((group.getMask() & Protocol.MASK_DELETE_ON_EXIT) != 0){
+			if(group.pullSessions.size() == 0){ 
+				try {
+					group.delete();
+				} catch (IOException e) {
+					log.warn(e.getMessage());
+				}
+			}
+		}
 	} 
 	 
 	private void cleanInactiveSessions() { 
@@ -286,7 +318,19 @@ abstract class AbstractQueue implements MessageQueue{
 				PullSession pull = iterSess.next();
 				if(!pull.session.active()){
 					group.pullSessions.remove(pull.session.id());
-					iterSess.remove();
+					iterSess.remove(); 
+				}
+			}
+			
+			//remove group if masked as delete_on_exit
+			if((group.getMask() & Protocol.MASK_DELETE_ON_EXIT) != 0){
+				if(group.pullSessions.size() == 0){
+					iter.remove();
+					try {
+						group.delete();
+					} catch (IOException e) {
+						log.warn(e.getMessage());
+					}
 				}
 			}
 		}  
@@ -338,6 +382,10 @@ abstract class AbstractQueue implements MessageQueue{
 		public abstract Message read() throws IOException ;
 
 		public abstract boolean isEnd();
+		
+		public Integer getMask(){
+			return 0;
+		}
 		
 		@Override
 		public void close() throws IOException { } 

@@ -2,15 +2,16 @@ package io.zbus.mq;
 
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
+	private Boolean groupNameRandom;
 	private String filter;     //filter on message'tag
-	private Integer mask;   
+	private Integer mask;    
 	
 	private String startCopy;  //create group from another group 
 	private Long startOffset;
 	private String startMsgId; //create group start from offset, msgId to check valid
 	private Long startTime;    //create group start from time
 	
-	//only used in server side, TODO
+	//only used in server side, 
 	private String creator;
 	
 	public ConsumeGroup(){
@@ -22,7 +23,8 @@ public class ConsumeGroup implements Cloneable {
 	} 
 	
 	public ConsumeGroup(Message msg){ 
-		groupName = msg.getConsumeGroup();
+		groupName = msg.getConsumeGroup(); 
+		groupNameRandom = msg.getGroupNameRandom();
 		startCopy = msg.getGroupStartCopy();
 		startOffset = msg.getGroupStartOffset();
 		startTime = msg.getGroupStartTime();
@@ -79,6 +81,12 @@ public class ConsumeGroup implements Cloneable {
 	} 
 	public void setCreator(String creator) {
 		this.creator = creator;
+	}  
+	public Boolean getGroupNameRandom() {
+		return groupNameRandom;
+	} 
+	public void setGroupNameRandom(Boolean groupNameRandom) {
+		this.groupNameRandom = groupNameRandom;
 	}
 
 	@Override

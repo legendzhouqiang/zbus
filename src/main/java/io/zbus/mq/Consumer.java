@@ -20,6 +20,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private ServerSelector consumeServerSelector; 
 	
 	protected String topic; 
+	protected Integer topicMask;
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow; 
 	protected int consumeTimeout; 
@@ -38,15 +39,13 @@ public class Consumer extends MqAdmin implements Closeable {
 		super(config); 
 		
 		this.topic = config.getTopic(); 
+		this.topicMask = config.getTopicMask();
 		this.consumeGroup = config.getConsumeGroup();
 		if(this.consumeGroup == null){
 			this.consumeGroup = new ConsumeGroup();
 			this.consumeGroup.setGroupName(this.topic);
-		}
+		} 
 		
-		if(this.consumeGroup.getMask() == null){ //TODO
-			this.consumeGroup.setMask(config.getTopicMask());
-		}
 		this.consumeWindow = config.getConsumeWindow();
 		this.consumeTimeout = config.getConsumeTimeout();
 		
@@ -160,6 +159,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				MqClient clieint = pool.createClient();
 				ConsumeThread thread = threads[i] = new ConsumeThread(clieint); 
 				thread.setTopic(topic); 
+				thread.setTopicMask(topicMask);
 				thread.setConsumeGroup(consumeGroup); 
 				thread.setToken(token); 
 				thread.setConsumeRunner(consumeRunner); 

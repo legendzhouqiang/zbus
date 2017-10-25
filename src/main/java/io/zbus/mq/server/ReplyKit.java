@@ -102,6 +102,17 @@ public class ReplyKit {
 		session.write(res);
 	} 
 	
+	public static void reply401(Message msg, Session session, String reason) throws IOException {
+		Message res = new Message();
+		String topic = msg.getTopic(); 
+		res.setId(msg.getId());
+		res.setStatus(401);
+		res.setTopic(topic);
+		 
+		res.setBody(reason); 
+		session.write(res);
+	} 
+	
 	public static void reply302(Message msg, Session session, String location) throws IOException {
 		Message res = new Message(); 
 		res.setId(msg.getId());

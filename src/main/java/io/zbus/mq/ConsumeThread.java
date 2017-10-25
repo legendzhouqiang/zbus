@@ -9,16 +9,21 @@ import java.util.concurrent.TimeUnit;
 import io.zbus.kit.ThreadKit.ManualResetEvent;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
+import io.zbus.mq.Protocol.ConsumeGroupInfo;
 
 public class ConsumeThread implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(ConsumeThread.class);  
 	protected final MqClient client;
 	
 	protected String topic;  
+	protected Integer topicMask;
 	protected String token;
 	protected ConsumeGroup consumeGroup;
 	protected int consumeTimeout = 10000;
 	protected Integer consumeWindow;
+	
+	private String consumeGroupName; //internally upated
+	 
 	
 	protected ExecutorService consumeRunner;
 	protected MessageHandler messageHandler;
@@ -27,14 +32,15 @@ public class ConsumeThread implements Closeable{
 	
 	protected RunningThread consumeThread;
 	 
-	public ConsumeThread(MqClient client, String topic, ConsumeGroup group){
+	public ConsumeThread(MqClient client, String topic, ConsumeGroup group, Integer topicMask){
 		this.client = client;
 		this.topic = topic;
 		this.consumeGroup = group;
+		this.topicMask = topicMask;
 	}
 	
 	public ConsumeThread(MqClient client, String topic){
-		this(client, topic, null);
+		this(client, topic, null, null);
 	}
 	
 	public ConsumeThread(MqClient client){
@@ -62,8 +68,9 @@ public class ConsumeThread implements Closeable{
 		}  
 		this.client.setToken(token);
 		this.client.setInvokeTimeout(consumeTimeout);
-		try {
-			this.client.declareGroup(topic, consumeGroup);
+		try { 
+			ConsumeGroupInfo info = this.client.declareGroup(topic, consumeGroup, topicMask);
+			consumeGroupName = info.groupName; //update groupName
 		} catch (IOException e) { 
 			log.error(e.getMessage(), e);
 		} catch (InterruptedException e) { 
@@ -77,7 +84,7 @@ public class ConsumeThread implements Closeable{
 	
 	public void pause(){
 		try {
-			client.unconsume(topic, this.consumeGroup.getGroupName()); //stop consuming in serverside
+			client.unconsume(topic, consumeGroupName); //stop consuming in serverside
 			consumeThread.running = false;
 			consumeThread.interrupt();
 			
@@ -99,11 +106,12 @@ public class ConsumeThread implements Closeable{
 	public Message take() throws IOException, InterruptedException {  
 		Message res = null;
 		try {  
-			res = client.consume(topic, this.consumeGroup.getGroupName(), this.getConsumeWindow()); 
+			res = client.consume(topic, this.consumeGroupName, this.getConsumeWindow()); 
 			if (res == null) return res; 
 			Integer status = res.getStatus();
-			if (status == 404) {
-				client.declareGroup(topic, consumeGroup); 
+			if (status == 404) { 
+				ConsumeGroupInfo info = client.declareGroup(topic, consumeGroup, topicMask);
+				consumeGroupName = info.groupName; //update groupName
 				return take();
 			}
 			
@@ -255,7 +263,14 @@ public class ConsumeThread implements Closeable{
 
 	public MqClient getClient() {
 		return client;
-	} 
-	
+	}
+
+	public Integer getTopicMask() {
+		return topicMask;
+	}
+
+	public void setTopicMask(Integer topicMask) {
+		this.topicMask = topicMask;
+	}  
 	
 }

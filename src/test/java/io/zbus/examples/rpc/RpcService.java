@@ -23,6 +23,7 @@ public class RpcService {
 		b.serviceName("MyRpc") // application level entry, full URL: <service> / <module> / <method>
 		 .port(15555)          // start server inside 
 		 .autoDiscover(true)   // disable if add modules manually
+		 .connectionCount(4)   // parallel connection count
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();
