@@ -114,15 +114,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.PAGE, pageHandler);
 		registerHandler(Protocol.PING, pingHandler);   
 		
-		registerHandler(Message.HEARTBEAT, heartbeatHandler);    
-		
-		
-		if(Fix.Enabled){
-			//Compatible to older zbus
-			registerHandler(Fix.CreateMQ, declareHandler); 
-			registerHandler(Fix.QueryMQ, queryHandler); 
-			registerHandler(Fix.RemoveMQ, removeHandler); 
-		} 
+		registerHandler(Message.HEARTBEAT, heartbeatHandler);     
 	}   
 	
 	private MessageHandler<Message> produceHandler = new MessageHandler<Message>() { 
@@ -197,6 +189,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			msg.removeHeader(Protocol.ACK);
 			msg.removeHeader(Protocol.RECVER);
 			msg.removeHeader(Protocol.COMMAND);
+			msg.removeHeader("remote-addr");
 			
 			Integer status = 200;
 			if(msg.getOriginStatus() != null){
@@ -730,6 +723,9 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			} 
 			return;
 		} 
+		
+		//clean Token info(Sensitive)
+		msg.removeHeader(Protocol.TOKEN);
 		
     	if(cmd != null){
     		MessageHandler<Message> handler = handlerMap.get(cmd);

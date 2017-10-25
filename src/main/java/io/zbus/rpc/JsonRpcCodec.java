@@ -24,8 +24,7 @@ package io.zbus.rpc;
  
 
 import io.zbus.kit.JsonKit;
-import io.zbus.mq.Message;
-import io.zbus.mq.server.Fix;
+import io.zbus.mq.Message; 
  
 
 public class JsonRpcCodec implements RpcCodec {  
@@ -35,11 +34,7 @@ public class JsonRpcCodec implements RpcCodec {
 		Message msg = new Message();  
 		if(encoding == null) encoding = DEFAULT_ENCODING;  
 		msg.setEncoding(encoding);
-		if(Fix.Enabled){ //zbus7 package name conflicts if type enabled
-			msg.setBody(JsonKit.toJSONBytes(request, encoding));
-		} else {
-			msg.setBody(JsonKit.toJSONBytesWithType(request, encoding));
-		} 
+		msg.setBody(JsonKit.toJSONBytesWithType(request, encoding)); 
 		return msg;
 	}
 	

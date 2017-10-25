@@ -24,8 +24,6 @@ package io.zbus.mq;
  
 
 import static io.zbus.mq.Protocol.*;
-
-import io.zbus.mq.server.Fix;
  
 
 public class Message extends io.zbus.transport.http.Message {    
@@ -107,26 +105,21 @@ public class Message extends io.zbus.transport.http.Message {
 		String value = this.getHeader(ORIGIN_STATUS);
 		if(value != null){
 			return Integer.valueOf(value);
-		}
-		
-		return Fix.getOriginStatus(this); 
+		} 
+		return null;
 	} 
 	
 	public Message setOriginStatus(Integer value) {
-		this.setHeader(ORIGIN_STATUS, value);
-		Fix.setOriginStatus(this, value);
+		this.setHeader(ORIGIN_STATUS, value); 
 		return this;
 	}  
 	
 	public String getOriginUrl() {
-		String value = this.getHeader(ORIGIN_URL); 
-		if(value == null) value = Fix.getOriginUrl(this);    
-		return value;
+		return this.getHeader(ORIGIN_URL);   
 	} 
 	
 	public Message setOriginUrl(String value) {
-		this.setHeader(ORIGIN_URL, value);
-		Fix.setOriginUrl(this, value);
+		this.setHeader(ORIGIN_URL, value); 
 		return this;
 	}   
 	
@@ -141,14 +134,11 @@ public class Message extends io.zbus.transport.http.Message {
 	}   
 	
 	public String getOriginId() {
-		String value = this.getHeader(ORIGIN_ID); 
-		if(value == null) value = Fix.getOriginId(this);  
-		return value;
+		return this.getHeader(ORIGIN_ID);   
 	} 
 	
 	public Message setOriginId(String value) { 
-		this.setHeader(ORIGIN_ID, value); 
-		Fix.setOriginId(this, value);
+		this.setHeader(ORIGIN_ID, value);  
 		return this;
 	} 
 	
@@ -165,10 +155,7 @@ public class Message extends io.zbus.transport.http.Message {
 	} 
 	
 	public String getTopic(){
-		String topic = getHeader(Protocol.TOPIC);
-		if(topic != null) return topic;
-		
-		return Fix.getTopic(this); 
+		return getHeader(Protocol.TOPIC); 
 	} 
 	public Message setTopic(String value) {
 		this.setHeader(TOPIC, value);
@@ -195,9 +182,8 @@ public class Message extends io.zbus.transport.http.Message {
 	
 	public Integer getTopicMask(){
 		String value = getHeader(TOPIC_MASK);
-		if(value != null) return Integer.valueOf(value);
-		
-		return Fix.getTopicMask(this); 
+		if(value != null) return Integer.valueOf(value); 
+		return null;
 	} 
 	
 	public Message setTopicMask(Integer value) { 

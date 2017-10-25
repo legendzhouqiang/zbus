@@ -44,9 +44,7 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	private String serverName;
 	
 	private long cleanMqInterval = 3000;           //3 seconds
-	private long reportToTrackerInterval = 30000;  //30 seconds 
-	 
-	private boolean compatible = false;  //set protocol compatible to zbus7 if true
+	private long reportToTrackerInterval = 30000;  //30 seconds  
 	
 	private AuthProvider authProvider = new XmlAuthProvider();  
 	private MessageLogger messageLogger;
@@ -62,8 +60,7 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	}
 	
 	public void loadFromXml(Document doc) throws Exception{
-		XPath xpath = XPathFactory.newInstance().newXPath();     
-		this.compatible = valueOf(xpath.evaluate("/zbus/@compatible", doc), false);
+		XPath xpath = XPathFactory.newInstance().newXPath();      
 		
 		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
 		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
@@ -265,14 +262,6 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	public void setAuthProvider(AuthProvider authProvider) {
 		this.authProvider = authProvider;
 	}
-
-	public boolean isCompatible() {
-		return compatible;
-	}
-
-	public void setCompatible(boolean compatible) {
-		this.compatible = compatible;
-	}   
 	 
 	public void addToken(String token, String topic){
 		Token t = new Token();

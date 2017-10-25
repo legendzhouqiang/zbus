@@ -40,3 +40,5 @@
 - RPC参数列表可以任意顺序插入Message请求参数的申明，获取RPC请求上下文
 - 浏览器请求URL格式中module改为必填选，格式为 /{Topic}/{Module}/{Method}/{Param1}/{Param2}.....
 - RPC结果返回状态改为由底层HTTP协议状态码控制：200正常，600业务逻辑错误
+- 清理zbus7老版本协议适配代码 
+- 服务器接受消息认证后删除Token敏感信息
