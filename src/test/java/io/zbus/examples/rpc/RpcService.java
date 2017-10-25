@@ -2,6 +2,12 @@ package io.zbus.examples.rpc;
 
 import io.zbus.rpc.bootstrap.ServiceBootstrap;
 
+/**
+ * Will start zbus server internally
+ * 
+ * @author Rushmore
+ *
+ */
 public class RpcService {
 
 	@SuppressWarnings("resource")
