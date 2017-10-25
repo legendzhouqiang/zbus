@@ -6,7 +6,7 @@ import io.zbus.rpc.RpcCallback;
 import io.zbus.rpc.RpcInvoker;
 import io.zbus.rpc.bootstrap.ClientBootstrap;
 
-public class RpcClientSimple {
+public class RpcClient {
 
 	public static void main(String[] args) throws Exception {   
 		ClientBootstrap b = new ClientBootstrap(); 

@@ -3,8 +3,8 @@ package io.zbus.examples.rpc.spring;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import io.zbus.examples.rpc.TestCases;
 import io.zbus.examples.rpc.biz.InterfaceExample;
+import io.zbus.examples.rpc.biz.TestCases;
 import io.zbus.rpc.bootstrap.SpringClientBootstrap;
 
 public class SpringRpcClient {

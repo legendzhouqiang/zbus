@@ -1,6 +1,7 @@
 package io.zbus.examples.rpc;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
+import io.zbus.examples.rpc.biz.TestCases;
 import io.zbus.examples.rpc.biz.generic.GenericMethod;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface1;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface2;

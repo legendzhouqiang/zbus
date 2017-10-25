@@ -1,4 +1,4 @@
-package io.zbus.examples.rpc;
+package io.zbus.examples.rpc.biz;
 
 import java.util.Arrays;
 import java.util.List;
@@ -7,10 +7,6 @@ import java.util.Random;
 
 import org.junit.Assert;
 
-import io.zbus.examples.rpc.biz.InterfaceExample;
-import io.zbus.examples.rpc.biz.MyEnum;
-import io.zbus.examples.rpc.biz.Order;
-import io.zbus.examples.rpc.biz.User;
 import io.zbus.examples.rpc.biz.generic.GenericMethod;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface1;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface2;

@@ -5,20 +5,20 @@ import io.zbus.rpc.bootstrap.ServiceBootstrap;
 public class RpcService {
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {  
+	public static void main(String[] args) throws Exception { 
+		ServiceBootstrap b = new ServiceBootstrap(); 
 		
-		//Enable SSL + Token based security 
+		//manually add modules
+		//b.addModule(InterfaceExampleImpl.class); 
+		//b.addModule(GenericMethodImpl.class);
+		//b.addModule(SubService1.class);
+		//b.addModule(SubService2.class);  
 		
-		//ServerAddress serverAddress = new ServerAddress("localhost:15555");
-		//serverAddress.setCertFile("ssl/zbus.crt");
-		//serverAddress.setSslEnabled(true);	 
-		//serverAddress.setToken("myrpc_service"); 
-		
-		ServiceBootstrap b = new ServiceBootstrap();  
-		b.serviceName("MyRpc")
-		 .serviceToken("myrpc_service") 
-		 .serviceAddress("localhost:15555;localhost:15556") //connect to remote server
-		 .autoDiscover(true) //auto load class with Annotation Remote
+		b.serviceName("MyRpc") // application level entry, full URL: <service> / <module> / <method>
+		 .port(15555)          // start server inside 
+		 .autoDiscover(true)   // disable if add modules manually
+		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
+		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();
 	}
 }
