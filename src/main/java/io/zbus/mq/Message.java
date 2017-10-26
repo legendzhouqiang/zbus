@@ -170,15 +170,15 @@ public class Message extends io.zbus.transport.http.Message {
 		this.setHeader(CONSUME_GROUP, value);
 		return this;
 	} 
-	public Boolean getGroupNameRandom() {
-		String random = this.getHeader(GROUP_NAME_RANDOM);
+	public Boolean getGroupNameAuto() {
+		String random = this.getHeader(GROUP_NAME_AUTO);
 		if(random == null) return null; 
 		random = random.trim().toLowerCase();
 		return random.equals("1") || random.equals("true");
 	}  
-	public void setGroupNameRandom(Boolean value){ 
+	public void setGroupNameAuto(Boolean value){ 
 		if(value == null) return; 
-		this.setHeader(GROUP_NAME_RANDOM, value? "true" : "false");
+		this.setHeader(GROUP_NAME_AUTO, value? "true" : "false");
 	} 
 	public Long getOffset(){
 		String value = this.getHeader(OFFSET);

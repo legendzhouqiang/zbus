@@ -31,6 +31,6 @@ public class MessageServerExample {
 		EventLoop loop = new EventLoop();
 		loop.setIdleTimeInSeconds(30); 
 		MessageServer server = new MessageServer(loop);   
-		server.start(80, adaptor);  
+		server.start(8080, adaptor);  
 	} 
 }

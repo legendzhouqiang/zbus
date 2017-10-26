@@ -2,7 +2,7 @@ package io.zbus.mq;
 
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
-	private Boolean groupNameRandom;
+	private Boolean groupNameAuto;
 	private String filter;     //filter on message'tag
 	private Integer mask;    
 	
@@ -24,14 +24,38 @@ public class ConsumeGroup implements Cloneable {
 	
 	public ConsumeGroup(Message msg){ 
 		groupName = msg.getConsumeGroup(); 
-		groupNameRandom = msg.getGroupNameRandom();
+		groupNameAuto = msg.getGroupNameAuto();
 		startCopy = msg.getGroupStartCopy();
 		startOffset = msg.getGroupStartOffset();
 		startTime = msg.getGroupStartTime();
 		startMsgId = msg.getGroupStartMsgId();
 		filter = msg.getGroupFilter();
 		mask = msg.getGroupMask();
+		
+		
 		creator = msg.getToken(); //token as creator
+	}
+	
+	public void writeToMessage(Message msg){
+		msg.setConsumeGroup(this.getGroupName());
+		msg.setGroupNameAuto(this.getGroupNameAuto());
+		msg.setGroupStartCopy(this.getStartCopy());
+		msg.setGroupFilter(this.getFilter());
+		msg.setGroupStartMsgId(this.getStartMsgId());
+		msg.setGroupStartOffset(this.getStartOffset()); 
+		msg.setGroupStartTime(this.getStartTime());
+		msg.setGroupMask(this.getMask());
+	}
+	
+	public ConsumeGroup asTempBroadcastGroup(){
+		this.setGroupName(null);
+		this.setGroupNameAuto(true);  //auto generate groupName
+		this.setMask(Protocol.MASK_EXCLUSIVE | Protocol.MASK_DELETE_ON_EXIT); //Exclusive + deleteOnExit
+		return this;
+	}
+	
+	public static ConsumeGroup createTempBroadcastGroup(){
+		return new ConsumeGroup().asTempBroadcastGroup();
 	}
 	
 	public String getStartCopy() {
@@ -82,11 +106,11 @@ public class ConsumeGroup implements Cloneable {
 	public void setCreator(String creator) {
 		this.creator = creator;
 	}  
-	public Boolean getGroupNameRandom() {
-		return groupNameRandom;
+	public Boolean getGroupNameAuto() {
+		return groupNameAuto;
 	} 
-	public void setGroupNameRandom(Boolean groupNameRandom) {
-		this.groupNameRandom = groupNameRandom;
+	public void setGroupNameAuto(Boolean groupNameAuto){
+		this.groupNameAuto = groupNameAuto;
 	}
 
 	@Override

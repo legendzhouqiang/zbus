@@ -229,14 +229,7 @@ public class MqClient extends CompositeClient<Message, Message>{
 		msg.setCommand(Protocol.DECLARE);
 		msg.setTopic(topic);
 		msg.setTopicMask(topicMask);
-		msg.setConsumeGroup(group.getGroupName());
-		msg.setGroupStartCopy(group.getStartCopy());
-		msg.setGroupFilter(group.getFilter());
-		msg.setGroupStartMsgId(group.getStartMsgId());
-		msg.setGroupStartOffset(group.getStartOffset()); 
-		msg.setGroupStartTime(group.getStartTime());
-		msg.setGroupMask(group.getMask());
-		
+		group.writeToMessage(msg); 
 		
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, ConsumeGroupInfo.class); 
