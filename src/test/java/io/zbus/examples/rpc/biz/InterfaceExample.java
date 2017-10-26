@@ -3,7 +3,7 @@ package io.zbus.examples.rpc.biz;
 import java.util.List;
 import java.util.Map;
 
-import io.zbus.mq.Message;
+import io.zbus.transport.http.Message;
 
 public interface InterfaceExample{
   

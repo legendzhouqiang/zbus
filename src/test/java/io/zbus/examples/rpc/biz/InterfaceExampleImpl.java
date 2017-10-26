@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.mq.Message;
 import io.zbus.rpc.Remote;
+import io.zbus.transport.http.Message;
 
 @Remote
 public class InterfaceExampleImpl implements InterfaceExample{
@@ -174,7 +174,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	@Override
 	public Message raw1(int i, Message req) {
 		Message res = new Message();
-		res.setBody(i + ":" + req.getTopic());
+		res.setBody(i + ":" + req.getHeader("topic"));
 		return res;
 	}
 	

@@ -243,7 +243,7 @@ public class RpcProcessor {
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
 		int requiredLength = 0;
 		for(Class<?> clazz : targetParamTypes){
-			if(clazz == Message.class) continue; //ignore Message parameter
+			if(Message.class.isAssignableFrom(clazz)) continue; //ignore Message parameter
 			requiredLength++;
 		}
 		if(requiredLength !=  req.getParams().length){
@@ -286,7 +286,7 @@ public class RpcProcessor {
 				Object[] reqParams = req.getParams(); 
 				int j = 0;
 				for(int i=0; i<targetParamTypes.length; i++){  
-					if(targetParamTypes[i] == Message.class){
+					if(Message.class.isAssignableFrom(targetParamTypes[i])){
 						invokeParams[i] = msg;
 					} else {
 						invokeParams[i] = codec.convert(reqParams[j++], targetParamTypes[i]);
