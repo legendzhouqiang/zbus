@@ -1,4 +1,4 @@
-package io.zbus.rpc.bootstrap;
+package io.zbus.rpc.mq;
 
 import java.util.List;
 import java.util.Map;

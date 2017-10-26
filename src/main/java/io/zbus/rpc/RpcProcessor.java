@@ -1,6 +1,5 @@
 package io.zbus.rpc;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,12 +11,10 @@ import java.util.Map;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.mq.Message;
-import io.zbus.mq.MessageHandler;
-import io.zbus.mq.MqClient;
+import io.zbus.transport.http.Message; 
 
 
-public class RpcProcessor implements MessageHandler{
+public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);  
 	
 	private RpcCodec codec = new JsonRpcCodec();
@@ -271,27 +268,7 @@ public class RpcProcessor implements MessageHandler{
 			throw new IllegalArgumentException(errorMsg);
 		}
 	}
-	
-	@Override
-	public void handle(Message msg, MqClient client) throws IOException {
-		final String topic = msg.getTopic();
-		final String msgId  = msg.getId();
-		final String sender = msg.getSender();
-		 
-		Message res = process(msg);
-		
-		if(res != null){
-			res.setId(msgId);
-			res.setTopic(topic);  
-			res.setReceiver(sender);  
-			if(res.getStatus() == null){
-				res.setStatus(200); //default to 200, if not set
-			}
-			//route back message
-			client.route(res);
-		}
-	}
-	
+	 
 	public Message process(Message msg){   
 		String encoding = msg.getEncoding();
 		Object result = null;

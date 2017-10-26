@@ -652,7 +652,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     	
     	//Possible URL RPC request
     	if(info.path.size()>=3 && "GET".equalsIgnoreCase(msg.getMethod())){
-    		// /<topic>/<method>/<param_1>/../<param_n>[?module=<module>&&<header_ext_kvs>]  
+    		// /module/<topic>/<method>/<param_1>/../<param_n>
     		boolean rpc = false; 
         	MessageQueue mq = null;
         	String topic = msg.getTopic();
@@ -725,10 +725,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				ReplyKit.reply403(msg, sess);
 			} 
 			return;
-		} 
-		
-		//clean Token info(Sensitive)
-		msg.removeHeader(Protocol.TOKEN);
+		}  
 		
     	if(cmd != null){
     		MessageHandler<Message> handler = handlerMap.get(cmd);

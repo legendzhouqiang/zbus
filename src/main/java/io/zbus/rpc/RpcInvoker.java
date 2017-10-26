@@ -30,67 +30,39 @@ import java.lang.reflect.Proxy;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.mq.Broker;
-import io.zbus.mq.Message;
-import io.zbus.mq.Producer;
+import io.zbus.kit.logging.LoggerFactory; 
 import io.zbus.transport.ResultCallback;
+import io.zbus.transport.http.Message;
 
 public class RpcInvoker {  
-	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class); 
-	 
-	private final Producer producer;
-	private final String topic;  
+	private static final Logger log = LoggerFactory.getLogger(RpcInvoker.class);  
 	private String module;  
 	private String encoding = "UTF-8";  
 	private int timeout;
 	private boolean verbose;
 	
 	private RpcCodec codec; 
+	private MessageInvoker messageInvoker;
 	
-	public RpcInvoker(Broker broker, String topic){
-		this(new RpcConfig(broker, topic));
-	}
-	
-	public RpcInvoker(RpcConfig config){ 
-		this.topic = config.getTopic(); 
-		if(this.topic == null){
-			throw new IllegalArgumentException("Missing topic in config");
-		}
-		
-		this.codec = config.getCodec();
-		if(this.codec == null){
-			this.codec = new JsonRpcCodec(); //default to JsonRpc
-		}
+	public RpcInvoker(RpcConfig config) {
+		this.messageInvoker = config.getMessageInvoker();
 		this.module = config.getModule(); 
-		this.encoding = config.getEncoding(); 
-		this.timeout = config.getInvokeTimeout();
+		this.codec = config.getCodec();
+		this.timeout = config.getTimeout();
 		this.verbose = config.isVerbose();
-		
-		this.producer = new Producer(config); 
+		this.encoding = config.getEncoding();
+		if(this.codec == null) {
+			this.codec = new JsonRpcCodec();
+		}
 	}
-	
-	public RpcInvoker(RpcInvoker other){
-		this.topic = other.topic;
+	 
+	public RpcInvoker(RpcInvoker other){ 
 		this.codec = other.codec;
 		this.module = other.module;
 		this.encoding = other.encoding;
 		this.timeout = other.timeout;
-		this.verbose = other.verbose;
-		this.producer = other.producer;
-	}
-	
-	private Message invokeSync(Message req, int timeout) throws IOException, InterruptedException {
-		req.setAck(false);
-		req.setTopic(this.topic);
-		return this.producer.publish(req, timeout);
-	}
- 
-	private void invokeAsync(Message req, ResultCallback<Message> callback) throws IOException {
-		req.setAck(false);
-		req.setTopic(this.topic);
-		
-		this.producer.publishAsync(req, callback);
+		this.verbose = other.verbose; 
+		this.messageInvoker = other.messageInvoker;
 	} 
 	
 	public <T> T invokeSync(Class<T> resultClass, String method, Object... args){
@@ -146,7 +118,7 @@ public class RpcInvoker {
 				log.info("[REQ]: %s", msgReq);
 			} 
 			
-			msgRes = invokeSync(msgReq, this.timeout); 
+			msgRes = messageInvoker.invokeSync(msgReq, this.timeout); 
 			
 			if(verbose){
 				long end = System.currentTimeMillis();
@@ -176,7 +148,7 @@ public class RpcInvoker {
 			log.info("[REQ]: %s", msgReq);
 		}  
 		try {
-			invokeAsync(msgReq, new ResultCallback<Message>() { 
+			messageInvoker.invokeAsync(msgReq, new ResultCallback<Message>() { 
 				@Override
 				public void onReturn(Message result) { 
 					if(verbose){
@@ -202,8 +174,8 @@ public class RpcInvoker {
 	 
 	@SuppressWarnings("unchecked")
 	private <T> T extractResult(Message message, Class<T> clazz){
-		if(clazz == Message.class) return (T)message; //special case
-		
+		if(Message.class.isAssignableFrom(clazz)) return (T)message; //special case
+	
 		Object result = codec.decodeResponse(message);  
 		if(message.getStatus() != RpcCodec.STATUS_OK){
 			if(result instanceof RuntimeException){

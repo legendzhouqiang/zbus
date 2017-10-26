@@ -1,6 +1,6 @@
 package io.zbus.examples.rpc;
 
-import io.zbus.rpc.bootstrap.ServiceBootstrap;
+import io.zbus.rpc.mq.ServiceBootstrap;
 
 /**
  * 
@@ -26,6 +26,7 @@ public class RpcServiceNoServer {
 		 //.serviceToken("myrpc_service") 
 		 .serviceAddress("localhost:15555;localhost:15556") //connect to remote server
 		 .autoDiscover(true) //auto load class with Annotation Remote
+		 .connectionCount(4)
 		 .start();
 	}
 }

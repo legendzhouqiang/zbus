@@ -22,8 +22,7 @@
  */
 package io.zbus.rpc;
 
-import io.zbus.mq.Message;
-
+import io.zbus.transport.http.Message;
 
 public interface RpcCodec {
 	Message  encodeRequest(Request request, String encoding); 

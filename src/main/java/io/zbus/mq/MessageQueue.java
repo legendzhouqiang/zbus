@@ -240,6 +240,7 @@ abstract class AbstractQueue implements MessageQueue{
 				Message pullMsg = pull.getPullMessage(); 
 				Message writeMsg = Message.copyWithoutBody(msg); 
 				
+				writeMsg.removeHeader(Protocol.TOKEN); //Remove sensitive Token info
 				writeMsg.setOriginId(msg.getId());  
 				writeMsg.setId(pullMsg.getId());
 				Integer status = writeMsg.getStatus();

@@ -27,7 +27,7 @@ public class Producer extends MqAdmin{
 	
 	public Producer(Broker broker){
 		this(new ProducerConfig(broker));
-	}
+	} 
 	
 	public Message publish(Message msg, int timeout) throws IOException, InterruptedException {
 		MqClientPool[] poolArray = broker.selectClient(this.produceServerSelector, msg);
@@ -37,7 +37,7 @@ public class Producer extends MqAdmin{
 		MqClientPool pool = poolArray[0]; 
 		MqClient client = null;
 		try {
-			client = pool.borrowClient();  
+			client = pool.borrowClient(); 
 			return configClient(client).produce(msg, timeout);
 		} finally {
 			pool.returnClient(client);
@@ -56,7 +56,7 @@ public class Producer extends MqAdmin{
 		MqClientPool pool = poolArray[0]; 
 		MqClient client = null;
 		try {
-			client = pool.borrowClient();
+			client = pool.borrowClient(); 
 			configClient(client).produceAsync(msg, callback);
 		} finally {
 			pool.returnClient(client);

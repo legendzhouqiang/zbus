@@ -5,7 +5,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.examples.rpc.biz.TestCases;
-import io.zbus.rpc.bootstrap.SpringClientBootstrap;
+import io.zbus.rpc.mq.SpringClientBootstrap;
 
 public class SpringRpcClient {
 

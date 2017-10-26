@@ -2,6 +2,7 @@ package io.zbus.examples.transport.tcp;
 
 import java.io.IOException;
 
+import io.zbus.kit.JsonKit;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.Session;
@@ -23,7 +24,7 @@ public class MessageServerExample {
 				Message res = new Message();
 				res.setId(msg.getId()); //match the ID for response
 				res.setStatus(200);
-				res.setBody("Hello world");
+				res.setBody(JsonKit.toJSONString("xxxyzz"));
 				session.write(res);
 			}
 		});  

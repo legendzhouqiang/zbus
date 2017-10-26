@@ -24,7 +24,7 @@ package io.zbus.rpc;
  
 
 import io.zbus.kit.JsonKit;
-import io.zbus.mq.Message; 
+import io.zbus.transport.http.Message; 
  
 
 public class JsonRpcCodec implements RpcCodec {  

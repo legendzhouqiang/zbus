@@ -1,13 +1,16 @@
-package io.zbus.rpc.bootstrap;
+package io.zbus.rpc.mq;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
 import io.zbus.kit.ClassKit;
 import io.zbus.kit.StrKit;
 import io.zbus.mq.Broker;
+import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
+import io.zbus.mq.MessageHandler;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
@@ -15,14 +18,10 @@ import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcProcessor;
 import io.zbus.transport.ServerAddress;
 
-/**
- * Bootstrap to setup Rpc Service
- * Spring friendly setters
- * 
- * @author Rushmore
- *
- */
-public class ServiceBootstrap extends AbstractBootstrap{ 
+public class ServiceBootstrap implements Closeable{ 
+	protected BrokerConfig brokerConfig = null;  
+	protected Broker broker; 
+	
 	protected MqServerConfig serverConfig = null;
 	protected ConsumerConfig consumerConfig = new ConsumerConfig(); 
 	
@@ -30,19 +29,7 @@ public class ServiceBootstrap extends AbstractBootstrap{
 	protected Consumer consumer;
 	protected RpcProcessor processor = new RpcProcessor(); 
 	protected boolean autoDiscover = false;
-	
-	public ServiceBootstrap serviceAddress(ServerAddress... tracker){
-		return (ServiceBootstrap)super.serviceAddress(tracker);
-	}
-	
-	public ServiceBootstrap serviceAddress(String tracker){
-		return (ServiceBootstrap)super.serviceAddress(tracker);
-	} 
-	
-	@Override
-	public ServiceBootstrap broker(Broker broker) { 
-		return (ServiceBootstrap)super.broker(broker);
-	}
+	 
 	
 	public ServiceBootstrap port(int port){
 		if(serverConfig == null){
@@ -145,10 +132,12 @@ public class ServiceBootstrap extends AbstractBootstrap{
 		Integer mask = consumerConfig.getTopicMask();
 		if(mask == null) {
 			mask = Protocol.MASK_MEMORY ;
-		}  
+		}   
+		
+		MessageHandler rpcHandler = new RpcMessageHandler(this.processor);
 		   
 		consumerConfig.setTopicMask(mask | Protocol.MASK_RPC); 
-		consumerConfig.setMessageHandler(processor);     
+		consumerConfig.setMessageHandler(rpcHandler);     
 		consumer = new Consumer(consumerConfig);
 		
 		consumer.start();
@@ -170,6 +159,31 @@ public class ServiceBootstrap extends AbstractBootstrap{
 		return this;
 	}
 	
+	public ServiceBootstrap broker(Broker broker){
+		this.broker = broker;
+		return this;
+	}
+	
+	public ServiceBootstrap serviceAddress(ServerAddress... tracker){
+		if(brokerConfig == null){
+			brokerConfig = new BrokerConfig();
+		}
+		for(ServerAddress address : tracker){
+			brokerConfig.addTracker(address);
+		}
+		return this;
+	}
+	
+	public ServiceBootstrap serviceAddress(String tracker){
+		String[] bb = tracker.split("[;, ]");
+		for(String addr : bb){
+			addr = addr.trim();
+			if("".equals(addr)) continue;
+			ServerAddress serverAddress = new ServerAddress(addr);
+			serviceAddress(serverAddress);
+		}
+		return this;
+	} 
 	
 	@Override
 	public void close() throws IOException { 

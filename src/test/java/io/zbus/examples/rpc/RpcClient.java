@@ -4,7 +4,7 @@ import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.RpcCallback;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.bootstrap.ClientBootstrap;
+import io.zbus.rpc.mq.ClientBootstrap;
 
 public class RpcClient {
 
