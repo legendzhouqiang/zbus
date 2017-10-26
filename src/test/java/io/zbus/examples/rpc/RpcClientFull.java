@@ -5,7 +5,7 @@ import io.zbus.examples.rpc.biz.TestCases;
 import io.zbus.examples.rpc.biz.generic.GenericMethod;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface1;
 import io.zbus.examples.rpc.biz.inheritance.SubServiceInterface2;
-import io.zbus.rpc.mq.ClientBootstrap;
+import io.zbus.rpc.bootstrap.ClientBootstrap;
 
 public class RpcClientFull {
 

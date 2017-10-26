@@ -1,6 +1,6 @@
 package io.zbus.examples.rpc;
 
-import io.zbus.rpc.mq.ServiceBootstrap;
+import io.zbus.rpc.bootstrap.ServiceBootstrap;
 
 /**
  * 

@@ -1,4 +1,4 @@
-package io.zbus.rpc.http;
+package io.zbus.rpc.transport.http;
 
 import java.io.IOException;
 import java.util.Map;

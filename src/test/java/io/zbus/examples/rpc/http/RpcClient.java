@@ -1,17 +1,16 @@
-package io.zbus.examples.rpc;
+package io.zbus.examples.rpc.http;
 
 import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.RpcCallback;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.bootstrap.ClientBootstrap;
+import io.zbus.rpc.bootstrap.HttpClientBootstrap;
 
 public class RpcClient {
 
 	public static void main(String[] args) throws Exception {   
-		ClientBootstrap b = new ClientBootstrap(); 
-		b.serviceAddress("localhost:15555")
-		 .serviceName("MyRpc")
+		HttpClientBootstrap b = new HttpClientBootstrap(); 
+		b.serviceAddress("localhost:15555") 
 		 .serviceToken("myrpc_service"); 
 		
 		RpcInvoker rpc = b.invoker();

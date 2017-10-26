@@ -1,4 +1,4 @@
-package io.zbus.rpc.mq;
+package io.zbus.rpc.bootstrap;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,6 +16,7 @@ import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.rpc.transport.mq.RpcMessageHandler;
 import io.zbus.transport.ServerAddress;
 
 public class ServiceBootstrap implements Closeable{ 

@@ -1,4 +1,4 @@
-package io.zbus.rpc.mq;
+package io.zbus.rpc.bootstrap;
 
 import java.util.List;
 import java.util.Map;
@@ -8,11 +8,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import io.zbus.mq.server.MqServerConfig;
 import io.zbus.rpc.Remote;
-import io.zbus.transport.ServerAddress;
 
-public class SpringServiceBootstrap extends ServiceBootstrap implements ApplicationContextAware {
+public class SpringHttpServiceBootstrap extends HttpServiceBootstrap implements ApplicationContextAware {
 	private ApplicationContext context;
 	
 	@Override
@@ -51,48 +49,17 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	}   
 	
 	public void setSslCertFile(String certFile){
-		if(serverConfig == null){
-			serverConfig = new MqServerConfig();
-		}
-		serverConfig.setSslCertFile(certFile); 
-		serverConfig.setSslEnabled(true);
+		this.certFile = certFile;
 	}  
 	
 	public void setSslKeyFile(String keyFile){
-		if(serverConfig == null){
-			serverConfig = new MqServerConfig();
-		}
-		serverConfig.setSslKeyFile(keyFile);
-		serverConfig.setSslEnabled(true);
+		this.keyFile = keyFile;
 	}   
-	
-	public void setStorePath(String mqPath){
-		storePath(mqPath);
-	}   
-	
-	public void setServiceAddress(ServerAddress... tracker){
-		serviceAddress(tracker);
-	}
-	
-	public void setServiceAddress(String tracker){
-		serviceAddress(tracker);
-	} 
-	
-	public void setServiceName(String topic){
-		serviceName(topic);
-	}
-	
-	public void setServiceMask(int mask){
-		serviceMask(mask);
-	}
-	
+	 
+	 
 	public void setServiceToken(String token){  
 		serviceToken(token);
-	} 
-	
-	public void setConnectionCount(int connectionCount){ 
-		connectionCount(connectionCount);
-	} 
+	}  
 	 
 	public void setAutoDiscover(boolean autoDiscover) {
 		autoDiscover(autoDiscover);

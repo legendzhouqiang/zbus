@@ -1,4 +1,4 @@
-package io.zbus.rpc.mq;
+package io.zbus.rpc.bootstrap;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.ProducerConfig;
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
+import io.zbus.rpc.transport.mq.RpcMqInvoker;
 import io.zbus.transport.ServerAddress;
 
 public class ClientBootstrap implements Closeable {   

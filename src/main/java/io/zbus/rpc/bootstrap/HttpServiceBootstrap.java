@@ -1,4 +1,4 @@
-package io.zbus.rpc.http;
+package io.zbus.rpc.bootstrap;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -8,12 +8,13 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.rpc.transport.http.RpcMessageAdaptor;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.SslKit;
 import io.zbus.transport.http.MessageServer;
  
 
-public class ServiceBootstrap implements Closeable {  
+public class HttpServiceBootstrap implements Closeable {  
 	protected RpcProcessor processor = new RpcProcessor(); 
 	protected boolean autoDiscover = false;
 	protected int port;
@@ -24,28 +25,28 @@ public class ServiceBootstrap implements Closeable {
 	protected String token;
 	protected EventLoop eventLoop;
 	 
-	public ServiceBootstrap port(int port){ 
+	public HttpServiceBootstrap port(int port){ 
 		this.port = port;
 		return this;
 	} 
 	 
-	public ServiceBootstrap host(String host){ 
+	public HttpServiceBootstrap host(String host){ 
 		this.host = host;
 		return this;
 	}   
 	
-	public ServiceBootstrap ssl(String certFile, String keyFile){ 
+	public HttpServiceBootstrap ssl(String certFile, String keyFile){ 
 		this.certFile = certFile;
 		this.keyFile = keyFile;
 		return this;
 	}  
 	 
-	public ServiceBootstrap autoDiscover(boolean autoDiscover) {
+	public HttpServiceBootstrap autoDiscover(boolean autoDiscover) {
 		this.autoDiscover = autoDiscover;
 		return this;
 	} 
 	
-	public ServiceBootstrap serviceToken(String token){ 
+	public HttpServiceBootstrap serviceToken(String token){ 
 		this.token = token;
 		return this;
 	}  
@@ -61,7 +62,7 @@ public class ServiceBootstrap implements Closeable {
 		}  
 	}
 	 
-	public ServiceBootstrap start() throws Exception{
+	public HttpServiceBootstrap start() throws Exception{
 		validate();  
 		
 		if(autoDiscover){
@@ -81,17 +82,17 @@ public class ServiceBootstrap implements Closeable {
 		return this;
 	}  
 	
-	public ServiceBootstrap addModule(Class<?>... clazz){
+	public HttpServiceBootstrap addModule(Class<?>... clazz){
 		processor.addModule(clazz);
 		return this;
 	}  
 	
-	public ServiceBootstrap addModule(String module, Object... services){
+	public HttpServiceBootstrap addModule(String module, Object... services){
 		processor.addModule(module, services);
 		return this;
 	}
 	
-	public ServiceBootstrap addModule(Object... services){
+	public HttpServiceBootstrap addModule(Object... services){
 		processor.addModule(services);
 		return this;
 	}

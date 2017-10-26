@@ -1,4 +1,4 @@
-package io.zbus.rpc.mq;
+package io.zbus.rpc.bootstrap;
 
 import io.zbus.transport.ServerAddress;
 
