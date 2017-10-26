@@ -1,6 +1,6 @@
 package io.zbus.examples.rpc;
 
-import io.zbus.rpc.bootstrap.ServiceBootstrap;
+import io.zbus.rpc.bootstrap.mq.ServiceBootstrap;
 
 /**
  * Will start zbus server internally

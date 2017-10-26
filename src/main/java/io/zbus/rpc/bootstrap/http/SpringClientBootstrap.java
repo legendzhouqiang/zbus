@@ -1,8 +1,8 @@
-package io.zbus.rpc.bootstrap;
+package io.zbus.rpc.bootstrap.http;
 
 import io.zbus.transport.ServerAddress;
 
-public class SpringHttpClientBootstrap extends HttpClientBootstrap {
+public class SpringClientBootstrap extends ClientBootstrap {
 	
 	public void setServiceAddress(ServerAddress serverAddress){
 		serviceAddress(serverAddress);

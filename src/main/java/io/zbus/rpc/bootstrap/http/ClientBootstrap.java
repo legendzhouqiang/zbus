@@ -1,4 +1,4 @@
-package io.zbus.rpc.bootstrap;
+package io.zbus.rpc.bootstrap.http;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -9,29 +9,29 @@ import io.zbus.rpc.transport.http.RpcHttpInvoker;
 import io.zbus.transport.ServerAddress;
 import io.zbus.transport.http.MessageClientPool;
 
-public class HttpClientBootstrap implements Closeable {   
+public class ClientBootstrap implements Closeable {   
 	protected MessageClientPool clientPool;
 	protected String token;
 	protected ServerAddress serverAddress;
 	protected int clientPoolSize = 32; 
 	protected RpcConfig rpcConfig = new RpcConfig(); 
 	 
-	public HttpClientBootstrap serviceToken(String token){  
+	public ClientBootstrap serviceToken(String token){  
 		this.token = token;
 		return this;
 	}  
 	
-	public HttpClientBootstrap serviceAddress(ServerAddress serverAddress){
+	public ClientBootstrap serviceAddress(ServerAddress serverAddress){
 		this.serverAddress = serverAddress;
 		return this;
 	}
 	
-	public HttpClientBootstrap serviceAddress(String serverAddress){
+	public ClientBootstrap serviceAddress(String serverAddress){
 		this.serverAddress = new ServerAddress(serverAddress);
 		return this;
 	}
 	
-	public HttpClientBootstrap clientPoolSize(int clientPoolSize){
+	public ClientBootstrap clientPoolSize(int clientPoolSize){
 		this.clientPoolSize = clientPoolSize;
 		return this;
 	}

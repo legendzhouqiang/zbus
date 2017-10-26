@@ -4,12 +4,12 @@ import io.zbus.examples.rpc.biz.InterfaceExample;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.RpcCallback;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.bootstrap.HttpClientBootstrap;
+import io.zbus.rpc.bootstrap.http.ClientBootstrap;
 
 public class RpcClient {
 
 	public static void main(String[] args) throws Exception {   
-		HttpClientBootstrap b = new HttpClientBootstrap(); 
+		ClientBootstrap b = new ClientBootstrap(); 
 		b.serviceAddress("localhost:15555") 
 		 .serviceToken("myrpc_service"); 
 		
