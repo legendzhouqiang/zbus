@@ -57,11 +57,11 @@ public class HttpProxy implements Closeable {
 	}
 
 	public synchronized void start() throws IOException {
-		 for(Entry<String, ProxyEntry> e : this.config.getEntryTable().entrySet()){
-			 String topic = e.getKey();
-			 ProxyEntry entry = e.getValue();
-			 List<ProxyHandler> handlers = new ArrayList<ProxyHandler>();
-			for (String target : entry.targetList) { 
+		for (Entry<String, ProxyEntry> e : this.config.getEntryTable().entrySet()) {
+			String topic = e.getKey();
+			ProxyEntry entry = e.getValue();
+			List<ProxyHandler> handlers = new ArrayList<ProxyHandler>();
+			for (String target : entry.targetList) {
 				ProxyHandlerConfig handlerConfig = new ProxyHandlerConfig();
 				handlerConfig.topic = topic;
 				handlerConfig.token = entry.token;
@@ -82,11 +82,11 @@ public class HttpProxy implements Closeable {
 				if (bb.length > 1) {
 					url = bb[1].trim();
 				}
-				if(!url.endsWith("/")){
+				if (!url.endsWith("/")) {
 					url += "/";
 				}
-				if(!url.startsWith("/")){
-					url = "/"+url;
+				if (!url.startsWith("/")) {
+					url = "/" + url;
 				}
 				handlerConfig.targetUrl = url; // format: /xxx/
 
@@ -98,10 +98,9 @@ public class HttpProxy implements Closeable {
 					log.error(ex.getMessage(), ex);
 				}
 			}
-			 entryHandlerTable.put(topic, handlers);
-		 }
+			entryHandlerTable.put(topic, handlers);
+		}
 	}
- 
 	 
 	@Override
 	public void close() throws IOException { 

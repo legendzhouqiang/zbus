@@ -28,8 +28,8 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 	private MessageFilter recvFilter; 
 	private int defaultTimeout = 10000;
 	
-	private Context lastestContext;
-	private ManualResetEvent latestReturned = new ManualResetEvent(true);
+	private Context context;
+	private ManualResetEvent ready = new ManualResetEvent(true);
 	
 	private static class Context{
 		String topic;
@@ -69,30 +69,28 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 	
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
-		Message res = new Message((io.zbus.transport.http.Message)msg); 
+		Message res = new Message((io.zbus.transport.http.Message)msg);  
 		
-		String msgId = res.getId(); 
-		if(msgId == null){
-			targetMessageIdentifiable = false;
-		} else {
-			targetMessageIdentifiable = true;
-		}
+		String msgId = res.getId();  
 		Context ctx = null;
 		if(targetMessageIdentifiable){ 
 			ctx = requestTable.remove(msgId); 
-		} else { 
-			ctx = lastestContext;
-			lastestContext = null; //clear 
+		} else {  
+			ctx = context;
+			context = null; //clear  
 		}  
 		
 		if(ctx == null){  
+			log.warn("Message from target without context: " + res);
 			return; //ignore
 		}
 		
 		res.setId(ctx.msgId);
 		res.setTopic(ctx.topic);
-		res.setReceiver(ctx.sender); 
-		latestReturned.set();
+		res.setReceiver(ctx.sender);  
+		if(!targetMessageIdentifiable) {
+			ready.set();
+		}
 		
 		if(recvFilter != null){
 			if( recvFilter.filter(res, ctx.senderClient) == false){
@@ -113,10 +111,10 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 			return;
 		}
 		
-		synchronized (latestReturned) { 
+		synchronized (ready) { 
 			sendMessageUnsafe(msg, senderClient, timeoutMs); 
-			latestReturned.await(timeoutMs, TimeUnit.MILLISECONDS);
-			if(!latestReturned.isSignalled()){
+			ready.await(timeoutMs, TimeUnit.MILLISECONDS);
+			if(!ready.isSignalled()){
 				throw new IOException("waiting result timeout, should close connection");
 			}    
 		}   
@@ -129,15 +127,14 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 		ctx.msgId = msg.getId();
 		ctx.topic = msg.getTopic();
 		ctx.sender = msg.getSender();
-		ctx.senderClient = senderClient;
-		 
-		lastestContext = ctx; 
-		latestReturned.reset(); 
+		ctx.senderClient = senderClient; 
 		
 		if(targetMessageIdentifiable){
 			requestTable.put(ctx.msgId, ctx); 
-		}  
-		
+		} else {
+			context = ctx; 
+			ready.reset(); 
+		} 
 		super.sendMessage(msg);   
 	}
 	
@@ -160,6 +157,9 @@ public class ProxyClient extends TcpClient<io.zbus.transport.http.Message, io.zb
 
 	public void setDefaultTimeout(int defaultTimeout) {
 		this.defaultTimeout = defaultTimeout;
-	} 
-	
+	}
+
+	public void setTargetMessageIdentifiable(boolean targetMessageIdentifiable) {
+		this.targetMessageIdentifiable = targetMessageIdentifiable;
+	}  
 }  

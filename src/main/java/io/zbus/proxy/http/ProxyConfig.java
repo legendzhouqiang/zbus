@@ -35,6 +35,7 @@ public class ProxyConfig extends XmlConfig {
 		public List<String> targetList = new ArrayList<String>();
 		public int heartbeatInterval;
 		public int targetClientCount;
+		public boolean targetMessageIdentifiable = false;
 	} 
 	
 	public void loadFromXml(Document doc) throws Exception{
@@ -63,6 +64,7 @@ public class ProxyConfig extends XmlConfig {
 			    }
 			    entry.targetClientCount = valueOf(xpath.evaluate("@clientCount", node), 4);
 			    entry.heartbeatInterval = valueOf(xpath.evaluate("@heartbeat", node), 1)*1000;  //default to 1 seconds
+			    entry.targetMessageIdentifiable = valueOf(xpath.evaluate("@messageIdentifiable", node), false);
 			    entry.topic = entryName;
 			    
 			    NodeList targetList = (NodeList) xpath.compile("./*").evaluate(node, XPathConstants.NODESET);
