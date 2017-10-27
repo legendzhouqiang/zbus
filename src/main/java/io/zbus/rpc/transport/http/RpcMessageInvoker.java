@@ -8,10 +8,10 @@ import io.zbus.transport.http.Message;
 import io.zbus.transport.http.MessageClient;
 import io.zbus.transport.http.MessageClientPool; 
 
-public class RpcHttpInvoker implements MessageInvoker { 
+public class RpcMessageInvoker implements MessageInvoker { 
 	private MessageClientPool clientPool;
 	private String token;
-	public RpcHttpInvoker(MessageClientPool clientPool){  
+	public RpcMessageInvoker(MessageClientPool clientPool){  
 		this.clientPool = clientPool;
 	}
 	

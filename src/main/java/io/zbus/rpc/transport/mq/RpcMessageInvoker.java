@@ -8,11 +8,11 @@ import io.zbus.rpc.MessageInvoker;
 import io.zbus.transport.ResultCallback;
 import io.zbus.transport.http.Message; 
 
-public class RpcMqInvoker implements MessageInvoker {
+public class RpcMessageInvoker implements MessageInvoker {
 	private final Producer producer;
 	private final String topic; 
 	
-	public RpcMqInvoker(ProducerConfig config, String topic){ 
+	public RpcMessageInvoker(ProducerConfig config, String topic){ 
 		this.topic = topic;
 		if(this.topic == null){
 			throw new IllegalArgumentException("Missing topic in config");

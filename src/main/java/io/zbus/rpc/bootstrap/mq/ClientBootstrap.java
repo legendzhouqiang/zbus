@@ -8,7 +8,7 @@ import io.zbus.mq.BrokerConfig;
 import io.zbus.mq.ProducerConfig;
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.transport.mq.RpcMqInvoker;
+import io.zbus.rpc.transport.mq.RpcMessageInvoker;
 import io.zbus.transport.ServerAddress;
 
 public class ClientBootstrap implements Closeable {   
@@ -43,7 +43,7 @@ public class ClientBootstrap implements Closeable {
 			broker = new Broker(brokerConfig);
 		} 
 		producerConfig.setBroker(broker);
-		RpcMqInvoker messageInvoker = new RpcMqInvoker(producerConfig, this.topic);
+		RpcMessageInvoker messageInvoker = new RpcMessageInvoker(producerConfig, this.topic);
 		rpcConfig.setMessageInvoker(messageInvoker);
 		return new RpcInvoker(rpcConfig); 
 	}

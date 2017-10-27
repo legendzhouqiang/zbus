@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import io.zbus.rpc.RpcConfig;
 import io.zbus.rpc.RpcInvoker;
-import io.zbus.rpc.transport.http.RpcHttpInvoker;
+import io.zbus.rpc.transport.http.RpcMessageInvoker;
 import io.zbus.transport.ServerAddress;
 import io.zbus.transport.http.MessageClientPool;
 
@@ -40,7 +40,7 @@ public class ClientBootstrap implements Closeable {
 		if(clientPool == null){
 			 clientPool = new MessageClientPool(serverAddress, clientPoolSize, null);
 		} 
-		RpcHttpInvoker messageInvoker = new RpcHttpInvoker(clientPool);
+		RpcMessageInvoker messageInvoker = new RpcMessageInvoker(clientPool);
 		messageInvoker.setToken(this.token);
 		rpcConfig.setMessageInvoker(messageInvoker);
 		return new RpcInvoker(rpcConfig); 

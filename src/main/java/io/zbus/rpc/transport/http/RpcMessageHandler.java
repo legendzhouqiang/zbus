@@ -12,12 +12,12 @@ import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
 
-public class RpcMessageAdaptor extends ServerAdaptor {
+public class RpcMessageHandler extends ServerAdaptor {
 	private final static String TOKEN_KEY = "token";
 	protected final RpcProcessor rpcProcessor;
 	private String token;
 	
-	public RpcMessageAdaptor(RpcProcessor rpcProcessor) {
+	public RpcMessageHandler(RpcProcessor rpcProcessor) {
 		this.rpcProcessor = rpcProcessor;
 	}
 	

@@ -8,7 +8,7 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcProcessor;
-import io.zbus.rpc.transport.http.RpcMessageAdaptor;
+import io.zbus.rpc.transport.http.RpcMessageHandler;
 import io.zbus.transport.EventLoop;
 import io.zbus.transport.SslKit;
 import io.zbus.transport.http.MessageServer;
@@ -75,7 +75,7 @@ public class ServiceBootstrap implements Closeable {
 		}
 		
 		server = new MessageServer(eventLoop);   
-		RpcMessageAdaptor adaptor = new RpcMessageAdaptor(this.processor);
+		RpcMessageHandler adaptor = new RpcMessageHandler(this.processor);
 		adaptor.setToken(this.token);
 		server.start(this.host, this.port, adaptor); 
 		
