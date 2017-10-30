@@ -121,7 +121,7 @@ function topicServerList(topicInfoList, filterServerList){
 			maskLabel += "<a target='_blank' class=\"label label-primary\" href='" + url + "'>rpc</a>";
 		}  
 		if(mask & Protocol.MASK_PROXY){
-			maskLabel += "<span class=\"label label-primary\">proxy</span>";
+			maskLabel += "<a target='_blank' class=\"label label-primary\" href='" + url + "'>proxy</a>";
 		}
 		
 		res += "<tr>";
