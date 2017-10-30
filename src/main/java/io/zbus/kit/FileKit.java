@@ -141,6 +141,23 @@ public class FileKit {
 		return template;
 	}
 	 
+	public static String renderTemplate(String resource, Map<String, Object> model) throws IOException {
+		String template = renderFile(resource);
+		if(model == null) return template; 
+		
+		for(Entry<String, Object> e : model.entrySet()){
+			String key = e.getKey();
+			Object val = e.getValue();
+			
+			key = "\\{\\{"+key+"\\}\\}"; 
+			if(val == null){
+				val = "";
+			}
+			template = template.replaceAll(key, val.toString()); 
+		}
+		
+		return template;
+	}
 	
 	public static byte[] loadFileBytes(String resource) throws IOException {
 		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);

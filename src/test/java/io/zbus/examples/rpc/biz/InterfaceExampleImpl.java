@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.zbus.rpc.Doc;
 import io.zbus.rpc.Remote;
 import io.zbus.transport.http.Message;
 
@@ -82,10 +83,13 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public User[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
-	
-	
-	public Map<String, Object> map(int value1) {
-		HashMap<String, Object> res = new HashMap<String, Object>();
+	 
+	@Doc("测试类") 
+	public Map<String, Object> map(
+		@Doc("size of map") 
+		int value1
+	) {
+		Map<String, Object> res = new HashMap<String, Object>();
 		res.put("key1", value1);
 		res.put("key2", "value2");
 		res.put("key3", 2.5);

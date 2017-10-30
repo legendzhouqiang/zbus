@@ -16,9 +16,7 @@ public class ConsumerExample {
 		Broker broker = new Broker("localhost:15555");   
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
-		config.setTopic("MyTopic");
-		config.setConnectionCount(2);      // connection count to each server in broker
-		config.setConsumeRunnerPoolSize(64);  // consume handler running thread pool size
+		config.setTopic("MyTopic"); 
 		config.setMessageHandler(new MessageHandler() { 
 			@Override
 			public void handle(Message msg, MqClient client) throws IOException {

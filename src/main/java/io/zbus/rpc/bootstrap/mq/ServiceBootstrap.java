@@ -75,6 +75,7 @@ public class ServiceBootstrap implements Closeable{
 	
 	public ServiceBootstrap serviceName(String topic){
 		consumerConfig.setTopic(topic);
+		processor.setDocUrlContext("/"+topic+"/");
 		return this;
 	}
 	

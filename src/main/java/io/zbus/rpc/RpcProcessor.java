@@ -1,5 +1,6 @@
 package io.zbus.rpc;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -20,6 +22,8 @@ public class RpcProcessor {
 	private RpcCodec codec = new JsonRpcCodec();
 	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>(); 
 	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();	
+	
+	private String docUrlContext = "/";
 	 
 	public void addModule(Object... services){
 		for(Object obj : services){
@@ -27,8 +31,7 @@ public class RpcProcessor {
 			for(Class<?> intf : getAllInterfaces(obj.getClass())){
 				addModule(intf.getSimpleName(), obj);
 				addModule(intf.getName(), obj);
-			}
-			addModule("", obj);
+			} 
 			addModule(obj.getClass().getSimpleName(), obj);
 			addModule(obj.getClass().getName(), obj);
 		} 
@@ -71,8 +74,7 @@ public class RpcProcessor {
 			for(Class<?> intf : getAllInterfaces(obj.getClass())){
 				removeModule(intf.getSimpleName(), obj);
 				removeModule(intf.getCanonicalName(), obj);
-			}
-			removeModule("", obj);
+			} 
 			removeModule(obj.getClass().getSimpleName(), obj);
 			removeModule(obj.getClass().getName(), obj);
 		}
@@ -98,8 +100,7 @@ public class RpcProcessor {
 		if(object2Methods.containsKey(serviceKey)){
 			return;
 		}
-		List<String> modules = new ArrayList<String>(); 
-		modules.add(""); 
+		List<String> modules = new ArrayList<String>();  
 		for(Class<?> intf : getAllInterfaces(service.getClass())){
 			modules.add(intf.getSimpleName());
 			modules.add(intf.getCanonicalName()); 
@@ -124,10 +125,10 @@ public class RpcProcessor {
 			RpcMethod rpcm = new RpcMethod();
 			rpcm.setModules(modules);
 			rpcm.setName(method);
-			rpcm.setReturnType(m.getReturnType().getName());
+			rpcm.setReturnType(m.getReturnType().getCanonicalName());
 			List<String> paramTypes = new ArrayList<String>();
 			for(Class<?> t : m.getParameterTypes()){
-				paramTypes.add(t.getName());
+				paramTypes.add(t.getCanonicalName());
 			}
 			rpcm.setParamTypes(paramTypes);
 			rpcMethods.add(rpcm);
@@ -268,15 +269,68 @@ public class RpcProcessor {
 			throw new IllegalArgumentException(errorMsg);
 		}
 	}
+	
+	private String rowDoc(RpcMethod m, int idx) { 
+		String color = "altColor";
+		if(idx%2 != 0) {
+			color = "rowColor";
+		}
+		String fmt = 
+				"<tr class=\"%s\">" +  
+				"<td class=\"returnType\">%s</td>" +  
+				"<td class=\"methodParams\"><code><strong><a href=\"%s\">%s</a></strong>(%s)</code>" + 
+				"	<ul class=\"params\"> %s </ul>" + 
+				"	<div class=\"methodDesc\">%s</div>" + 
+				"</td>" +
+				
+				"<td class=\"modules\">" + 
+				"	<ul> %s </ul>" + 
+				"</td></tr>";
+		String methodLink = docUrlContext + m.modules.get(0) + "/" + m.name;
+		String method = m.name;
+		String paramList = "";
+		for(String type : m.paramTypes) {
+			paramList += type + ", ";
+		}
+		if(paramList.length() > 0) {
+			paramList = paramList.substring(0, paramList.length()-2);
+		}
+		String paramDesc = "";
+		String methodDesc = "";
+		String modules = "";
+		for(String module : m.modules) {
+			modules += "<li>"+module+"</li>";
+		}
+		return String.format(fmt, color, m.returnType, methodLink, method,
+				paramList, paramDesc, methodDesc, modules);
+	}
+	
+	private Message renderDoc() throws IOException {
+		
+		Message result = new Message();
+		String doc = "<div>";
+		int rowIdx = 0;
+		for(List<RpcMethod> objectMethods : object2Methods.values()) {
+			for(RpcMethod m : objectMethods) {
+				doc += rowDoc(m, rowIdx++);
+			}
+		}
+		doc += "</div>";
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("content", doc);
+		String body = FileKit.renderTemplate("rpc.htm", model);
+		result.setBody(body);
+		return result;
+	}
 	 
 	public Message process(Message msg){   
 		String encoding = msg.getEncoding();
 		Object result = null;
-		int status = RpcCodec.STATUS_OK; //assumed to be sucessful
+		int status = RpcCodec.STATUS_OK; //assumed to be successful
 		try { 
 			Request req = codec.decodeRequest(msg);  
 			if(req == null || StrKit.isEmpty(req.getMethod())){
-				result = object2Methods;
+				return renderDoc(); 
 			} else {
 				MethodInstance target = matchMethod(req);
 				checkParamTypes(target, req);
@@ -320,8 +374,18 @@ public class RpcProcessor {
 
 	public void setCodec(RpcCodec codec) {
 		this.codec = codec;
-	} 
+	}  
 	
+	public String getDocUrlContext() {
+		return docUrlContext;
+	}
+
+	public void setDocUrlContext(String docUrlContext) {
+		this.docUrlContext = docUrlContext;
+	}
+
+
+
 	private static class MethodInstance{
 		public Method method;
 		public Object instance;
