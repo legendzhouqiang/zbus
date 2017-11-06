@@ -95,22 +95,18 @@ public class RpcProcessor {
 		return res;
 	}  
 	
-	private void addMoudleInfo(Object service){
+	private void addMoudleInfo(String module, Object service){
+		List<RpcMethod> rpcMethods = null;
 		String serviceKey = service.getClass().getCanonicalName();
 		if(object2Methods.containsKey(serviceKey)){
-			return;
+			rpcMethods = object2Methods.get(serviceKey); 
+		} else {
+			rpcMethods = new ArrayList<RpcMethod>();
+			object2Methods.put(serviceKey,rpcMethods);
 		}
-		List<String> modules = new ArrayList<String>();  
-		for(Class<?> intf : getAllInterfaces(service.getClass())){
-			modules.add(intf.getSimpleName());
-			modules.add(intf.getCanonicalName()); 
-		}
-		modules.add(service.getClass().getSimpleName()); 
-		modules.add(service.getClass().getName());  
+		  
 		
-		Method [] methods = service.getClass().getMethods(); 
-		List<RpcMethod> rpcMethods = new ArrayList<RpcMethod>();
-		object2Methods.put(serviceKey,rpcMethods);
+		Method [] methods = service.getClass().getMethods();  
 		for (Method m : methods) { 
 			if(m.getDeclaringClass() == Object.class) continue;
 			String method = m.getName();
@@ -122,16 +118,31 @@ public class RpcProcessor {
 					method = m.getName();
 				}  
 			}
-			RpcMethod rpcm = new RpcMethod();
-			rpcm.setModules(modules);
-			rpcm.setName(method);
-			rpcm.setReturnType(m.getReturnType().getCanonicalName());
-			List<String> paramTypes = new ArrayList<String>();
-			for(Class<?> t : m.getParameterTypes()){
-				paramTypes.add(t.getCanonicalName());
+			RpcMethod rpcm = null;
+			for(RpcMethod rm : rpcMethods) {
+				if(rm.getName().equals(method)) {
+					rpcm = rm;
+					break;
+				}
 			}
-			rpcm.setParamTypes(paramTypes);
-			rpcMethods.add(rpcm);
+			if(rpcm != null) {
+				if(!rpcm.modules.contains(module)) {
+					rpcm.modules.add(module);
+				}
+			} else {
+				List<String> modules = new ArrayList<String>(); 
+				modules.add(module);
+				rpcm = new RpcMethod();
+				rpcm.setModules(modules);
+				rpcm.setName(method);
+				rpcm.setReturnType(m.getReturnType().getCanonicalName());
+				List<String> paramTypes = new ArrayList<String>();
+				for(Class<?> t : m.getParameterTypes()){
+					paramTypes.add(t.getCanonicalName());
+				}
+				rpcm.setParamTypes(paramTypes);
+				rpcMethods.add(rpcm);
+			} 
 		} 
 	}
 	
@@ -141,7 +152,7 @@ public class RpcProcessor {
 	} 
 	
 	private void initCommandTable(String module, Object service){
-		addMoudleInfo(service);
+		addMoudleInfo(module, service);
 		
 		try {  
 			Method [] methods = service.getClass().getMethods(); 

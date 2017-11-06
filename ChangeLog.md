@@ -47,3 +47,7 @@
 - RPC设计独立于MQ，少量更改增加支持不经过MQ的HTTP RPC
 - HTTP proxy在高压下偶尔堵塞的bug修复,保持长连接
 - RPC方法列表支持URL访问
+
+## 0.10.1 notes
+- 增加zbus.js支持HTTP直接RPC调用
+- FileKit增加Cache开关

@@ -43,6 +43,10 @@ public class FileKit {
 	private final static Map<String, String> cache = new ConcurrentHashMap<String, String>();
 	private static boolean enableCache = true;
 	
+	public static void setCache(boolean value) {
+		enableCache = value;
+	}
+	
 	public static InputStream inputStream(String filePath){
 		File file = new File(filePath);
 		if(file.exists()){
