@@ -228,6 +228,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     					mq = new DiskQueue(new File(config.getMqPath(), topic));  
     				} 
 	    			mq.setCreator(msg.getToken()); 
+	    			mq.setMessageLogger(messageLogger);
 	    			mqTable.put(topic, mq);
 	    			log.info("MQ Created: %s", mq);
     			}
@@ -596,6 +597,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		if (mqDirs != null && mqDirs.length > 0) {
 			for (File mqDir : mqDirs) {
 				MessageQueue mq = new DiskQueue(mqDir);
+				mq.setMessageLogger(messageLogger);
 				mqTable.put(mqDir.getName(), mq);
 				log.info("Topic = %s loaded", mqDir.getName()); 
 			}

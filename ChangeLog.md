@@ -52,3 +52,7 @@
 - 增加zbus.js支持HTTP直接RPC调用
 - FileKit增加Cache开关
 - 默认RPC方法元信息页面修复module不准确的bug
+
+## 0.10.2 notes
+
+- MessageLogger增强，覆盖消费者所有消息，可选择过滤

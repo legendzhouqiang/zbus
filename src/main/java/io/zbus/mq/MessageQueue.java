@@ -17,6 +17,7 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.Protocol.TopicInfo;
+import io.zbus.mq.server.MessageLogger;
 import io.zbus.mq.server.ReplyKit;
 import io.zbus.transport.Session;
 
@@ -47,6 +48,8 @@ public interface MessageQueue {
 	
 	int getMask(); 
 	void setMask(int value);  
+	
+	void setMessageLogger(MessageLogger messageLogger);
 }
 
 
@@ -99,7 +102,7 @@ abstract class AbstractQueue implements MessageQueue{
 	protected Map<String, AbstractConsumeGroup> consumeGroups = new ConcurrentSkipListMap<String, AbstractConsumeGroup>(String.CASE_INSENSITIVE_ORDER); 
 	protected long lastUpdatedTime = System.currentTimeMillis();  
 	protected String topic;   
-	
+	protected MessageLogger messageLogger;
 	protected long groupNumber = consumeGroups.size();
 	  
 	public AbstractQueue(){
@@ -122,6 +125,11 @@ abstract class AbstractQueue implements MessageQueue{
 			}
 			return name;
 		}
+	}
+	
+	@Override
+	public void setMessageLogger(MessageLogger messageLogger) {
+		this.messageLogger = messageLogger;
 	}
 	
 	@Override
@@ -253,6 +261,9 @@ abstract class AbstractQueue implements MessageQueue{
 					writeMsg.setOriginStatus(status);
 				} 
 				writeMsg.setStatus(200); //status meaning changed to 'consume-status'
+				if(messageLogger != null) {
+					messageLogger.log(writeMsg);
+				}
 				pull.getSession().write(writeMsg);  
 			} catch (Exception ex) {   
 				log.error(ex.getMessage(), ex);  
