@@ -51,3 +51,4 @@
 ## 0.10.1 notes
 - 增加zbus.js支持HTTP直接RPC调用
 - FileKit增加Cache开关
+- 默认RPC方法元信息页面修复module不准确的bug
