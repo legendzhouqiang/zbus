@@ -83,6 +83,11 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public User[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
+	
+	@Override
+	public List<User> listUsers() {
+		return Arrays.asList(getUser("hong"), getUser("leiming"));
+	}
 	 
 	@Doc("测试类") 
 	public Map<String, Object> map(

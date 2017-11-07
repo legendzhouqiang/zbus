@@ -29,6 +29,8 @@ public interface InterfaceExample{
 	
 	User[] getUsers();
 	
+	List<User> listUsers();
+	
 	Object[] objectArray(String id);
 
 	int saveObjectArray(Object[] array);

@@ -90,6 +90,8 @@ public class TestCases {
 			System.out.println(obj);
 		} 
 		
+		biz.listUsers();
+		
 		MyEnum e = biz.myEnum(MyEnum.Monday);
 		System.out.println(e);
 		
