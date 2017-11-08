@@ -13,10 +13,11 @@ public class RpcClient {
 		b.serviceAddress("localhost:15555") 
 		 .serviceToken("myrpc_service"); 
 		
-		RpcInvoker rpc = b.invoker();
+		RpcInvoker rpc = b.invoker(); 
+		rpc.setModule("InterfaceExample");
 		
 		//Way 1) Raw request
-		Request req = new Request();
+		Request req = new Request(); 
 		req.setMethod("plus");
 		req.setParams(new Object[]{1,2});
 		

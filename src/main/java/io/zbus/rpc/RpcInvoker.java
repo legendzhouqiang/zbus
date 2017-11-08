@@ -114,6 +114,9 @@ public class RpcInvoker {
 	}
 	
 	public Message invokeSync0(Request request){
+		if(request.getModule() == null || "".equals(request.getModule())) {
+			request.setModule(this.module);
+		}
 		Message msgReq = null, msgRes = null;
 		try {
 			long start = System.currentTimeMillis();
@@ -194,9 +197,52 @@ public class RpcInvoker {
 		} catch (Exception e) { 
 			throw new RpcException(e.getMessage(), e.getCause());
 		}
-	} 
-	 
+	}  
 	
+	public String getModule() {
+		return module;
+	}
+
+	public void setModule(String module) {
+		this.module = module;
+	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+
+	public int getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+
+	public MessageInvoker getMessageInvoker() {
+		return messageInvoker;
+	}
+
+	public void setMessageInvoker(MessageInvoker messageInvoker) {
+		this.messageInvoker = messageInvoker;
+	}
+
+	public void setCodec(RpcCodec codec) {
+		this.codec = codec;
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T createProxy(Class<T> clazz){  
 		Constructor<RpcInvocationHandler> rpcInvokerCtor;
@@ -219,7 +265,10 @@ public class RpcInvoker {
 		try {
 			rpcInvokerCtor = RpcInvocationHandler.class.getConstructor(new Class[] {RpcInvoker.class });
 			RpcInvoker rpcInvoker = new RpcInvoker(config);
-			rpcInvoker.module = clazz.getName();
+			if(rpcInvoker.module == null || "".equals(rpcInvoker.module)) {
+				rpcInvoker.module = clazz.getName();
+			}   
+			
 			RpcInvocationHandler rpcInvokerHandler = rpcInvokerCtor.newInstance(rpcInvoker); 
 			Class<T>[] interfaces = new Class[] { clazz }; 
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

@@ -535,6 +535,8 @@ function MqClient(serverAddress) {
     this.onMessage = null;
     this.onConnected = null;
     this.onDisconnected = null;  
+    this.socket = null;
+    this.connectPromise = null;
 
     this.readBuf = new Uint8Array(0); //only used when NODEJS 
 } 
@@ -544,7 +546,7 @@ if (__NODEJS__) {
 inherits(MqClient, Events.EventEmitter); 
 
 MqClient.prototype.connect = function (connectedHandler) { 
-    if(this.socket && this.connectPromise) {
+    if(this.socket != null && this.connectPromise != null) {
         return this.connectPromise;
     }
     this.onConnected = connectedHandler;
@@ -688,21 +690,31 @@ MqClient.prototype.close = function () {
 //WebSocket
 	
 MqClient.prototype.connect = function (connectedHandler) {
+    if(this.socket != null && this.connectPromise != null) {
+        return this.connectPromise;
+    }
+
     logger.debug("Trying to connect to " + this.address()); 
     this.onConnected = connectedHandler; 
 
-    //should handle failure 
     var connectSuccess;
-    this.connectPromise = new Promise(resolve => {
+    var connectFailure;
+    this.connectPromise = new Promise((resolve, reject) => {
         connectSuccess = resolve;
-    });
+        connectFailure = reject;
+    }); 
 
     var WebSocket = window.WebSocket;
     if (!WebSocket) {
         WebSocket = window.MozWebSocket;
     }
-
-    this.socket = new WebSocket(this.address());
+    try{
+        this.socket = new WebSocket(this.address());
+    } catch(e){
+        connectFailure(e);
+        return this.connectPromise;
+    }
+    
     this.socket.binaryType = 'arraybuffer';
     var client = this;
     this.socket.onopen = function (event) {
@@ -1677,6 +1689,8 @@ class ClientBootstrap {
     constructor(){  
         this.broker = null;
         this.httpClient = null;
+        this.topic = null;
+        this.token = null;
     }   
 
     serviceAddress(address){
@@ -1696,17 +1710,16 @@ class ClientBootstrap {
 
     invoker(){
         var ctrl = { };
-        if('token' in this){
+        if(this.token != null){
             ctrl.token = this.token;
         }
 
-        if('topic' in this) {//MQ mode
+        if(this.topic != null) {//MQ mode
             ctrl.topic = this.topic;
             if(this.broker == null){
                 this.broker = new Broker();
                 this.broker._addTracker(this.serverAddress);
-            }
-            
+            } 
             return new RpcInvoker(this.broker, ctrl);
         } 
 
@@ -1714,11 +1727,11 @@ class ClientBootstrap {
         return new RpcInvoker(this.httpClient, ctrl);  
     }
     close() { 
-        if('broker' in this){
+        if(this.broker != null){
             this.broker.close();
             this.broker = null;
         }
-        if('httpClient' in this){
+        if(this.httpClient != null){
             this.httpClient.close();
             this.httpClient = null;
         }

@@ -57,3 +57,7 @@
 
 - MessageLogger增强，覆盖消费者所有消息，可选择过滤
 - 增加支持RPC返回结果是否带有类型信息，以良好支持JAVA泛型。默认不返回JSON类型信息（浏览器友好）
+
+## 0.10.3 notes
+
+- RpcInvoker修复module指定错误
