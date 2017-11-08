@@ -65,6 +65,10 @@ public class RpcInvoker {
 		this.messageInvoker = other.messageInvoker;
 	} 
 	
+	public RpcCodec getCodec() {
+		return codec;
+	}
+	
 	public <T> T invokeSync(Class<T> resultClass, String method, Object... args){
 		Request request = new Request()
 			.module(module)

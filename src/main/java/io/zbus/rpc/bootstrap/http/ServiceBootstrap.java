@@ -25,6 +25,13 @@ public class ServiceBootstrap implements Closeable {
 	protected String token;
 	protected EventLoop eventLoop;
 	 
+	protected boolean responseTypeInfo = false; 
+	
+	public ServiceBootstrap responseTypeInfo(boolean responseTypeInfo){  
+		this.responseTypeInfo = responseTypeInfo;
+		return this;
+	}   
+	
 	public ServiceBootstrap port(int port){ 
 		this.port = port;
 		return this;
@@ -75,6 +82,7 @@ public class ServiceBootstrap implements Closeable {
 		}
 		
 		server = new MessageServer(eventLoop);   
+		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
 		RpcMessageHandler adaptor = new RpcMessageHandler(this.processor);
 		adaptor.setToken(this.token);
 		server.start(this.host, this.port, adaptor); 

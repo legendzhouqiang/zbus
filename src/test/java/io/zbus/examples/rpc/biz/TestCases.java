@@ -85,12 +85,15 @@ public class TestCases {
 		
 		biz.saveUserList(Arrays.asList(users));
 		
-		Object[] objects = biz.getUsers();
-		for(Object obj : objects){
+		User[] objects = biz.getUsers();
+		for(User obj : objects){
 			System.out.println(obj);
 		} 
 		
-		biz.listUsers();
+		List<User> listUsers = biz.listUsers();
+		for(User user : listUsers) {
+			System.out.println(">>>>" + user.getName());
+		}
 		
 		MyEnum e = biz.myEnum(MyEnum.Monday);
 		System.out.println(e);

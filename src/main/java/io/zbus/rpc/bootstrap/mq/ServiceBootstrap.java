@@ -31,6 +31,12 @@ public class ServiceBootstrap implements Closeable{
 	protected RpcProcessor processor = new RpcProcessor(); 
 	protected boolean autoDiscover = false;
 	 
+	protected boolean responseTypeInfo = false; 
+	
+	public ServiceBootstrap responseTypeInfo(boolean responseTypeInfo){  
+		this.responseTypeInfo = responseTypeInfo;
+		return this;
+	}   
 	
 	public ServiceBootstrap port(int port){
 		if(serverConfig == null){
@@ -135,7 +141,7 @@ public class ServiceBootstrap implements Closeable{
 		if(mask == null) {
 			mask = Protocol.MASK_MEMORY ;
 		}   
-		
+		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
 		MessageHandler rpcHandler = new RpcMessageHandler(this.processor);
 		   
 		consumerConfig.setTopicMask(mask | Protocol.MASK_RPC); 

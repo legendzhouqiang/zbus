@@ -29,7 +29,10 @@ public interface RpcCodec {
 	Message  encodeResponse(Object response, String encoding); 
 	Request  decodeRequest(Message msg); 
 	Object decodeResponse(Message msg);  
-	<T> T convert(Object value, Class<T> clazz);
+	
+	<T> T convert(Object value, Class<T> clazz); 
+	void setRequestTypeInfo(boolean requestTypeInfo); //encoding info includes Type info, e.g. Class info
+	void setResponseTypeInfo(boolean responseTypeInfo);   //encoding info includes Type info, e.g. Class info
 	
 	public static final int STATUS_OK = 200;
 	public static final int STATUS_APP_ERROR = 600; //extension of HTTP status

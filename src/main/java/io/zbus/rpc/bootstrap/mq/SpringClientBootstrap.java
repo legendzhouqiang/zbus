@@ -8,6 +8,10 @@ public class SpringClientBootstrap extends ClientBootstrap {
 		serviceAddress(tracker);
 	}
 	
+	public void setRequestTypeInfo(boolean requestTypeInfo){
+		requestTypeInfo(requestTypeInfo);
+	}
+	
 	public void setServiceAddress(String tracker){
 		serviceAddress(tracker);
 	}

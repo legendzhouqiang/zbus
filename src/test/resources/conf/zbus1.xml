@@ -78,7 +78,7 @@
 		</token>  
 		
 		<token value="proxy" name="Proxy" operation="*"> 
-			<topic value="http"/>
+			<topic value="*"/>
 		</token>    		
 	</auth>  
 	

@@ -18,7 +18,12 @@ public class ClientBootstrap implements Closeable {
 	protected RpcConfig rpcConfig = new RpcConfig(); 
 	protected ProducerConfig producerConfig = new ProducerConfig();
 	protected String topic; 
+	protected boolean requestTypeInfo = true; 
 	
+	public ClientBootstrap requestTypeInfo(boolean requestTypeInfo){  
+		this.requestTypeInfo = requestTypeInfo;
+		return this;
+	}    
 	
 	public ClientBootstrap serviceName(String topic){
 		this.topic = topic;
@@ -28,7 +33,7 @@ public class ClientBootstrap implements Closeable {
 	public ClientBootstrap serviceToken(String token){  
 		producerConfig.setToken(token); 
 		return this;
-	}  
+	}    
 	
 	public RpcInvoker invoker(){
 		if(broker == null){
@@ -45,7 +50,10 @@ public class ClientBootstrap implements Closeable {
 		producerConfig.setBroker(broker);
 		RpcMessageInvoker messageInvoker = new RpcMessageInvoker(producerConfig, this.topic);
 		rpcConfig.setMessageInvoker(messageInvoker);
-		return new RpcInvoker(rpcConfig); 
+		RpcInvoker rpcInvoker = new RpcInvoker(rpcConfig); 
+		rpcInvoker.getCodec().setRequestTypeInfo(requestTypeInfo); 
+		
+		return rpcInvoker;
 	}
 	
 	public <T> T createProxy(Class<T> clazz){  

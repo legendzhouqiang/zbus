@@ -19,7 +19,7 @@ public class RpcClientFull {
 		
 		ClientBootstrap b = new ClientBootstrap(); 
 		//b.serviceAddress(serverAddress)
-		b.serviceAddress("localhost:15555;localhost:15556") //Multiple servers, HA support!
+		b.serviceAddress("localhost:15555")//;localhost:15556") //Multiple servers, HA support!
 		 .serviceName("MyRpc")
 		 .serviceToken("myrpc_service"); 
 

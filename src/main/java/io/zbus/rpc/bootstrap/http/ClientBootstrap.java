@@ -15,7 +15,14 @@ public class ClientBootstrap implements Closeable {
 	protected ServerAddress serverAddress;
 	protected int clientPoolSize = 32; 
 	protected RpcConfig rpcConfig = new RpcConfig(); 
-	 
+	
+	protected boolean requestTypeInfo = true; 
+	
+	public ClientBootstrap requestTypeInfo(boolean requestTypeInfo){  
+		this.requestTypeInfo = requestTypeInfo;
+		return this;
+	}    
+	
 	public ClientBootstrap serviceToken(String token){  
 		this.token = token;
 		return this;
@@ -43,7 +50,10 @@ public class ClientBootstrap implements Closeable {
 		RpcMessageInvoker messageInvoker = new RpcMessageInvoker(clientPool);
 		messageInvoker.setToken(this.token);
 		rpcConfig.setMessageInvoker(messageInvoker);
-		return new RpcInvoker(rpcConfig); 
+		RpcInvoker rpcInvoker = new RpcInvoker(rpcConfig); 
+		rpcInvoker.getCodec().setRequestTypeInfo(requestTypeInfo); 
+		
+		return rpcInvoker;
 	}
 	
 	public <T> T createProxy(Class<T> clazz){  
