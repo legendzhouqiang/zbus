@@ -1,5 +1,5 @@
 package io.zbus.mq;
-
+ 
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
 	private Boolean groupNameAuto;
@@ -9,7 +9,7 @@ public class ConsumeGroup implements Cloneable {
 	private String startCopy;  //create group from another group 
 	private Long startOffset;
 	private String startMsgId; //create group start from offset, msgId to check valid
-	private Long startTime;    //create group start from time
+	private Long startTime;    //create group start from time 
 	
 	//only used in server side, 
 	private String creator;
@@ -30,8 +30,7 @@ public class ConsumeGroup implements Cloneable {
 		startTime = msg.getGroupStartTime();
 		startMsgId = msg.getGroupStartMsgId();
 		filter = msg.getGroupFilter();
-		mask = msg.getGroupMask();
-		
+		mask = msg.getGroupMask();   
 		
 		creator = msg.getToken(); //token as creator
 	}
@@ -44,7 +43,7 @@ public class ConsumeGroup implements Cloneable {
 		msg.setGroupStartMsgId(this.getStartMsgId());
 		msg.setGroupStartOffset(this.getStartOffset()); 
 		msg.setGroupStartTime(this.getStartTime());
-		msg.setGroupMask(this.getMask());
+		msg.setGroupMask(this.getMask()); 
 	}
 	
 	public ConsumeGroup asTempBroadcastGroup(){
@@ -81,7 +80,8 @@ public class ConsumeGroup implements Cloneable {
 	}
 	public void setStartMsgId(String startMsgId) {
 		this.startMsgId = startMsgId;
-	}
+	} 
+
 	public Long getStartTime() {
 		return startTime;
 	}

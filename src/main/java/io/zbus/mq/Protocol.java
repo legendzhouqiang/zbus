@@ -58,10 +58,13 @@ public class Protocol {
 	public static final String GROUP_NAME_AUTO      = "group_name_auto";  
 	public static final String GROUP_START_COPY     = "group_start_copy";  
 	public static final String GROUP_START_OFFSET   = "group_start_offset";
-	public static final String GROUP_START_MSGID    = "group_start_msgid";
+	public static final String GROUP_START_MSGID    = "group_start_msgid"; 
 	public static final String GROUP_START_TIME     = "group_start_time";   
 	public static final String GROUP_FILTER         = "group_filter";  
 	public static final String GROUP_MASK           = "group_mask"; 
+	
+	public static final String CONSUME_OFFSET       = "consume_offset";
+	public static final String CONSUME_MSGID        = "consume_msgid";
 	public static final String CONSUME_WINDOW       = "consume_window";  
 	
 	public static final String SENDER   			= "sender"; 
@@ -80,6 +83,7 @@ public class Protocol {
 	//Security  
 	public static final String TOKEN   				= "token";  
 	
+	public static final int MASK_DISK    	    = 0;
 	public static final int MASK_MEMORY    	    = 1<<0;
 	public static final int MASK_RPC    	    = 1<<1;
 	public static final int MASK_PROXY    	    = 1<<2; 

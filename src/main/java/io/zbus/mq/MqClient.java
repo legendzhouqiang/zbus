@@ -122,19 +122,31 @@ public class MqClient extends CompositeClient<Message, Message>{
 	}
 	
 	public Message consume(String topic) throws IOException, InterruptedException{
-		return consume(topic, null, null);
+		ConsumeCtrl ctrl = new ConsumeCtrl();
+		ctrl.setTopic(topic);
+		ctrl.setConsumeGroup(topic); 
+		return consume(ctrl);
 	}
 	
-	public Message consume(String topic, String group) throws IOException, InterruptedException {
-		return consume(topic, group, null);
-	}
-	 
-	public Message consume(String topic, String group, Integer window) throws IOException, InterruptedException {
+	public Message consume(String topic, String group) throws IOException, InterruptedException { 
+		ConsumeCtrl ctrl = new ConsumeCtrl();
+		ctrl.setTopic(topic);
+		ctrl.setConsumeGroup(group); 
+		return consume(ctrl);
+	} 
+	
+	public Message consume(ConsumeCtrl ctrl) throws IOException, InterruptedException {
+		if(ctrl.getTopic() == null) {
+			throw new IllegalArgumentException("Missing topic");
+		}
+		
 		Message msg = new Message();
 		msg.setCommand(Protocol.CONSUME);
-		msg.setTopic(topic);
-		msg.setConsumeGroup(group);  
-		msg.setConsumeWindow(window); 
+		msg.setTopic(ctrl.getTopic());
+		msg.setConsumeGroup(ctrl.getConsumeGroup());
+		msg.setConsumeMsgId(ctrl.getConsumeMsgId());
+		msg.setConsumeOffset(ctrl.getConsumeOffset());
+		msg.setConsumeWindow(ctrl.getConsumeWindow()); 
 		
 		Message res = invokeSync(msg, invokeTimeout);
 		if (res == null) return res;
@@ -142,10 +154,10 @@ public class MqClient extends CompositeClient<Message, Message>{
 		res.setId(res.getOriginId());
 		res.removeHeader(Protocol.ORIGIN_ID); 
 		return res;
-	}  
+	}
 	
 	public void unconsume(String topic) throws IOException, InterruptedException {
-		unconsume(topic, null);
+		unconsume(topic, topic);
 	}
 	
 	public void unconsume(String topic, String group) throws IOException, InterruptedException {
@@ -207,28 +219,30 @@ public class MqClient extends CompositeClient<Message, Message>{
 	
 	
 	public TopicInfo declareTopic(String topic) throws IOException, InterruptedException{
-		return declareTopic(topic, null);
-	}
+		Topic ctrl = new Topic();
+		ctrl.setName(topic);
+		return declareTopic(ctrl);
+	} 
 	
-	public TopicInfo declareTopic(String topic, Integer topicMask) throws IOException, InterruptedException{
+	public TopicInfo declareTopic(Topic topic) throws IOException, InterruptedException{
 		Message msg = new Message();
 		msg.setCommand(Protocol.DECLARE);
-		msg.setTopic(topic); 
-		msg.setTopicMask(topicMask);
+		topic.writeToMessage(msg);
 		 
 		Message res = invokeSync(msg, invokeTimeout);
 		return parseResult(res, TopicInfo.class); 
 	}
 	
 	public ConsumeGroupInfo declareGroup(String topic, ConsumeGroup group) throws IOException, InterruptedException{
-		return declareGroup(topic, group, null);
+		Topic t = new Topic();
+		t.setName(topic);
+		return declareGroup(t, group);
 	}
-	
-	public ConsumeGroupInfo declareGroup(String topic, ConsumeGroup group, Integer topicMask) throws IOException, InterruptedException{
+	 
+	public ConsumeGroupInfo declareGroup(Topic topic, ConsumeGroup group) throws IOException, InterruptedException{
 		Message msg = new Message();
 		msg.setCommand(Protocol.DECLARE);
-		msg.setTopic(topic);
-		msg.setTopicMask(topicMask);
+		topic.writeToMessage(msg);
 		group.writeToMessage(msg); 
 		
 		Message res = invokeSync(msg, invokeTimeout);

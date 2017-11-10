@@ -66,6 +66,11 @@ public class ConsumerConfig extends MqConfig {
 	public void setTopic(String topic) {
 		this.topic = topic;
 	} 
+	
+	public void setTopic(Topic topic) {
+		this.topic = topic.getName();
+		this.topicMask = topic.getMask();
+	}
 
 	public ServerSelector getConsumeServerSelector() {
 		return consumeServerSelector;

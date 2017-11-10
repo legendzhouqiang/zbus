@@ -220,6 +220,35 @@ public class Message extends io.zbus.transport.http.Message {
 		this.setHeader(GROUP_START_OFFSET, value);
 		return this;
 	}   
+	
+	public String getGroupStartMsgId(){
+		String value = this.getHeader(GROUP_START_MSGID);
+		return value;
+	} 
+	public Message setGroupStartMsgId(String mq) {
+		this.setHeader(GROUP_START_MSGID, mq);
+		return this;
+	} 
+	
+	public String getConsumeMsgId(){
+		String value = this.getHeader(CONSUME_MSGID);
+		return value;
+	} 
+	public Message setConsumeMsgId(String mq) {
+		this.setHeader(CONSUME_MSGID, mq);
+		return this;
+	} 
+	
+	public Long getConsumeOffset(){
+		String value = this.getHeader(CONSUME_OFFSET);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	public Message setConsumeOffset(Long value) {
+		this.setHeader(CONSUME_OFFSET, value);
+		return this;
+	}   
+	
 	public Long getGroupStartTime(){
 		String value = this.getHeader(GROUP_START_TIME);
 		if(value == null) return null;
@@ -235,16 +264,7 @@ public class Message extends io.zbus.transport.http.Message {
 	public Message setGroupStartCopy(String value) {
 		this.setHeader(GROUP_START_COPY, value);
 		return this;
-	}  
-	
-	public String getGroupStartMsgId(){
-		String value = this.getHeader(GROUP_START_MSGID);
-		return value;
-	} 
-	public Message setGroupStartMsgId(String mq) {
-		this.setHeader(GROUP_START_MSGID, mq);
-		return this;
-	} 
+	}   
 	
 	public Integer getConsumeWindow(){
 		String value = this.getHeader(CONSUME_WINDOW);
