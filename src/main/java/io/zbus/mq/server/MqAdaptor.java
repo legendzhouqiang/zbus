@@ -86,6 +86,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.CONSUME, consumeHandler);  
 		registerHandler(Protocol.ROUTE, routeHandler);  
 		registerHandler(Protocol.UNCONSUME, unconsumeHandler); 
+		registerHandler(Protocol.ACK, ackHandler); 
 		
 		//Topic/ConsumerGroup 
 		registerHandler(Protocol.DECLARE, declareHandler);  
@@ -171,6 +172,25 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 			if(msg.getTopic().equalsIgnoreCase(topic)){ 
 				tracker.myServerChanged(); 
 			} 
+		}
+	}; 
+	
+	private MessageHandler<Message> ackHandler = new MessageHandler<Message>() { 
+		@Override
+		public void handle(Message msg, Session sess) throws IOException {  
+			System.out.println(msg);
+			MessageQueue mq = findMQ(msg, sess);
+			boolean ack = msg.isAck();
+			if(mq == null) {
+				if(ack) {
+					ReplyKit.reply404(msg, sess);
+				}
+				return;  
+			}
+			
+			if(ack) {
+				ReplyKit.reply200(msg, sess);
+			}
 		}
 	}; 
 	

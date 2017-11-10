@@ -75,10 +75,8 @@ public class ProxyHandler implements MessageHandler, Closeable {
 	public synchronized void start() {
 		if (consumer != null) return; 
 		ConsumerConfig consumeConfig = new ConsumerConfig(config.broker);
-		consumeConfig.setTopic(config.topic);
-		consumeConfig.setConnectionCount(config.consumerCount);
-		consumeConfig.setTopicMask(Protocol.MASK_MEMORY|Protocol.MASK_PROXY);
-		consumeConfig.setMaxInFlightMessage(1); //run each time
+		consumeConfig.setTopic(config.topic, Protocol.MASK_MEMORY|Protocol.MASK_PROXY);
+		consumeConfig.setConnectionCount(config.consumerCount); 
 		consumeConfig.setConsumeTimeout(config.consumeTimeout);
 		consumeConfig.setToken(config.token);
 		

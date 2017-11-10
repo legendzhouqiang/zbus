@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -25,9 +22,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	
 	private ExecutorService consumeRunner;  
 	private MessageHandler messageHandler;
-	private int connectionCount;
-	private int consumeRunnerPoolSize; 
-	private int maxInFlightMessage;   
+	private int connectionCount; 
 	
 	private boolean started;
 	
@@ -35,10 +30,8 @@ public class Consumer extends MqAdmin implements Closeable {
 
 	public Consumer(ConsumerConfig config) {
 		super(config); 
-		
-		this.topic = new Topic();
-		this.topic.setName(config.getTopic()); 
-		this.topic.setMask(config.getTopicMask());
+		 
+		this.topic = config.getTopic(); 
 		this.consumeGroup = config.getConsumeGroup();
 		if(this.consumeGroup == null){
 			this.consumeGroup = new ConsumeGroup();
@@ -50,10 +43,8 @@ public class Consumer extends MqAdmin implements Closeable {
 		consumeCtrl.setConsumeWindow(config.getConsumeWindow());
 		consumeCtrl.setConsumeTimeout(config.getConsumeTimeout()); 
 		
-		this.messageHandler = config.getMessageHandler();
-		this.consumeRunnerPoolSize = config.getConsumeRunnerPoolSize();
-		this.connectionCount = config.getConnectionCount();
-		this.maxInFlightMessage = config.getMaxInFlightMessage();
+		this.messageHandler = config.getMessageHandler(); 
+		this.connectionCount = config.getConnectionCount(); 
 		
 		this.consumeServerSelector = config.getConsumeServerSelector();
 		if(this.consumeServerSelector == null){
@@ -70,12 +61,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		if(this.messageHandler == null){
 			throw new IllegalArgumentException("ConsumeHandler and MessageProcessor are both null");
-		} 
-		
-		int n = consumeRunnerPoolSize;
-		consumeRunner = new ThreadPoolExecutor(n, n, 120, TimeUnit.SECONDS, 
-				new LinkedBlockingQueue<Runnable>(maxInFlightMessage),
-				new ThreadPoolExecutor.CallerRunsPolicy());  
+		}  
 		
 		Message msg = new Message();
 		msg.setTopic(topic.getName());
@@ -160,8 +146,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				MqClient client = pool.createClient();
 				ConsumeCtrl ctrl = consumeCtrl.clone();
 				ConsumeThread thread = threads[i] = new ConsumeThread(client, topic, consumeGroup, ctrl);  
-				thread.setToken(token); 
-				thread.setConsumeRunner(consumeRunner);   
+				thread.setToken(token);  
 				thread.setMessageHandler(messageHandler); 
 			}
 		} 

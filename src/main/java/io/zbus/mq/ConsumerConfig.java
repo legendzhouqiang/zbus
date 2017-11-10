@@ -3,15 +3,13 @@ package io.zbus.mq;
 import io.zbus.mq.Broker.ServerSelector;
 
 public class ConsumerConfig extends MqConfig {  
-	protected String topic;
+	protected Topic topic; 
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow; 
 	protected int consumeTimeout = 120000;// 2 minutes  
 	
 	protected MessageHandler messageHandler;   
-	protected int connectionCount = 1;
-	protected int consumeRunnerPoolSize = 64; 
-	protected int maxInFlightMessage = 100;
+	protected int connectionCount = 1;  
 	
 	protected ServerSelector consumeServerSelector; 
 	
@@ -59,17 +57,28 @@ public class ConsumerConfig extends MqConfig {
 		this.consumeTimeout = consumeTimeout;
 	}
 
-	public String getTopic() {
+	public Topic getTopic() {
 		return topic;
 	}
 
 	public void setTopic(String topic) {
-		this.topic = topic;
+		this.topic = new Topic(topic);
 	} 
 	
 	public void setTopic(Topic topic) {
-		this.topic = topic.getName();
-		this.topicMask = topic.getMask();
+		this.topic = topic;
+	}
+	
+	public void setTopic(String topic, Integer topicMask) {
+		this.topic = new Topic(topic);
+		this.topic.setMask(topicMask);
+	}
+	
+	public void setTopicMask(Integer topicMask) {
+		if(this.topic == null) {
+			this.topic = new Topic(); 
+		}
+		this.topic.setMask(topicMask);
 	}
 
 	public ServerSelector getConsumeServerSelector() {
@@ -86,23 +95,7 @@ public class ConsumerConfig extends MqConfig {
 
 	public void setMessageHandler(MessageHandler messageHandler) {
 		this.messageHandler = messageHandler;
-	} 
-	
-	public int getConsumeRunnerPoolSize() {
-		return consumeRunnerPoolSize;
-	}
-
-	public void setConsumeRunnerPoolSize(int consumeRunnerPoolSize) {
-		this.consumeRunnerPoolSize = consumeRunnerPoolSize;
-	}
-
-	public int getMaxInFlightMessage() {
-		return maxInFlightMessage;
-	}
-
-	public void setMaxInFlightMessage(int maxInFlightMessage) {
-		this.maxInFlightMessage = maxInFlightMessage;
-	} 
+	}  
 
 	public int getConnectionCount() {
 		return connectionCount;
@@ -110,7 +103,7 @@ public class ConsumerConfig extends MqConfig {
 
 	public void setConnectionCount(int connectionCount) {
 		this.connectionCount = connectionCount;
-	}
+	} 
 
 	@Override
 	public ConsumerConfig clone() { 

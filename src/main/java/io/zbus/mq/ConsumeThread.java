@@ -3,7 +3,6 @@ package io.zbus.mq;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.ThreadKit.ManualResetEvent;
@@ -19,9 +18,7 @@ public class ConsumeThread implements Closeable{
 	protected ConsumeGroup consumeGroup; 
 	protected ConsumeCtrl consumeCtrl; 
 	
-	protected String token;
-	
-	protected ExecutorService consumeRunner;
+	protected String token; 
 	protected MessageHandler messageHandler;
 	
 	protected ManualResetEvent active = new ManualResetEvent(true); 
@@ -145,32 +142,18 @@ public class ConsumeThread implements Closeable{
 						}
 						if(!running) break; 
 						msg = take();
-						if(msg == null) continue;
-						consumeCtrl.clearLocation(); //clear location if set
+						if(msg == null) continue; 
 						if(!running) break;
 						
 						if(messageHandler == null){
 							throw new IllegalStateException("Missing ConsumeHandler");
 						}
 						
-						if(consumeRunner == null){
-							try{
-								messageHandler.handle(msg, client);
-							} catch (Exception e) {
-								log.error(e.getMessage(), e);
-							}
-						} else {
-							consumeRunner.submit(new Runnable() { 
-								@Override
-								public void run() {
-									try{
-										messageHandler.handle(msg, client);
-									} catch (Exception e) {
-										log.error(e.getMessage(), e);
-									}
-								}
-							});
-						}
+						try{
+							messageHandler.handle(msg, client);
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						} 
 						
 					} catch (InterruptedException e) {
 						client.close(); 
@@ -188,15 +171,7 @@ public class ConsumeThread implements Closeable{
 	@Override
 	public void close() throws IOException {
 		consumeThread.interrupt();  
-	} 
-
-	public ExecutorService getConsumeRunner() {
-		return consumeRunner;
-	}
-
-	public void setConsumeRunner(ExecutorService consumeRunner) {
-		this.consumeRunner = consumeRunner;
-	} 
+	}  
 	
 	public void setMessageHandler(MessageHandler messageHandler) {
 		this.messageHandler = messageHandler;

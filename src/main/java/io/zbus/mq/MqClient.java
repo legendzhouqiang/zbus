@@ -23,10 +23,10 @@ import io.zbus.transport.tcp.TcpClient;
 import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
  
 
-public class MqClient extends CompositeClient<Message, Message>{         
+public class MqClient extends CompositeClient<Message, Message> {         
 	protected String token;      
 	protected int invokeTimeout = 3000;
-	protected int heartbeatInterval = 60000; //60s
+	protected int heartbeatInterval = 60000; //60s 
 	
 	public MqClient(String address, final EventLoop loop){
 		ServerAddress serverAddress = new ServerAddress(address);
@@ -167,6 +167,34 @@ public class MqClient extends CompositeClient<Message, Message>{
 		msg.setConsumeGroup(group);   
 		invokeAsync(msg, null); 
 	}
+	
+	public void ack(Message res) throws IOException {
+		Message msg = new Message();
+		msg.setCommand(Protocol.ACK);
+		msg.setTopic(res.getTopic());
+		msg.setConsumeGroup(res.getConsumeGroup());    
+		msg.setAckMsgId(res.getId());
+		msg.setOffset(res.getOffset());
+		
+		try {
+			invokeSync(msg);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		} 
+	}
+	
+	public void ackAsync(Message res) throws IOException {
+		Message msg = new Message();
+		msg.setCommand(Protocol.ACK);
+		msg.setTopic(res.getTopic());
+		msg.setConsumeGroup(res.getConsumeGroup());    
+		msg.setAckMsgId(res.getId());
+		msg.setOffset(res.getOffset());
+		
+		msg.setAck(false); //No need to reply from server, Not ACK command.
+		invokeAsync(msg, null); 
+	}
+	 
 	
 	public TrackerInfo queryTracker() throws IOException, InterruptedException{
 		Message msg = new Message();
@@ -338,5 +366,5 @@ public class MqClient extends CompositeClient<Message, Message>{
 
 	public void setToken(String token) {
 		this.token = token;
-	} 
+	}  
 }

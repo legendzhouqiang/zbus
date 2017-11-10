@@ -8,6 +8,10 @@ public class Topic implements Cloneable {
 		
 	}  
 	
+	public Topic(String name) {
+		this.name = name;
+	}
+	
 	public Topic(Message msg){ 
 		name = msg.getTopic(); 
 		mask = msg.getTopicMask();

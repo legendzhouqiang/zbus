@@ -12,6 +12,7 @@ import io.zbus.mq.Consumer;
 import io.zbus.mq.ConsumerConfig;
 import io.zbus.mq.MessageHandler;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Topic;
 import io.zbus.mq.server.MqServer;
 import io.zbus.mq.server.MqServerConfig;
 import io.zbus.rpc.Remote;
@@ -101,8 +102,8 @@ public class ServiceBootstrap implements Closeable{
 	} 
 	
 	private void validate(){
-		String topic = consumerConfig.getTopic();
-		if(StrKit.isEmpty(topic)){
+		Topic topic = consumerConfig.getTopic();
+		if(topic == null || StrKit.isEmpty(topic.getName())){
 			throw new IllegalStateException("serviceName required");
 		}
 		if(serverConfig == null && brokerConfig.getTrackerList().isEmpty()){
@@ -122,7 +123,7 @@ public class ServiceBootstrap implements Closeable{
 		if(serverConfig != null){
 			String token = consumerConfig.getToken();
 			if(token != null){
-				serverConfig.addToken(token, consumerConfig.getTopic());
+				serverConfig.addToken(token, consumerConfig.getTopic().getName());
 				serverConfig.getAuthProvider().setEnabled(true); //enable auth
 			} 
 			mqServer = new MqServer(serverConfig); 
@@ -137,7 +138,7 @@ public class ServiceBootstrap implements Closeable{
 		}
 		
 		consumerConfig.setBroker(broker);  
-		Integer mask = consumerConfig.getTopicMask();
+		Integer mask = consumerConfig.getTopic().getMask();
 		if(mask == null) {
 			mask = Protocol.MASK_MEMORY ;
 		}   

@@ -15,6 +15,7 @@ public class Protocol {
 	public static final String PRODUCE       = "produce";   
 	public static final String CONSUME       = "consume";   
 	public static final String UNCONSUME     = "unconsume"; //leave consume status
+	public static final String ACK           = "ack";
 	public static final String ROUTE   	     = "route";     //route back message to sender
 	
 	//Topic control
@@ -70,9 +71,9 @@ public class Protocol {
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";
 	public static final String ID      				= "id";	   
+	public static final String ACK_MSGID      		= "ack_msgid";	
 	
-	public static final String HOST   			    = "host";  
-	public static final String ACK      			= "ack";	  
+	public static final String HOST   			    = "host";   
 	public static final String ENCODING 			= "encoding"; 
 	
 	public static final String ORIGIN_ID     		= "origin_id";
@@ -90,6 +91,7 @@ public class Protocol {
 	public static final int MASK_PAUSE    	    = 1<<3;  
 	public static final int MASK_EXCLUSIVE 	    = 1<<4;  
 	public static final int MASK_DELETE_ON_EXIT = 1<<5; 
+	public static final int MASK_ACK_REQUIRED   = 1<<6; 
 	
 	
 	public static class ServerEvent{  

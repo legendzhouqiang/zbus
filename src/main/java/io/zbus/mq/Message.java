@@ -154,6 +154,15 @@ public class Message extends io.zbus.transport.http.Message {
 		this.setHeader(ACK, value);
 	} 
 	
+	public String getAckMsgId() {
+		return getHeader(ACK_MSGID);
+	}
+	
+	public Message setAckMsgId(String value) {
+		this.setHeader(ACK_MSGID, value);
+		return this;
+	} 
+	
 	public String getTopic(){
 		return getHeader(Protocol.TOPIC); 
 	} 

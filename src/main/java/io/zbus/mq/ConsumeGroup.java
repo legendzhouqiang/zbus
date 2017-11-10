@@ -1,5 +1,7 @@
 package io.zbus.mq;
- 
+
+import java.util.concurrent.TimeUnit;
+
 public class ConsumeGroup implements Cloneable { 
 	private String groupName;
 	private Boolean groupNameAuto;
@@ -10,6 +12,9 @@ public class ConsumeGroup implements Cloneable {
 	private Long startOffset;
 	private String startMsgId; //create group start from offset, msgId to check valid
 	private Long startTime;    //create group start from time 
+	
+	private Integer ackWindow;
+	private Long ackTimeout;
 	
 	//only used in server side, 
 	private String creator;
@@ -100,6 +105,13 @@ public class ConsumeGroup implements Cloneable {
 	public void setMask(Integer mask) {
 		this.mask = mask;
 	} 
+	public void addMask(Integer mask) {
+		if(this.mask == null) {
+			this.mask = mask;
+		}
+		
+		this.mask |= mask;
+	}
 	public String getCreator() {
 		return creator;
 	} 
@@ -111,6 +123,21 @@ public class ConsumeGroup implements Cloneable {
 	} 
 	public void setGroupNameAuto(Boolean groupNameAuto){
 		this.groupNameAuto = groupNameAuto;
+	} 
+	public Integer getAckWindow() {
+		return ackWindow;
+	} 
+	public void setAckWindow(Integer ackWindow) {
+		this.ackWindow = ackWindow;
+	} 
+	public Long getAckTimeout() {
+		return ackTimeout;
+	} 
+	public void setAckTimeout(Long ackTimeout) {
+		this.ackTimeout = ackTimeout;
+	}
+	public void setAckTimeout(TimeUnit unit, long duration) {
+		setAckTimeout(unit.toMillis(duration));
 	}
 
 	@Override
