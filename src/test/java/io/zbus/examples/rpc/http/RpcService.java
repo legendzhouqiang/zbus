@@ -10,6 +10,7 @@ public class RpcService {
 		
 		b.port(15555)          // start server inside 
 		 .autoDiscover(true)   // disable if add modules manually 
+		 .responseTypeInfo(false)
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();
