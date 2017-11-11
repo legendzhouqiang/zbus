@@ -34,9 +34,11 @@ public class Consumer extends MqAdmin implements Closeable {
 		this.topic = config.getTopic(); 
 		this.consumeGroup = config.getConsumeGroup();
 		if(this.consumeGroup == null){
-			this.consumeGroup = new ConsumeGroup();
-			this.consumeGroup.setGroupName(this.topic.getName());
+			this.consumeGroup = new ConsumeGroup(); 
 		} 
+		if(this.consumeGroup.getGroupName() == null) {
+			this.consumeGroup.setGroupName(this.topic.getName());
+		}
 		
 		consumeCtrl.setTopic(topic.getName());
 		consumeCtrl.setConsumeGroup(consumeGroup.getGroupName());

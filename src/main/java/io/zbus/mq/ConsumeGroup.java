@@ -14,10 +14,7 @@ public class ConsumeGroup implements Cloneable {
 	private Long startTime;    //create group start from time 
 	
 	private Integer ackWindow;
-	private Long ackTimeout;
-	
-	//only used in server side, 
-	private String creator;
+	private Long ackTimeout; 
 	
 	public ConsumeGroup(){
 		
@@ -35,9 +32,7 @@ public class ConsumeGroup implements Cloneable {
 		startTime = msg.getGroupStartTime();
 		startMsgId = msg.getGroupStartMsgId();
 		filter = msg.getGroupFilter();
-		mask = msg.getGroupMask();   
-		
-		creator = msg.getToken(); //token as creator
+		mask = msg.getGroupMask();    
 	}
 	
 	public void writeToMessage(Message msg){
@@ -105,28 +100,47 @@ public class ConsumeGroup implements Cloneable {
 	public void setMask(Integer mask) {
 		this.mask = mask;
 	} 
-	public void addMask(Integer mask) {
+	
+	public void clearMask() {
+		this.mask = null;
+	}
+	
+	public void addMask(Integer value) {
+		if(value == null) return;
 		if(this.mask == null) {
-			this.mask = mask;
+			this.mask = value;
 		}
 		
-		this.mask |= mask;
+		this.mask |= value;
 	}
-	public String getCreator() {
-		return creator;
+	
+	public void removeMask(Integer value) {
+		if(value == null) return;
+		if(this.mask == null) {
+			return;
+		}
+		
+		this.mask |= ~value;
 	} 
-	public void setCreator(String creator) {
-		this.creator = creator;
-	}  
+	
 	public Boolean getGroupNameAuto() {
 		return groupNameAuto;
 	} 
 	public void setGroupNameAuto(Boolean groupNameAuto){
 		this.groupNameAuto = groupNameAuto;
 	} 
+	
+	public void setAck(boolean ack) { 
+		if(ack) {
+			addMask(Protocol.MASK_ACK_REQUIRED);
+		} else {
+			removeMask(Protocol.MASK_ACK_REQUIRED);
+		}
+	}
+	
 	public Integer getAckWindow() {
 		return ackWindow;
-	} 
+	}  
 	public void setAckWindow(Integer ackWindow) {
 		this.ackWindow = ackWindow;
 	} 

@@ -74,11 +74,7 @@ public class DiskQueue extends AbstractQueue{
 			} else {  
 				//3) consume from the very beginning
 				group = new DiskConsumeGroup(this.index, consumeGroup);  
-			}   
-			String creator = ctrl.getCreator();
-			if(creator != null){
-				group.reader.setCreator(ctrl.getCreator());
-			}
+			}    
 			consumeGroups.put(consumeGroup, group); 
 			log.info("ConsumeGroup created: %s", group); 
 		} 
