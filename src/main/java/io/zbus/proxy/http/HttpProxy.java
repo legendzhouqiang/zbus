@@ -12,7 +12,7 @@ import io.zbus.kit.ConfigKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Broker;
-import io.zbus.proxy.http.ProxyConfig.ProxyEntry;
+import io.zbus.proxy.http.HttpProxyConfig.ProxyEntry;
 import io.zbus.transport.ServerAddress;
 
 /**
@@ -33,9 +33,9 @@ public class HttpProxy implements Closeable {
 	private boolean ownBroker = false;  
 	
 	private Map<String, List<ProxyHandler>> entryHandlerTable = new HashMap<String, List<ProxyHandler>>();
-	private ProxyConfig config;
+	private HttpProxyConfig config;
 	
-	public HttpProxy(ProxyConfig config) throws IOException { 
+	public HttpProxy(HttpProxyConfig config) throws IOException { 
 		this.config = config;
 		if (config.getBroker() != null) {
 			this.broker = config.getBroker();
@@ -125,7 +125,7 @@ public class HttpProxy implements Closeable {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 		String configFile = ConfigKit.option(args, "-conf", "conf/http_proxy.xml"); 
-		ProxyConfig config = new ProxyConfig();
+		HttpProxyConfig config = new HttpProxyConfig();
 		config.loadFromXml(configFile);
 		  
 		HttpProxy proxy = new HttpProxy(config);

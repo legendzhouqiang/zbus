@@ -17,6 +17,24 @@
 	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->
 	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds -->
 	
+	<auth enabled="false">  
+		<token value="admin" name="Admin" operation="admin"/> 
+		
+		<token value="mytopic_group1" operation="*"> 
+			<topic value="MyTopic">	
+				<consumeGroup>Group1</consumeGroup> 
+			</topic>
+		</token>    
+		
+		<token value="rpc_service" operation="*"> 
+			<topic value="MyRpc"/>
+		</token>  
+		
+		<token value="proxy" operation="*"> 
+			<topic value="*"/>
+		</token>    		
+	</auth>  
+	
 	<!-- 
 	<trackerList>
 		<serverAddress>
@@ -28,59 +46,27 @@
 	--> 
 	 
 	<!--  
-	<httpProxy connectionCount="1" consumeTimeout="10000" token="proxy">
-		<proxy entry="http" token="proxy">
-			<target>http://localhost:15555/server</target>  
-			<target>http://localhost:15556/server</target>
-		</proxy>  
+	<httpProxy zbus="localhost:15555" consumerCount="4" clientCount="4" token="admin">
+		<proxy entry="examples" 
+			token="admin" 
+			sendFilter=""  
+			recvFilter="" 
+			messageIdentifiable="false"
+			>   
+			<target>http://localhost:80/</target> 
+			 
+		</proxy> 
 	</httpProxy> 
 	-->
 	
-	<auth enabled="false">  
-		<token value="admin" name="Admin" operation="admin"/> 
-		
-		<token value="mytopic_group1" name="MyTopicGroup1" operation="*"> 
-			<topic value="MyTopic">	
-				<consumeGroup>Group1</consumeGroup> 
-			</topic>
-		</token>   
-		
-		<token value="mytopic" name="MyTopic" operation="*"> 
-			<topic value="MyTopic"/>
-		</token>   
-		
-		<token value="produce_all" name="ProduceAll" operation="produce,track_sub">
-			<topic value="*"/>
-		</token>    
-		
-		<token value="myrpc_client" name="MyRpcClient" operation="produce, track_sub"> 
-			<topic value="MyRpc"/>
-		</token>   
-		
-		<token value="myrpc_service" name="MyRpcService" operation="*"> 
-			<topic value="MyRpc"/>
-		</token>  
-		
-		<token value="myrpc_all" name="MyRpcAll" operation="*"> 
-			<topic value="MyRpc"/>
-		</token>  
-		
-		<token value="tracker" operation="server, tracker, track_sub">
-			<topic value="MyTopic">	
-				<consumeGroup>Group1</consumeGroup> 
-			</topic>
-		</token>    
-		
-		<token value="track_pub_token" operation="track_pub"/>   
-		
-		<token value="rpc_service" operation="declare,track_sub,consume,route"> 
-			<topic value="*"/>
-		</token>  
-		
-		<token value="proxy" name="Proxy" operation="*"> 
-			<topic value="*"/>
-		</token>    		
-	</auth>  
+	<!--
+	<tcpProxy>  
+		<server>0.0.0.0:80</server>
+		<target>localhost:15555</target>
+		<connectTimeout>3000</connectTimeout>
+		<idleTimeout>60000</idleTimeout> 
+	</tcpProxy>
+	--> 
 	
 </zbus>
 

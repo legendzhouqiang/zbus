@@ -10,7 +10,7 @@ import org.w3c.dom.Document;
 import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.StrKit;
 
-public class ProxyConfig extends XmlConfig{
+public class TcpProxyConfig extends XmlConfig{
 	private String proxyHost = "0.0.0.0"; 
 	private int proxyPort = 80; 
 	private String targetAddress;      //IP:Port

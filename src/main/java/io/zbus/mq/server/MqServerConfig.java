@@ -15,16 +15,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.ClassKit;
+import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
-import io.zbus.mq.server.auth.XmlAuthProvider;
 import io.zbus.mq.server.auth.Token.TopicResource;
-import io.zbus.proxy.http.ProxyConfig;
+import io.zbus.mq.server.auth.XmlAuthProvider;
+import io.zbus.proxy.http.HttpProxyConfig;
+import io.zbus.proxy.tcp.TcpProxyConfig;
 import io.zbus.transport.ServerAddress;
 
 public class MqServerConfig extends XmlConfig implements Cloneable  {  
@@ -49,7 +50,8 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	private AuthProvider authProvider = new XmlAuthProvider();  
 	private MessageLogger messageLogger;
 	
-	private ProxyConfig httpProxyConfig;
+	private HttpProxyConfig httpProxyConfig;
+	private TcpProxyConfig tcpProxyConfig;
 	
 	public MqServerConfig(){ 
 		
@@ -128,8 +130,13 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 			}
 		}
 		
-		this.httpProxyConfig = new ProxyConfig();
+		this.httpProxyConfig = new HttpProxyConfig();
 		this.httpProxyConfig.loadFromXml(doc);
+		
+		if(valueOf(xpath.evaluate("/zbus/tcpProxy", doc), null) != null) {
+			this.tcpProxyConfig = new TcpProxyConfig();
+			this.tcpProxyConfig.loadFromXml(doc);
+		}
 	} 
 	
 	public void addTracker(String trackerAddress, String certFile) throws IOException{
@@ -280,22 +287,31 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 		authProvider.addToken(token);
 	}
 
-	public ProxyConfig getHttpProxyConfig() {
+	public HttpProxyConfig getHttpProxyConfig() {
 		return httpProxyConfig;
 	}
 
-	public void setHttpProxyConfig(ProxyConfig httpProxyConfig) {
+	public void setHttpProxyConfig(HttpProxyConfig httpProxyConfig) {
 		this.httpProxyConfig = httpProxyConfig;
-	} 
+	}  
 	
+	public TcpProxyConfig getTcpProxyConfig() {
+		return tcpProxyConfig;
+	}
+
+	public void setTcpProxyConfig(TcpProxyConfig tcpProxyConfig) {
+		this.tcpProxyConfig = tcpProxyConfig;
+	}
+
 	public MessageLogger getMessageLogger() {
 		return messageLogger;
 	}
 
 	public void setMessageLogger(MessageLogger messageLogger) {
 		this.messageLogger = messageLogger;
-	}
-
+	} 
+	
+	
 	public MqServerConfig clone() { 
 		try {
 			return (MqServerConfig)super.clone();

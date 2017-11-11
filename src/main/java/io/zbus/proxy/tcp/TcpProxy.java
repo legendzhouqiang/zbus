@@ -27,7 +27,7 @@ public class TcpProxy extends ServerAdaptor implements Closeable {
 	TcpServer server;    
 	EventLoop loop;
 	
-	public TcpProxy(ProxyConfig config){
+	public TcpProxy(TcpProxyConfig config){
 		this.proxyHost = config.getProxyHost();
 		this.proxyPort = config.getProxyPort();
 		
@@ -105,7 +105,7 @@ public class TcpProxy extends ServerAdaptor implements Closeable {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		String configFile = ConfigKit.option(args, "-conf", "conf/tcp_proxy.xml"); 
-		ProxyConfig config = new ProxyConfig();
+		TcpProxyConfig config = new TcpProxyConfig();
 		config.loadFromXml(configFile);  
 		TcpProxy proxy = new TcpProxy(config);
 		proxy.start();

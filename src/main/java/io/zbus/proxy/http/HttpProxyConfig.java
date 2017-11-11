@@ -19,7 +19,7 @@ import io.zbus.kit.ClassKit;
 import io.zbus.kit.ConfigKit.XmlConfig;
 import io.zbus.mq.Broker;
 
-public class ProxyConfig extends XmlConfig { 
+public class HttpProxyConfig extends XmlConfig { 
 	private Broker broker; 
 	private String brokerAddress;
 	private int consumerCount = 4; //Number of connections to zbus broker per consumer 

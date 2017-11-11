@@ -30,7 +30,9 @@ import io.zbus.mq.MessageQueue;
 import io.zbus.mq.Protocol.ServerInfo;
 import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.proxy.http.HttpProxy;
-import io.zbus.proxy.http.ProxyConfig;
+import io.zbus.proxy.http.HttpProxyConfig;
+import io.zbus.proxy.tcp.TcpProxy;
+import io.zbus.proxy.tcp.TcpProxyConfig;
 import io.zbus.transport.CodecInitializer;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.ServerAddress;
@@ -53,6 +55,7 @@ public class MqServer extends TcpServer {
 	private MqAdaptor mqAdaptor;  
 	private Tracker tracker; 
 	private HttpProxy httpProxy;
+	private TcpProxy tcpProxy;
 	
 	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
@@ -145,9 +148,10 @@ public class MqServer extends TcpServer {
 		}   
 		
 		loadHttpProxy(config.getHttpProxyConfig());
+		loadTcpProxy(config.getTcpProxyConfig());
 	} 
 	
-	private void loadHttpProxy(ProxyConfig config){ 
+	private void loadHttpProxy(HttpProxyConfig config){ 
 		if(config == null || config.getEntryTable().isEmpty()) return; 
 		
 		try {
@@ -156,6 +160,17 @@ public class MqServer extends TcpServer {
 			httpProxy = new HttpProxy(config);
 			httpProxy.start();
 		} catch (IOException e) {
+			log.error(e.getMessage(), e.getCause());
+		}
+	}
+	
+	private void loadTcpProxy(TcpProxyConfig config){ 
+		if(config == null) return; 
+		
+		try {
+			tcpProxy = new TcpProxy(config);
+			tcpProxy.start();
+		} catch (Exception e) {
 			log.error(e.getMessage(), e.getCause());
 		}
 	}
@@ -184,7 +199,9 @@ public class MqServer extends TcpServer {
 		if(httpProxy != null){
 			httpProxy.close();
 		}
-		
+		if(tcpProxy != null) {
+			tcpProxy.close();
+		}
 		super.close();
 	}  
     
