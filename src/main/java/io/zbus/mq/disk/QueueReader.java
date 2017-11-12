@@ -4,13 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.StrKit;
  
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private static final int READER_FILE_SIZE = 1024;  
-	private static final int FITER_POS = 12;  
+	private static final int FILTER_POS = 12;  
+	private static final int ACK_POS = 12+128; 
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
@@ -18,6 +20,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private long blockNumber;
 	private int offset = 0; 
 	private String filter; //max: 127 bytes, filter on Messsage's tag
+	private int ackWindow = 1;
+	private long ackTimeout = TimeUnit.SECONDS.toMillis(10); //10s
 	
 	private List<String[]> filterParts = new ArrayList<String[]>();
 	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
@@ -154,6 +158,8 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			this.filter = new String(tag, 1, tagLen);
 			calcFilter(this.filter); 
 		} 
+		this.ackWindow = buffer.getInt();
+		this.ackTimeout = buffer.getLong();
 	}
 	
 	@Override
@@ -164,8 +170,11 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		writeOffset();
 		
 		//write tag
-		buffer.position(FITER_POS);
+		buffer.position(FILTER_POS);
 		buffer.put((byte)0); //tag default to null 
+		buffer.position(ACK_POS);
+		buffer.putInt(this.ackWindow);
+		buffer.putLong(this.ackTimeout);
 	}   
 	 
 	public int getOffset() {
@@ -182,12 +191,12 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 			this.filter = filter;
 			int len = 0;
 			if(StrKit.isEmpty(filter)){ //clear
-				buffer.position(FITER_POS);
+				buffer.position(FILTER_POS);
 				buffer.put((byte)0);  
 				
 			} else {
 				len = filter.length();
-				buffer.position(FITER_POS);
+				buffer.position(FILTER_POS);
 				buffer.put((byte)len); 
 				buffer.put(this.filter.getBytes());
 				
@@ -240,5 +249,37 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public String getIndexName(){
 		return this.index.getName();
+	}
+	
+	public int getAckWindow() {
+		return this.ackWindow;
+	}
+	
+	public void setAckWindow(Integer window) {
+		if(window == null) return;
+		lock.lock();
+		try{  
+			this.ackWindow = window;
+			buffer.position(ACK_POS);
+			buffer.putInt(window);
+		} finally {
+			lock.unlock();
+		}  
+	}
+	
+	public long getAckTimeout() {
+		return this.ackTimeout;
+	}
+	
+	public void setAckTimeout(Long timeout) {
+		if(timeout == null) return;
+		lock.lock();
+		try{  
+			this.ackTimeout = timeout;
+			buffer.position(ACK_POS+4);
+			buffer.putLong(timeout);
+		} finally {
+			lock.unlock();
+		}  
 	}
 } 

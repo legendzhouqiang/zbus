@@ -12,6 +12,7 @@ public class Index extends MappedFile {
 	public static final int IndexVersion  = 0x01;
 	public static final String IndexSuffix = ".idx";
 	public static final String ReaderSuffix = ".rdx";
+	public static final String NakSuffix = ".nak";
 	public static final String BlockSuffix = ".zbus";
 	public static final String BlockDir = "data";
 	public static final String ReaderDir = "reader"; 
