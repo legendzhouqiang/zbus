@@ -206,6 +206,20 @@ abstract class AbstractQueue implements MessageQueue{
 			}
 			group.pullSessions.put(session.id(), session);
 		}   
+		 
+		
+		Long offset = message.getConsumeOffset();
+		String msgId = message.getConsumeMsgId();
+		if(offset != null && msgId != null) { //handle case of pulling message with offset and id
+			Message res = group.read(offset, msgId);
+			if(res == null) {
+				ReplyKit.reply404(message, session, "Message Not Found: offset=" + offset + ", id="+msgId);
+				return;
+			}
+			String pullMsgId = message.getId();
+			sendOutMessage(group.groupName, session, res, pullMsgId);
+			return;
+		}
 		
 		for(PullSession pull : group.pullQ){
 			if(pull.getSession() == session){
@@ -251,33 +265,37 @@ abstract class AbstractQueue implements MessageQueue{
 				} 
 				
 				Message pullMsg = pull.getPullMessage(); 
-				Message writeMsg = Message.copyWithoutBody(msg); 
-				
-				writeMsg.removeHeader(Protocol.TOKEN); //Remove sensitive Token info
-				writeMsg.setOriginId(msg.getId());  
-				writeMsg.setId(pullMsg.getId());
-				writeMsg.setConsumeGroup(group.groupName);
-				
-				Integer status = writeMsg.getStatus();
-				if(status == null){
-					writeMsg.setOriginMethod(writeMsg.getMethod());
-					if(!"/".equals(writeMsg.getUrl())){
-						writeMsg.setOriginUrl(writeMsg.getUrl()); 
-					}  
-				} else {
-					writeMsg.setOriginStatus(status);
-				} 
-				writeMsg.setStatus(200); //status meaning changed to 'consume-status'
-				if(messageLogger != null) {
-					messageLogger.log(writeMsg);
-				}
-				pull.getSession().write(writeMsg);  
+				sendOutMessage(group.groupName, pull.getSession(), msg, pullMsg.getId()); 
 			} catch (Exception ex) {   
 				log.error(ex.getMessage(), ex);  
 			} 
 		} 
 		
 	} 
+	
+	private void sendOutMessage(String groupName, Session session, Message msg, String pullMsgId) {
+		Message writeMsg = Message.copyWithoutBody(msg); 
+		
+		writeMsg.removeHeader(Protocol.TOKEN); //Remove sensitive Token info
+		writeMsg.setOriginId(msg.getId());  
+		writeMsg.setId(pullMsgId);
+		writeMsg.setConsumeGroup(groupName);
+		
+		Integer status = writeMsg.getStatus();
+		if(status == null){
+			writeMsg.setOriginMethod(writeMsg.getMethod());
+			if(!"/".equals(writeMsg.getUrl())){
+				writeMsg.setOriginUrl(writeMsg.getUrl()); 
+			}  
+		} else {
+			writeMsg.setOriginStatus(status);
+		} 
+		writeMsg.setStatus(200); //status meaning changed to 'consume-status'
+		if(messageLogger != null) {
+			messageLogger.log(writeMsg);
+		}
+		session.write(writeMsg);  
+	}
 	
 	@Override
 	public int sessionCount(String consumeGroup) {
@@ -398,7 +416,9 @@ abstract class AbstractQueue implements MessageQueue{
 			}
 		}
 		
-		public abstract Message read() throws IOException ;
+		public abstract Message read() throws IOException;
+		
+		public abstract Message read(long offset, String msgId) throws IOException;
 
 		public abstract boolean isEnd();
 		

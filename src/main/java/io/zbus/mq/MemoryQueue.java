@@ -116,6 +116,11 @@ public class MemoryQueue extends AbstractQueue {
 			return queue.poll();
 		} 
 		
+		@Override
+		public Message read(long offset, String msgId) { 
+			return null;
+		}
+		
 		public boolean isEnd(){
 			return queue.size() == 0;
 		}

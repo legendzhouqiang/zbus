@@ -222,6 +222,10 @@ public class DiskQueue extends AbstractQueue{
 				return null;
 			}
 			
+			return convert(data);
+		}
+		
+		private Message convert(DiskMessage data) {
 			Message msg = Message.parse(data.body);
 			if(msg == null){ 
 				log.warn("data read from queue can not be serialized back to Message type");
@@ -229,6 +233,15 @@ public class DiskQueue extends AbstractQueue{
 				msg.setOffset(data.offset);   
 			}
 			return msg;
+		}
+		
+		@Override
+		public Message read(long offset, String msgId) throws IOException {
+			DiskMessage data = reader.read(offset, msgId);
+			if(data == null) {
+				return null;
+			}
+			return convert(data);
 		}
 		
 		@Override

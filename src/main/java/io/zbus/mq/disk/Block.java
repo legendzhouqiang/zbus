@@ -13,15 +13,17 @@ import java.util.concurrent.locks.ReentrantLock;
 class Block implements Closeable {  
 	private final Index index; 
 	private final long blockNumber; 
+	private final long baseOffset;
 	
 	private RandomAccessFile diskFile; 
 	private BlockReadBuffer readBuffer;
 	private Object readBufferLock = new Object();
 	private final Lock lock = new ReentrantLock();  
 	
-	Block(Index index, File file, long blockNumber) throws IOException{   
+	Block(Index index, File file, long blockNumber, long baseOffset) throws IOException{   
 		this.index = index;
 		this.blockNumber = blockNumber;
+		this.baseOffset = baseOffset;
 		this.index.checkBlockNumber(blockNumber);
 		
 		if(!file.exists()){
@@ -71,7 +73,7 @@ class Block implements Closeable {
 	}
 	
 	private void writeToBuffer(DiskMessage data, ByteBuffer buf, int endOffset, long messageNumber) {  
-		buf.putLong(endOffset);
+		buf.putLong(baseOffset+endOffset);
 		if(data.timestamp == null){
 			buf.putLong(System.currentTimeMillis()); 
 		} else {

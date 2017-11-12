@@ -107,14 +107,11 @@ public class QueueNak extends MappedFile {
 		return null;
 	}
 	
-	public DiskMessage pollTimeoutMessage() {
+	public DiskMessage pollTimeoutMessage() throws IOException {
 		NakRecord nak = pollTimeoutNak();
 		if(nak == null) return null;
-
-		//TODO
-		queueReader.getGroupName();
-		
-		return null;
+ 
+		return queueReader.read(nak.offset, nak.msgId); 
 	}
 	
 	public void addNak(long offset, String msgId) {
