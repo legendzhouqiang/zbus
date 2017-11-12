@@ -113,15 +113,26 @@ public class Index extends MappedFile {
 		}
 	}
  
-	public int searchBlockNumber(long totalOffset) throws IOException {
+	public Object[] searchBlock(long totalOffset) throws IOException {
 		for (int i = 0; i < blockCount; i++) {
 			long blockNumber = blockStart + i;
 			Offset offset = readOffset(blockNumber);
 			if (totalOffset >= offset.baseOffset && totalOffset < offset.baseOffset + offset.endOffset) {
-				return i;
+				return new Object[] { blockNumber, offset };
 			}
 		}
-		return -1;
+		return null;
+	}
+	
+	public Object[] searchBlockByTime(long timestamp) throws IOException {
+		for (int i = 0; i < blockCount; i++) {
+			long blockNumber = blockStart + i;
+			Offset offset = readOffset(blockNumber);
+			if(offset.updatedTime<timestamp) continue;
+			
+			return new Object[] { blockNumber, offset };
+		}
+		return null;
 	}
 	
 	public long increaseMessageCount(){

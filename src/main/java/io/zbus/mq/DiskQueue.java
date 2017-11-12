@@ -13,6 +13,7 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.Protocol.ConsumeGroupInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.disk.Index;
+import io.zbus.mq.disk.QueueNak;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
 import io.zbus.transport.Session;
@@ -182,10 +183,15 @@ public class DiskQueue extends AbstractQueue{
 	
 	private class DiskConsumeGroup extends AbstractConsumeGroup{ 
 		public final QueueReader reader; 
+		public QueueNak queueNak = null;
 		
 		public DiskConsumeGroup(Index index, String groupName) throws IOException{ 
 			super(groupName);
 			reader = new QueueReader(index, this.groupName);
+			Integer mask = index.getMask();
+			if(mask != null && (mask&Protocol.MASK_ACK_REQUIRED) != 0) { 
+				queueNak = new QueueNak(reader);
+			}
 		}
 		
 		public DiskConsumeGroup(QueueReader reader, String groupName) throws IOException{ 
@@ -204,7 +210,14 @@ public class DiskQueue extends AbstractQueue{
 		
 		@Override
 		public Message read() throws IOException { 
-			DiskMessage data = reader.read();
+			DiskMessage data = null;
+			if(queueNak != null) {  
+				data = queueNak.pollTimeoutMessage();
+			}
+			if(data == null) {
+				data = reader.read();
+			}
+			
 			if(data == null){
 				return null;
 			}
@@ -228,7 +241,18 @@ public class DiskQueue extends AbstractQueue{
 		}
 		
 		public Integer getMask(){
-			return reader.getMask();
+			Integer mask = reader.getMask();
+			if(mask == null || mask == 0) {
+				mask = index.getMask(); //use Topic mask instead if not set
+			}
+			return mask;
+		}
+		
+		@Override
+		public void recordNak(Long offset, String msgId) {
+			 if(queueNak != null && offset != null) {
+				 queueNak.addNak(offset, msgId);
+			 } 
 		}
 		
 		public ConsumeGroupInfo getConsumeGroupInfo(){

@@ -245,6 +245,11 @@ abstract class AbstractQueue implements MessageQueue{
 			
 			this.lastUpdatedTime = System.currentTimeMillis(); 
 			try {  
+				
+				if(group.isAckEnabled()) {
+					group.recordNak(msg.getOffset(), msg.getId());
+				} 
+				
 				Message pullMsg = pull.getPullMessage(); 
 				Message writeMsg = Message.copyWithoutBody(msg); 
 				
@@ -399,6 +404,16 @@ abstract class AbstractQueue implements MessageQueue{
 		
 		public Integer getMask(){
 			return 0;
+		}
+		
+		public boolean isAckEnabled() {
+			Integer mask = getMask();
+			if(mask == null) return false;
+			return (mask & Protocol.MASK_ACK_REQUIRED) != 0;
+		}
+		
+		public void recordNak(Long offset, String msgId) {
+			
 		}
 		
 		@Override

@@ -6,46 +6,85 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
  
 public class QueueNak extends MappedFile { 
-	public static final int NakMaxCount = 1000;   
-	private static final int FileSize = HeadSize + NakMaxCount * NakRecord.Size;
- 
-	private final File nakFile;
-	 
-	private static final int NakLimitPos = 0;  
-	private Queue<NakRecord> nakQueue = new PriorityQueue<NakRecord>(new NakRecordComparator());
+	private static final int MaxWindowCount = 1000;   
+	private static final int FileSize = HeadSize + MaxWindowCount * NakRecord.Size;  
+	private static final int WindowPos = 0;  
+	private static final int TimeoutPos = 4;  
+	
+	
+	private Queue<NakRecord> queue = new PriorityQueue<NakRecord>(new NakRecordComparator());
 	private Queue<Integer> availableEntries = new PriorityQueue<Integer>(); 
 	
-	private int nakLimit = 100; 
-
-	public QueueNak(File nakFile) throws IOException{
-		this.nakFile = nakFile;
-		load(this.nakFile, FileSize); 
+	private int window = 100; 
+	private long timeout = TimeUnit.SECONDS.toMillis(10); //default to 10s 
+	
+	private final QueueReader queueReader;
+	
+	public QueueNak(QueueReader queueReader) throws IOException{ 
+		this.queueReader = queueReader; 
+		File nakFile = new File(queueReader.getReaderDir(), queueReader.getGroupName() + Index.NakSuffix);
+		load(nakFile, FileSize); 
 	}   
 	
 	public int size() {
-		return nakQueue.size();
+		return queue.size();
+	}
+	
+	public int remaining() {
+		return window - size();
+	}
+	
+	public int getWindow() {
+		return this.window;
+	}
+	
+	public void setWindow(int value) {
+		if(value < 0 || value>=MaxWindowCount) {
+			throw new IllegalArgumentException("nakLimit(" + value + ") invalid");
+		}
+		this.window = value;
+		try {
+			lock.lock(); 
+			buffer.position(WindowPos);
+			buffer.putInt(this.window);
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	public long getTimeout() {
+		return this.timeout;
+	}
+	
+	public void setTimeout(long value) { 
+		this.timeout = value;
+		try {
+			lock.lock(); 
+			buffer.position(TimeoutPos);
+			buffer.putLong(this.timeout);
+		} finally {
+			lock.unlock();
+		}
 	}
 	
 	public Iterator<NakRecord> iterator(){
-		return nakQueue.iterator();
+		return queue.iterator();
 	}
 	
 	public void clear() {
 		buffer.position(HeadSize);
-		buffer.put(new byte[NakRecord.Size*NakMaxCount]);
-		nakQueue.clear(); 
-		initAvailableEntries();
-	}
-	
-	private void initAvailableEntries() {
-		for(int i=0;i<NakMaxCount;i++) {
+		buffer.put(new byte[NakRecord.Size*MaxWindowCount]);
+		queue.clear(); 
+		
+		for(int i=0;i<MaxWindowCount;i++) {
 			availableEntries.add(i);
 		}
-	}
+	} 
 	
-	public NakRecord queryNak(long offset) {
+	public NakRecord getNak(long offset) {
 		Iterator<NakRecord> iter = iterator();
 		while(iter.hasNext()) {
 			NakRecord nak = iter.next();
@@ -56,6 +95,28 @@ public class QueueNak extends MappedFile {
 		return null;
 	} 
 	
+	public NakRecord pollTimeoutNak() {
+		synchronized(queue) {
+			NakRecord nak = queue.peek();
+			if(nak == null) return null;
+			if(System.currentTimeMillis() >= (nak.updatedTime+timeout)) {
+				removeNak(nak);
+				return queue.poll();
+			} 
+		} 
+		return null;
+	}
+	
+	public DiskMessage pollTimeoutMessage() {
+		NakRecord nak = pollTimeoutNak();
+		if(nak == null) return null;
+
+		//TODO
+		queueReader.getGroupName();
+		
+		return null;
+	}
+	
 	public void addNak(long offset, String msgId) {
 		try {
 			lock.lock(); 
@@ -63,7 +124,7 @@ public class QueueNak extends MappedFile {
 				throw new IllegalArgumentException("msgId is null");
 			}
 			
-			NakRecord nak = queryNak(offset);
+			NakRecord nak = getNak(offset);
 			if(nak != null) {
 				if(!msgId.equals(nak.msgId)) {
 					throw new IllegalStateException("msgId not matched");
@@ -74,7 +135,7 @@ public class QueueNak extends MappedFile {
 				return;
 			}
 			
-			if(nakQueue.size() > nakLimit) {
+			if(queue.size() > window) {
 				throw new IllegalStateException("NAK queue full");
 			}
 			nak = new NakRecord(); 
@@ -85,6 +146,9 @@ public class QueueNak extends MappedFile {
 			nak.entryNumber = entryNumber;
 			nak.offset = offset;
 			nak.msgId = msgId; 
+			nak.status = 1;
+			
+			queue.add(nak);
 			
 			writeNakUnsafe(nak);
 		} finally {
@@ -104,9 +168,13 @@ public class QueueNak extends MappedFile {
 		}
 		if(nak == null) return;
 		
+		removeNak(nak);
+		iter.remove(); 
+	}
+	
+	public void removeNak(NakRecord nak) {
 		try {
-			lock.lock(); 
-			iter.remove();
+			lock.lock();  
 			nak.status = 0;
 			availableEntries.add(nak.entryNumber);
 			writeNakUnsafe(nak);
@@ -117,42 +185,30 @@ public class QueueNak extends MappedFile {
 
 	@Override
 	protected void loadDefaultData() throws IOException {  
-		buffer.position(NakLimitPos);
-		this.nakLimit = buffer.getInt();
+		buffer.position(WindowPos);
+		this.window = buffer.getInt();
+		this.timeout = buffer.getLong();
 		
-		for(int i=0; i< NakMaxCount; i++) {
+		for(int i=0; i< MaxWindowCount; i++) {
 			NakRecord nak = readNakUnsafe(i);
 			if(nak.status != 1) {
 				availableEntries.add(i);
 				continue;
 			}
-			nakQueue.add(nak); 
+			queue.add(nak); 
 		}
 	}
 
 	@Override
 	protected void writeDefaultData() throws IOException { 
-		buffer.position(NakLimitPos);
-		buffer.putInt(this.nakLimit);
-	}  
-	
-	public int getNakLimit() {
-		return this.nakLimit;
-	}
-	
-	public void setNakLimit(int nakLimit) {
-		if(nakLimit < 0 || nakLimit>=NakMaxCount) {
-			throw new IllegalArgumentException("nakLimit(" + nakLimit + ") invalid");
+		buffer.position(WindowPos);
+		buffer.putInt(this.window);
+		buffer.putLong(this.timeout);
+		
+		for(int i=0;i<MaxWindowCount;i++) {
+			availableEntries.add(i);
 		}
-		this.nakLimit = nakLimit;
-		try {
-			lock.lock(); 
-			buffer.position(NakLimitPos);
-			buffer.putInt(this.nakLimit);
-		} finally {
-			lock.unlock();
-		}
-	}
+	}   
 	
 	private int nakPosition(int entryNumber) {
 		return HeadSize + entryNumber*NakRecord.Size;
@@ -161,7 +217,7 @@ public class QueueNak extends MappedFile {
 	private void writeNakUnsafe(NakRecord nak) {
 		int pos = nakPosition(nak.entryNumber);
 		buffer.position(pos); 
-		buffer.put((byte)1);
+		buffer.put(nak.status);
 		buffer.putLong(nak.offset);
 		if(nak.msgId == null) {
 			buffer.put((byte)0);
@@ -220,7 +276,7 @@ public class QueueNak extends MappedFile {
 		public final static int Size = 1 + 8 + 1 + MsgIdMaxLen + 4 + 8; //61
 	}
 	
-	public static class NakRecordComparator implements Comparator<NakRecord>{
+	private static class NakRecordComparator implements Comparator<NakRecord>{
 
 		@Override
 		public int compare(NakRecord o1, NakRecord o2) {  

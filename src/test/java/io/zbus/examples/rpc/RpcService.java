@@ -25,7 +25,7 @@ public class RpcService {
 		 .port(15555)          // start server inside 
 		 .autoDiscover(true)   // disable if add modules manually
 		 .connectionCount(4)   // parallel connection count
-		 //.serviceMask(Protocol.MASK_DISK)
+		 .serviceMask(Protocol.MASK_DISK)
 		 .responseTypeInfo(true)
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication

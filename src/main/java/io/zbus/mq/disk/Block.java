@@ -273,6 +273,10 @@ class Block implements Closeable {
     	return index.readOffset(blockNumber).endOffset;
     } 
     
+    public long getBlockNumber() {
+		return blockNumber;
+	}
+    
 	@Override
 	public void close() throws IOException {  
 		this.diskFile.close();

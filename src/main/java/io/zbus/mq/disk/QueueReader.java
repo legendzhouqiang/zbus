@@ -4,15 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.zbus.kit.StrKit;
+import io.zbus.mq.disk.Index.Offset;
  
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private static final int READER_FILE_SIZE = 1024;  
 	private static final int FILTER_POS = 12;  
-	private static final int ACK_POS = 12+128; 
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
@@ -20,8 +19,6 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	private long blockNumber;
 	private int offset = 0; 
 	private String filter; //max: 127 bytes, filter on Messsage's tag
-	private int ackWindow = 1;
-	private long ackTimeout = TimeUnit.SECONDS.toMillis(10); //10s
 	
 	private List<String[]> filterParts = new ArrayList<String[]>();
 	private long messageNumber = -1; //the last messageNumber read, the next message number to read is messageNumber+1
@@ -71,16 +68,91 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		block = this.index.createReadBlock(this.blockNumber);
 	}  
 	
+	public Index getIndex() {
+		return this.index;
+	}
+	
+	public String getGroupName() {
+		return this.readerGroup;
+	}
+	
+	public File getReaderDir() {
+		return new File(index.getIndexDir(), Index.ReaderDir);
+	}
+	
 	private File readerFile(String readerGroup){
 		File readerDir = new File(index.getIndexDir(), Index.ReaderDir);
 		return new File(readerDir, this.readerGroup + Index.ReaderSuffix); 
 	}
 	
 	public boolean seek(long offset, String msgid) throws IOException{ 
+		Object[] res = index.searchBlock(offset);
+		if(res == null) {
+			return false;
+		}
+		long blockNo = (Long)res[0];
+		Offset off = (Offset)res[1];
+		
+		int offsetInside = (int)(offset - off.baseOffset);
+		Block b = null;
+		if(blockNo == this.blockNumber) {
+			b = this.block; 
+		} else {
+			b = index.createReadBlock(blockNo);
+		}
+		DiskMessage msg = b.readHead(offsetInside);
+		if(!msgid.equals(msg.id)) {
+			if(b != this.block) {
+				b.close();
+			}
+			return false;
+		}
+		
+		this.blockNumber = blockNo;
+		this.offset = offsetInside;
+		if(b != this.block) {
+			this.block.close();
+		}
+		this.block = b; 
+		this.messageNumber = msg.messageNumber;
+		
 		return true;
 	}   
 	
 	public boolean seek(long time) throws IOException{ 
+		Object[] res = index.searchBlock(offset);
+		if(res == null) {
+			return false;
+		}
+		long blockNo = (Long)res[0];
+		Offset offset = (Offset)res[1];
+		 
+		Block b = null;
+		if(blockNo == this.blockNumber) {
+			b = this.block; 
+		} else {
+			b = index.createReadBlock(blockNo);
+		}
+		
+		int pos = 0;
+		
+		DiskMessage msg = null;
+		while(pos < offset.endOffset) {
+			msg = block.readFully(pos);
+			pos += msg.bytesScanned;
+			if(msg.timestamp<time) continue; 
+		}
+		if(b != this.block) {
+			this.block.close();
+		}
+		
+		if(msg == null) return false;
+		
+		this.blockNumber = blockNo;
+		this.offset = pos; 
+		this.block = b; 
+		this.messageNumber = msg.messageNumber;
+		
 		return true;
 	}   
 	
@@ -157,9 +229,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		if(tagLen > 0){
 			this.filter = new String(tag, 1, tagLen);
 			calcFilter(this.filter); 
-		} 
-		this.ackWindow = buffer.getInt();
-		this.ackTimeout = buffer.getLong();
+		}
 	}
 	
 	@Override
@@ -171,10 +241,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		
 		//write tag
 		buffer.position(FILTER_POS);
-		buffer.put((byte)0); //tag default to null 
-		buffer.position(ACK_POS);
-		buffer.putInt(this.ackWindow);
-		buffer.putLong(this.ackTimeout);
+		buffer.put((byte)0); //tag default to null
 	}   
 	 
 	public int getOffset() {
@@ -249,37 +316,5 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	
 	public String getIndexName(){
 		return this.index.getName();
-	}
-	
-	public int getAckWindow() {
-		return this.ackWindow;
-	}
-	
-	public void setAckWindow(Integer window) {
-		if(window == null) return;
-		lock.lock();
-		try{  
-			this.ackWindow = window;
-			buffer.position(ACK_POS);
-			buffer.putInt(window);
-		} finally {
-			lock.unlock();
-		}  
-	}
-	
-	public long getAckTimeout() {
-		return this.ackTimeout;
-	}
-	
-	public void setAckTimeout(Long timeout) {
-		if(timeout == null) return;
-		lock.lock();
-		try{  
-			this.ackTimeout = timeout;
-			buffer.position(ACK_POS+4);
-			buffer.putLong(timeout);
-		} finally {
-			lock.unlock();
-		}  
 	}
 } 
