@@ -261,22 +261,21 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				}
 				
 				String groupName = msg.getConsumeGroup();  
-				if(groupName != null){  //ConsumeGroup specified
-					ConsumeGroup consumeGroup = new ConsumeGroup(msg);  
-					ConsumeGroupInfo info = mq.declareGroup(consumeGroup); 
+				ConsumeGroup consumeGroup = new ConsumeGroup(msg); 
+				if(consumeGroup.getGroupNameAuto() != null && consumeGroup.getGroupNameAuto()) {
+					//Internally generated ConsumeGroup enabled
+					ConsumeGroupInfo info = mq.declareGroup(consumeGroup);  
 					ReplyKit.replyJson(msg, sess, info); 
 				} else { 
-					ConsumeGroup consumeGroup = new ConsumeGroup(msg); 
-					if(consumeGroup.getGroupNameAuto() != null && consumeGroup.getGroupNameAuto()) {
-						//Internally generated ConsumeGroup enabled
-						ConsumeGroupInfo info = mq.declareGroup(consumeGroup);  
+					if(groupName != null){  //ConsumeGroup specified 
+						ConsumeGroupInfo info = mq.declareGroup(consumeGroup); 
 						ReplyKit.replyJson(msg, sess, info); 
-					} else { 
+					} else {
 						TopicInfo topicInfo = mq.topicInfo();
 				    	topicInfo.serverAddress = mqServer.getServerAddress();  
 						ReplyKit.replyJson(msg, sess, topicInfo);
 					}
-				}  
+				}
 				
 			} catch (Exception e) { 
 				log.error(e.getMessage(), e);

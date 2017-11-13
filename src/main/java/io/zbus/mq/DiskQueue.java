@@ -52,7 +52,7 @@ public class DiskQueue extends AbstractQueue{
 	  
 	public ConsumeGroupInfo declareGroup(ConsumeGroup ctrl) throws Exception{
 		String consumeGroup = ctrl.getGroupName();
-		if(consumeGroup == null){ 
+		if(consumeGroup == null || (ctrl.getGroupNameAuto() != null && ctrl.getGroupNameAuto()==true)){ 
 			consumeGroup = nextGroupName();
 		}
 		Integer mask = ctrl.getMask();
