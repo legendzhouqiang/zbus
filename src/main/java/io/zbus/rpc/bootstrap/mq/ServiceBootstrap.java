@@ -31,6 +31,7 @@ public class ServiceBootstrap implements Closeable{
 	protected Consumer consumer;
 	protected RpcProcessor processor = new RpcProcessor(); 
 	protected boolean autoDiscover = false;
+	protected boolean verbose = false;
 	 
 	protected boolean responseTypeInfo = false; 
 	
@@ -71,6 +72,10 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	}
 	
+	public ServiceBootstrap verbose(boolean verbose) {
+		this.verbose = verbose;
+		return this;
+	} 
 	
 	public ServiceBootstrap storePath(String mqPath){
 		if(serverConfig == null){
@@ -126,6 +131,7 @@ public class ServiceBootstrap implements Closeable{
 				serverConfig.addToken(token, consumerConfig.getTopic().getName());
 				serverConfig.getAuthProvider().setEnabled(true); //enable auth
 			} 
+			serverConfig.setVerbose(verbose);
 			mqServer = new MqServer(serverConfig); 
 			mqServer.start();
 			broker = new Broker(mqServer, token);  

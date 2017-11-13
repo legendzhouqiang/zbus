@@ -26,6 +26,7 @@ public class ServiceBootstrap implements Closeable {
 	protected EventLoop eventLoop;
 	 
 	protected boolean responseTypeInfo = false; 
+	protected boolean verbose = false;
 	
 	public ServiceBootstrap responseTypeInfo(boolean responseTypeInfo){  
 		this.responseTypeInfo = responseTypeInfo;
@@ -50,6 +51,11 @@ public class ServiceBootstrap implements Closeable {
 	 
 	public ServiceBootstrap autoDiscover(boolean autoDiscover) {
 		this.autoDiscover = autoDiscover;
+		return this;
+	} 
+	
+	public ServiceBootstrap verbose(boolean verbose) {
+		this.verbose = verbose;
 		return this;
 	} 
 	
@@ -85,6 +91,7 @@ public class ServiceBootstrap implements Closeable {
 		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
 		RpcMessageHandler adaptor = new RpcMessageHandler(this.processor);
 		adaptor.setToken(this.token);
+		adaptor.setVerbose(this.verbose);
 		server.start(this.host, this.port, adaptor); 
 		
 		return this;

@@ -22,5 +22,5 @@ public class SpringClientBootstrap extends ClientBootstrap {
 	 
 	public void setServiceToken(String token){  
 		serviceToken(token);
-	}  
+	}   
 }

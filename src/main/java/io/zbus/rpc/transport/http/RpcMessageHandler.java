@@ -6,6 +6,8 @@ import java.util.Map;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.StrKit.UrlInfo;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.RpcProcessor;
 import io.zbus.transport.ServerAdaptor;
@@ -13,17 +15,28 @@ import io.zbus.transport.Session;
 import io.zbus.transport.http.Message;
 
 public class RpcMessageHandler extends ServerAdaptor {
+	private static final Logger log = LoggerFactory.getLogger(RpcMessageHandler.class); 
 	private final static String TOKEN_KEY = "token";
 	protected final RpcProcessor rpcProcessor;
 	private String token;
+	
+	private boolean verbose = false;
 	
 	public RpcMessageHandler(RpcProcessor rpcProcessor) {
 		this.rpcProcessor = rpcProcessor;
 	}
 	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+	
 	@Override
 	public void onMessage(Object message, Session sess) throws IOException { 
 		Message msg = (Message)message; 
+		if(verbose) {
+			log.info(""+msg);
+		}
+		
 		parseCookieToken(msg);
 		handleUrlMessage(msg);
 		

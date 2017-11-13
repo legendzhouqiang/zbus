@@ -97,4 +97,8 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	public void setAutoDiscover(boolean autoDiscover) {
 		autoDiscover(autoDiscover);
 	}
+	
+	public void setVerbose(boolean verbose){
+		verbose(verbose);
+	}
 }
