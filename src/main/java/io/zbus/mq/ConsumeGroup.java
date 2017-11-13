@@ -142,6 +142,11 @@ public class ConsumeGroup implements Cloneable {
 		}
 	}
 	
+	public boolean isAckEnabled(){
+		if(mask == null) return false;
+		return (mask & Protocol.MASK_ACK_REQUIRED) != 0;
+	}
+	
 	public Integer getAckWindow() {
 		return ackWindow;
 	}  

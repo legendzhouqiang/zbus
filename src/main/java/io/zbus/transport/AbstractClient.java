@@ -203,7 +203,7 @@ public abstract class AbstractClient<REQ extends Id, RES extends Id> extends Att
 		return this.invokeSync(req, this.invokeTimeout);
 	}
 	 
-	public RES invokeSync(REQ req, int timeout) throws IOException, InterruptedException {
+	public RES invokeSync(REQ req, long timeout) throws IOException, InterruptedException {
 		Ticket<REQ, RES> ticket = null;
 		try { 
 			ticket = sync.createTicket(req, timeout);

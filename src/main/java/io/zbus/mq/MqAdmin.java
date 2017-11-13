@@ -13,7 +13,7 @@ public class MqAdmin {
 	protected ServerSelector adminServerSelector;
 	 
 	protected String token; 
-	protected int invokeTimeout = 10000;  // 10 s
+	protected long invokeTimeout = 10000;  // 10 s
 	protected boolean verbose = false;
 	
 	public MqAdmin(MqConfig config){

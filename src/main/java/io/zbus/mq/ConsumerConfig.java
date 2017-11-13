@@ -1,12 +1,14 @@
 package io.zbus.mq;
  
+import java.util.concurrent.TimeUnit;
+
 import io.zbus.mq.Broker.ServerSelector;
 
 public class ConsumerConfig extends MqConfig {  
 	protected Topic topic; 
 	protected ConsumeGroup consumeGroup; 
 	protected Integer consumeWindow; 
-	protected int consumeTimeout = 120000;// 2 minutes  
+	protected long consumeTimeout = 120000;// 2 minutes  
 	
 	protected MessageHandler messageHandler;   
 	protected int connectionCount = 1;  
@@ -49,12 +51,16 @@ public class ConsumerConfig extends MqConfig {
 		this.consumeWindow = consumeWindow;
 	} 
 
-	public int getConsumeTimeout() {
+	public long getConsumeTimeout() {
 		return consumeTimeout;
 	} 
 
-	public void setConsumeTimeout(int consumeTimeout) {
+	public void setConsumeTimeout(long consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
+	}
+	
+	public void setConsumeTimeout(TimeUnit unit, long duration) {
+		this.consumeTimeout = unit.toMillis(duration);
 	}
 
 	public Topic getTopic() {

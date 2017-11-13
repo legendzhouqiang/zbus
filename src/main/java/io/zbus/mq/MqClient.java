@@ -25,8 +25,8 @@ import io.zbus.transport.tcp.TcpClient.HeartbeatMessageBuilder;
 
 public class MqClient extends CompositeClient<Message, Message> {         
 	protected String token;      
-	protected int invokeTimeout = 3000;
-	protected int heartbeatInterval = 60000; //60s 
+	protected long invokeTimeout = 3000;
+	protected long heartbeatInterval = 60000; //60s 
 	
 	public MqClient(String address, final EventLoop loop){
 		ServerAddress serverAddress = new ServerAddress(address);
@@ -54,11 +54,11 @@ public class MqClient extends CompositeClient<Message, Message> {
 		buildSupport(serverAddress, loop, heartbeatInterval);
 	}
 	
-	public MqClient(ServerAddress serverAddress, final EventLoop loop, int heartbeatInterval){  
+	public MqClient(ServerAddress serverAddress, final EventLoop loop, long heartbeatInterval){  
 		buildSupport(serverAddress, loop, heartbeatInterval);
 	}
 	
-	private void buildSupport(ServerAddress serverAddress, final EventLoop loop, int heartbeatInterval){
+	private void buildSupport(ServerAddress serverAddress, final EventLoop loop, long heartbeatInterval){
 		this.token = serverAddress.getToken();
 		if(serverAddress.server != null){
 			support = new InProcClient<Message, Message>(serverAddress.server);
@@ -103,11 +103,11 @@ public class MqClient extends CompositeClient<Message, Message> {
 	}
 	
 	
-	public void setInvokeTimeout(int invokeTimeout) {
+	public void setInvokeTimeout(long invokeTimeout) {
 		this.invokeTimeout = invokeTimeout;
 	}
 	
-	public Message produce(Message msg, int timeout) throws IOException, InterruptedException{ 
+	public Message produce(Message msg, long timeout) throws IOException, InterruptedException{ 
 		msg.setCommand(Protocol.PRODUCE);
 		return invokeSync(msg, timeout);  
 	} 

@@ -29,7 +29,7 @@ public class Producer extends MqAdmin{
 		this(new ProducerConfig(broker));
 	} 
 	
-	public Message publish(Message msg, int timeout) throws IOException, InterruptedException {
+	public Message publish(Message msg, long timeout) throws IOException, InterruptedException {
 		MqClientPool[] poolArray = broker.selectClient(this.produceServerSelector, msg);
 		if(poolArray.length < 1){
 			throw new MqException("Missing MqClient for publishing message: " + msg);

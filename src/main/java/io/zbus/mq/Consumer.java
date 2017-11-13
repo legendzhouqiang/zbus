@@ -45,6 +45,10 @@ public class Consumer extends MqAdmin implements Closeable {
 		consumeCtrl.setConsumeWindow(config.getConsumeWindow());
 		consumeCtrl.setConsumeTimeout(config.getConsumeTimeout()); 
 		
+		if(consumeGroup.isAckEnabled() && consumeGroup.getAckTimeout() == null){ 
+			consumeGroup.setAckTimeout(config.getConsumeTimeout());
+		}
+		
 		this.messageHandler = config.getMessageHandler(); 
 		this.connectionCount = config.getConnectionCount(); 
 		

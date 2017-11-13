@@ -9,7 +9,7 @@ public class ConsumeCtrl implements Cloneable {
 	
 	private Integer consumeWindow; 
 
-	private int consumeTimeout = 10000;
+	private long consumeTimeout = 10000;
 	
 	public ConsumeCtrl(){
 		
@@ -83,11 +83,11 @@ public class ConsumeCtrl implements Cloneable {
 		this.consumeWindow = consumeWindow;
 	} 
 
-	public int getConsumeTimeout() {
+	public long getConsumeTimeout() {
 		return consumeTimeout;
 	}
 
-	public void setConsumeTimeout(int consumeTimeout) {
+	public void setConsumeTimeout(long consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
 	}
 

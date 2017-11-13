@@ -18,12 +18,13 @@ public class ConsumerExample {
 		Broker broker = new Broker("localhost:15555");   
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
-		config.setTopic("MyTopic"); 
+		config.setTopic("MyTopic");  
+		config.setConsumeTimeout(TimeUnit.SECONDS, 10);
 		
 		ConsumeGroup group = new ConsumeGroup(); //ConsumeGroup default to same as topic 
 		group.setAck(true);
 		group.setAckWindow(10);
-		group.setAckTimeout(TimeUnit.SECONDS, 10);
+		//group.setAckTimeout(TimeUnit.SECONDS, 10); //If not set, same as ConsumeTimeout
 		
 		config.setConsumeGroup(group); 
 		config.setMessageHandler(new MessageHandler() { 
@@ -31,7 +32,7 @@ public class ConsumerExample {
 			public void handle(Message msg, MqClient client) throws IOException {
 				System.out.println(msg);    
 				 
-				client.ack(msg);
+				//client.ack(msg);
 			}
 		});
 		

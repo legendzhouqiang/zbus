@@ -146,7 +146,7 @@ public class TcpClient<REQ extends Id, RES extends Id> extends AbstractClient<RE
 		} 
 	}   
 	
-	public synchronized void startHeartbeat(int intervalInMillis, HeartbeatMessageBuilder<REQ> builder){
+	public synchronized void startHeartbeat(long intervalInMillis, HeartbeatMessageBuilder<REQ> builder){
 		this.heartbeatMessageBuilder = builder;
 		if(heartbeator == null){
 			heartbeator = Executors.newSingleThreadScheduledExecutor();
