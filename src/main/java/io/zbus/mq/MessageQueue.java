@@ -25,6 +25,7 @@ public interface MessageQueue {
 
 	void produce(Message message) throws IOException;  
 	Message consume(String consumeGroup) throws IOException;  
+	void ack(Message message, Session session) throws IOException;
 	
 	void consume(Message message, Session session) throws IOException;   
 	void unconsume(Message message, Session session) throws IOException;   
@@ -181,6 +182,20 @@ abstract class AbstractQueue implements MessageQueue{
 		}   
 		group.removeSession(session); 
 	}
+	
+	public void ack(Message message, Session session) throws IOException {
+		String consumeGroup = message.getConsumeGroup();
+		if(consumeGroup == null){
+			consumeGroup = this.topic;
+		}  
+		AbstractConsumeGroup group = consumeGroups.get(consumeGroup);
+		if(group == null){ 
+			return;
+		}     
+		Long offset = message.getOffset();
+		group.ack(offset);
+		
+	}
 
 	@Override
 	public void consume(Message message, Session session) throws IOException {
@@ -242,16 +257,22 @@ abstract class AbstractQueue implements MessageQueue{
 		} 
 	}
 	
-	protected void dispatch(AbstractConsumeGroup group) throws IOException{  
-		while(group.pullQ.peek() != null && !group.isEnd()){
-			Message msg = null;
+	protected void dispatch(AbstractConsumeGroup group) throws IOException {   
+		while(group.pullQ.peek() != null){
+			Message msg = group.readTimeoutMessage();
+			if(msg == null && group.isEnd()) break;
+			
+			if(group.isNakFull()) break; //NAk message full
+			
 			PullSession pull = group.pullQ.poll(); 
 			if(pull == null) break; 
 			if( !pull.getSession().active() ){  
 				continue;
 			}  
+			if(msg == null) {
+				msg = group.read();
+			}
 			
-			msg = group.read();
 			if(msg == null){
 				group.pullQ.offer(pull);
 				break; 
@@ -261,7 +282,11 @@ abstract class AbstractQueue implements MessageQueue{
 			try {  
 				
 				if(group.isAckEnabled()) {
-					group.recordNak(msg.getOffset(), msg.getId());
+					try {
+						group.recordNak(msg.getOffset(), msg.getId());
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);  
+					}
 				} 
 				
 				Message pullMsg = pull.getPullMessage(); 
@@ -416,6 +441,14 @@ abstract class AbstractQueue implements MessageQueue{
 			}
 		}
 		
+		public Message readTimeoutMessage() throws IOException{
+			return null;
+		}
+		
+		public void ack(long offset) throws IOException{
+			
+		}
+		
 		public abstract Message read() throws IOException;
 		
 		public abstract Message read(long offset, String msgId) throws IOException;
@@ -430,6 +463,10 @@ abstract class AbstractQueue implements MessageQueue{
 			Integer mask = getMask();
 			if(mask == null) return false;
 			return (mask & Protocol.MASK_ACK_REQUIRED) != 0;
+		}
+		
+		public boolean isNakFull(){
+			return false;
 		}
 		
 		public void recordNak(Long offset, String msgId) {

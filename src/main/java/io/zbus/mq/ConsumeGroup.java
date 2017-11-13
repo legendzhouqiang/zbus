@@ -33,17 +33,21 @@ public class ConsumeGroup implements Cloneable {
 		startMsgId = msg.getGroupStartMsgId();
 		filter = msg.getGroupFilter();
 		mask = msg.getGroupMask();    
+		ackWindow = msg.getGroupAckWindow();
+		ackTimeout = msg.getGroupAckTimeout();
 	}
 	
 	public void writeToMessage(Message msg){
-		msg.setConsumeGroup(this.getGroupName());
-		msg.setGroupNameAuto(this.getGroupNameAuto());
-		msg.setGroupStartCopy(this.getStartCopy());
-		msg.setGroupFilter(this.getFilter());
-		msg.setGroupStartMsgId(this.getStartMsgId());
-		msg.setGroupStartOffset(this.getStartOffset()); 
-		msg.setGroupStartTime(this.getStartTime());
-		msg.setGroupMask(this.getMask()); 
+		msg.setConsumeGroup(this.groupName);
+		msg.setGroupNameAuto(this.groupNameAuto);
+		msg.setGroupStartCopy(this.startCopy);
+		msg.setGroupFilter(this.filter);
+		msg.setGroupStartMsgId(this.startMsgId);
+		msg.setGroupStartOffset(this.startOffset); 
+		msg.setGroupStartTime(this.startTime);
+		msg.setGroupMask(this.mask); 
+		msg.setGroupAckWindow(this.ackWindow);
+		msg.setGroupAckTimeout(this.ackTimeout);
 	}
 	
 	public ConsumeGroup asTempBroadcastGroup(){

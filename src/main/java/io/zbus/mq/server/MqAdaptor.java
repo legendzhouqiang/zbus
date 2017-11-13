@@ -177,8 +177,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	
 	private MessageHandler<Message> ackHandler = new MessageHandler<Message>() { 
 		@Override
-		public void handle(Message msg, Session sess) throws IOException {  
-			System.out.println(msg);
+		public void handle(Message msg, Session sess) throws IOException {   
 			MessageQueue mq = findMQ(msg, sess);
 			boolean ack = msg.isAck();
 			if(mq == null) {
@@ -187,6 +186,8 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 				}
 				return;  
 			}
+			
+			mq.ack(msg, sess);
 			
 			if(ack) {
 				ReplyKit.reply200(msg, sess);

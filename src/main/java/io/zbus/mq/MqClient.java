@@ -172,8 +172,7 @@ public class MqClient extends CompositeClient<Message, Message> {
 		Message msg = new Message();
 		msg.setCommand(Protocol.ACK);
 		msg.setTopic(res.getTopic());
-		msg.setConsumeGroup(res.getConsumeGroup());    
-		msg.setAckMsgId(res.getId());
+		msg.setConsumeGroup(res.getConsumeGroup());     
 		msg.setOffset(res.getOffset());
 		
 		try {
@@ -187,8 +186,7 @@ public class MqClient extends CompositeClient<Message, Message> {
 		Message msg = new Message();
 		msg.setCommand(Protocol.ACK);
 		msg.setTopic(res.getTopic());
-		msg.setConsumeGroup(res.getConsumeGroup());    
-		msg.setAckMsgId(res.getId());
+		msg.setConsumeGroup(res.getConsumeGroup());   
 		msg.setOffset(res.getOffset());
 		
 		msg.setAck(false); //No need to reply from server, Not ACK command.

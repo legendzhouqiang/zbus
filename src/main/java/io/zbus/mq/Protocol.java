@@ -63,6 +63,8 @@ public class Protocol {
 	public static final String GROUP_START_TIME     = "group_start_time";   
 	public static final String GROUP_FILTER         = "group_filter";  
 	public static final String GROUP_MASK           = "group_mask"; 
+	public static final String GROUP_ACK_WINDOW     = "group_ack_window"; 
+	public static final String GROUP_ACK_TIMEOUT    = "group_ack_timeout";
 	
 	public static final String CONSUME_OFFSET       = "consume_offset";
 	public static final String CONSUME_MSGID        = "consume_msgid";
@@ -70,8 +72,7 @@ public class Protocol {
 	
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";
-	public static final String ID      				= "id";	   
-	public static final String ACK_MSGID      		= "ack_msgid";	
+	public static final String ID      				= "id";	    
 	
 	public static final String HOST   			    = "host";   
 	public static final String ENCODING 			= "encoding"; 

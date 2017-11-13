@@ -85,6 +85,15 @@ public class DiskQueue extends AbstractQueue{
 		if(mask != null){
 			group.setMask(mask);
 		}
+		Integer ackWindow = ctrl.getAckWindow();
+		Long ackTimeout = ctrl.getAckTimeout();
+		
+		if(ackWindow != null) {
+			group.setAckWindow(ackWindow);
+		}
+		if(ackTimeout != null) { 
+			group.setAckTimeout(ackTimeout);
+		}
 		
 		if(ctrl.getStartOffset() != null){
 			boolean seekOk = group.seek(ctrl.getStartOffset(), ctrl.getStartMsgId());
@@ -200,6 +209,12 @@ public class DiskQueue extends AbstractQueue{
 			initNakQueue();
 		}
 		
+		@Override
+		public boolean isNakFull() { 
+			if(queueNak == null) return false;
+			return queueNak.remaining() <= 0;
+		}
+		
 		private void initNakQueue() throws IOException {
 			if(queueNak != null) return;
 			Integer mask = reader.getMask();
@@ -213,6 +228,23 @@ public class DiskQueue extends AbstractQueue{
 		}
 		
 		@Override
+		public void ack(long offset) throws IOException {
+			if(queueNak == null) return;
+			
+			queueNak.removeNak(offset);
+		}
+		
+		public void setAckWindow(Integer window) {
+			if(queueNak == null) return;
+			queueNak.setWindow(window);
+		}
+		
+		public void setAckTimeout(Long timeout) {
+			if(queueNak == null) return;
+			queueNak.setTimeout(timeout);
+		}
+		
+		@Override
 		public boolean isEnd() { 
 			try {
 				return reader.isEOF();
@@ -222,14 +254,18 @@ public class DiskQueue extends AbstractQueue{
 		}
 		
 		@Override
-		public Message read() throws IOException { 
+		public Message readTimeoutMessage() throws IOException {
 			DiskMessage data = null;
 			if(queueNak != null) {  
 				data = queueNak.pollTimeoutMessage();
 			}
-			if(data == null) {
-				data = reader.read();
-			}
+			if(data == null) return null;
+			return convert(data);
+		}
+		
+		@Override
+		public Message read() throws IOException { 
+			DiskMessage data = reader.read(); 
 			
 			if(data == null){
 				return null;

@@ -152,16 +152,7 @@ public class Message extends io.zbus.transport.http.Message {
 	public void setAck(boolean ack){
 		String value = ack? "1":"0";
 		this.setHeader(ACK, value);
-	} 
-	
-	public String getAckMsgId() {
-		return getHeader(ACK_MSGID);
-	}
-	
-	public Message setAckMsgId(String value) {
-		this.setHeader(ACK_MSGID, value);
-		return this;
-	} 
+	}  
 	
 	public String getTopic(){
 		return getHeader(Protocol.TOPIC); 
@@ -243,8 +234,8 @@ public class Message extends io.zbus.transport.http.Message {
 		String value = this.getHeader(CONSUME_MSGID);
 		return value;
 	} 
-	public Message setConsumeMsgId(String mq) {
-		this.setHeader(CONSUME_MSGID, mq);
+	public Message setConsumeMsgId(String value) {
+		this.setHeader(CONSUME_MSGID, value);
 		return this;
 	} 
 	
@@ -272,6 +263,27 @@ public class Message extends io.zbus.transport.http.Message {
 	} 
 	public Message setGroupStartCopy(String value) {
 		this.setHeader(GROUP_START_COPY, value);
+		return this;
+	}   
+	
+	public Integer getGroupAckWindow(){
+		String value = getHeader(GROUP_ACK_WINDOW);
+		if(value != null) return Integer.valueOf(value); 
+		return null;
+	} 
+	public Message setGroupAckWindow(Integer value) {
+		this.setHeader(GROUP_ACK_WINDOW, value);
+		return this;
+	} 
+	
+	public Long getGroupAckTimeout(){
+		String value = this.getHeader(GROUP_ACK_TIMEOUT);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	
+	public Message setGroupAckTimeout(Long value) {
+		this.setHeader(GROUP_ACK_TIMEOUT, value);
 		return this;
 	}   
 	
