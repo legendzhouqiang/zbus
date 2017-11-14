@@ -23,7 +23,41 @@
 package io.zbus.mq;
  
 
-import static io.zbus.mq.Protocol.*;
+import static io.zbus.mq.Protocol.ACK;
+import static io.zbus.mq.Protocol.COMMAND;
+import static io.zbus.mq.Protocol.CONSUME_GROUP;
+import static io.zbus.mq.Protocol.CONSUME_MSGID;
+import static io.zbus.mq.Protocol.CONSUME_OFFSET;
+import static io.zbus.mq.Protocol.CONSUME_WINDOW;
+import static io.zbus.mq.Protocol.GROUP_ACK_TIMEOUT;
+import static io.zbus.mq.Protocol.GROUP_ACK_WINDOW;
+import static io.zbus.mq.Protocol.GROUP_FILTER;
+import static io.zbus.mq.Protocol.GROUP_MASK;
+import static io.zbus.mq.Protocol.GROUP_NAME_AUTO;
+import static io.zbus.mq.Protocol.GROUP_START_COPY;
+import static io.zbus.mq.Protocol.GROUP_START_MSGID;
+import static io.zbus.mq.Protocol.GROUP_START_OFFSET;
+import static io.zbus.mq.Protocol.GROUP_START_TIME;
+import static io.zbus.mq.Protocol.HOST;
+import static io.zbus.mq.Protocol.OFFSET;
+import static io.zbus.mq.Protocol.ORIGIN_ID;
+import static io.zbus.mq.Protocol.ORIGIN_METHOD;
+import static io.zbus.mq.Protocol.ORIGIN_STATUS;
+import static io.zbus.mq.Protocol.ORIGIN_URL;
+import static io.zbus.mq.Protocol.RECVER;
+import static io.zbus.mq.Protocol.RETRY;
+import static io.zbus.mq.Protocol.SENDER;
+import static io.zbus.mq.Protocol.TAG;
+import static io.zbus.mq.Protocol.TIMESTAMP;
+import static io.zbus.mq.Protocol.TOKEN;
+import static io.zbus.mq.Protocol.TOPIC;
+import static io.zbus.mq.Protocol.TOPIC_MASK;
+import static io.zbus.mq.Protocol.VERSION;
+
+import java.util.Map;
+import java.util.Map.Entry;
+
+import io.zbus.kit.StrKit;
  
 
 public class Message extends io.zbus.transport.http.Message {    
@@ -328,6 +362,27 @@ public class Message extends io.zbus.transport.http.Message {
 		return this;
 	}    
 	
+	
+	public void parseCookieToken(){
+		String cookieString = this.getHeader("cookie");
+        if (cookieString != null) {
+        	Map<String, String> cookies = StrKit.kvp(cookieString, "[;]");
+        	if(cookies.containsKey(Protocol.TOKEN)){
+        		if(this.getToken() == null){
+        			this.setToken(cookies.get(Protocol.TOKEN));
+        		} 
+        	} 
+        }
+	}
+	
+	public void merge(Map<String, String> header){
+		for(Entry<String, String> e : header.entrySet()){
+			if(this.getHeader(e.getKey()) == null){
+				this.setHeader(e.getKey(), e.getValue());
+			}
+		}
+	}
+	
 	public static Message parse(byte[] data){
 		io.zbus.transport.http.Message message = io.zbus.transport.http.Message.parse(data);
 		return new Message(message);
@@ -336,5 +391,6 @@ public class Message extends io.zbus.transport.http.Message {
 	public static Message copyWithoutBody(Message msg){
 		io.zbus.transport.http.Message res = io.zbus.transport.http.Message.copyWithoutBody(msg);
 		return new Message(res);
-	}
+	} 
+	
 }

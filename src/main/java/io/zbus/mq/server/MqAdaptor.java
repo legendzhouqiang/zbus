@@ -639,6 +639,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     		return;
     	} 
     	UrlInfo info = StrKit.parseUrl(url); 
+    	msg.merge(info.params);
     	String cmd = info.params.get(Protocol.COMMAND); 
     	if(cmd == null) {
     		if(info.path.isEmpty()) {
@@ -702,20 +703,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 	        	msg.setBody(JsonKit.toJSONString(req));
         	}
     	} 
-	}
-    
-    private void parseCookieToken(Message msg){
-    	String cookieString = msg.getHeader("cookie");
-        if (cookieString != null) {
-        	Map<String, String> cookies = StrKit.kvp(cookieString, "[;]");
-        	if(cookies.containsKey(Protocol.TOKEN)){
-        		if(msg.getToken() == null){
-        			msg.setToken(cookies.get(Protocol.TOKEN));
-        		} 
-        	} 
-        }
-    }
-     
+	} 
     
     public void onMessage(Object obj, Session sess) throws IOException {  
     	Message msg = (Message)obj;  
@@ -725,7 +713,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		if(msg.getId() == null){
 			msg.setId(UUID.randomUUID().toString());
 		}
-		parseCookieToken(msg);
+		msg.parseCookieToken();
 		
 		if(messageLogger != null){
 			messageLogger.log(msg);

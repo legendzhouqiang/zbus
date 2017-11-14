@@ -64,3 +64,4 @@
 - TcpProxy，HttpProxy可随zbus带起来，在同一个进程中运行
 - RPC增加Verbose选项，方便开发状态console查看消息
 - MQ消费者端增加ACK确认,以及可配置的超时重发机制
+- MQ数据格式增加checksum完整性验证

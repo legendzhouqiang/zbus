@@ -72,13 +72,9 @@ class Block implements Closeable {
 		}
 	}
 	
-	private void writeToBuffer(DiskMessage data, ByteBuffer buf, int endOffset, long messageNumber) {  
-		buf.putLong(baseOffset+endOffset);
-		if(data.timestamp == null){
-			buf.putLong(System.currentTimeMillis()); 
-		} else {
-			buf.putLong(data.timestamp);
-		} 
+	private ByteBuffer writeChecksumPart(DiskMessage data, long messageNumber){
+		ByteBuffer buf = ByteBuffer.wrap(new byte[DiskMessage.CHECKSUM_SIZE]); 
+		
 		byte[] id = new byte[40]; 
 		if(data.id != null){
 			id[0] = (byte)data.id.length();
@@ -87,7 +83,11 @@ class Block implements Closeable {
 			id[0] = 0; 
 		}
 		buf.put(id); 
-		buf.putLong(data.corrOffset==null? 0 : data.corrOffset);
+		if(data.timestamp == null){
+			buf.putLong(System.currentTimeMillis()); 
+		} else {
+			buf.putLong(data.timestamp);
+		} 
 		buf.putLong(messageNumber); //write message number
 		
 		byte[] tag = new byte[128];
@@ -97,7 +97,18 @@ class Block implements Closeable {
 		} else { 
 			tag[0] = 0; 
 		}
-		buf.put(tag);  
+		buf.put(tag);
+		
+		return buf;
+	}
+	
+	private void writeToBuffer(DiskMessage data, ByteBuffer buf, int endOffset, long messageNumber) {  
+		buf.putLong(baseOffset+endOffset);
+		ByteBuffer checkedBuf = writeChecksumPart(data, messageNumber);
+		long checksum = BlockReadBuffer.calcChecksum(checkedBuf.array());
+		buf.putLong(checksum);
+		buf.put(checkedBuf.array()); 
+		
 		if(data.body != null){
 			buf.putInt(data.body.length);
 			buf.put(data.body);  
@@ -123,15 +134,21 @@ class Block implements Closeable {
 		DiskMessage data = new DiskMessage();  
     	
     	readBuffer.seek(pos);  
-		data.offset = readBuffer.readLong(); //offset  
-		data.timestamp = readBuffer.readLong(); 
+		data.offset = readBuffer.readLong(); //offset
+		data.checksum = readBuffer.readLong();
+		boolean valid = readBuffer.checksum(DiskMessage.CHECKSUM_SIZE, data.checksum); 
+		if(!valid){
+			throw new IllegalStateException("read position="+pos+" invalid");
+		}
 		byte[] id = new byte[40];
 		readBuffer.read(id); 
 		int idLen = id[0];
-		if(idLen>0){
+		if(idLen>0 && idLen < 40){
 			data.id = new String(id, 1, idLen);  
+		} else {
+			throw new IllegalStateException("Message.Id invalid length");
 		}
-		data.corrOffset = readBuffer.readLong();
+		data.timestamp = readBuffer.readLong();
 		data.messageNumber = readBuffer.readLong();
 		byte[] tag = new byte[128];
 		readBuffer.read(tag);

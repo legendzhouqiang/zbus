@@ -2,6 +2,8 @@ package io.zbus.mq.disk;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 public class BlockReadBuffer {
 	private static final int BUFFER_SIZE = 1024*1024; //TODO, Make it configuarable
@@ -49,6 +51,18 @@ public class BlockReadBuffer {
 		}  
 		
 		return n;
+	}
+	
+	public boolean checksum(int size, long checksum){
+		Checksum crc = new CRC32();
+		crc.update(buffer, offset, size);
+		return checksum == crc.getValue();
+	}
+	
+	public static long calcChecksum(byte[] data){
+		Checksum crc = new CRC32();
+		crc.update(data, 0, data.length);
+		return crc.getValue();
 	}
 	
 	public int read(byte[] data) throws IOException{   
