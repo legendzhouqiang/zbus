@@ -24,7 +24,7 @@ public class ConsumerExample {
 		ConsumeGroup group = new ConsumeGroup(); //ConsumeGroup default to same as topic 
 		group.setAck(true);    //Enable ACK. Disabled by default
 		group.setAckWindow(10);
-		group.setAckTimeout(10, TimeUnit.SECONDS); //If not set, same as ConsumeTimeout
+		//group.setAckTimeout(10, TimeUnit.SECONDS); //If not set, same as ConsumeTimeout
 		
 		config.setConsumeGroup(group); 
 		config.setMessageHandler(new MessageHandler() { 
