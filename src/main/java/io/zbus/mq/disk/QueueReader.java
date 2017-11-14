@@ -218,7 +218,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		} 
 	}
 	
-	public DiskMessage read(long offset, String msgId) throws IOException{ 
+	public DiskMessage read(long offset) throws IOException{ 
 		
 		lock.lock();
 		try{  
@@ -233,12 +233,7 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 				this.randomAccessBlock = index.createReadBlock(blockOffset.blockNumber);
 			}
 			int offsetInside = (int)(offset - blockOffset.offset.baseOffset);
-			DiskMessage msg = randomAccessBlock.readFully(offsetInside);
-			if(!msgId.equals(msg.id)) {
-				return null;
-			}
-			
-			return msg;
+			return randomAccessBlock.readFully(offsetInside);  
 		} finally {
 			lock.unlock();
 		} 

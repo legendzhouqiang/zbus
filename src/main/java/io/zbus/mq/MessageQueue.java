@@ -223,12 +223,16 @@ abstract class AbstractQueue implements MessageQueue{
 		}   
 		 
 		
-		Long offset = message.getConsumeOffset();
-		String msgId = message.getConsumeMsgId();
-		if(offset != null && msgId != null) { //handle case of pulling message with offset and id
-			Message res = group.read(offset, msgId);
+		Long offset = message.getOffset(); 
+		if(offset != null) { //handle case of pulling message with offset and id
+			Message res = null;
+			try{
+				res = group.read(offset);
+			} catch (IllegalStateException e) {
+				log.warn(e.getMessage());;
+			}
 			if(res == null) {
-				ReplyKit.reply404(message, session, "Message Not Found: offset=" + offset + ", id="+msgId);
+				ReplyKit.reply404(message, session, "Message Not Found: offset=" + offset);
 				return;
 			}
 			String pullMsgId = message.getId();
@@ -283,7 +287,7 @@ abstract class AbstractQueue implements MessageQueue{
 				
 				if(group.isAckEnabled()) {
 					try {
-						group.recordNak(msg.getOffset(), msg.getId(), msg.getRetry());
+						group.recordNak(msg.getOffset(),msg.getRetry());
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);  
 					}
@@ -451,7 +455,7 @@ abstract class AbstractQueue implements MessageQueue{
 		
 		public abstract Message read() throws IOException;
 		
-		public abstract Message read(long offset, String msgId) throws IOException;
+		public abstract Message read(long offset) throws IOException;
 
 		public abstract boolean isEnd();
 		
@@ -469,7 +473,7 @@ abstract class AbstractQueue implements MessageQueue{
 			return false;
 		}
 		
-		public void recordNak(Long offset, String msgId, Integer retryCount) {
+		public void recordNak(Long offset, Integer retryCount) {
 			
 		}
 		

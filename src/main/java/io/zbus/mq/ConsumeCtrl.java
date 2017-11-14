@@ -4,8 +4,7 @@ public class ConsumeCtrl implements Cloneable {
 	private String topic;
 	private String consumeGroup;  
 	
-	private Long consumeOffset;   
-	private String consumeMsgId; 
+	private Long offset;    
 	
 	private Integer consumeWindow; 
 
@@ -18,30 +17,16 @@ public class ConsumeCtrl implements Cloneable {
 	public ConsumeCtrl(Message msg){ 
 		topic = msg.getTopic();
 		consumeGroup = msg.getConsumeGroup();  
-		consumeMsgId = msg.getConsumeMsgId();
-		consumeOffset = msg.getConsumeOffset(); 
+		offset = msg.getOffset(); 
 		consumeWindow = msg.getConsumeWindow();
 	}
 	
 	public void writeToMessage(Message msg){
 		msg.setTopic(this.getTopic());
 		msg.setConsumeGroup(this.consumeGroup);    
-		msg.setConsumeMsgId(this.consumeMsgId);
-		msg.setConsumeOffset(this.consumeOffset);
+		msg.setOffset(this.offset);
 		msg.setConsumeWindow(this.consumeWindow);
-	} 
-	
-	
-	public void setLocation(Long offset, String msgId) {
-		this.consumeOffset = offset;
-		this.consumeMsgId = msgId;
-	}
-	
-	public void clearLocation() {
-		this.consumeOffset = null;
-		this.consumeMsgId = null;
-	}
-	 
+	}  
 	
 	public String getTopic() {
 		return topic;
@@ -57,23 +42,7 @@ public class ConsumeCtrl implements Cloneable {
 
 	public void setConsumeGroup(String consumeGroup) {
 		this.consumeGroup = consumeGroup;
-	}
-
-	public Long getConsumeOffset() {
-		return consumeOffset;
-	}
-
-	public void setConsumeOffset(Long consumeOffset) {
-		this.consumeOffset = consumeOffset;
-	}
-
-	public String getConsumeMsgId() {
-		return consumeMsgId;
-	}
-
-	public void setConsumeMsgId(String consumeMsgId) {
-		this.consumeMsgId = consumeMsgId;
-	}
+	} 
 
 	public Integer getConsumeWindow() {
 		return consumeWindow;
@@ -89,6 +58,14 @@ public class ConsumeCtrl implements Cloneable {
 
 	public void setConsumeTimeout(long consumeTimeout) {
 		this.consumeTimeout = consumeTimeout;
+	} 
+
+	public Long getOffset() {
+		return offset;
+	}
+
+	public void setOffset(Long offset) {
+		this.offset = offset;
 	}
 
 	@Override

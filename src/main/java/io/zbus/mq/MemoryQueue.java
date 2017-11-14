@@ -117,7 +117,7 @@ public class MemoryQueue extends AbstractQueue {
 		} 
 		
 		@Override
-		public Message read(long offset, String msgId) { 
+		public Message read(long offset) { 
 			return null;
 		}
 		

@@ -144,8 +144,7 @@ public class MqClient extends CompositeClient<Message, Message> {
 		msg.setCommand(Protocol.CONSUME);
 		msg.setTopic(ctrl.getTopic());
 		msg.setConsumeGroup(ctrl.getConsumeGroup());
-		msg.setConsumeMsgId(ctrl.getConsumeMsgId());
-		msg.setConsumeOffset(ctrl.getConsumeOffset());
+		msg.setOffset(ctrl.getOffset());
 		msg.setConsumeWindow(ctrl.getConsumeWindow()); 
 		
 		Message res = invokeSync(msg, invokeTimeout);

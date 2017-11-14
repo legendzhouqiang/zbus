@@ -66,8 +66,6 @@ public class Protocol {
 	public static final String GROUP_ACK_WINDOW     = "group_ack_window"; 
 	public static final String GROUP_ACK_TIMEOUT    = "group_ack_timeout";
 	
-	public static final String CONSUME_OFFSET       = "consume_offset";
-	public static final String CONSUME_MSGID        = "consume_msgid";
 	public static final String CONSUME_WINDOW       = "consume_window";  
 	
 	public static final String SENDER   			= "sender"; 

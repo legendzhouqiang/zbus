@@ -23,36 +23,7 @@
 package io.zbus.mq;
  
 
-import static io.zbus.mq.Protocol.ACK;
-import static io.zbus.mq.Protocol.COMMAND;
-import static io.zbus.mq.Protocol.CONSUME_GROUP;
-import static io.zbus.mq.Protocol.CONSUME_MSGID;
-import static io.zbus.mq.Protocol.CONSUME_OFFSET;
-import static io.zbus.mq.Protocol.CONSUME_WINDOW;
-import static io.zbus.mq.Protocol.GROUP_ACK_TIMEOUT;
-import static io.zbus.mq.Protocol.GROUP_ACK_WINDOW;
-import static io.zbus.mq.Protocol.GROUP_FILTER;
-import static io.zbus.mq.Protocol.GROUP_MASK;
-import static io.zbus.mq.Protocol.GROUP_NAME_AUTO;
-import static io.zbus.mq.Protocol.GROUP_START_COPY;
-import static io.zbus.mq.Protocol.GROUP_START_MSGID;
-import static io.zbus.mq.Protocol.GROUP_START_OFFSET;
-import static io.zbus.mq.Protocol.GROUP_START_TIME;
-import static io.zbus.mq.Protocol.HOST;
-import static io.zbus.mq.Protocol.OFFSET;
-import static io.zbus.mq.Protocol.ORIGIN_ID;
-import static io.zbus.mq.Protocol.ORIGIN_METHOD;
-import static io.zbus.mq.Protocol.ORIGIN_STATUS;
-import static io.zbus.mq.Protocol.ORIGIN_URL;
-import static io.zbus.mq.Protocol.RECVER;
-import static io.zbus.mq.Protocol.RETRY;
-import static io.zbus.mq.Protocol.SENDER;
-import static io.zbus.mq.Protocol.TAG;
-import static io.zbus.mq.Protocol.TIMESTAMP;
-import static io.zbus.mq.Protocol.TOKEN;
-import static io.zbus.mq.Protocol.TOPIC;
-import static io.zbus.mq.Protocol.TOPIC_MASK;
-import static io.zbus.mq.Protocol.VERSION;
+import static io.zbus.mq.Protocol.*;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -262,26 +233,7 @@ public class Message extends io.zbus.transport.http.Message {
 	public Message setGroupStartMsgId(String mq) {
 		this.setHeader(GROUP_START_MSGID, mq);
 		return this;
-	} 
-	
-	public String getConsumeMsgId(){
-		String value = this.getHeader(CONSUME_MSGID);
-		return value;
-	} 
-	public Message setConsumeMsgId(String value) {
-		this.setHeader(CONSUME_MSGID, value);
-		return this;
-	} 
-	
-	public Long getConsumeOffset(){
-		String value = this.getHeader(CONSUME_OFFSET);
-		if(value == null) return null;
-		return Long.valueOf(value);
-	} 
-	public Message setConsumeOffset(Long value) {
-		this.setHeader(CONSUME_OFFSET, value);
-		return this;
-	}   
+	}  
 	
 	public Long getGroupStartTime(){
 		String value = this.getHeader(GROUP_START_TIME);

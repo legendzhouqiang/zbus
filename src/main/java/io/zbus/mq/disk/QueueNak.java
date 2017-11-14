@@ -111,7 +111,7 @@ public class QueueNak extends MappedFile {
 		NakRecord nak = pollTimeoutNak();
 		if(nak == null) return null;
  
-		DiskMessage msg = queueReader.read(nak.offset, nak.msgId); 
+		DiskMessage msg = queueReader.read(nak.offset); 
 		return new TimeoutMessage(msg, nak);
 	}
 	
@@ -125,18 +125,12 @@ public class QueueNak extends MappedFile {
 		}
 	}
 	
-	public void addNak(long offset, String msgId, Integer retry) {
+	public void addNak(long offset, Integer retry) {
 		try {
-			lock.lock(); 
-			if(msgId == null) {
-				throw new IllegalArgumentException("msgId is null");
-			}
+			lock.lock();  
 			
 			NakRecord nak = getNak(offset);
-			if(nak != null) {
-				if(!msgId.equals(nak.msgId)) {
-					throw new IllegalStateException("msgId not matched");
-				} 
+			if(nak != null) { 
 				nak.updatedTime = System.currentTimeMillis();
 				writeNakUnsafe(nak);
 				return;
@@ -151,8 +145,7 @@ public class QueueNak extends MappedFile {
 				throw new IllegalStateException("NAK entry full");
 			}
 			nak.entryNumber = entryNumber;
-			nak.offset = offset;
-			nak.msgId = msgId; 
+			nak.offset = offset; 
 			nak.status = 1;
 			nak.retryCount = retry==null? 1 : retry+1;
 			
@@ -226,14 +219,7 @@ public class QueueNak extends MappedFile {
 		int pos = nakPosition(nak.entryNumber);
 		buffer.position(pos); 
 		buffer.put(nak.status);
-		buffer.putLong(nak.offset);
-		if(nak.msgId == null) {
-			buffer.put((byte)0);
-		} else {
-			buffer.put((byte)nak.msgId.length());
-			buffer.put(nak.msgId.getBytes());
-		}
-		buffer.position(pos + NakRecord.RetryCountPos);
+		buffer.putLong(nak.offset); 
 		buffer.putInt(nak.retryCount);
 		buffer.putLong(nak.updatedTime); 
 	} 
@@ -243,17 +229,8 @@ public class QueueNak extends MappedFile {
 		nak.entryNumber = entryNumber;
 	
 		int pos = nakPosition(entryNumber);
-		buffer.position(pos); 
-		
-		nak.status = buffer.get();
-		nak.offset = buffer.getLong();
-		int len = buffer.get();
-		if(len>0) {
-			byte[] msgId = new byte[len];
-			buffer.get(msgId);
-			nak.msgId = new String(msgId);
-		}
-		buffer.position(pos + NakRecord.RetryCountPos);
+		buffer.position(pos);  
+		nak.offset = buffer.getLong(); 
 		nak.retryCount = buffer.getInt();
 		nak.updatedTime = buffer.getLong(); 
 		
@@ -271,17 +248,13 @@ public class QueueNak extends MappedFile {
 	
 	public static class NakRecord {
 		public byte status;     //1   0 - invalid, 1 - valid
-		public long offset;	    //8
-		public String msgId;    //40, max 39
+		public long offset;	    //8 
 		public int retryCount;  
 		public long updatedTime = System.currentTimeMillis(); 
 		
 		public int entryNumber; //entry number, offset from 0, not persisted
-		
-		
-		public final static int MsgIdMaxLen = 39;
-		public final static int RetryCountPos = 1 + 8 + 1 + MsgIdMaxLen;
-		public final static int Size = 1 + 8 + 1 + MsgIdMaxLen + 4 + 8; //61
+
+		public final static int Size = 1 + 8 + 4 + 8; //21
 	}
 	
 	private static class NakRecordComparator implements Comparator<NakRecord>{

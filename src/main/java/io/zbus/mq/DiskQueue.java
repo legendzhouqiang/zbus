@@ -278,8 +278,8 @@ public class DiskQueue extends AbstractQueue{
 		} 
 		
 		@Override
-		public Message read(long offset, String msgId) throws IOException {
-			DiskMessage data = reader.read(offset, msgId);
+		public Message read(long offset) throws IOException {
+			DiskMessage data = reader.read(offset);
 			if(data == null) {
 				return null;
 			}
@@ -339,9 +339,9 @@ public class DiskQueue extends AbstractQueue{
 		}
 		
 		@Override
-		public void recordNak(Long offset, String msgId, Integer retryCount) {
+		public void recordNak(Long offset, Integer retryCount) {
 			 if(queueNak != null && offset != null) {
-				 queueNak.addNak(offset, msgId, retryCount);
+				 queueNak.addNak(offset, retryCount);
 			 } 
 		}
 		

@@ -18,7 +18,7 @@ public class QueueNakTest {
 		Iterator<NakRecord> iter = q.iterator();
 		while(iter.hasNext()) {
 			NakRecord nak = iter.next();
-			System.out.println(nak.msgId);
+			System.out.println(nak.offset);
 		} 
 		
 		

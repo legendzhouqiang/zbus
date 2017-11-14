@@ -32,7 +32,7 @@ public class ConsumerExample {
 			public void handle(Message msg, MqClient client) throws IOException {
 				System.out.println(msg);    
 				 
-				client.ack(msg); //If no ack, message will be consumed again after timeout
+				//client.ack(msg); //If no ack, message will be consumed again after timeout
 			}
 		});
 		
