@@ -102,7 +102,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		
 		registerHandler(Protocol.SSL, sslHandler); 
 		
-		
+		if(false){
 		//Monitor/Management
 		registerHandler(Protocol.HOME, homeHandler);  
 		registerHandler("favicon.ico", faviconHandler);
@@ -114,6 +114,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		registerHandler(Protocol.IMG, imgHandler); 
 		registerHandler(Protocol.PAGE, pageHandler);
 		registerHandler(Protocol.PING, pingHandler);   
+		}
 		
 		registerHandler(Message.HEARTBEAT, heartbeatHandler);     
 	}   

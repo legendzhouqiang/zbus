@@ -19,12 +19,12 @@ public class ConsumerExample {
 		
 		ConsumerConfig config = new ConsumerConfig(broker);
 		config.setTopic("MyTopic");  
-		config.setConsumeTimeout(TimeUnit.SECONDS, 10);
+		config.setConsumeTimeout(10, TimeUnit.SECONDS);
 		
 		ConsumeGroup group = new ConsumeGroup(); //ConsumeGroup default to same as topic 
 		group.setAck(true);    //Enable ACK. Disabled by default
 		group.setAckWindow(10);
-		//group.setAckTimeout(TimeUnit.SECONDS, 10); //If not set, same as ConsumeTimeout
+		group.setAckTimeout(10, TimeUnit.SECONDS); //If not set, same as ConsumeTimeout
 		
 		config.setConsumeGroup(group); 
 		config.setMessageHandler(new MessageHandler() { 

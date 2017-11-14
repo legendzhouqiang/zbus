@@ -59,7 +59,7 @@ public class ConsumerConfig extends MqConfig {
 		this.consumeTimeout = consumeTimeout;
 	}
 	
-	public void setConsumeTimeout(TimeUnit unit, long duration) {
+	public void setConsumeTimeout(long duration, TimeUnit unit) {
 		this.consumeTimeout = unit.toMillis(duration);
 	}
 

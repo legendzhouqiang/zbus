@@ -159,7 +159,7 @@ public class ConsumeGroup implements Cloneable {
 	public void setAckTimeout(Long ackTimeout) {
 		this.ackTimeout = ackTimeout;
 	}
-	public void setAckTimeout(TimeUnit unit, long duration) {
+	public void setAckTimeout(long duration, TimeUnit unit) {
 		setAckTimeout(unit.toMillis(duration));
 	}
 
