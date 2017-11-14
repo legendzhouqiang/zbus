@@ -151,7 +151,7 @@ public class ServiceBootstrap implements Closeable{
 		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
 		MessageHandler rpcHandler = new RpcMessageHandler(this.processor);
 		   
-		consumerConfig.setTopicMask(mask | Protocol.MASK_RPC); 
+		consumerConfig.setTopicMask((mask | Protocol.MASK_RPC) & ~Protocol.MASK_ACK_REQUIRED); 
 		consumerConfig.setMessageHandler(rpcHandler);     
 		consumer = new Consumer(consumerConfig);
 		

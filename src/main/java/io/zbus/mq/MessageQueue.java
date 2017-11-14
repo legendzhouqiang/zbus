@@ -283,7 +283,7 @@ abstract class AbstractQueue implements MessageQueue{
 				
 				if(group.isAckEnabled()) {
 					try {
-						group.recordNak(msg.getOffset(), msg.getId());
+						group.recordNak(msg.getOffset(), msg.getId(), msg.getRetry());
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);  
 					}
@@ -469,7 +469,7 @@ abstract class AbstractQueue implements MessageQueue{
 			return false;
 		}
 		
-		public void recordNak(Long offset, String msgId) {
+		public void recordNak(Long offset, String msgId, Integer retryCount) {
 			
 		}
 		

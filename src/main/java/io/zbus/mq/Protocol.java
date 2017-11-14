@@ -72,7 +72,9 @@ public class Protocol {
 	
 	public static final String SENDER   			= "sender"; 
 	public static final String RECVER   			= "recver";
-	public static final String ID      				= "id";	    
+	public static final String ID      				= "id";	
+	public static final String TIMESTAMP      	    = "timestamp";	//timestamp when message saved in broker
+	public static final String RETRY      	        = "retry";	    //NAK message retry count
 	
 	public static final String HOST   			    = "host";   
 	public static final String ENCODING 			= "encoding"; 

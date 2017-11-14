@@ -22,7 +22,7 @@ public class ConsumerExample {
 		config.setConsumeTimeout(TimeUnit.SECONDS, 10);
 		
 		ConsumeGroup group = new ConsumeGroup(); //ConsumeGroup default to same as topic 
-		group.setAck(true);
+		group.setAck(true);    //Enable ACK. Disabled by default
 		group.setAckWindow(10);
 		//group.setAckTimeout(TimeUnit.SECONDS, 10); //If not set, same as ConsumeTimeout
 		
@@ -32,7 +32,7 @@ public class ConsumerExample {
 			public void handle(Message msg, MqClient client) throws IOException {
 				System.out.println(msg);    
 				 
-				//client.ack(msg);
+				client.ack(msg); //If no ack, message will be consumed again after timeout
 			}
 		});
 		

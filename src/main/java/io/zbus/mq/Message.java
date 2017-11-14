@@ -306,6 +306,28 @@ public class Message extends io.zbus.transport.http.Message {
 		return this;
 	}    
 	
+	public Long getTimestamp() {
+		String value = this.getHeader(TIMESTAMP);
+		if(value == null) return null;
+		return Long.valueOf(value);
+	} 
+	
+	public Message setTimestamp(Long value) {
+		this.setHeader(TIMESTAMP, value);
+		return this;
+	}    
+	
+	public Integer getRetry() {
+		String value = this.getHeader(RETRY);
+		if(value == null) return null;
+		return Integer.valueOf(value);
+	} 
+	
+	public Message setRetry(Integer value) {
+		this.setHeader(RETRY, value);
+		return this;
+	}    
+	
 	public static Message parse(byte[] data){
 		io.zbus.transport.http.Message message = io.zbus.transport.http.Message.parse(data);
 		return new Message(message);

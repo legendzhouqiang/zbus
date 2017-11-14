@@ -107,14 +107,25 @@ public class QueueNak extends MappedFile {
 		return null;
 	}
 	
-	public DiskMessage pollTimeoutMessage() throws IOException {
+	public TimeoutMessage pollTimeoutMessage() throws IOException {
 		NakRecord nak = pollTimeoutNak();
 		if(nak == null) return null;
  
-		return queueReader.read(nak.offset, nak.msgId); 
+		DiskMessage msg = queueReader.read(nak.offset, nak.msgId); 
+		return new TimeoutMessage(msg, nak);
 	}
 	
-	public void addNak(long offset, String msgId) {
+	public static class TimeoutMessage{
+		public DiskMessage diskMessage;
+		public NakRecord nakRecord;
+		
+		public TimeoutMessage(DiskMessage diskMessage, NakRecord nakRecord){
+			this.diskMessage = diskMessage;
+			this.nakRecord = nakRecord;
+		}
+	}
+	
+	public void addNak(long offset, String msgId, Integer retry) {
 		try {
 			lock.lock(); 
 			if(msgId == null) {
@@ -125,8 +136,7 @@ public class QueueNak extends MappedFile {
 			if(nak != null) {
 				if(!msgId.equals(nak.msgId)) {
 					throw new IllegalStateException("msgId not matched");
-				}
-				nak.retryCount++;
+				} 
 				nak.updatedTime = System.currentTimeMillis();
 				writeNakUnsafe(nak);
 				return;
@@ -144,6 +154,7 @@ public class QueueNak extends MappedFile {
 			nak.offset = offset;
 			nak.msgId = msgId; 
 			nak.status = 1;
+			nak.retryCount = retry==null? 1 : retry+1;
 			
 			queue.add(nak);
 			

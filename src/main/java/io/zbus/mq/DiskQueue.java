@@ -16,6 +16,7 @@ import io.zbus.mq.disk.Index;
 import io.zbus.mq.disk.QueueNak;
 import io.zbus.mq.disk.QueueReader;
 import io.zbus.mq.disk.QueueWriter;
+import io.zbus.mq.disk.QueueNak.TimeoutMessage;
 import io.zbus.transport.Session;
 
 
@@ -255,12 +256,14 @@ public class DiskQueue extends AbstractQueue{
 		
 		@Override
 		public Message readTimeoutMessage() throws IOException {
-			DiskMessage data = null;
+			TimeoutMessage data = null; 
 			if(queueNak != null) {  
 				data = queueNak.pollTimeoutMessage();
 			}
 			if(data == null) return null;
-			return convert(data);
+			Message message = convert(data.diskMessage);
+			message.setRetry(data.nakRecord.retryCount);
+			return message;
 		}
 		
 		@Override
@@ -288,7 +291,8 @@ public class DiskQueue extends AbstractQueue{
 			if(msg == null){ 
 				log.warn("data read from queue can not be serialized back to Message type");
 			} else {
-				msg.setOffset(data.offset);   
+				msg.setOffset(data.offset);  
+				msg.setTimestamp(data.timestamp);
 			}
 			return msg;
 		}
@@ -335,9 +339,9 @@ public class DiskQueue extends AbstractQueue{
 		}
 		
 		@Override
-		public void recordNak(Long offset, String msgId) {
+		public void recordNak(Long offset, String msgId, Integer retryCount) {
 			 if(queueNak != null && offset != null) {
-				 queueNak.addNak(offset, msgId);
+				 queueNak.addNak(offset, msgId, retryCount);
 			 } 
 		}
 		

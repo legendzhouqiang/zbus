@@ -27,7 +27,7 @@ public class RpcService {
 		 .connectionCount(4)   // parallel connection count
 		 .serviceMask(Protocol.MASK_DISK)
 		 .responseTypeInfo(false)
-		 .verbose(false)
+		 .verbose(true)
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();
