@@ -244,3 +244,7 @@ td div.num{
 .login .token{
 	width: 300px;
 }
+
+.hide{
+	display: none;
+}

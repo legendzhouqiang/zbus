@@ -25,6 +25,7 @@ package io.zbus.kit;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
 import java.util.regex.Matcher;
@@ -129,7 +130,11 @@ public class NetKit {
 	}
 
 	public static String getLocalIp() {
-		return getLocalIp("*>10>172>192>127");
+		try {
+			return InetAddress.getLocalHost().getHostAddress().toString();
+		} catch (UnknownHostException e) { 
+			return getLocalIp("*>10>172>192>127"); 
+		} 
 	}
 
 	public static String remoteAddress(SocketChannel channel) {

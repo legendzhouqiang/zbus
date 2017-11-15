@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<zbus>
-
+<zbus> 
 	<serverHost>0.0.0.0</serverHost>  
 	<serverPort>15555</serverPort>  
-	<serverName></serverName> <!-- Public IP/Domain name -->   
+	<serverName></serverName> <!-- Public IP/Domain name -->  
+	<monitor enabled="true" port="15555"/> <!-- If port not configured, same as server, could be the same port! -->  
  
  	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
  
@@ -15,7 +15,7 @@
 	
 	<trackerOnly>false</trackerOnly> 
 	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->
-	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds -->
+	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds --> 
 	
 	<auth enabled="false">  
 		<token value="admin" name="Admin" operation="admin"/> 

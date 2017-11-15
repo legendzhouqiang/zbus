@@ -57,6 +57,9 @@ public class MqServer extends TcpServer {
 	private HttpProxy httpProxy;
 	private TcpProxy tcpProxy;
 	
+	private TcpServer monitorServer;
+	private MonitorAdaptor monitorAdaptor = null;
+	
 	private AtomicLong infoVersion = new AtomicLong(System.currentTimeMillis());
 	
 	public MqServer(){
@@ -123,10 +126,32 @@ public class MqServer extends TcpServer {
 			}
 		}, 1000, config.getCleanMqInterval(), TimeUnit.MILLISECONDS);   
 		
-		tracker = new Tracker(this);
+		tracker = new Tracker(this); 
 		
+		if(config.isMonitorEnabled()){
+			Integer monitorPort = config.getMonitorPort();
+			this.monitorAdaptor = new MonitorAdaptor(this);
+			if(config.getMonitorPort() != null && monitorPort != config.getServerPort()){
+				this.monitorServer = new TcpServer(loop); 
+				this.monitorServer.codec(new CodecInitializer() {
+					@Override
+					public void initPipeline(List<ChannelHandler> p) {
+						p.add(new HttpServerCodec());
+						p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
+						p.add(new io.zbus.transport.http.MessageCodec());
+						p.add(new io.zbus.mq.MessageCodec());
+					}
+				}); 
+				this.monitorServer.start(monitorPort, this.monitorAdaptor);
+			}  
+		}    
 		//adaptor needs tracker built first
-		mqAdaptor = new MqAdaptor(this); 
+		if(this.monitorServer != null){
+			mqAdaptor = new MqAdaptor(this, null); 
+		} else {
+			mqAdaptor = new MqAdaptor(this, monitorAdaptor); 
+		}
+		
 		final boolean verbose = config.isVerbose();
 		if(config.getMessageLogger() == null){
 			mqAdaptor.setMessageLogger(new MessageLogger() { 
@@ -195,6 +220,12 @@ public class MqServer extends TcpServer {
 	public void close() throws IOException {   
 		scheduledExecutor.shutdown();   
 		mqAdaptor.close();  
+		if(monitorServer != null){
+			monitorServer.close();
+		}
+		if(monitorAdaptor != null){
+			monitorAdaptor.close();
+		}
 		tracker.close();
 		if(httpProxy != null){
 			httpProxy.close();

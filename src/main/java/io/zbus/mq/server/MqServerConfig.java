@@ -35,6 +35,9 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 	private int serverPort = 15555;   
 	private List<ServerAddress> trackerList = new ArrayList<ServerAddress>();  
 	
+	private boolean monitorEnabled = true;
+	private Integer monitorPort = null;  //null: same as serverPort
+	
 	private boolean sslEnabled = false;  
 	private String sslCertFile;
 	private String sslKeyFile;
@@ -66,6 +69,11 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 		
 		this.serverHost = valueOf(xpath.evaluate("/zbus/serverHost", doc), "0.0.0.0");   
 		this.serverPort = valueOf(xpath.evaluate("/zbus/serverPort", doc), 15555);
+		this.monitorEnabled = valueOf(xpath.evaluate("/zbus/monitor/@enabled", doc), true);
+		String monitorPort = valueOf(xpath.evaluate("/zbus/monitor/@port", doc), "");
+		if(!monitorPort.equals("")){
+			this.monitorPort = Integer.valueOf(monitorPort);
+		}
 		
 		this.serverName = valueOf(xpath.evaluate("/zbus/serverName", doc), null); 
 		this.mqPath = valueOf(xpath.evaluate("/zbus/mqPath", doc), "/tmp/zbus");
@@ -179,8 +187,24 @@ public class MqServerConfig extends XmlConfig implements Cloneable  {
 
 	public void setServerPort(int serverPort) {
 		this.serverPort = serverPort;
-	} 
+	}  
 	
+	public boolean isMonitorEnabled() {
+		return monitorEnabled;
+	}
+
+	public void setMonitorEnabled(boolean monitorEnabled) {
+		this.monitorEnabled = monitorEnabled;
+	}
+
+	public Integer getMonitorPort() {
+		return monitorPort;
+	}
+
+	public void setMonitorPort(Integer monitorPort) {
+		this.monitorPort = monitorPort;
+	}
+
 	public List<ServerAddress> getTrackerList() {
 		return trackerList;
 	}

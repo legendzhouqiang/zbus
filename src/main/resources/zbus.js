@@ -890,6 +890,9 @@ MqClient.prototype.produce = function (msg) {
 }
 MqClient.prototype.consume = function (msg) { 
     return this.invokeCmd(Protocol.CONSUME, msg);
+}  
+MqClient.prototype.tracker = function () { 
+    return this.invokeObject(Protocol.TRACKER, {});
 } 
 
 
@@ -1006,6 +1009,7 @@ class Broker {
         this.onServerJoin = null;
         this.onServerLeave = null;
         this.onServerUpdated = null;
+        this.onTrackerUpdated = null;
 
         this.readyTable = {};  
         this.readyTriggered = false;
@@ -1097,6 +1101,9 @@ class Broker {
                 return;
             }
             var trackerInfo = msg.body;
+            if(broker.onTrackerUpdated != null){
+                broker.onTrackerUpdated(trackerInfo);
+            }
             
             //update remote real address
             var trackerAddress = new ServerAddress(trackerInfo.serverAddress);

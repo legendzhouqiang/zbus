@@ -11,23 +11,26 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.zbus.kit.FileKit;
 import io.zbus.kit.StrKit;
+import io.zbus.kit.StrKit.UrlInfo;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAdaptor;
+import io.zbus.transport.ServerAddress;
 import io.zbus.transport.Session; 
 
 public class MonitorAdaptor extends ServerAdaptor implements Closeable { 
  
 	private final Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();
 	private AuthProvider authProvider;
+	private ServerAddress serverAddress;
 	 
 	public MonitorAdaptor(MqServer mqServer){
 		super(mqServer.getSessionTable()); 
 		this.authProvider = mqServer.getConfig().getAuthProvider();
-		 
+		 this.serverAddress = mqServer.getServerAddress();
 		//Monitor/Management
 		registerHandler(Protocol.HOME, homeHandler);  
 		registerHandler("favicon.ico", faviconHandler);
@@ -49,11 +52,15 @@ public class MonitorAdaptor extends ServerAdaptor implements Closeable {
 			String tokenStr = msg.getToken();
 			Token token = authProvider.getToken(tokenStr);
 			Map<String, Object> model = new HashMap<String, Object>();
-			String tokenShow = null;
+			String tokenName = null;
 			if(token != null && tokenStr != null){
-				tokenShow = String.format("<li><a href='/?cmd=logout'>%s Logout</a></li>", token.name);
+				tokenName = token.name;
 			}
-			model.put("token", tokenShow);
+			
+			
+			model.put("trackerAddress", serverAddress.address);
+			model.put("sslEnabled", String.valueOf(serverAddress.sslEnabled));
+			model.put("tokenName", tokenName); 
 			
 			ReplyKit.replyTemplate(msg, sess, "home.htm", model);
 		}
@@ -186,31 +193,62 @@ public class MonitorAdaptor extends ServerAdaptor implements Closeable {
 			// just ignore
 		}
 	};   
-     
     
-    public void onMessage(Object obj, Session sess) throws IOException {  
-    	Message msg = (Message)obj;   
-		msg.parseCookieToken();
-		
+	
+	public boolean handle(Message msg, Session sess) throws IOException {  
 		String cmd = msg.getCommand();
-		boolean auth = authProvider.auth(msg); 
-		if(!auth){ 
-			if(Protocol.HOME.equals(cmd)){
+		
+		if(Protocol.HOME.equals(cmd)){
+			if(!authProvider.auth(msg)){
 				ReplyKit.reply302(msg, sess, "/?cmd=login");
-			} else { 
-				ReplyKit.reply403(msg, sess);
-			} 
-			return;
+				return true;
+			}
 		}  
 		
     	if(cmd != null){
     		MessageHandler<Message> handler = handlerMap.get(cmd);
 	    	if(handler != null){
 	    		handler.handle(msg, sess);
-	    		return;
+	    		return true;
 	    	}
     	} 
+    	
+    	return false;
+	}
+    
+    public void onMessage(Object obj, Session sess) throws IOException {  
+    	Message msg = (Message)obj;   
+		msg.parseCookieToken();
+		
+		handleUrlMessage(msg);
+		
+		handle(msg, sess);
     }   
+    
+    private void handleUrlMessage(Message msg){ 
+    	if(msg.getCommand() != null){ //if cmd in header, URL parsing is ignored!
+    		return;
+    	} 
+    	String url = msg.getUrl(); 
+    	if(url == null || "/".equals(url)){
+    		msg.setCommand(Protocol.HOME);
+    		return;
+    	} 
+    	UrlInfo info = StrKit.parseUrl(url); 
+    	msg.merge(info.params);
+    	String cmd = msg.getCommand();
+    	if(cmd == null) {
+    		cmd = Protocol.HOME; 
+    	}  
+    	cmd = cmd.toLowerCase();
+    	msg.setCommand(cmd); 
+    	
+    	if(msg.getTopic() == null) {
+    		if(info.path.size() > 0){
+    			msg.setTopic(info.path.get(0));
+    		}
+    	}
+    }
     
     public void registerHandler(String command, MessageHandler<Message> handler){
     	this.handlerMap.put(command, handler);
