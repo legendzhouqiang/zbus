@@ -18,7 +18,7 @@ public class ReplyKit {
 		res.setStatus(200);
 		res.setId(req.getId());
 		res.setHeader("content-type", "text/html"); 
-		String body = FileKit.renderFile(fileName, model);
+		String body = FileKit.loadFile(fileName, model);
 		res.setBody(body);
 		session.write(res);  
 	}

@@ -87,7 +87,7 @@ public class MqServer extends TcpServer {
 		String certFileContent = "";
 		if (sslEnabled){  
 			try{ 
-				certFileContent = FileKit.renderFile(config.getSslCertFile());
+				certFileContent = FileKit.loadFile(config.getSslCertFile());
 				SslContext sslContext = SslKit.buildServerSsl(config.getSslCertFile(), config.getSslKeyFile());
 				loop.setSslContext(sslContext); 
 			} catch (Exception e) { 

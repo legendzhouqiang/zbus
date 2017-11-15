@@ -341,7 +341,7 @@ public class RpcProcessor {
 		doc += "</div>";
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("content", doc);
-		String body = FileKit.renderFile("rpc.htm", model);
+		String body = FileKit.loadFile("rpc.htm", model);
 		result.setBody(body);
 		return result;
 	}

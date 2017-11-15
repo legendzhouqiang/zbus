@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,22 +44,9 @@ public class FileKit {
 	
 	public static void setCache(boolean value) {
 		enableCache = value;
-	}
+	}  
 	
-	public static InputStream inputStream(String filePath){
-		File file = new File(filePath);
-		if(file.exists()){
-			try {
-				return new FileInputStream(file);
-			} catch (FileNotFoundException e) {
-				return null;
-			}
-		} 
-		return FileKit.class.getClassLoader().getResourceAsStream(filePath);
-	}
-	 
-	
-	public static InputStream loadFile(String resource) throws IOException {
+	public static InputStream inputStream(String resource) {
 		ClassLoader classLoader = null;
 		try {
 			Method method = Thread.class.getMethod("getContextClassLoader");
@@ -84,14 +70,14 @@ public class FileKit {
 				} else {
 					return new FileInputStream(new File(url.toURI()));
 				}
-			}
-			throw new IOException("Missing file: " + resource); 
+			} 
 		} catch (Exception e) {
-			throw new IOException(e.getMessage(), e.getCause()); 
+			//ignore
 		} 
+		return null;
 	}
 
-	public static String renderFile(String resource) throws IOException {
+	public static String loadFile(String resource) throws IOException {
 		if(enableCache && cache.containsKey(resource)){
 			return cache.get(resource);
 		}
@@ -124,8 +110,8 @@ public class FileKit {
 	}
 	 
 	
-	public static String renderFile(String resource, Map<String, Object> model) throws IOException {
-		String template = renderFile(resource);
+	public static String loadFile(String resource, Map<String, Object> model) throws IOException {
+		String template = loadFile(resource);
 		if(model == null) return template; 
 		
 		for(Entry<String, Object> e : model.entrySet()){

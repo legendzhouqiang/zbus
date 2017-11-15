@@ -122,7 +122,7 @@ public class MonitorAdaptor extends ServerAdaptor implements Closeable {
 		String cmd = msg.getCommand();  
 		String body = null;
 		try{
-			body = FileKit.renderFile(fileName, model);
+			body = FileKit.loadFile(fileName, model);
 			if(body == null){
 				res.setStatus(404);
 				body = "404: File (" + fileName +") Not Found";
