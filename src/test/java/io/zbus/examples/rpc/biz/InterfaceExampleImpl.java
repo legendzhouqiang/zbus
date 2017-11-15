@@ -1,5 +1,6 @@
 package io.zbus.examples.rpc.biz;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.zbus.kit.FileKit;
 import io.zbus.rpc.Doc;
 import io.zbus.rpc.Remote;
 import io.zbus.transport.http.Message;
@@ -194,6 +196,43 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		res.setHeader("location", "/");
 		return res;
 	}
+	
+	public Message file(Message request) {
+		String url = request.getUrl(); // /statci/file/xxx/
+		String[] bb = url.split("[/]");
+		String resource = "";
+		int count = 0;
+		for(int i=0;i<bb.length;i++){
+			if(bb[i].equals("")) continue;
+			count++;
+			if(count<3) continue;
+			resource += bb[i];
+			if(i<bb.length-1) resource+= "/";
+		}
+		
+		Message res = new Message();
+		res.setStatus(200);
+		try {
+			String content = FileKit.renderFile(resource);
+			res.setBody(content);
+			
+			if(resource.endsWith(".js")) {
+				res.setHeader("content-type", "application/javascript");
+			} else if(resource.endsWith(".css")) {
+				res.setHeader("content-type", "text/css");
+			} else if(resource.endsWith(".htm") || resource.endsWith(".html")) {
+				res.setHeader("content-type", "text/html");
+			} else if(resource.endsWith(".svg")){
+				res.setHeader("content-type", "image/svg+xml");
+			} else {
+				res.setHeader("content-type", "text/plain");
+			}
+		} catch (IOException e) {
+			res.setStatus(404);
+			res.setBody(e.getMessage());
+		}
+		return res;
+	} 
 }
 
 

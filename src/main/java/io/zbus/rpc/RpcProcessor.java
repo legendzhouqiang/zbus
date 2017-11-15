@@ -210,7 +210,13 @@ public class RpcProcessor {
 		}   
 	}  
 	
-	private MethodInstance matchMethod(Request req){ 
+	
+	static class MethodMatchResult{
+		MethodInstance method;
+		boolean fullMatched;
+	}
+	
+	private MethodMatchResult matchMethod(Request req){ 
 		StringBuilder sb = new StringBuilder();
 		if(req.getParamTypes() != null){
 			for(String type : req.getParamTypes()){
@@ -221,11 +227,17 @@ public class RpcProcessor {
 		String method = req.getMethod();
 		String key = module+":"+method+":"+sb.toString();  
 		String key2 = module+":"+method;
+		
+		MethodMatchResult result = new MethodMatchResult();
 		if(this.methods.containsKey(key)){
-			return this.methods.get(key); 
+			result.method = this.methods.get(key); 
+			result.fullMatched = true;
+			return result;
 		} else { 
 			if(this.methods.containsKey(key2)){
-				return this.methods.get(key2);
+				result.method = this.methods.get(key2); 
+				result.fullMatched = false; 
+				return result;
 			}
 			String errorMsg = String.format("%s:%s not found, missing moudle settings?", module, method);
 			throw new IllegalArgumentException(errorMsg); 
@@ -343,8 +355,11 @@ public class RpcProcessor {
 			if(req == null || StrKit.isEmpty(req.getMethod())){
 				return renderDoc(); 
 			} else {
-				MethodInstance target = matchMethod(req);
-				checkParamTypes(target, req);
+				MethodMatchResult matchResult = matchMethod(req);
+				MethodInstance target = matchResult.method;
+				if(matchResult.fullMatched){
+					checkParamTypes(target, req);
+				}
 				
 				Class<?>[] targetParamTypes = target.method.getParameterTypes();
 				Object[] invokeParams = new Object[targetParamTypes.length];  

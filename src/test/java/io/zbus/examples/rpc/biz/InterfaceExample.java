@@ -67,4 +67,6 @@ public interface InterfaceExample{
 	Message raw1(int i, Message req);
 	
 	Message redirect();
+	
+	Message file(Message request);
 }
