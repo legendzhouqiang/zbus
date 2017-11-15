@@ -3,7 +3,7 @@
 	<serverHost>0.0.0.0</serverHost>  
 	<serverPort>15555</serverPort>  
 	<serverName></serverName> <!-- Public IP/Domain name -->  
-	<monitor enabled="true" port="15550"/> <!-- If port not configured, same as server, could be the same port! -->  
+	<monitor enabled="true" port="15555"/> <!-- If port not configured, same as server, could be the same port! -->  
  
  	<sslEnabled certFile="ssl/zbus.crt" keyFile="ssl/zbus.key">false</sslEnabled> 
  
