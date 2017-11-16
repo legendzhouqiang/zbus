@@ -62,9 +62,8 @@ public class FileKit {
 			if (classLoader != null) {
 				URL url = classLoader.getResource(resource);
 				if (url == null) {
-					throw new IOException("Can not find resource:" + resource);  
-				}
-				
+					return new FileInputStream(new File(resource));
+				} 
 				if (url.toString().startsWith("jar:file:")) {
 					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
 				} else {
@@ -129,7 +128,7 @@ public class FileKit {
 	} 
 	
 	public static byte[] loadFileBytes(String resource) throws IOException {
-		InputStream in = FileKit.class.getClassLoader().getResourceAsStream(resource);
+		InputStream in = inputStream(resource);
 		if (in == null)
 			return null;
 
