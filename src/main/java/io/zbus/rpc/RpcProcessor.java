@@ -95,7 +95,7 @@ public class RpcProcessor {
 		return res;
 	}  
 	
-	private void addMoudleInfo(String module, Object service){
+	private void addModuleInfo(String module, Object service){
 		List<RpcMethod> rpcMethods = null;
 		String serviceKey = service.getClass().getCanonicalName();
 		if(object2Methods.containsKey(serviceKey)){
@@ -146,13 +146,13 @@ public class RpcProcessor {
 		} 
 	}
 	
-	private void removeMoudleInfo(Object service){
+	private void removeModuleInfo(Object service){
 		String serviceKey = service.getClass().getName();
 		object2Methods.remove(serviceKey);
 	} 
 	
 	private void initCommandTable(String module, Object service){
-		addMoudleInfo(module, service);
+		addModuleInfo(module, service);
 		
 		try {  
 			Method [] methods = service.getClass().getMethods(); 
@@ -186,7 +186,7 @@ public class RpcProcessor {
 	}
 	
 	private void removeCommandTable(String module, Object service){
-		removeMoudleInfo(service);
+		removeModuleInfo(service);
 		
 		try {  
 			Method [] methods = service.getClass().getMethods(); 
