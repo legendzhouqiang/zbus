@@ -1,6 +1,5 @@
 package io.zbus.examples.rpc;
 
-import io.zbus.mq.Protocol;
 import io.zbus.rpc.bootstrap.mq.ServiceBootstrap;
 
 /**
@@ -25,8 +24,8 @@ public class RpcService {
 		 .port(15555)          // start server inside 
 		 .autoDiscover(true)   // disable if add modules manually
 		 .connectionCount(4)   // parallel connection count
-		 .serviceMask(Protocol.MASK_DISK)
-		 .responseTypeInfo(false)
+		 //.serviceMask(Protocol.MASK_DISK)
+		 .responseTypeInfo(false) //Enable it if Generic method proxy required!!!
 		 .verbose(true)
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
