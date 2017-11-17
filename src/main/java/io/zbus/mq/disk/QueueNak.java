@@ -14,12 +14,13 @@ public class QueueNak extends MappedFile {
 	private static final int WindowPos = 0;  
 	private static final int TimeoutPos = 4;  
 	
-	
-	private Queue<NakRecord> queue = new PriorityQueue<NakRecord>(new NakRecordComparator());
-	private Queue<Integer> availableEntries = new PriorityQueue<Integer>(); 
-	
 	private int window = 100; 
 	private long timeout = TimeUnit.SECONDS.toMillis(10); //default to 10s 
+	
+	private Queue<NakRecord> queue = new PriorityQueue<NakRecord>(window, new NakRecordComparator());
+	private Queue<Integer> availableEntries = new PriorityQueue<Integer>(); 
+	
+	
 	
 	private final QueueReader queueReader;
 	

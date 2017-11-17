@@ -70,3 +70,4 @@
 ## 0.11.1 notes
 
 - TcpProxy支持多目标配置
+- QueueNak修改依赖JDK8，依赖JDK6
