@@ -49,6 +49,8 @@ public class JsonRpcCodec implements RpcCodec {
 		} else {
 			msg.setBody(JsonKit.toJSONBytes(request, encoding));
 		}
+		String contentType = "application/json";
+		msg.setHeader("content-type", contentType);
 		return msg;
 	}
 	
@@ -74,6 +76,8 @@ public class JsonRpcCodec implements RpcCodec {
 		} else {
 			msg.setBody(JsonKit.toJSONBytes(response, encoding));
 		} 
+		String contentType = "application/json";
+		msg.setHeader("content-type", contentType);
 		return msg; 
 	}
 	

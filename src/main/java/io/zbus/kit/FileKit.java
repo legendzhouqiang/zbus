@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -130,22 +131,21 @@ public class FileKit {
 	public static byte[] loadFileBytes(String resource) throws IOException {
 		InputStream in = inputStream(resource);
 		if (in == null)
-			return null;
+			throw new FileNotFoundException(resource + " Not Found");
 
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		int nRead;
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream(); 
 		byte[] data = new byte[1024];
 		try {
+			int nRead;
 			while ((nRead = in.read(data, 0, data.length)) != -1) {
 				buffer.write(data, 0, nRead);
-			}
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			} 
 		} finally {
 			try {
+				buffer.close();
 				in.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				//ignore
 			}
 		}
 		return buffer.toByteArray();

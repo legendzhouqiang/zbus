@@ -148,4 +148,17 @@ public class NetKit {
 		String res = String.format("%s", addr);
 		return addr == null ? res : res.substring(1);
 	}
+
+	public static Object[] hostPort(String address){
+		Object[] res = new Object[2];
+		String[] bb = address.split("[:]",2);
+		if(bb.length > 0){
+			res[0] = bb[0].trim();
+		}
+		res[1] = 80;
+		if(bb.length>1){
+			res[1] = Integer.valueOf(bb[1]); 
+		}
+		return res;
+	}
 }

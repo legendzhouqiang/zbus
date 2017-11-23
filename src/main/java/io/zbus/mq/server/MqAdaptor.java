@@ -14,7 +14,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.kit.StrKit.UrlInfo;
+import io.zbus.kit.HttpKit;
+import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.ConsumeGroup;
@@ -475,7 +476,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     		msg.setCommand(Protocol.HOME);
     		return;
     	} 
-    	UrlInfo info = StrKit.parseUrl(url); 
+    	UrlInfo info = HttpKit.parseUrl(url); 
     	msg.merge(info.params);
     	String cmd = info.params.get(Protocol.COMMAND); 
     	if(cmd == null) {

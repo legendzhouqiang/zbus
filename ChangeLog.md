@@ -71,3 +71,7 @@
 
 - TcpProxy支持多目标配置
 - QueueNak修改依赖JDK8，依赖JDK6
+
+## 0.11.2 notes
+
+- RPC默认返回application/json类型

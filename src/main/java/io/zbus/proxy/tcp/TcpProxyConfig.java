@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import io.zbus.kit.ConfigKit.XmlConfig;
-import io.zbus.kit.StrKit;
+import io.zbus.kit.NetKit;
 
 public class TcpProxyConfig extends XmlConfig{ 
 	
@@ -35,7 +35,7 @@ public class TcpProxyConfig extends XmlConfig{
 				entry.connectTimeout = valueOf(xpath.evaluate("./connectTimeout", node), 3000);
 				entry.idleTimeout = valueOf(xpath.evaluate("./idleTimeout", node), 60000); 
 			   
-			    Object[] hp = StrKit.hostPort(server);
+			    Object[] hp = NetKit.hostPort(server);
 			    entry.proxyHost = (String)hp[0];
 			    entry.proxyPort = (Integer)hp[1];  
 			    

@@ -5,7 +5,8 @@ import java.util.Map;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.kit.StrKit.UrlInfo;
+import io.zbus.kit.HttpKit;
+import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.rpc.Request;
@@ -78,7 +79,7 @@ public class RpcMessageHandler extends ServerAdaptor {
     	if(url == null || "/".equals(url)){ 
     		return;
     	} 
-		UrlInfo info = StrKit.parseUrl(url);    
+		UrlInfo info = HttpKit.parseUrl(url);    
 		String token = info.params.get(TOKEN_KEY); //special for token kv
 		if(token != null){
 			msg.setHeader(TOKEN_KEY, token);

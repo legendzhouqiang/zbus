@@ -10,8 +10,9 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.zbus.kit.FileKit;
+import io.zbus.kit.HttpKit;
+import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.StrKit;
-import io.zbus.kit.StrKit.UrlInfo;
 import io.zbus.mq.Message;
 import io.zbus.mq.Protocol;
 import io.zbus.mq.server.auth.AuthProvider;
@@ -234,7 +235,7 @@ public class MonitorAdaptor extends ServerAdaptor implements Closeable {
     		msg.setCommand(Protocol.HOME);
     		return;
     	} 
-    	UrlInfo info = StrKit.parseUrl(url); 
+    	UrlInfo info = HttpKit.parseUrl(url); 
     	msg.merge(info.params);
     	String cmd = msg.getCommand();
     	if(cmd == null) {
