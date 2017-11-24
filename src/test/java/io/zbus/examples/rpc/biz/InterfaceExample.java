@@ -68,5 +68,7 @@ public interface InterfaceExample{
 	
 	Message redirect();
 	
+	String getPath(String urlPath);
+	
 	Message file(Message request);
 }

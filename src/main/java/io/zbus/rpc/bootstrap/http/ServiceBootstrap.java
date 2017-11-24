@@ -24,14 +24,9 @@ public class ServiceBootstrap implements Closeable {
 	protected MessageServer server; 
 	protected String token;
 	protected EventLoop eventLoop;
-	 
-	protected boolean responseTypeInfo = false; 
-	protected boolean verbose = false;
+	  
+	protected boolean verbose = false;   
 	
-	public ServiceBootstrap responseTypeInfo(boolean responseTypeInfo){  
-		this.responseTypeInfo = responseTypeInfo;
-		return this;
-	}   
 	
 	public ServiceBootstrap port(int port){ 
 		this.port = port;
@@ -56,6 +51,21 @@ public class ServiceBootstrap implements Closeable {
 	
 	public ServiceBootstrap verbose(boolean verbose) {
 		this.verbose = verbose;
+		return this;
+	} 
+	
+	public ServiceBootstrap responseTypeInfo(boolean responseTypeInfo){  
+		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
+		return this;
+	}   
+	
+	public ServiceBootstrap stackTrace(boolean stackTrace) {
+		this.processor.setEnableStackTrace(stackTrace);
+		return this;
+	} 
+	
+	public ServiceBootstrap methodPage(boolean methodPage) {
+		this.processor.setEnableMethodPage(methodPage);
 		return this;
 	} 
 	
@@ -87,8 +97,7 @@ public class ServiceBootstrap implements Closeable {
 			eventLoop.setSslContext(context);
 		}
 		
-		server = new MessageServer(eventLoop);   
-		processor.getCodec().setResponseTypeInfo(responseTypeInfo);
+		server = new MessageServer(eventLoop);    
 		RpcMessageHandler adaptor = new RpcMessageHandler(this.processor);
 		adaptor.setToken(this.token);
 		adaptor.setVerbose(this.verbose);

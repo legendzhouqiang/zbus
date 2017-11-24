@@ -101,4 +101,12 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	public void setVerbose(boolean verbose){
 		verbose(verbose);
 	}
+	
+	public void setStackTrace(boolean stackTrace){
+		stackTrace(stackTrace);
+	}
+	
+	public void setMethodPage(boolean methodPage){
+		methodPage(methodPage);
+	}
 }

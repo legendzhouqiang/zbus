@@ -317,7 +317,7 @@ public class MqClient extends CompositeClient<Message, Message> {
 		invokeAsync(msg, null);  
 	}  
 	
-	public Message invokeSync(Message msg, int timeout) throws IOException, InterruptedException {
+	public Message invokeSync(Message msg, long timeout) throws IOException, InterruptedException {
 		fillCommonHeaders(msg);
 		return super.invokeSync(msg, timeout);
 	}

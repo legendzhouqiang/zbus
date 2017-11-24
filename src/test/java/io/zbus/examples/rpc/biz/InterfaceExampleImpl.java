@@ -198,9 +198,13 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		return res;
 	}
 	
+	public String getPath(String urlPath){
+		return urlPath;
+	}
+	
 	public Message file(Message request) {
 		String url = request.getUrl(); // /static/resource/app.js 
-		boolean hasTopic = request.getHeader("topic") == null;
+		boolean hasTopic = request.getHeader("topic") != null;
 		String resource = HttpKit.rpcUrl(url, hasTopic);
 		
 		Message res = new Message();

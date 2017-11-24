@@ -75,3 +75,6 @@
 ## 0.11.2 notes
 
 - RPC默认返回application/json类型
+- RPC支持错误信息显示开关，可隐藏堆栈信息
+- RPC支持方法列表页面开关，可隐藏展示所有的方法信息
+- 修复timeout类型bug，int=>long

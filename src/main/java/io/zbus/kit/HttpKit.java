@@ -58,12 +58,12 @@ public class HttpKit {
 		return info;
 	}
 	
-	public static String rpcUrl(String url, boolean noTopic){
+	public static String rpcUrl(String url, boolean hasTopic){
 		String[] bb = url.split("[/]");
 		String resource = "";
 		int count = 0;
-		int prefixCount = 4;
-		if(noTopic) prefixCount = 3;
+		int prefixCount = 3;
+		if(hasTopic) prefixCount = 4;
 		for(int i=0;i<bb.length;i++){
 			if(bb[i].equals("")) continue;
 			count++;

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.zbus.kit.FileKit;
+import io.zbus.kit.HttpKit;
 import io.zbus.kit.StrKit;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
@@ -24,6 +25,8 @@ public class RpcProcessor {
 	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();	
 	
 	private String docUrlContext = "/";
+	private boolean enableStackTrace = true;
+	private boolean enableMethodPage = true;
 	 
 	public void addModule(Object... services){
 		for(Object obj : services){
@@ -239,7 +242,7 @@ public class RpcProcessor {
 				result.fullMatched = false; 
 				return result;
 			}
-			String errorMsg = String.format("%s:%s not found, missing moudle settings?", module, method);
+			String errorMsg = String.format("%s:%s Not Found", module, method);
 			throw new IllegalArgumentException(errorMsg); 
 		}
 	}
@@ -328,9 +331,15 @@ public class RpcProcessor {
 				paramList, paramDesc, methodDesc, modules);
 	}
 	
-	private Message renderDoc() throws IOException {
+	private Message renderDoc() throws IOException { 
+		Message result = new Message(); 
+		Map<String, Object> model = new HashMap<String, Object>();
+		 
+		if(!enableMethodPage){
+			result.setBody("<h1>Method page disabled</h1>");
+			return result;
+		}
 		
-		Message result = new Message();
 		String doc = "<div>";
 		int rowIdx = 0;
 		for(List<RpcMethod> objectMethods : object2Methods.values()) {
@@ -339,8 +348,8 @@ public class RpcProcessor {
 			}
 		}
 		doc += "</div>";
-		Map<String, Object> model = new HashMap<String, Object>();
-		model.put("content", doc);
+		model.put("content", doc); 
+		
 		String body = FileKit.loadFile("rpc.htm", model);
 		result.setBody(body);
 		return result;
@@ -369,7 +378,18 @@ public class RpcProcessor {
 					if(Message.class.isAssignableFrom(targetParamTypes[i])){
 						invokeParams[i] = msg;
 					} else {
-						invokeParams[i] = codec.convert(reqParams[j++], targetParamTypes[i]);
+						if(targetParamTypes.length == 1 
+						  && targetParamTypes[0] == String.class
+						  && reqParams.length > 1){ //special case: url length not matched with target
+							boolean hasTopic = msg.getHeader("topic") != null;
+							invokeParams[i] = HttpKit.rpcUrl(msg.getUrl(), hasTopic); 
+						} else {
+							if(j >= reqParams.length){
+								throw new IllegalArgumentException("Argument count not matched");
+							}
+							invokeParams[i] = codec.convert(reqParams[j], targetParamTypes[i]);
+							j++;
+						}
 					}
 				} 
 				result = target.method.invoke(target.instance, invokeParams);
@@ -381,8 +401,12 @@ public class RpcProcessor {
 			status = RpcCodec.STATUS_APP_ERROR;
 			result = e.getTargetException(); 
 		} catch (Throwable e) { 
-			status = RpcCodec.STATUS_APP_ERROR;
-			result = e; 
+			status = RpcCodec.STATUS_APP_ERROR; 
+			if(enableStackTrace){
+				result = new RpcException(e.getMessage()); //Support JDK6
+			} else {
+				result = new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace); //Require JDK7+
+			}
 		} 
 		try {
 			Message res = codec.encodeResponse(result, encoding); 
@@ -408,8 +432,23 @@ public class RpcProcessor {
 
 	public void setDocUrlContext(String docUrlContext) {
 		this.docUrlContext = docUrlContext;
+	}  
+
+	public boolean isEnableStackTrace() {
+		return enableStackTrace;
 	}
 
+	public void setEnableStackTrace(boolean enableStackTrace) {
+		this.enableStackTrace = enableStackTrace;
+	} 
+
+	public boolean isEnableMethodPage() {
+		return enableMethodPage;
+	}
+
+	public void setEnableMethodPage(boolean enableMethodPage) {
+		this.enableMethodPage = enableMethodPage;
+	}
 
 
 	private static class MethodInstance{

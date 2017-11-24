@@ -12,6 +12,8 @@ public class RpcService {
 		 .autoDiscover(true)   // disable if add modules manually 
 		 .responseTypeInfo(false)
 		 .verbose(true)
+		 .stackTrace(false)
+		 .methodPage(true)
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();
