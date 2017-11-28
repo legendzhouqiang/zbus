@@ -109,4 +109,8 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	public void setMethodPage(boolean methodPage){
 		methodPage(methodPage);
 	}
+	
+	public void setDeclareOnMissing(boolean declareOnMissing){
+		declareOnMissing(declareOnMissing);
+	}
 }

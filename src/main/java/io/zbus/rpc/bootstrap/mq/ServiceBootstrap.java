@@ -115,6 +115,17 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	} 
 	
+	/**
+	 * If topic(ServiceName) in zbus is missing, should we declare it or not.
+	 * 
+	 * @param declareOnMissing
+	 * @return
+	 */
+	public ServiceBootstrap declareOnMissing(boolean declareOnMissing) {
+		this.consumerConfig.setDeclareOnMissing(declareOnMissing);
+		return this;
+	} 
+	
 	private void validate(){
 		Topic topic = consumerConfig.getTopic();
 		if(topic == null || StrKit.isEmpty(topic.getName())){

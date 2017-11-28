@@ -12,6 +12,7 @@ public class ConsumerConfig extends MqConfig {
 	
 	protected MessageHandler messageHandler;   
 	protected int connectionCount = 1;  
+	protected boolean declareOnMissing = true;  //declare topic or consume-group if missing
 	
 	protected ServerSelector consumeServerSelector; 
 	
@@ -109,7 +110,15 @@ public class ConsumerConfig extends MqConfig {
 
 	public void setConnectionCount(int connectionCount) {
 		this.connectionCount = connectionCount;
-	} 
+	}  
+	
+	public boolean isDeclareOnMissing() {
+		return declareOnMissing;
+	}
+
+	public void setDeclareOnMissing(boolean declareOnMissing) {
+		this.declareOnMissing = declareOnMissing;
+	}
 
 	@Override
 	public ConsumerConfig clone() { 

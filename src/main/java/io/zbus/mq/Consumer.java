@@ -23,6 +23,7 @@ public class Consumer extends MqAdmin implements Closeable {
 	private ExecutorService consumeRunner;  
 	private MessageHandler messageHandler;
 	private int connectionCount; 
+	private boolean declareOnMissing = true;
 	
 	private boolean started;
 	
@@ -51,6 +52,7 @@ public class Consumer extends MqAdmin implements Closeable {
 		
 		this.messageHandler = config.getMessageHandler(); 
 		this.connectionCount = config.getConnectionCount(); 
+		this.declareOnMissing = config.isDeclareOnMissing();
 		
 		this.consumeServerSelector = config.getConsumeServerSelector();
 		if(this.consumeServerSelector == null){
@@ -153,6 +155,7 @@ public class Consumer extends MqAdmin implements Closeable {
 				ConsumeCtrl ctrl = consumeCtrl.clone();
 				ConsumeThread thread = threads[i] = new ConsumeThread(client, topic, consumeGroup, ctrl);  
 				thread.setToken(token);  
+				thread.setDeclareOnMissing(declareOnMissing);
 				thread.setMessageHandler(messageHandler); 
 			}
 		} 

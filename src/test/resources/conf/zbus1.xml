@@ -20,9 +20,8 @@
 	<auth enabled="false">  
 		<token value="admin" name="Admin" operation="admin"/> 
 		
-		<token value="mytopic_group1" operation="*"> 
-			<topic value="MyTopic">	
-				<consumeGroup>Group1</consumeGroup> 
+		<token value="mytopic" operation="home, track_sub"> 
+			<topic value="MyTopic">	 
 			</topic>
 		</token>    
 		
@@ -34,6 +33,18 @@
 			<topic value="*"/>
 		</token>    		
 	</auth>  
+	
+	<!-- topic list to create on initialization -->
+	<initMqList>
+		<topic name="MyTopic1" mask="">	
+			<consumeGroup name="Group1" mask=""/>
+		</topic>
+		<topic value="MyTopic2" mask=""/>
+	</initMqList>
+	
+	<mqClean>
+		
+	</mqClean>
 	
 	<!-- 
 	<trackerList>

@@ -29,7 +29,7 @@ public class RpcService {
 		 .responseTypeInfo(false) //Enable it if Generic method proxy required!!!
 		 .verbose(true)
 		 .stackTrace(false)    // enable stackTrace info to client if true
-		 .methodPage(true)    // Show method page if true
+		 .methodPage(true)     // Show method page if true 
 		 //.ssl("ssl/zbus.crt", "ssl/zbus.key") //Enable SSL
 		 //.serviceToken("myrpc_service") //Enable Token authentication
 		 .start();

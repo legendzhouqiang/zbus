@@ -78,3 +78,15 @@
 - RPC支持错误信息显示开关，可隐藏堆栈信息
 - RPC支持方法列表页面开关，可隐藏展示所有的方法信息
 - 修复timeout类型bug，int=>long
+
+## 0.11.3 notes
+
+- 修复checksum缓存错误
+
+## 0.12.0 TODO
+
+- RPC增加默认根目录页面配置，增加模块目录页面支持
+- RPC URL增加key-value组映射到map和pojo的支持
+
+/[module]/[method]/[param_1].../?key1=val1&&key2=val2
+

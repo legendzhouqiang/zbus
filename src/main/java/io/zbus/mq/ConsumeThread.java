@@ -17,7 +17,7 @@ public class ConsumeThread implements Closeable{
 	protected Topic topic;
 	protected ConsumeGroup consumeGroup; 
 	protected ConsumeCtrl consumeCtrl; 
-	
+	protected boolean declareOnMissing = true;
 	protected String token; 
 	protected MessageHandler messageHandler;
 	
@@ -49,15 +49,17 @@ public class ConsumeThread implements Closeable{
 		} 
 		this.client.setToken(token);
 		this.client.setInvokeTimeout(consumeCtrl.getConsumeTimeout());
-		try { 
-			ConsumeGroupInfo info = this.client.declareGroup(topic, consumeGroup); 
-			consumeCtrl.setConsumeGroup(info.groupName); //update groupName
-		} catch (IOException e) { 
-			log.error(e.getMessage(), e);
-		} catch (InterruptedException e) { 
-			log.error(e.getMessage(), e);
-		}
 		
+		if(declareOnMissing){
+			try { 
+				ConsumeGroupInfo info = this.client.declareGroup(topic, consumeGroup); 
+				consumeCtrl.setConsumeGroup(info.groupName); //update groupName
+			} catch (IOException e) { 
+				log.error(e.getMessage(), e);
+			} catch (InterruptedException e) { 
+				log.error(e.getMessage(), e);
+			}
+		} 
 		
 		consumeThread = new RunningThread();
 		consumeThread.start();
@@ -91,6 +93,9 @@ public class ConsumeThread implements Closeable{
 			if (res == null) return res; 
 			Integer status = res.getStatus();
 			if (status == 404) { 
+				if(!declareOnMissing){
+					throw new MqException(res.getBodyString());
+				}
 				ConsumeGroupInfo info = client.declareGroup(topic, consumeGroup);
 				consumeCtrl.setConsumeGroup(info.groupName); //update groupName
 				return take();
@@ -190,8 +195,17 @@ public class ConsumeThread implements Closeable{
 
 	public MessageHandler getMessageHandler() {
 		return messageHandler;
-	} 
+	}  
 	
+	public boolean isDeclareOnMissing() {
+		return declareOnMissing;
+	} 
+
+	public void setDeclareOnMissing(boolean declareOnMissing) {
+		this.declareOnMissing = declareOnMissing;
+	}
+
+
 	public MqClient getClient() {
 		return client;
 	} 
