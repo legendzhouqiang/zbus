@@ -156,7 +156,7 @@ public class MqServer extends TcpServer {
 		if(config.getMessageLogger() == null){
 			mqAdaptor.setMessageLogger(new MessageLogger() { 
 				@Override
-				public void log(Message message) {
+				public void log(Message message, Session session) {
 					if(verbose){
 						log.info("\n%s", message);
 					} 

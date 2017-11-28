@@ -554,7 +554,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
 		msg.parseCookieToken();
 		
 		if(messageLogger != null){
-			messageLogger.log(msg);
+			messageLogger.log(msg, sess);
 		} 
 		
 		handleUrlMessage(msg);   
