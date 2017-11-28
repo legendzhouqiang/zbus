@@ -52,7 +52,7 @@ Maven
 	<dependency>
 		<groupId>io.zbus</groupId>
 		<artifactId>zbus</artifactId>
-		<version>0.9.0</version>
+		<version>0.11.3</version>
 	</dependency>
 
 ## Performance
