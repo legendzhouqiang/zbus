@@ -56,6 +56,10 @@ public class ClientBootstrap implements Closeable {
 		return rpcInvoker;
 	}
 	
+	public void module(String module){
+		this.rpcConfig.setModule(module);
+	}
+	
 	public <T> T createProxy(Class<T> clazz){  
 		return invoker().createProxy(clazz); 
 	}    
