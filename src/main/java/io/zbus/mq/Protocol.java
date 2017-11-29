@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.zbus.transport.ServerAddress; 
 
 public class Protocol {  
-	public static final String VERSION_VALUE = "0.11.3";      
+	public static final String VERSION_VALUE = "0.11.4";      
 	
 	//=============================[1] Command Values================================================
 	//MQ Produce/Consume

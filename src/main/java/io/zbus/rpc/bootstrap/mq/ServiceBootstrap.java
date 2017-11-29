@@ -188,6 +188,11 @@ public class ServiceBootstrap implements Closeable{
 		return this;
 	}
 	
+	public ServiceBootstrap addModule(String module, Class<?>... clazz){
+		processor.addModule(module, clazz);
+		return this;
+	}
+	
 	public ServiceBootstrap addModule(Object... services){
 		processor.addModule(services);
 		return this;

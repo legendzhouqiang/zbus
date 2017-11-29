@@ -223,6 +223,19 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		}
 		return res;
 	} 
+	
+	/**
+	 * 
+	 * Default method(method in URL missing)
+	 * 
+	 * @return page
+	 */
+	public Message index() {  
+		Message res = new Message();
+		res.setStatus(200); 
+		res.setBody("Index page");
+		return res;
+	} 
 }
 
 

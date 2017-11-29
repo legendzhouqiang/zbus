@@ -8,7 +8,7 @@ import io.zbus.mq.ProducerConfig;
 public class ProducerWithAuthExample { 
 	public static void main(String[] args) throws Exception { 
 		String token = "MyTopic_token";
-		Broker broker = new Broker("localhost:15555", token); 
+		Broker broker = new Broker("localhost:15555", token);  //!!!Share it in Application!!!
 		  
 		ProducerConfig config = new ProducerConfig();
 		config.setBroker(broker);

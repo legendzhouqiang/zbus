@@ -83,10 +83,8 @@
 
 - 修复checksum缓存错误
 
-## 0.12.0 TODO
 
-- RPC增加默认根目录页面配置，增加模块目录页面支持
-- RPC URL增加key-value组映射到map和pojo的支持
+## 0.11.4 notes
 
-/[module]/[method]/[param_1].../?key1=val1&&key2=val2
+- RPC增加默认根目录页面配置，增加模块目录页面支持 
 

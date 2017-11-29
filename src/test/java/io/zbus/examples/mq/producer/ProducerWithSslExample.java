@@ -11,7 +11,7 @@ public class ProducerWithSslExample {
 		ServerAddress serverAddress = new ServerAddress("localhost:15555", true);
 		serverAddress.setCertFile("ssl/zbus.crt"); 
 		
-		Broker broker = new Broker(); 
+		Broker broker = new Broker(); //!!!Share it in Application!!!
 		broker.addTracker(serverAddress);
 		  
 		ProducerConfig config = new ProducerConfig();

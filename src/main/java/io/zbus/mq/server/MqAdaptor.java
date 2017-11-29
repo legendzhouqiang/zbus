@@ -510,37 +510,34 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     		}
     	} 
     	
-    	//Possible URL RPC request
-    	if(info.path.size()>=3 && "GET".equalsIgnoreCase(msg.getMethod())){
-    		// /module/<topic>/<method>/<param_1>/../<param_n>
-    		boolean rpc = false; 
-        	MessageQueue mq = null;
-        	String topic = msg.getTopic();
-        	if(topic != null){
-        		mq = mqTable.get(topic);
-        	}
-        	if(mq != null){
-        		rpc = (mq.getMask()&Protocol.MASK_RPC) != 0;
-        	}
-        	if(rpc){ 
-	    		String module = info.path.get(1);
-	    		String method = info.path.get(2); 
-	    		
-	    		Request req = new Request();
-	    		req.setModule(module);
-	        	req.setMethod(method); 
-	        	
-	        	if(info.path.size()>3){
-	        		Object[] params = new Object[info.path.size()-3];
-	        		for(int i=0;i<params.length;i++){
-	        			params[i] = info.path.get(3+i);
-	        		}
-	        		req.setParams(params); 
-	        	}  
-	        	msg.setAck(false);
-	        	msg.setBody(JsonKit.toJSONString(req));
-        	}
-    	} 
+    	if(msg.getBody() != null) return;
+    	 
+    	MessageQueue mq = null;
+    	String topic = msg.getTopic();
+    	if(topic != null){
+    		mq = mqTable.get(topic);
+    	}
+    	if(mq == null) return;
+    	
+    	if((mq.getMask()&Protocol.MASK_RPC) == 0) return;  //Not RPC
+    	
+    	// /topic/module/<topic>/<method>/<param_1>/../<param_n>   
+    	Request req = new Request();
+    	if(info.path.size()>=2){
+    		req.setModule(info.path.get(1));
+    	}
+    	if(info.path.size()>=3){
+    		req.setMethod(info.path.get(2));
+    	}
+    	if(info.path.size()>3){
+    		Object[] params = new Object[info.path.size()-3];
+    		for(int i=0;i<params.length;i++){
+    			params[i] = info.path.get(3+i);
+    		}
+    		req.setParams(params); 
+    	}  
+    	msg.setAck(false);
+    	msg.setBody(JsonKit.toJSONString(req));   
 	} 
     
     public void onMessage(Object obj, Session sess) throws IOException {  

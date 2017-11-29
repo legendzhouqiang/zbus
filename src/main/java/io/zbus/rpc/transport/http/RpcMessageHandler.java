@@ -79,30 +79,30 @@ public class RpcMessageHandler extends ServerAdaptor {
     	if(url == null || "/".equals(url)){ 
     		return;
     	} 
+    	if(msg.getBody() != null) return;
+    	
 		UrlInfo info = HttpKit.parseUrl(url);    
 		String token = info.params.get(TOKEN_KEY); //special for token kv
 		if(token != null){
 			msg.setHeader(TOKEN_KEY, token);
 		}
 		
-    	if(info.path.size()>=2 && "GET".equalsIgnoreCase(msg.getMethod())){
-    		// /<module>/<method>/<param_1>/../<param_n>  
-    		String module = info.path.get(0);
-    		String method = info.path.get(1); 
-    		
-    		Request req = new Request();
-    		req.setModule(module);
-        	req.setMethod(method); 
-        	
-        	if(info.path.size()>2){
-        		Object[] params = new Object[info.path.size()-2];
-        		for(int i=0;i<params.length;i++){
-        			params[i] = info.path.get(2+i);
-        		}
-        		req.setParams(params); 
-        	}   
-	        msg.setBody(JsonKit.toJSONString(req)); 
+		Request req = new Request();
+    	if(info.path.size()>=1){
+    		req.setModule(info.path.get(0));
+    	}
+    	if(info.path.size()>=2){
+    		req.setMethod(info.path.get(1));
     	} 
+    	
+    	if(info.path.size()>2){
+    		Object[] params = new Object[info.path.size()-2];
+    		for(int i=0;i<params.length;i++){
+    			params[i] = info.path.get(2+i);
+    		}
+    		req.setParams(params); 
+    	}   
+        msg.setBody(JsonKit.toJSONString(req));  
 	}
 
 	public void setToken(String token) {

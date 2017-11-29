@@ -18,7 +18,7 @@ public class RpcService {
 		//b.addModule(InterfaceExampleImpl.class); 
 		//b.addModule(GenericMethodImpl.class);
 		//b.addModule(SubService1.class);
-		//b.addModule(SubService2.class);  
+		//b.addModule("index", Index.class);  
 		
 		b.serviceName("MyRpc") // application level entry, full URL: <service> / <module> / <method> 
 		 .port(15555)          // start server inside 

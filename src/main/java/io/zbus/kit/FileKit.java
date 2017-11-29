@@ -131,7 +131,7 @@ public class FileKit {
 	public static byte[] loadFileBytes(String resource) throws IOException {
 		InputStream in = inputStream(resource);
 		if (in == null)
-			throw new FileNotFoundException(resource + " Not Found");
+			throw new FileNotFoundException("File(" + resource + ") Not Found");
 
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(); 
 		byte[] data = new byte[1024];
