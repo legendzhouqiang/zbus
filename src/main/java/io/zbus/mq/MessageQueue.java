@@ -321,7 +321,7 @@ abstract class AbstractQueue implements MessageQueue{
 		} 
 		writeMsg.setStatus(200); //status meaning changed to 'consume-status'
 		if(messageLogger != null) {
-			messageLogger.log(writeMsg);
+			messageLogger.log(writeMsg, session);
 		}
 		session.write(writeMsg);  
 	}
