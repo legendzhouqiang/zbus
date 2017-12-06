@@ -23,7 +23,9 @@
 package io.zbus.rpc;
  
 
+import io.zbus.kit.HttpKit;
 import io.zbus.kit.JsonKit;
+import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.transport.http.Message; 
  
 
@@ -53,12 +55,43 @@ public class JsonRpcCodec implements RpcCodec {
 		msg.setHeader("content-type", contentType);
 		return msg;
 	}
-	
+	private Request decodeUpload(Message msg) {
+		UrlInfo info = HttpKit.parseUrl(msg.getUrl());  
+		if(info.path.size() < 1){
+			return null;
+		}
+		
+		int moduleStart = 0;
+		if(msg.getHeader("topic") != null) moduleStart = 1; //MQ based, topic prefix added
+		
+		Request req = new Request();
+    	if(info.path.size()>=moduleStart+1){
+    		req.setModule(info.path.get(moduleStart));
+    	}
+    	if(info.path.size()>=moduleStart+2){
+    		req.setMethod(info.path.get(moduleStart+1));
+    	} 
+    	
+    	int paramStart = moduleStart+2;
+    	if(info.path.size()>paramStart){
+    		Object[] params = new Object[info.path.size()-(paramStart)];
+    		for(int i=0;i<params.length;i++){
+    			params[i] = info.path.get(paramStart+i);
+    		}
+    		req.setParams(params); 
+    	}   
+    	return req;
+	}
 	public Request decodeRequest(Message msg) {
 		String encoding = msg.getEncoding();
 		if(encoding == null){
 			encoding = DEFAULT_ENCODING;
 		}
+		String contentType = msg.getHeader(Message.CONTENT_TYPE);
+		if(contentType != null && contentType.startsWith(Message.CONTENT_TYPE_UPLOAD)){
+			return decodeUpload(msg);
+		} 
+		
 		String jsonString = msg.getBodyString(encoding);
 		return JsonKit.parseObject(jsonString, Request.class);  
 	} 

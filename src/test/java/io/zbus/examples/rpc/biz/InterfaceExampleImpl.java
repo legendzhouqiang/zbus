@@ -13,6 +13,8 @@ import io.zbus.kit.HttpKit;
 import io.zbus.rpc.Doc;
 import io.zbus.rpc.Remote;
 import io.zbus.transport.http.Message;
+import io.zbus.transport.http.Message.FileForm;
+import io.zbus.transport.http.Message.FileUpload;
 
 @Remote
 public class InterfaceExampleImpl implements InterfaceExample{
@@ -236,6 +238,40 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		res.setBody("Index page");
 		return res;
 	} 
+	
+	@Override
+	public Message showUpload() { 
+		Message res = new Message();
+		res.setStatus(200);
+		try {
+			byte[] data = FileKit.loadFileBytes("rpc/upload.htm");
+			res.setBody(data);  
+			res.setHeader("content-type", "text/html"); 
+		} catch (IOException e) {
+			res.setStatus(404);
+			res.setBody(e.getMessage());
+		}
+		return res;
+	}
+	
+	@Override
+	public boolean upload(Message request) { 
+		FileForm fileForm = request.getFileForm();
+		if(fileForm == null) return false;
+		System.out.println("Key-Value pairs");
+		for(String key : fileForm.attributes.keySet()){
+			System.out.println(key + "=>" + fileForm.attributes.get(key));
+		}
+		System.out.println("Files");
+		for(String key : fileForm.files.keySet()){
+			List<FileUpload> files = fileForm.files.get(key);
+			for(FileUpload file : files){
+				System.out.println("FileName: " + file.fileName);
+				System.out.println(new String(file.data));
+			}
+		}
+		return true;
+	}
 }
 
 

@@ -71,4 +71,8 @@ public interface InterfaceExample{
 	String getPath(String urlPath);
 	
 	Message file(Message request);
+	
+	boolean upload(Message request);
+	
+	Message showUpload();
 }
