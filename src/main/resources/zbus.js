@@ -1329,10 +1329,14 @@ class Consumer extends MqAdmin {
         if (consumeCtrl.constructor == String) {
             consumeCtrl = {
                 topic: consumeCtrl,
+                consume_group: consumeCtrl,
                 token: this.token
             };
         }
         this.consumeCtrl = clone(consumeCtrl); 
+        if(this.consumeCtrl.consume_group == undefined || this.consumeCtrl.consume_group == null){
+            this.consumeCtrl.consume_group = this.consumeCtrl.topic;
+        }
 
         this.consumeClientTable = {}; //addressKey => list of MqClient consuming
     }  
@@ -1372,14 +1376,8 @@ class Consumer extends MqAdmin {
         for (var i = 0; i < this.connectionCount; i++) {
             var client = clientInBrokerTable.fork(); //create new connections
             clients.push(client);   
-            client.connect((client) => { //web browser need 
-                var ctrl = clone(consumer.consumeCtrl);
-                client.declare(ctrl).then(res=>{
-                    if (res.error) { 
-                        throw new Error("declare error: " + res.error);
-                    } 
-                    consumer.consume(client);
-                });
+            client.connect((client) => {  
+                consumer.consume(client); 
             });  
         }  
         this.consumeClientTable[addr] = clients; 
@@ -1405,6 +1403,7 @@ class Consumer extends MqAdmin {
         .then(res => {
             if(res.status == 404) {//Missing topic, to declare 
                 var ctrl = clone(consumer.consumeCtrl);
+                logger.debug("Trying to declare " + JSON.stringify(ctrl));
                 return client.declare(ctrl)
                 .then(res=>{
                     if (res.error) { 
@@ -1524,13 +1523,7 @@ class RpcInvoker {
             if (msg.status != 200) {
                 throw msg.body;
             } 
-            var res;
-            if(typeof(msg.body) == 'string'){
-                res = JSON.parse(msg.body);
-            } else {
-                res = msg.body;
-            }  
-            return res;
+            return msg.body; 
         });
     } 
 
@@ -1646,11 +1639,16 @@ class ServiceBootstrap {
         if(!this.topic){
             throw new Error("Missing serviceName");
         }  
+        var consumeGroup = this.topic;
+        if(this.consume_group != null){
+            consumeGroup = this.consume_group;
+        }
         var consumeCtrl = {
             topic: this.topic,
+            consume_group: consumeGroup,
             topic_mask: Protocol.MASK_MEMORY | Protocol.MASK_RPC,
             token: this.token
-        };
+        }; 
         this.consumer = new Consumer(this.broker, consumeCtrl);
         this.consumer.messageHandler = this.processor.messageHandler;
         this.consumer.connectionCount = this.connectionSize; 
@@ -1719,6 +1717,16 @@ class ClientBootstrap {
         var ctrl = { };
         if(this.token != null){
             ctrl.token = this.token;
+        }
+
+        if(this.serverAddress == null){
+            if(window != undefined){
+                var url = window.location.href;
+                var arr = url.split("/");
+                this.serverAddress = arr[2];
+            } else {
+                throw 'serverAddress missing';
+            }
         }
 
         if(this.topic != null) {//MQ mode
