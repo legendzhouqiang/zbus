@@ -733,7 +733,7 @@ MqClient.prototype.connect = function (connectedHandler) {
     };
 
     this.socket.onclose = function (event) {
-        this.connectPromise = null;
+        client.connectPromise = null;
         clearInterval(client.heartbeat);
         if (client.onDisconnected) {
             client.onDisconnected(); 
