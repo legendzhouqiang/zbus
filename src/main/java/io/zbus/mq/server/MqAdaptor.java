@@ -537,7 +537,7 @@ public class MqAdaptor extends ServerAdaptor implements Closeable {
     		req.setParams(params); 
     	}  
     	msg.setAck(false);
-    	msg.setBody(JsonKit.toJSONString(req));   
+    	msg.setJsonBody(JsonKit.toJSONString(req));   
 	} 
     
     public void onMessage(Object obj, Session sess) throws IOException {  

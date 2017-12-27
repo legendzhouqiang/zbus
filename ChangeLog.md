@@ -93,4 +93,8 @@
 ## 0.11.5 notes
 
 - zbus.js支持RPC默认不填写服务器地址
+- 服务器客户端都支持消息header部分URLEncode/Decode
 
+
+## TODO lists
+- 删除消费分组crash JVM

@@ -15,15 +15,14 @@
 	<cleanMqInterval>3000</cleanMqInterval> <!-- Milliseconds -->
 	<reportToTrackerInterval>30000</reportToTrackerInterval> <!-- Milliseconds -->
 	
-	<!-- --> 
+	<!-- -->  
 	<trackerList>
 		<serverAddress>
 			<address>localhost:15555</address>  
 			<sslEnabled certFile="ssl/zbus.crt">false</sslEnabled> 
 			<token></token>
 		</serverAddress>   
-	</trackerList>  
-	 
+	</trackerList>   
 	
 	<auth enabled="false" class="">
 		<token value="" operation="js, css, img, ssl, tracker, track_sub, track_pub">  

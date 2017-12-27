@@ -6,13 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.zbus.kit.StrKit;
+import io.zbus.kit.logging.Logger;
+import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.mq.disk.Index.BlockOffset;
 import io.zbus.mq.disk.Index.Offset;
  
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {
+	private static final Logger log = LoggerFactory.getLogger(QueueReader.class); 
+	
 	private static final int READER_FILE_SIZE = 1024;  
 	private static final int FILTER_POS = 12;  
+	private static final int FILTER_MAX_LENGTH = 127;  
 	private Block block;  
 	private final Index index;  
 	private final String readerGroup; 
@@ -276,14 +281,17 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 	} 
 
 	public void setFilter(String filter) {
+		if(filter != null && filter.length() > FILTER_MAX_LENGTH){
+			log.warn("filter:[" + filter + "] exceed max length 127");
+			return;
+		} 
 		lock.lock();
 		try{  
 			this.filter = filter;
 			int len = 0;
 			if(StrKit.isEmpty(filter)){ //clear
 				buffer.position(FILTER_POS);
-				buffer.put((byte)0);  
-				
+				buffer.put((byte)0);   
 			} else {
 				len = filter.length();
 				buffer.position(FILTER_POS);
