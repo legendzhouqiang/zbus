@@ -113,4 +113,8 @@ public class SpringServiceBootstrap extends ServiceBootstrap implements Applicat
 	public void setDeclareOnMissing(boolean declareOnMissing){
 		declareOnMissing(declareOnMissing);
 	}
+	
+	public void setResponseTypeInfo(boolean responseTypeInfo){
+		responseTypeInfo(responseTypeInfo);
+	}
 }

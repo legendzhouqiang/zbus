@@ -13,6 +13,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		<property name="serviceName" value="MyRpc"/> 
 		<property name="serviceToken" value="myrpc_service"/> 
 		<property name="autoDiscover" value="true"/>  
+		<property name="responseTypeInfo" value="true"/>  
 		<property name="port" value="15555"/> <!-- start server internally --> 
 		<!-- Connect to zbus server 
 		<property name="serviceAddress" value="localhost:15555"/>
