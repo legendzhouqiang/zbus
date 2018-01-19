@@ -25,7 +25,7 @@ public class TestCases {
 	}
 	
 	
-	public static void testRpcInvoker(RpcInvoker rpc){
+	public static void testRpcInvoker(RpcInvoker rpc) throws Exception{
 		Object res = rpc.invokeSync(String.class, "echo", "test");
 		System.out.println(res);
 
@@ -107,6 +107,12 @@ public class TestCases {
 		try{
 			biz.throwNullPointerException();
 		} catch (NullPointerException ex) {
+			System.out.println(ex);
+		}
+		
+		try{
+			biz.throwUserException();
+		} catch (UserException ex) {
 			System.out.println(ex);
 		}
 		

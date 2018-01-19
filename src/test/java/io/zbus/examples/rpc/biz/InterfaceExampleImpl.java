@@ -133,6 +133,11 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public void throwException() {
 		throw new RuntimeException("runtime exception from server");
 	}
+	
+	public void throwUserException() throws UserException {
+		throw new UserException("user defined exception");
+	}
+	
 	public void throwNullPointerException(){
 		throw new NullPointerException("null pointer");
 	}

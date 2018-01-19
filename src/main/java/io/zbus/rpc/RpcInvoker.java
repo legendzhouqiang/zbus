@@ -69,7 +69,7 @@ public class RpcInvoker {
 		return codec;
 	}
 	
-	public <T> T invokeSync(Class<T> resultClass, String method, Object... args){
+	public <T> T invokeSync(Class<T> resultClass, String method, Object... args) throws Exception{
 		Request request = new Request()
 			.module(module)
 			.method(method)  
@@ -78,7 +78,7 @@ public class RpcInvoker {
 		return invokeSync(resultClass, request);
 	}
 	
-	public <T> T invokeSync(Class<T> resultClass, String method, Class<?>[] paramTypes, Object... args){
+	public <T> T invokeSync(Class<T> resultClass, String method, Class<?>[] paramTypes, Object... args) throws Exception{
 		Request request = new Request()
 			.module(module)
 			.method(method) 
@@ -88,17 +88,17 @@ public class RpcInvoker {
 		return invokeSync(resultClass, request);
 	} 
 	
-	public <T> T invokeSync(Class<T> resultClass, Request request){
+	public <T> T invokeSync(Class<T> resultClass, Request request) throws Exception{
 		Message msg = invokeSync0(request); 
 		return extractResult(msg, resultClass); 
 	}
 	
 	
-	public Object invokeSync(String method, Object... args) {	
+	public Object invokeSync(String method, Object... args) throws Exception {	
 		return invokeSync(method, null, args);
 	}  
 	
-	public Object invokeSync(String method, Class<?>[] types, Object... args) {	
+	public Object invokeSync(String method, Class<?>[] types, Object... args) throws Exception {	
 		Request req = new Request()
 			.module(module)
 			.method(method) 
@@ -108,7 +108,7 @@ public class RpcInvoker {
 		return extractResult(msg, Object.class);
 	} 
 	
-	public Object invokeSync(Request request) {
+	public Object invokeSync(Request request) throws Exception {
 		Message msg = invokeSync0(request);  
 		return extractResult(msg, Object.class);
 	}
@@ -180,13 +180,13 @@ public class RpcInvoker {
 	 
 	 
 	@SuppressWarnings("unchecked")
-	private <T> T extractResult(Message message, Class<T> clazz){
+	private <T> T extractResult(Message message, Class<T> clazz) throws Exception{
 		if(Message.class.isAssignableFrom(clazz)) return (T)message; //special case
 	
 		Object result = codec.decodeResponse(message);  
 		if(message.getStatus() != RpcCodec.STATUS_OK){
-			if(result instanceof RuntimeException){
-				throw (RuntimeException)result;
+			if(result instanceof Exception){
+				throw (Exception)result;
 			} else {
 				throw new RpcException(result.toString());
 			}

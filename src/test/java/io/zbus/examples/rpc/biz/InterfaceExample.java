@@ -54,6 +54,8 @@ public interface InterfaceExample{
 	
 	void throwNullPointerException();
 	
+	void throwUserException() throws UserException;
+	
 	void throwException();
 	
 	void throwUnkownException();
