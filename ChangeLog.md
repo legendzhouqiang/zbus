@@ -94,6 +94,7 @@
 
 - zbus.js支持RPC默认不填写服务器地址
 - 服务器客户端都支持消息header部分URLEncode/Decode
+- 修复RPC客户端只支持Runtime异常，支持各类异常
 
 
 ## TODO lists
