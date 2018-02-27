@@ -121,7 +121,7 @@ public class BlockReadBuffer {
 		byte[] data = new byte[4];
 		int n = read(data);
 		if(n != 4){
-			throw new IllegalStateException("Not enought data");
+			throw new IllegalStateException("Not enough data");
 		} 
 		int ch1 = data[0]&0XFF;
         int ch2 = data[1]&0XFF;

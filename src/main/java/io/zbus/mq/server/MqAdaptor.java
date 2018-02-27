@@ -31,7 +31,7 @@ import io.zbus.mq.Protocol.TopicInfo;
 import io.zbus.mq.disk.DiskMessage;
 import io.zbus.mq.server.auth.AuthProvider;
 import io.zbus.mq.server.auth.Token;
-import io.zbus.rpc.Request;
+import io.zbus.rpc2.Request;
 import io.zbus.transport.MessageHandler;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session; 
