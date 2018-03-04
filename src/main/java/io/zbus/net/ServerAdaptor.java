@@ -35,9 +35,13 @@ public abstract class ServerAdaptor implements IoAdaptor{
 	}
  
 	@Override
-	public void onError(Throwable e, Session sess) throws Exception { 
+	public void onError(Throwable e, Session sess) { 
 		log.info("Error: " + sess, e);
-		cleanSession(sess);
+		try {
+			cleanSession(sess);
+		} catch (IOException ex) {
+			log.error(ex.getMessage(), ex);
+		}
 	} 
 
 	@Override

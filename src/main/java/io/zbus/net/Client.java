@@ -1,5 +1,5 @@
 package io.zbus.net;
- 
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,210 +21,243 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.NetKit;
 import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory; 
+import io.zbus.kit.logging.LoggerFactory;
 
+public class Client<REQ, RES> implements Closeable {
+	private static final Logger log = LoggerFactory.getLogger(Client.class);
 
-public class Client<REQ, RES> implements Closeable{
-	private static final Logger log = LoggerFactory.getLogger(Client.class); 
-	  
-	public volatile MessageHandler<RES> onMessage; 
+	public volatile MessageHandler<RES> onMessage;
 	public volatile ErrorHandler onError;
 	public volatile EventHandler onOpen;
-	public volatile EventHandler onClose;   
-	
-	public long connectTimeout = 3000;  
-	public long reconnectDelay = 3000;  
-	
-	
+	public volatile EventHandler onClose;
+
+	public long connectTimeout = 3000;
+	public long reconnectDelay = 3000;
+
 	protected final String host;
-	protected final int port;   
-	
+	protected final int port;
+
 	protected Bootstrap bootstrap;
-	protected final EventLoopGroup group;  
-	protected SslContext sslCtx; 
-	protected ChannelFuture channelFuture; 
-	protected CodecInitializer codecInitializer;   
-	
-	protected volatile ScheduledExecutorService heartbeator = null; 
-	protected MessageBuilder<REQ> heartbeatMessageBuilder;   
-	
-	protected Session session;  
+	protected final EventLoopGroup group;
+	protected SslContext sslCtx;
+	protected ChannelFuture channelFuture;
+	protected CodecInitializer codecInitializer;
+
+	protected volatile ScheduledExecutorService heartbeator = null;
+	protected MessageBuilder<REQ> heartbeatMessageBuilder;
+
+	protected Session session;
 	protected IoAdaptor ioAdaptor;
-	
-	protected CountDownLatch activeLatch = new CountDownLatch(1);     
-	protected List<REQ> sendingMessages = Collections.synchronizedList(new ArrayList<>());
-	
+
+	protected CountDownLatch activeLatch = new CountDownLatch(1);
+	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>());
+
 	private ConnectionStatus status = ConnectionStatus.New;
-	
-	public Client(String address, EventLoop loop){   
-		group = loop.getGroup(); 
-		
+
+	public Client(String address, EventLoop loop) {
+		group = loop.getGroup();
+
 		Object[] hp = NetKit.hostPort(address);
-		this.host = (String)hp[0];
-		this.port = (Integer)hp[1]; 
-		
-		onOpen = ()->{
+		this.host = (String) hp[0];
+		this.port = (Integer) hp[1];
+
+		onOpen = () -> {
 			String msg = String.format("Connection(%s) OK", serverAddress());
-			log.info(msg); 
+			log.info(msg);
 		};
-		
-		onClose = ()->{
+
+		onClose = () -> {
 			log.warn("Disconnected from(%s)", serverAddress());
+			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0);
 			try {
 				Thread.sleep(reconnectDelay);
 			} catch (InterruptedException e1) {
 				return;
 			}
-			
+
 			connect();
-		};  
-		
-		ioAdaptor = new IoAdaptor() {  
+		};
+
+		onError = e -> {
+			log.error(e.getMessage(), e);
+		};
+
+		ioAdaptor = new IoAdaptor() {
 			@Override
-			public void sessionCreated(Session session) throws IOException { 
-				Client.this.session = session; 
+			public void sessionCreated(Session session) throws IOException {
+				Client.this.session = session;
 				activeLatch.countDown();
 				status = ConnectionStatus.Open;
-				if(onOpen != null){
+				for (REQ req : messageSendingQueue) {
+					session.write(req);
+				}
+				messageSendingQueue.clear();
+
+				if (onOpen != null) {
 					onOpen.handle();
 				}
 			}
 
 			public void sessionToDestroy(Session session) throws IOException {
-				if(Client.this.session != null){
-					Client.this.session.close(); 
+				if (Client.this.session != null) {
+					Client.this.session.close();
 					Client.this.session = null;
-				} 
+				}
 				status = ConnectionStatus.Closed;
-				if(onClose != null){
+				if (onClose != null) {
 					onClose.handle();
-				}   
-			} 
+				}
+			}
 
 			@Override
-			public void onError(Throwable e, Session sess) throws IOException { 
-				if(onError != null){
-					onError.handle(e);
+			public void onError(Throwable e, Session sess) {
+				if (onError != null) {
+					try {
+						onError.handle(e);
+					} catch (Exception ex) {
+						log.error(ex.getMessage(), ex.getCause());
+					}
 				} else {
 					log.error(e.getMessage(), e);
 				}
-			} 
-			
-			@Override
-			public void onIdle(Session sess) throws IOException { 
-				
 			}
-			  
-			
+
+			@Override
+			public void onIdle(Session sess) throws IOException {
+
+			}
+
 			@Override
 			public void onMessage(Object msg, Session sess) throws IOException {
 				@SuppressWarnings("unchecked")
-				RES res = (RES)msg;     
-		    	if(onMessage != null){
-		    		onMessage.handle(res);
-		    		return;
-		    	}  
-		    	log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
-			}    
+				RES res = (RES) msg;
+				if (onMessage != null) {
+					onMessage.handle(res);
+					return;
+				}
+				log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
+			}
 		};
-	}  
-	
-	  
-	protected String serverAddress(){
-		return String.format("%s%s:%d", sslCtx==null? "" : "[SSL]", host, port);
 	}
-	
+
+	protected String serverAddress() {
+		return String.format("%s%s:%d", sslCtx == null ? "" : "[SSL]", host, port);
+	}
+
 	public void codec(CodecInitializer codecInitializer) {
 		this.codecInitializer = codecInitializer;
-	}  
+	}
 
-	public synchronized void connect(){  
-		init(); 
+	public synchronized void connect() {
+		init();
 		activeLatch = new CountDownLatch(1);
 		status = ConnectionStatus.Connecting;
 		channelFuture = bootstrap.connect(host, port);
-	}    
-	
-	private void init(){
-		if(bootstrap != null) return;
-		if(this.group == null){
+		try {
+			channelFuture = channelFuture.sync();
+		} catch (InterruptedException e) {
+			return;
+		} catch (Throwable ex) {
+			if (onClose != null) {
+				onClose.handle();
+			}
+
+			if (onError != null) {
+				try {
+					onError.handle(ex);
+				} catch (Exception e) {
+					if(ex instanceof RuntimeException){
+						throw (RuntimeException)ex;
+					}
+					throw new RuntimeException(ex.getMessage(), ex.getCause());
+				}
+			} else {
+				if(ex instanceof RuntimeException){
+					throw (RuntimeException)ex;
+				}
+				throw new RuntimeException(ex.getMessage(), ex.getCause());
+			}
+		}
+	}
+
+	private void init() {
+		if (bootstrap != null)
+			return;
+		if (this.group == null) {
 			throw new IllegalStateException("group missing");
 		}
 		bootstrap = new Bootstrap();
-		bootstrap.group(this.group) 
-		 .channel(NioSocketChannel.class)  
-		 .handler(new ChannelInitializer<SocketChannel>() { 
+		bootstrap.group(this.group).channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
 			NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
+
 			@Override
-			protected void initChannel(SocketChannel ch) throws Exception { 
-				if(codecInitializer == null){
-					log.warn("Missing codecInitializer"); 
-				} 
+			protected void initChannel(SocketChannel ch) throws Exception {
+				if (codecInitializer == null) {
+					log.warn("Missing codecInitializer");
+				}
 				ChannelPipeline p = ch.pipeline();
-				if(sslCtx != null){
+				if (sslCtx != null) {
 					p.addLast(sslCtx.newHandler(ch.alloc()));
 				}
-				if(codecInitializer != null){
+				if (codecInitializer != null) {
 					List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
 					codecInitializer.initPipeline(handlers);
-					for(ChannelHandler handler : handlers){ 
-						p.addLast((ChannelHandler)handler);
+					for (ChannelHandler handler : handlers) {
+						p.addLast((ChannelHandler) handler);
 					}
 				}
 				p.addLast(nettyToIoAdaptor);
 			}
-		});  
-	}   
-	 
-	
-	public synchronized void startHeartbeat(long intervalInMillis, MessageBuilder<REQ> builder){
+		});
+	}
+
+	public synchronized void startHeartbeat(long intervalInMillis, MessageBuilder<REQ> builder) {
 		this.heartbeatMessageBuilder = builder;
-		if(heartbeator == null){
+		if (heartbeator == null) {
 			heartbeator = Executors.newSingleThreadScheduledExecutor();
-			this.heartbeator.scheduleAtFixedRate(()-> { 
+			this.heartbeator.scheduleAtFixedRate(() -> {
 				try {
-					if(heartbeatMessageBuilder != null){
+					if (heartbeatMessageBuilder != null) {
 						REQ msg = heartbeatMessageBuilder.build();
 						sendMessage(msg);
 					}
 				} catch (Exception e) {
 					log.warn(e.getMessage(), e);
-				} 
+				}
 			}, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS);
 		}
-	}  
+	}
 
 	public ConnectionStatus getStatus() {
 		return status;
-	} 
-	
-	public void sendMessage(REQ req) { 
-		if(status != ConnectionStatus.Open){
-			sendingMessages.add(req);
-			if(status == ConnectionStatus.New){
+	}
+
+	public void sendMessage(REQ req) {
+		if (status != ConnectionStatus.Open) {
+			messageSendingQueue.add(req);
+			if (status == ConnectionStatus.New) {
 				connect();
 			}
 			return;
 		}
-		session.write(req);  
-    } 
-	
-	 
+		session.write(req);
+	}
+
 	@Override
 	public void close() throws IOException {
 		onOpen = null;
-		onClose = null; 
-		
-		if(session != null){
+		onClose = null;
+
+		if (session != null) {
 			session.close();
 			session = null;
-		}   
-		
-		if(heartbeator != null){
+		}
+
+		if (heartbeator != null) {
 			heartbeator.shutdownNow();
 			heartbeator = null;
-		} 
-		
+		}
+
 		status = ConnectionStatus.Closed;
-	}   
+	}
 }

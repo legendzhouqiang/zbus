@@ -29,6 +29,6 @@ public interface IoAdaptor{
 	void sessionCreated(Session sess) throws IOException; 
 	void sessionToDestroy(Session sess) throws IOException;  
 	void onMessage(Object msg, Session sess) throws IOException;  
-	void onError(Throwable e, Session sess) throws Exception; 
+	void onError(Throwable e, Session sess); 
 	void onIdle(Session sess) throws IOException; 
 }
