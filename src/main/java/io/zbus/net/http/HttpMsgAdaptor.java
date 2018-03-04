@@ -30,40 +30,40 @@ import io.zbus.net.MessageHandler;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session; 
 
-public class MessageAdaptor extends ServerAdaptor{     
-	protected MessageHandler<Message> filterHandler;   
-	protected Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<String, MessageHandler<Message>>();  
+public class HttpMsgAdaptor extends ServerAdaptor{     
+	protected MessageHandler<HttpMsg> filterHandler;   
+	protected Map<String, MessageHandler<HttpMsg>> handlerMap = new ConcurrentHashMap<String, MessageHandler<HttpMsg>>();  
 	
-	public MessageAdaptor(){ 
+	public HttpMsgAdaptor(){ 
 		this(null);
 	}
 	
-	public MessageAdaptor(Map<String, Session> sessionTable){
+	public HttpMsgAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable);
-		this.cmd(Message.HEARTBEAT, new MessageHandler<Message>() { 
-			public void handle(Message msg, Session sess) throws IOException { 
+		this.cmd(HttpMsg.HEARTBEAT, new MessageHandler<HttpMsg>() { 
+			public void handle(HttpMsg msg, Session sess) throws IOException { 
 				//ignore
 			}
 		});
 	}
 	 
-	public void cmd(String command, MessageHandler<Message> handler){
+	public void cmd(String command, MessageHandler<HttpMsg> handler){
     	this.handlerMap.put(command, handler);
     }
 	
-	public void url(String url, MessageHandler<Message> handler){
+	public void url(String url, MessageHandler<HttpMsg> handler){
 		if(url.startsWith("/")){
 			url = url.substring(1);
 		}
     	this.handlerMap.put(url, handler);
     }
 	 
-    public void registerFilterHandler(MessageHandler<Message> filterHandler) {
+    public void registerFilterHandler(MessageHandler<HttpMsg> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
     public void onMessage(Object obj, Session sess) throws IOException {  
-    	Message msg = (Message)obj;  
+    	HttpMsg msg = (HttpMsg)obj;  
     	final String msgId = msg.getId();
     	handleUrlMessage(msg);
     	
@@ -73,14 +73,14 @@ public class MessageAdaptor extends ServerAdaptor{
     	
     	String cmd = msg.getCommand();
     	if(cmd != null){ //cmd
-    		MessageHandler<Message> handler = handlerMap.get(cmd);
+    		MessageHandler<HttpMsg> handler = handlerMap.get(cmd);
         	if(handler != null){
         		handler.handle(msg, sess);
         		return;
         	}
     	}
     	 
-    	Message res = new Message();
+    	HttpMsg res = new HttpMsg();
     	res.setId(msgId); 
     	res.setStatus(404);
     	String text = String.format("404: Command(%s) Not Found", cmd);
@@ -88,7 +88,7 @@ public class MessageAdaptor extends ServerAdaptor{
     	sess.write(res); 
     }  
     
-    protected void handleUrlMessage(Message msg){ 
+    protected void handleUrlMessage(HttpMsg msg){ 
     	if(msg.getCommand() != null){
     		return;
     	} 

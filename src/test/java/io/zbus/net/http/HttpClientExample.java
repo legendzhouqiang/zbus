@@ -1,7 +1,7 @@
 package io.zbus.net.http;
 
 import io.zbus.net.EventLoop;
-import io.zbus.net.http.Message;
+import io.zbus.net.http.HttpMsg;
 import io.zbus.net.http.HttpClient;
 
 public class HttpClientExample {
@@ -10,7 +10,7 @@ public class HttpClientExample {
 		EventLoop loop = new EventLoop();  
 		HttpClient client = new HttpClient("localhost", loop);
 
-		Message req = new Message(); 
+		HttpMsg req = new HttpMsg(); 
 		req.setBody("中文");
 		client.sendMessage(req);
 		client.messageHandler = (msg, session)->{
