@@ -24,15 +24,7 @@ package io.zbus.net;
 
 import java.io.IOException;
  
- 
-
-/**
- * Session life-cycle events management. This adaptor is very important point to configure user specific behavior.
- * 
- * 
- * @author rushmore (洪磊明)
- *
- */
+  
 public interface IoAdaptor{   
 	void sessionCreated(Session sess) throws IOException; 
 	void sessionToDestroy(Session sess) throws IOException;  
