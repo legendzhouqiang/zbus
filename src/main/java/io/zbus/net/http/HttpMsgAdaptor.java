@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.net.MessageHandler;
+import io.zbus.net.SessionMessageHandler;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session; 
 
 public class HttpMsgAdaptor extends ServerAdaptor{     
-	protected MessageHandler<HttpMsg> filterHandler;   
-	protected Map<String, MessageHandler<HttpMsg>> handlerMap = new ConcurrentHashMap<String, MessageHandler<HttpMsg>>();  
+	protected SessionMessageHandler<HttpMsg> filterHandler;   
+	protected Map<String, SessionMessageHandler<HttpMsg>> handlerMap = new ConcurrentHashMap<String, SessionMessageHandler<HttpMsg>>();  
 	
 	public HttpMsgAdaptor(){ 
 		this(null);
@@ -40,25 +40,25 @@ public class HttpMsgAdaptor extends ServerAdaptor{
 	
 	public HttpMsgAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable);
-		this.cmd(HttpMsg.HEARTBEAT, new MessageHandler<HttpMsg>() { 
+		this.cmd(HttpMsg.HEARTBEAT, new SessionMessageHandler<HttpMsg>() { 
 			public void handle(HttpMsg msg, Session sess) throws IOException { 
 				//ignore
 			}
 		});
 	}
 	 
-	public void cmd(String command, MessageHandler<HttpMsg> handler){
+	public void cmd(String command, SessionMessageHandler<HttpMsg> handler){
     	this.handlerMap.put(command, handler);
     }
 	
-	public void url(String url, MessageHandler<HttpMsg> handler){
+	public void url(String url, SessionMessageHandler<HttpMsg> handler){
 		if(url.startsWith("/")){
 			url = url.substring(1);
 		}
     	this.handlerMap.put(url, handler);
     }
 	 
-    public void registerFilterHandler(MessageHandler<HttpMsg> filterHandler) {
+    public void registerFilterHandler(SessionMessageHandler<HttpMsg> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
@@ -73,7 +73,7 @@ public class HttpMsgAdaptor extends ServerAdaptor{
     	
     	String cmd = msg.getCommand();
     	if(cmd != null){ //cmd
-    		MessageHandler<HttpMsg> handler = handlerMap.get(cmd);
+    		SessionMessageHandler<HttpMsg> handler = handlerMap.get(cmd);
         	if(handler != null){
         		handler.handle(msg, sess);
         		return;

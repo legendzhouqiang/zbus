@@ -3,6 +3,7 @@ package io.zbus.net;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -23,9 +24,18 @@ import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory; 
 
 
-public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeable{
+public class Client<REQ, RES> implements Closeable{
 	private static final Logger log = LoggerFactory.getLogger(Client.class); 
 	  
+	public volatile MessageHandler<RES> onMessage; 
+	public volatile ErrorHandler onError;
+	public volatile EventHandler onOpen;
+	public volatile EventHandler onClose;   
+	
+	public long connectTimeout = 3000;  
+	public long reconnectDelay = 3000;  
+	
+	
 	protected final String host;
 	protected final int port;   
 	
@@ -36,20 +46,15 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 	protected CodecInitializer codecInitializer;   
 	
 	protected volatile ScheduledExecutorService heartbeator = null; 
-	protected MessageBuilder<REQ> heartbeatMessageBuilder;
-	
+	protected MessageBuilder<REQ> heartbeatMessageBuilder;   
 	
 	protected Session session;  
-	protected String clientId; 
-	protected int connectTimeout = 3000;  
+	protected IoAdaptor ioAdaptor;
 	
 	protected CountDownLatch activeLatch = new CountDownLatch(1);     
+	protected List<REQ> sendingMessages = Collections.synchronizedList(new ArrayList<>());
 	
-	public volatile MessageHandler<RES> messageHandler; 
-	public volatile ErrorHandler errorHandler;
-	public volatile ConnectedHandler connectedHandler;
-	public volatile DisconnectedHandler disconnectedHandler;   
-
+	private ConnectionStatus status = ConnectionStatus.New;
 	
 	public Client(String address, EventLoop loop){   
 		group = loop.getGroup(); 
@@ -58,17 +63,72 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 		this.host = (String)hp[0];
 		this.port = (Integer)hp[1]; 
 		
-		connectedHandler = ()->{
-			String msg = String.format("Connection(%s) OK, ID=%s", serverAddress(), clientId);
+		onOpen = ()->{
+			String msg = String.format("Connection(%s) OK", serverAddress());
 			log.info(msg); 
 		};
 		
-		disconnectedHandler = ()->{
-			log.warn("Disconnected from(%s) ID=%s", serverAddress(), clientId);
-			ensureConnected();//automatically reconnect by default
-		}; 
-	} 
-	 
+		onClose = ()->{
+			log.warn("Disconnected from(%s)", serverAddress());
+			try {
+				Thread.sleep(reconnectDelay);
+			} catch (InterruptedException e1) {
+				return;
+			}
+			
+			connect();
+		};  
+		
+		ioAdaptor = new IoAdaptor() {  
+			@Override
+			public void sessionCreated(Session session) throws IOException { 
+				Client.this.session = session; 
+				activeLatch.countDown();
+				status = ConnectionStatus.Open;
+				if(onOpen != null){
+					onOpen.handle();
+				}
+			}
+
+			public void sessionToDestroy(Session session) throws IOException {
+				if(Client.this.session != null){
+					Client.this.session.close(); 
+					Client.this.session = null;
+				} 
+				status = ConnectionStatus.Closed;
+				if(onClose != null){
+					onClose.handle();
+				}   
+			} 
+
+			@Override
+			public void onError(Throwable e, Session sess) throws IOException { 
+				if(onError != null){
+					onError.handle(e);
+				} else {
+					log.error(e.getMessage(), e);
+				}
+			} 
+			
+			@Override
+			public void onIdle(Session sess) throws IOException { 
+				
+			}
+			  
+			
+			@Override
+			public void onMessage(Object msg, Session sess) throws IOException {
+				@SuppressWarnings("unchecked")
+				RES res = (RES)msg;     
+		    	if(onMessage != null){
+		    		onMessage.handle(res);
+		    		return;
+		    	}  
+		    	log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
+			}    
+		};
+	}  
+	
 	  
 	protected String serverAddress(){
 		return String.format("%s%s:%d", sslCtx==null? "" : "[SSL]", host, port);
@@ -81,28 +141,9 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 	public synchronized void connect(){  
 		init(); 
 		activeLatch = new CountDownLatch(1);
+		status = ConnectionStatus.Connecting;
 		channelFuture = bootstrap.connect(host, port);
-	}   
-	
-	
-	public void connectSync(long timeout) throws IOException, InterruptedException {
-		if(hasConnected()) return; 
-		
-		synchronized (this) {
-			if(!hasConnected()){ 
-	    		connect();
-	    		activeLatch.await(timeout,TimeUnit.MILLISECONDS); 
-				
-	    		if(hasConnected()){ 
-					return;
-				}   
-				channelFuture.sync();
-				String msg = String.format("Connection(%s) failed", serverAddress()); 
-				log.warn(msg);
-				cleanSession();  
-			}
-		} 
-	} 
+	}    
 	
 	private void init(){
 		if(bootstrap != null) return;
@@ -113,7 +154,7 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 		bootstrap.group(this.group) 
 		 .channel(NioSocketChannel.class)  
 		 .handler(new ChannelInitializer<SocketChannel>() { 
-			NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(Client.this);
+			NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception { 
 				if(codecInitializer == null){
@@ -151,76 +192,28 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 				} 
 			}, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS);
 		}
-	}     
+	}  
+
+	public ConnectionStatus getStatus() {
+		return status;
+	} 
 	
-	
-	protected synchronized void cleanSession() throws IOException{
-		if(session != null){
-			session.close();
-			session = null;
-			activeLatch = new CountDownLatch(1);
-		} 
-	}
-	 
-	
-	public boolean hasConnected() {
-		return session != null && session.active();
-	}
-	
-	private Thread asyncConnectThread; 
-	public void ensureConnected(){
-		if(hasConnected()) return;
-		if(asyncConnectThread != null) return;
-		
-		asyncConnectThread = new Thread(()->{  
-			try {
-				while(!hasConnected()){
-					try{
-						connectSync(connectTimeout); 
-						if(!hasConnected()){
-							Thread.sleep(connectTimeout);
-						}
-					} catch (IOException e) {    
-						String msg = String.format("Trying again(%s) in %.1f seconds", serverAddress(), connectTimeout/1000.0); 
-						log.warn(msg); 
-						Thread.sleep(connectTimeout);
-					} catch (InterruptedException e) {
-						throw e;
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-						break;
-					}  
-				} 
-				asyncConnectThread = null;
-			} catch (InterruptedException e) {
-				//ignore
-			}   
-		}); 
-		asyncConnectThread.start(); 
-	}
-	
-	
-	public void sendMessage(REQ req) throws IOException, InterruptedException{
-		if(!hasConnected()){
-			connectSync(connectTimeout);  
-			if(!hasConnected()){
-				String msg = String.format("Connection(%s) failed", serverAddress()); 
-				throw new IOException(msg);
+	public void sendMessage(REQ req) { 
+		if(status != ConnectionStatus.Open){
+			sendingMessages.add(req);
+			if(status == ConnectionStatus.New){
+				connect();
 			}
-		}  
+			return;
+		}
 		session.write(req);  
     } 
 	
 	 
 	@Override
 	public void close() throws IOException {
-		connectedHandler = null;
-		disconnectedHandler = null;
-		
-		if(asyncConnectThread != null){
-			asyncConnectThread.interrupt();
-			asyncConnectThread = null;
-		}
+		onOpen = null;
+		onClose = null; 
 		
 		if(session != null){
 			session.close();
@@ -231,54 +224,7 @@ public class Client<REQ, RES> extends AttributeMap implements IoAdaptor, Closeab
 			heartbeator.shutdownNow();
 			heartbeator = null;
 		} 
-	} 
-  
-
-	@Override
-	public void sessionCreated(Session session) throws IOException { 
-		this.session = session;
-		this.clientId = this.session.id();
-		activeLatch.countDown();
-		if(connectedHandler != null){
-			connectedHandler.onConnected();
-		}
-	}
-
-	public void sessionToDestroy(Session session) throws IOException {
-		if(this.session != null){
-			this.session.close(); 
-			this.session = null;
-		} 
 		
-		if(disconnectedHandler != null){
-			disconnectedHandler.onDisconnected();
-		}   
-	} 
-
-	@Override
-	public void onError(Throwable e, Session sess) throws IOException { 
-		if(errorHandler != null){
-			errorHandler.onError(e, session);
-		} else {
-			log.error(e.getMessage(), e);
-		}
-	} 
-	
-	@Override
-	public void onIdle(Session sess) throws IOException { 
-		
-	}
-	  
-	
-	@Override
-	public void onMessage(Object msg, Session sess) throws IOException {
-		@SuppressWarnings("unchecked")
-		RES res = (RES)msg;     
-    	if(messageHandler != null){
-    		messageHandler.handle(res, sess);
-    		return;
-    	} 
-    	
-    	log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
-	}    
+		status = ConnectionStatus.Closed;
+	}   
 }

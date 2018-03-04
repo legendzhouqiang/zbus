@@ -2,7 +2,7 @@ package io.zbus.net.http;
 
 import java.io.IOException;
 
-import io.zbus.net.MessageHandler;
+import io.zbus.net.SessionMessageHandler;
 import io.zbus.net.Session; 
 
 public class HttpServerExample {
@@ -11,7 +11,7 @@ public class HttpServerExample {
 	public static void main(String[] args) {    
 		HttpMsgAdaptor adaptor = new HttpMsgAdaptor();
 		
-		adaptor.url("/", new MessageHandler<HttpMsg>() { 
+		adaptor.url("/", new SessionMessageHandler<HttpMsg>() { 
 			@Override
 			public void handle(HttpMsg msg, Session session) throws IOException {  
 				//System.out.println(msg);
