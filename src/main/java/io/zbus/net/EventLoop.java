@@ -25,7 +25,7 @@ public class EventLoop implements Closeable {
 	private int idleTimeInSeconds = 180; //180s 
 	private int packageSizeLimit = 1024*1024*1024; //maximum of 1G
 	
-	private Map<String, SSLEngine> sslEngineCache = new ConcurrentHashMap<>();
+	private Map<String, SslContext> sslContextCache = new ConcurrentHashMap<>();
 
 	public EventLoop() {
 		try {
@@ -119,17 +119,23 @@ public class EventLoop implements Closeable {
 		this.packageSizeLimit = packageSizeLimit;
 	}   
 	
-	public SSLEngine getSSLEngine(String host, int port){
+	public SSLEngine buildSSLEngine(String host, int port, ByteBufAllocator alloc){
 		String key = String.format("%s:%d", host,port);
-		SSLEngine engine = sslEngineCache.get(key);
-		if(engine == null){
-			engine = buildSSLEngine(host, port);
-			sslEngineCache.put(key, engine);
+		SslContext sslContext = sslContextCache.get(key); 
+		if(sslContext == null){
+			sslContext = buildSslContext();
+			sslContextCache.put(key, sslContext);
 		}
-		return engine; 
+		
+		SSLEngine sslEngine = sslContext.newEngine(alloc, host, port); 
+		sslEngine.setUseClientMode(true);
+		SSLParameters params = sslEngine.getSSLParameters();
+		params.setEndpointIdentificationAlgorithm("HTTPS");
+		sslEngine.setSSLParameters(params);
+		return sslEngine; 
 	}
 	
-	private SSLEngine buildSSLEngine(String peerHost, int peerPort) { 
+	private SslContext buildSslContext() { 
 		try {
 			SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
 					.sslProvider(SslProvider.JDK)
@@ -138,17 +144,11 @@ public class EventLoop implements Closeable {
 			String[] protocols = new String[] { "TLSv1.2", "TLSv1.1", "TLSv1" };
 			sslContextBuilder.protocols(protocols);
 			SslContext sslContext = sslContextBuilder.build();
+			return sslContext;
 			
-			SSLEngine sslEngine = sslContext.newEngine(ByteBufAllocator.DEFAULT, peerHost, peerPort); 
-			sslEngine.setUseClientMode(true);
-			SSLParameters params = sslEngine.getSSLParameters();
-			params.setEndpointIdentificationAlgorithm("HTTPS");
-			sslEngine.setSSLParameters(params);
-			return sslEngine;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-	}
-	
+	} 
 }

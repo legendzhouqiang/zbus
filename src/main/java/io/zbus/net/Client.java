@@ -19,7 +19,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
@@ -43,10 +42,10 @@ public class Client<REQ, RES> implements Closeable {
 	protected final URI uri;
 
 	protected Bootstrap bootstrap;
-	protected Object bootstrapLock = new Object();
-	protected final EventLoopGroup group;
-	protected SslContext sslCtx;
-	private SSLEngine sslEngine; // FIXME use SslContext
+	protected Object bootstrapLock = new Object(); 
+	protected final EventLoop loop;
+	protected SslContext sslCtx; 
+	protected final boolean sslEnabled;
 
 	protected ChannelFuture connectFuture;
 	protected CodecInitializer codecInitializer;
@@ -62,7 +61,7 @@ public class Client<REQ, RES> implements Closeable {
 	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
  
 	public Client(String address, EventLoop loop) {
-		group = loop.getGroup();
+		this.loop = loop; 
 		boolean isSsl = false;
 		try {
 			uri = new URI(address); 
@@ -76,11 +75,8 @@ public class Client<REQ, RES> implements Closeable {
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(address + " is illegal");
 		}   
-		
-		sslCtx = loop.getSslContext(); 
-		if (isSsl && sslCtx == null) {
-			sslEngine = loop.getSSLEngine(host, port);
-		}
+		sslEnabled = isSsl;
+		sslCtx = loop.getSslContext();  
 
 		EventHandler reconnect = ()->{
 			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0);
@@ -184,14 +180,9 @@ public class Client<REQ, RES> implements Closeable {
 			connectFuture = bootstrap.connect(host, port);
 			try {
 				connectFuture = connectFuture.sync(); 
-			} catch (InterruptedException e) {
-				return;
 			} catch (Throwable ex) { 
 				cleanSessionUnsafe();
-				ioAdaptor.onError(ex, session);  
-				if (onClose != null) {
-					onClose.handle();
-				} 
+				ioAdaptor.onError(ex, session);   
 			}
 		} 
 	}  
@@ -199,36 +190,36 @@ public class Client<REQ, RES> implements Closeable {
 	private void init() {
 		synchronized (bootstrapLock) {
 			if (bootstrap != null) return; 
-			if (this.group == null) {
+			if (this.loop.getGroup() == null) {
 				throw new IllegalStateException("group missing");
 			}
 			
 			bootstrap = new Bootstrap();
-			bootstrap.group(this.group)
+			bootstrap.group(this.loop.getGroup())
 				.channel(NioSocketChannel.class)
-				.handler(new ChannelInitializer<SocketChannel>() {
+				.handler(new ChannelInitializer<SocketChannel>() { 
 					NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
-
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
 						if (codecInitializer == null) {
 							log.warn("Missing codecInitializer");
 						}
 						ChannelPipeline p = ch.pipeline();
-						if (sslCtx != null) {
+						if (sslCtx != null) { //SslContext take first priority!!!
 							p.addLast(sslCtx.newHandler(ch.alloc()));
-						} else if (sslEngine != null) { // FIXME use only
-														// sslCtx
+						} else if (sslEnabled) {
+							SSLEngine sslEngine = loop.buildSSLEngine(host, port, ch.alloc());
 							SslHandler sslHandler = new SslHandler(sslEngine);
 							p.addLast(sslHandler);
 						}
+						
 						if (codecInitializer != null) {
 							List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
 							codecInitializer.initPipeline(handlers);
 							for (ChannelHandler handler : handlers) {
 								p.addLast((ChannelHandler) handler);
 							}
-						}
+						} 
 						p.addLast(nettyToIoAdaptor);
 					}
 				});
@@ -254,7 +245,7 @@ public class Client<REQ, RES> implements Closeable {
 	
 	public boolean active(){ 
 		synchronized (sessionLock) {
-			return session != null || session.active();
+			return session != null && session.active();
 		} 
 	}
 

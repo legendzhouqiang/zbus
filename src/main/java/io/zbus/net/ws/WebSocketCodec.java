@@ -1,12 +1,13 @@
 package io.zbus.net.ws;
 
+import java.net.URI;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -14,31 +15,32 @@ import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException;
+import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
 public class WebSocketCodec extends MessageToMessageCodec<Object, byte[]> {
 	private static final Logger log = LoggerFactory.getLogger(WebSocketCodec.class); 
 	
-	private WebSocketClientHandshaker handshaker;
-	private ChannelPromise handshakeFuture;
+	private WebSocketClientHandshaker handshaker; 
+	private URI uri;
 
-	public WebSocketCodec(WebSocketClientHandshaker handshaker) {
-		this.handshaker = handshaker;
-	} 
-	@Override
-	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		handshakeFuture = ctx.newPromise();
-		handshaker.handshake(ctx.channel());
-		super.channelActive(ctx);
+	public WebSocketCodec(URI uri) {
+		this.uri = uri;
 	} 
 	
 	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception { 
-		super.channelInactive(ctx);
-	}
+	public void channelActive(ChannelHandlerContext ctx) throws Exception { 
+		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
+                uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
+		
+		handshaker.handshake(ctx.channel());  
+		
+		super.channelActive(ctx);
+	}  
 	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, byte[] msg, List<Object> out) throws Exception { 
@@ -63,17 +65,16 @@ public class WebSocketCodec extends MessageToMessageCodec<Object, byte[]> {
 		Channel ch = ctx.channel();
 		if (!handshaker.isHandshakeComplete()) {
 			try {
-				handshaker.finishHandshake(ch, (FullHttpResponse) msg); 
-				handshakeFuture.setSuccess(); 
+				handshaker.finishHandshake(ch, (FullHttpResponse) msg);  
 			} catch (WebSocketHandshakeException e) { 
-				log.error(e.getMessage(), e);
-				handshakeFuture.setFailure(e);
+				log.error(e.getMessage(), e); 
 			}
 			return;
 		}
 
 		super.channelRead(ctx, msg);
 	} 
+	
 
 	private byte[] decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 		// Check for closing frame
@@ -106,12 +107,5 @@ public class WebSocketCodec extends MessageToMessageCodec<Object, byte[]> {
 		byte[] data = new byte[size];
 		buf.readBytes(data);
 		return data;
-	}
-
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) { 
-		if (!handshakeFuture.isDone()) {
-			handshakeFuture.setFailure(cause);
-		}
-		ctx.close();
-	}
+	} 
 }
