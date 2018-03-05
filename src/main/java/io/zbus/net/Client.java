@@ -59,6 +59,7 @@ public class Client<REQ, RES> implements Closeable {
 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);
 	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
+	protected boolean sendCachedMessages = true;
  
 	public Client(String address, EventLoop loop) {
 		this.loop = loop; 
@@ -110,10 +111,10 @@ public class Client<REQ, RES> implements Closeable {
 					Client.this.session = session;
 				} 
 				activeLatch.countDown(); 
-				for (REQ req : messageSendingQueue) {
-					session.write(req);
+				
+				if(sendCachedMessages){
+					sendCachedMessages();
 				}
-				messageSendingQueue.clear();
 
 				if (onOpen != null) {
 					onOpen.handle();
@@ -160,10 +161,17 @@ public class Client<REQ, RES> implements Closeable {
 			}
 		};
 	}
+	
+	protected void sendCachedMessages(){
+		for (REQ req : messageSendingQueue) {
+			session.write(req);
+		}
+		messageSendingQueue.clear();
+	}
 
 	protected String serverAddress() {
-		return String.format("%s://%s:%d", uri.getScheme(), host, port);
-	}
+		return String.format("%s://%s:%d%s", uri.getScheme(), host, port, uri.getPath());
+	} 
 
 	public void codec(CodecInitializer codecInitializer) {
 		this.codecInitializer = codecInitializer;
@@ -226,7 +234,7 @@ public class Client<REQ, RES> implements Closeable {
 		}
 	}
 
-	public synchronized void startHeartbeat(long intervalInMillis, MessageBuilder<REQ> builder) {
+	public synchronized void heartbeat(long intervalInMillis, MessageBuilder<REQ> builder) {
 		this.heartbeatMessageBuilder = builder;
 		if (heartbeator == null) {
 			heartbeator = Executors.newSingleThreadScheduledExecutor();

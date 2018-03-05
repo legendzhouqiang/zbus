@@ -16,14 +16,12 @@ public class WebSocketExample2 {
 		
 		ws.onMessage = msg->{
 			System.out.println(new String(msg));
-		};
+		};  
 		
 		JSONObject json = new JSONObject();
 		json.put("event", "addChannel");
 		json.put("channel", "ltcbtc_trades");
 		
-		ws.sendMessage(JSON.toJSONString(json).getBytes());
-		
-		//ws.connect(); 
+		ws.sendMessage(JSON.toJSONString(json).getBytes()); 
 	} 
 }
