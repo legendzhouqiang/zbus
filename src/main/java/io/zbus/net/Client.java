@@ -170,8 +170,7 @@ public class Client<REQ, RES> implements Closeable {
 				log.info("Connecting to (%s) in process", serverAddress());
 				return;
 			}
-			activeLatch = new CountDownLatch(1);  
-			log.info("Connecting to (%s)", serverAddress());
+			activeLatch = new CountDownLatch(1);   
 			connectFuture = bootstrap.connect(host, port);
 			try {
 				connectFuture = connectFuture.sync(); 
