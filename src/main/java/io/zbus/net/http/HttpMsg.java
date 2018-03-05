@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory; 
+import io.zbus.kit.logging.LoggerFactory;
 
 public class HttpMsg{  
 	private static final Logger log = LoggerFactory.getLogger(HttpMsg.class); 
@@ -64,6 +64,7 @@ public class HttpMsg{
 	protected Integer status; //null: request, otherwise: response
 	protected String url = "/";
 	protected String method = "GET"; 
+	protected String scheme = "http";
 	
 	protected Map<String, String> headers = new ConcurrentHashMap<String, String>(); 
 	protected byte[] body; 
@@ -427,7 +428,7 @@ public class HttpMsg{
 	
 	private void writeHttpLine(OutputStream out) throws IOException{
 		if(this.status != null){
-			String desc = null;
+			String desc = null; 
 			HttpResponseStatus s = HttpResponseStatus.valueOf(Integer.valueOf(status));
 			if(s != null){
 				desc = s.reasonPhrase();

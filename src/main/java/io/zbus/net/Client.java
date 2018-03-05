@@ -2,6 +2,8 @@ package io.zbus.net;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +11,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLEngine;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -19,7 +23,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
-import io.zbus.kit.NetKit;
+import io.netty.handler.ssl.SslHandler;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
@@ -34,12 +38,15 @@ public class Client<REQ, RES> implements Closeable {
 	public long connectTimeout = 3000;
 	public long reconnectDelay = 3000;
 
-	protected final String host;
-	protected final int port;
+	protected String host;
+	protected int port;
+	protected String scheme = "tcp"; //tcp, tcps, http, https
 
 	protected Bootstrap bootstrap;
 	protected final EventLoopGroup group;
 	protected SslContext sslCtx;
+	private SSLEngine sslEngine; // FIXME use SslContext
+
 	protected ChannelFuture channelFuture;
 	protected CodecInitializer codecInitializer;
 
@@ -53,13 +60,30 @@ public class Client<REQ, RES> implements Closeable {
 	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>());
 
 	private ConnectionStatus status = ConnectionStatus.New;
-
+ 
 	public Client(String address, EventLoop loop) {
 		group = loop.getGroup();
-
-		Object[] hp = NetKit.hostPort(address);
-		this.host = (String) hp[0];
-		this.port = (Integer) hp[1];
+		boolean isSsl = false;
+		try {
+			URI uri = new URI(address); 
+			scheme = uri.getScheme();
+			host = uri.getHost();
+			port = uri.getPort();
+			isSsl = "https".equalsIgnoreCase(scheme) || "wss".equals(scheme);
+			if(port < 0){
+				port = isSsl? 443 : 80;
+			}
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(address + " is illegal");
+		}   
+		
+		sslCtx = loop.getSslContext();
+		if(sslCtx != null){
+			scheme = "tcps";
+		} 		 
+		if (isSsl && sslCtx == null) {
+			sslEngine = loop.getSSLEngine(host, port);
+		}
 
 		onOpen = () -> {
 			String msg = String.format("Connection(%s) OK", serverAddress());
@@ -73,8 +97,7 @@ public class Client<REQ, RES> implements Closeable {
 				Thread.sleep(reconnectDelay);
 			} catch (InterruptedException e1) {
 				return;
-			}
-
+			} 
 			connect();
 		};
 
@@ -141,7 +164,7 @@ public class Client<REQ, RES> implements Closeable {
 	}
 
 	protected String serverAddress() {
-		return String.format("%s%s:%d", sslCtx == null ? "" : "[SSL]", host, port);
+		return String.format("%s://%s:%d", scheme, host, port);
 	}
 
 	public void codec(CodecInitializer codecInitializer) {
@@ -166,19 +189,19 @@ public class Client<REQ, RES> implements Closeable {
 				try {
 					onError.handle(ex);
 				} catch (Exception e) {
-					if(ex instanceof RuntimeException){
-						throw (RuntimeException)ex;
+					if (ex instanceof RuntimeException) {
+						throw (RuntimeException) ex;
 					}
 					throw new RuntimeException(ex.getMessage(), ex.getCause());
 				}
 			} else {
-				if(ex instanceof RuntimeException){
-					throw (RuntimeException)ex;
+				if (ex instanceof RuntimeException) {
+					throw (RuntimeException) ex;
 				}
 				throw new RuntimeException(ex.getMessage(), ex.getCause());
 			}
 		}
-	}
+	}  
 
 	private void init() {
 		if (bootstrap != null)
@@ -198,6 +221,10 @@ public class Client<REQ, RES> implements Closeable {
 				ChannelPipeline p = ch.pipeline();
 				if (sslCtx != null) {
 					p.addLast(sslCtx.newHandler(ch.alloc()));
+				} else if (sslEngine != null) { // FIXME use only sslCtx
+					SslHandler sslHandler = new SslHandler(sslEngine);
+					//sslHandler.setHandshakeTimeoutMillis(10000);
+					p.addLast(sslHandler);
 				}
 				if (codecInitializer != null) {
 					List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();

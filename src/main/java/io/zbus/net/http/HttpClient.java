@@ -1,4 +1,5 @@
 package io.zbus.net.http;
+ 
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -23,34 +24,43 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
 			p.add(new HttpMsgCodec());
 		});
-		
-		onClose = null;  //Disable auto reconnect 
+
+		onClose = null; // Disable auto reconnect
 		onError = null;
 	}
 	
+	private void fillCommonHeader(HttpMsg req){
+		req.setHeader("host", host);
+	}
+
 	public HttpMsg request(HttpMsg req) throws IOException, InterruptedException {
+		fillCommonHeader(req);
 		return request(req, 3000);
 	}
 
 	public HttpMsg request(HttpMsg req, long timeout) throws IOException, InterruptedException {
-		CountDownLatch countDown = new CountDownLatch(1);   
+		fillCommonHeader(req);
+		CountDownLatch countDown = new CountDownLatch(1);
 		AtomicReference<HttpMsg> res = new AtomicReference<HttpMsg>();
-		onMessage = resp->{
+		onMessage = resp -> {
 			res.set(resp);
 			countDown.countDown();
 		};
 		sendMessage(req);
 		countDown.await(timeout, TimeUnit.MILLISECONDS);
-		
+		if(res.get() == null){
+			throw new IOException("Timeout for request: " + req);
+		}
 		return res.get();
 	}
-	
-	public void requestAsync(HttpMsg request,
-			final MessageHandler<HttpMsg> messageHandler,
-			final ErrorHandler errorHandler){
+
+	public void request(HttpMsg req, final MessageHandler<HttpMsg> messageHandler,
+			final ErrorHandler errorHandler) {
+		fillCommonHeader(req);
+		
 		onMessage = messageHandler;
 		onError = errorHandler;
-		
-		sendMessage(request);
-	}
+
+		sendMessage(req);
+	}  
 }

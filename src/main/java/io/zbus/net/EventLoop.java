@@ -2,10 +2,18 @@ package io.zbus.net;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
+
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
 
 public class EventLoop implements Closeable { 
 	private EventLoopGroup bossGroup;  
@@ -16,6 +24,8 @@ public class EventLoop implements Closeable {
 	private SslContext sslContext; 
 	private int idleTimeInSeconds = 180; //180s 
 	private int packageSizeLimit = 1024*1024*1024; //maximum of 1G
+	
+	private Map<String, SSLEngine> sslEngineCache = new ConcurrentHashMap<>();
 
 	public EventLoop() {
 		try {
@@ -90,7 +100,7 @@ public class EventLoop implements Closeable {
 		if (ownWorkerGroup && workerGroup != null) {
 			workerGroup.shutdownGracefully();
 			workerGroup = null;
-		}
+		} 
 	}
 
 	public int getIdleTimeInSeconds() {
@@ -108,5 +118,37 @@ public class EventLoop implements Closeable {
 	public void setPackageSizeLimit(int packageSizeLimit) {
 		this.packageSizeLimit = packageSizeLimit;
 	}   
+	
+	public SSLEngine getSSLEngine(String host, int port){
+		String key = String.format("%s:%d", host,port);
+		SSLEngine engine = sslEngineCache.get(key);
+		if(engine == null){
+			engine = buildSSLEngine(host, port);
+			sslEngineCache.put(key, engine);
+		}
+		return engine; 
+	}
+	
+	private SSLEngine buildSSLEngine(String peerHost, int peerPort) { 
+		try {
+			SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+					.sslProvider(SslProvider.JDK)
+					.sessionCacheSize(0)
+					.sessionTimeout(0);
+			String[] protocols = new String[] { "TLSv1.2", "TLSv1.1", "TLSv1" };
+			sslContextBuilder.protocols(protocols);
+			SslContext sslContext = sslContextBuilder.build();
+			
+			SSLEngine sslEngine = sslContext.newEngine(ByteBufAllocator.DEFAULT, peerHost, peerPort); 
+			sslEngine.setUseClientMode(true);
+			SSLParameters params = sslEngine.getSSLParameters();
+			params.setEndpointIdentificationAlgorithm("HTTPS");
+			sslEngine.setSSLParameters(params);
+			return sslEngine;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
 }

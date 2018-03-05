@@ -78,7 +78,7 @@ public class HttpMsgCodec extends MessageToMessageCodec<Object, HttpMsg> {
 		FullHttpMessage httpMsg = null;
 		if (msg.getStatus() == null) {// as request
 			httpMsg = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
-					msg.getUrl());
+					msg.getUrl()); 
 		} else {// as response
 			httpMsg = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));

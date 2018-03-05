@@ -128,5 +128,5 @@ public class Ssl {
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
-	} 
+	}  
 }

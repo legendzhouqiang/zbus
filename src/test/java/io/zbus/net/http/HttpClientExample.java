@@ -2,22 +2,20 @@ package io.zbus.net.http;
 
 import io.zbus.net.EventLoop;
 
-public class HttpClientExample {
-
-	public static void main(String[] args) throws Exception, InterruptedException {
+public class HttpClientExample { 
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws Exception, InterruptedException { 
 		EventLoop loop = new EventLoop();
-		HttpClient client = new HttpClient("localhost:15555", loop);
+		
+		HttpClient client = new HttpClient("https://api.binance.com", loop);
 
-		HttpMsg req = new HttpMsg();
-		req.setBody("hello world");
-		client.requestAsync(req, res -> {
-			System.out.println(res);
-			client.close();
-			loop.close();
-		}, e -> {
+		HttpMsg req = new HttpMsg();  
+		req.setUrl("/api/v1/exchangeInfo");  
+		
+		client.request(req, resp->{
+			System.out.println(resp);
+		}, e->{
 			e.printStackTrace();
-			client.close();
-			loop.close();
-		}); 
+		});  
 	}
 }
