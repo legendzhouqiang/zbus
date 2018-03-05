@@ -22,10 +22,10 @@ public class WebSocketExample2 {
 			JSONObject json = new JSONObject();
 			json.put("event", "addChannel");
 			json.put("channel", "ltcbtc_trades");
-			
+			 
 			ws.sendMessage(JSON.toJSONString(json).getBytes()); 
 		};
-		
+		 
 		ws.connect();  
 	} 
 }

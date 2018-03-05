@@ -52,6 +52,7 @@ public class Client<REQ, RES> implements Closeable {
 
 	protected volatile ScheduledExecutorService heartbeator = null;
 	protected MessageBuilder<REQ> heartbeatMessageBuilder;
+	protected volatile ScheduledExecutorService reconnectRunner = Executors.newSingleThreadScheduledExecutor();
 
 	protected Session session;
 	protected Object sessionLock = new Object();
@@ -59,7 +60,7 @@ public class Client<REQ, RES> implements Closeable {
 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);
 	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
-	protected boolean sendCachedMessages = true;
+	protected boolean triggerOpenWhenConnected = true;
  
 	public Client(String address, EventLoop loop) {
 		this.loop = loop; 
@@ -78,31 +79,15 @@ public class Client<REQ, RES> implements Closeable {
 		}   
 		sslEnabled = isSsl;
 		sslCtx = loop.getSslContext();  
-
-		EventHandler reconnect = ()->{
-			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0);
-			try {
-				Thread.sleep(reconnectDelay);
-			} catch (InterruptedException e1) {
-				return;
-			} 
-			connect();
-		};
-		
-		onOpen = () -> {
-			String msg = String.format("Connection(%s) OK", serverAddress());
-			log.info(msg);
-		};
-
+ 
 		onClose = () -> {
-			log.warn("Disconnected from(%s)", serverAddress());
-			reconnect.handle();
-		};
-
-		onError = e -> {
-			log.error(e.getMessage(), e);
-			reconnect.handle();
-		}; 
+			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0); 
+			reconnectRunner.schedule(()->{
+				if(!active()){
+					connect();
+				}
+			}, reconnectDelay, TimeUnit.MILLISECONDS); 
+		};  
 
 		ioAdaptor = new IoAdaptor() {
 			@Override
@@ -112,18 +97,19 @@ public class Client<REQ, RES> implements Closeable {
 				} 
 				activeLatch.countDown(); 
 				
-				if(sendCachedMessages){
+				String msg = String.format("Connection(%s) OK", serverAddress());
+				log.info(msg);
+				
+				if(triggerOpenWhenConnected){
 					sendCachedMessages();
-				}
-
-				if (onOpen != null) {
-					onOpen.handle();
-				}
+					if (onOpen != null) {
+						onOpen.handle();
+					}
+				}  
 			}
 
 			public void sessionToDestroy(Session session) throws IOException { 
-				cleanSession(); 
-				
+				cleanSession();  
 				if (onClose != null) {
 					onClose.handle();
 				}
@@ -131,7 +117,7 @@ public class Client<REQ, RES> implements Closeable {
 
 			@Override
 			public void onError(Throwable e, Session sess) { 
-				cleanSession(); 
+				cleanSession(); //trigger sessionToDestroy
 				
 				if (onError != null) {
 					try {
@@ -162,7 +148,7 @@ public class Client<REQ, RES> implements Closeable {
 		};
 	}
 	
-	protected void sendCachedMessages(){
+	protected void sendCachedMessages(){ 
 		for (REQ req : messageSendingQueue) {
 			session.write(req);
 		}
@@ -184,13 +170,17 @@ public class Client<REQ, RES> implements Closeable {
 				log.info("Connecting to (%s) in process", serverAddress());
 				return;
 			}
-			activeLatch = new CountDownLatch(1);   
+			activeLatch = new CountDownLatch(1);  
+			log.info("Connecting to (%s)", serverAddress());
 			connectFuture = bootstrap.connect(host, port);
 			try {
 				connectFuture = connectFuture.sync(); 
 			} catch (Throwable ex) { 
 				cleanSessionUnsafe();
-				ioAdaptor.onError(ex, session);   
+				log.error(ex.getMessage(), ex);
+				if(onClose != null){
+					onClose.handle();
+				}
 			}
 		} 
 	}  
@@ -260,7 +250,9 @@ public class Client<REQ, RES> implements Closeable {
 	public void sendMessage(REQ req) {
 		if(!active()){
 			messageSendingQueue.add(req);  
-			connect(); 
+			if(connectFuture == null){
+				connect();
+			}
 			return;
 		} 
 		session.write(req);
@@ -302,6 +294,10 @@ public class Client<REQ, RES> implements Closeable {
 		if (heartbeator != null) {
 			heartbeator.shutdownNow();
 			heartbeator = null;
+		} 
+		if (reconnectRunner != null) {
+			reconnectRunner.shutdownNow();
+			reconnectRunner = null;
 		} 
 	}
 }

@@ -13,7 +13,7 @@ public class WebSocketExample {
 		ws.onMessage = msg -> {
 			System.out.println(new String(msg));
 		};
-
+		 
 		ws.connect();
 	}
 }

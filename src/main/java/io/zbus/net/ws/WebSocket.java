@@ -32,7 +32,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 	
 	public WebSocket(String address, final EventLoop loop) {
 		super(address, loop); 
-		sendCachedMessages = false;  //wait for handsake finished
+		triggerOpenWhenConnected = false;  //wait for handsake finished
 		codec(p -> {
 			p.clear();
 			p.add(new HttpRequestEncoder());
@@ -83,9 +83,12 @@ public class WebSocket extends Client<byte[], byte[]> {
 			Channel ch = ctx.channel();
 			if (!handshaker.isHandshakeComplete()) {
 				try {
-					handshaker.finishHandshake(ch, (FullHttpResponse) msg);  
+					handshaker.finishHandshake(ch, (FullHttpResponse) msg);   
 					websocketReady = true;
-					sendCachedMessages();
+					if(onOpen != null){ 
+						sendCachedMessages();
+						onOpen.handle();
+					}  
 				} catch (WebSocketHandshakeException e) { 
 					log.error(e.getMessage(), e); 
 				}
