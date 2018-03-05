@@ -43,23 +43,23 @@ public class Client<REQ, RES> implements Closeable {
 	protected final URI uri;
 
 	protected Bootstrap bootstrap;
+	protected Object bootstrapLock = new Object();
 	protected final EventLoopGroup group;
 	protected SslContext sslCtx;
 	private SSLEngine sslEngine; // FIXME use SslContext
 
-	protected ChannelFuture channelFuture;
+	protected ChannelFuture connectFuture;
 	protected CodecInitializer codecInitializer;
 
 	protected volatile ScheduledExecutorService heartbeator = null;
 	protected MessageBuilder<REQ> heartbeatMessageBuilder;
 
 	protected Session session;
+	protected Object sessionLock = new Object();
 	protected IoAdaptor ioAdaptor;
 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);
-	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>());
-
-	private ConnectionStatus status = ConnectionStatus.New;
+	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
  
 	public Client(String address, EventLoop loop) {
 		group = loop.getGroup();
@@ -110,9 +110,10 @@ public class Client<REQ, RES> implements Closeable {
 		ioAdaptor = new IoAdaptor() {
 			@Override
 			public void sessionCreated(Session session) throws IOException {
-				Client.this.session = session;
-				activeLatch.countDown();
-				status = ConnectionStatus.Open;
+				synchronized (Client.this.sessionLock) {
+					Client.this.session = session;
+				} 
+				activeLatch.countDown(); 
 				for (REQ req : messageSendingQueue) {
 					session.write(req);
 				}
@@ -123,19 +124,18 @@ public class Client<REQ, RES> implements Closeable {
 				}
 			}
 
-			public void sessionToDestroy(Session session) throws IOException {
-				if (Client.this.session != null) {
-					Client.this.session.close();
-					Client.this.session = null;
-				}
-				status = ConnectionStatus.Closed;
+			public void sessionToDestroy(Session session) throws IOException { 
+				cleanSession(); 
+				
 				if (onClose != null) {
 					onClose.handle();
 				}
 			}
 
 			@Override
-			public void onError(Throwable e, Session sess) {
+			public void onError(Throwable e, Session sess) { 
+				cleanSession(); 
+				
 				if (onError != null) {
 					try {
 						onError.handle(e);
@@ -174,84 +174,65 @@ public class Client<REQ, RES> implements Closeable {
 	}
 
 	public synchronized void connect() {
-		init();
-		if(status == ConnectionStatus.Connecting){
-			log.info("Connecting to (%s) in process", serverAddress());
-			return;
-		}
-		
-		activeLatch = new CountDownLatch(1);
-		status = ConnectionStatus.Connecting;
-		if(channelFuture != null){
-			if(channelFuture.channel() != null)
-				channelFuture.channel().close();
-		}
-		
-		channelFuture = bootstrap.connect(host, port);
-		try {
-			channelFuture = channelFuture.sync(); 
-		} catch (InterruptedException e) {
-			return;
-		} catch (Throwable ex) {
-			if(channelFuture != null){
-				if(channelFuture.channel() != null)
-					channelFuture.channel().close();
+		init(); 
+		synchronized (sessionLock) {
+			if(connectFuture != null){
+				log.info("Connecting to (%s) in process", serverAddress());
+				return;
 			}
-			
-			if (onClose != null) {
-				onClose.handle();
+			activeLatch = new CountDownLatch(1);   
+			connectFuture = bootstrap.connect(host, port);
+			try {
+				connectFuture = connectFuture.sync(); 
+			} catch (InterruptedException e) {
+				return;
+			} catch (Throwable ex) { 
+				cleanSessionUnsafe();
+				ioAdaptor.onError(ex, session);  
+				if (onClose != null) {
+					onClose.handle();
+				} 
 			}
-
-			if (onError != null) {
-				try {
-					onError.handle(ex);
-				} catch (Exception e) {
-					if (ex instanceof RuntimeException) {
-						throw (RuntimeException) ex;
-					}
-					throw new RuntimeException(ex.getMessage(), ex.getCause());
-				}
-			} else {
-				if (ex instanceof RuntimeException) {
-					throw (RuntimeException) ex;
-				}
-				throw new RuntimeException(ex.getMessage(), ex.getCause());
-			}
-		}
+		} 
 	}  
 
 	private void init() {
-		if (bootstrap != null)
-			return;
-		if (this.group == null) {
-			throw new IllegalStateException("group missing");
-		}
-		bootstrap = new Bootstrap();
-		bootstrap.group(this.group).channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
-			NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
-
-			@Override
-			protected void initChannel(SocketChannel ch) throws Exception {
-				if (codecInitializer == null) {
-					log.warn("Missing codecInitializer");
-				}
-				ChannelPipeline p = ch.pipeline();
-				if (sslCtx != null) {
-					p.addLast(sslCtx.newHandler(ch.alloc()));
-				} else if (sslEngine != null) { // FIXME use only sslCtx
-					SslHandler sslHandler = new SslHandler(sslEngine); 
-					p.addLast(sslHandler);
-				}
-				if (codecInitializer != null) {
-					List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
-					codecInitializer.initPipeline(handlers);
-					for (ChannelHandler handler : handlers) {
-						p.addLast((ChannelHandler) handler);
-					}
-				}
-				p.addLast(nettyToIoAdaptor);
+		synchronized (bootstrapLock) {
+			if (bootstrap != null) return; 
+			if (this.group == null) {
+				throw new IllegalStateException("group missing");
 			}
-		});
+			
+			bootstrap = new Bootstrap();
+			bootstrap.group(this.group)
+				.channel(NioSocketChannel.class)
+				.handler(new ChannelInitializer<SocketChannel>() {
+					NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
+
+					@Override
+					protected void initChannel(SocketChannel ch) throws Exception {
+						if (codecInitializer == null) {
+							log.warn("Missing codecInitializer");
+						}
+						ChannelPipeline p = ch.pipeline();
+						if (sslCtx != null) {
+							p.addLast(sslCtx.newHandler(ch.alloc()));
+						} else if (sslEngine != null) { // FIXME use only
+														// sslCtx
+							SslHandler sslHandler = new SslHandler(sslEngine);
+							p.addLast(sslHandler);
+						}
+						if (codecInitializer != null) {
+							List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
+							codecInitializer.initPipeline(handlers);
+							for (ChannelHandler handler : handlers) {
+								p.addLast((ChannelHandler) handler);
+							}
+						}
+						p.addLast(nettyToIoAdaptor);
+					}
+				});
+		}
 	}
 
 	public synchronized void startHeartbeat(long intervalInMillis, MessageBuilder<REQ> builder) {
@@ -269,38 +250,59 @@ public class Client<REQ, RES> implements Closeable {
 				}
 			}, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS);
 		}
-	}
-
-	public ConnectionStatus getStatus() {
-		return status;
+	} 
+	
+	public boolean active(){ 
+		synchronized (sessionLock) {
+			return session != null || session.active();
+		} 
 	}
 
 	public void sendMessage(REQ req) {
-		if (status != ConnectionStatus.Open) {
-			messageSendingQueue.add(req);
-			if (status == ConnectionStatus.New) {
-				connect();
-			}
+		if(!active()){
+			messageSendingQueue.add(req);  
+			connect(); 
 			return;
-		}
+		} 
 		session.write(req);
 	}
 
+	protected void cleanSession() { 
+		synchronized (sessionLock) {
+			cleanSessionUnsafe();
+		} 
+	}
+	
+	protected void cleanSessionUnsafe() { 
+		if (session != null) {
+			try {
+				session.close();
+			} catch (IOException e) {
+				log.error(e.getMessage(), e.getCause());
+			}
+			session = null;
+		}
+		if(connectFuture != null && connectFuture.channel() != null){
+			try {
+				connectFuture.channel().close(); 
+			} catch (Exception e) {
+				log.error(e.getMessage(), e.getCause());
+			}
+			
+		} 
+		connectFuture = null;
+	}
+	
 	@Override
 	public void close() throws IOException {
 		onOpen = null;
 		onClose = null;
 
-		if (session != null) {
-			session.close();
-			session = null;
-		}
+		cleanSession();
 
 		if (heartbeator != null) {
 			heartbeator.shutdownNow();
 			heartbeator = null;
-		}
-
-		status = ConnectionStatus.Closed;
+		} 
 	}
 }
