@@ -39,8 +39,8 @@ public class Client<REQ, RES> implements Closeable {
 	public long reconnectDelay = 3000;
 
 	protected String host;
-	protected int port;
-	protected String scheme = "tcp"; //tcp, tcps, http, https
+	protected int port; 
+	protected final URI uri;
 
 	protected Bootstrap bootstrap;
 	protected final EventLoopGroup group;
@@ -65,8 +65,8 @@ public class Client<REQ, RES> implements Closeable {
 		group = loop.getGroup();
 		boolean isSsl = false;
 		try {
-			URI uri = new URI(address); 
-			scheme = uri.getScheme();
+			uri = new URI(address); 
+			String scheme = uri.getScheme();
 			host = uri.getHost();
 			port = uri.getPort();
 			isSsl = "https".equalsIgnoreCase(scheme) || "wss".equals(scheme);
@@ -77,21 +77,12 @@ public class Client<REQ, RES> implements Closeable {
 			throw new IllegalArgumentException(address + " is illegal");
 		}   
 		
-		sslCtx = loop.getSslContext();
-		if(sslCtx != null){
-			scheme = "tcps";
-		} 		 
+		sslCtx = loop.getSslContext(); 
 		if (isSsl && sslCtx == null) {
 			sslEngine = loop.getSSLEngine(host, port);
 		}
 
-		onOpen = () -> {
-			String msg = String.format("Connection(%s) OK", serverAddress());
-			log.info(msg);
-		};
-
-		onClose = () -> {
-			log.warn("Disconnected from(%s)", serverAddress());
+		EventHandler reconnect = ()->{
 			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0);
 			try {
 				Thread.sleep(reconnectDelay);
@@ -100,10 +91,21 @@ public class Client<REQ, RES> implements Closeable {
 			} 
 			connect();
 		};
+		
+		onOpen = () -> {
+			String msg = String.format("Connection(%s) OK", serverAddress());
+			log.info(msg);
+		};
+
+		onClose = () -> {
+			log.warn("Disconnected from(%s)", serverAddress());
+			reconnect.handle();
+		};
 
 		onError = e -> {
 			log.error(e.getMessage(), e);
-		};
+			reconnect.handle();
+		}; 
 
 		ioAdaptor = new IoAdaptor() {
 			@Override
@@ -164,7 +166,7 @@ public class Client<REQ, RES> implements Closeable {
 	}
 
 	protected String serverAddress() {
-		return String.format("%s://%s:%d", scheme, host, port);
+		return String.format("%s://%s:%d", uri.getScheme(), host, port);
 	}
 
 	public void codec(CodecInitializer codecInitializer) {
@@ -222,8 +224,7 @@ public class Client<REQ, RES> implements Closeable {
 				if (sslCtx != null) {
 					p.addLast(sslCtx.newHandler(ch.alloc()));
 				} else if (sslEngine != null) { // FIXME use only sslCtx
-					SslHandler sslHandler = new SslHandler(sslEngine);
-					//sslHandler.setHandshakeTimeoutMillis(10000);
+					SslHandler sslHandler = new SslHandler(sslEngine); 
 					p.addLast(sslHandler);
 				}
 				if (codecInitializer != null) {

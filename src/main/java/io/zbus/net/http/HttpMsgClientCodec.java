@@ -47,8 +47,8 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.http.HttpMsg.FileForm; 
 
 
-public class HttpMsgCodec extends MessageToMessageCodec<Object, HttpMsg> {
-	private static final Logger log = LoggerFactory.getLogger(HttpMsgCodec.class);
+public class HttpMsgClientCodec extends MessageToMessageCodec<Object, HttpMsg> {
+	private static final Logger log = LoggerFactory.getLogger(HttpMsgClientCodec.class);
 
 	private static final String WEBSOCKET_PATH = "/";
 	private WebSocketServerHandshaker handshaker;

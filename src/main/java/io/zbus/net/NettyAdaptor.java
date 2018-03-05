@@ -71,11 +71,11 @@ public class NettyAdaptor extends ChannelInboundHandlerAdapter {
 	private Session getSession(ChannelHandlerContext ctx){
 		Attribute<String> attr = ctx.channel().attr(sessionKey); 
 		if(attr.get() == null){
-			throw new IllegalThreadStateException("Missing sessionKey");
+			throw new IllegalStateException("Missing sessionKey");
 		}
 		Session sess = sessionMap.get(attr.get()); 
 		if(sess == null){
-			throw new IllegalThreadStateException("Session and ChannelHandlerContext mapping not found");
+			throw new IllegalStateException("Session and ChannelHandlerContext mapping not found");
 		}
 		return sess;
 	}

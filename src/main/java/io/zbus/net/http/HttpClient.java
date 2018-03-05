@@ -22,7 +22,7 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
-			p.add(new HttpMsgCodec());
+			p.add(new HttpMsgClientCodec());
 		});
 
 		onClose = null; // Disable auto reconnect
