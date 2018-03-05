@@ -18,10 +18,14 @@ public class WebSocketExample2 {
 			System.out.println(new String(msg));
 		};  
 		
-		JSONObject json = new JSONObject();
-		json.put("event", "addChannel");
-		json.put("channel", "ltcbtc_trades");
+		ws.onOpen = ()-> {
+			JSONObject json = new JSONObject();
+			json.put("event", "addChannel");
+			json.put("channel", "ltcbtc_trades");
+			
+			ws.sendMessage(JSON.toJSONString(json).getBytes()); 
+		};
 		
-		ws.sendMessage(JSON.toJSONString(json).getBytes()); 
+		ws.connect();  
 	} 
 }

@@ -28,6 +28,7 @@ import io.zbus.net.EventLoop;
 
 public class WebSocket extends Client<byte[], byte[]> {
 	private static final Logger log = LoggerFactory.getLogger(WebSocket.class);
+	private boolean websocketReady = false;
 	
 	public WebSocket(String address, final EventLoop loop) {
 		super(address, loop); 
@@ -39,6 +40,11 @@ public class WebSocket extends Client<byte[], byte[]> {
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
 			p.add(new WebSocketCodec());
 		}); 
+	}
+	
+	@Override
+	public boolean active() { 
+		return super.active() && websocketReady;
 	}
 	
 	class WebSocketCodec extends MessageToMessageCodec<Object, byte[]> {  
@@ -78,6 +84,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 			if (!handshaker.isHandshakeComplete()) {
 				try {
 					handshaker.finishHandshake(ch, (FullHttpResponse) msg);  
+					websocketReady = true;
 					sendCachedMessages();
 				} catch (WebSocketHandshakeException e) { 
 					log.error(e.getMessage(), e); 
