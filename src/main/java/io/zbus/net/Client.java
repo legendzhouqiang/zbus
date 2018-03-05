@@ -175,14 +175,29 @@ public class Client<REQ, RES> implements Closeable {
 
 	public synchronized void connect() {
 		init();
+		if(status == ConnectionStatus.Connecting){
+			log.info("Connecting to (%s) in process", serverAddress());
+			return;
+		}
+		
 		activeLatch = new CountDownLatch(1);
 		status = ConnectionStatus.Connecting;
+		if(channelFuture != null){
+			if(channelFuture.channel() != null)
+				channelFuture.channel().close();
+		}
+		
 		channelFuture = bootstrap.connect(host, port);
 		try {
-			channelFuture = channelFuture.sync();
+			channelFuture = channelFuture.sync(); 
 		} catch (InterruptedException e) {
 			return;
 		} catch (Throwable ex) {
+			if(channelFuture != null){
+				if(channelFuture.channel() != null)
+					channelFuture.channel().close();
+			}
+			
 			if (onClose != null) {
 				onClose.handle();
 			}

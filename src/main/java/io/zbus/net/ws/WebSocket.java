@@ -22,21 +22,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
-			p.add(new WebsocketCodec(hankshaker));
+			p.add(new WebSocketCodec(hankshaker));
 		}); 
 	}
-	
-	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception { 
-		EventLoop loop = new EventLoop();
-		String address = "wss://stream.binance.com:9443/ws/btcusdt@aggTrade";
-		
-		WebSocket ws = new WebSocket(address, loop);
-		
-		ws.onMessage = msg->{
-			System.out.println(new String(msg));
-		};
-		
-		ws.connect(); 
-	} 
 }
