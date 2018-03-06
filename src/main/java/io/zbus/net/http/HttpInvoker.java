@@ -71,7 +71,8 @@ public class HttpInvoker {
 		String url = uri.toString() + request.getUrl(); 
 		HttpClient client = new HttpClient(uri, loop);
 		try{ 
-			logger.debug("Sending request: %s %s", request.getMethod(), url);
+			long start = System.currentTimeMillis(); 
+			logger.info("Request(ID=%d) %s %s", start, request.getMethod(), url);
 			HttpMsg resp = client.request(request, timeoutInMillis);
 			String body = resp.getBodyString();
 			if (resp.getStatus() != 200) {
@@ -80,7 +81,8 @@ public class HttpInvoker {
 				logger.error(exception.getMessage(), exception);
 				throw exception;
 			}
-			logger.debug("Received resopnse: %s", body);
+			long end = System.currentTimeMillis();
+			logger.info("Resopnse(Time=%dms, ID=%d): %s", (end-start), start, body);
 			return body;
 		} catch (InterruptedException e) {
 			return null; //ignore
