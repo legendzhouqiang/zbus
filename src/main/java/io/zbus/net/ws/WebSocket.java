@@ -85,8 +85,8 @@ public class WebSocket extends Client<byte[], byte[]> {
 				try {
 					handshaker.finishHandshake(ch, (FullHttpResponse) msg);   
 					websocketReady = true;
-					if(onOpen != null){ 
-						sendCachedMessages();
+					sendCachedMessages();
+					if(onOpen != null){  
 						onOpen.handle();
 					}  
 				} catch (WebSocketHandshakeException e) { 

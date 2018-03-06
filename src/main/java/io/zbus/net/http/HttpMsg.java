@@ -126,7 +126,9 @@ public class HttpMsg{
 			} catch (URISyntaxException e) {
 				throw new IllegalArgumentException(url);
 			}
-		} 
+		} else {
+			this.url = url;
+		}
 		return this;
 	}
 

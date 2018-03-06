@@ -59,7 +59,7 @@ public class Client<REQ, RES> implements Closeable {
 	protected IoAdaptor ioAdaptor;
 
 	protected CountDownLatch activeLatch = new CountDownLatch(1);
-	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
+	protected List<REQ> cachedMessages = Collections.synchronizedList(new ArrayList<>()); 
 	protected boolean triggerOpenWhenConnected = true;
 	
 	public Client(URI uri, EventLoop loop) {
@@ -157,10 +157,10 @@ public class Client<REQ, RES> implements Closeable {
 	}
 	
 	protected void sendCachedMessages(){ 
-		for (REQ req : messageSendingQueue) {
+		for (REQ req : cachedMessages) {
 			session.write(req);
 		}
-		messageSendingQueue.clear();
+		cachedMessages.clear();
 	}
 
 	protected String serverAddress() {
@@ -256,7 +256,7 @@ public class Client<REQ, RES> implements Closeable {
 
 	public void sendMessage(REQ req) {
 		if(!active()){
-			messageSendingQueue.add(req);  
+			cachedMessages.add(req);  
 			if(connectFuture == null){
 				connect();
 			}
