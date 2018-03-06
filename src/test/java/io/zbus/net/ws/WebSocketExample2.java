@@ -23,7 +23,7 @@ public class WebSocketExample2 {
 			json.put("event", "addChannel");
 			json.put("channel", "ltcbtc_trades");
 			 
-			ws.sendMessage(JSON.toJSONString(json).getBytes()); 
+			ws.sendMessage(JSON.toJSONBytes(json)); 
 		};
 		 
 		ws.connect();  

@@ -39,13 +39,13 @@ public class Client<REQ, RES> implements Closeable {
 
 	protected String host;
 	protected int port; 
-	protected final URI uri;
+	protected URI uri;
 
 	protected Bootstrap bootstrap;
 	protected Object bootstrapLock = new Object(); 
 	protected final EventLoop loop;
 	protected SslContext sslCtx; 
-	protected final boolean sslEnabled;
+	protected boolean sslEnabled;
 
 	protected ChannelFuture connectFuture;
 	protected CodecInitializer codecInitializer;
@@ -61,23 +61,31 @@ public class Client<REQ, RES> implements Closeable {
 	protected CountDownLatch activeLatch = new CountDownLatch(1);
 	protected List<REQ> messageSendingQueue = Collections.synchronizedList(new ArrayList<>()); 
 	protected boolean triggerOpenWhenConnected = true;
- 
+	
+	public Client(URI uri, EventLoop loop) {
+		this.uri = uri;
+		this.loop = loop;
+		setup();
+	}
+	
 	public Client(String address, EventLoop loop) {
-		this.loop = loop; 
-		boolean isSsl = false;
+		this.loop = loop;
 		try {
-			uri = new URI(address); 
-			String scheme = uri.getScheme();
-			host = uri.getHost();
-			port = uri.getPort();
-			isSsl = "https".equalsIgnoreCase(scheme) || "wss".equals(scheme);
-			if(port < 0){
-				port = isSsl? 443 : 80;
-			}
+			this.uri = new URI(address);
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(address + " is illegal");
-		}   
-		sslEnabled = isSsl;
+		}
+		setup();
+	}
+	
+	private void setup() {  
+		String scheme = uri.getScheme();
+		host = uri.getHost();
+		port = uri.getPort();
+		sslEnabled = "https".equalsIgnoreCase(scheme) || "wss".equals(scheme);
+		if(port < 0){
+			port = sslEnabled? 443 : 80;
+		}  
 		sslCtx = loop.getSslContext();  
  
 		onClose = () -> {

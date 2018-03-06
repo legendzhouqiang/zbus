@@ -31,6 +31,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,8 +65,8 @@ public class HttpMsg{
 	 
 	protected Integer status; //null: request, otherwise: response
 	protected String url = "/";
-	protected String method = "GET"; 
-	protected String scheme = "http";
+	protected URI uri; //Helper for url
+	protected String method = "GET";  
 	
 	protected Map<String, String> headers = new ConcurrentHashMap<String, String>(); 
 	protected byte[] body; 
@@ -115,10 +117,22 @@ public class HttpMsg{
 		return this.url;
 	} 
 	
-	public HttpMsg setUrl(String url){ 
-		this.url = url;  
+	public HttpMsg setUrl(String url) {
+		if (url.startsWith("http")) {
+			try {
+				this.uri = new URI(url);
+				this.url = uri.getPath();
+				this.setHeader("host", this.uri.getHost()); //!set host!
+			} catch (URISyntaxException e) {
+				throw new IllegalArgumentException(url);
+			}
+		} 
 		return this;
 	}
+
+	public URI getUri() {
+		return uri;
+	} 
 	
 	public HttpMsg setStatus(Integer status) { 
 		this.status = status;

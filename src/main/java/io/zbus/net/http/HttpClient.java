@@ -2,6 +2,7 @@ package io.zbus.net.http;
  
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,9 +16,18 @@ import io.zbus.net.EventLoop;
 import io.zbus.net.MessageHandler;
 
 public class HttpClient extends Client<HttpMsg, HttpMsg> {
-
+	
+	public HttpClient(URI uri, final EventLoop loop) {
+		super(uri, loop);
+		setup();
+	}
+	
 	public HttpClient(String address, final EventLoop loop) {
 		super(address, loop);
+		setup();
+	} 
+	
+	private void setup(){
 		codec(p -> {
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
@@ -49,7 +59,7 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		sendMessage(req);
 		countDown.await(timeout, TimeUnit.MILLISECONDS);
 		if(res.get() == null){
-			throw new IOException("Timeout for request: " + req);
+			throw new IOException("Timeout for request:\n" + req);
 		}
 		return res.get();
 	}
