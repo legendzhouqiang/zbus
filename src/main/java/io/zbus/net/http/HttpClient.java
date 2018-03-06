@@ -59,7 +59,8 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		sendMessage(req);
 		countDown.await(timeout, TimeUnit.MILLISECONDS);
 		if(res.get() == null){
-			throw new IOException("Timeout for request:\n" + req);
+			String msg = String.format("Timeout(%dms) for request:\n", timeout);
+			throw new IOException(msg + req);
 		}
 		return res.get();
 	}

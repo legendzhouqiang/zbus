@@ -82,7 +82,12 @@ public class HttpInvoker {
 				throw exception;
 			}
 			long end = System.currentTimeMillis();
-			logger.info("Resopnse(Time=%dms, ID=%d): %s", (end-start), start, body);
+			String bodyLog = body;
+			int maxLength = 1024;
+			if(bodyLog.length() > maxLength){
+				bodyLog = bodyLog.substring(0, maxLength) + " ... [more ignored]";
+			}
+			logger.info("Resopnse(Time=%dms, ID=%d): %s", (end-start), start, bodyLog);
 			return body;
 		} catch (InterruptedException e) {
 			return null; //ignore
