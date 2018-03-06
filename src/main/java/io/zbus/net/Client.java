@@ -108,8 +108,7 @@ public class Client<REQ, RES> implements Closeable {
 				String msg = String.format("Connection(%s) OK", serverAddress());
 				log.info(msg);
 				
-				if(triggerOpenWhenConnected){
-					sendCachedMessages();
+				if(triggerOpenWhenConnected){ 
 					if (onOpen != null) {
 						onOpen.handle();
 					}
@@ -154,14 +153,7 @@ public class Client<REQ, RES> implements Closeable {
 				log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
 			}
 		};
-	}
-	
-	protected void sendCachedMessages(){ 
-		for (REQ req : cachedMessages) {
-			session.write(req);
-		}
-		cachedMessages.clear();
-	}
+	} 
 
 	protected String serverAddress() {
 		return String.format("%s://%s:%d%s", uri.getScheme(), host, port, uri.getPath());
@@ -256,11 +248,8 @@ public class Client<REQ, RES> implements Closeable {
 
 	public void sendMessage(REQ req) {
 		if(!active()){
-			cachedMessages.add(req);  
-			if(connectFuture == null){
-				connect();
-			}
-			return;
+			String msg = String.format("Socket(%s) not open yet", serverAddress());
+			throw new IllegalStateException(msg);
 		} 
 		session.write(req);
 	}

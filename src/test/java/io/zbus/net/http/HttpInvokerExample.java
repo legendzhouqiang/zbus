@@ -1,5 +1,7 @@
 package io.zbus.net.http;
 
+import com.alibaba.fastjson.JSONObject;
+
 import io.zbus.net.EventLoop;
 
 public class HttpInvokerExample {  
@@ -11,9 +13,9 @@ public class HttpInvokerExample {
 		
 		HttpMsg req = new HttpMsg();  
 		req.setUrl("https://api.binance.com/api/v1/exchangeInfo");    
-		Object resp = http.json(req);
+		JSONObject resp = (JSONObject)http.json(req);
 		
-		System.out.println(resp);
+		System.out.println(resp.size());
 		
 		loop.close();
 	}

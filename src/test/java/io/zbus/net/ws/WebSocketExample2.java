@@ -15,7 +15,7 @@ public class WebSocketExample2 {
 		WebSocket ws = new WebSocket(address, loop);
 		
 		ws.onMessage = msg->{
-			System.out.println(new String(msg));
+			System.out.println(msg);
 		};  
 		
 		ws.onOpen = ()-> {
@@ -23,7 +23,7 @@ public class WebSocketExample2 {
 			json.put("event", "addChannel");
 			json.put("channel", "ltcbtc_trades");
 			 
-			ws.sendMessage(JSON.toJSONBytes(json)); 
+			ws.sendMessage(JSON.toJSONString(json)); 
 		};
 		 
 		ws.connect();  

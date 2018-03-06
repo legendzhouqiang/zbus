@@ -1,5 +1,6 @@
 package io.zbus.net.ws;
 
+import java.nio.charset.Charset;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
@@ -26,13 +27,15 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.Client;
 import io.zbus.net.EventLoop;
 
-public class WebSocket extends Client<byte[], byte[]> {
+public class WebSocket extends Client<String, String> {
 	private static final Logger log = LoggerFactory.getLogger(WebSocket.class);
 	private boolean websocketReady = false;
 	
+	private Charset charset = Charset.forName("UTF-8");
+	
 	public WebSocket(String address, final EventLoop loop) {
 		super(address, loop); 
-		triggerOpenWhenConnected = false;  //wait for handsake finished
+		triggerOpenWhenConnected = false;  //wait for handsake finished 
 		codec(p -> {
 			p.clear();
 			p.add(new HttpRequestEncoder());
@@ -47,7 +50,11 @@ public class WebSocket extends Client<byte[], byte[]> {
 		return super.active() && websocketReady;
 	}
 	
-	class WebSocketCodec extends MessageToMessageCodec<Object, byte[]> {  
+	public void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+	
+	class WebSocketCodec extends MessageToMessageCodec<Object,String> {  
 		private WebSocketClientHandshaker handshaker;  
 		
 		@Override
@@ -61,8 +68,8 @@ public class WebSocket extends Client<byte[], byte[]> {
 		}  
 		
 		@Override
-		protected void encode(ChannelHandlerContext ctx, byte[] msg, List<Object> out) throws Exception { 
-			WebSocketFrame frame = new TextWebSocketFrame(new String(msg)); //FIXME binary frame?
+		protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception { 
+			WebSocketFrame frame = new TextWebSocketFrame(msg); 
 			out.add(frame);
 			return; 
 		}
@@ -70,7 +77,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 		@Override
 		protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception { 
 			if (obj instanceof WebSocketFrame) {
-				byte[] msg = decodeWebSocketFrame(ctx, (WebSocketFrame) obj);
+				String msg = decodeWebSocketFrame(ctx, (WebSocketFrame) obj);
 				if (msg != null) {
 					out.add(msg);
 				}
@@ -84,8 +91,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 			if (!handshaker.isHandshakeComplete()) {
 				try {
 					handshaker.finishHandshake(ch, (FullHttpResponse) msg);   
-					websocketReady = true;
-					sendCachedMessages();
+					websocketReady = true; 
 					if(onOpen != null){  
 						onOpen.handle();
 					}  
@@ -99,7 +105,7 @@ public class WebSocket extends Client<byte[], byte[]> {
 		} 
 		
 
-		private byte[] decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
+		private String decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 			// Check for closing frame
 			if (frame instanceof CloseWebSocketFrame) {
 				handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
@@ -125,11 +131,11 @@ public class WebSocket extends Client<byte[], byte[]> {
 			return null;
 		}
 
-		private byte[] parseMessage(ByteBuf buf) {
+		private String parseMessage(ByteBuf buf) {
 			int size = buf.readableBytes();
 			byte[] data = new byte[size];
 			buf.readBytes(data);
-			return data;
+			return new String(data, charset);
 		} 
 	}
 }

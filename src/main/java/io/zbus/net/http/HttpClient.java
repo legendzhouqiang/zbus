@@ -56,7 +56,13 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 			res.set(resp);
 			countDown.countDown();
 		};
-		sendMessage(req);
+		
+		onOpen = ()->{
+			sendMessage(req);
+		}; 
+		
+		connect(); 
+		
 		countDown.await(timeout, TimeUnit.MILLISECONDS);
 		if(res.get() == null){
 			String msg = String.format("Timeout(%dms) for request:\n", timeout);
@@ -71,7 +77,11 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		
 		onMessage = messageHandler;
 		onError = errorHandler;
-
-		sendMessage(req);
+		
+		onOpen = ()->{
+			sendMessage(req);
+		}; 
+		
+		connect();  
 	}  
 }
