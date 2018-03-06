@@ -68,10 +68,10 @@ public class HttpInvoker {
 		if(uri == null){
 			uri = this.uri;
 		}
-		String url = uri.toString() + request.getUrl();
-		url = "Request(" + url + ")"; 
+		String url = uri.toString() + request.getUrl(); 
 		HttpClient client = new HttpClient(uri, loop);
 		try{ 
+			logger.debug("Sending request: %s %s", request.getMethod(), url);
 			HttpMsg resp = client.request(request, timeoutInMillis);
 			String body = resp.getBodyString();
 			if (resp.getStatus() != 200) {
@@ -80,6 +80,7 @@ public class HttpInvoker {
 				logger.error(exception.getMessage(), exception);
 				throw exception;
 			}
+			logger.debug("Received resopnse: %s", body);
 			return body;
 		} catch (InterruptedException e) {
 			return null; //ignore

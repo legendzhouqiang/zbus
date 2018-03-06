@@ -293,6 +293,7 @@ public class Client<REQ, RES> implements Closeable {
 	
 	@Override
 	public void close() throws IOException {
+		log.debug("Close connection(%s)", serverAddress());
 		onOpen = null;
 		onClose = null;
 
