@@ -122,6 +122,9 @@ public class HttpMsg{
 			try {
 				this.uri = new URI(url);
 				this.url = uri.getPath();
+				if(uri.getQuery() != null){
+					this.url += "?" + uri.getQuery();
+				}
 				this.setHeader("host", this.uri.getHost()); //!set host!
 			} catch (URISyntaxException e) {
 				throw new IllegalArgumentException(url);
