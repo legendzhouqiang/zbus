@@ -12,7 +12,7 @@ public class HttpInvokerExample {
 		HttpInvoker http = new HttpInvoker(loop);
 		
 		HttpMsg req = new HttpMsg();  
-		req.setUrl("https://api.binance.com/api/v1/exchangeInfo");    
+		req.setUrl("https://api.binance.com/api/v1/exchangeInfo2");    
 		JSONObject resp = (JSONObject)http.json(req);
 		
 		System.out.println(resp.size());

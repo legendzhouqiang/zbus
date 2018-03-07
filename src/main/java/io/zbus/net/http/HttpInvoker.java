@@ -70,9 +70,7 @@ public class HttpInvoker {
 		}
 		String url = uri.toString() + request.getUrl(); 
 		HttpClient client = new HttpClient(uri, loop);
-		try{ 
-			long start = System.currentTimeMillis(); 
-			logger.info("Request(ID=%d) %s %s", start, request.getMethod(), url);
+		try{  
 			HttpMsg resp = client.request(request, timeoutInMillis);
 			String body = resp.getBodyString();
 			if (resp.getStatus() != 200) {
@@ -80,20 +78,10 @@ public class HttpInvoker {
 				HttpException exception = new HttpException(url);  
 				logger.error(exception.getMessage(), exception);
 				throw exception;
-			}
-			long end = System.currentTimeMillis();
-			String bodyLog = body;
-			int maxLength = 1024;
-			if(bodyLog.length() > maxLength){
-				bodyLog = bodyLog.substring(0, maxLength) + " ... [more ignored]";
-			}
-			logger.info("Resopnse(Time=%dms, ID=%d): %s", (end-start), start, bodyLog);
+			} 
 			return body;
 		} catch (InterruptedException e) {
 			return null; //ignore
-		} catch (IOException e) {
-			logger.error(url + " Error: ", e);
-			throw e;
 		} finally {
 			if(client != null){
 				client.close();
@@ -110,5 +98,9 @@ public class HttpInvoker {
 	 
 	public void setInvokeTimeout(long invokeTimeout) {
 		this.invokeTimeout = invokeTimeout;
+	}
+	
+	public long getInvokeTimeout() {
+		return invokeTimeout;
 	}
 }

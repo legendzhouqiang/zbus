@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +22,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
@@ -57,8 +58,7 @@ public class Client<REQ, RES> implements Closeable {
 	protected Session session;
 	protected Object sessionLock = new Object();
 	protected IoAdaptor ioAdaptor;
-
-	protected CountDownLatch activeLatch = new CountDownLatch(1);
+ 
 	protected List<REQ> cachedMessages = Collections.synchronizedList(new ArrayList<>()); 
 	protected boolean triggerOpenWhenConnected = true;
 	
@@ -102,8 +102,7 @@ public class Client<REQ, RES> implements Closeable {
 			public void sessionCreated(Session session) throws IOException {
 				synchronized (Client.this.sessionLock) {
 					Client.this.session = session;
-				} 
-				activeLatch.countDown(); 
+				}  
 				
 				String msg = String.format("Connection(%s) OK", serverAddress());
 				log.info(msg);
@@ -169,18 +168,26 @@ public class Client<REQ, RES> implements Closeable {
 			if(connectFuture != null){
 				log.info("Connecting to (%s) in process", serverAddress());
 				return;
-			}
-			activeLatch = new CountDownLatch(1);   
+			} 
 			connectFuture = bootstrap.connect(host, port);
-			try {
-				connectFuture = connectFuture.sync(); 
-			} catch (Throwable ex) { 
-				cleanSessionUnsafe();
-				log.error(ex.getMessage(), ex);
-				if(onClose != null){
-					onClose.handle();
+			connectFuture.addListener(new GenericFutureListener<Future<? super Void>>() { 
+				@Override
+				public void operationComplete(Future<? super Void> future) throws Exception { 
+					if(future.isSuccess()){
+						
+					} else {
+						Throwable ex = future.cause();
+						if(ex != null){
+							if(onError != null){
+								onError.handle(ex);
+							} else {
+								log.error(ex.getMessage(), ex);
+							}
+						}
+						cleanSession(); 
+					}
 				}
-			}
+			}); 
 		} 
 	}  
 
@@ -282,7 +289,7 @@ public class Client<REQ, RES> implements Closeable {
 	
 	@Override
 	public void close() throws IOException {
-		log.debug("Close connection(%s)", serverAddress());
+		log.info("Close connection(%s)", serverAddress());
 		onOpen = null;
 		onClose = null;
 

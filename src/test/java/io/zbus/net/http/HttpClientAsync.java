@@ -4,25 +4,22 @@ import java.io.IOException;
 
 import io.zbus.net.EventLoop;
 
-public class HttpClientExample {  
+public class HttpClientAsync {   
+	
 	public static void main(String[] args) throws Exception, InterruptedException { 
 		EventLoop loop = new EventLoop();
-		
 		HttpClient client = new HttpClient("https://api.binance.com", loop);
-
 		HttpMsg req = new HttpMsg();  
-		req.setUrl("/api/v1/exchangeInfo");  
+		req.setUrl("/api/v1/exchangeInfo2");  
 		
-		client.request(req, resp->{
-			System.out.println(resp);
-			try {
-				client.close();
+		client.request(req, resp->{ 
+			try { 
+				client.close(); 
 				loop.close();
-			} catch (IOException e1) { 
-			}
-			
-		}, e->{
-			e.printStackTrace();
+			} catch (IOException e) {  } 
+		}, e-> { 
+			client.close(); 
+			loop.close();
 		});  
 	}
 }
