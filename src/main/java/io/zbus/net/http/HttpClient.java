@@ -21,7 +21,9 @@ import io.zbus.net.MessageHandler;
 public class HttpClient extends Client<HttpMsg, HttpMsg> {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
 	private boolean traceEnabled = true;
-	private boolean autoClose = false;
+	private boolean autoClose = false; 
+	
+	private long defaultTimeout = 10000; //10s
 	
 	public HttpClient(URI uri, final EventLoop loop) {
 		super(uri, loop);
@@ -51,10 +53,12 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 
 	public HttpMsg request(HttpMsg req) throws IOException, InterruptedException {
 		fillCommonHeader(req);
-		return request(req, 3000);
+		return request(req, defaultTimeout);
 	}
 
 	public HttpMsg request(HttpMsg req, long timeout) throws IOException, InterruptedException {
+		fillCommonHeader(req);
+		
 		final long start = System.currentTimeMillis(); 
 		URI uri = req.getUri();
 		if(uri == null){
@@ -63,9 +67,7 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		final String reqStr = String.format("%s %s", req.getMethod() , uri.toString() + req.getUrl()); 
 		if(traceEnabled){ 
 			logger.info("Request(ID=%d) %s", start, reqStr);
-		}
-		
-		fillCommonHeader(req);
+		}  
 		CountDownLatch countDown = new CountDownLatch(1);
 		AtomicReference<HttpMsg> res = new AtomicReference<HttpMsg>();
 		onMessage = resp -> {

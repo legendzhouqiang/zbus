@@ -10,8 +10,7 @@ public class HttpClientSync {
 		HttpMsg req = new HttpMsg();  
 		req.setUrl("/api/v1/exchangeInfo");  
 		
-		HttpMsg resp = client.request(req);  
-		System.out.println(resp);
+		client.request(req);   
 		
 		client.close();
 		loop.close();

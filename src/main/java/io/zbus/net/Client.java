@@ -7,8 +7,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
@@ -18,6 +16,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
@@ -45,16 +44,15 @@ public class Client<REQ, RES> implements Closeable {
 	protected Bootstrap bootstrap;
 	protected Object bootstrapLock = new Object(); 
 	protected final EventLoop loop;
+	protected final EventLoopGroup group;
 	protected SslContext sslCtx; 
 	protected boolean sslEnabled;
 
 	protected ChannelFuture connectFuture;
 	protected CodecInitializer codecInitializer;
-
-	protected volatile ScheduledExecutorService heartbeator = null;
-	protected MessageBuilder<REQ> heartbeatMessageBuilder;
-	protected volatile ScheduledExecutorService reconnectRunner = Executors.newSingleThreadScheduledExecutor();
-
+ 
+	protected MessageBuilder<REQ> heartbeatMessageBuilder;  
+	
 	protected Session session;
 	protected Object sessionLock = new Object();
 	protected IoAdaptor ioAdaptor;
@@ -65,11 +63,13 @@ public class Client<REQ, RES> implements Closeable {
 	public Client(URI uri, EventLoop loop) {
 		this.uri = uri;
 		this.loop = loop;
+		this.group = loop.getGroup();
 		setup();
 	}
 	
 	public Client(String address, EventLoop loop) {
 		this.loop = loop;
+		this.group = loop.getGroup();
 		try {
 			this.uri = new URI(address);
 		} catch (URISyntaxException e) {
@@ -90,10 +90,9 @@ public class Client<REQ, RES> implements Closeable {
  
 		onClose = () -> {
 			log.warn("Trying to reconnect to (%s) in %.1f seconds", serverAddress(), reconnectDelay / 1000.0); 
-			reconnectRunner.schedule(()->{
-				if(!active()){
+			group.schedule(()->{
+				if(!active())
 					connect();
-				}
 			}, reconnectDelay, TimeUnit.MILLISECONDS); 
 		};  
 
@@ -175,7 +174,8 @@ public class Client<REQ, RES> implements Closeable {
 				public void operationComplete(Future<? super Void> future) throws Exception { 
 					if(future.isSuccess()){
 						
-					} else {
+					} else { 
+						cleanSession();
 						Throwable ex = future.cause();
 						if(ex != null){
 							if(onError != null){
@@ -183,8 +183,10 @@ public class Client<REQ, RES> implements Closeable {
 							} else {
 								log.error(ex.getMessage(), ex);
 							}
+						} 
+						if(onClose != null){
+							onClose.handle();
 						}
-						cleanSession(); 
 					}
 				}
 			}); 
@@ -231,20 +233,17 @@ public class Client<REQ, RES> implements Closeable {
 	}
 
 	public synchronized void heartbeat(long intervalInMillis, MessageBuilder<REQ> builder) {
-		this.heartbeatMessageBuilder = builder;
-		if (heartbeator == null) {
-			heartbeator = Executors.newSingleThreadScheduledExecutor();
-			this.heartbeator.scheduleAtFixedRate(() -> {
-				try {
-					if (heartbeatMessageBuilder != null) {
-						REQ msg = heartbeatMessageBuilder.build();
-						sendMessage(msg);
-					}
-				} catch (Exception e) {
-					log.warn(e.getMessage(), e);
+		this.heartbeatMessageBuilder = builder; 
+		this.group.scheduleAtFixedRate(() -> {
+			try {
+				if (heartbeatMessageBuilder != null) {
+					REQ msg = heartbeatMessageBuilder.build();
+					sendMessage(msg);
 				}
-			}, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS);
-		}
+			} catch (Exception e) {
+				log.warn(e.getMessage(), e);
+			}
+		}, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS); 
 	} 
 	
 	public boolean active(){ 
@@ -293,15 +292,6 @@ public class Client<REQ, RES> implements Closeable {
 		onOpen = null;
 		onClose = null;
 
-		cleanSession();
-
-		if (heartbeator != null) {
-			heartbeator.shutdownNow();
-			heartbeator = null;
-		} 
-		if (reconnectRunner != null) {
-			reconnectRunner.shutdownNow();
-			reconnectRunner = null;
-		} 
+		cleanSession(); 
 	}
 }
