@@ -67,7 +67,8 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		final String reqStr = String.format("%s %s", req.getMethod() , uri.toString() + req.getUrl()); 
 		if(traceEnabled){ 
 			logger.info("Request(ID=%d) %s", start, reqStr);
-		}  
+		} 
+		
 		CountDownLatch countDown = new CountDownLatch(1);
 		AtomicReference<HttpMsg> res = new AtomicReference<HttpMsg>();
 		onMessage = resp -> {
@@ -83,13 +84,16 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 			
 			res.set(resp);
 			countDown.countDown();
-		};
-		
-		onOpen = ()->{
-			sendMessage(req);
 		}; 
 		
-		connect(); 
+		if(active()){
+			sendMessage(req);
+		} else {
+			onOpen = ()->{ 
+				sendMessage(req);
+			};  
+			connect(); 
+		}
 		
 		countDown.await(timeout, TimeUnit.MILLISECONDS);
 		if(res.get() == null){ 

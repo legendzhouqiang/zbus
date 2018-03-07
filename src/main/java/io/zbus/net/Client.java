@@ -213,9 +213,9 @@ public class Client<REQ, RES> implements Closeable {
 						ChannelPipeline p = ch.pipeline();
 						if (sslCtx != null) { //SslContext take first priority!!!
 							p.addLast(sslCtx.newHandler(ch.alloc()));
-						} else if (sslEnabled) {
+						} else if (sslEnabled) { 
 							SSLEngine sslEngine = loop.buildSSLEngine(host, port, ch.alloc());
-							SslHandler sslHandler = new SslHandler(sslEngine);
+							SslHandler sslHandler = new SslHandler(sslEngine); 
 							p.addLast(sslHandler);
 						}
 						
