@@ -9,7 +9,7 @@ public class HttpClientSync3 {
 		
 		HttpClient client = new HttpClient("http://api.zb.com", loop);
 		
-		for(int i=0;i<100;i++){ 
+		for(int i=0;i<10;i++){ 
 			HttpMsg req = new HttpMsg();  
 			req.setUrl("/data/v1/markets");   
 			client.request(req);   

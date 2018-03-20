@@ -8,9 +8,9 @@ public class HttpClientAsync {
 	
 	public static void main(String[] args) throws Exception, InterruptedException { 
 		EventLoop loop = new EventLoop();
-		HttpClient client = new HttpClient("https://api.binance.com", loop);
-		HttpMsg req = new HttpMsg();  
-		req.setUrl("/api/v1/exchangeInfo");   
+		
+		HttpClient client = new HttpClient("http://localhost", loop);
+		HttpMsg req = new HttpMsg();   
 		 
 		client.request(req, resp->{ 
 			try { 
