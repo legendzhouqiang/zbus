@@ -1,18 +1,16 @@
 package io.zbus.net.ws;
 
-import java.util.UUID;
-
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.net.EventLoop;
-import io.zbus.rpc.Request;
 
-public class WebSocketExample {
+public class WebSocketExample2 {
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		EventLoop loop = new EventLoop();
-		String address = "ws://localhost";
+		String address = "wss://api.zb.com:9999/websocket";
 		
 		WebsocketClient ws = new WebsocketClient(address, loop);
 		
@@ -21,14 +19,13 @@ public class WebSocketExample {
 		};  
 		
 		ws.onOpen = ()-> {
-			Request req = new Request();
-			req.method = "echo";
-			req.params = new Object[]{ "hi" };
-			req.messageId = UUID.randomUUID().toString();
+			JSONObject json = new JSONObject();
+			json.put("event", "addChannel");
+			json.put("channel", "ltcbtc_ticker");
 			 
-			ws.sendMessage(JSON.toJSONString(req)); 
+			ws.sendMessage(JSON.toJSONString(json)); 
 		};
 		 
-		ws.connect();  
+		ws.connect();
 	}
 }

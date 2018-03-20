@@ -32,29 +32,17 @@ import io.zbus.net.Session;
 
 public class HttpMsgAdaptor extends ServerAdaptor{     
 	protected SessionMessageHandler<HttpMsg> filterHandler;   
-	protected Map<String, SessionMessageHandler<HttpMsg>> handlerMap = new ConcurrentHashMap<String, SessionMessageHandler<HttpMsg>>();  
+	protected Map<String, SessionMessageHandler<HttpMsg>> handlerMap = new ConcurrentHashMap<>();  
 	
 	public HttpMsgAdaptor(){ 
 		this(null);
 	}
 	
 	public HttpMsgAdaptor(Map<String, Session> sessionTable){
-		super(sessionTable);
-		this.cmd(HttpMsg.HEARTBEAT, new SessionMessageHandler<HttpMsg>() { 
-			public void handle(HttpMsg msg, Session sess) throws IOException { 
-				//ignore
-			}
-		});
-	}
-	 
-	public void cmd(String command, SessionMessageHandler<HttpMsg> handler){
-    	this.handlerMap.put(command, handler);
-    }
+		super(sessionTable); 
+	} 
 	
-	public void url(String url, SessionMessageHandler<HttpMsg> handler){
-		if(url.startsWith("/")){
-			url = url.substring(1);
-		}
+	public void url(String url, SessionMessageHandler<HttpMsg> handler){ 
     	this.handlerMap.put(url, handler);
     }
 	 
@@ -71,19 +59,17 @@ public class HttpMsgAdaptor extends ServerAdaptor{
     		this.filterHandler.handle(msg, sess);
     	}
     	
-    	String cmd = msg.getCommand();
-    	if(cmd != null){ //cmd
-    		SessionMessageHandler<HttpMsg> handler = handlerMap.get(cmd);
-        	if(handler != null){
-        		handler.handle(msg, sess);
-        		return;
-        	}
-    	}
-    	 
+    	String url = msg.getUrl();
+    	SessionMessageHandler<HttpMsg> handler = handlerMap.get(url);
+    	if(handler != null){
+    		handler.handle(msg, sess);
+    		return;
+    	}  
+    	
     	HttpMsg res = new HttpMsg();
     	res.setId(msgId); 
     	res.setStatus(404);
-    	String text = String.format("404: Command(%s) Not Found", cmd);
+    	String text = String.format("404: %s Not Found", url);
     	res.setBody(text); 
     	sess.write(res); 
     }  

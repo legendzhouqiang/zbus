@@ -291,13 +291,17 @@ public class RpcProcessor {
 	}
 
 	public Response process(Request req) { 
-		Response response = new Response();
+		Response response = new Response();  
 		try { 
 			if (req == null) {
 				req = new Request();
 				req.method = "index";
 				req.module = "index";
 			}
+			response.channelId = req.channelId;
+			response.messageId = req.messageId;
+			
+			
 			if (StrKit.isEmpty(req.module)) {
 				req.module = "index";
 			}

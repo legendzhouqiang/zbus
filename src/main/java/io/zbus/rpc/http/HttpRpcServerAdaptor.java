@@ -22,17 +22,37 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 	
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException { 
-		HttpMsg reqMsg = (HttpMsg)msg;
-		Request request = handleUrlMessage(reqMsg);
-		if(request == null){
-			request = JSON.parseObject(reqMsg.getBodyString(), Request.class);
+		HttpMsg reqMsg = null;
+		Request request = null;
+		boolean writeHttp = true;
+		if(msg instanceof HttpMsg){
+			reqMsg = (HttpMsg)msg;
+			request = handleUrlMessage(reqMsg);
+			if(request == null){
+				request = JSON.parseObject(reqMsg.getBodyString(), Request.class);
+			} 
+		} else if(msg instanceof byte[]){
+			request = JSON.parseObject((byte[])msg, Request.class); 
+			writeHttp = false;
+		}  
+		
+		if(request != null){
+			request.channelId = sess.id();
 		}
+		
 		Response response = processor.process(request);
-		String resStr = JSON.toJSONString(response);
-		HttpMsg resMsg = new HttpMsg();
-		resMsg.setStatus(200);
-		resMsg.setBody(resStr);
-		sess.write(resMsg);
+		response.channelId = null; //clear
+		
+		byte[] data = JSON.toJSONBytes(response);
+		
+		if(writeHttp){
+			HttpMsg resMsg = new HttpMsg();
+			resMsg.setStatus(200);
+			resMsg.setBody(data);
+			sess.write(resMsg);
+		} else {
+			sess.write(data);
+		}
 	} 
 	
 	protected Request handleUrlMessage(HttpMsg msg) {

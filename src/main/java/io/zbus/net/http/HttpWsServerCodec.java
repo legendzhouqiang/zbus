@@ -47,8 +47,8 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.http.HttpMsg.FileForm; 
 
 
-public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
-	private static final Logger log = LoggerFactory.getLogger(HttpMsgServerCodec.class);
+public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
+	private static final Logger log = LoggerFactory.getLogger(HttpWsServerCodec.class);
 
 	private static final String WEBSOCKET_PATH = "/";
 	private WebSocketServerHandshaker handshaker;
@@ -65,10 +65,10 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
     }
     
 	@Override
-	protected void encode(ChannelHandlerContext ctx, HttpMsg msg, List<Object> out) throws Exception {
+	protected void encode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {
 		//1) WebSocket mode
 		if(handshaker != null){//websocket step in, Message To WebSocketFrame
-			ByteBuf buf = Unpooled.wrappedBuffer(msg.toBytes());
+			ByteBuf buf = Unpooled.wrappedBuffer((byte[])obj);
 			WebSocketFrame frame = new TextWebSocketFrame(buf);
 			out.add(frame); 
 			return;
@@ -76,6 +76,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
 		
 		//2) HTTP mode
 		FullHttpMessage httpMsg = null;
+		HttpMsg msg = (HttpMsg)obj;
 		if (msg.getStatus() == null) {// as request
 			httpMsg = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
 					msg.getUrl()); 
@@ -200,7 +201,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
 	protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {
 		//1) WebSocket mode
 		if(obj instanceof WebSocketFrame){
-			HttpMsg msg = decodeWebSocketFrame(ctx, (WebSocketFrame)obj);
+			byte[] msg = decodeWebSocketFrame(ctx, (WebSocketFrame)obj);
 			if(msg != null){
 				out.add(msg);
 			}
@@ -286,7 +287,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
 		super.channelRead(ctx, msg);
 	}
  
-	private HttpMsg decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
+	private byte[] decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 		// Check for closing frame
 		if (frame instanceof CloseWebSocketFrame) {
 			handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
@@ -312,15 +313,11 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, HttpMsg> {
 		return null;
 	}
 	
-	private HttpMsg parseMessage(ByteBuf buf){
+	private byte[] parseMessage(ByteBuf buf){
 		int size = buf.readableBytes();
 		byte[] data = new byte[size];
 		buf.readBytes(data); 
-		HttpMsg msg = HttpMsg.parse(data); 
-		if(msg == null){
-			log.warn("Message format error: " + new String(data));
-		}
-		return msg;
+		return data;
 	}
 
 	private static String getWebSocketLocation(HttpMessage req, ChannelHandlerContext ctx) {
