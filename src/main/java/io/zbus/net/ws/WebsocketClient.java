@@ -27,17 +27,16 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.Client;
 import io.zbus.net.EventLoop;
 
-public class WebSocket extends Client<String, String> {
-	private static final Logger log = LoggerFactory.getLogger(WebSocket.class);
+public class WebsocketClient extends Client<String, String> {
+	private static final Logger log = LoggerFactory.getLogger(WebsocketClient.class);
 	private boolean websocketReady = false;
 	
 	private Charset charset = Charset.forName("UTF-8");
 	
-	public WebSocket(String address, final EventLoop loop) {
+	public WebsocketClient(String address, final EventLoop loop) {
 		super(address, loop); 
 		triggerOpenWhenConnected = false;  //wait for handsake finished 
-		codec(p -> {
-			p.clear();
+		codec(p -> { 
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));

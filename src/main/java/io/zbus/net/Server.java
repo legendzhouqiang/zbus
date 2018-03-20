@@ -58,11 +58,8 @@ public class Server implements Closeable {
 	} 
 	
 	public void start(final String host, final int port, IoAdaptor ioAdaptor, boolean isDefault) {
-		EventLoopGroup bossGroup = (EventLoopGroup)loop.getGroup();
-		EventLoopGroup workerGroup = (EventLoopGroup)loop.getWorkerGroup(); 
-		if(workerGroup == null){
-			workerGroup = bossGroup;
-		} 
+		EventLoopGroup bossGroup = loop.getGroup();
+		EventLoopGroup workerGroup = loop.getGroup();  
 		
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(bossGroup, workerGroup)

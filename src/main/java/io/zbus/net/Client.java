@@ -150,7 +150,7 @@ public class Client<REQ, RES> implements Closeable {
 				}
 				log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
 			}
-		};
+		}; 
 	} 
 
 	protected String serverAddress() {
@@ -161,8 +161,8 @@ public class Client<REQ, RES> implements Closeable {
 		this.codecInitializer = codecInitializer;
 	}
 
-	public synchronized void connect() {
-		init(); 
+	public synchronized void connect() { 
+		init();
 		synchronized (sessionLock) {
 			if(connectFuture != null){
 				log.info("Connecting to (%s) in process", serverAddress());

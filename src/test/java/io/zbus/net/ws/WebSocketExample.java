@@ -9,7 +9,7 @@ public class WebSocketExample {
 		EventLoop loop = new EventLoop();
 		String address = "wss://stream.binance.com:9443/ws/btcusdt@aggTrade";
 
-		WebSocket ws = new WebSocket(address, loop);
+		WebsocketClient ws = new WebsocketClient(address, loop);
 		ws.onMessage = msg -> {
 			System.out.println(new String(msg));
 		};

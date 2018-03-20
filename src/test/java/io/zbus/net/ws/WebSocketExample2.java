@@ -12,7 +12,7 @@ public class WebSocketExample2 {
 		EventLoop loop = new EventLoop();
 		String address = "wss://api.zb.com:9999/websocket";
 		
-		WebSocket ws = new WebSocket(address, loop);
+		WebsocketClient ws = new WebsocketClient(address, loop);
 		
 		ws.onMessage = msg->{
 			System.out.println(msg);

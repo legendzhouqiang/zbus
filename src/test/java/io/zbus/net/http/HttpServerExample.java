@@ -1,5 +1,7 @@
 package io.zbus.net.http;
 
+import io.zbus.net.EventLoop;
+
 public class HttpServerExample {
 
 	@SuppressWarnings("resource")
@@ -15,8 +17,9 @@ public class HttpServerExample {
 			res.setBody(""+System.currentTimeMillis());
 			sess.write(res); 
 		});  
-		 
-		HttpServer server = new HttpServer();   
+		
+		EventLoop loop = new EventLoop(); 
+		HttpServer server = new HttpServer(loop);   
 		server.start(80, adaptor);  
 	} 
 }
