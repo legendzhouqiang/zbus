@@ -1,9 +1,12 @@
 package io.zbus.rpc;
 
+import java.util.Map;
+
 public class Response {
-	public Object result;
-	public Object error;
+	public String id;
 	
-	public String channelId;  //Server populated: from socket id
-	public String messageId;
+	public Object result;
+	public Object error;  
+	
+	public Map<String, Object> properties;  
 }

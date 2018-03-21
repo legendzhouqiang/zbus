@@ -34,14 +34,9 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 		} else if(msg instanceof byte[]){
 			request = JSON.parseObject((byte[])msg, Request.class); 
 			writeHttp = false;
-		}  
+		}   
 		
-		if(request != null){
-			request.channelId = sess.id();
-		}
-		
-		Response response = processor.process(request);
-		response.channelId = null; //clear
+		Response response = processor.process(request);  
 		
 		byte[] data = JSON.toJSONBytes(response);
 		
@@ -66,18 +61,16 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 		
 		Request req = new Request();
     	if(info.path.size()>=1){
-    		req.module = info.path.get(0);
+    		req.properties.put(Request.MODULE, info.path.get(0));
     	}
     	if(info.path.size()>=2){
-    		req.method = info.path.get(1);
+    		req.command = info.path.get(1);
     	} 
     	
-    	if(info.path.size()>2){
-    		Object[] params = new Object[info.path.size()-2];
-    		for(int i=0;i<params.length;i++){
-    			params[i] = info.path.get(2+i);
-    		}
-    		req.params = params; 
+    	if(info.path.size()>2){ 
+    		for(int i=0;i<info.path.size()-2;i++){
+    			req.params.add(info.path.get(2+i));
+    		} 
     	}   
     	return req;
 	}

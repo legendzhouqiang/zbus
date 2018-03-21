@@ -22,9 +22,9 @@ public class WebSocketExample {
 		
 		ws.onOpen = ()-> {
 			Request req = new Request();
-			req.method = "echo";
-			req.params = new Object[]{ "hi" };
-			req.messageId = UUID.randomUUID().toString();
+			req.command = "echo";
+			req.params.add("hi");
+			req.id = UUID.randomUUID().toString();
 			 
 			ws.sendMessage(JSON.toJSONString(req)); 
 		};
