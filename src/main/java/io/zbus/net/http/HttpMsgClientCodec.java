@@ -18,7 +18,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion; 
 
 
-public class HttpMsgClientCodec extends MessageToMessageCodec<Object, HttpMsg> { 
+public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpMsg> { 
  
 	@Override
 	protected void encode(ChannelHandlerContext ctx, HttpMsg msg, List<Object> out) throws Exception {  
@@ -59,7 +59,7 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<Object, HttpMsg> {
 
 	private HttpMsg decodeHeaders(HttpMessage httpMsg){
 		HttpMsg msg = new HttpMsg();
-		Iterator<Entry<String, String>> iter = httpMsg.headers().iterator();
+		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
 			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)){ //encoding and type
@@ -75,18 +75,18 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<Object, HttpMsg> {
 
 		if (httpMsg instanceof HttpRequest) {
 			HttpRequest req = (HttpRequest) httpMsg;
-			msg.setMethod(req.getMethod().name());
-			msg.setUrl(req.getUri());
+			msg.setMethod(req.method().name());
+			msg.setUrl(req.uri());
 		} else if (httpMsg instanceof HttpResponse) {
 			HttpResponse resp = (HttpResponse) httpMsg;
-			int status = resp.getStatus().code();
+			int status = resp.status().code();
 			msg.setStatus(status);
 		}
 		return msg;
 	} 
 	
 	@Override
-	protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {  
+	protected void decode(ChannelHandlerContext ctx, HttpMessage obj, List<Object> out) throws Exception {  
 		HttpMessage httpMsg = (HttpMessage) obj; 
 		HttpMsg msg = decodeHeaders(httpMsg);   
 		

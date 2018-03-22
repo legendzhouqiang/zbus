@@ -15,7 +15,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -47,10 +47,8 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.http.HttpMsg.FileForm; 
 
 
-public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
-	private static final Logger log = LoggerFactory.getLogger(HttpWsServerCodec.class);
-
-	private static final String WEBSOCKET_PATH = "/";
+public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
+	private static final Logger log = LoggerFactory.getLogger(HttpMsgServerCodec.class); 
 	private WebSocketServerHandshaker handshaker;
 
 	//File upload
@@ -62,26 +60,43 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
         DiskFileUpload.baseDirectory = null; // system temp directory
         DiskAttribute.deleteOnExitTemporaryFile = true; // should delete file on  exit (in normal exit)
         DiskAttribute.baseDirectory = null; // system temp directory
+    } 
+    
+    
+    @Override
+    public boolean acceptOutboundMessage(Object msg) throws Exception {
+    	return msg instanceof HttpMsg || msg instanceof byte[];
     }
+     
     
 	@Override
-	protected void encode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {
-		//1) WebSocket mode
-		if(handshaker != null){//websocket step in, Message To WebSocketFrame
-			ByteBuf buf = Unpooled.wrappedBuffer((byte[])obj);
+	protected void encode(ChannelHandlerContext ctx, Object obj,  List<Object> out) throws Exception {
+		//1) WebSocket mode  
+		if(obj instanceof byte[]){
+			if(handshaker == null){ 
+				log.warn("Handshake not finished");
+				return;
+			}
+			byte[] msg = (byte[])obj;
+			ByteBuf buf = Unpooled.wrappedBuffer(msg);
 			WebSocketFrame frame = new TextWebSocketFrame(buf);
 			out.add(frame); 
-			return;
-		}
+			return; 
+		} 
 		
-		//2) HTTP mode
-		FullHttpMessage httpMsg = null;
+		if(!(obj instanceof HttpMsg)){
+			log.warn("HttpMessage required");
+			return;
+		} 
+		
+		//2) HTTP mode  
+		FullHttpMessage httpMessage = null;  
 		HttpMsg msg = (HttpMsg)obj;
 		if (msg.getStatus() == null) {// as request
-			httpMsg = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
+			httpMessage = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
 					msg.getUrl()); 
 		} else {// as response
-			httpMsg = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+			httpMessage = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 		//content-type and encoding
@@ -95,25 +110,78 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 			contentType += "; charset=" + encoding;
 		}
 		if(contentType != null){
-			httpMsg.headers().set(HttpMsg.CONTENT_TYPE, contentType);
+			httpMessage.headers().set(HttpMsg.CONTENT_TYPE, contentType);
 		}
 		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
 			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)) continue;
 			if(e.getKey().equalsIgnoreCase(HttpMsg.ENCODING)) continue;
 			
-			httpMsg.headers().add(e.getKey().toLowerCase(), e.getValue());
+			httpMessage.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
 		if (msg.getBody() != null) {
-			httpMsg.content().writeBytes(msg.getBody());
+			httpMessage.content().writeBytes(msg.getBody());
 		}
 
-		out.add(httpMsg);
+		out.add(httpMessage);
 	}
+	
+	@Override
+	protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {
+		//1) WebSocket mode
+		if(obj instanceof WebSocketFrame){
+			byte[] msg = decodeWebSocketFrame(ctx, (WebSocketFrame)obj);
+			if(msg != null){
+				out.add(msg);
+			}
+			return;
+		}
+		
+		//2) HTTP mode
+		if(!(obj instanceof HttpMessage)){
+			throw new IllegalArgumentException("HttpMessage object required: " + obj);
+		}
+		 
+		HttpMessage httpMsg = (HttpMessage) obj; 
+		HttpMsg msg = decodeHeaders(httpMsg); 
+		String contentType = msg.getHeader(HttpMsg.CONTENT_TYPE);
+		
+		//Body
+		ByteBuf body = null;
+		if (httpMsg instanceof FullHttpMessage) {
+			FullHttpMessage fullReq = (FullHttpMessage) httpMsg;
+			body = fullReq.content();
+		}
+		
+		//Special case for file uploads
+		if(httpMsg instanceof HttpRequest 
+				&& contentType != null 
+				&& contentType.startsWith(HttpMsg.CONTENT_TYPE_UPLOAD) ){
+			if(body != null){
+				body = body.duplicate(); //read form will change the body
+			}
+			
+			HttpRequest req = (HttpRequest) httpMsg;
+			decoder = new HttpPostRequestDecoder(factory, req);   
+			handleUploadMessage(httpMsg, msg);
+			out.add(msg); 
+		}  
+		
+		if (body != null) { 
+			int size = body.readableBytes();
+			if (size > 0) {
+				byte[] data = new byte[size];
+				body.readBytes(data);
+				msg.setBody(data);
+			}
+		}
+
+		out.add(msg);
+	} 
 
 	private HttpMsg decodeHeaders(HttpMessage httpMsg){
 		HttpMsg msg = new HttpMsg();
-		Iterator<Entry<String, String>> iter = httpMsg.headers().iterator();
+		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
 			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)){ //encoding and type
@@ -129,11 +197,11 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 
 		if (httpMsg instanceof HttpRequest) {
 			HttpRequest req = (HttpRequest) httpMsg;
-			msg.setMethod(req.getMethod().name());
-			msg.setUrl(req.getUri());
+			msg.setMethod(req.method().name());
+			msg.setUrl(req.uri());
 		} else if (httpMsg instanceof HttpResponse) {
 			HttpResponse resp = (HttpResponse) httpMsg;
-			int status = resp.getStatus().code();
+			int status = resp.status().code();
 			msg.setStatus(status);
 		}
 		return msg;
@@ -195,60 +263,8 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 	private void resetUpload() {  
         decoder.destroy();
         decoder = null;
-    }
+    } 
 	
-	@Override
-	protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception {
-		//1) WebSocket mode
-		if(obj instanceof WebSocketFrame){
-			byte[] msg = decodeWebSocketFrame(ctx, (WebSocketFrame)obj);
-			if(msg != null){
-				out.add(msg);
-			}
-			return;
-		}
-		
-		//2) HTTP mode
-		if(!(obj instanceof HttpMessage)){
-			throw new IllegalArgumentException("HttpMessage object required: " + obj);
-		}
-		 
-		HttpMessage httpMsg = (HttpMessage) obj; 
-		HttpMsg msg = decodeHeaders(httpMsg); 
-		String contentType = msg.getHeader(HttpMsg.CONTENT_TYPE);
-		
-		//Body
-		ByteBuf body = null;
-		if (httpMsg instanceof FullHttpMessage) {
-			FullHttpMessage fullReq = (FullHttpMessage) httpMsg;
-			body = fullReq.content();
-		}
-		
-		//Special case for file uploads
-		if(httpMsg instanceof HttpRequest 
-				&& contentType != null 
-				&& contentType.startsWith(HttpMsg.CONTENT_TYPE_UPLOAD) ){
-			if(body != null){
-				body = body.duplicate(); //read form will change the body
-			}
-			
-			HttpRequest req = (HttpRequest) httpMsg;
-			decoder = new HttpPostRequestDecoder(factory, req);   
-			handleUploadMessage(httpMsg, msg);
-			out.add(msg); 
-		}  
-		
-		if (body != null) { 
-			int size = body.readableBytes();
-			if (size > 0) {
-				byte[] data = new byte[size];
-				body.readBytes(data);
-				msg.setBody(data);
-			}
-		}
-
-		out.add(msg);
-	} 
 	 
 	private static String[] httpContentType(String value){
 		String type="text/plain", charset="utf-8";
@@ -263,15 +279,15 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 			}
 		}
 		return new String[]{type, charset};
-	}
-
+	} 
+	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		if(msg instanceof FullHttpRequest){
 			FullHttpRequest req = (FullHttpRequest) msg; 
 			
 			//check if websocket upgrade encountered
-			if(req.headers().contains("Upgrade") || req.headers().contains("upgrade")) {
+			if(req.headers().contains("Upgrade") || req.headers().contains("upgrade")) { 
 				WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
 						getWebSocketLocation(req, ctx), null, true, 1024 * 1024 * 1024);
 				handshaker = wsFactory.newHandshaker(req);
@@ -321,7 +337,7 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 	}
 
 	private static String getWebSocketLocation(HttpMessage req, ChannelHandlerContext ctx) {
-		String location = req.headers().get(HttpHeaders.Names.HOST) + WEBSOCKET_PATH;
+		String location = req.headers().get(HttpHeaderNames.HOST) + "/";
 		if (ctx.pipeline().get(SslHandler.class) != null) {
 			return "wss://" + location;
 		} else {

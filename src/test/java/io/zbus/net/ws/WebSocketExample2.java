@@ -1,9 +1,11 @@
 package io.zbus.net.ws;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.zbus.kit.JsonKit;
 import io.zbus.net.EventLoop;
+import io.zbus.net.http.ws.WebsocketClient;
 
 public class WebSocketExample2 {
 	
@@ -19,11 +21,11 @@ public class WebSocketExample2 {
 		};  
 		
 		ws.onOpen = ()-> {
-			JSONObject json = new JSONObject();
-			json.put("event", "addChannel");
-			json.put("channel", "ltcbtc_ticker");
+			Map<String, String> req = new HashMap<>();
+			req.put("event", "addChannel");
+			req.put("channel", "ltcbtc_ticker");
 			 
-			ws.sendMessage(JSON.toJSONString(json)); 
+			ws.sendMessage(JsonKit.toJSONString(req)); 
 		};
 		 
 		ws.connect();

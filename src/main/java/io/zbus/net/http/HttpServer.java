@@ -14,8 +14,8 @@ public class HttpServer extends Server {
 		super(loop);  
 		codec(p -> {
 			p.add(new HttpServerCodec());
-			p.add(new HttpObjectAggregator(getEventLoop().getPackageSizeLimit()));
-			p.add(new HttpWsServerCodec()); 
+			p.add(new HttpObjectAggregator(getEventLoop().getPackageSizeLimit())); 
+			p.add(new HttpMsgServerCodec());  
 		}); 
 	} 
 }

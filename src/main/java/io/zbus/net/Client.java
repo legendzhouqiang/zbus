@@ -203,8 +203,7 @@ public class Client<REQ, RES> implements Closeable {
 			bootstrap = new Bootstrap();
 			bootstrap.group(this.loop.getGroup())
 				.channel(NioSocketChannel.class)
-				.handler(new ChannelInitializer<SocketChannel>() { 
-					NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
+				.handler(new ChannelInitializer<SocketChannel>() {  
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
 						if (codecInitializer == null) {
@@ -226,6 +225,7 @@ public class Client<REQ, RES> implements Closeable {
 								p.addLast((ChannelHandler) handler);
 							}
 						} 
+						NettyAdaptor nettyToIoAdaptor = new NettyAdaptor(ioAdaptor);
 						p.addLast(nettyToIoAdaptor);
 					}
 				});

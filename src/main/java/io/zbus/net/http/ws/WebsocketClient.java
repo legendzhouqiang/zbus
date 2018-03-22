@@ -1,4 +1,4 @@
-package io.zbus.net.ws;
+package io.zbus.net.http.ws;
 
 import java.nio.charset.Charset;
 import java.util.List;
