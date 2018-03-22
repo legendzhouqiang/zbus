@@ -4,8 +4,8 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.net.EventLoop;
 import io.zbus.net.Server;
 import io.zbus.net.Ssl;
-import io.zbus.net.http.HttpMsgAdaptor;
-import io.zbus.net.http.HttpServer; 
+import io.zbus.net.http.HttpMessageAdaptor;
+import io.zbus.net.http.HttpWsServer; 
 
 public class SslServerExample {
 
@@ -17,7 +17,7 @@ public class SslServerExample {
 		EventLoop loop = new EventLoop(); 
 		loop.setSslContext(context);
 		
-		Server server = new HttpServer(loop);  
-		server.start(80, new HttpMsgAdaptor());  
+		Server server = new HttpWsServer(loop);  
+		server.start(80, new HttpMessageAdaptor());  
 	} 
 }

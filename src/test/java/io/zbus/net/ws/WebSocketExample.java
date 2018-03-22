@@ -1,14 +1,15 @@
 package io.zbus.net.ws;
 
+import java.io.IOException;
+
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.net.EventLoop;
-import io.zbus.net.http.ws.WebsocketClient;
+import io.zbus.net.http.WebsocketClient;
 import io.zbus.rpc.Request;
 
 public class WebSocketExample {
-	
-	@SuppressWarnings("resource")
+	 
 	public static void main(String[] args) throws Exception {
 		EventLoop loop = new EventLoop();
 		String address = "ws://localhost/";
@@ -17,6 +18,12 @@ public class WebSocketExample {
 		
 		ws.onMessage = msg->{
 			System.out.println(msg);
+			try {
+				ws.close();
+				loop.close();
+			} catch (IOException e) { 
+				e.printStackTrace();
+			}
 		};  
 		
 		ws.onOpen = ()-> {
@@ -25,7 +32,7 @@ public class WebSocketExample {
 			req.params.add("hi");
 			req.id = StrKit.uuid();
 			 
-			ws.sendMessage(JsonKit.toJSONString(req)); 
+			ws.sendMessage(JsonKit.toJSONString(req));  
 		};
 		 
 		ws.connect();  

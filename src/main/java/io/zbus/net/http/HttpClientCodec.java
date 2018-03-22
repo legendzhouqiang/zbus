@@ -10,7 +10,6 @@ import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpMessage;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -18,10 +17,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion; 
 
 
-public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpMsg> { 
+public class HttpClientCodec extends MessageToMessageCodec<io.netty.handler.codec.http.HttpMessage, HttpMessage> { 
  
 	@Override
-	protected void encode(ChannelHandlerContext ctx, HttpMsg msg, List<Object> out) throws Exception {  
+	protected void encode(ChannelHandlerContext ctx, HttpMessage msg, List<Object> out) throws Exception {  
 		FullHttpMessage httpMsg = null;
 		if (msg.getStatus() == null) {// as request
 			httpMsg = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
@@ -31,8 +30,8 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpM
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 		//content-type and encoding
-		String contentType = msg.getHeader(HttpMsg.CONTENT_TYPE); 
-		String encoding = msg.getHeader(HttpMsg.ENCODING);
+		String contentType = msg.getHeader(HttpMessage.CONTENT_TYPE); 
+		String encoding = msg.getHeader(HttpMessage.ENCODING);
 		if(encoding != null){
 			encoding = "utf-8";
 			if(contentType == null) {
@@ -41,12 +40,12 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpM
 			contentType += "; charset=" + encoding;
 		}
 		if(contentType != null){
-			httpMsg.headers().set(HttpMsg.CONTENT_TYPE, contentType);
+			httpMsg.headers().set(HttpMessage.CONTENT_TYPE, contentType);
 		}
 		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
-			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)) continue;
-			if(e.getKey().equalsIgnoreCase(HttpMsg.ENCODING)) continue;
+			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)) continue;
+			if(e.getKey().equalsIgnoreCase(HttpMessage.ENCODING)) continue;
 			
 			httpMsg.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
@@ -57,16 +56,16 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpM
 		out.add(httpMsg);
 	}
 
-	private HttpMsg decodeHeaders(HttpMessage httpMsg){
-		HttpMsg msg = new HttpMsg();
+	private HttpMessage decodeHeaders(io.netty.handler.codec.http.HttpMessage httpMsg){
+		HttpMessage msg = new HttpMessage();
 		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
-			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)){ //encoding and type
+			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)){ //encoding and type
 				String[] typeInfo = httpContentType(e.getValue());
-				msg.setHeader(HttpMsg.CONTENT_TYPE, typeInfo[0]); 
-				if(msg.getHeader(HttpMsg.ENCODING) == null) {
-					msg.setHeader(HttpMsg.ENCODING, typeInfo[1]);
+				msg.setHeader(HttpMessage.CONTENT_TYPE, typeInfo[0]); 
+				if(msg.getHeader(HttpMessage.ENCODING) == null) {
+					msg.setHeader(HttpMessage.ENCODING, typeInfo[1]);
 				}
 			} else {
 				msg.setHeader(e.getKey().toLowerCase(), e.getValue());
@@ -86,9 +85,8 @@ public class HttpMsgClientCodec extends MessageToMessageCodec<HttpMessage, HttpM
 	} 
 	
 	@Override
-	protected void decode(ChannelHandlerContext ctx, HttpMessage obj, List<Object> out) throws Exception {  
-		HttpMessage httpMsg = (HttpMessage) obj; 
-		HttpMsg msg = decodeHeaders(httpMsg);   
+	protected void decode(ChannelHandlerContext ctx, io.netty.handler.codec.http.HttpMessage httpMsg, List<Object> out) throws Exception {   
+		HttpMessage msg = decodeHeaders(httpMsg);   
 		
 		//Body
 		ByteBuf body = null;

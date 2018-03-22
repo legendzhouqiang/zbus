@@ -5,10 +5,10 @@ public class HttpServerExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) { 
 		
-		HttpMsgAdaptor adaptor = new HttpMsgAdaptor();
+		HttpMessageAdaptor adaptor = new HttpMessageAdaptor();
 		
 		adaptor.url("/", (msg, sess) -> {   
-			HttpMsg res = new HttpMsg();
+			HttpMessage res = new HttpMessage();
 			res.setStatus(200);
 			
 			res.setId(msg.getId()); //match the ID for response 
@@ -16,7 +16,7 @@ public class HttpServerExample {
 			sess.write(res); 
 		});   
 		 
-		HttpServer server = new HttpServer();   
+		HttpWsServer server = new HttpWsServer();   
 		server.start(80, adaptor);  
 	} 
 }

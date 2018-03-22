@@ -18,7 +18,7 @@ import io.zbus.net.ErrorHandler;
 import io.zbus.net.EventLoop;
 import io.zbus.net.MessageHandler;
 
-public class HttpClient extends Client<HttpMsg, HttpMsg> {
+public class HttpClient extends Client<HttpMessage, HttpMessage> {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
 	private boolean traceEnabled = true;
 	private boolean autoClose = false; 
@@ -40,23 +40,23 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
 			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
-			p.add(new HttpMsgClientCodec());
+			p.add(new HttpClientCodec());
 		});
 
 		onClose = null; // Disable auto reconnect
 		onError = null;
 	}
 	
-	private void fillCommonHeader(HttpMsg req){
+	private void fillCommonHeader(HttpMessage req){
 		req.setHeader("host", host);
 	}
 
-	public HttpMsg request(HttpMsg req) throws IOException, InterruptedException {
+	public HttpMessage request(HttpMessage req) throws IOException, InterruptedException {
 		fillCommonHeader(req);
 		return request(req, defaultTimeout);
 	}
 
-	public HttpMsg request(HttpMsg req, long timeout) throws IOException, InterruptedException {
+	public HttpMessage request(HttpMessage req, long timeout) throws IOException, InterruptedException {
 		fillCommonHeader(req);
 		
 		final long start = System.currentTimeMillis(); 
@@ -70,7 +70,7 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 		} 
 		
 		CountDownLatch countDown = new CountDownLatch(1);
-		AtomicReference<HttpMsg> res = new AtomicReference<HttpMsg>();
+		AtomicReference<HttpMessage> res = new AtomicReference<HttpMessage>();
 		onMessage = resp -> {
 			if(traceEnabled){
 				long end = System.currentTimeMillis();
@@ -108,7 +108,7 @@ public class HttpClient extends Client<HttpMsg, HttpMsg> {
 	}
 
 	
-	public void request(HttpMsg req, final MessageHandler<HttpMsg> messageHandler,
+	public void request(HttpMessage req, final MessageHandler<HttpMessage> messageHandler,
 			final ErrorHandler errorHandler) {
 		fillCommonHeader(req);
 		final AtomicLong start = new AtomicLong(System.currentTimeMillis());  

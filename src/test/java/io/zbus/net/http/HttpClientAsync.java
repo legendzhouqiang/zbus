@@ -10,7 +10,7 @@ public class HttpClientAsync {
 		EventLoop loop = new EventLoop();
 		
 		HttpClient client = new HttpClient("http://localhost", loop);
-		HttpMsg req = new HttpMsg();   
+		HttpMessage req = new HttpMessage();   
 		 
 		client.request(req, resp->{ 
 			try { 

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.net.EventLoop;
-import io.zbus.net.http.ws.WebsocketClient;
+import io.zbus.net.http.WebsocketClient;
 
 public class WebSocketExample2 {
 	

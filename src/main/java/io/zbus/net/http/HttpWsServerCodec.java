@@ -16,7 +16,6 @@ import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -44,11 +43,11 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.handler.ssl.SslHandler;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.net.http.HttpMsg.FileForm; 
+import io.zbus.net.http.HttpMessage.FileForm; 
 
 
-public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
-	private static final Logger log = LoggerFactory.getLogger(HttpMsgServerCodec.class); 
+public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
+	private static final Logger log = LoggerFactory.getLogger(HttpWsServerCodec.class); 
 	private WebSocketServerHandshaker handshaker;
 
 	//File upload
@@ -65,7 +64,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
     
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
-    	return msg instanceof HttpMsg || msg instanceof byte[];
+    	return msg instanceof HttpMessage || msg instanceof byte[];
     }
      
     
@@ -84,14 +83,14 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 			return; 
 		} 
 		
-		if(!(obj instanceof HttpMsg)){
+		if(!(obj instanceof HttpMessage)){
 			log.warn("HttpMessage required");
 			return;
 		} 
 		
 		//2) HTTP mode  
 		FullHttpMessage httpMessage = null;  
-		HttpMsg msg = (HttpMsg)obj;
+		HttpMessage msg = (HttpMessage)obj;
 		if (msg.getStatus() == null) {// as request
 			httpMessage = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
 					msg.getUrl()); 
@@ -100,8 +99,8 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 		//content-type and encoding
-		String contentType = msg.getHeader(HttpMsg.CONTENT_TYPE); 
-		String encoding = msg.getHeader(HttpMsg.ENCODING);
+		String contentType = msg.getHeader(HttpMessage.CONTENT_TYPE); 
+		String encoding = msg.getHeader(HttpMessage.ENCODING);
 		if(encoding != null){
 			encoding = "utf-8";
 			if(contentType == null) {
@@ -110,12 +109,12 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 			contentType += "; charset=" + encoding;
 		}
 		if(contentType != null){
-			httpMessage.headers().set(HttpMsg.CONTENT_TYPE, contentType);
+			httpMessage.headers().set(HttpMessage.CONTENT_TYPE, contentType);
 		}
 		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
-			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)) continue;
-			if(e.getKey().equalsIgnoreCase(HttpMsg.ENCODING)) continue;
+			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)) continue;
+			if(e.getKey().equalsIgnoreCase(HttpMessage.ENCODING)) continue;
 			
 			httpMessage.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
@@ -138,13 +137,13 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		}
 		
 		//2) HTTP mode
-		if(!(obj instanceof HttpMessage)){
+		if(!(obj instanceof io.netty.handler.codec.http.HttpMessage)){
 			throw new IllegalArgumentException("HttpMessage object required: " + obj);
 		}
 		 
-		HttpMessage httpMsg = (HttpMessage) obj; 
-		HttpMsg msg = decodeHeaders(httpMsg); 
-		String contentType = msg.getHeader(HttpMsg.CONTENT_TYPE);
+		io.netty.handler.codec.http.HttpMessage httpMsg = (io.netty.handler.codec.http.HttpMessage) obj; 
+		HttpMessage msg = decodeHeaders(httpMsg); 
+		String contentType = msg.getHeader(HttpMessage.CONTENT_TYPE);
 		
 		//Body
 		ByteBuf body = null;
@@ -156,7 +155,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		//Special case for file uploads
 		if(httpMsg instanceof HttpRequest 
 				&& contentType != null 
-				&& contentType.startsWith(HttpMsg.CONTENT_TYPE_UPLOAD) ){
+				&& contentType.startsWith(HttpMessage.CONTENT_TYPE_UPLOAD) ){
 			if(body != null){
 				body = body.duplicate(); //read form will change the body
 			}
@@ -179,16 +178,16 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		out.add(msg);
 	} 
 
-	private HttpMsg decodeHeaders(HttpMessage httpMsg){
-		HttpMsg msg = new HttpMsg();
+	private HttpMessage decodeHeaders(io.netty.handler.codec.http.HttpMessage httpMsg){
+		HttpMessage msg = new HttpMessage();
 		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
-			if(e.getKey().equalsIgnoreCase(HttpMsg.CONTENT_TYPE)){ //encoding and type
+			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)){ //encoding and type
 				String[] typeInfo = httpContentType(e.getValue());
-				msg.setHeader(HttpMsg.CONTENT_TYPE, typeInfo[0]); 
-				if(msg.getHeader(HttpMsg.ENCODING) == null) {
-					msg.setHeader(HttpMsg.ENCODING, typeInfo[1]);
+				msg.setHeader(HttpMessage.CONTENT_TYPE, typeInfo[0]); 
+				if(msg.getHeader(HttpMessage.ENCODING) == null) {
+					msg.setHeader(HttpMessage.ENCODING, typeInfo[1]);
 				}
 			} else {
 				msg.setHeader(e.getKey().toLowerCase(), e.getValue());
@@ -207,7 +206,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		return msg;
 	}
 	
-	private void handleUploadMessage(HttpMessage httpMsg, HttpMsg uploadMessage) throws IOException{
+	private void handleUploadMessage(io.netty.handler.codec.http.HttpMessage httpMsg, HttpMessage uploadMessage) throws IOException{
 		if (httpMsg instanceof HttpContent) { 
             HttpContent chunk = (HttpContent) httpMsg;
             decoder.offer(chunk); 
@@ -232,7 +231,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
         }
 	}
 	
-	private void handleUploadFile(InterfaceHttpData data, HttpMsg uploadMessage) throws IOException{
+	private void handleUploadFile(InterfaceHttpData data, HttpMessage uploadMessage) throws IOException{
 		FileForm fileForm = uploadMessage.fileForm;
         if(uploadMessage.fileForm == null){
         	uploadMessage.fileForm = fileForm = new FileForm();
@@ -246,14 +245,14 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		
 		if (data.getHttpDataType() == HttpDataType.FileUpload) {
             FileUpload fileUpload = (FileUpload) data;
-            HttpMsg.FileUpload file = new HttpMsg.FileUpload();
+            HttpMessage.FileUpload file = new HttpMessage.FileUpload();
             file.fileName = fileUpload.getFilename();
             file.contentType = fileUpload.getContentType();
             file.data = fileUpload.get(); 
             
-            List<HttpMsg.FileUpload> uploads = fileForm.files.get(data.getName());
+            List<HttpMessage.FileUpload> uploads = fileForm.files.get(data.getName());
             if(uploads == null){
-            	uploads = new ArrayList<HttpMsg.FileUpload>();
+            	uploads = new ArrayList<HttpMessage.FileUpload>();
             	fileForm.files.put(data.getName(), uploads);
             }
             uploads.add(file);
@@ -336,7 +335,7 @@ public class HttpMsgServerCodec extends MessageToMessageCodec<Object, Object> {
 		return data;
 	}
 
-	private static String getWebSocketLocation(HttpMessage req, ChannelHandlerContext ctx) {
+	private static String getWebSocketLocation(io.netty.handler.codec.http.HttpMessage req, ChannelHandlerContext ctx) {
 		String location = req.headers().get(HttpHeaderNames.HOST) + "/";
 		if (ctx.pipeline().get(SslHandler.class) != null) {
 			return "wss://" + location;

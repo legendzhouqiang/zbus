@@ -47,8 +47,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
 
-public class HttpMsg{  
-	private static final Logger log = LoggerFactory.getLogger(HttpMsg.class); 
+public class HttpMessage {  
+	private static final Logger log = LoggerFactory.getLogger(HttpMessage.class); 
 	private static final String DEFAULT_ENCODING = "UTF-8"; 
 	
 	public static final String HEARTBEAT        = "heartbeat";  
@@ -73,12 +73,12 @@ public class HttpMsg{
 	
 	protected FileForm fileForm;  //Only populated when uploading files
 	
-	public HttpMsg(){
+	public HttpMessage(){
 		setBody((byte[])null);
 		setCommonHeaders();
 	} 
 	
-	public HttpMsg(HttpMsg other){ 
+	public HttpMessage(HttpMessage other){ 
 		this.method = other.method;
 		this.status = other.status;
 		this.url = other.url;
@@ -88,12 +88,12 @@ public class HttpMsg{
 		this.fileForm = other.fileForm;
 	}
 	
-	public HttpMsg(String body){
+	public HttpMessage(String body){
 		setBody(body); 
 		setCommonHeaders();
 	}
 	
-	public HttpMsg(byte[] body){
+	public HttpMessage(byte[] body){
 		setBody(body);
 		setCommonHeaders();
 	}
@@ -102,8 +102,8 @@ public class HttpMsg{
 		setHeader("connection", "Keep-Alive"); 
 	}
 	
-	public static HttpMsg copyWithoutBody(HttpMsg msg){
-		HttpMsg res = new HttpMsg();
+	public static HttpMessage copyWithoutBody(HttpMessage msg){
+		HttpMessage res = new HttpMessage();
 		res.status = msg.status;
 		res.url = msg.url;
 		res.method = msg.method;
@@ -117,7 +117,7 @@ public class HttpMsg{
 		return this.url;
 	} 
 	
-	public HttpMsg setUrl(String url) {
+	public HttpMessage setUrl(String url) {
 		if (url.startsWith("http")) {
 			try {
 				this.uri = new URI(url);
@@ -139,7 +139,7 @@ public class HttpMsg{
 		return uri;
 	} 
 	
-	public HttpMsg setStatus(Integer status) { 
+	public HttpMessage setStatus(Integer status) { 
 		this.status = status;
 		return this; 
 	} 
@@ -197,7 +197,7 @@ public class HttpMsg{
 		return b;
 	}  
 	
-	public HttpMsg setBody(byte[] body) {
+	public HttpMessage setBody(byte[] body) {
 		int len = 0;
 		if( body != null){
 			len = body.length;
@@ -207,7 +207,7 @@ public class HttpMsg{
 		return this;
 	}
 	
-	public HttpMsg setBody(String body, String encoding){
+	public HttpMessage setBody(String body, String encoding){
 		try {
 			return setBody(body.getBytes(encoding));
 		} catch (UnsupportedEncodingException e) { //just ignore
@@ -215,7 +215,7 @@ public class HttpMsg{
 		}
 	}
 	
-	public HttpMsg setBody(String body){ 
+	public HttpMessage setBody(String body){ 
 		String encoding = this.getEncoding();
 		if(encoding == null){
 			encoding = DEFAULT_ENCODING;
@@ -227,16 +227,16 @@ public class HttpMsg{
 		}
 	} 
 	
-	public HttpMsg setBody(String format, Object ...args) { 
+	public HttpMessage setBody(String format, Object ...args) { 
 		this.setBody(String.format(format, args));
 		return this;
 	}  
 	
-	public HttpMsg setJsonBody(String body){
+	public HttpMessage setJsonBody(String body){
 		return this.setJsonBody(body.getBytes());
 	}
 	
-	public HttpMsg setJsonBody(byte[] body){ 
+	public HttpMessage setJsonBody(byte[] body){ 
 		this.setBody(body);
 		this.setHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
 		return this;
@@ -273,7 +273,7 @@ public class HttpMsg{
 		return this.getHeader(CMD);
 	} 
 	
-	public HttpMsg setCommand(String value) {
+	public HttpMessage setCommand(String value) {
 		this.setHeader(CMD, value); 
 		return this;
 	}   
@@ -282,7 +282,7 @@ public class HttpMsg{
 		return this.getHeader(ENCODING);
 	} 
 	
-	public HttpMsg setEncoding(String encoding) {
+	public HttpMessage setEncoding(String encoding) {
 		this.setHeader(ENCODING, encoding);
 		return this;
 	} 
@@ -407,15 +407,15 @@ public class HttpMsg{
 		return -1;
 	}
 	
-	public static HttpMsg parse(byte[] data){
+	public static HttpMessage parse(byte[] data){
 		int idx = findHeaderEnd(data);
 		if(idx == -1){
 			throw new IllegalArgumentException("Invalid input byte array");
 		}
 		int headLen = idx + 1;
-		HttpMsg msg = new HttpMsg();
+		HttpMessage msg = new HttpMessage();
 		msg.decodeHeaders(data, 0, headLen);
-		String contentLength = msg.getHeader(HttpMsg.CONTENT_LENGTH);
+		String contentLength = msg.getHeader(HttpMessage.CONTENT_LENGTH);
 		if(contentLength == null){ //just head 
 			return msg;
 		}

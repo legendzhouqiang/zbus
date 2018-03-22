@@ -8,7 +8,7 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
 import io.zbus.net.EventLoop;
 import io.zbus.net.Ssl;
-import io.zbus.net.http.HttpServer;
+import io.zbus.net.http.HttpWsServer;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcProcessor; 
  
@@ -20,7 +20,7 @@ public class ServiceBootstrap implements Closeable {
 	protected String host = "0.0.0.0";
 	protected String certFile;
 	protected String keyFile;
-	protected HttpServer server; 
+	protected HttpWsServer server; 
 	protected String token;
 	protected EventLoop eventLoop;
 	  
@@ -91,7 +91,7 @@ public class ServiceBootstrap implements Closeable {
 			eventLoop.setSslContext(context);
 		}
 		
-		server = new HttpServer(eventLoop);    
+		server = new HttpWsServer(eventLoop);    
 		HttpRpcServerAdaptor adaptor = new HttpRpcServerAdaptor(this.processor); 
 		server.start(this.host, this.port, adaptor); 
 		
