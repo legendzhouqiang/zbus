@@ -1,5 +1,5 @@
 package io.zbus.net;
 
 public interface EventHandler { 
-	void handle();   
+	void handle() throws Exception;   
 }

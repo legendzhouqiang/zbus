@@ -108,7 +108,11 @@ public class Client<REQ, RES> implements Closeable {
 				
 				if(triggerOpenWhenConnected){ 
 					if (onOpen != null) {
-						onOpen.handle();
+						try {
+							onOpen.handle();
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
 					}
 				}  
 			}
@@ -116,7 +120,11 @@ public class Client<REQ, RES> implements Closeable {
 			public void sessionToDestroy(Session session) throws IOException { 
 				cleanSession();  
 				if (onClose != null) {
-					onClose.handle();
+					try {
+						onClose.handle();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
 				}
 			}
 
@@ -144,11 +152,15 @@ public class Client<REQ, RES> implements Closeable {
 			public void onMessage(Object msg, Session sess) throws IOException {
 				@SuppressWarnings("unchecked")
 				RES res = (RES) msg;
-				if (onMessage != null) {
-					onMessage.handle(res);
+				if(onMessage == null){
+					log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
 					return;
-				}
-				log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!Drop,%s", res);
+				} 
+				try {
+					onMessage.handle(res);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}  
 			}
 		}; 
 	} 

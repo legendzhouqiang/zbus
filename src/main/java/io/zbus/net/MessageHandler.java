@@ -1,5 +1,5 @@
 package io.zbus.net;
 
 public interface MessageHandler<T> { 
-	void handle(T e);   
+	void handle(T e) throws Exception;   
 }

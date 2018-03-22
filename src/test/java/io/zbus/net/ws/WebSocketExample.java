@@ -1,7 +1,5 @@
 package io.zbus.net.ws;
 
-import java.io.IOException;
-
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.net.EventLoop;
@@ -17,13 +15,9 @@ public class WebSocketExample {
 		WebsocketClient ws = new WebsocketClient(address, loop);
 		
 		ws.onMessage = msg->{
-			System.out.println(msg);
-			try {
-				ws.close();
-				loop.close();
-			} catch (IOException e) { 
-				e.printStackTrace();
-			}
+			System.out.println(msg); 
+			ws.close();
+			loop.close(); 
 		};  
 		
 		ws.onOpen = ()-> {

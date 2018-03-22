@@ -1,5 +1,7 @@
 package io.zbus.net.http;
 
+import io.zbus.net.Server;
+
 public class HttpServerExample {
 
 	@SuppressWarnings("resource")
@@ -16,7 +18,7 @@ public class HttpServerExample {
 			sess.write(res); 
 		});   
 		 
-		HttpWsServer server = new HttpWsServer();   
+		Server server = new HttpWsServer();   
 		server.start(80, adaptor);  
 	} 
 }
