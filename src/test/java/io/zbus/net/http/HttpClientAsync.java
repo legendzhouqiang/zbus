@@ -2,7 +2,10 @@ package io.zbus.net.http;
 
 import java.io.IOException;
 
+import io.zbus.kit.JsonKit;
+import io.zbus.kit.StrKit;
 import io.zbus.net.EventLoop;
+import io.zbus.rpc.Request;
 
 public class HttpClientAsync {   
 	
@@ -10,9 +13,17 @@ public class HttpClientAsync {
 		EventLoop loop = new EventLoop();
 		
 		HttpClient client = new HttpClient("http://localhost", loop);
-		HttpMessage req = new HttpMessage();   
+		HttpMessage reqMsg = new HttpMessage();   
+		
+		Request req = new Request();
+		req.command = "echo";
+		req.params.add("hi");
+		req.id = StrKit.uuid();
 		 
-		client.request(req, resp->{ 
+		reqMsg.setBody(JsonKit.toJSONString(req));  
+		
+		client.request(reqMsg, resp->{ 
+			System.out.println(resp);
 			try { 
 				client.close(); 
 				loop.close();
