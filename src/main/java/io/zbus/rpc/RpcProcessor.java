@@ -217,19 +217,16 @@ public class RpcProcessor {
 		boolean fullMatched;
 	}
 
-	
-	@SuppressWarnings("unchecked")
+	 
 	private MethodMatchResult matchMethod(Request req) {
-		StringBuilder sb = new StringBuilder();
-		Object paramTypes = req.properties.get(Request.PARAM_TYPES);
-		if(paramTypes != null && paramTypes instanceof List){
-			List<String> types = (List<String>)paramTypes; 
-			for (String type : types) {
+		StringBuilder sb = new StringBuilder(); 
+		if(req.paramTypes != null){ 
+			for (String type : req.paramTypes) {
 				sb.append(type + ",");
 			}
 		} 
-		String module = (String)req.properties.get("module");
-		String method = req.command;
+		String module = req.module;
+		String method = req.method;
 		String key = module + ":" + method + ":" + sb.toString();
 		String key2 = module + ":" + method;
 
@@ -271,7 +268,7 @@ public class RpcProcessor {
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
 		int requiredLength = targetParamTypes.length;
 
-		if (requiredLength != req.params.size()) {
+		if (requiredLength != req.params.length) {
 			String requiredParamTypeString = "";
 			for (int i = 0; i < targetParamTypes.length; i++) {
 				Class<?> paramType = targetParamTypes[i];
@@ -280,11 +277,11 @@ public class RpcProcessor {
 					requiredParamTypeString += ", ";
 				}
 			}
-			List<Object> params = req.params;
+			Object[] params = req.params;
 			String gotParamsString = "";
-			for (int i = 0; i < params.size(); i++) {
-				gotParamsString += params.get(i);
-				if (i < params.size() - 1) {
+			for (int i = 0; i < params.length; i++) {
+				gotParamsString += params[i];
+				if (i < params.length - 1) {
 					gotParamsString += ", ";
 				}
 			}
@@ -299,16 +296,20 @@ public class RpcProcessor {
 		try { 
 			if (req == null) {
 				req = new Request();
-				req.command = "index";
-				req.properties.put(Request.MODULE, "index");
+				req.method = "index";
+				req.module = "index";
 			}  
-			response.id = req.id; 
-			
-			if (StrKit.isEmpty((String)req.properties.get(Request.MODULE))) {
-				req.properties.put(Request.MODULE, "index");
+			if(req.params == null){
+				req.params = new Object[0];
 			}
-			if (StrKit.isEmpty(req.command)) {
-				req.command = "index";
+			response.id = req.id;   //ID match
+			response.attachment = req.attachment;
+			
+			if (StrKit.isEmpty(req.module)) {
+				req.module = "index";
+			}
+			if (StrKit.isEmpty(req.method)) {
+				req.method = "index";
 			} 
 
 			MethodMatchResult matchResult = matchMethod(req);
@@ -319,9 +320,9 @@ public class RpcProcessor {
 
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];
-			List<Object> reqParams = req.params; 
+			Object[] reqParams = req.params; 
 			for (int i = 0; i < targetParamTypes.length; i++) { 
-				invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+				invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);  
 			}
 			response.result = target.method.invoke(target.instance, invokeParams); 
 		} catch (InvocationTargetException e) { 

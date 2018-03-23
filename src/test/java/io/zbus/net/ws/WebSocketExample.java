@@ -22,8 +22,8 @@ public class WebSocketExample {
 		
 		ws.onOpen = ()-> {
 			Request req = new Request();
-			req.command = "echo";
-			req.params.add("hi");
+			req.method = "echo";
+			req.params = new Object[]{"hi"};
 			req.id = StrKit.uuid();
 			 
 			ws.sendMessage(JsonKit.toJSONString(req));  

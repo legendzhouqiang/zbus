@@ -61,15 +61,16 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 		
 		Request req = new Request();
     	if(info.path.size()>=1){
-    		req.properties.put(Request.MODULE, info.path.get(0));
+    		req.module = info.path.get(0);
     	}
     	if(info.path.size()>=2){
-    		req.command = info.path.get(1);
+    		req.method = info.path.get(1);
     	} 
     	
     	if(info.path.size()>2){ 
+    		req.params = new Object[info.path.size()-2];
     		for(int i=0;i<info.path.size()-2;i++){
-    			req.params.add(info.path.get(2+i));
+    			req.params[i] = info.path.get(2+i);
     		} 
     	}   
     	return req;

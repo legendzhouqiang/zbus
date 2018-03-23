@@ -1,18 +1,13 @@
 package io.zbus.rpc;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public class Request { 
-	public String id;
-	public String command;   
-	public List<Object> params = new ArrayList<>();    
+public class Request {  
+	public String id;          //[O]Request ID, for match
+	public String module;      //[O]
+	public String method;      //[R]
+	public Object[] params;    //[O]  
+	public String[] paramTypes;//[O] method override support    
 	
-	public Map<String, Object> properties = new HashMap<>();   
-	
-	
-	public static final String MODULE = "module"; 
-	public static final String PARAM_TYPES = "paramTypes"; 
+	public Map<String, Object> attachment;
 }
