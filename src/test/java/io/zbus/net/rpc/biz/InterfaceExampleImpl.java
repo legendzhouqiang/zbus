@@ -2,6 +2,7 @@ package io.zbus.net.rpc.biz;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -167,7 +168,9 @@ public class InterfaceExampleImpl implements InterfaceExample{
 
 	@Override
 	public Map<String, Object> map(int value1) { 
-		return null;
+		Map<String, Object> value = new HashMap<>();
+		value.put("key", value1);
+		return value;
 	} 
 	
 	@Override

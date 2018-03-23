@@ -8,7 +8,8 @@ public class RpcServerExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
 		ServiceBootstrap b = new ServiceBootstrap();
-		b.addModule("index", InterfaceExampleImpl.class);
+		b.addModule("example", InterfaceExampleImpl.class);
+		//b.addModule("test", InterfaceExampleImpl.class);
 		b.port(80);
 		b.start();
 	}

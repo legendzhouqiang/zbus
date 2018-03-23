@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 
 import io.zbus.kit.HttpKit;
+import io.zbus.kit.JsonKit;
 import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
@@ -50,11 +51,12 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 			}
 		}
 
-		byte[] data = JSON.toJSONBytes(response);
+		byte[] data = JsonKit.toJSONBytes(response, "utf8");
 
 		if (writeHttp) {
 			HttpMessage resMsg = new HttpMessage();
 			resMsg.setStatus(200);
+			resMsg.setEncoding("utf8");
 			resMsg.setBody(data);
 			sess.write(resMsg);
 		} else {

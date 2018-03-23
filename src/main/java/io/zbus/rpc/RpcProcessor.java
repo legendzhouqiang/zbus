@@ -3,7 +3,6 @@ package io.zbus.rpc;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,22 +15,22 @@ import io.zbus.kit.logging.LoggerFactory;
 public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);
 
-	private Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
-	private Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
+	Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
+	Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
 
-	private boolean enableStackTrace = true;
-	private boolean enableMethodPage = true;
+	String docUrlRoot = "/";
+	boolean enableStackTrace = true;
+	boolean enableMethodPage = true;
 
+	public RpcProcessor(){
+		addModule("index", new DocRender(this, docUrlRoot));
+	}
+	
 	public void addModule(Object... services) {
 		for (Object obj : services) {
 			if (obj == null)
-				continue;
-			for (Class<?> intf : getAllInterfaces(obj.getClass())) {
-				addModule(intf.getSimpleName(), obj);
-				addModule(intf.getName(), obj);
-			}
-			addModule(obj.getClass().getSimpleName(), obj);
-			addModule(obj.getClass().getName(), obj);
+				continue; 
+			addModule(obj.getClass().getSimpleName(), obj); 
 		}
 	}
 
@@ -68,13 +67,8 @@ public class RpcProcessor {
 	}
 
 	public void removeModule(Object... services) {
-		for (Object obj : services) {
-			for (Class<?> intf : getAllInterfaces(obj.getClass())) {
-				removeModule(intf.getSimpleName(), obj);
-				removeModule(intf.getCanonicalName(), obj);
-			}
-			removeModule(obj.getClass().getSimpleName(), obj);
-			removeModule(obj.getClass().getName(), obj);
+		for (Object obj : services) { 
+			removeModule(obj.getClass().getSimpleName(), obj); 
 		}
 	}
 
@@ -82,17 +76,8 @@ public class RpcProcessor {
 		for (Object service : services) {
 			this.removeCommandTable(module, service);
 		}
-	}
-
-	private static List<Class<?>> getAllInterfaces(Class<?> clazz) {
-		List<Class<?>> res = new ArrayList<Class<?>>();
-		while (clazz != null) {
-			res.addAll(Arrays.asList(clazz.getInterfaces()));
-			clazz = clazz.getSuperclass();
-		}
-		return res;
-	}
-
+	} 
+	
 	private void addModuleInfo(String module, Object service) {
 		List<RpcMethod> rpcMethods = null;
 		String serviceKey = service.getClass().getCanonicalName();
@@ -360,10 +345,10 @@ public class RpcProcessor {
 	}
 
 	public static class RpcMethod {
-		private List<String> modules = new ArrayList<String>();
-		private String name;
-		private List<String> paramTypes = new ArrayList<String>();
-		private String returnType;
+		List<String> modules = new ArrayList<String>();
+		String name;
+		List<String> paramTypes = new ArrayList<String>();
+		String returnType;
 
 		public List<String> getModules() {
 			return modules;
