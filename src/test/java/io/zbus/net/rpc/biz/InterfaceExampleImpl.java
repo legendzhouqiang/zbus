@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.zbus.net.http.HttpMessage;
 import io.zbus.rpc.Remote; 
 
 @Remote
@@ -168,6 +169,14 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public Map<String, Object> map(int value1) { 
 		return null;
 	} 
+	
+	@Override
+	public HttpMessage html() {
+		HttpMessage res = new HttpMessage();
+		res.setStatus(200);
+		res.setBody("html" + System.currentTimeMillis());
+		return res;
+	}
 }
 
 

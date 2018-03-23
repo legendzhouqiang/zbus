@@ -3,6 +3,8 @@ package io.zbus.net.rpc.biz;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.net.http.HttpMessage;
+
 public interface InterfaceExample{
   
 	int getUserScore();
@@ -61,4 +63,6 @@ public interface InterfaceExample{
 	String nullParam(String nullStr); 
 	
 	String index();
+	
+	HttpMessage html();
 }
