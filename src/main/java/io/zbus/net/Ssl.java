@@ -5,9 +5,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
+
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.zbus.kit.FileKit;
 import io.zbus.kit.logging.Logger;
@@ -15,7 +22,41 @@ import io.zbus.kit.logging.LoggerFactory;
 
 public class Ssl {
 	private static final Logger log = LoggerFactory.getLogger(Ssl.class);
- 
+	private static Map<String, SslContext> sslContextCache = new ConcurrentHashMap<>();
+	
+	public static SSLEngine buildSSLEngine(String host, int port, ByteBufAllocator alloc){
+		String key = String.format("%s:%d", host,port);
+		SslContext sslContext = sslContextCache.get(key); 
+		if(sslContext == null){
+			sslContext = buildSslContext();
+			sslContextCache.put(key, sslContext);
+		}
+		
+		SSLEngine sslEngine = sslContext.newEngine(alloc, host, port); 
+		sslEngine.setUseClientMode(true);
+		SSLParameters params = sslEngine.getSSLParameters();
+		params.setEndpointIdentificationAlgorithm("HTTPS");
+		sslEngine.setSSLParameters(params);
+		return sslEngine; 
+	}
+	
+	private static SslContext buildSslContext() { 
+		try {
+			SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+					.sslProvider(SslProvider.JDK)
+					.sessionCacheSize(0)
+					.sessionTimeout(0);
+			String[] protocols = new String[] { "TLSv1.2", "TLSv1.1", "TLSv1" };
+			sslContextBuilder.protocols(protocols);
+			SslContext sslContext = sslContextBuilder.build();
+			return sslContext;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	} 
+	
 	public static SslContext buildClientSsl(String certFileContent){ 
 		if(certFileContent == null) return null;
 		

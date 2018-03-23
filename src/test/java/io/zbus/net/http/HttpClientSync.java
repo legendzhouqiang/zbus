@@ -9,10 +9,9 @@ public class HttpClientSync {
 		
 		HttpClient client = new HttpClient("http://localhost", loop);
 		
-		for(int i=0;i<100;i++){ 
-			HttpMessage req = new HttpMessage();    
-			client.request(req);   
-		}
+		HttpMessage req = new HttpMessage();    
+		req.setUrl("/index/html");
+		client.request(req);    
 		
 		client.close();
 		loop.close();
