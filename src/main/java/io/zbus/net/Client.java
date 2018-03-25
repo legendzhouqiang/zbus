@@ -70,6 +70,9 @@ public class Client<REQ, RES> implements Closeable {
 	public Client(String address, EventLoop loop) {
 		this.loop = loop;
 		this.group = loop.getGroup();
+		if(!address.contains("://")) {
+			address = "tcp://"+address;
+		}
 		try {
 			this.uri = new URI(address);
 		} catch (URISyntaxException e) {

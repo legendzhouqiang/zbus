@@ -28,7 +28,7 @@ public class JsonKit {
 	
 	@SuppressWarnings("unchecked")
 	public static <T> T convert(Object json, Class<T> clazz) { 
-		if(json == null){ //fix zbus-java bug#1 
+		if(json == null){ 
 			return null;
 		}
 		if(clazz.isAssignableFrom(json.getClass())){ 
