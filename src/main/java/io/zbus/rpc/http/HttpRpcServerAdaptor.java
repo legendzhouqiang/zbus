@@ -5,8 +5,8 @@ import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 
 import io.zbus.kit.HttpKit;
-import io.zbus.kit.JsonKit;
 import io.zbus.kit.HttpKit.UrlInfo;
+import io.zbus.kit.JsonKit;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
 import io.zbus.net.http.HttpMessage;
@@ -15,7 +15,7 @@ import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcProcessor;
 
 public class HttpRpcServerAdaptor extends ServerAdaptor {
-	protected final RpcProcessor processor;
+	protected final RpcProcessor processor; 
 
 	public HttpRpcServerAdaptor(RpcProcessor processor) {
 		this.processor = processor;
@@ -36,10 +36,11 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 			request = JSON.parseObject((byte[]) msg, Request.class);
 			writeHttp = false;
 		}
-
-		Response response = processor.process(request);
-		if (response.result != null && response.result instanceof HttpMessage) {
-			HttpMessage res = (HttpMessage) response.result;
+		
+		Response response = processor.process(request); 
+		
+		if (response.getResult() != null && response.getResult() instanceof HttpMessage) {
+			HttpMessage res = (HttpMessage) response.getResult();
 			if (writeHttp) {
 				if (res.getStatus() == null) {
 					res.setStatus(200);
@@ -47,7 +48,7 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 				sess.write(res);
 				return;
 			} else {
-				response.result = res.toString();
+				response.setResult(res.toString());
 			}
 		}
 
@@ -76,16 +77,17 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 
 		Request req = new Request();
 		if (info.path.size() >= 1) {
-			req.module = info.path.get(0);
+			req.setModule(info.path.get(0));
 		}
 		if (info.path.size() >= 2) {
-			req.method = info.path.get(1);
+			req.setMethod(info.path.get(1));
 		}
 
 		if (info.path.size() > 2) {
-			req.params = new Object[info.path.size() - 2];
+			Object[] params = new Object[info.path.size() - 2];
+			req.setParams(params);
 			for (int i = 0; i < info.path.size() - 2; i++) {
-				req.params[i] = info.path.get(2 + i);
+				params[i] = info.path.get(2 + i);
 			}
 		}
 		return req;

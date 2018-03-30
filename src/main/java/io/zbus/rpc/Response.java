@@ -1,11 +1,43 @@
 package io.zbus.rpc;
 
-import java.util.Map;
+import java.util.HashMap;
 
-public class Response {
-	public String id; 
-	public Object result;
-	public Object error;   
+public class Response extends HashMap<String, Object>  { 
+	private static final long serialVersionUID = 3189028874502200908L; 
 	
-	public Map<String, Object> attachment;
+	public Integer getStatus() {
+		return get("status");
+	}
+	
+	public void setStatus(Integer value) {
+		put("status", value);
+	} 
+	
+	public Object getResult() {
+		return get("result");
+	}
+	
+	public void setResult(Object value) {
+		put("result", value);
+	}   
+	
+	public Object getError() {
+		return get("error");
+	}
+	
+	public void setError(Object value) {
+		put("error", value);
+	} 
+	 
+	public String getId() { 
+		return get("id");
+	}
+	public void setId(String value) {
+		put("id", value);
+	} 
+	
+	@SuppressWarnings("unchecked")
+	public <T> T get(String key) {
+		return (T)super.get(key);
+	}
 }

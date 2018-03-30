@@ -78,6 +78,10 @@ public class ServiceBootstrap implements Closeable {
 			processor.addModule(clazz);
 		}  
 	}
+	
+	public RpcProcessor processor() {
+		return this.processor;
+	}
 	 
 	public ServiceBootstrap start() throws Exception{
 		validate();  

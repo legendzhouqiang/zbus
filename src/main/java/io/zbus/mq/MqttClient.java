@@ -47,7 +47,7 @@ public class MqttClient extends Client<MqttMessage, MqttMessage> {
                 .build();
 		
 		EventLoop loop = new EventLoop();
-		MqttClient client = new MqttClient("localhost:1883", loop);
+		MqttClient client = new MqttClient("localhost:2883", loop);
 		client.onOpen = ()->{
 			client.sendMessage(message);
 			client.sendMessage(createSubMessage());
@@ -64,7 +64,7 @@ public class MqttClient extends Client<MqttMessage, MqttMessage> {
 				true, 0);
 		MqttMessageIdVariableHeader mqttMessageIdVariableHeader = MqttMessageIdVariableHeader.from(12345);
 
-		List<MqttTopicSubscription> topicSubscriptions = new LinkedList<MqttTopicSubscription>();
+		List<MqttTopicSubscription> topicSubscriptions = new LinkedList<>();
 		topicSubscriptions.add(new MqttTopicSubscription("/abc", MqttQoS.AT_LEAST_ONCE));
 		topicSubscriptions.add(new MqttTopicSubscription("/def", MqttQoS.AT_LEAST_ONCE));
 		topicSubscriptions.add(new MqttTopicSubscription("/xyz", MqttQoS.EXACTLY_ONCE));

@@ -6,11 +6,24 @@ import io.zbus.rpc.http.ServiceBootstrap;
 public class RpcServerExample {
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {  
+	public static void main(String[] args) throws Exception {
 		ServiceBootstrap b = new ServiceBootstrap();
-		b.addModule("example", InterfaceExampleImpl.class);
-		//b.addModule("test", InterfaceExampleImpl.class);
-		b.port(80);
-		b.start();
+
+		b.processor().setAuthFilter((req, resp) -> {
+			if("map".equals(req.getMethod())) { 
+				resp.setStatus(403);
+				resp.setError("Access Denied: map");
+				return false; 
+			}
+			return true;
+		});
+
+		b.processor().setBeforeFilter((req, resp) -> { 
+			return true;
+		});
+
+		b.stackTrace(false)
+		 .addModule("example", InterfaceExampleImpl.class) 
+		 .port(80).start();
 	}
 }

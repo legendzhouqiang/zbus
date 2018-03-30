@@ -20,7 +20,11 @@ public class RpcProcessor {
 
 	String docUrlRoot = "/";
 	boolean enableStackTrace = true;
-	boolean enableMethodPage = true;
+	boolean enableMethodPage = true; 
+	
+	protected RpcFilter beforeFilter;
+	protected RpcFilter afterFilter;
+	protected RpcFilter authFilter;
 
 	public RpcProcessor(){
 		addModule("index", new DocRender(this, docUrlRoot));
@@ -205,13 +209,13 @@ public class RpcProcessor {
 	 
 	private MethodMatchResult matchMethod(Request req) {
 		StringBuilder sb = new StringBuilder(); 
-		if(req.paramTypes != null){ 
-			for (String type : req.paramTypes) {
+		if(req.getParamTypes() != null){ 
+			for (String type : req.getParamTypes()) {
 				sb.append(type + ",");
 			}
 		} 
-		String module = req.module;
-		String method = req.method;
+		String module = req.getModule();
+		String method = req.getMethod();
 		String key = module + ":" + method + ":" + sb.toString();
 		String key2 = module + ":" + method;
 
@@ -253,7 +257,7 @@ public class RpcProcessor {
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
 		int requiredLength = targetParamTypes.length;
 
-		if (requiredLength != req.params.length) {
+		if (requiredLength != req.getParams().length) {
 			String requiredParamTypeString = "";
 			for (int i = 0; i < targetParamTypes.length; i++) {
 				Class<?> paramType = targetParamTypes[i];
@@ -262,7 +266,7 @@ public class RpcProcessor {
 					requiredParamTypeString += ", ";
 				}
 			}
-			Object[] params = req.params;
+			Object[] params = req.getParams();
 			String gotParamsString = "";
 			for (int i = 0; i < params.length; i++) {
 				gotParamsString += params[i];
@@ -276,27 +280,68 @@ public class RpcProcessor {
 		}
 	}
 
-	public Response process(Request req) { 
+	public Response process(Request req) {  
 		Response response = new Response();  
 		try { 
 			if (req == null) {
 				req = new Request();
-				req.method = "index";
-				req.module = "index";
+				req.setMethod("index");
+				req.setModule("index");
 			}  
-			if(req.params == null){
-				req.params = new Object[0];
-			}
-			response.id = req.id;   //ID match
-			response.attachment = req.attachment;
-			
-			if (StrKit.isEmpty(req.module)) {
-				req.module = "index";
-			}
-			if (StrKit.isEmpty(req.method)) {
-				req.method = "index";
+			if(req.getParams() == null){
+				req.setParams(new Object[0]);
 			} 
-
+			
+			if (StrKit.isEmpty(req.getModule())) {
+				req.setModule("index");
+			}
+			if (StrKit.isEmpty(req.getMethod())) {
+				req.setMethod("index");
+			}   
+			
+			if(beforeFilter != null) {
+				boolean next = beforeFilter.doFilter(req, response);
+				if(!next) return response;
+			}
+			
+			if(authFilter != null) {
+				boolean next = authFilter.doFilter(req, response);
+				if(!next) return response; 
+			} 
+			
+			invoke(req, response);
+			
+			if(afterFilter != null) {
+				afterFilter.doFilter(req, response);
+			}
+			 
+		} catch (Throwable e) {
+			response.setError(new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace)); 
+		} finally {
+			bind(req, response);
+			if(response.getError() != null && response.getError() instanceof Throwable) { 
+				Throwable t = (Throwable)response.getError();
+				if(response.getStatus() == null) {
+					response.setStatus(500);
+				}
+				if(!enableStackTrace) {
+					t.setStackTrace(new StackTraceElement[0]);
+				}
+			} else {
+				if(response.getStatus() == null) {
+					response.setStatus(200);
+				}
+			}
+		} 
+		return response;
+	}
+	
+	private void bind(Request request, Response response) {
+		response.setId(request.getId()); //Id Match
+	}
+	
+	private void invoke(Request req, Response response) throws IllegalAccessException, IllegalArgumentException {   
+		try {   
 			MethodMatchResult matchResult = matchMethod(req);
 			MethodInstance target = matchResult.method;
 			if (matchResult.fullMatched) {
@@ -305,17 +350,14 @@ public class RpcProcessor {
 
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];
-			Object[] reqParams = req.params; 
+			Object[] reqParams = req.getParams(); 
 			for (int i = 0; i < targetParamTypes.length; i++) { 
 				invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);  
 			}
-			response.result = target.method.invoke(target.instance, invokeParams); 
+			response.setResult(target.method.invoke(target.instance, invokeParams)); 
 		} catch (InvocationTargetException e) { 
-			response.error = e.getTargetException();
-		} catch (Throwable e) {
-			response.error = new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace); 
+			response.setError(e.getTargetException());
 		} 
-		return response;
 	}
 
 	public boolean isEnableStackTrace() {
@@ -332,6 +374,19 @@ public class RpcProcessor {
 
 	public void setEnableMethodPage(boolean enableMethodPage) {
 		this.enableMethodPage = enableMethodPage;
+	} 
+ 
+
+	public void setBeforeFilter(RpcFilter beforeFilter) {
+		this.beforeFilter = beforeFilter;
+	} 
+
+	public void setAfterFilter(RpcFilter afterFilter) {
+		this.afterFilter = afterFilter;
+	} 
+
+	public void setAuthFilter(RpcFilter authFilter) {
+		this.authFilter = authFilter;
 	}
 
 	private static class MethodInstance {
