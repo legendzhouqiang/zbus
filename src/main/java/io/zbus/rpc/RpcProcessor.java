@@ -257,7 +257,7 @@ public class RpcProcessor {
 		Class<?>[] targetParamTypes = target.method.getParameterTypes();
 		int requiredLength = targetParamTypes.length;
 
-		if (requiredLength != req.getParams().length) {
+		if (requiredLength != req.getParams().size()) {
 			String requiredParamTypeString = "";
 			for (int i = 0; i < targetParamTypes.length; i++) {
 				Class<?> paramType = targetParamTypes[i];
@@ -266,15 +266,15 @@ public class RpcProcessor {
 					requiredParamTypeString += ", ";
 				}
 			}
-			Object[] params = req.getParams();
+			List<Object> params = req.getParams();
 			String gotParamsString = "";
-			for (int i = 0; i < params.length; i++) {
-				gotParamsString += params[i];
-				if (i < params.length - 1) {
+			for (int i = 0; i < params.size(); i++) {
+				gotParamsString += params.get(i);
+				if (i < params.size() - 1) {
 					gotParamsString += ", ";
 				}
 			}
-			String errorMsg = String.format("Method:%s(%s), called with %s(%s)", target.method.getName(),
+			String errorMsg = String.format("Method defined: %s(%s), But called: %s(%s)", target.method.getName(),
 					requiredParamTypeString, target.method.getName(), gotParamsString);
 			throw new IllegalArgumentException(errorMsg);
 		}
@@ -339,9 +339,9 @@ public class RpcProcessor {
 			
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];
-			Object[] reqParams = req.getParams(); 
+			List<Object> reqParams = req.getParams(); 
 			for (int i = 0; i < targetParamTypes.length; i++) { 
-				invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);  
+				invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
 			}
 			response.setData(target.method.invoke(target.instance, invokeParams)); 
 			response.setStatus(200);

@@ -14,8 +14,9 @@ public class HttpClientAsync {
 
 		HttpMessage reqMsg = new HttpMessage();
 		Request req = new Request();
+		req.setModule("example");
 		req.setMethod("echo");
-		req.setParams(new Object[]{"hi"});
+		req.setParams("hi");
 		req.setId(StrKit.uuid());
 
 		reqMsg.setBody(JsonKit.toJSONString(req));

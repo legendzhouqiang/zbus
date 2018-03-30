@@ -1,6 +1,8 @@
 package io.zbus.rpc;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class Request extends HashMap<String, Object> {   
 	private static final long serialVersionUID = -2112706466764692497L;   
@@ -26,10 +28,13 @@ public class Request extends HashMap<String, Object> {
 		put("module", value);
 	} 
 	
-	public Object[] getParams() {
+	public List<Object> getParams() {
 		return get("params");
 	} 
-	public void setParams(Object[] value) {
+	public void setParams(Object... value) {
+		put("params", Arrays.asList(value));
+	} 
+	public void setParams(List<Object> value) {
 		put("params", value);
 	} 
 	
