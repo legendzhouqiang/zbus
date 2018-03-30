@@ -35,7 +35,7 @@ public class WebsocketClient extends Client<String, String> {
 	
 	public WebsocketClient(String address, final EventLoop loop) {
 		super(address, loop); 
-		triggerOpenWhenConnected = false;  //wait for handsake finished 
+		triggerOpenWhenConnected = false;  //wait for handshake finished 
 		codec(p -> { 
 			p.add(new HttpRequestEncoder());
 			p.add(new HttpResponseDecoder());
