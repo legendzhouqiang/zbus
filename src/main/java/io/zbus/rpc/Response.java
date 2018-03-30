@@ -13,22 +13,14 @@ public class Response extends HashMap<String, Object>  {
 		put("status", value);
 	} 
 	
-	public Object getResult() {
-		return get("result");
+	public Object getData() {
+		return get("data");
 	}
 	
-	public void setResult(Object value) {
-		put("result", value);
-	}   
+	public void setData(Object value) {
+		put("data", value);
+	}    
 	
-	public Object getError() {
-		return get("error");
-	}
-	
-	public void setError(Object value) {
-		put("error", value);
-	} 
-	 
 	public String getId() { 
 		return get("id");
 	}

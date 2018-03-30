@@ -12,7 +12,7 @@ public class RpcServerExample {
 		b.processor().setAuthFilter((req, resp) -> {
 			if("map".equals(req.getMethod())) { 
 				resp.setStatus(403);
-				resp.setError("Access Denied: map");
+				resp.setData("Access Denied: map");
 				return false; 
 			}
 			return true;
@@ -24,6 +24,7 @@ public class RpcServerExample {
 
 		b.stackTrace(false)
 		 .addModule("example", InterfaceExampleImpl.class) 
-		 .port(80).start();
+		 .port(80)
+		 .start();
 	}
 }

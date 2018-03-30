@@ -316,27 +316,18 @@ public class RpcProcessor {
 			}
 			 
 		} catch (Throwable e) {
-			response.setError(new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace)); 
+			response.setData(new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace)); 
+			response.setStatus(500);
 		} finally {
-			bind(req, response);
-			if(response.getError() != null && response.getError() instanceof Throwable) { 
-				Throwable t = (Throwable)response.getError();
-				if(response.getStatus() == null) {
-					response.setStatus(500);
-				}
-				if(!enableStackTrace) {
-					t.setStackTrace(new StackTraceElement[0]);
-				}
-			} else {
-				if(response.getStatus() == null) {
-					response.setStatus(200);
-				}
+			bindRequestResponse(req, response); 
+			if(response.getStatus() == null) {
+				response.setStatus(200);
 			}
 		} 
 		return response;
 	}
 	
-	private void bind(Request request, Response response) {
+	private void bindRequestResponse(Request request, Response response) {
 		response.setId(request.getId()); //Id Match
 	}
 	
@@ -344,19 +335,25 @@ public class RpcProcessor {
 		try {   
 			MethodMatchResult matchResult = matchMethod(req);
 			MethodInstance target = matchResult.method;
-			if (matchResult.fullMatched) {
-				checkParamTypes(target, req);
-			}
-
+			checkParamTypes(target, req); 
+			
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];
 			Object[] reqParams = req.getParams(); 
 			for (int i = 0; i < targetParamTypes.length; i++) { 
 				invokeParams[i] = JsonKit.convert(reqParams[i], targetParamTypes[i]);  
 			}
-			response.setResult(target.method.invoke(target.instance, invokeParams)); 
-		} catch (InvocationTargetException e) { 
-			response.setError(e.getTargetException());
+			response.setData(target.method.invoke(target.instance, invokeParams)); 
+			response.setStatus(200);
+		} catch (InvocationTargetException e) {  
+			Throwable t = e.getTargetException();
+			if(t != null) {
+				if(!enableStackTrace) {
+					t.setStackTrace(new StackTraceElement[0]);
+				}
+			}
+			response.setData(t);
+			response.setStatus(500);
 		} 
 	}
 

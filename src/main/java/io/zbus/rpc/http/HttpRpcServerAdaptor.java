@@ -39,8 +39,8 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 		
 		Response response = processor.process(request); 
 		
-		if (response.getResult() != null && response.getResult() instanceof HttpMessage) {
-			HttpMessage res = (HttpMessage) response.getResult();
+		if (response.getData() != null && response.getData() instanceof HttpMessage) {
+			HttpMessage res = (HttpMessage) response.getData();
 			if (writeHttp) {
 				if (res.getStatus() == null) {
 					res.setStatus(200);
@@ -48,7 +48,7 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 				sess.write(res);
 				return;
 			} else {
-				response.setResult(res.toString());
+				response.setData(res.toString());
 			}
 		}
 
