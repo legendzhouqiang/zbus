@@ -12,11 +12,6 @@ import io.zbus.rpc.Remote;
 
 @Remote
 public class InterfaceExampleImpl implements InterfaceExample{
- 
-	@Override
-	public String index() { 
-		return "the index content";
-	}
 	
 	@Override 
 	public String echo(String string) { 

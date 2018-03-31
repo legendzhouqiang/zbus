@@ -3,6 +3,7 @@ package io.zbus.rpc;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,8 @@ import io.zbus.kit.logging.LoggerFactory;
 public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);
 
-	Map<String, MethodInstance> methods = new HashMap<String, MethodInstance>();
-	Map<String, List<RpcMethod>> object2Methods = new HashMap<String, List<RpcMethod>>();
+	Map<String, MethodInstance> methods = new HashMap<>();
+	Map<String, List<RpcMethod>> object2Methods = new HashMap<>();
 
 	String docUrlRoot = "/";
 	boolean enableStackTrace = true;
@@ -93,6 +94,11 @@ public class RpcProcessor {
 		}
 
 		Method[] methods = service.getClass().getMethods();
+		
+		Arrays.sort(methods, (a, b)->{
+			return a.getName().compareTo(b.getName()); 
+		});
+		
 		for (Method m : methods) {
 			if (m.getDeclaringClass() == Object.class)
 				continue;

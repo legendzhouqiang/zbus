@@ -62,7 +62,7 @@ public interface InterfaceExample{
 	
 	String nullParam(String nullStr); 
 	
-	String index();
+	//String index();
 	
 	HttpMessage html();
 }

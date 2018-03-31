@@ -2,8 +2,11 @@ package io.zbus.rpc;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import io.zbus.kit.FileKit;
 import io.zbus.net.http.HttpMessage;
@@ -28,11 +31,14 @@ public class DocRender {
 		
 		String doc = "<div>";
 		int rowIdx = 0;
-		for(List<RpcMethod> objectMethods : this.rpcProcessor.object2Methods.values()) {
+		TreeMap<String, List<RpcMethod>> methods = new TreeMap<>(this.rpcProcessor.object2Methods);
+		Iterator<Entry<String, List<RpcMethod>>> iter = methods.entrySet().iterator();
+		while(iter.hasNext()) {
+			List<RpcMethod> objectMethods = iter.next().getValue();
 			for(RpcMethod m : objectMethods) {
 				doc += rowDoc(m, rowIdx++);
 			}
-		}
+		} 
 		doc += "</div>";
 		model.put("content", doc); 
 		model.put("urlPrefix", urlPrefix);
