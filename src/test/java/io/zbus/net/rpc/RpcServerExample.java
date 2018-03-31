@@ -9,22 +9,22 @@ public class RpcServerExample {
 	public static void main(String[] args) throws Exception {
 		ServiceBootstrap b = new ServiceBootstrap();
 
-		b.processor().setAuthFilter((req, resp) -> {
+		b.setAuthFilter((req, resp) -> {
 			if("map".equals(req.getMethod())) { 
 				resp.setStatus(403);
-				resp.setData("Access Denied: map");
+				resp.setData("Access Denied");
 				return false; 
 			}
 			return true;
 		});
 
-		b.processor().setBeforeFilter((req, resp) -> { 
+		b.setBeforeFilter((req, resp) -> { 
 			return true;
 		});
 
-		b.stackTrace(false)
-		 .addModule("example", InterfaceExampleImpl.class) 
-		 .port(80)
-		 .start();
+		b.setStackTrace(false);
+		b.addModule("example", InterfaceExampleImpl.class);
+		b.setPort(80);
+		b.start();
 	}
 }

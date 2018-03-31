@@ -2,7 +2,9 @@ package io.zbus.rpc.http;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
@@ -10,64 +12,69 @@ import io.zbus.net.EventLoop;
 import io.zbus.net.Ssl;
 import io.zbus.net.http.HttpWsServer;
 import io.zbus.rpc.Remote;
+import io.zbus.rpc.RpcFilter;
 import io.zbus.rpc.RpcProcessor; 
  
 
 public class ServiceBootstrap implements Closeable {  
-	protected RpcProcessor processor = new RpcProcessor(); 
-	protected boolean autoDiscover = false;
-	protected int port;
-	protected String host = "0.0.0.0";
-	protected String certFile;
-	protected String keyFile;
-	protected HttpWsServer server; 
-	protected String token;
-	protected EventLoop eventLoop;
-	  
-	protected boolean verbose = false;   
+	private RpcProcessor processor = new RpcProcessor(); 
+	private boolean autoDiscover = false;
+	private int port;
+	private String host = "0.0.0.0";
+	private String certFile;
+	private String keyFile;
+	private HttpWsServer server;  
+	private EventLoop eventLoop;     
 	
-	
-	public ServiceBootstrap port(int port){ 
+	public ServiceBootstrap setPort(int port){ 
 		this.port = port;
 		return this;
 	} 
 	 
-	public ServiceBootstrap host(String host){ 
+	public ServiceBootstrap setHost(String host){ 
 		this.host = host;
 		return this;
-	}   
+	}    
 	
-	public ServiceBootstrap ssl(String certFile, String keyFile){ 
-		this.certFile = certFile;
+	public ServiceBootstrap setCertFile(String certFile){ 
+		this.certFile = certFile; 
+		return this;
+	}  
+	
+	public ServiceBootstrap setKeyFile(String keyFile){ 
 		this.keyFile = keyFile;
 		return this;
 	}  
 	 
-	public ServiceBootstrap autoDiscover(boolean autoDiscover) {
+	public ServiceBootstrap setAutoDiscover(boolean autoDiscover) {
 		this.autoDiscover = autoDiscover;
-		return this;
-	} 
-	
-	public ServiceBootstrap verbose(boolean verbose) {
-		this.verbose = verbose;
 		return this;
 	}  
 	
-	public ServiceBootstrap stackTrace(boolean stackTrace) {
+	public ServiceBootstrap setStackTrace(boolean stackTrace) {
 		this.processor.setEnableStackTrace(stackTrace);
 		return this;
 	} 
 	
-	public ServiceBootstrap methodPage(boolean methodPage) {
+	public ServiceBootstrap setMethodPage(boolean methodPage) {
 		this.processor.setEnableMethodPage(methodPage);
-		return this;
-	} 
-	
-	public ServiceBootstrap serviceToken(String token){ 
-		this.token = token;
 		return this;
 	}  
 	
+	
+	
+	public void setBeforeFilter(RpcFilter beforeFilter) {
+		this.processor.setBeforeFilter(beforeFilter);
+	}
+
+	public void setAfterFilter(RpcFilter afterFilter) {
+		this.processor.setAfterFilter(afterFilter);
+	}
+
+	public void setAuthFilter(RpcFilter authFilter) {
+		this.processor.setAuthFilter(authFilter);
+	}
+
 	private void validate(){ 
 		
 	}
@@ -120,6 +127,13 @@ public class ServiceBootstrap implements Closeable {
 	public ServiceBootstrap addModule(Object... services){
 		processor.addModule(services);
 		return this;
+	}
+	
+	public void setModuleTable(Map<String, Object> instances){
+		if(instances == null) return;
+		for(Entry<String, Object> e : instances.entrySet()){
+			processor.addModule(e.getKey(), e.getValue());
+		}
 	}
 	
 	
