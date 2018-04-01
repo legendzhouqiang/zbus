@@ -13,7 +13,7 @@
 	</select> 
 	
 	<select id="getProc" resultType="Map">
-		SELECT * FROM proc WHERE name = #{name}
+		SELECT definer, type, param_list as paramList FROM proc WHERE name = #{name}
 	</select> 
 	
 	<select id="helpCate" resultType="Map">
