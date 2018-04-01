@@ -4,23 +4,24 @@
 http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"> 
  	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
  	
- 	<import resource="mysql.xml"/> 
-	
-	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-	  <property name="dataSource" ref="dataSource" />
-	  <property name="configuration">
-	    <bean class="org.apache.ibatis.session.Configuration">
-	      <property name="mapUnderscoreToCamelCase" value="true"/>
-	    </bean>
-	  </property>
+ 	<import resource="mysql.xml"/>  
+ 	
+	<bean id="sqlSessionFactory"  class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:/rpc/mybatis.xml" />
+		<property name="mapperLocations">
+			<list>
+				<value>classpath*:/rpc/mapper/*.xml</value>
+			</list>
+		</property>
 	</bean>
 	
 	<bean id="db" class="org.mybatis.spring.mapper.MapperFactoryBean">
-	  <property name="mapperInterface" value="io.zbus.net.rpc.biz.DbService" />
+	  <property name="mapperInterface" value="io.zbus.rpc.biz.DbService" />
 	  <property name="sqlSessionFactory" ref="sqlSessionFactory" /> 
 	</bean>   
 	
-	<bean id="example" class="io.zbus.net.rpc.biz.InterfaceExampleImpl"/>
+	<bean id="example" class="io.zbus.rpc.biz.InterfaceExampleImpl"/>
 	
 	<bean class="io.zbus.rpc.http.ServiceBootstrap" init-method="start"> 
 		<property name="port" value="80" />

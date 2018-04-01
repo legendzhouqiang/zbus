@@ -1,4 +1,4 @@
-package io.zbus.net.rpc.biz;
+package io.zbus.rpc.biz;
 
 import java.util.Arrays;
 import java.util.List;

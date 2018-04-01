@@ -1,4 +1,4 @@
-package io.zbus.net.rpc.biz.generic;
+package io.zbus.rpc.biz.generic;
 
 import io.zbus.rpc.Remote;
 

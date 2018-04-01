@@ -1,6 +1,6 @@
-package io.zbus.net.rpc;
+package io.zbus.rpc;
 
-import io.zbus.net.rpc.biz.InterfaceExampleImpl;
+import io.zbus.rpc.biz.InterfaceExampleImpl;
 import io.zbus.rpc.http.ServiceBootstrap;
 
 public class RpcServerExample {

@@ -1,4 +1,4 @@
-package io.zbus.net.rpc;
+package io.zbus.rpc;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -6,7 +6,7 @@ public class SpringExample {
  
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
-		new ClassPathXmlApplicationContext("context.xml");      
+		new ClassPathXmlApplicationContext("rpc/context.xml");      
 	}
 
 }

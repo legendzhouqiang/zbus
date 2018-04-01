@@ -1,4 +1,4 @@
-package io.zbus.net.rpc.biz.inheritance;
+package io.zbus.rpc.biz.inheritance;
 
 import io.zbus.rpc.Remote;
 

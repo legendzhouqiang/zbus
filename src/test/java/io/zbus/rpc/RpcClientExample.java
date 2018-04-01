@@ -1,4 +1,4 @@
-package io.zbus.net.rpc;
+package io.zbus.rpc;
 
 import io.zbus.net.EventLoop;
 import io.zbus.rpc.Request;

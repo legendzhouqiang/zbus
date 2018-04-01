@@ -1,4 +1,4 @@
-package io.zbus.net.rpc.biz;
+package io.zbus.rpc.biz;
 
 public class UserException extends Exception { 
 	private static final long serialVersionUID = -6135508809283998375L; 

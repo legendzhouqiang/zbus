@@ -1,4 +1,4 @@
-package io.zbus.net.rpc.biz.generic;
+package io.zbus.rpc.biz.generic;
 
 public interface GenericMethod {
 	<T> void test(T t);
