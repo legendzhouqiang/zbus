@@ -4,7 +4,7 @@ import io.zbus.net.EventLoop;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.RpcClient;
 
-public class RpcClientExample {
+public class RpcClientHttpExample {
 
 	public static void main(String[] args) throws Exception {
 		EventLoop loop = new EventLoop();

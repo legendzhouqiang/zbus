@@ -6,7 +6,7 @@ import io.zbus.net.EventLoop;
 import io.zbus.net.http.WebsocketClient;
 import io.zbus.rpc.Request;
 
-public class WsRpcExample {
+public class RpcClientWsExample {
 
 	public static void main(String[] args) throws Exception {
 		EventLoop loop = new EventLoop();
