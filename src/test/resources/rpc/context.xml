@@ -21,7 +21,13 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	  <property name="sqlSessionFactory" ref="sqlSessionFactory" /> 
 	</bean>   
 	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">  
+	  <constructor-arg ref="sqlSessionFactory"/>
+	</bean>  
+	
 	<bean id="example" class="io.zbus.rpc.biz.InterfaceExampleImpl"/>
+	
+	<bean id="sql" class="io.zbus.rpc.biz.RawDbService"/>
 	
 	<bean class="io.zbus.rpc.http.ServiceBootstrap" init-method="start"> 
 		<property name="port" value="80" />
@@ -29,6 +35,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 			<map>
 				<entry key="db" value-ref="db"/>
 				<entry key="example" value-ref="example"/>
+				<entry key="sql" value-ref="sql"/>
 			</map>
 		</property>
 	</bean> 

@@ -22,8 +22,8 @@ public class WsRpcExample {
 
 		ws.onOpen = () -> {
 			Request req = new Request();
-			req.setModule("db");
-			req.setMethod("helpCate"); 
+			req.setModule("sql");
+			req.setMethod("test"); 
 			req.setId(StrKit.uuid());
 
 			ws.sendMessage(JsonKit.toJSONString(req));

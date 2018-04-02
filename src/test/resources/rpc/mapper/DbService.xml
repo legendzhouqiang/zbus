@@ -20,4 +20,8 @@
 		SELECT * FROM help_category
 	</select> 
 	
+	<select id="test" resultType="Map">
+		SELECT name, url FROM help_topic limit 10
+	</select> 
+	
 </mapper>

@@ -11,5 +11,5 @@ public interface DbService {
 	 
 	Map<String, Object> getProc(@Param("name") String name);
 	 
-	List<Map<String, Object>> helpCate();
+	List<Map<String, Object>> helpCate(); 
 }
