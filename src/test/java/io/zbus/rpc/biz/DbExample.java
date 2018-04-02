@@ -6,12 +6,12 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-public class RawDbService {  
+public class DbExample {  
 	
 	@Autowired
 	SqlSession sqlSession;
 	
 	public List<HelpTopic> test(){
-		return sqlSession.selectList("io.zbus.rpc.biz.DbService.test"); 
+		return sqlSession.selectList("io.zbus.rpc.biz.db.test"); 
 	}
 }

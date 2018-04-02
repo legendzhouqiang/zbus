@@ -16,18 +16,18 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 		</property>
 	</bean>
 	
-	<bean id="db" class="org.mybatis.spring.mapper.MapperFactoryBean">
-	  <property name="mapperInterface" value="io.zbus.rpc.biz.DbService" />
-	  <property name="sqlSessionFactory" ref="sqlSessionFactory" /> 
-	</bean>   
-	
 	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">  
 	  <constructor-arg ref="sqlSessionFactory"/>
 	</bean>  
 	
-	<bean id="example" class="io.zbus.rpc.biz.InterfaceExampleImpl"/>
+	<bean id="db" class="org.mybatis.spring.mapper.MapperFactoryBean">
+	  <property name="mapperInterface" value="io.zbus.rpc.biz.DbInterface" />
+	  <property name="sqlSessionFactory" ref="sqlSessionFactory" /> 
+	</bean>     
 	
-	<bean id="sql" class="io.zbus.rpc.biz.RawDbService"/>
+	<bean id="sql" class="io.zbus.rpc.biz.DbExample"/>
+	
+	<bean id="example" class="io.zbus.rpc.biz.InterfaceExampleImpl"/>
 	
 	<bean class="io.zbus.rpc.http.ServiceBootstrap" init-method="start"> 
 		<property name="port" value="80" />
