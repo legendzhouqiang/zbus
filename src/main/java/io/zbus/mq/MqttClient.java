@@ -47,7 +47,7 @@ public class MqttClient extends Client<MqttMessage, MqttMessage> {
                 .build();
 		
 		EventLoop loop = new EventLoop();
-		MqttClient client = new MqttClient("localhost:2883", loop);
+		MqttClient client = new MqttClient("localhost:1883", loop);
 		client.onOpen = ()->{
 			client.sendMessage(message);
 			client.sendMessage(createSubMessage());

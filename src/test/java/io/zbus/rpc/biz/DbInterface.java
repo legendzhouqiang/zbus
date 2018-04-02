@@ -9,11 +9,11 @@ import org.apache.ibatis.annotations.Select;
 
 public interface DbInterface { 
 	@Select("SELECT * FROM  user WHERE User=#{userId}")
-	User getUser(@Param("userId") String userId);
+	Map<String, Object> getUser(@Param("userId") String userId);
 	
 	@Select("SELECT definer, type, param_list as paramList FROM proc WHERE name = #{name}")
 	Map<String, Object> getProc(@Param("name") String name);
 	 
 	@Select("SELECT * FROM help_category")
-	List<Map<String, Object>> helpCate(); 
+	List<Map<String, Object>> helpCate();  
 }
