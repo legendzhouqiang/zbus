@@ -2,7 +2,7 @@ package io.zbus.rpc;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SpringExample {
+public class RpcServerSpringExample {
  
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {  
