@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.mq.subscription.Subscription;
@@ -18,15 +19,20 @@ public class MqServerAdaptor extends ServerAdaptor {
 
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
+		JSONObject json = null;
 		if (msg instanceof byte[]) {
-			handleWebsocketMessage((byte[]) msg, sess);
+			json = JSONObject.parseObject(new String((byte[])msg));
 		} else if (msg instanceof HttpMessage) {
-			handleHttpMessage((HttpMessage) msg, sess);
+			HttpMessage httpMessage = (HttpMessage)msg;
+			json = JSONObject.parseObject(httpMessage.getBodyString()); 
+		} else {
+			throw new IllegalStateException("Not support message type");
 		}
-	}
-
-	protected void handleWebsocketMessage(byte[] msg, Session sess) throws IOException {
-		JSONObject json = JSONObject.parseObject(new String(msg));
+		
+		handleJsonMessage(json, sess);
+	} 
+	
+	protected void handleJsonMessage(JSONObject json, Session sess) throws IOException { 
 		String cmd = json.getString("cmd");
 		if (cmd == null) {
 			JSONObject res = new JSONObject();
@@ -34,7 +40,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			res.put("data", "missing command");
 			res.put("id", json.getString("id"));
 
-			sess.write(JSONObject.toJSONBytes(res));
+			sendMessage(sess, json, true);
 			return;
 		}
 
@@ -48,8 +54,23 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		} 
 	}
+	
+	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
+		if(isWebsocket) {
+			sess.write(JSON.toJSONBytes(json));
+			return;
+		}
+		
+		HttpMessage res = new HttpMessage();
+		Integer status = json.getInteger("status");
+		if(status == null) status = 200; 
+		res.setStatus(status);
+		res.setJsonBody(JSON.toJSONBytes(json));
+		
+		sess.write(res);
+	}
 
-	protected void handlePubMessage(JSONObject json, Session sess) throws IOException {
+	private void handlePubMessage(JSONObject json, Session sess) throws IOException {
 		String topic = json.getString("topic");
 		for(Entry<String, Subscription> e : subscriptionTable.entrySet()) {
 			Subscription sub = e.getValue();
@@ -57,13 +78,13 @@ public class MqServerAdaptor extends ServerAdaptor {
 				Session matched = sessionTable.get(sub.clientId);
 				if(matched != null) { 
 					json.remove("cmd");
-					matched.write(JSONObject.toJSONBytes(json));
+					sendMessage(matched, json, true); 
 				}
 			}
 		} 
 	}
 	
-	protected void handleSubMessage(JSONObject json, Session sess) throws IOException {
+	private void handleSubMessage(JSONObject json, Session sess) throws IOException {
 		Subscription sub = subscriptionTable.get(sess.id());
 		if(sub == null) {
 			sub = new Subscription();
@@ -72,9 +93,5 @@ public class MqServerAdaptor extends ServerAdaptor {
 		}
 		sub.topics.clear();
 		sub.topics.add(json.getString("topic"));
-	}
-
-	protected void handleHttpMessage(HttpMessage msg, Session sess) throws IOException {
-
-	}
+	} 
 }

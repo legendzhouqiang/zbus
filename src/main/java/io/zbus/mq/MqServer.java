@@ -30,6 +30,6 @@ public class MqServer extends Server {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		MqServer server = new MqServer();
-		server.start(80);
+		server.start(15555);
 	}
 }
