@@ -9,19 +9,6 @@ public class RpcServerExample {
 	public static void main(String[] args) throws Exception {
 		ServiceBootstrap b = new ServiceBootstrap();
 
-		b.setAuthFilter((req, resp) -> {
-			if("map".equals(req.getMethod())) { 
-				resp.setStatus(403);
-				resp.setData("Access Denied");
-				return false; 
-			}
-			return true;
-		});
-
-		b.setBeforeFilter((req, resp) -> { 
-			return true;
-		});
-
 		b.setStackTrace(false);
 		b.addModule("example", InterfaceExampleImpl.class);
 		b.setPort(80);

@@ -3,7 +3,7 @@
 <mapper namespace="io.zbus.rpc.biz.db"> 
 
 	<select id="test" resultType="Map">
-		SELECT name, url FROM help_topic limit 10
+		SELECT name, url, example FROM help_topic limit 10
 	</select> 
 	
 </mapper>

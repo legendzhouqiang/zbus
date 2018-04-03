@@ -3,6 +3,7 @@ package io.zbus.rpc.biz;
 public class HelpTopic {
 	public String name;
 	public String url;
+	public String example;
 
 	public String getName() {
 		return name;
@@ -20,4 +21,13 @@ public class HelpTopic {
 		this.url = url;
 	}
 
+	public String getExample() {
+		return example;
+	}
+
+	public void setExample(String example) {
+		this.example = example;
+	}
+
+	
 }
