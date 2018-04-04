@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
-import io.zbus.mq.subscription.Subscription;
+import io.zbus.mq.model.Subscription;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
 import io.zbus.net.http.HttpMessage;

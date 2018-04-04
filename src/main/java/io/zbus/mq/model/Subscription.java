@@ -1,4 +1,4 @@
-package io.zbus.mq.subscription;
+package io.zbus.mq.model;
 
 import java.util.ArrayList;
 import java.util.List;
