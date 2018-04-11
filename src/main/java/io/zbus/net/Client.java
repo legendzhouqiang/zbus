@@ -69,7 +69,7 @@ public class Client<REQ, RES> implements Closeable {
 	
 	public Client(String address, EventLoop loop) {
 		this.loop = loop;
-		this.group = loop.getGroup();
+		this.group = loop.getGroup(); 
 		if(!address.contains("://")) {
 			address = "tcp://"+address;
 		}
@@ -79,7 +79,7 @@ public class Client<REQ, RES> implements Closeable {
 			throw new IllegalArgumentException(address + " is illegal");
 		}
 		setup();
-	}
+	} 
 	
 	private void setup() {  
 		String scheme = uri.getScheme();
@@ -110,6 +110,10 @@ public class Client<REQ, RES> implements Closeable {
 				log.info(msg);
 				
 				if(triggerOpenWhenConnected){ 
+					for(REQ req : cachedMessages) {
+						sendMessage(req);
+					}
+					cachedMessages.clear();
 					if (onOpen != null) {
 						try {
 							onOpen.handle();
@@ -269,8 +273,11 @@ public class Client<REQ, RES> implements Closeable {
 
 	public void sendMessage(REQ req) {
 		if(!active()){
-			String msg = String.format("Socket(%s) not open yet", serverAddress());
-			throw new IllegalStateException(msg);
+			cachedMessages.add(req);
+			connect();
+			//String msg = String.format("Socket(%s) not open yet", serverAddress());
+			//throw new IllegalStateException(msg);
+			return;
 		} 
 		session.write(req);
 	}

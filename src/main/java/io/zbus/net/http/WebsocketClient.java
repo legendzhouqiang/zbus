@@ -91,6 +91,10 @@ public class WebsocketClient extends Client<String, String> {
 				try {
 					handshaker.finishHandshake(ch, (FullHttpResponse) msg);   
 					websocketReady = true; 
+					for(String req : cachedMessages) {
+						sendMessage(req);
+					}
+					cachedMessages.clear();
 					if(onOpen != null){  
 						onOpen.handle();
 					}  

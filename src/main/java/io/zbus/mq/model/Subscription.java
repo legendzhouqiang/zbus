@@ -6,4 +6,5 @@ import java.util.List;
 public class Subscription {
 	public List<String> topics = new ArrayList<>();
 	public String clientId; 
+	public Integer window;
 }

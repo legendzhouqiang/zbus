@@ -60,23 +60,8 @@ public class MqServerAdaptor extends ServerAdaptor {
 			
 			handleSubMessage(json, sess); 
 		} 
-	}
+	} 
 	
-	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
-		if(isWebsocket) {
-			sess.write(JSON.toJSONBytes(json));
-			return;
-		}
-		
-		HttpMessage res = new HttpMessage();
-		Integer status = json.getInteger(Protocol.STATUS);
-		if(status == null) status = 200; 
-		res.setStatus(status);
-		res.setJsonBody(JSON.toJSONBytes(json));
-		
-		sess.write(res);
-	}
-
 	private void handlePubMessage(JSONObject json, Session sess) throws IOException {
 		String topic = json.getString(Protocol.TOPIC);
 		for(Entry<String, Subscription> e : subscriptionTable.entrySet()) {
@@ -103,4 +88,20 @@ public class MqServerAdaptor extends ServerAdaptor {
 		sub.topics.clear();
 		sub.topics.add(topic);
 	} 
+	
+	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
+		if(isWebsocket) {
+			sess.write(JSON.toJSONBytes(json));
+			return;
+		}
+		
+		HttpMessage res = new HttpMessage();
+		Integer status = json.getInteger(Protocol.STATUS);
+		if(status == null) status = 200; 
+		res.setStatus(status);
+		res.setJsonBody(JSON.toJSONBytes(json));
+		
+		sess.write(res);
+	}
+
 }
