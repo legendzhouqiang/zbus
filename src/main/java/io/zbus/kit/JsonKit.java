@@ -45,7 +45,11 @@ public class JsonKit {
 		} else {
 			jsonString = JSON.toJSONString(json);
 		}
-		return parseObject(jsonString, clazz);
+		try {
+			return parseObject(jsonString, clazz);
+		} catch (JSONException e) {
+			return parseObject(fixJson(jsonString), clazz);
+		}
 	} 
 	
 	public static String toJSONString(Object value) {
@@ -104,4 +108,22 @@ public class JsonKit {
 			out.close();
 		}
 	}
+	
+	public static String fixJson(String str){
+		if(!str.startsWith("{")) {
+			str = "{" + str + "}";
+		} 
+		str = str.replace(" ", "");
+		str = str.replace(":", "':'");
+		str = str.replace(",", "','");
+		str = str.replace("{", "{'");
+		str = str.replace("}", "'}");
+		str = str.replace("[", "['");
+		str = str.replace("]", "']"); 
+		str = str.replace("'[", "[");
+		str = str.replace("]'", "]");
+		str = str.replace("'{", "{");
+		str = str.replace("}'", "}");
+		return str;
+	} 
 } 
