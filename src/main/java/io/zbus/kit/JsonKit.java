@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -34,12 +33,18 @@ public class JsonKit {
 		if(clazz.isAssignableFrom(json.getClass())){ 
 			return (T)json;
 		}
+		/*
 		if(json instanceof JSONObject){
 			JSONObject jsonObject = (JSONObject)json;
 			return jsonObject.toJavaObject(clazz);
 		}
-		
-		String jsonString = JSON.toJSONString(json);
+		*/
+		String jsonString = null;
+		if(json instanceof String) {
+			jsonString = (String)json;
+		} else {
+			jsonString = JSON.toJSONString(json);
+		}
 		return parseObject(jsonString, clazz);
 	} 
 	

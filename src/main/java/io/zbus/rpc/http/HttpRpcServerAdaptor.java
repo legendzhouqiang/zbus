@@ -58,6 +58,7 @@ public class HttpRpcServerAdaptor extends ServerAdaptor {
 			HttpMessage resMsg = new HttpMessage();
 			resMsg.setStatus(200);
 			resMsg.setEncoding("utf8");
+			resMsg.setHeader("content-type", "application/json");
 			resMsg.setBody(data);
 			sess.write(resMsg);
 		} else {

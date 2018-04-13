@@ -1,6 +1,8 @@
 package io.zbus.net.http;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -196,8 +198,14 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 
 		if (httpMsg instanceof HttpRequest) {
 			HttpRequest req = (HttpRequest) httpMsg;
-			msg.setMethod(req.method().name());
-			msg.setUrl(req.uri());
+			msg.setMethod(req.method().name()); 
+			String url = req.uri();
+			try {
+				url = URLDecoder.decode(req.uri(), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				//ignore
+			}
+			msg.setUrl(url);
 		} else if (httpMsg instanceof HttpResponse) {
 			HttpResponse resp = (HttpResponse) httpMsg;
 			int status = resp.status().code();
