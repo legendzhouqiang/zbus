@@ -1,4 +1,4 @@
-package io.zbus.mq.model;
+package io.zbus.mq.memory;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -6,34 +6,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.mq.model.Channel;
+import io.zbus.mq.model.MessageQueue;
+
 public class MemoryQueue implements MessageQueue{ 
 	private long maxCount = 1000; 
 	
 	private List<Object> messages = Collections.synchronizedList(new LinkedList<>());
 	
+	private String name;
 	
-	private Domain domain;
-	private Map<String, Channel> channelTable = new ConcurrentHashMap<>();
+	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
 	
-	
-	
-	public MemoryQueue(String domain) {
-		this.domain = new Domain();
-		this.domain.name = domain;
-	}
-	
-	public MemoryQueue(Domain domain) {
-		this.domain = domain;
-	}
-
-	@Override
-	public Domain getDomain() { 
-		return this.domain;
-	}
-
-	@Override
-	public void setDomain(Domain domain) {
-		this.domain = domain;
+	public MemoryQueue(String name) { 
+		this.name = name;
+	} 
+  
+	public String getName() {
+		return name;
 	}
 
 	@Override

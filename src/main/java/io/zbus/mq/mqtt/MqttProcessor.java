@@ -1,4 +1,4 @@
-package io.zbus.mq;
+package io.zbus.mq.mqtt;
 
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttMessage;

@@ -15,19 +15,17 @@ public class MessageDispatcher {
 		this.mqTable = mqTable;
 	} 
 	
-	public void dispatch(Channel channel) {
-		Domain domain = channel.domain;
-		MessageQueue mq = mqTable.get(domain.name);
+	public void dispatch(Channel channel) { 
+		MessageQueue mq = mqTable.get(channel.queue);
 		if(mq == null) return;
 		
 		List<Object> messages;
 		do {
 			messages = mq.read(channel.id, readBatchSize);
-		} while(messages != null && messages.size() == readBatchSize);
-		
-		
+		} while(messages != null && messages.size() == readBatchSize); 
 	}
-	public void dispatch(Domain domain) {
+	
+	public void dispatch(MessageQueue mq) {
 		
 	}
 }

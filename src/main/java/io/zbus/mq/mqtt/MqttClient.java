@@ -1,4 +1,4 @@
-package io.zbus.mq;
+package io.zbus.mq.mqtt;
 
 import java.util.LinkedList;
 import java.util.List;

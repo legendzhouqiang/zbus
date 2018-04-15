@@ -10,15 +10,14 @@ import java.util.List;
  * 
  * MQTT compatible, with domain default to null(empty)
  * 
- *      domain |||||||||||(message/topic)|||||||||||||||
+ *      queue |||||||||||(message/topic)|||||||||||||||
  *                 ------- channel1
  *                 ------- channel2
  *                 
- * By default:
- *   domain = null, 
+ * By default: 
  *   channel = unique generated, each subscriber with unique channel
  * 
- * Domain  -- message queue identifier, every message with topic resides in a domain
+ * Queue   -- message container, with name as identifier
  * Channel -- subscriber isolation, each channel share same message pointer for reading
  * Topic   -- message's topic, subscriber may filter on it. e.g. /abc, follows MQTT standard
  * 
@@ -31,9 +30,8 @@ import java.util.List;
  * @author Hong Leiming
  *
  */
-public interface MessageQueue { 
-	Domain getDomain(); 
-	void setDomain(Domain domain); 
+public interface MessageQueue {   
+	String getName();
 	
 	Channel getChannel(String channelId);
 	void addChannel(Channel channel);
