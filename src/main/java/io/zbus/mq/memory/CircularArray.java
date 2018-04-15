@@ -3,18 +3,18 @@ package io.zbus.mq.memory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CircleQueue {
+public class CircularArray {
 	private final int maxSize;
 	private long start = 0; // readable entry
 	private long end = 0;   // first entry to write
 	private Object[] array;
 
-	public CircleQueue(int maxSize) {
+	public CircularArray(int maxSize) {
 		this.maxSize = maxSize;
 		array = new Object[this.maxSize];
 	}
 
-	public CircleQueue() {
+	public CircularArray() {
 		this(10000);
 	}
 
@@ -91,20 +91,5 @@ public class CircleQueue {
 				return (int) (end - offset);
 			}
 		}
-	}
-
-	public static void main(String[] args) {
-		CircleQueue q = new CircleQueue();
-		q.write("abc", "efg");
-		q.write("xyz");
-
-		Reader reader = q.createReader();
-		System.out.println(reader.size());
-		List<String> res = reader.read(20);
-		for (String s : res) {
-			System.out.println(s);
-		}
-		System.out.println(reader.size());
-	}
-
+	} 
 }
