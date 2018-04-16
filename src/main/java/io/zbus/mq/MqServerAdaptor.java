@@ -72,16 +72,14 @@ public class MqServerAdaptor extends ServerAdaptor {
 	} 
 	
 	private void handlePubMessage(JSONObject json, Session sess) throws IOException {
-		String mqName = json.getString(Protocol.MQ);
-		String channel = json.getString(Protocol.CHANNEL); 
-		
+		String mqName = json.getString(Protocol.MQ);  
 		MessageQueue mq = mqManager.get(mqName);
 		if(mq == null) {
 			mq = mqManager.create(mqName);
 		}
 		
 		mq.write(json); 
-		messageDispatcher.dispatch(mq, channel); 
+		messageDispatcher.dispatch(mq); 
 	}
 	
 	private void handleSubMessage(JSONObject json, Session sess) throws IOException {

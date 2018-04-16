@@ -52,15 +52,16 @@ public class CircularArray {
 		private final Channel channel; 
 		Reader(Channel channel) {
 			this.channel = channel; 
-			if (this.channel.offset < start) {
-				this.channel.offset = start;
+			if (this.channel.offset == null || this.channel.offset < start) {
+				this.channel.offset = end;
 			}
 			if (this.channel.offset > end) {
 				this.channel.offset = end;
 			}
 		}
 		
-		public void setOffset(long offset) {
+		public void setOffset(Long offset) {
+			if(offset == null) return;
 			this.channel.offset = offset;
 			if (this.channel.offset < start) {
 				this.channel.offset = start;

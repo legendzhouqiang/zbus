@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class Channel implements Cloneable {   
 	public String name;
-	public long offset; 
+	public Long offset; 
 	
 	public HashMap<String, Object> attributes = new HashMap<>();
 	@Override

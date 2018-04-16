@@ -20,6 +20,7 @@ public class Sub2 {
 			Map<String, Object> req = new HashMap<>();
 			req.put("cmd", "sub"); 
 			req.put("topic", "/abc"); 
+			req.put("channel", "share2");
 			 
 			ws.sendMessage(req);
 		};
