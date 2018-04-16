@@ -99,7 +99,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 		
 		String topic = json.getString(Protocol.TOPIC);
 		sub.topics.clear();
-		sub.topics.add(topic); 
+		if(topic != null) {
+			sub.topics.add(topic); 
+		}
 		
 		MessageQueue mq = mqManager.get(mqName); 
 		if(mq == null) {

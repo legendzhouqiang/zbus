@@ -41,7 +41,7 @@ public class MessageDispatcher {
 					Subscription sub = subs.get((int)(index%N));
 					index++;
 					if (index < 0) index = 0L;
-					if(sub.topics.contains(topic)) {
+					if(sub.topics.isEmpty() || sub.topics.contains(topic)) {
 						Session sess = sessionTable.get(sub.clientId);
 						if(sess == null) continue;
 						sendMessage(sess, data, sub.isWebsocket); 
