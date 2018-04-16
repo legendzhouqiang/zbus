@@ -8,14 +8,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.Subscription;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
 import io.zbus.net.http.HttpMessage;
 
 public class MqServerAdaptor extends ServerAdaptor { 
-	Map<String, Subscription> subscriptionTable = new ConcurrentHashMap<>();
-
+	private Map<String, Subscription> subscriptionTable = new ConcurrentHashMap<>();
+	private Map<String, MessageQueue> mqTable = new ConcurrentHashMap<>();
+	
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
 		JSONObject json = null;
@@ -82,11 +84,27 @@ public class MqServerAdaptor extends ServerAdaptor {
 			sub = new Subscription();
 			sub.clientId = sess.id();
 			subscriptionTable.put(sub.clientId, sub);
-		}
-		//Integer qos = json.getInteger(Protocol.QOS); 
+		} 
+		
 		String topic = json.getString(Protocol.TOPIC);
 		sub.topics.clear();
 		sub.topics.add(topic);
+		
+		String mqName = json.getString(Protocol.MQ);
+		if(mqName == null) {
+			mqName = ""; //empty name
+		}
+		
+		MessageQueue mq = mqTable.get(mqName);
+		if(mq == null) { 
+			// mq: { name: xx }
+			// channel: { name: xxx }
+		}
+		
+		String channel = json.getString(Protocol.CHANNEL);
+		if(channel == null) {
+			
+		}
 	} 
 	
 	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {

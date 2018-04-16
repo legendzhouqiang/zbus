@@ -1,6 +1,7 @@
 package io.zbus.mq.db;
 
 import java.util.List;
+import java.util.Map;
 
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
@@ -8,52 +9,42 @@ import io.zbus.mq.model.MessageQueue;
 public class DbQueue implements MessageQueue{
 
 	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
+	public String name() {
+		return null;
+	}
+	
+	@Override
+	public Map<String, Object> attributes() {
+		return null;
+	}
+	 
+	@Override
+	public void flush() {
+		
+	}
+
+	@Override
+	public Channel channel(String channelId) {
 		return null;
 	}
 
 	@Override
-	public Channel getChannel(String channelId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void addChannel(Channel channel) {
-		// TODO Auto-generated method stub
+	public void saveChannel(Channel channel) {
 		
 	}
 
 	@Override
 	public void removeChannel(String channelId) {
-		// TODO Auto-generated method stub
 		
-	}
+	}  
 
 	@Override
-	public void updateChannel(Channel channel) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void write(Object message) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Object read(String channelId) {
-		// TODO Auto-generated method stub
+	public List<Object> read(String channelId, int count) {
 		return null;
 	}
 
 	@Override
-	public List<Object> read(String channelId, int batchSize) {
-		// TODO Auto-generated method stub
-		return null;
-	} 
-	 
-
+	public void write(Object... message) { 
+		
+	}  
 }

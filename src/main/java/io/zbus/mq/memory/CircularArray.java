@@ -3,6 +3,8 @@ package io.zbus.mq.memory;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.zbus.mq.model.Channel;
+
 public class CircularArray {
 	private final int maxSize;
 	private long start = 0; // readable entry
@@ -40,44 +42,45 @@ public class CircularArray {
 				forwardIndex();
 			}
 		}
+	} 
+
+	public Reader createReader(Channel channel) {
+		return new Reader(channel);
 	}
 
-	public Reader createReader() {
-		return new Reader();
-	}
-
-	public Reader createReader(long offset) {
-		return new Reader(offset);
-	}
-
-	public class Reader {
-		private long offset = start;
-
-		public Reader() {
-
-		}
-
-		public Reader(long offset) {
-			this.offset = offset;
-			if (this.offset < start) {
-				this.offset = start;
+	public class Reader { 
+		private final Channel channel; 
+		Reader(Channel channel) {
+			this.channel = channel; 
+			if (this.channel.offset < start) {
+				this.channel.offset = start;
 			}
-			if (this.offset > end) {
-				this.offset = end;
+			if (this.channel.offset > end) {
+				this.channel.offset = end;
+			}
+		}
+		
+		public void setOffset(long offset) {
+			this.channel.offset = offset;
+			if (this.channel.offset < start) {
+				this.channel.offset = start;
 			}
 		}
 
 		@SuppressWarnings("unchecked")
-		public <T> List<T> read(int batchSize) {
+		public <T> List<T> read(int count) {
 			synchronized (array) {
 				List<T> res = new ArrayList<>();
-				if (offset < start) {
-					offset = start;
+				if (channel.offset < start) {
+					channel.offset = start;
 				}
-				while (offset < end) {
-					int idx = (int) (offset % maxSize);
+				int c = 0;
+				while (channel.offset < end) {
+					int idx = (int) (channel.offset % maxSize);
 					res.add((T) array[idx]);
-					offset++;
+					channel.offset++;
+					c++;
+					if(c > count) break; 
 				}
 				return res;
 			}
@@ -85,10 +88,10 @@ public class CircularArray {
 
 		public int size() {
 			synchronized (array) {
-				if (offset < start) {
-					offset = start;
+				if (channel.offset < start) {
+					channel.offset = start;
 				}
-				return (int) (end - offset);
+				return (int) (end - channel.offset);
 			}
 		}
 	} 

@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.zbus.mq.memory.CircularArray;
 import io.zbus.mq.memory.CircularArray.Reader;
+import io.zbus.mq.model.Channel;
 
 public class CircularArrayTest {
 	public static void main(String[] args) {
@@ -11,7 +12,7 @@ public class CircularArrayTest {
 		q.write("abc", "efg");
 		q.write("xyz");
 
-		Reader reader = q.createReader();
+		Reader reader = q.createReader(new Channel());
 		System.out.println(reader.size());
 		List<String> res = reader.read(20);
 		for (String s : res) {

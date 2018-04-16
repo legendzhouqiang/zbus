@@ -1,21 +1,20 @@
 package io.zbus.mq.model;
 
 import java.util.List;
+import java.util.Map;
 
-/**
+/** 
+ *  
+ * MessageQueue:
  * 
- * Domain of a MessageQueue -- identifies a message queue. 
- * Noted: Topic is an attribute of a message, not for a message queue. A Message Queue may contains messages with different topics
- * 
- * 
- * MQTT compatible, with domain default to null(empty)
- * 
- *      queue |||||||||||(message/topic)|||||||||||||||
+ *      queue_name |||||||||||(message/topic)|||||||||||||||
  *                 ------- channel1
  *                 ------- channel2
  *                 
  * By default: 
  *   channel = unique generated, each subscriber with unique channel
+ *   
+ * Noted: Topic is an attribute of a message, not a message queue. A Message Queue may contains messages with different topics
  * 
  * Queue   -- message container, with name as identifier
  * Channel -- subscriber isolation, each channel share same message pointer for reading
@@ -26,19 +25,23 @@ import java.util.List;
  * 1) PubSub: default, each subscriber generated unique channel
  * 2) LoadBalance: subscribers share same channel
  * 3) Mixed: each group of subscribers share a same channel
+ *  
+ * MQTT compatible, with queue default to null(empty) 
+ * 
  * 
  * @author Hong Leiming
  *
  */
-public interface MessageQueue {   
-	String getName();
+public interface MessageQueue { 
+	String name();
 	
-	Channel getChannel(String channelId);
-	void addChannel(Channel channel);
-	void removeChannel(String channelId);
-	void updateChannel(Channel channel);
+	void write(Object... message); 
+	List<Object> read(String channelId, int count);  
 	
-	void write(Object message);
-	Object read(String channelId); 
-	List<Object> read(String channelId, int batchSize); 
+	Channel channel(String channelId);
+	void saveChannel(Channel channel);
+	void removeChannel(String channelId);  
+	
+	Map<String, Object> attributes();
+	void flush();
 }

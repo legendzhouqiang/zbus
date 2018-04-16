@@ -1,6 +1,5 @@
 package io.zbus.mq.model;
 
-import java.util.List;
 import java.util.Map;
 
 import io.zbus.net.Session;
@@ -15,14 +14,7 @@ public class MessageDispatcher {
 		this.mqTable = mqTable;
 	} 
 	
-	public void dispatch(Channel channel) { 
-		MessageQueue mq = mqTable.get(channel.queue);
-		if(mq == null) return;
-		
-		List<Object> messages;
-		do {
-			messages = mq.read(channel.id, readBatchSize);
-		} while(messages != null && messages.size() == readBatchSize); 
+	public void dispatch(Channel channel) {  
 	}
 	
 	public void dispatch(MessageQueue mq) {
