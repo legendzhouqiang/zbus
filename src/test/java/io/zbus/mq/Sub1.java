@@ -3,6 +3,7 @@ package io.zbus.mq;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.zbus.kit.JsonKit;
 import io.zbus.net.EventLoop;
 
 public class Sub1 { 
@@ -26,5 +27,10 @@ public class Sub1 {
 		};
 
 		ws.connect();
+		ws.heartbeat(10*1000, ()->{
+			Map<String, Object> req = new HashMap<>();
+			req.put("cmd", "ping");  
+			return JsonKit.toJSONString(req);
+		});
 	} 
 }

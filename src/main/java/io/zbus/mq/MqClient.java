@@ -22,5 +22,6 @@ public class MqClient extends WebsocketClient{
 	 
 	public void sendMessage(Map<String, Object> req) { 
 		super.sendMessage(JSON.toJSONString(req));
-	}  
+	}   
+	
 }
