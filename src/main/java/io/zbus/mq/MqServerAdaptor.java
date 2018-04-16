@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageDispatcher;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.MqManager;
@@ -84,26 +85,31 @@ public class MqServerAdaptor extends ServerAdaptor {
 	
 	private void handleSubMessage(JSONObject json, Session sess) throws IOException {
 		Subscription sub = subscriptionManager.get(sess.id());
-		String mq = json.getString(Protocol.MQ);
-		String channel = json.getString(Protocol.CHANNEL);
-		if(mq == null) mq = "";
-		if(channel == null) channel = sess.id();
+		String mqName = json.getString(Protocol.MQ);
+		String channelName = json.getString(Protocol.CHANNEL);
+		if(mqName == null) mqName = "";
+		if(channelName == null) channelName = sess.id();
 		if(sub == null) {
 			sub = new Subscription();
 			sub.clientId = sess.id(); 
-			sub.mq = mq;
-			sub.channel = channel;
+			sub.mq = mqName;
+			sub.channel = channelName;
 			
 			subscriptionManager.add(sub);
-		} 
+		}  
 		
 		String topic = json.getString(Protocol.TOPIC);
 		sub.topics.clear();
 		sub.topics.add(topic); 
 		
-		MessageQueue queue = mqManager.get(mq);
-		if(queue != null) {
-			messageDispatcher.dispatch(queue, channel);
+		MessageQueue mq = mqManager.get(mqName);
+		if(mq.channel(channelName) == null) { 
+			Channel channel = new Channel();
+			channel.name = channelName;
+			mq.saveChannel(channel);
+		}
+		if(mq != null) {
+			messageDispatcher.dispatch(mq, channelName);
 		} 
 	} 
 	
