@@ -41,7 +41,9 @@ public class MemoryQueue implements MessageQueue{
 	 
 	@Override
 	public Channel channel(String channelId) {
-		return channelTable.get(channelId).clone(); 
+		Channel channel = channelTable.get(channelId);
+		if(channel == null) return null;
+		return channel.clone(); 
 	}
 	
 	@Override

@@ -21,7 +21,7 @@ public class MessageDispatcher {
 	@SuppressWarnings("unchecked")
 	public void dispatch(MessageQueue mq, String channel) {   
 		List<Subscription> subs = subscriptionManager.getSubscriptionList(mq.name(), channel);
-		if(subs.size() == 0) return;
+		if(subs == null || subs.size() == 0) return;
 		
 		int count = 10;
 	    List<Object> messages = mq.read(channel, count);

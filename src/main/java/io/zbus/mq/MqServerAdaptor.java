@@ -76,9 +76,10 @@ public class MqServerAdaptor extends ServerAdaptor {
 		String channel = json.getString(Protocol.CHANNEL); 
 		
 		MessageQueue mq = mqManager.get(mqName);
-		if(mq == null) { 
-			return;
-		} 
+		if(mq == null) {
+			mq = mqManager.create(mqName);
+		}
+		
 		mq.write(json); 
 		messageDispatcher.dispatch(mq, channel); 
 	}
@@ -102,15 +103,17 @@ public class MqServerAdaptor extends ServerAdaptor {
 		sub.topics.clear();
 		sub.topics.add(topic); 
 		
-		MessageQueue mq = mqManager.get(mqName);
+		MessageQueue mq = mqManager.get(mqName); 
+		if(mq == null) {
+			mq = mqManager.create(mqName);
+		}
+		
 		if(mq.channel(channelName) == null) { 
 			Channel channel = new Channel();
 			channel.name = channelName;
 			mq.saveChannel(channel);
 		}
-		if(mq != null) {
-			messageDispatcher.dispatch(mq, channelName);
-		} 
+		messageDispatcher.dispatch(mq, channelName); 
 	} 
 	
 	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
