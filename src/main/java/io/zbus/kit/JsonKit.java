@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -51,6 +52,11 @@ public class JsonKit {
 			return parseObject(fixJson(jsonString), clazz);
 		}
 	} 
+	
+	public static <T> T get(JSONObject json, String key, Class<T> clazz) { 
+		Object object = json.get(key);
+		return convert(object, clazz);
+	}
 	
 	public static String toJSONString(Object value) {
 		return toJSONString(value,DEFAULT_ENCODING);

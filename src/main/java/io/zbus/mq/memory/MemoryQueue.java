@@ -43,6 +43,11 @@ public class MemoryQueue implements MessageQueue{
 	public Channel channel(String channelId) {
 		return channelTable.get(channelId).clone(); 
 	}
+	
+	@Override
+	public Map<String, Channel> channels() { 
+		return channelTable;
+	}
 
 	@Override
 	public void saveChannel(Channel channel) {  

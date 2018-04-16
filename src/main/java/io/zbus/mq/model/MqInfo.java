@@ -3,7 +3,7 @@ package io.zbus.mq.model;
 import java.util.HashMap;
  
 
-public class MessageQueueInfo extends HashMap<String, Object> { 
+public class MqInfo extends HashMap<String, Object> { 
 	private static final long serialVersionUID = 8802567360098590561L;  
 	
 	public String getName() {

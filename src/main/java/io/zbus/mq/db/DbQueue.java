@@ -27,6 +27,12 @@ public class DbQueue implements MessageQueue{
 	public Channel channel(String channelId) {
 		return null;
 	}
+	
+	@Override
+	public Map<String, Channel> channels() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public void saveChannel(Channel channel) {

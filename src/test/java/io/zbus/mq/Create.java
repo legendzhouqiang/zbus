@@ -3,7 +3,7 @@ package io.zbus.mq;
 import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.mq.model.ChannelInfo;
-import io.zbus.mq.model.MessageQueueInfo;
+import io.zbus.mq.model.MqInfo;
 import io.zbus.net.EventLoop;
 
 public class Create { 
@@ -21,7 +21,7 @@ public class Create {
 			JSONObject req = new JSONObject();
 			req.put("cmd", "create"); 
 			
-			MessageQueueInfo mqInfo = new MessageQueueInfo();
+			MqInfo mqInfo = new MqInfo();
 			mqInfo.setName("MyMQ");           
 			
 			ChannelInfo channelInfo = new ChannelInfo();

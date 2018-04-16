@@ -1,22 +1,28 @@
 package io.zbus.mq;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import io.zbus.mq.model.MessageDispatcher;
 import io.zbus.mq.model.MessageQueue;
+import io.zbus.mq.model.MqManager;
 import io.zbus.mq.model.Subscription;
+import io.zbus.mq.model.SubscriptionManager;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
 import io.zbus.net.http.HttpMessage;
 
 public class MqServerAdaptor extends ServerAdaptor { 
-	private Map<String, Subscription> subscriptionTable = new ConcurrentHashMap<>();
-	private Map<String, MessageQueue> mqTable = new ConcurrentHashMap<>();
+	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
+	private MessageDispatcher messageDispatcher;
+	private MqManager mqManager = new MqManager();
+	
+	
+	public MqServerAdaptor() {
+		messageDispatcher = new MessageDispatcher(subscriptionManager, sessionTable);
+	}
 	
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
@@ -38,11 +44,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 		String sessId = sess.id();
 		super.cleanSession(sess); 
 		
-		subscriptionTable.remove(sessId);
+		subscriptionManager.removeByClientId(sessId);
 	}
 	
 	protected void handleJsonMessage(JSONObject json, Session sess) throws IOException { 
-		String cmd = json.getString(Protocol.CMD);
+		String cmd = (String)json.remove(Protocol.CMD);
 		if (cmd == null) {
 			JSONObject res = new JSONObject();
 			res.put(Protocol.STATUS, 400);
@@ -65,46 +71,40 @@ public class MqServerAdaptor extends ServerAdaptor {
 	} 
 	
 	private void handlePubMessage(JSONObject json, Session sess) throws IOException {
-		String topic = json.getString(Protocol.TOPIC);
-		for(Entry<String, Subscription> e : subscriptionTable.entrySet()) {
-			Subscription sub = e.getValue();
-			if(sub.topics.contains(topic)) {
-				Session matched = sessionTable.get(sub.clientId);
-				if(matched != null) { 
-					json.remove(Protocol.CMD);
-					sendMessage(matched, json, true); 
-				}
-			}
+		String mqName = json.getString(Protocol.MQ);
+		String channel = json.getString(Protocol.CHANNEL); 
+		
+		MessageQueue mq = mqManager.get(mqName);
+		if(mq == null) { 
+			return;
 		} 
+		mq.write(json); 
+		messageDispatcher.dispatch(mq, channel); 
 	}
 	
 	private void handleSubMessage(JSONObject json, Session sess) throws IOException {
-		Subscription sub = subscriptionTable.get(sess.id()); 
+		Subscription sub = subscriptionManager.get(sess.id());
+		String mq = json.getString(Protocol.MQ);
+		String channel = json.getString(Protocol.CHANNEL);
+		if(mq == null) mq = "";
+		if(channel == null) channel = sess.id();
 		if(sub == null) {
 			sub = new Subscription();
-			sub.clientId = sess.id();
-			subscriptionTable.put(sub.clientId, sub);
+			sub.clientId = sess.id(); 
+			sub.mq = mq;
+			sub.channel = channel;
+			
+			subscriptionManager.add(sub);
 		} 
 		
 		String topic = json.getString(Protocol.TOPIC);
 		sub.topics.clear();
-		sub.topics.add(topic);
+		sub.topics.add(topic); 
 		
-		String mqName = json.getString(Protocol.MQ);
-		if(mqName == null) {
-			mqName = ""; //empty name
-		}
-		
-		MessageQueue mq = mqTable.get(mqName);
-		if(mq == null) { 
-			// mq: { name: xx }
-			// channel: { name: xxx }
-		}
-		
-		String channel = json.getString(Protocol.CHANNEL);
-		if(channel == null) {
-			
-		}
+		MessageQueue queue = mqManager.get(mq);
+		if(queue != null) {
+			messageDispatcher.dispatch(queue, channel);
+		} 
 	} 
 	
 	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {

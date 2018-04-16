@@ -41,6 +41,7 @@ public interface MessageQueue {
 	Channel channel(String channelId);
 	void saveChannel(Channel channel);
 	void removeChannel(String channelId);  
+	Map<String, Channel> channels(); 
 	
 	Map<String, Object> attributes();
 	void flush();

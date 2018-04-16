@@ -13,7 +13,7 @@ public class StrKit {
 	public static boolean isEmpty(String str) {
 		return str == null || str.trim().equals(""); 
 	}
-
+	
 	public static Map<String, String> kvp(String value){
 		return StrKit.kvp(value, "&");
 	}
