@@ -3,8 +3,8 @@ package io.zbus.rpc.http;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
@@ -51,16 +51,20 @@ public class ServiceBootstrap implements Closeable {
 		return this;
 	}  
 	
-	public ServiceBootstrap setStackTrace(boolean stackTrace) {
-		this.processor.setEnableStackTrace(stackTrace);
+	public ServiceBootstrap setStackTraceEnabled(boolean stackTrace) {
+		this.processor.setStackTraceEnabled(stackTrace);
 		return this;
 	} 
 	
-	public ServiceBootstrap setMethodPage(boolean methodPage) {
-		this.processor.setEnableMethodPage(methodPage);
+	public ServiceBootstrap setMethodPageEnabled(boolean methodPage) {
+		this.processor.setMethodPageEnabled(methodPage);
 		return this;
 	}  
 	
+	public ServiceBootstrap setMethodPageModule(String monitorModuleName) {
+		this.processor.setMethodPageModule(monitorModuleName);
+		return this;
+	}  
 	
 	
 	public void setBeforeFilter(RpcFilter beforeFilter) {
@@ -83,7 +87,7 @@ public class ServiceBootstrap implements Closeable {
 		Set<Class<?>> classes = ClassKit.scan(Remote.class);
 		for(Class<?> clazz : classes){
 			processor.addModule(clazz);
-		}  
+		}   
 	}
 	
 	public RpcProcessor processor() {
@@ -96,6 +100,10 @@ public class ServiceBootstrap implements Closeable {
 		if(autoDiscover){
 			initProcessor();
 		} 
+		if(processor.isMethodPageEnabled()) {
+			processor.enableMethodPageModule();
+		}
+		
 		eventLoop = new EventLoop();
 		if(keyFile != null && certFile != null) {
 			SslContext context = Ssl.buildServerSsl(certFile, keyFile);

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 
 import io.zbus.net.http.HttpMessage;
+import io.zbus.rpc.Param;
 import io.zbus.rpc.Remote; 
 
 @Remote
@@ -18,7 +19,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		return string;
 	}
 	
-	public String getString(String name) { 
+	public String getString(@Param("0") String name) { 
 		if(name == null){
 			System.out.println("got null: "+ name);
 		}
@@ -174,6 +175,12 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		res.setStatus(200);
 		res.setBody("html" + System.currentTimeMillis());
 		return res;
+	}
+	
+	@Override
+	public String index(String defaultValue) { 
+		if(defaultValue == null) return "default";
+		return defaultValue;
 	}
 }
 

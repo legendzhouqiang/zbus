@@ -18,17 +18,18 @@ public class RpcProcessor {
 
 	Map<String, MethodInstance> methods = new HashMap<>();
 	Map<String, List<RpcMethod>> object2Methods = new HashMap<>();
-
+	
 	String docUrlRoot = "/";
-	boolean enableStackTrace = true;
-	boolean enableMethodPage = true; 
+	boolean stackTraceEnabled = true;
+	boolean methodPageEnabled = true; 
+	String methodPageModule = "index";
 	
 	protected RpcFilter beforeFilter;
 	protected RpcFilter afterFilter;
-	protected RpcFilter authFilter;
-
-	public RpcProcessor(){
-		addModule("index", new DocRender(this, docUrlRoot));
+	protected RpcFilter authFilter; 
+	
+	public void enableMethodPageModule() {
+		addModule(methodPageModule, new DocRender(this, docUrlRoot));
 	}
 	
 	public void addModule(Object... services) {
@@ -219,7 +220,11 @@ public class RpcProcessor {
 			for (String type : req.getParamTypes()) {
 				sb.append(type + ",");
 			}
-		} 
+		} else if(req.getParams() != null) {
+			for(Object param : req.getParams()) {
+				sb.append(param.getClass().getName() + ",");
+			}
+		}
 		String module = req.getModule();
 		String method = req.getMethod();
 		String key = module + ":" + method + ":" + sb.toString();
@@ -257,35 +262,8 @@ public class RpcProcessor {
 			return new String[] { key, key3 };
 		}
 		return new String[] { key, key2, key3 };
-	}
-
-	private void checkParamTypes(MethodInstance target, Request req) {
-		Class<?>[] targetParamTypes = target.method.getParameterTypes();
-		int requiredLength = targetParamTypes.length;
-
-		if (requiredLength != req.getParams().size()) {
-			String requiredParamTypeString = "";
-			for (int i = 0; i < targetParamTypes.length; i++) {
-				Class<?> paramType = targetParamTypes[i];
-				requiredParamTypeString += paramType.getName();
-				if (i < targetParamTypes.length - 1) {
-					requiredParamTypeString += ", ";
-				}
-			}
-			List<Object> params = req.getParams();
-			String gotParamsString = "";
-			for (int i = 0; i < params.size(); i++) {
-				gotParamsString += params.get(i);
-				if (i < params.size() - 1) {
-					gotParamsString += ", ";
-				}
-			}
-			String errorMsg = String.format("Method defined: %s(%s), But called: %s(%s)", target.method.getName(),
-					requiredParamTypeString, target.method.getName(), gotParamsString);
-			throw new IllegalArgumentException(errorMsg);
-		}
-	}
-
+	} 
+	
 	public Response process(Request req) {  
 		Response response = new Response();  
 		try { 
@@ -322,7 +300,7 @@ public class RpcProcessor {
 			}
 			 
 		} catch (Throwable e) {
-			response.setData(new RpcException(e.getMessage(), e.getCause(), false, enableStackTrace)); 
+			response.setData(new RpcException(e.getMessage(), e.getCause(), false, stackTraceEnabled)); 
 			response.setStatus(500);
 		} finally {
 			bindRequestResponse(req, response); 
@@ -341,20 +319,24 @@ public class RpcProcessor {
 		try {   
 			MethodMatchResult matchResult = matchMethod(req);
 			MethodInstance target = matchResult.method;
-			checkParamTypes(target, req); 
+			//checkParamTypes(target, req); 
 			
 			Class<?>[] targetParamTypes = target.method.getParameterTypes();
 			Object[] invokeParams = new Object[targetParamTypes.length];
 			List<Object> reqParams = req.getParams(); 
 			for (int i = 0; i < targetParamTypes.length; i++) { 
-				invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+				if(i>=reqParams.size()) {
+					invokeParams[i] = null;
+				} else {
+					invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+				}
 			}
 			response.setData(target.method.invoke(target.instance, invokeParams)); 
 			response.setStatus(200);
 		} catch (InvocationTargetException e) {  
 			Throwable t = e.getTargetException();
 			if(t != null) {
-				if(!enableStackTrace) {
+				if(!stackTraceEnabled) {
 					t.setStackTrace(new StackTraceElement[0]);
 				}
 			}
@@ -362,23 +344,33 @@ public class RpcProcessor {
 			response.setStatus(500);
 		} 
 	}
+	
+	protected void checkParamTypes(MethodInstance target, Request req) {
+		Class<?>[] targetParamTypes = target.method.getParameterTypes();
+		int requiredLength = targetParamTypes.length;
 
-	public boolean isEnableStackTrace() {
-		return enableStackTrace;
-	}
-
-	public void setEnableStackTrace(boolean enableStackTrace) {
-		this.enableStackTrace = enableStackTrace;
-	}
-
-	public boolean isEnableMethodPage() {
-		return enableMethodPage;
-	}
-
-	public void setEnableMethodPage(boolean enableMethodPage) {
-		this.enableMethodPage = enableMethodPage;
+		if (requiredLength != req.getParams().size()) {
+			String requiredParamTypeString = "";
+			for (int i = 0; i < targetParamTypes.length; i++) {
+				Class<?> paramType = targetParamTypes[i];
+				requiredParamTypeString += paramType.getName();
+				if (i < targetParamTypes.length - 1) {
+					requiredParamTypeString += ", ";
+				}
+			}
+			List<Object> params = req.getParams();
+			String gotParamsString = "";
+			for (int i = 0; i < params.size(); i++) {
+				gotParamsString += params.get(i);
+				if (i < params.size() - 1) {
+					gotParamsString += ", ";
+				}
+			}
+			String errorMsg = String.format("Method defined: %s(%s), But called: %s(%s)", target.method.getName(),
+					requiredParamTypeString, target.method.getName(), gotParamsString);
+			throw new IllegalArgumentException(errorMsg);
+		}
 	} 
- 
 
 	public void setBeforeFilter(RpcFilter beforeFilter) {
 		this.beforeFilter = beforeFilter;
@@ -390,6 +382,30 @@ public class RpcProcessor {
 
 	public void setAuthFilter(RpcFilter authFilter) {
 		this.authFilter = authFilter;
+	} 
+
+	public boolean isStackTraceEnabled() {
+		return stackTraceEnabled;
+	}
+
+	public void setStackTraceEnabled(boolean stackTraceEnabled) {
+		this.stackTraceEnabled = stackTraceEnabled;
+	}
+
+	public boolean isMethodPageEnabled() {
+		return methodPageEnabled;
+	}
+
+	public void setMethodPageEnabled(boolean methodPageEnabled) {
+		this.methodPageEnabled = methodPageEnabled;
+	}
+
+	public String getMethodPageModule() {
+		return methodPageModule;
+	}
+
+	public void setMethodPageModule(String methodPageModule) {
+		this.methodPageModule = methodPageModule;
 	}
 
 	private static class MethodInstance {

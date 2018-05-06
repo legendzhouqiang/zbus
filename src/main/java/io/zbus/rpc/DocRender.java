@@ -24,7 +24,7 @@ public class DocRender {
 		HttpMessage result = new HttpMessage(); 
 		Map<String, Object> model = new HashMap<String, Object>();
 		 
-		if(!this.rpcProcessor.enableMethodPage){
+		if(!this.rpcProcessor.isMethodPageEnabled()){
 			result.setBody("<h1>Method page disabled</h1>");
 			return result;
 		}

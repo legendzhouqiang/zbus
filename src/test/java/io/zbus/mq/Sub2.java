@@ -20,8 +20,8 @@ public class Sub2 {
 		ws.onOpen = () -> { 
 			Map<String, Object> req = new HashMap<>();
 			req.put("cmd", "sub"); 
-			req.put("topic", "/abc"); 
-			req.put("channel", "share1");
+			req.put("topic", "/abcedf"); 
+			req.put("channel", "share2");
 			 
 			ws.sendMessage(req);
 		};

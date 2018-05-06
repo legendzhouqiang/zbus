@@ -9,7 +9,8 @@ public class RpcServerExample {
 	public static void main(String[] args) throws Exception {
 		ServiceBootstrap b = new ServiceBootstrap();
 
-		b.setStackTrace(false);
+		b.setStackTraceEnabled(false);
+		//b.setMethodPageModule("m");
 		b.addModule("example", InterfaceExampleImpl.class);
 		b.setPort(80);
 		b.start();

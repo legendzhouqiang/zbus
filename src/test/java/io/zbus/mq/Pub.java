@@ -9,7 +9,7 @@ public class Pub {
 
 	public static void main(String[] args) throws Exception {
 		EventLoop loop = new EventLoop();
-		MqClient ws = new MqClient("localhost:15555", loop);
+		MqClient ws = new MqClient("localhost:15555", loop); 
 
 		ws.onMessage = msg -> {
 			System.out.println(msg);
