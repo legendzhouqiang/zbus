@@ -1,5 +1,7 @@
 package io.zbus.net.http;
 
+import java.io.IOException;
+
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.net.EventLoop;
@@ -27,8 +29,12 @@ public class HttpClientAsync {
 			client.close();
 			loop.close();
 		}, e -> {
-			client.close();
-			loop.close();
+			try {
+				client.close();
+				loop.close();
+			} catch (IOException e1) { 
+				e1.printStackTrace();
+			} 
 		});
 	}
 }

@@ -1,35 +1,42 @@
 package io.zbus.net.ws;
 
-import io.zbus.kit.JsonKit;
-import io.zbus.kit.StrKit;
-import io.zbus.net.EventLoop;
-import io.zbus.net.http.WebsocketClient;
-import io.zbus.rpc.Request;
+import java.io.IOException;
+
+import io.zbus.net.WebsocketClient;
 
 public class WebSocketExample {
 
-	public static void main(String[] args) throws Exception {
-		EventLoop loop = new EventLoop();
-		String address = "ws://localhost/";
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws Exception { 
+		String address = "wss://stream.binance.com:9443/stream?streams=hsrbtc@depth/btcusdt@depth";
 
-		WebsocketClient ws = new WebsocketClient(address, loop);
+		WebsocketClient ws = new WebsocketClient(address);
 
-		ws.onMessage = msg -> {
-			System.out.println(msg);
-			ws.close();
-			loop.close();
+		ws.onText = data -> {
+			 System.out.println(data);
+		};  
+		
+		ws.onBinary = data ->{
+			System.out.println(data.remaining());
 		};
-
-		ws.onOpen = () -> {
-			Request req = new Request();
-			req.setModule("example");
-			req.setMethod("plus");
-			req.setParams(1, 2);
-			req.setId(StrKit.uuid());
-
-			ws.sendMessage(JsonKit.toJSONString(req));
-		};
-
-		ws.connect();
+		 
+		ws.connect(); 
+		new Thread(()->{
+			while(true) {
+				if(System.currentTimeMillis() - ws.lastActiveTime > 10_000) {
+					try {
+						ws.close();
+						ws.connect();
+					} catch (IOException e) { 
+						e.printStackTrace();
+					}
+				}
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) { 
+					e.printStackTrace();
+				}
+			}
+		}).start();
 	}
 }

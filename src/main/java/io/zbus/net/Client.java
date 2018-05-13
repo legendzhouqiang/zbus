@@ -29,7 +29,7 @@ import io.zbus.kit.logging.LoggerFactory;
 public class Client<REQ, RES> implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Client.class);
 
-	public volatile MessageHandler<RES> onMessage;
+	public volatile DataHandler<RES> onMessage;
 	public volatile ErrorHandler onError;
 	public volatile EventHandler onOpen;
 	public volatile EventHandler onClose;

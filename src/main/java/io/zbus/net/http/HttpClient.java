@@ -16,7 +16,7 @@ import io.zbus.kit.logging.LoggerFactory;
 import io.zbus.net.Client;
 import io.zbus.net.ErrorHandler;
 import io.zbus.net.EventLoop;
-import io.zbus.net.MessageHandler;
+import io.zbus.net.DataHandler;
 
 public class HttpClient extends Client<HttpMessage, HttpMessage> {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
@@ -108,7 +108,7 @@ public class HttpClient extends Client<HttpMessage, HttpMessage> {
 	}
 
 	
-	public void request(HttpMessage req, final MessageHandler<HttpMessage> messageHandler,
+	public void request(HttpMessage req, final DataHandler<HttpMessage> messageHandler,
 			final ErrorHandler errorHandler) {
 		fillCommonHeader(req);
 		final AtomicLong start = new AtomicLong(System.currentTimeMillis());  

@@ -15,13 +15,13 @@ import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.net.ErrorHandler;
 import io.zbus.net.EventLoop;
-import io.zbus.net.MessageHandler;
+import io.zbus.net.DataHandler;
 import io.zbus.net.http.WebsocketClient;
 
 public class RpcClient extends WebsocketClient {
 	static class RequestContext {
 		Request request;
-		MessageHandler<Response> onData;
+		DataHandler<Response> onData;
 		ErrorHandler onError;
 	}
 
@@ -46,11 +46,11 @@ public class RpcClient extends WebsocketClient {
 		return address;
 	} 
 	
-	public void invoke(Request request, MessageHandler<Response> dataHandler) {
+	public void invoke(Request request, DataHandler<Response> dataHandler) {
 		invoke(request, dataHandler, null);
 	}
 
-	public void invoke(Request request, MessageHandler<Response> dataHandler, ErrorHandler errorHandler) {
+	public void invoke(Request request, DataHandler<Response> dataHandler, ErrorHandler errorHandler) {
 		request.setId(StrKit.uuid());
 		
 		RequestContext ctx = new RequestContext();
