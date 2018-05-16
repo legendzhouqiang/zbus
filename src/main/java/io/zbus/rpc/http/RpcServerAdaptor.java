@@ -14,10 +14,10 @@ import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcProcessor;
 
-public class HttpRpcServerAdaptor extends ServerAdaptor {
+public class RpcServerAdaptor extends ServerAdaptor {
 	protected final RpcProcessor processor; 
 
-	public HttpRpcServerAdaptor(RpcProcessor processor) {
+	public RpcServerAdaptor(RpcProcessor processor) {
 		this.processor = processor;
 	}
 

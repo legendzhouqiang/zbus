@@ -5,7 +5,7 @@ import io.zbus.rpc.biz.User;
 
 public class RpcClientExample {
 
-	public static void main(String[] args) throws Exception { 
+	public static void main(String[] args) throws Exception {  
 		RpcClient rpc = new RpcClient("localhost"); 
 
 		Request req = new Request();

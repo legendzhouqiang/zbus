@@ -111,7 +111,7 @@ public class ServiceBootstrap implements Closeable {
 		}
 		
 		server = new HttpWsServer(eventLoop);    
-		HttpRpcServerAdaptor adaptor = new HttpRpcServerAdaptor(this.processor); 
+		RpcServerAdaptor adaptor = new RpcServerAdaptor(this.processor); 
 		server.start(this.host, this.port, adaptor); 
 		
 		return this;
