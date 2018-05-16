@@ -8,10 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
 
 public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);

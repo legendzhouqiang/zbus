@@ -6,8 +6,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.zbus.net.DataHandler;
 import io.zbus.net.ErrorHandler;
 import io.zbus.net.EventHandler;

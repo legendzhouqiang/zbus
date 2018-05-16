@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -22,9 +25,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory; 
+import io.netty.handler.timeout.IdleStateHandler; 
 
 public class Server implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(Server.class); 
@@ -75,12 +76,12 @@ public class Server implements Closeable {
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if(future.isSuccess()){
 					if(loop.isSslEnabled()){
-						log.info("Server([SSL]%s:%d) started", host, port);
+						log.info("Server([SSL]{}:{}) started", host, port);
 					} else {
-						log.info("Server(%s:%d) started", host, port);
+						log.info("Server({}:{}) started", host, port);
 					} 
 				} else { 
-					String message = String.format("Server(%s:%d) failed to start", host, port);
+					String message = String.format("Server({}:{}) failed to start", host, port);
 					throw new IOException(message, future.cause());
 				}
 			}

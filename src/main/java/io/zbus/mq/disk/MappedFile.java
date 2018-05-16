@@ -12,8 +12,8 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
  
 
 public class MappedFile implements Closeable {   

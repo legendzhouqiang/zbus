@@ -11,14 +11,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.zbus.kit.FileKit;
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
 
 public class Ssl {
 	private static final Logger log = LoggerFactory.getLogger(Ssl.class);

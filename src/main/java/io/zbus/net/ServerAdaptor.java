@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ServerAdaptor implements IoAdaptor{    
 	private static final Logger log = LoggerFactory.getLogger(ServerAdaptor.class); 

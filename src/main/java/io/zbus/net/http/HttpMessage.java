@@ -43,9 +43,10 @@ import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.zbus.kit.logging.Logger;
-import io.zbus.kit.logging.LoggerFactory;
 
 public class HttpMessage {  
 	private static final Logger log = LoggerFactory.getLogger(HttpMessage.class); 
