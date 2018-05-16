@@ -38,12 +38,12 @@ public class WebsocketClient implements Closeable {
 	
 	private List<String> cachedSendingMessages = new ArrayList<String>(); 
 	
-	public WebsocketClient(String streamUrl, OkHttpClient client) { 
+	public WebsocketClient(String address, OkHttpClient client) { 
 		this.client = client;
-		if(!streamUrl.startsWith("ws://") && !streamUrl.startsWith("wss://")) {
-			streamUrl = "ws://" + streamUrl;
+		if(!address.startsWith("ws://") && !address.startsWith("wss://")) {
+			address = "ws://" + address;
 		}
-		this.address = streamUrl; 
+		this.address = address; 
 		
 		onClose = ()-> {
 			synchronized (wsLock) {
@@ -73,8 +73,8 @@ public class WebsocketClient implements Closeable {
 		};
 	}
 	
-	public WebsocketClient(String streamUrl){
-		this(streamUrl, new OkHttpClient());  
+	public WebsocketClient(String address){
+		this(address, new OkHttpClient());  
 	} 
 	
 	

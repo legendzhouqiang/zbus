@@ -15,7 +15,8 @@ import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.net.DataHandler;
 import io.zbus.net.ErrorHandler;
-import io.zbus.net.http.WebsocketClient; 
+import io.zbus.net.http.WebsocketClient;
+import okhttp3.OkHttpClient; 
 
 public class RpcClient extends WebsocketClient {
 	static class RequestContext {
@@ -27,7 +28,11 @@ public class RpcClient extends WebsocketClient {
 	private Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>();
 
 	public RpcClient(String address) {  
-		super(address);
+		this(address, new OkHttpClient());
+	}  
+	
+	public RpcClient(String address, OkHttpClient httpClient) {
+		super(address, httpClient);
 		onText = msg -> {
 			Response response = JsonKit.parseObject(msg, Response.class);
 			RequestContext ctx = callbackTable.remove(response.getId());
@@ -35,7 +40,7 @@ public class RpcClient extends WebsocketClient {
 				ctx.onData.handle(response);
 			}
 		}; 
-	}  
+	}
 	
 	public void invoke(Request request, DataHandler<Response> dataHandler) {
 		invoke(request, dataHandler, null);
