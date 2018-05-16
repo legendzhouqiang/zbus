@@ -46,7 +46,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.handler.ssl.SslHandler;
-import io.zbus.net.http.HttpMessage.FileForm; 
+import io.zbus.net.http.Message.FileForm; 
 
 
 public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
@@ -67,7 +67,7 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
     
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
-    	return msg instanceof HttpMessage || msg instanceof byte[];
+    	return msg instanceof Message || msg instanceof byte[];
     }
      
     
@@ -86,14 +86,14 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 			return; 
 		} 
 		
-		if(!(obj instanceof HttpMessage)){
+		if(!(obj instanceof Message)){
 			log.warn("HttpMessage required");
 			return;
 		} 
 		
 		//2) HTTP mode  
 		FullHttpMessage httpMessage = null;  
-		HttpMessage msg = (HttpMessage)obj;
+		Message msg = (Message)obj;
 		if (msg.getStatus() == null) {// as request
 			httpMessage = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(msg.getMethod()),
 					msg.getUrl()); 
@@ -102,8 +102,8 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 					HttpResponseStatus.valueOf(Integer.valueOf(msg.getStatus())));
 		}
 		//content-type and encoding
-		String contentType = msg.getHeader(HttpMessage.CONTENT_TYPE); 
-		String encoding = msg.getHeader(HttpMessage.ENCODING);
+		String contentType = msg.getHeader(Message.CONTENT_TYPE); 
+		String encoding = msg.getHeader(Message.ENCODING);
 		if(encoding != null){
 			encoding = "utf-8";
 			if(contentType == null) {
@@ -112,12 +112,12 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 			contentType += "; charset=" + encoding;
 		}
 		if(contentType != null){
-			httpMessage.headers().set(HttpMessage.CONTENT_TYPE, contentType);
+			httpMessage.headers().set(Message.CONTENT_TYPE, contentType);
 		}
 		
 		for (Entry<String, String> e : msg.getHeaders().entrySet()) {
-			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)) continue;
-			if(e.getKey().equalsIgnoreCase(HttpMessage.ENCODING)) continue;
+			if(e.getKey().equalsIgnoreCase(Message.CONTENT_TYPE)) continue;
+			if(e.getKey().equalsIgnoreCase(Message.ENCODING)) continue;
 			
 			httpMessage.headers().add(e.getKey().toLowerCase(), e.getValue());
 		}
@@ -145,8 +145,8 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 		}
 		 
 		io.netty.handler.codec.http.HttpMessage httpMsg = (io.netty.handler.codec.http.HttpMessage) obj; 
-		HttpMessage msg = decodeHeaders(httpMsg); 
-		String contentType = msg.getHeader(HttpMessage.CONTENT_TYPE);
+		Message msg = decodeHeaders(httpMsg); 
+		String contentType = msg.getHeader(Message.CONTENT_TYPE);
 		
 		//Body
 		ByteBuf body = null;
@@ -158,7 +158,7 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 		//Special case for file uploads
 		if(httpMsg instanceof HttpRequest 
 				&& contentType != null 
-				&& contentType.startsWith(HttpMessage.CONTENT_TYPE_UPLOAD) ){
+				&& contentType.startsWith(Message.CONTENT_TYPE_UPLOAD) ){
 			if(body != null){
 				body = body.duplicate(); //read form will change the body
 			}
@@ -181,16 +181,16 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 		out.add(msg);
 	} 
 
-	private HttpMessage decodeHeaders(io.netty.handler.codec.http.HttpMessage httpMsg){
-		HttpMessage msg = new HttpMessage();
+	private Message decodeHeaders(io.netty.handler.codec.http.HttpMessage httpMsg){
+		Message msg = new Message();
 		Iterator<Entry<String, String>> iter = httpMsg.headers().iteratorAsString();
 		while (iter.hasNext()) {
 			Entry<String, String> e = iter.next();
-			if(e.getKey().equalsIgnoreCase(HttpMessage.CONTENT_TYPE)){ //encoding and type
+			if(e.getKey().equalsIgnoreCase(Message.CONTENT_TYPE)){ //encoding and type
 				String[] typeInfo = httpContentType(e.getValue());
-				msg.setHeader(HttpMessage.CONTENT_TYPE, typeInfo[0]); 
-				if(msg.getHeader(HttpMessage.ENCODING) == null) {
-					msg.setHeader(HttpMessage.ENCODING, typeInfo[1]);
+				msg.setHeader(Message.CONTENT_TYPE, typeInfo[0]); 
+				if(msg.getHeader(Message.ENCODING) == null) {
+					msg.setHeader(Message.ENCODING, typeInfo[1]);
 				}
 			} else {
 				msg.setHeader(e.getKey().toLowerCase(), e.getValue());
@@ -215,7 +215,7 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 		return msg;
 	}
 	
-	private void handleUploadMessage(io.netty.handler.codec.http.HttpMessage httpMsg, HttpMessage uploadMessage) throws IOException{
+	private void handleUploadMessage(io.netty.handler.codec.http.HttpMessage httpMsg, Message uploadMessage) throws IOException{
 		if (httpMsg instanceof HttpContent) { 
             HttpContent chunk = (HttpContent) httpMsg;
             decoder.offer(chunk); 
@@ -240,7 +240,7 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
         }
 	}
 	
-	private void handleUploadFile(InterfaceHttpData data, HttpMessage uploadMessage) throws IOException{
+	private void handleUploadFile(InterfaceHttpData data, Message uploadMessage) throws IOException{
 		FileForm fileForm = uploadMessage.fileForm;
         if(uploadMessage.fileForm == null){
         	uploadMessage.fileForm = fileForm = new FileForm();
@@ -254,14 +254,14 @@ public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {
 		
 		if (data.getHttpDataType() == HttpDataType.FileUpload) {
             FileUpload fileUpload = (FileUpload) data;
-            HttpMessage.FileUpload file = new HttpMessage.FileUpload();
+            Message.FileUpload file = new Message.FileUpload();
             file.fileName = fileUpload.getFilename();
             file.contentType = fileUpload.getContentType();
             file.data = fileUpload.get(); 
             
-            List<HttpMessage.FileUpload> uploads = fileForm.files.get(data.getName());
+            List<Message.FileUpload> uploads = fileForm.files.get(data.getName());
             if(uploads == null){
-            	uploads = new ArrayList<HttpMessage.FileUpload>();
+            	uploads = new ArrayList<Message.FileUpload>();
             	fileForm.files.put(data.getName(), uploads);
             }
             uploads.add(file);

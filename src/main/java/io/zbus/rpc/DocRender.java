@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import io.zbus.kit.FileKit;
-import io.zbus.net.http.HttpMessage;
+import io.zbus.net.http.Message;
 import io.zbus.rpc.RpcProcessor.RpcMethod;
 
 public class DocRender { 
@@ -20,8 +20,8 @@ public class DocRender {
 		this.urlPrefix = urlPrefix;
 	}
 
-	public HttpMessage index() throws IOException { 
-		HttpMessage result = new HttpMessage(); 
+	public Message index() throws IOException { 
+		Message result = new Message(); 
 		Map<String, Object> model = new HashMap<String, Object>();
 		 
 		if(!this.rpcProcessor.isMethodPageEnabled()){

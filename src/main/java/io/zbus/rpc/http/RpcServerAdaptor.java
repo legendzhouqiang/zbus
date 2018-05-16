@@ -9,7 +9,7 @@ import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.JsonKit;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
-import io.zbus.net.http.HttpMessage;
+import io.zbus.net.http.Message;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcProcessor;
@@ -23,11 +23,11 @@ public class RpcServerAdaptor extends ServerAdaptor {
 
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
-		HttpMessage reqMsg = null;
+		Message reqMsg = null;
 		Request request = null;
 		boolean writeHttp = true;
-		if (msg instanceof HttpMessage) {
-			reqMsg = (HttpMessage) msg;
+		if (msg instanceof Message) {
+			reqMsg = (Message) msg;
 			request = handleUrlMessage(reqMsg);
 			if (request == null) {
 				request = JSON.parseObject(reqMsg.getBodyString(), Request.class);
@@ -39,8 +39,8 @@ public class RpcServerAdaptor extends ServerAdaptor {
 		
 		Response response = processor.process(request); 
 		
-		if (response.getData() != null && response.getData() instanceof HttpMessage) {
-			HttpMessage res = (HttpMessage) response.getData();
+		if (response.getData() != null && response.getData() instanceof Message) {
+			Message res = (Message) response.getData();
 			if (writeHttp) {
 				if (res.getStatus() == null) {
 					res.setStatus(200);
@@ -55,7 +55,7 @@ public class RpcServerAdaptor extends ServerAdaptor {
 		byte[] data = JsonKit.toJSONBytes(response, "utf8");
 
 		if (writeHttp) {
-			HttpMessage resMsg = new HttpMessage();
+			Message resMsg = new Message();
 			resMsg.setStatus(200);
 			resMsg.setEncoding("utf8");
 			resMsg.setHeader("content-type", "application/json");
@@ -66,7 +66,7 @@ public class RpcServerAdaptor extends ServerAdaptor {
 		}
 	}
 
-	protected Request handleUrlMessage(HttpMessage msg) {
+	protected Request handleUrlMessage(Message msg) {
 		String url = msg.getUrl();
 		if (url == null || "/".equals(url)) {
 			return null;

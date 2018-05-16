@@ -3,7 +3,7 @@ package io.zbus.rpc.biz;
 import java.util.List;
 import java.util.Map;
 
-import io.zbus.net.http.HttpMessage;
+import io.zbus.net.http.Message;
 
 public interface InterfaceExample{
   
@@ -64,5 +64,5 @@ public interface InterfaceExample{
 	
 	String index(String defaultValue);
 	
-	HttpMessage html();
+	Message html();
 }

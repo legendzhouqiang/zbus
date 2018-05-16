@@ -13,7 +13,7 @@ import io.zbus.mq.model.Subscription;
 import io.zbus.mq.model.SubscriptionManager;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session;
-import io.zbus.net.http.HttpMessage;
+import io.zbus.net.http.Message;
 
 public class MqServerAdaptor extends ServerAdaptor { 
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
@@ -30,8 +30,8 @@ public class MqServerAdaptor extends ServerAdaptor {
 		JSONObject json = null;
 		if (msg instanceof byte[]) {
 			json = JSONObject.parseObject(new String((byte[])msg));
-		} else if (msg instanceof HttpMessage) {
-			HttpMessage httpMessage = (HttpMessage)msg;
+		} else if (msg instanceof Message) {
+			Message httpMessage = (Message)msg;
 			json = JSONObject.parseObject(httpMessage.getBodyString()); 
 		} else {
 			throw new IllegalStateException("Not support message type");
@@ -122,7 +122,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		}
 		
-		HttpMessage res = new HttpMessage();
+		Message res = new Message();
 		Integer status = json.getInteger(Protocol.STATUS);
 		if(status == null) status = 200; 
 		res.setStatus(status);

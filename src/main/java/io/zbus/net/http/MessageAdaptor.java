@@ -30,28 +30,28 @@ import io.zbus.net.SessionMessageHandler;
 import io.zbus.net.ServerAdaptor;
 import io.zbus.net.Session; 
 
-public class HttpMessageAdaptor extends ServerAdaptor{     
-	protected SessionMessageHandler<HttpMessage> filterHandler;   
-	protected Map<String, SessionMessageHandler<HttpMessage>> handlerMap = new ConcurrentHashMap<>();  
+public class MessageAdaptor extends ServerAdaptor{     
+	protected SessionMessageHandler<Message> filterHandler;   
+	protected Map<String, SessionMessageHandler<Message>> handlerMap = new ConcurrentHashMap<>();  
 	
-	public HttpMessageAdaptor(){ 
+	public MessageAdaptor(){ 
 		this(null);
 	}
 	
-	public HttpMessageAdaptor(Map<String, Session> sessionTable){
+	public MessageAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable); 
 	} 
 	
-	public void url(String url, SessionMessageHandler<HttpMessage> handler){ 
+	public void url(String url, SessionMessageHandler<Message> handler){ 
     	this.handlerMap.put(url, handler);
     }
 	 
-    public void registerFilterHandler(SessionMessageHandler<HttpMessage> filterHandler) {
+    public void registerFilterHandler(SessionMessageHandler<Message> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
     public void onMessage(Object obj, Session sess) throws IOException {  
-    	HttpMessage msg = (HttpMessage)obj;  
+    	Message msg = (Message)obj;  
     	final String msgId = msg.getId();
     	handleUrlMessage(msg);
     	
@@ -60,13 +60,13 @@ public class HttpMessageAdaptor extends ServerAdaptor{
     	}
     	
     	String url = msg.getUrl();
-    	SessionMessageHandler<HttpMessage> handler = handlerMap.get(url);
+    	SessionMessageHandler<Message> handler = handlerMap.get(url);
     	if(handler != null){
     		handler.handle(msg, sess);
     		return;
     	}  
     	
-    	HttpMessage res = new HttpMessage();
+    	Message res = new Message();
     	res.setId(msgId); 
     	res.setStatus(404);
     	String text = String.format("404: %s Not Found", url);
@@ -74,7 +74,7 @@ public class HttpMessageAdaptor extends ServerAdaptor{
     	sess.write(res); 
     }  
     
-    protected void handleUrlMessage(HttpMessage msg){ 
+    protected void handleUrlMessage(Message msg){ 
     	if(msg.getCommand() != null){
     		return;
     	} 

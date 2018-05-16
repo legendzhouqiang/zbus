@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.net.http.HttpMessage;
+import io.zbus.net.http.Message;
 import io.zbus.rpc.Param;
 import io.zbus.rpc.Remote; 
 
@@ -170,8 +170,8 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	} 
 	
 	@Override
-	public HttpMessage html() {
-		HttpMessage res = new HttpMessage();
+	public Message html() {
+		Message res = new Message();
 		res.setStatus(200);
 		res.setBody("html" + System.currentTimeMillis());
 		return res;

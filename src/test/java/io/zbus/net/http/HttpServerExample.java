@@ -7,10 +7,10 @@ public class HttpServerExample {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) { 
 		
-		HttpMessageAdaptor adaptor = new HttpMessageAdaptor();
+		MessageAdaptor adaptor = new MessageAdaptor();
 		
 		adaptor.url("/", (msg, sess) -> {   
-			HttpMessage res = new HttpMessage();
+			Message res = new Message();
 			res.setStatus(200);
 			
 			res.setId(msg.getId()); //match the ID for response 
