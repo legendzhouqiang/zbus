@@ -13,10 +13,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.net.ErrorHandler;
-import io.zbus.net.EventLoop;
 import io.zbus.net.DataHandler;
-import io.zbus.net.http.WebsocketClient;
+import io.zbus.net.ErrorHandler;
+import io.zbus.net.http.WebsocketClient; 
 
 public class RpcClient extends WebsocketClient {
 	static class RequestContext {
@@ -27,24 +26,16 @@ public class RpcClient extends WebsocketClient {
 
 	private Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>();
 
-	public RpcClient(String address, EventLoop loop) {
-		super(normalizeAddress(address), loop);
-
-		onMessage = msg -> {
+	public RpcClient(String address) {  
+		super(address);
+		onText = msg -> {
 			Response response = JsonKit.parseObject(msg, Response.class);
 			RequestContext ctx = callbackTable.remove(response.getId());
 			if (ctx != null) {
 				ctx.onData.handle(response);
 			}
-		};
-	} 
-	 
-	private static String normalizeAddress(String address) {
-		if(!address.startsWith("ws://") && !address.startsWith("wss://")) {
-			address = "ws://" + address;
-		}
-		return address;
-	} 
+		}; 
+	}  
 	
 	public void invoke(Request request, DataHandler<Response> dataHandler) {
 		invoke(request, dataHandler, null);

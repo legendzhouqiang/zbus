@@ -1,15 +1,12 @@
 package io.zbus.rpc;
 
-import io.zbus.net.EventLoop;
 import io.zbus.rpc.biz.InterfaceExample;
 import io.zbus.rpc.biz.User;
 
 public class RpcClientExample {
 
-	public static void main(String[] args) throws Exception {
-		EventLoop loop = new EventLoop();
-
-		RpcClient rpc = new RpcClient("localhost", loop); 
+	public static void main(String[] args) throws Exception { 
+		RpcClient rpc = new RpcClient("localhost"); 
 
 		Request req = new Request();
 		req.setModule("example");
@@ -25,9 +22,7 @@ public class RpcClientExample {
 		InterfaceExample example = rpc.createProxy(InterfaceExample.class, "example");
 		User[] users = example.getUsers();
 		System.out.println(users);
-		
-		Thread.sleep(2000); 
-		rpc.close();
-		loop.close(); 
+		 
+		rpc.close(); 
 	}
 }

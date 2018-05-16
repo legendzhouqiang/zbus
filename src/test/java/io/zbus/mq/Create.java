@@ -4,16 +4,14 @@ import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.mq.model.ChannelInfo;
 import io.zbus.mq.model.MqInfo;
-import io.zbus.net.EventLoop;
 
 public class Create { 
 	
 	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {
-		EventLoop loop = new EventLoop();  
-		MqClient ws = new MqClient("localhost:15555", loop);
+	public static void main(String[] args) throws Exception { 
+		MqClient ws = new MqClient("localhost:15555");
 
-		ws.onMessage = msg -> {
+		ws.onText = msg -> {
 			System.out.println(msg); 
 		};
 

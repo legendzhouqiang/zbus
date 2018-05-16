@@ -1,144 +1,184 @@
 package io.zbus.net.http;
 
-import java.nio.charset.Charset;
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestEncoder;
-import io.netty.handler.codec.http.HttpResponseDecoder;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException;
-import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import io.zbus.kit.logging.Logger;
 import io.zbus.kit.logging.LoggerFactory;
-import io.zbus.net.Client;
-import io.zbus.net.EventLoop;
+import io.zbus.net.DataHandler;
+import io.zbus.net.ErrorHandler;
+import io.zbus.net.EventHandler;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
 
-public class WebsocketClient extends Client<String, String> {
-	private static final Logger log = LoggerFactory.getLogger(WebsocketClient.class);
-	private boolean websocketReady = false;
+public class WebsocketClient implements Closeable {
+	private static final Logger logger = LoggerFactory.getLogger(WebsocketClient.class); 
 	
-	private Charset charset = Charset.forName("UTF-8");
+	public DataHandler<String> onText;
+	public DataHandler<ByteBuffer> onBinary;
+	public EventHandler onClose;
+	public EventHandler onOpen;
+	public ErrorHandler onError;
 	
-	public WebsocketClient(String address, final EventLoop loop) {
-		super(address, loop); 
-		triggerOpenWhenConnected = false;  //wait for handshake finished 
-		codec(p -> { 
-			p.add(new HttpRequestEncoder());
-			p.add(new HttpResponseDecoder());
-			p.add(new HttpObjectAggregator(loop.getPackageSizeLimit()));
-			p.add(new WebSocketCodec());
-		}); 
+	public int reconnectDelay = 3000; // 3s 
+	public long lastActiveTime = System.currentTimeMillis();
+	
+	private OkHttpClient client; 
+	private String address;
+	private WebSocket ws;
+	private Object wsLock = new Object();
+	
+	private List<String> cachedSendingMessages = new ArrayList<String>(); 
+	
+	public WebsocketClient(String streamUrl, OkHttpClient client) { 
+		this.client = client;
+		if(!streamUrl.startsWith("ws://") && !streamUrl.startsWith("wss://")) {
+			streamUrl = "ws://" + streamUrl;
+		}
+		this.address = streamUrl; 
+		
+		onClose = ()-> {
+			synchronized (wsLock) {
+				if(ws != null){
+					ws.close(1000, null); 
+					ws = null;
+				}
+			}; 
+			
+			try {
+				logger.info("Trying to reconnect " + WebsocketClient.this.address);
+				Thread.sleep(reconnectDelay);
+			} catch (InterruptedException e) {
+				// ignore
+			}  
+			connect();
+		};
+		
+		onError = e -> {;
+			if(onClose != null){
+				try {
+					onClose.handle();
+				} catch (Exception ex) {
+					logger.error(ex.getMessage(), ex);
+				}
+			}
+		};
 	}
+	
+	public WebsocketClient(String streamUrl){
+		this(streamUrl, new OkHttpClient());  
+	} 
+	
 	
 	@Override
-	public boolean active() { 
-		return super.active() && websocketReady;
-	}
-	
-	public void setCharset(Charset charset) {
-		this.charset = charset;
-	}
-	
-	class WebSocketCodec extends MessageToMessageCodec<Object,String> {  
-		private WebSocketClientHandshaker handshaker;  
+	public void close() throws IOException { 
+		onClose = null;
+		onError = null;
 		
-		@Override
-		public void channelActive(ChannelHandlerContext ctx) throws Exception { 
-			this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-	                uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
-			
-			handshaker.handshake(ctx.channel());  
-			
-			super.channelActive(ctx);
-		}  
-		
-		@Override
-		protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception { 
-			WebSocketFrame frame = new TextWebSocketFrame(msg); 
-			out.add(frame);
-			return; 
-		}
-
-		@Override
-		protected void decode(ChannelHandlerContext ctx, Object obj, List<Object> out) throws Exception { 
-			if (obj instanceof WebSocketFrame) {
-				String msg = decodeWebSocketFrame(ctx, (WebSocketFrame) obj);
-				if (msg != null) {
-					out.add(msg);
-				}
+		synchronized (this.wsLock) {
+			if(this.ws != null){
+				this.ws.close(1000, null);  
+				this.ws = null;
+			} 
+		} 
+	} 
+	
+	public void sendMessage(String command){
+		synchronized (wsLock) {
+			if(this.ws == null){
+				this.cachedSendingMessages.add(command);
+				this.connect();
 				return;
 			} 
-		}
-
-		@Override
-		public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-			Channel ch = ctx.channel();
-			if (!handshaker.isHandshakeComplete()) {
-				try {
-					handshaker.finishHandshake(ch, (FullHttpResponse) msg);   
-					websocketReady = true; 
-					for(String req : cachedMessages) {
-						sendMessage(req);
-					}
-					cachedMessages.clear();
-					if(onOpen != null){  
-						onOpen.handle();
-					}  
-				} catch (WebSocketHandshakeException e) { 
-					log.error(e.getMessage(), e); 
-				}
-				return;
-			}
-
-			super.channelRead(ctx, msg);
-		} 
+			this.ws.send(command);
+		}  
+	}  
+	
+	public synchronized void connect(){    
+		connectUnsafe();
+	}
+	
+	protected void connectUnsafe(){   
+		lastActiveTime = System.currentTimeMillis(); 
+		Request request = new Request.Builder()
+				.url(address)
+				.build(); 
 		
-
-		private String decodeWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
-			// Check for closing frame
-			if (frame instanceof CloseWebSocketFrame) {
-				handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-				return null;
+		this.ws = client.newWebSocket(request, new WebSocketListener() {
+			@Override
+			public void onOpen(WebSocket webSocket, Response response) {
+				String msg = String.format("Websocket(%s) connected", address);
+				logger.info(msg);
+				response.close();
+				
+				if(cachedSendingMessages.size()>0){
+					for(String json : cachedSendingMessages){
+						sendMessage(json);
+					}
+				} 
+				if(onOpen != null){
+					try {
+						onOpen.handle();
+					} catch (Exception e) {
+						logger.error(e.getMessage(), e);
+					}
+				}
 			}
 
-			if (frame instanceof PingWebSocketFrame) {
-				ctx.write(new PongWebSocketFrame(frame.content().retain()));
-				return null;
+			@Override
+			public void onMessage(WebSocket webSocket, String text) {
+				lastActiveTime = System.currentTimeMillis(); 
+				try {
+					if(onText != null){
+						onText.handle(text);
+					}
+				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+			
+			@Override
+			public void onMessage(WebSocket webSocket, ByteString bytes) {
+				lastActiveTime = System.currentTimeMillis();
+				try {
+					if(onBinary != null){
+						onBinary.handle(bytes.asByteBuffer());
+					}
+				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
+				}
 			}
 
-			if (frame instanceof TextWebSocketFrame) {
-				TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-				return parseMessage(textFrame.content());
+			@Override
+			public void onClosed(WebSocket webSocket, int code, String reason) { 
+				String msg = String.format("Websocket(%s) closed", address);
+				logger.info(msg);
+				if(onClose != null){
+					try {
+						onClose.handle();
+					} catch (Exception e) {
+						logger.error(e.getMessage(), e);
+					}
+				}
 			}
 
-			if (frame instanceof BinaryWebSocketFrame) {
-				BinaryWebSocketFrame binFrame = (BinaryWebSocketFrame) frame;
-				return parseMessage(binFrame.content());
-			}
-
-			log.warn("Message format error: " + frame);
-			return null;
-		}
-
-		private String parseMessage(ByteBuf buf) {
-			int size = buf.readableBytes();
-			byte[] data = new byte[size];
-			buf.readBytes(data);
-			return new String(data, charset);
-		} 
+			@Override
+			public void onFailure(WebSocket webSocket, Throwable t, Response response) { 
+				String error = String.format("Websocket(%s) error: %s", address, t.getMessage());
+				logger.error(error);
+				
+				response.close();
+				if(onError != null){
+					onError.handle(t);
+				}
+			} 
+		}); 
 	}
 }
