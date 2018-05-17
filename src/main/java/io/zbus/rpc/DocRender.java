@@ -10,7 +10,6 @@ import java.util.TreeMap;
 
 import io.zbus.kit.FileKit;
 import io.zbus.net.http.Message;
-import io.zbus.rpc.RpcProcessor.RpcMethod;
 
 public class DocRender { 
 	private final RpcProcessor rpcProcessor;  
@@ -50,27 +49,38 @@ public class DocRender {
 	
 	private String rowDoc(RpcMethod m, int idx) {  
 		String fmt = 
-				"<tr>" +  
+				"<tr>" +   
+				"<td class=\"module\">" + 
+				"	<a href='%s'>%s</a>" + 
+				"</td>" +
 				"<td class=\"returnType\">%s</td>" +  
 				"<td class=\"methodParams\"><code><strong><a href=\"%s\">%s</a></strong>(%s)</code>" +  
-				"</td>" +
-				
-				"<td class=\"modules\">" + 
-				"	<a href='%s'>%s</a>" + 
-				"</td></tr>";
-		String methodLink = this.rpcProcessor.docUrlRoot + m.modules.get(0) + "/" + m.name;
-		String method = m.name;
+				"</td>" + 
+				"</tr>";
+		String methodLink = this.rpcProcessor.docUrlRoot + m.module + "/" + m.method;
+		String method = m.method;
 		String paramList = "";
-		for(String type : m.paramTypes) {
-			paramList += type + ", ";
+		int size = m.paramNames.size();
+		if(size < m.paramTypes.size()) {
+			size = m.paramTypes.size();
 		}
+		for(int i=0;i<size;i++) { 
+			if(i<m.paramTypes.size()) { 
+				paramList += m.paramTypes.get(i);
+			}
+			if(i<m.paramNames.size()) { 
+				if(i<m.paramTypes.size()) paramList += " ";
+				paramList += m.paramNames.get(i) ;
+			}
+			paramList += ", ";
+		} 
 		if(paramList.length() > 0) {
 			paramList = paramList.substring(0, paramList.length()-2);
 		}  
-		String moduleLink = this.rpcProcessor.docUrlRoot + m.modules.get(0);
+		String moduleLink = this.rpcProcessor.docUrlRoot + m.module;
 		
-		return String.format(fmt, m.returnType, methodLink, method,
-				paramList, moduleLink, m.modules.get(0));
+		return String.format(fmt, moduleLink, m.module, m.returnType, methodLink, method,
+				paramList);
 	} 
 	
 	

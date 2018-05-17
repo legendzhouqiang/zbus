@@ -11,8 +11,10 @@ import io.zbus.kit.ClassKit;
 import io.zbus.net.EventLoop;
 import io.zbus.net.Ssl;
 import io.zbus.net.http.HttpWsServer;
+import io.zbus.rpc.GenericInvocation;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcFilter;
+import io.zbus.rpc.RpcMethod;
 import io.zbus.rpc.RpcProcessor; 
  
 
@@ -142,6 +144,11 @@ public class ServiceBootstrap implements Closeable {
 		for(Entry<String, Object> e : instances.entrySet()){
 			processor.addModule(e.getKey(), e.getValue());
 		}
+	}
+	
+	public ServiceBootstrap addMethod(RpcMethod spec, GenericInvocation genericInvocation){
+		processor.addMethod(spec, genericInvocation);
+		return this;
 	}
 	
 	

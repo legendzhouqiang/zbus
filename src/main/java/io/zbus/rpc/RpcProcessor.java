@@ -30,20 +30,24 @@ public class RpcProcessor {
 	protected RpcFilter authFilter; 
 	
 	public void enableMethodPageModule() {
-		addModule(methodPageModule, new DocRender(this, docUrlRoot));
+		Object[] services = new Object[] {new DocRender(this, docUrlRoot)};
+		addModule(false, methodPageModule, services);
 	}
 	
-	public void addModule(Object... services) {
-		for (Object obj : services) {
-			if (obj == null)
-				continue; 
-			addModule(obj.getClass().getSimpleName(), obj); 
-		}
-	}
+	private static String defaultModuleName(Object service) {
+		return service.getClass().getSimpleName();
+	} 
 
 	public void addModule(String module, Object... services) {
+		addModule(true, module, services);
+	}
+	
+	public void addModule(boolean enableModuleInfo, String module, Object... services) {
 		for (Object service : services) {
 			this.initCommandTable(module, service);
+			if(enableModuleInfo) {
+				addModuleInfo(module, service);
+			}
 		}
 	}
 
@@ -58,6 +62,15 @@ public class RpcProcessor {
 			}
 		}
 		addModule(services);
+	}
+	
+	public void addModule(Object... services) {
+		for (Object obj : services) {
+			if (obj == null)
+				continue; 
+			String module = defaultModuleName(obj);
+			addModule(module, obj); 
+		}
 	}
 
 	public void addModule(String module, Class<?>... clazz) {
@@ -75,7 +88,8 @@ public class RpcProcessor {
 
 	public void removeModule(Object... services) {
 		for (Object obj : services) { 
-			removeModule(obj.getClass().getSimpleName(), obj); 
+			String module = defaultModuleName(obj);
+			removeModule(module, obj); 
 		}
 	}
 
@@ -84,6 +98,45 @@ public class RpcProcessor {
 			this.removeCommandTable(module, service);
 		}
 	} 
+	
+	public void addMethod(RpcMethod spec, GenericInvocation service) {
+		MethodInstance mi = new MethodInstance(spec.method, service);
+		mi.paramNames = spec.paramNames;
+		
+		String key = key(spec.module, spec.method);
+		this.methods.put(key, mi);
+		addMethodInfo(spec, service);
+	}
+	
+	private void addMethodInfo(RpcMethod spec, GenericInvocation service) {
+		List<RpcMethod> rpcMethods = null;
+		String serviceKey = service.getClass().getCanonicalName();
+		if (object2Methods.containsKey(serviceKey)) {
+			rpcMethods = object2Methods.get(serviceKey);
+		} else {
+			rpcMethods = new ArrayList<RpcMethod>();
+			object2Methods.put(serviceKey, rpcMethods);
+		}
+		
+		RpcMethod rpcm = null;
+		for (RpcMethod rm : rpcMethods) {
+			if (spec.method.equals(rm.method)) {
+				rpcm = rm;
+				break;
+			}
+		}
+		if (rpcm != null) {
+			rpcm.module = spec.module; 
+		} else {  
+			rpcm = new RpcMethod();
+			rpcm.module = spec.module;
+			rpcm.method = spec.method;
+			rpcm.returnType = spec.returnType; 
+			rpcm.paramNames = spec.paramNames;
+			rpcm.paramTypes = spec.paramTypes;
+			rpcMethods.add(rpcm);
+		} 
+	}
 	
 	private void addModuleInfo(String module, Object service) {
 		List<RpcMethod> rpcMethods = null;
@@ -116,27 +169,23 @@ public class RpcProcessor {
 			}
 			RpcMethod rpcm = null;
 			for (RpcMethod rm : rpcMethods) {
-				if (rm.getName().equals(method)) {
+				if (method.equals(rm.method)) {
 					rpcm = rm;
 					break;
 				}
 			}
 			if (rpcm != null) {
-				if (!rpcm.modules.contains(module)) {
-					rpcm.modules.add(module);
-				}
-			} else {
-				List<String> modules = new ArrayList<String>();
-				modules.add(module);
+				rpcm.module = module; 
+			} else {  
 				rpcm = new RpcMethod();
-				rpcm.setModules(modules);
-				rpcm.setName(method);
-				rpcm.setReturnType(m.getReturnType().getCanonicalName());
+				rpcm.module = module;
+				rpcm.method = method;
+				rpcm.returnType = m.getReturnType().getCanonicalName();
 				List<String> paramTypes = new ArrayList<String>();
 				for (Class<?> t : m.getParameterTypes()) {
 					paramTypes.add(t.getCanonicalName());
 				}
-				rpcm.setParamTypes(paramTypes);
+				rpcm.paramTypes = paramTypes;
 				rpcMethods.add(rpcm);
 			}
 		}
@@ -147,9 +196,7 @@ public class RpcProcessor {
 		object2Methods.remove(serviceKey);
 	}
 
-	private void initCommandTable(String module, Object service) {
-		addModuleInfo(module, service);
-
+	private void initCommandTable(String module, Object service) { 
 		try {
 			Method[] methods = service.getClass().getMethods();
 			for (Method m : methods) {
@@ -168,7 +215,7 @@ public class RpcProcessor {
 				}
 
 				m.setAccessible(true);
-				MethodInstance mi = new MethodInstance(m, service);
+				MethodInstance mi = new MethodInstance(m, service); 
 
 				String[] keys = paramSignature(module, m);
 				for (String key : keys) {
@@ -207,14 +254,8 @@ public class RpcProcessor {
 		} catch (SecurityException e) {
 			log.error(e.getMessage(), e);
 		}
-	}
-
-	static class MethodMatchResult {
-		MethodInstance method;
-		boolean fullMatched;
-	}
-
-	 
+	} 
+	
 	private MethodMatchResult matchMethod(Request req) {
 		StringBuilder sb = new StringBuilder(); 
 		if(req.getParamTypes() != null){ 
@@ -264,6 +305,10 @@ public class RpcProcessor {
 		}
 		return new String[] { key, key2, key3 };
 	} 
+	
+	private String key(String module, String method) {
+		return module + ":" + method;
+	}
 	
 	public Response process(Request req) {  
 		Response response = new Response();  
@@ -316,23 +361,46 @@ public class RpcProcessor {
 		response.setId(request.getId()); //Id Match
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void invoke(Request req, Response response) throws IllegalAccessException, IllegalArgumentException {   
 		try {   
 			MethodMatchResult matchResult = matchMethod(req);
-			MethodInstance target = matchResult.method;
-			//checkParamTypes(target, req); 
 			
-			Class<?>[] targetParamTypes = target.method.getParameterTypes();
-			Object[] invokeParams = new Object[targetParamTypes.length];
-			List<Object> reqParams = req.getParams(); 
-			for (int i = 0; i < targetParamTypes.length; i++) { 
-				if(i>=reqParams.size()) {
-					invokeParams[i] = null;
-				} else {
-					invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+			MethodInstance target = matchResult.method;  
+			
+			Object data = null;
+			if(target.reflectedMethod != null) {
+				Class<?>[] targetParamTypes = target.reflectedMethod.getParameterTypes();
+				Object[] invokeParams = new Object[targetParamTypes.length];
+				List<Object> reqParams = req.getParams(); 
+				for (int i = 0; i < targetParamTypes.length; i++) { 
+					if(i>=reqParams.size()) {
+						invokeParams[i] = null;
+					} else {
+						invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+					}
 				}
+				data = target.reflectedMethod.invoke(target.instance, invokeParams);
+				
+			} else if(target.genericInvocation != null) {
+				Map<String, Object> mapParams = new HashMap<>(); 
+				List<Object> paramList = req.getParams();
+				if(paramList != null) {
+					if(paramList.size() == 1 && paramList.get(0) instanceof Map) {
+						mapParams = (Map<String, Object>)paramList.get(0); 
+					} else {
+						for(int i=0;i <paramList.size(); i++) {
+							if(target.paramNames == null) break;
+							if(i<target.paramNames.size()) {
+								mapParams.put(target.paramNames.get(i), paramList.get(i));
+							}
+						}
+					}
+				}
+				data = target.genericInvocation.invoke(req.getMethod(), mapParams);
 			}
-			response.setData(target.method.invoke(target.instance, invokeParams)); 
+			
+			response.setData(data); 
 			response.setStatus(200);
 		} catch (InvocationTargetException e) {  
 			Throwable t = e.getTargetException();
@@ -345,33 +413,6 @@ public class RpcProcessor {
 			response.setStatus(500);
 		} 
 	}
-	
-	protected void checkParamTypes(MethodInstance target, Request req) {
-		Class<?>[] targetParamTypes = target.method.getParameterTypes();
-		int requiredLength = targetParamTypes.length;
-
-		if (requiredLength != req.getParams().size()) {
-			String requiredParamTypeString = "";
-			for (int i = 0; i < targetParamTypes.length; i++) {
-				Class<?> paramType = targetParamTypes[i];
-				requiredParamTypeString += paramType.getName();
-				if (i < targetParamTypes.length - 1) {
-					requiredParamTypeString += ", ";
-				}
-			}
-			List<Object> params = req.getParams();
-			String gotParamsString = "";
-			for (int i = 0; i < params.size(); i++) {
-				gotParamsString += params.get(i);
-				if (i < params.size() - 1) {
-					gotParamsString += ", ";
-				}
-			}
-			String errorMsg = String.format("Method defined: %s(%s), But called: %s(%s)", target.method.getName(),
-					requiredParamTypeString, target.method.getName(), gotParamsString);
-			throw new IllegalArgumentException(errorMsg);
-		}
-	} 
 
 	public void setBeforeFilter(RpcFilter beforeFilter) {
 		this.beforeFilter = beforeFilter;
@@ -409,52 +450,29 @@ public class RpcProcessor {
 		this.methodPageModule = methodPageModule;
 	}
 
-	private static class MethodInstance {
-		public Method method;
-		public Object instance;
-
-		public MethodInstance(Method method, Object instance) {
-			this.method = method;
-			this.instance = instance;
-		}
+	static class MethodMatchResult {
+		MethodInstance method;
+		boolean fullMatched;
 	}
-
-	public static class RpcMethod {
-		List<String> modules = new ArrayList<String>();
-		String name;
-		List<String> paramTypes = new ArrayList<String>();
-		String returnType;
-
-		public List<String> getModules() {
-			return modules;
+	
+	static class MethodInstance {
+		public String methodName; 
+		
+		public Method reflectedMethod;
+		public Object instance;  
+		
+		public GenericInvocation genericInvocation;   
+		public List<String> paramNames; 
+		
+		public MethodInstance(Method reflectedMethod, Object instance) {
+			this.reflectedMethod = reflectedMethod;
+			this.instance = instance;
+			this.methodName = this.reflectedMethod.getName();
 		}
-
-		public void setModules(List<String> modules) {
-			this.modules = modules;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public List<String> getParamTypes() {
-			return paramTypes;
-		}
-
-		public void setParamTypes(List<String> paramTypes) {
-			this.paramTypes = paramTypes;
-		}
-
-		public String getReturnType() {
-			return returnType;
-		}
-
-		public void setReturnType(String returnType) {
-			this.returnType = returnType;
+		
+		public MethodInstance(String methodName, GenericInvocation genericInvocation) {  
+			this.methodName = methodName;
+			this.genericInvocation = genericInvocation;
 		}
 	}
 }

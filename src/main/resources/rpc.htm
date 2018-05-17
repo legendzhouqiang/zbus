@@ -19,9 +19,10 @@ table {  background-color: transparent;  display: table; border-collapse: separa
 .table { width: 100%; max-width: 100%;  margin-bottom: 1rem; }
 .table th {  height: 30px; }
 .table td, .table th {    border-bottom: 1px solid #eceeef;   text-align: left; padding-left: 16px;}
+th.module {  width: 10%; }
 th.returnType {  width: 20%; }
-th.methodParams {   width: 40%; }
-th.modules {  width: 40%; }
+th.methodParams {   width: 70%; } 
+td.returnType { text-align: right; }
 thead { display: table-header-group; vertical-align: middle; border-color: inherit;}
 tbody { display: table-row-group; vertical-align: middle; border-color: inherit;}
 tr { display: table-row;  vertical-align: inherit; border-color: inherit; }
@@ -40,9 +41,9 @@ tr { display: table-row;  vertical-align: inherit; border-color: inherit; }
 <table class='table'>
 <thead>
 <tr class='table-info'>
+	<th class='module'>Module</th>
     <th class='returnType'>Return Type</th>
-    <th class='methodParams'>Method and Params</th>
-    <th class='modules'>Module</th>
+    <th class='methodParams'>Method and Params</th> 
 </tr>
 <thead>
 <tbody> 
