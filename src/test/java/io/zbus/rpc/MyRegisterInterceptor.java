@@ -3,16 +3,11 @@ package io.zbus.rpc;
 import java.util.Arrays;
 import java.util.Map;
 
-import io.zbus.rpc.http.ServiceBootstrap;
+public class MyRegisterInterceptor implements RegisterInterceptor {
 
-
-public class RpcServerExample_DynamicMethod {
-
-	@SuppressWarnings("resource")
-	public static void main(String[] args) throws Exception {
-		ServiceBootstrap b = new ServiceBootstrap(); 
-		b.setStackTraceEnabled(false); 
-		
+	@Override
+	public void onStart(RpcProcessor processor) { 
+		//注册方法
 		GenericService service = new GenericService();
 		
 		//抽象的服务调用，增加一个具体的方法
@@ -22,11 +17,7 @@ public class RpcServerExample_DynamicMethod {
 		spec.paramTypes = Arrays.asList(String.class.getName(), Integer.class.getName());
 		spec.paramNames = Arrays.asList("name", "age");
 		spec.returnType = Map.class.getName();
-		b.addMethod(spec, service);
 		
-		b.addModule("generic", service);
-	
-		b.setPort(80);
-		b.start();
-	}
+		processor.addMethod(spec, service);
+	} 
 }

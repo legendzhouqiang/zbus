@@ -12,6 +12,7 @@ import io.zbus.net.EventLoop;
 import io.zbus.net.Ssl;
 import io.zbus.net.http.HttpWsServer;
 import io.zbus.rpc.GenericInvocation;
+import io.zbus.rpc.RegisterInterceptor;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcFilter;
 import io.zbus.rpc.RpcMethod;
@@ -27,6 +28,7 @@ public class ServiceBootstrap implements Closeable {
 	private String keyFile;
 	private HttpWsServer server;  
 	private EventLoop eventLoop;     
+	private RegisterInterceptor onStart;
 	
 	public ServiceBootstrap setPort(int port){ 
 		this.port = port;
@@ -80,6 +82,10 @@ public class ServiceBootstrap implements Closeable {
 	public void setAuthFilter(RpcFilter authFilter) {
 		this.processor.setAuthFilter(authFilter);
 	}
+	
+	public void setOnStart(RegisterInterceptor onStart) {
+		this.onStart = onStart;
+	}
 
 	private void validate(){ 
 		
@@ -104,6 +110,10 @@ public class ServiceBootstrap implements Closeable {
 		} 
 		if(processor.isMethodPageEnabled()) {
 			processor.enableMethodPageModule();
+		}
+		
+		if(onStart != null) {
+			onStart.onStart(processor);
 		}
 		
 		eventLoop = new EventLoop();
