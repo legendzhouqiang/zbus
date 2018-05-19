@@ -4,7 +4,7 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.transport.Server;
 import io.zbus.transport.Ssl;
 import io.zbus.transport.http.HttpWsServer;
-import io.zbus.transport.http.MessageServerAdaptor; 
+import io.zbus.transport.http.HttpWsServerAdaptor; 
 
 public class SslServerExample {
 
@@ -15,6 +15,6 @@ public class SslServerExample {
 		
 		Server server = new HttpWsServer(); 
 		server.setSslContext(context);
-		server.start(80, new MessageServerAdaptor());  
+		server.start(80, new HttpWsServerAdaptor());  
 	} 
 }

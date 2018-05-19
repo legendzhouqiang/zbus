@@ -9,7 +9,7 @@ import java.util.Random;
 
 import io.zbus.rpc.annotation.Param;
 import io.zbus.rpc.annotation.Remote;
-import io.zbus.transport.http.Message; 
+import io.zbus.transport.http.HttpMessage; 
 
 @Remote
 public class InterfaceExampleImpl implements InterfaceExample{
@@ -170,8 +170,8 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	} 
 	
 	@Override
-	public Message html() {
-		Message res = new Message();
+	public HttpMessage html() {
+		HttpMessage res = new HttpMessage();
 		res.setStatus(200);
 		res.setBody("html" + System.currentTimeMillis());
 		return res;

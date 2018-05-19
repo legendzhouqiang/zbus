@@ -8,7 +8,7 @@ import com.alibaba.fastjson.JSON;
 
 import io.zbus.mq.Protocol;
 import io.zbus.transport.Session;
-import io.zbus.transport.http.Message;
+import io.zbus.transport.http.HttpMessage;
 
 public class MessageDispatcher {  
 	private SubscriptionManager subscriptionManager;
@@ -66,7 +66,7 @@ public class MessageDispatcher {
 			return;
 		}
 		
-		Message res = new Message();
+		HttpMessage res = new HttpMessage();
 		Integer status = (Integer)data.get(Protocol.STATUS);
 		if(status == null) status = 200; 
 		res.setStatus(status);

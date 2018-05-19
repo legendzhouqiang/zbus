@@ -29,28 +29,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session; 
 
-public class MessageServerAdaptor extends ServerAdaptor{     
-	protected MessageHandler<Message> filterHandler;   
-	protected Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<>();  
+public class HttpWsServerAdaptor extends ServerAdaptor{     
+	protected MessageHandler<HttpMessage> filterHandler;   
+	protected Map<String, MessageHandler<HttpMessage>> handlerMap = new ConcurrentHashMap<>();  
 	
-	public MessageServerAdaptor(){ 
+	public HttpWsServerAdaptor(){ 
 		this(null);
 	}
 	
-	public MessageServerAdaptor(Map<String, Session> sessionTable){
+	public HttpWsServerAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable); 
 	} 
 	
-	public void url(String url, MessageHandler<Message> handler){ 
+	public void url(String url, MessageHandler<HttpMessage> handler){ 
     	this.handlerMap.put(url, handler);
     }
 	 
-    public void registerFilterHandler(MessageHandler<Message> filterHandler) {
+    public void registerFilterHandler(MessageHandler<HttpMessage> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
     public void onMessage(Object obj, Session sess) throws IOException {  
-    	Message msg = (Message)obj;  
+    	HttpMessage msg = (HttpMessage)obj;  
     	final String msgId = msg.getId();
     	handleUrlMessage(msg);
     	
@@ -59,13 +59,13 @@ public class MessageServerAdaptor extends ServerAdaptor{
     	}
     	
     	String url = msg.getUrl();
-    	MessageHandler<Message> handler = handlerMap.get(url);
+    	MessageHandler<HttpMessage> handler = handlerMap.get(url);
     	if(handler != null){
     		handler.handle(msg, sess);
     		return;
     	}  
     	
-    	Message res = new Message();
+    	HttpMessage res = new HttpMessage();
     	res.setId(msgId); 
     	res.setStatus(404);
     	String text = String.format("404: %s Not Found", url);
@@ -73,7 +73,7 @@ public class MessageServerAdaptor extends ServerAdaptor{
     	sess.write(res); 
     }  
     
-    protected void handleUrlMessage(Message msg){ 
+    protected void handleUrlMessage(HttpMessage msg){ 
     	if(msg.getCommand() != null){
     		return;
     	} 
