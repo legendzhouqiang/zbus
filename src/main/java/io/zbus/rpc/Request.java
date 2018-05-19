@@ -1,10 +1,10 @@
 package io.zbus.rpc;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
-public class Request extends HashMap<String, Object> {   
+public class Request extends TreeMap<String, Object> {   
 	private static final long serialVersionUID = -2112706466764692497L;   
 	
 	public String getMethod() {
@@ -63,9 +63,10 @@ public class Request extends HashMap<String, Object> {
 	public String getSignature() { 
 		return get("signature");
 	}
+	
 	public void setSignature(String value) {
 		put("signature", value);
-	} 
+	}  
 	
 	@SuppressWarnings("unchecked")
 	public <T> T get(String key) {

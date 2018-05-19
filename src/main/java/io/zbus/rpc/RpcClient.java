@@ -11,6 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.zbus.auth.ApiAuth;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.transport.DataHandler;
@@ -18,13 +19,11 @@ import io.zbus.transport.ErrorHandler;
 import io.zbus.transport.http.WebsocketClient;
 import okhttp3.OkHttpClient; 
 
-public class RpcClient extends WebsocketClient {
-	static class RequestContext {
-		Request request;
-		DataHandler<Response> onData;
-		ErrorHandler onError;
-	}
-
+public class RpcClient extends WebsocketClient { 
+	public String apiKey;
+	public String secretKey;
+	public boolean authEnabled = false;
+	
 	private Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>();
 
 	public RpcClient(String address) {  
@@ -48,6 +47,16 @@ public class RpcClient extends WebsocketClient {
 
 	public void invoke(Request request, DataHandler<Response> dataHandler, ErrorHandler errorHandler) {
 		request.setId(StrKit.uuid());
+		if(authEnabled) {
+			if(apiKey == null) {
+				throw new IllegalStateException("apiKey not set");
+			}
+			if(secretKey == null) {
+				throw new IllegalStateException("secretKey not set");
+			}
+			
+			ApiAuth.setSignature(request, apiKey, secretKey);
+		}
 		
 		RequestContext ctx = new RequestContext();
 		ctx.request = request;
@@ -159,5 +168,11 @@ public class RpcClient extends WebsocketClient {
 			}
 			return REMOTE_METHOD_CALL;
 		} 
+	}
+	
+	static class RequestContext {
+		Request request;
+		DataHandler<Response> onData;
+		ErrorHandler onError;
 	}
 }
