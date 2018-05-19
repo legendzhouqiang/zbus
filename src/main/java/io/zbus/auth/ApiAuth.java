@@ -21,7 +21,7 @@ public interface ApiAuth {
     	for(Entry<String, Object> e : request.entrySet()) {
     		sorted.put(e.getKey(), e.getValue());
     	}
-    	sorted.put("apiKey", apiKey);
+    	sorted.put(APIKEY, apiKey);
 		String message = JsonKit.toJSONString(sorted);
 		String sign = CryptoKit.hmacSign(message, secret); 
 		return sign;
@@ -29,10 +29,9 @@ public interface ApiAuth {
 	
 	public static void setSignature(Map<String, Object> request, String apiKey, String secret) { 
 		String sign = signature(request, apiKey, secret);
-		request.put("apiKey", apiKey); 
-		request.put("signature", sign);
-    } 
-	
+		request.put(APIKEY, apiKey); 
+		request.put(SIGNATURE, sign);
+    }  
 	
 	AuthResult auth(Map<String, Object> request); 
 }

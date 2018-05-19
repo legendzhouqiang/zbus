@@ -10,10 +10,10 @@ import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
 import io.zbus.rpc.GenericInvocation;
 import io.zbus.rpc.RegisterInterceptor;
-import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcFilter;
 import io.zbus.rpc.RpcMethod;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.rpc.annotation.Remote;
 import io.zbus.transport.Ssl;
 import io.zbus.transport.http.HttpWsServer; 
  
@@ -156,8 +156,7 @@ public class ServiceBootstrap implements Closeable {
 	public ServiceBootstrap addMethod(RpcMethod spec, GenericInvocation genericInvocation){
 		processor.addMethod(spec, genericInvocation);
 		return this;
-	}
-	
+	}  
 	
 	@Override
 	public void close() throws IOException {  

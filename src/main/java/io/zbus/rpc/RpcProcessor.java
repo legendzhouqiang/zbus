@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
+import io.zbus.rpc.annotation.Remote;
 
 public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);

@@ -1,6 +1,6 @@
 package io.zbus.rpc.biz.generic;
 
-import io.zbus.rpc.Remote;
+import io.zbus.rpc.annotation.Remote;
 
 @Remote
 public class GenericMethodImpl implements GenericMethod{

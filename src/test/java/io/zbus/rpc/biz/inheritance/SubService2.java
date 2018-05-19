@@ -1,6 +1,6 @@
 package io.zbus.rpc.biz.inheritance;
 
-import io.zbus.rpc.Remote;
+import io.zbus.rpc.annotation.Remote;
 
 @Remote
 public class SubService2 extends BaseServiceImpl<String> implements SubServiceInterface2 {
