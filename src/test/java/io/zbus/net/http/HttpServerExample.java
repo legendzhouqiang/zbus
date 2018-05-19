@@ -1,13 +1,16 @@
 package io.zbus.net.http;
 
-import io.zbus.net.Server;
+import io.zbus.transport.Server;
+import io.zbus.transport.http.HttpWsServer;
+import io.zbus.transport.http.Message;
+import io.zbus.transport.http.MessageServerAdaptor;
 
 public class HttpServerExample {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) { 
 		
-		MessageAdaptor adaptor = new MessageAdaptor();
+		MessageServerAdaptor adaptor = new MessageServerAdaptor();
 		
 		adaptor.url("/", (msg, sess) -> {   
 			Message res = new Message();

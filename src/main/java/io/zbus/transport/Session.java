@@ -1,4 +1,4 @@
-package io.zbus.net;
+package io.zbus.transport;
 
 import java.io.Closeable;
 

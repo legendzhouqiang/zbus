@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.net;
+package io.zbus.transport;
 
 import java.io.IOException;
  
@@ -31,4 +31,9 @@ public interface IoAdaptor{
 	void onMessage(Object msg, Session sess) throws IOException;  
 	void onError(Throwable e, Session sess); 
 	void onIdle(Session sess) throws IOException; 
+	
+
+	public static interface MessageHandler<T> { 
+		void handle(T msg, Session session) throws IOException;   
+	}
 }

@@ -13,9 +13,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.net.DataHandler;
-import io.zbus.net.ErrorHandler;
-import io.zbus.net.http.WebsocketClient;
+import io.zbus.transport.DataHandler;
+import io.zbus.transport.ErrorHandler;
+import io.zbus.transport.http.WebsocketClient;
 import okhttp3.OkHttpClient; 
 
 public class RpcClient extends WebsocketClient {

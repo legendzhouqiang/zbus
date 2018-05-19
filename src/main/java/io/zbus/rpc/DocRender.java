@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import io.zbus.kit.FileKit;
-import io.zbus.net.http.Message;
+import io.zbus.transport.http.Message;
 
 public class DocRender { 
 	private final RpcProcessor rpcProcessor;  

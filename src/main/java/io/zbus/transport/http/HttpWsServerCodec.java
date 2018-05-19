@@ -1,4 +1,4 @@
-package io.zbus.net.http;
+package io.zbus.transport.http;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -46,7 +46,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.handler.ssl.SslHandler;
-import io.zbus.net.http.Message.FileForm; 
+import io.zbus.transport.http.Message.FileForm; 
 
 
 public class HttpWsServerCodec extends MessageToMessageCodec<Object, Object> {

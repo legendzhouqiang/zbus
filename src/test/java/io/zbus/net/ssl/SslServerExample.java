@@ -1,23 +1,20 @@
 package io.zbus.net.ssl;
 
 import io.netty.handler.ssl.SslContext;
-import io.zbus.net.EventLoop;
-import io.zbus.net.Server;
-import io.zbus.net.Ssl;
-import io.zbus.net.http.MessageAdaptor;
-import io.zbus.net.http.HttpWsServer; 
+import io.zbus.transport.Server;
+import io.zbus.transport.Ssl;
+import io.zbus.transport.http.HttpWsServer;
+import io.zbus.transport.http.MessageServerAdaptor; 
 
 public class SslServerExample {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) { 
 		
-		SslContext context = Ssl.buildServerSsl("ssl/zbus.crt", "ssl/zbus.key");
+		SslContext context = Ssl.buildServerSsl("ssl/zbus.crt", "ssl/zbus.key"); 
 		
-		EventLoop loop = new EventLoop(); 
-		loop.setSslContext(context);
-		
-		Server server = new HttpWsServer(loop);  
-		server.start(80, new MessageAdaptor());  
+		Server server = new HttpWsServer(); 
+		server.setSslContext(context);
+		server.start(80, new MessageServerAdaptor());  
 	} 
 }

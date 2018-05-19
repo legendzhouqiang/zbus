@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.zbus.kit.JsonKit;
-import io.zbus.net.http.WebsocketClient;
+import io.zbus.transport.http.WebsocketClient;
 
 public class WebSocketExample {
  

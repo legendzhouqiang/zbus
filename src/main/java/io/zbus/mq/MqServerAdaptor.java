@@ -11,9 +11,9 @@ import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.MqManager;
 import io.zbus.mq.model.Subscription;
 import io.zbus.mq.model.SubscriptionManager;
-import io.zbus.net.ServerAdaptor;
-import io.zbus.net.Session;
-import io.zbus.net.http.Message;
+import io.zbus.transport.ServerAdaptor;
+import io.zbus.transport.Session;
+import io.zbus.transport.http.Message;
 
 public class MqServerAdaptor extends ServerAdaptor { 
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  

@@ -20,33 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package io.zbus.net.http;
+package io.zbus.transport.http;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.net.SessionMessageHandler;
-import io.zbus.net.ServerAdaptor;
-import io.zbus.net.Session; 
+import io.zbus.transport.ServerAdaptor;
+import io.zbus.transport.Session; 
 
-public class MessageAdaptor extends ServerAdaptor{     
-	protected SessionMessageHandler<Message> filterHandler;   
-	protected Map<String, SessionMessageHandler<Message>> handlerMap = new ConcurrentHashMap<>();  
+public class MessageServerAdaptor extends ServerAdaptor{     
+	protected MessageHandler<Message> filterHandler;   
+	protected Map<String, MessageHandler<Message>> handlerMap = new ConcurrentHashMap<>();  
 	
-	public MessageAdaptor(){ 
+	public MessageServerAdaptor(){ 
 		this(null);
 	}
 	
-	public MessageAdaptor(Map<String, Session> sessionTable){
+	public MessageServerAdaptor(Map<String, Session> sessionTable){
 		super(sessionTable); 
 	} 
 	
-	public void url(String url, SessionMessageHandler<Message> handler){ 
+	public void url(String url, MessageHandler<Message> handler){ 
     	this.handlerMap.put(url, handler);
     }
 	 
-    public void registerFilterHandler(SessionMessageHandler<Message> filterHandler) {
+    public void registerFilterHandler(MessageHandler<Message> filterHandler) {
 		this.filterHandler = filterHandler;
 	}  
     
@@ -60,7 +59,7 @@ public class MessageAdaptor extends ServerAdaptor{
     	}
     	
     	String url = msg.getUrl();
-    	SessionMessageHandler<Message> handler = handlerMap.get(url);
+    	MessageHandler<Message> handler = handlerMap.get(url);
     	if(handler != null){
     		handler.handle(msg, sess);
     		return;

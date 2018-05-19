@@ -1,4 +1,4 @@
-package io.zbus.net.http;
+package io.zbus.transport.http;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -9,9 +9,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.zbus.net.DataHandler;
-import io.zbus.net.ErrorHandler;
-import io.zbus.net.EventHandler;
+import io.zbus.transport.DataHandler;
+import io.zbus.transport.ErrorHandler;
+import io.zbus.transport.EventHandler;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;

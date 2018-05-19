@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.zbus.net.http.Message;
 import io.zbus.rpc.Param;
-import io.zbus.rpc.Remote; 
+import io.zbus.rpc.Remote;
+import io.zbus.transport.http.Message; 
 
 @Remote
 public class InterfaceExampleImpl implements InterfaceExample{

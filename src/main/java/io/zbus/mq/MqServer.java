@@ -1,10 +1,10 @@
 package io.zbus.mq;
 
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.zbus.net.EventLoop;
-import io.zbus.net.Server;
-import io.zbus.net.http.HttpWsServerCodec; 
+import io.zbus.transport.Server;
+import io.zbus.transport.http.HttpWsServerCodec; 
 
 public class MqServer extends Server { 
 	private MqServerAdaptor serverAdaptor;
@@ -12,11 +12,11 @@ public class MqServer extends Server {
 		this(null); 
 	}
 
-	public MqServer(final EventLoop loop) {
+	public MqServer(final EventLoopGroup loop) {
 		super(loop);  
 		codec(p -> {
 			p.add(new HttpServerCodec());
-			p.add(new HttpObjectAggregator(getEventLoop().getPackageSizeLimit()));  
+			p.add(new HttpObjectAggregator(packageSizeLimit));  
 			p.add(new HttpWsServerCodec());
 		}); 
 		

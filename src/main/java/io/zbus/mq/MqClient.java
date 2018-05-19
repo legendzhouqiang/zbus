@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 
-import io.zbus.net.http.WebsocketClient; 
+import io.zbus.transport.http.WebsocketClient; 
 
 public class MqClient extends WebsocketClient{
 

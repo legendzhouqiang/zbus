@@ -8,15 +8,14 @@ import java.util.Set;
 
 import io.netty.handler.ssl.SslContext;
 import io.zbus.kit.ClassKit;
-import io.zbus.net.EventLoop;
-import io.zbus.net.Ssl;
-import io.zbus.net.http.HttpWsServer;
 import io.zbus.rpc.GenericInvocation;
 import io.zbus.rpc.RegisterInterceptor;
 import io.zbus.rpc.Remote;
 import io.zbus.rpc.RpcFilter;
 import io.zbus.rpc.RpcMethod;
-import io.zbus.rpc.RpcProcessor; 
+import io.zbus.rpc.RpcProcessor;
+import io.zbus.transport.Ssl;
+import io.zbus.transport.http.HttpWsServer; 
  
 
 public class ServiceBootstrap implements Closeable {  
@@ -26,8 +25,7 @@ public class ServiceBootstrap implements Closeable {
 	private String host = "0.0.0.0";
 	private String certFile;
 	private String keyFile;
-	private HttpWsServer server;  
-	private EventLoop eventLoop;     
+	private HttpWsServer server;    
 	private RegisterInterceptor onStart;
 	
 	public ServiceBootstrap setPort(int port){ 
@@ -116,13 +114,12 @@ public class ServiceBootstrap implements Closeable {
 			onStart.onStart(processor);
 		}
 		
-		eventLoop = new EventLoop();
+		server = new HttpWsServer();    
 		if(keyFile != null && certFile != null) {
 			SslContext context = Ssl.buildServerSsl(certFile, keyFile);
-			eventLoop.setSslContext(context);
-		}
+			server.setSslContext(context);
+		}  
 		
-		server = new HttpWsServer(eventLoop);    
 		RpcServerAdaptor adaptor = new RpcServerAdaptor(this.processor); 
 		server.start(this.host, this.port, adaptor); 
 		
@@ -166,9 +163,6 @@ public class ServiceBootstrap implements Closeable {
 	public void close() throws IOException {  
 		if(server != null) {
 			server.close();
-		}
-		if(eventLoop != null) {
-			eventLoop.close();
-		}
+		} 
 	}   
 }

@@ -1,5 +1,5 @@
 
-package io.zbus.net;
+package io.zbus.transport;
 
 
 public class InvokeException extends RuntimeException {  

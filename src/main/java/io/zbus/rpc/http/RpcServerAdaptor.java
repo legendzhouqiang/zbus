@@ -7,12 +7,12 @@ import com.alibaba.fastjson.JSON;
 import io.zbus.kit.HttpKit;
 import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.JsonKit;
-import io.zbus.net.ServerAdaptor;
-import io.zbus.net.Session;
-import io.zbus.net.http.Message;
 import io.zbus.rpc.Request;
 import io.zbus.rpc.Response;
 import io.zbus.rpc.RpcProcessor;
+import io.zbus.transport.ServerAdaptor;
+import io.zbus.transport.Session;
+import io.zbus.transport.http.Message;
 
 public class RpcServerAdaptor extends ServerAdaptor {
 	protected final RpcProcessor processor; 

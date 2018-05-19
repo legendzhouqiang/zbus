@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.alibaba.fastjson.JSON;
 
 import io.zbus.mq.Protocol;
-import io.zbus.net.Session;
-import io.zbus.net.http.Message;
+import io.zbus.transport.Session;
+import io.zbus.transport.http.Message;
 
 public class MessageDispatcher {  
 	private SubscriptionManager subscriptionManager;
