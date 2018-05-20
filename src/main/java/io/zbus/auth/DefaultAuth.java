@@ -5,11 +5,16 @@ import java.util.Map.Entry;
 
 import com.alibaba.fastjson.JSONObject;
 
-public class DefaultApiAuth implements ApiAuth {
+public class DefaultAuth implements RequestAuth {
 	private ApiKeyProvider apiKeyProvider;
+	private RequestSign requestSign = new DefaultSign();
 
-	public DefaultApiAuth(ApiKeyProvider apiKeyProvider) {
+	public DefaultAuth(ApiKeyProvider apiKeyProvider) {
 		this.apiKeyProvider = apiKeyProvider;
+	}
+	
+	public void setRequestSign(RequestSign requestSign) {
+		this.requestSign = requestSign;
 	}
 	
 	@Override
@@ -29,7 +34,7 @@ public class DefaultApiAuth implements ApiAuth {
 			sorted.put(e.getKey(), e.getValue());
 		}
 		
-		String sign2 = ApiAuth.signature(sorted, apiKey, secretKey);
+		String sign2 = requestSign.calcSignature(sorted, apiKey, secretKey);
 		if(sign.equals(sign2)) {
 			return new AuthResult(true);
 		} else {

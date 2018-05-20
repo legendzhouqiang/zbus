@@ -11,7 +11,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.zbus.auth.ApiAuth;
+import io.zbus.auth.DefaultSign;
+import io.zbus.auth.RequestSign;
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
 import io.zbus.transport.DataHandler;
@@ -23,6 +24,7 @@ public class RpcClient extends WebsocketClient {
 	public String apiKey;
 	public String secretKey;
 	public boolean authEnabled = false;
+	public RequestSign requestSign = new DefaultSign();
 	
 	private Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>();
 
@@ -55,7 +57,7 @@ public class RpcClient extends WebsocketClient {
 				throw new IllegalStateException("secretKey not set");
 			}
 			
-			ApiAuth.setSignature(request, apiKey, secretKey);
+			requestSign.sign(request, apiKey, secretKey);
 		}
 		
 		RequestContext ctx = new RequestContext();

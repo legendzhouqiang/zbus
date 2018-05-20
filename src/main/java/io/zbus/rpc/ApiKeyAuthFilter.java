@@ -1,17 +1,20 @@
 package io.zbus.rpc;
 
-import io.zbus.auth.ApiAuth;
 import io.zbus.auth.ApiKeyProvider;
 import io.zbus.auth.AuthResult;
-import io.zbus.auth.DefaultApiAuth;
+import io.zbus.auth.DefaultAuth;
+import io.zbus.auth.RequestAuth;
 
 public class ApiKeyAuthFilter implements RpcFilter {
-	private ApiAuth auth;
+	private RequestAuth auth;
 	
 	public ApiKeyAuthFilter(ApiKeyProvider apiKeyProvider) {
-		this.auth = new DefaultApiAuth(apiKeyProvider);
+		this.auth = new DefaultAuth(apiKeyProvider);
 	} 
 	
+	public ApiKeyAuthFilter(RequestAuth auth) {
+		this.auth = auth;
+	}  
 	
 	@Override
 	public boolean doFilter(Request request, Response response) { 
