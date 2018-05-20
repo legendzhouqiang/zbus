@@ -45,31 +45,27 @@ public class Server implements Closeable {
 	
 	protected CodecInitializer codecInitializer; 
 	
-	protected EventLoopGroup group;     
+	protected EventLoopGroup bossGroup;     
+	protected EventLoopGroup workGroup;   
 	protected SslContext sslContext; 
+	
 	protected int idleTimeInSeconds = 180; //180s 
-	protected int packageSizeLimit = 1024*1024*1024; //maximum of 1G 
-	protected boolean ownLoop;  
+	protected int packageSizeLimit = 1024*1024*1024; //maximum of 1G  
 	
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> listenTable = new ConcurrentHashMap<Integer, ServerInfo>();
   
 	public Server(){
-		this(null); 
-	}
-	
-	public Server(EventLoopGroup loop){ 
-		this.group = loop; 
-		if (this.group == null) {
-			this.group = new NioEventLoopGroup();
-			this.ownLoop = true;
-		} else {
-			this.ownLoop = false;
-		} 
-	}   
+		this.bossGroup = new NioEventLoopGroup(1);
+		this.workGroup = new NioEventLoopGroup();
+	} 
 	
 	public void setSslContext(SslContext sslContext) {
 		this.sslContext = sslContext;
+	}
+	
+	public SslContext getSslContext() {
+		return sslContext;
 	}
  
 	public void start(int port, IoAdaptor ioAdaptor) {
@@ -82,7 +78,7 @@ public class Server implements Closeable {
 	
 	public void start(final String host, final int port, IoAdaptor ioAdaptor, boolean isDefault) {  
 		ServerBootstrap b = new ServerBootstrap();
-		b.group(group, group)
+		b.group(bossGroup, workGroup)
 		 .option(ChannelOption.SO_BACKLOG, 102400) //TODO make it configurable
 		 .channel(NioServerSocketChannel.class) 
 		 .handler(new LoggingHandler(LogLevel.DEBUG))
@@ -110,9 +106,13 @@ public class Server implements Closeable {
 	
 	@Override
 	public void close() throws IOException {
-		if(ownLoop && group != null){
-			group.shutdownGracefully();
-			group = null;
+		if(bossGroup != null){
+			bossGroup.shutdownGracefully();
+			bossGroup = null;
+		}
+		if(workGroup != null){
+			workGroup.shutdownGracefully();
+			workGroup = null;
 		}
 	} 
 	 
@@ -161,10 +161,10 @@ public class Server implements Closeable {
 			}
 			CodecInitializer initializer = getCodecInitializer();
 			if(initializer != null){
-				List<ChannelHandler> handlers = new ArrayList<ChannelHandler>();
+				List<ChannelHandler> handlers = new ArrayList<>();
 				initializer.initPipeline(handlers);
 				for(ChannelHandler handler : handlers){
-					 p.addLast((ChannelHandler)handler); 
+					 p.addLast(handler); 
 				}
 			}	 
 			p.addLast(this.nettyToIoAdaptor);

@@ -15,6 +15,12 @@ public class SslServerExample {
 		
 		Server server = new HttpWsServer(); 
 		server.setSslContext(context);
-		server.start(80, new HttpWsServerAdaptor());  
+		
+		HttpWsServerAdaptor adaptor = new HttpWsServerAdaptor();
+		adaptor.url("/", (msg, sess)->{
+			System.out.println(msg);
+		}); 
+		
+		server.start(80, adaptor);  
 	} 
 }
