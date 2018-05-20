@@ -11,6 +11,7 @@ public class RpcServerExample {
 		ServiceBootstrap b = new ServiceBootstrap();
 
 		b.setStackTraceEnabled(false);
+		//b.setAutoLoadService(true);
 		//b.setMethodPageModule("m");
 		b.addModule("example", InterfaceExampleImpl.class); 
 		

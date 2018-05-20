@@ -13,7 +13,8 @@ import io.zbus.transport.http.HttpMessage;
 
 @Auth(exclude=true)
 public class InterfaceExampleImpl implements InterfaceExample{
-	 
+	
+	@Auth(exclude=false)
 	public String echo(String string) { 
 		return string;
 	}
@@ -48,8 +49,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	
 	public int plus(int a, int b) { 
 		return a+b;
-	}
-
+	} 
 
 	public MyEnum myEnum(MyEnum e) {  
 		return MyEnum.Sunday;

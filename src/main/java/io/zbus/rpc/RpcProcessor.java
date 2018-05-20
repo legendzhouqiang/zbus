@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
+import io.zbus.rpc.annotation.Auth;
 import io.zbus.rpc.annotation.Remote;
 
 public class RpcProcessor {
@@ -24,6 +25,7 @@ public class RpcProcessor {
 	String docUrlRoot = "/";
 	boolean stackTraceEnabled = true;
 	boolean methodPageEnabled = true; 
+	boolean methodPageAuthEnabled = false;
 	String methodPageModule = "index";
 	
 	protected RpcFilter beforeFilter;
@@ -32,7 +34,7 @@ public class RpcProcessor {
 	
 	public void enableMethodPageModule() {
 		Object[] services = new Object[] {new DocRender(this, docUrlRoot)};
-		addModule(false, methodPageModule, services);
+		addModule(false, methodPageAuthEnabled, methodPageModule, services);
 	}
 	
 	private static String defaultModuleName(Object service) {
@@ -44,8 +46,12 @@ public class RpcProcessor {
 	}
 	
 	public void addModule(boolean enableModuleInfo, String module, Object... services) {
+		addModule(enableModuleInfo, true, module, services);
+	}
+	
+	public void addModule(boolean enableModuleInfo, boolean defaultAuth, String module, Object... services) {
 		for (Object service : services) {
-			this.initCommandTable(module, service);
+			this.initCommandTable(module, service, defaultAuth);
 			if(enableModuleInfo) {
 				addModuleInfo(module, service);
 			}
@@ -195,30 +201,41 @@ public class RpcProcessor {
 	private void removeModuleInfo(Object service) {
 		String serviceKey = service.getClass().getName();
 		object2Methods.remove(serviceKey);
-	}
+	} 
 
-	private void initCommandTable(String module, Object service) { 
+	private void initCommandTable(String module, Object service, boolean defaultAuth) { 
 		try {
 			Method[] methods = service.getClass().getMethods();
+			boolean classAuthEnabled = defaultAuth;
+			Auth classAuth = service.getClass().getAnnotation(Auth.class);
+			if(classAuth != null) {
+				classAuthEnabled = !classAuth.exclude();
+			}
 			for (Method m : methods) {
 				if (m.getDeclaringClass() == Object.class)
 					continue;
 
-				String method = m.getName();
+				String methodName = m.getName();
 				Remote cmd = m.getAnnotation(Remote.class);
 				if (cmd != null) {
-					method = cmd.id();
-					if (cmd.exclude())
-						continue;
-					if ("".equals(method)) {
-						method = m.getName();
+					methodName = cmd.id();
+					if (cmd.exclude()) continue;
+					if ("".equals(methodName)) {
+						methodName = m.getName();
 					}
+				} 
+				
+				Auth auth = m.getAnnotation(Auth.class);
+				boolean authRequired = classAuthEnabled;
+				if(auth != null) {
+					authRequired = !auth.exclude();
 				}
 
 				m.setAccessible(true);
 				MethodInstance mi = new MethodInstance(m, service); 
+				mi.authRequired = authRequired;
 
-				String[] keys = methodKeys(module, m);
+				String[] keys = methodKeys(module, m, methodName);
 				for (String key : keys) {
 					if (this.methods.containsKey(key)) {
 						log.debug(key + " overrided");
@@ -237,17 +254,16 @@ public class RpcProcessor {
 		try {
 			Method[] methods = service.getClass().getMethods();
 			for (Method m : methods) {
-				String method = m.getName();
+				String methodName = m.getName();
 				Remote cmd = m.getAnnotation(Remote.class);
 				if (cmd != null) {
-					method = cmd.id();
-					if (cmd.exclude())
-						continue;
-					if ("".equals(method)) {
-						method = m.getName();
+					methodName = cmd.id();
+					if (cmd.exclude()) continue;
+					if ("".equals(methodName)) {
+						methodName = m.getName();
 					}
 				}
-				String[] keys = methodKeys(module, m);
+				String[] keys = methodKeys(module, m, methodName);
 				for (String key : keys) {
 					this.methods.remove(key);
 				}
@@ -289,7 +305,7 @@ public class RpcProcessor {
 		}
 	}
 
-	private String[] methodKeys(String module, Method m) {
+	private String[] methodKeys(String module, Method m, String methodName) {
 		Class<?>[] paramTypes = m.getParameterTypes();
 		StringBuilder sb = new StringBuilder();
 		StringBuilder sb2 = new StringBuilder();
@@ -298,9 +314,9 @@ public class RpcProcessor {
 			sb2.append(paramTypes[i].getName() + ",");
 		}
 
-		String key = module + ":" + m.getName() + ":" + sb.toString();
-		String key2 = module + ":" + m.getName() + ":" + sb2.toString();
-		String key3 = module + ":" + m.getName();
+		String key = module + ":" + methodName + ":" + sb.toString();
+		String key2 = module + ":" + methodName + ":" + sb2.toString();
+		String key3 = module + ":" + methodName;
 		if (key.equals(key2)) {
 			return new String[] { key, key3 };
 		}
@@ -333,11 +349,6 @@ public class RpcProcessor {
 			if(beforeFilter != null) {
 				boolean next = beforeFilter.doFilter(req, response);
 				if(!next) return response;
-			}
-			
-			if(authFilter != null) {
-				boolean next = authFilter.doFilter(req, response);
-				if(!next) return response; 
 			} 
 			
 			invoke(req, response);
@@ -365,9 +376,13 @@ public class RpcProcessor {
 	@SuppressWarnings("unchecked")
 	private void invoke(Request req, Response response) throws IllegalAccessException, IllegalArgumentException {   
 		try {   
-			MethodMatchResult matchResult = matchMethod(req);
-			
+			MethodMatchResult matchResult = matchMethod(req); 
 			MethodInstance target = matchResult.method;  
+			
+			if(authFilter != null && target.authRequired) { 
+				boolean next = authFilter.doFilter(req, response);
+				if(!next) return;
+			} 
 			
 			Object data = null;
 			if(target.reflectedMethod != null) {
@@ -442,6 +457,10 @@ public class RpcProcessor {
 	public void setMethodPageEnabled(boolean methodPageEnabled) {
 		this.methodPageEnabled = methodPageEnabled;
 	}
+	
+	public void setMethodPageAuthEnabled(boolean methodPageAuthEnabled) {
+		this.methodPageAuthEnabled = methodPageAuthEnabled;
+	}
 
 	public String getMethodPageModule() {
 		return methodPageModule;
@@ -458,6 +477,7 @@ public class RpcProcessor {
 	
 	static class MethodInstance {
 		public String methodName; 
+		public boolean authRequired = true;
 		
 		public Method reflectedMethod;
 		public Object instance;  

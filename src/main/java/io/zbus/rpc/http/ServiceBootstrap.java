@@ -20,7 +20,7 @@ import io.zbus.transport.http.HttpWsServer;
 
 public class ServiceBootstrap implements Closeable {  
 	private RpcProcessor processor = new RpcProcessor(); 
-	private boolean autoDiscover = false;
+	private boolean autoLoadService = false;
 	private int port;
 	private String host = "0.0.0.0";
 	private String certFile;
@@ -48,20 +48,25 @@ public class ServiceBootstrap implements Closeable {
 		return this;
 	}  
 	 
-	public ServiceBootstrap setAutoDiscover(boolean autoDiscover) {
-		this.autoDiscover = autoDiscover;
+	public ServiceBootstrap setAutoLoadService(boolean autoLoadService) {
+		this.autoLoadService = autoLoadService;
 		return this;
 	}  
 	
-	public ServiceBootstrap setStackTraceEnabled(boolean stackTrace) {
-		this.processor.setStackTraceEnabled(stackTrace);
+	public ServiceBootstrap setStackTraceEnabled(boolean stackTraceEnabled) {
+		this.processor.setStackTraceEnabled(stackTraceEnabled);
 		return this;
 	} 
 	
-	public ServiceBootstrap setMethodPageEnabled(boolean methodPage) {
-		this.processor.setMethodPageEnabled(methodPage);
+	public ServiceBootstrap setMethodPageEnabled(boolean methodPageEnabled) {
+		this.processor.setMethodPageEnabled(methodPageEnabled);
 		return this;
 	}  
+	
+	public ServiceBootstrap setMethodPageAuthEnabled(boolean methodPageAuthEnabled) {
+		this.processor.setMethodPageAuthEnabled(methodPageAuthEnabled);
+		return this;
+	}
 	
 	public ServiceBootstrap setMethodPageModule(String monitorModuleName) {
 		this.processor.setMethodPageModule(monitorModuleName);
@@ -103,7 +108,7 @@ public class ServiceBootstrap implements Closeable {
 	public ServiceBootstrap start() throws Exception{
 		validate();  
 		
-		if(autoDiscover){
+		if(autoLoadService){
 			initProcessor();
 		} 
 		if(processor.isMethodPageEnabled()) {

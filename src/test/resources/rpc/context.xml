@@ -42,8 +42,13 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	
 	<bean class="io.zbus.rpc.http.ServiceBootstrap" init-method="start"> 
 		<property name="port" value="80" />
+		<!-- 
+		<property name="certFile" value="ssl/zbus.crt"/>
+		<property name="keyFile" value="ssl/zbus.key"/>
+		 -->
+		
 		<property name="onStart" ref="registerInterceptor"/>
-		<property name="authFilter" ref="authFilter"/>
+		<property name="authFilter" ref="authFilter"/> 
 		<property name="moduleTable">
 			<map>
 				<entry key="db" value-ref="db"/>
