@@ -1,22 +1,18 @@
 package io.zbus.auth;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import io.zbus.kit.CryptoKit;
-import io.zbus.kit.JsonKit;
 
 public class DefaultSign implements RequestSign {  
-	public String calcSignature(Map<String, Object> request, String apiKey, String secret) { 
-		//Map应该按Key排序好，TreeMap已经排序好, TODO value如果是Map继续排序
-    	JSONObject sorted = new JSONObject(true);
-    	for(Entry<String, Object> e : request.entrySet()) {
-    		sorted.put(e.getKey(), e.getValue());
-    	}
-    	sorted.put(APIKEY, apiKey);
-		String message = JsonKit.toJSONString(sorted);
+	public String calcSignature(Map<String, Object> request, String apiKey, String secret) {  
+    	Map<String, Object> copy = new HashMap<>(request);
+    	copy.put(APIKEY, apiKey);
+    	String message = JSON.toJSONString(copy, SerializerFeature.MapSortField); //Sort map by key 
 		String sign = CryptoKit.hmacSign(message, secret); 
 		return sign;
     }

@@ -1,9 +1,7 @@
 package io.zbus.auth;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import com.alibaba.fastjson.JSONObject;
 
 public class DefaultAuth implements RequestAuth {
 	private ApiKeyProvider apiKeyProvider;
@@ -28,13 +26,10 @@ public class DefaultAuth implements RequestAuth {
 		String secretKey = apiKeyProvider.secretKey(apiKey);
 		if(secretKey == null) return new AuthResult(false, "secretKey not exists");
 		
-		JSONObject sorted = new JSONObject(true);
-		for(Entry<String, Object> e : request.entrySet()) {
-			if(SIGNATURE.equals(e.getKey())) continue; 
-			sorted.put(e.getKey(), e.getValue());
-		}
+		Map<String, Object> copy = new HashMap<>(request);
+		copy.remove(SIGNATURE);
 		
-		String sign2 = requestSign.calcSignature(sorted, apiKey, secretKey);
+		String sign2 = requestSign.calcSignature(copy, apiKey, secretKey);
 		if(sign.equals(sign2)) {
 			return new AuthResult(true);
 		} else {
