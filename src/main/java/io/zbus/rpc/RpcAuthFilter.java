@@ -5,14 +5,14 @@ import io.zbus.auth.AuthResult;
 import io.zbus.auth.DefaultAuth;
 import io.zbus.auth.RequestAuth;
 
-public class ApiKeyAuthFilter implements RpcFilter {
+public class RpcAuthFilter implements RpcFilter {
 	private RequestAuth auth;
 	
-	public ApiKeyAuthFilter(ApiKeyProvider apiKeyProvider) {
+	public RpcAuthFilter(ApiKeyProvider apiKeyProvider) {
 		this.auth = new DefaultAuth(apiKeyProvider);
 	} 
 	
-	public ApiKeyAuthFilter(RequestAuth auth) {
+	public RpcAuthFilter(RequestAuth auth) {
 		this.auth = auth;
 	}  
 	

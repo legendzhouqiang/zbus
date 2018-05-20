@@ -218,7 +218,7 @@ public class RpcProcessor {
 				m.setAccessible(true);
 				MethodInstance mi = new MethodInstance(m, service); 
 
-				String[] keys = paramSignature(module, m);
+				String[] keys = methodKeys(module, m);
 				for (String key : keys) {
 					if (this.methods.containsKey(key)) {
 						log.debug(key + " overrided");
@@ -247,7 +247,7 @@ public class RpcProcessor {
 						method = m.getName();
 					}
 				}
-				String[] keys = paramSignature(module, m);
+				String[] keys = methodKeys(module, m);
 				for (String key : keys) {
 					this.methods.remove(key);
 				}
@@ -289,7 +289,7 @@ public class RpcProcessor {
 		}
 	}
 
-	private String[] paramSignature(String module, Method m) {
+	private String[] methodKeys(String module, Method m) {
 		Class<?>[] paramTypes = m.getParameterTypes();
 		StringBuilder sb = new StringBuilder();
 		StringBuilder sb2 = new StringBuilder();

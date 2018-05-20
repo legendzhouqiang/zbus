@@ -7,18 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.zbus.rpc.annotation.Auth;
 import io.zbus.rpc.annotation.Param;
-import io.zbus.rpc.annotation.Remote;
 import io.zbus.transport.http.HttpMessage; 
 
-@Remote
+@Auth(exclude=true)
 public class InterfaceExampleImpl implements InterfaceExample{
-	
-	@Override 
+	 
 	public String echo(String string) { 
 		return string;
 	}
-	
+	 
 	public String getString(@Param("0") String name) { 
 		if(name == null){
 			System.out.println("got null: "+ name);
@@ -29,17 +28,15 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public String getString(String name, int c) {
 		return String.format("%s, %d", name, c);
 	}
-
-	@Override
+ 
 	public String testEncoding() { 
 		return "中文";
 	}
 	
 	public String[] stringArray() {
 		return new String[]{"hong", "leiming"};
-	}
+	} 
 	
-	@Override
 	public byte[] getBin() {
 		return new byte[10];
 	}
@@ -52,8 +49,8 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public int plus(int a, int b) { 
 		return a+b;
 	}
-	
-	@Override
+
+
 	public MyEnum myEnum(MyEnum e) {  
 		return MyEnum.Sunday;
 	}
@@ -83,14 +80,10 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public User[] getUsers() {
 		return new User[]{getUser("hong"), getUser("leiming")};
 	}
-	
-	@Override
+	 
 	public List<User> listUsers() {
 		return Arrays.asList(getUser("hong"), getUser("leiming"));
-	}
-	 
-	 
-	
+	} 
 	
 	public List<Map<String, Object>> listMap() {
 		List<Map<String, Object>> res = new ArrayList<Map<String,Object>>();
@@ -104,13 +97,13 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public int saveObjectArray(Object[] array) {
 		return 0;
 	}
-	
-	@Override
+
+
 	public int saveUserArray(User[] array) { 
 		return 0;
 	}
-	
-	@Override
+
+
 	public int saveUserList(List<User> array) { 
 		return 0;
 	}
@@ -140,8 +133,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 	public Class<?> classTest(Class<?> inClass) { 
 		return Double.class;
 	}
-	
-	@Override
+
 	public void testTimeout() {
 		try {
 			Thread.sleep(10000);
@@ -149,27 +141,23 @@ public class InterfaceExampleImpl implements InterfaceExample{
 			e.printStackTrace();
 		}
 	}
-	  
-	@Override
+
 	public int getUserScore() { 
 		Random r = new Random(System.currentTimeMillis());
 		int time = 10 + r.nextInt(100); 
 		return time;
 	}
 	
-	@Override
 	public String nullParam(String nullStr) { 
 		return nullStr;
 	}
 
-	@Override
 	public Map<String, Object> map(int value1) { 
 		Map<String, Object> value = new HashMap<>();
 		value.put("key", value1);
 		return value;
 	} 
 	
-	@Override
 	public HttpMessage html() {
 		HttpMessage res = new HttpMessage();
 		res.setStatus(200);
@@ -177,7 +165,6 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		return res;
 	}
 	
-	@Override
 	public String index(String defaultValue) { 
 		if(defaultValue == null) return "default";
 		return defaultValue;
