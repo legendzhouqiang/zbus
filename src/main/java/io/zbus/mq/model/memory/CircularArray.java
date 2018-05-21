@@ -1,4 +1,4 @@
-package io.zbus.mq.memory;
+package io.zbus.mq.model.memory;
 
 import java.util.ArrayList;
 import java.util.List;

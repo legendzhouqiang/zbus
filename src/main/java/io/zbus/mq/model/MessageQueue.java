@@ -24,25 +24,67 @@ import java.util.Map;
  * 
  * 1) PubSub: default, each subscriber generated unique channel
  * 2) LoadBalance: subscribers share same channel
- * 3) Mixed: each group of subscribers share a same channel
- *  
- * MQTT compatible, with queue default to null(empty) 
+ * 3) Mixed: each group of subscribers share a same channel 
  * 
  * 
- * @author Hong Leiming
+ * @author leiming.hong
  *
  */
 public interface MessageQueue { 
+	/**
+	 * Name of message queue, identifier
+	 * @return
+	 */
 	String name();
-	
+	/**
+	 * Write message to queue, support batch insert
+	 * 
+	 * @param message message or message list
+	 */
 	void write(Object... message); 
+	/**
+	 * Read message from queue by channel, support batch read
+	 * If the length of result is less than count, queue end reached.
+	 * 
+	 * @param channelId id of channel
+	 * @param count maximum count of message to read
+	 * @return
+	 */
 	List<Object> read(String channelId, int count);  
 	
+	/**
+	 * Get channel by id
+	 * 
+	 * @param channelId id of channel
+	 * @return Channel object
+	 */
 	Channel channel(String channelId);
+	
+	/**
+	 * Add or update channel to the queue
+	 * @param channel Channel object to save
+	 */
 	void saveChannel(Channel channel);
-	void removeChannel(String channelId);  
+	
+	/**
+	 * Remove channel by channel's Id
+	 * 
+	 * @param channelId
+	 */
+	void removeChannel(String channelId); 
+	
+	/** 
+	 * @return all channels inside of the queue
+	 */
 	Map<String, Channel> channels(); 
 	
+	/** 
+	 * @return attribute map of the queue
+	 */
 	Map<String, Object> attributes();
+	
+	/**
+	 * Flush message in memory to disk if support
+	 */
 	void flush();
 }

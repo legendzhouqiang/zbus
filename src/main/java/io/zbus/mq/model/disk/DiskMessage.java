@@ -1,4 +1,4 @@
-package io.zbus.mq.disk;
+package io.zbus.mq.model.disk;
 
 public class DiskMessage {
 	public Long offset; // 8, write ignore

@@ -1,4 +1,4 @@
-package io.zbus.mq.model;
+package io.zbus.mq;
 
 import java.util.List;
 import java.util.Map;
@@ -6,7 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.fastjson.JSON;
 
-import io.zbus.mq.Protocol;
+import io.zbus.mq.model.Channel;
+import io.zbus.mq.model.MessageQueue;
+import io.zbus.mq.model.Subscription;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.HttpMessage;
 

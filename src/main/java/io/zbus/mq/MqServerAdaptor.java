@@ -6,11 +6,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.mq.model.Channel;
-import io.zbus.mq.model.MessageDispatcher;
 import io.zbus.mq.model.MessageQueue;
-import io.zbus.mq.model.MqManager;
 import io.zbus.mq.model.Subscription;
-import io.zbus.mq.model.SubscriptionManager;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.HttpMessage;
@@ -18,7 +15,7 @@ import io.zbus.transport.http.HttpMessage;
 public class MqServerAdaptor extends ServerAdaptor { 
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
 	private MessageDispatcher messageDispatcher;
-	private MqManager mqManager = new MqManager();
+	private MessageQueueManager mqManager = new MessageQueueManager();
 	
 	
 	public MqServerAdaptor() {
@@ -28,16 +25,19 @@ public class MqServerAdaptor extends ServerAdaptor {
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
 		JSONObject json = null;
+		boolean isWebsocket = false;
 		if (msg instanceof byte[]) {
 			json = JSONObject.parseObject(new String((byte[])msg));
+			isWebsocket = true;
 		} else if (msg instanceof HttpMessage) {
 			HttpMessage httpMessage = (HttpMessage)msg;
 			json = JSONObject.parseObject(httpMessage.getBodyString()); 
+			isWebsocket = false;
 		} else {
 			throw new IllegalStateException("Not support message type");
 		}
 		
-		handleJsonMessage(json, sess);
+		handleJsonMessage(json, sess, isWebsocket);
 	} 
 	
 	@Override
@@ -48,7 +48,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		subscriptionManager.removeByClientId(sessId);
 	}
 	
-	protected void handleJsonMessage(JSONObject json, Session sess) throws IOException { 
+	protected void handleJsonMessage(JSONObject json, Session sess, boolean isWebsocket) throws IOException { 
 		String cmd = (String)json.remove(Protocol.CMD);
 		if (cmd == null) {
 			JSONObject res = new JSONObject();
@@ -56,7 +56,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			res.put(Protocol.DATA, "cmd key required");
 			res.put(Protocol.ID, json.getString(Protocol.ID));
 
-			sendMessage(sess, json, true);
+			sendMessage(sess, json, isWebsocket);
 			return;
 		}
 

@@ -1,10 +1,13 @@
-package io.zbus.mq;
+package io.zbus.mq.model;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 
-public class Message extends TreeMap<String, Object> {     
+public class Message extends HashMap<String, Object> {     
 	private static final long serialVersionUID = -2119891220813658947L;
  
+	
+	
+	
 	public String getApiKey() { 
 		return get("apiKey");
 	}

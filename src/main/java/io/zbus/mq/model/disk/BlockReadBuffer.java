@@ -1,4 +1,4 @@
-package io.zbus.mq.disk;
+package io.zbus.mq.model.disk;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

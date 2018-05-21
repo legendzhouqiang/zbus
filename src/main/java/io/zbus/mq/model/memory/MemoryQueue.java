@@ -1,12 +1,12 @@
-package io.zbus.mq.memory;
+package io.zbus.mq.model.memory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.zbus.mq.memory.CircularArray.Reader;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
+import io.zbus.mq.model.memory.CircularArray.Reader;
 
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  

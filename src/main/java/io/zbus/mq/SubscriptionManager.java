@@ -1,4 +1,4 @@
-package io.zbus.mq.model;
+package io.zbus.mq;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+
+import io.zbus.mq.model.Subscription;
 
 public class SubscriptionManager {  
 	private Map<String, Subscription> clientId2Subscription = new ConcurrentHashMap<>();

@@ -1,9 +1,9 @@
 package io.zbus.mq;
 
-import com.alibaba.fastjson.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
-import io.zbus.mq.model.ChannelInfo;
-import io.zbus.mq.model.MqInfo;
+import com.alibaba.fastjson.JSONObject;
 
 public class Create { 
 	
@@ -19,12 +19,11 @@ public class Create {
 			JSONObject req = new JSONObject();
 			req.put("cmd", "create"); 
 			
-			MqInfo mqInfo = new MqInfo();
-			mqInfo.setName("MyMQ");           
+			Map<String, Object> mqInfo = new HashMap<>();
+			mqInfo.put("name", "MyMQ");
 			
-			ChannelInfo channelInfo = new ChannelInfo();
-			channelInfo.setName("MyChannel"); 
-			
+			Map<String, Object> channelInfo = new HashMap<String, Object>();
+			channelInfo.put("name", "MyChannel");  
 			req.put("mq", mqInfo);            // { name: "MyMQ" }
 			req.put("channel", channelInfo);  // { name: "MyChannel" }
 			 

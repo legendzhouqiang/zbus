@@ -2,9 +2,9 @@ package io.zbus.kit;
 
 import java.util.List;
 
-import io.zbus.mq.memory.CircularArray;
-import io.zbus.mq.memory.CircularArray.Reader;
 import io.zbus.mq.model.Channel;
+import io.zbus.mq.model.memory.CircularArray;
+import io.zbus.mq.model.memory.CircularArray.Reader;
 
 public class CircularArrayTest {
 	public static void main(String[] args) {
