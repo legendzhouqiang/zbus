@@ -1,14 +1,14 @@
 package io.zbus.rpc;
 
 import io.zbus.rpc.biz.InterfaceExampleImpl;
-import io.zbus.rpc.http.ServiceBootstrap;
+import io.zbus.rpc.http.RpcBootstrap;
 
  
 public class RpcServerExample {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		ServiceBootstrap b = new ServiceBootstrap();
+		RpcBootstrap b = new RpcBootstrap();
 
 		b.setStackTraceEnabled(false);
 		//b.setAutoLoadService(true);

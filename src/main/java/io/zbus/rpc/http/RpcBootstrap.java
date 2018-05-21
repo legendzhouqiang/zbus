@@ -18,7 +18,7 @@ import io.zbus.transport.Ssl;
 import io.zbus.transport.http.HttpWsServer; 
  
 
-public class ServiceBootstrap implements Closeable {  
+public class RpcBootstrap implements Closeable {  
 	private RpcProcessor processor = new RpcProcessor(); 
 	private boolean autoLoadService = false;
 	private int port;
@@ -28,47 +28,47 @@ public class ServiceBootstrap implements Closeable {
 	private HttpWsServer server;    
 	private RegisterInterceptor onStart;
 	
-	public ServiceBootstrap setPort(int port){ 
+	public RpcBootstrap setPort(int port){ 
 		this.port = port;
 		return this;
 	} 
 	 
-	public ServiceBootstrap setHost(String host){ 
+	public RpcBootstrap setHost(String host){ 
 		this.host = host;
 		return this;
 	}    
 	
-	public ServiceBootstrap setCertFile(String certFile){ 
+	public RpcBootstrap setCertFile(String certFile){ 
 		this.certFile = certFile; 
 		return this;
 	}  
 	
-	public ServiceBootstrap setKeyFile(String keyFile){ 
+	public RpcBootstrap setKeyFile(String keyFile){ 
 		this.keyFile = keyFile;
 		return this;
 	}  
 	 
-	public ServiceBootstrap setAutoLoadService(boolean autoLoadService) {
+	public RpcBootstrap setAutoLoadService(boolean autoLoadService) {
 		this.autoLoadService = autoLoadService;
 		return this;
 	}  
 	
-	public ServiceBootstrap setStackTraceEnabled(boolean stackTraceEnabled) {
+	public RpcBootstrap setStackTraceEnabled(boolean stackTraceEnabled) {
 		this.processor.setStackTraceEnabled(stackTraceEnabled);
 		return this;
 	} 
 	
-	public ServiceBootstrap setMethodPageEnabled(boolean methodPageEnabled) {
+	public RpcBootstrap setMethodPageEnabled(boolean methodPageEnabled) {
 		this.processor.setMethodPageEnabled(methodPageEnabled);
 		return this;
 	}  
 	
-	public ServiceBootstrap setMethodPageAuthEnabled(boolean methodPageAuthEnabled) {
+	public RpcBootstrap setMethodPageAuthEnabled(boolean methodPageAuthEnabled) {
 		this.processor.setMethodPageAuthEnabled(methodPageAuthEnabled);
 		return this;
 	}
 	
-	public ServiceBootstrap setMethodPageModule(String monitorModuleName) {
+	public RpcBootstrap setMethodPageModule(String monitorModuleName) {
 		this.processor.setMethodPageModule(monitorModuleName);
 		return this;
 	}  
@@ -105,7 +105,7 @@ public class ServiceBootstrap implements Closeable {
 		return this.processor;
 	}
 	 
-	public ServiceBootstrap start() throws Exception{
+	public RpcBootstrap start() throws Exception{
 		validate();  
 		
 		if(autoLoadService){
@@ -131,22 +131,22 @@ public class ServiceBootstrap implements Closeable {
 		return this;
 	}  
 	
-	public ServiceBootstrap addModule(Class<?>... clazz){
+	public RpcBootstrap addModule(Class<?>... clazz){
 		processor.addModule(clazz);
 		return this;
 	}  
 	
-	public ServiceBootstrap addModule(String module, Class<?>... clazz){
+	public RpcBootstrap addModule(String module, Class<?>... clazz){
 		processor.addModule(module, clazz);
 		return this;
 	}
 	
-	public ServiceBootstrap addModule(String module, Object... services){
+	public RpcBootstrap addModule(String module, Object... services){
 		processor.addModule(module, services);
 		return this;
 	}
 	
-	public ServiceBootstrap addModule(Object... services){
+	public RpcBootstrap addModule(Object... services){
 		processor.addModule(services);
 		return this;
 	}
@@ -158,8 +158,13 @@ public class ServiceBootstrap implements Closeable {
 		}
 	}
 	
-	public ServiceBootstrap addMethod(RpcMethod spec, GenericInvocation genericInvocation){
+	public RpcBootstrap addMethod(RpcMethod spec, GenericInvocation genericInvocation){
 		processor.addMethod(spec, genericInvocation);
+		return this;
+	}  
+	
+	public RpcBootstrap removeMethod(String module, String method){
+		processor.removeMethod(module, method);
 		return this;
 	}  
 	

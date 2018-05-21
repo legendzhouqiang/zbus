@@ -115,6 +115,10 @@ public class RpcProcessor {
 		addMethodInfo(spec, service);
 	}
 	
+	public void removeMethod(String module, String method) {
+		
+	}
+	
 	private void addMethodInfo(RpcMethod spec, GenericInvocation service) {
 		List<RpcMethod> rpcMethods = null;
 		String serviceKey = service.getClass().getCanonicalName();

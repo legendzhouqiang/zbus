@@ -1,6 +1,8 @@
 package io.zbus.mq;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -15,11 +17,15 @@ import io.zbus.transport.http.HttpMessage;
 public class MqServerAdaptor extends ServerAdaptor { 
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
 	private MessageDispatcher messageDispatcher;
-	private MessageQueueManager mqManager = new MessageQueueManager();
-	
+	private MessageQueueManager mqManager = new MessageQueueManager(); 
+	private Map<String, CommandHandler> commandTable = new HashMap<>(); 
 	
 	public MqServerAdaptor() {
-		messageDispatcher = new MessageDispatcher(subscriptionManager, sessionTable);
+		messageDispatcher = new MessageDispatcher(subscriptionManager, sessionTable); 
+		
+		commandTable.put(Protocol.PUB, pubHandler);
+		commandTable.put(Protocol.SUB, subHandler);
+		commandTable.put(Protocol.CREATE, createHandler); 
 	}
 	
 	@Override
@@ -37,18 +43,6 @@ public class MqServerAdaptor extends ServerAdaptor {
 			throw new IllegalStateException("Not support message type");
 		}
 		
-		handleJsonMessage(json, sess, isWebsocket);
-	} 
-	
-	@Override
-	protected void cleanSession(Session sess) throws IOException { 
-		String sessId = sess.id();
-		super.cleanSession(sess); 
-		
-		subscriptionManager.removeByClientId(sessId);
-	}
-	
-	protected void handleJsonMessage(JSONObject json, Session sess, boolean isWebsocket) throws IOException { 
 		String cmd = (String)json.remove(Protocol.CMD);
 		if (cmd == null) {
 			JSONObject res = new JSONObject();
@@ -58,20 +52,28 @@ public class MqServerAdaptor extends ServerAdaptor {
 
 			sendMessage(sess, json, isWebsocket);
 			return;
-		}
-
-		
-		if (cmd.equals(Protocol.PUB)) {
-			
-			handlePubMessage(json, sess);  
-			
-		} else if (cmd.equals(Protocol.SUB)) {
-			
-			handleSubMessage(json, sess); 
 		} 
+		CommandHandler handler = commandTable.get(cmd);
+		if(handler == null) {
+			JSONObject res = new JSONObject();
+			res.put(Protocol.STATUS, 404);
+			res.put(Protocol.DATA, "cmd="+cmd + " not found");
+			res.put(Protocol.ID, json.getString(Protocol.ID)); 
+			sendMessage(sess, json, isWebsocket);
+			return;
+		}
+		handler.handle(json, sess, isWebsocket);
 	} 
 	
-	private void handlePubMessage(JSONObject json, Session sess) throws IOException {
+	@Override
+	protected void cleanSession(Session sess) throws IOException { 
+		String sessId = sess.id();
+		super.cleanSession(sess); 
+		
+		subscriptionManager.removeByClientId(sessId);
+	} 
+	
+	private CommandHandler createHandler = (json, sess, isWebsocket) -> {
 		String mqName = json.getString(Protocol.MQ);  
 		MessageQueue mq = mqManager.get(mqName);
 		if(mq == null) {
@@ -80,9 +82,19 @@ public class MqServerAdaptor extends ServerAdaptor {
 		
 		mq.write(json); 
 		messageDispatcher.dispatch(mq); 
-	}
+	};
 	
-	private void handleSubMessage(JSONObject json, Session sess) throws IOException {
+	private CommandHandler pubHandler = (json, sess, isWebsocket) -> {
+		String mqName = json.getString(Protocol.MQ);  
+		MessageQueue mq = mqManager.get(mqName);
+		if(mq == null) {
+			mq = mqManager.create(mqName);
+		} 
+		mq.write(json); 
+		messageDispatcher.dispatch(mq); 
+	};
+	
+	private CommandHandler subHandler = (json, sess, isWebsocket) -> {
 		Subscription sub = subscriptionManager.get(sess.id());
 		String mqName = json.getString(Protocol.MQ);
 		String channelName = json.getString(Protocol.CHANNEL);
@@ -114,7 +126,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			mq.saveChannel(channel);
 		}
 		messageDispatcher.dispatch(mq, channelName); 
-	} 
+	};
 	
 	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
 		if(isWebsocket) {
@@ -129,6 +141,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 		res.setJsonBody(JSON.toJSONBytes(json));
 		
 		sess.write(res);
-	}
+	} 
+}
 
+interface CommandHandler{
+	void handle(JSONObject json, Session sess, boolean isWebsocket);
 }

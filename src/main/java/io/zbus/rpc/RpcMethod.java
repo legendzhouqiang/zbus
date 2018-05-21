@@ -9,4 +9,5 @@ public class RpcMethod {
 	public List<String> paramTypes = new ArrayList<>();
 	public List<String> paramNames = new ArrayList<>();
 	public String returnType; 
+	public boolean authRequired;
 }
