@@ -7,24 +7,27 @@ import io.zbus.transport.http.HttpWsServerCodec;
 
 public class MqServer extends Server { 
 	private MqServerAdaptor serverAdaptor; 
+	private final MqServerConfig config;
 	
-	public MqServer() { 
+	public MqServer(MqServerConfig config) { 
+		this.config = config;
 		codec(p -> {
 			p.add(new HttpServerCodec());
-			p.add(new HttpObjectAggregator(packageSizeLimit));  
+			p.add(new HttpObjectAggregator(config.packageSizeLimit));  
 			p.add(new HttpWsServerCodec());
 		}); 
 		
 		serverAdaptor = new MqServerAdaptor();
 	} 
 	
-	public void start(int port) {
-		this.start(port, serverAdaptor);
+	public void start() {
+		this.start(config.port, serverAdaptor);
 	}
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
-		MqServer server = new MqServer();
-		server.start(15555);
+		MqServerConfig config = new MqServerConfig();
+		MqServer server = new MqServer(config);
+		server.start();
 	}
 }
