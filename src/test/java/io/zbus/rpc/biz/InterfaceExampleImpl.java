@@ -19,7 +19,7 @@ public class InterfaceExampleImpl implements InterfaceExample{
 		return string;
 	}
 	 
-	public String getString(@Param("0") String name) { 
+	public String getString(@Param("name") String name) { 
 		if(name == null){
 			System.out.println("got null: "+ name);
 		}

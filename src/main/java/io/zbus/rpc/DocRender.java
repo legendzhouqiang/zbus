@@ -3,7 +3,6 @@ package io.zbus.rpc;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -30,11 +29,11 @@ public class DocRender {
 		
 		String doc = "<div>";
 		int rowIdx = 0;
-		TreeMap<String, List<RpcMethod>> methods = new TreeMap<>(this.rpcProcessor.object2Methods);
-		Iterator<Entry<String, List<RpcMethod>>> iter = methods.entrySet().iterator();
+		TreeMap<String, Map<String, RpcMethod>> methods = new TreeMap<>(this.rpcProcessor.methodInfoTable);
+		Iterator<Entry<String, Map<String, RpcMethod>>> iter = methods.entrySet().iterator();
 		while(iter.hasNext()) {
-			List<RpcMethod> objectMethods = iter.next().getValue();
-			for(RpcMethod m : objectMethods) {
+			TreeMap<String, RpcMethod> objectMethods = new TreeMap<>(iter.next().getValue()); 
+			for(RpcMethod m : objectMethods.values()) {
 				doc += rowDoc(m, rowIdx++);
 			}
 		} 

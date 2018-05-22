@@ -143,8 +143,7 @@ public class RpcClient extends WebsocketClient {
 			 
 			Request request = new Request();
 			request.setModule(module);
-			request.setMethod(method.getName()); 
-			//request.setParamTypes(method.getParameterTypes()); //TODO 
+			request.setMethod(method.getName());  
 			request.setParams(args);
 			
 			Response resp = rpc.invoke(request);

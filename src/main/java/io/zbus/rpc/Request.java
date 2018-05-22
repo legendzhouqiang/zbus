@@ -36,21 +36,6 @@ public class Request extends TreeMap<String, Object> {
 	} 
 	public void setParams(List<Object> value) {
 		put("params", value);
-	} 
-	
-	public String[] getParamTypes() {
-		return get("paramTypes");
-	} 
-	public void setParamTypes(String[] value) {
-		put("paramTypes", value);
-	}   
-	public void setParamTypes(Class<?>[] value) {
-		String[] paramTypes = new String[value.length];
-		int i = 0;
-		for(Class<?> type : value) {
-			paramTypes[i++] = type.getName();
-		}
-		setParamTypes(paramTypes);
 	}  
 	
 	public String getApiKey() { 
