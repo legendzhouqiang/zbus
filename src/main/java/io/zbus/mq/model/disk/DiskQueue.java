@@ -8,7 +8,7 @@ import io.zbus.mq.model.MessageQueue;
 
 public class DiskQueue implements MessageQueue {
 
-	public DiskQueue(String mqName, Long mask) { 
+	public DiskQueue(String mqName) { 
 	}
 	
 	@Override

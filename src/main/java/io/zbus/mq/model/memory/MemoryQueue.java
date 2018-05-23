@@ -15,14 +15,13 @@ public class MemoryQueue implements MessageQueue{
 	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
 	private Map<String, Reader> readerTable = new ConcurrentHashMap<>();  
 	
-	public MemoryQueue(String name, Long mask, int maxSize) { 
+	public MemoryQueue(String name, int maxSize) { 
 		this.name = name;
-		this.data = new CircularArray(maxSize);
-		this.mask = mask;
+		this.data = new CircularArray(maxSize); 
 	}  
 	
-	public MemoryQueue(String name, Long mask) { 
-		this(name, mask, 1000); 
+	public MemoryQueue(String name) { 
+		this(name, 1000); 
 	} 
 	 
   

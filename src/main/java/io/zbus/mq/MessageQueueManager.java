@@ -44,22 +44,22 @@ public class MessageQueueManager {
 		MessageQueue mq = mqTable.get(mqName); 
 		if(mq == null) {
 			if(MEMORY.equals(mqType)) {
-				mq = new MemoryQueue(mqName, mqMask);
+				mq = new MemoryQueue(mqName);
 			} else if (DISK.equals(mqType)) {
-				mq = new DiskQueue(mqName, mqMask);
+				mq = new DiskQueue(mqName);
 			} else if(DB.equals(mqName)) {
-				mq = new DbQueue(mqName, mqMask);
+				mq = new DbQueue(mqName);
 			} else {
 				throw new IllegalArgumentException("mqType(" + mqType + ") Not Support");
 			}  
 			mqTable.put(mqName, mq);
-		} else {
-			mq.setMask(mqMask);
 		}
 		
+		mq.setMask(mqMask); 
+		
 		if(channel != null) {
-			Channel ch = new Channel(channel, channelMask);  
-			ch.offset = channelOffset;
+			Channel ch = new Channel(channel, channelOffset);  
+			ch.mask = channelMask;
 			mq.addChannel(ch);
 		}
 		

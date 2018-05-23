@@ -5,9 +5,9 @@ public class Channel implements Cloneable {
 	public Long offset; 
 	public Long mask; 
 	
-	public Channel(String name, Long mask) {
+	public Channel(String name, Long offset) {
 		this.name = name;
-		this.mask = mask;
+		this.offset = offset;
 	}
 	public Channel(String name) {
 		this(name, null);
