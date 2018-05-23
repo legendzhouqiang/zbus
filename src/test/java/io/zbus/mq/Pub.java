@@ -12,14 +12,14 @@ public class Pub {
 			System.out.println(msg); 
 		};
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 10000; i++) {
 			Map<String, Object> req = new HashMap<>();
 			req.put("cmd", "pub");
-			req.put("topic", "/abc");
+			req.put("mq", "MyMQ");
 			req.put("data", i);
 
 			ws.sendMessage(req);
 		} 
-		ws.close(); 
+		//ws.close(); 
 	}
 }

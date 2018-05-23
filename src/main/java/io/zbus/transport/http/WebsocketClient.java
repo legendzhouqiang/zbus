@@ -174,8 +174,9 @@ public class WebsocketClient implements Closeable {
 			public void onFailure(WebSocket webSocket, Throwable t, Response response) { 
 				String error = String.format("Websocket(%s) error: %s", address, t.getMessage());
 				logger.error(error);
-				
-				response.close();
+				if(response != null) {
+					response.close();
+				}
 				if(onError != null){
 					onError.handle(t);
 				}
