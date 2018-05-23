@@ -11,9 +11,9 @@ import io.zbus.mq.model.memory.CircularArray.Reader;
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  
 	private String name; 
+	private Long mask;
 	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
-	private Map<String, Reader> readerTable = new ConcurrentHashMap<>(); 
-	private Map<String, Object> attributes = new ConcurrentHashMap<>();
+	private Map<String, Reader> readerTable = new ConcurrentHashMap<>();  
 	
 	public MemoryQueue(String name, int maxSize) { 
 		this.name = name;
@@ -28,10 +28,10 @@ public class MemoryQueue implements MessageQueue{
 	public String name() {
 		return name;
 	}
-	
+
 	@Override
-	public Map<String, Object> attributes() { 
-		return attributes;
+	public Long mask() { 
+		return mask;
 	}
 	
 	@Override
@@ -52,7 +52,7 @@ public class MemoryQueue implements MessageQueue{
 	}
 
 	@Override
-	public void saveChannel(Channel channel) {  
+	public void addChannel(Channel channel) {  
 		channel = channel.clone(); //clone it 
 		Reader reader = readerTable.get(channel.name);
 		if(reader == null) {
@@ -82,4 +82,9 @@ public class MemoryQueue implements MessageQueue{
 		}   
 		return reader.read(count);
 	} 
+	
+	@Override
+	public void destroy() { 
+		
+	}
 }

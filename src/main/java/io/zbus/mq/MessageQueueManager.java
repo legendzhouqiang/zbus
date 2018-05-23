@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.model.MessageQueue;
+import io.zbus.mq.model.db.DbQueue;
+import io.zbus.mq.model.disk.DiskQueue;
 import io.zbus.mq.model.memory.MemoryQueue;
 
 public class MessageQueueManager {
@@ -18,27 +20,59 @@ public class MessageQueueManager {
 		return mqTable.get(mqName);
 	} 
 	
-	public MessageQueue createQueue(String mqName, String mqType) { 
+	/**
+	 * 
+	 * Create MQ or Channel of MQ
+	 * 
+	 * @param mqName
+	 * @param mqType
+	 * @param channel
+	 * @return
+	 */
+	public MessageQueue createQueue(
+			String mqName, String mqType, Long mqMask, 
+			String channel, Long channelMask) { 
+		
 		if(mqName == null) {
 			throw new IllegalArgumentException("Missing mqName");
 		}
 		if(mqType == null) {
 			mqType = MEMORY;
 		}
-		MessageQueue mq = new MemoryQueue(mqName);
+		
+		MessageQueue mq = null; 
+		if(MEMORY.equals(mqType)) {
+			mq = new MemoryQueue(mqName);
+		} else if (DISK.equals(mqType)) {
+			mq = new DiskQueue(mqName);
+		} else if(DB.equals(mqName)) {
+			mq = new DbQueue(mqName);
+		} else {
+			throw new IllegalArgumentException("mqType="+mqType + " Not Support");
+		}
+		
 		mqTable.put(mqName, mq);
 		return mq;
 	} 
 	
-	public void removeQueue(String mqName) {
-		mqTable.remove(mqName);
-	}
-	
-	public void createChannel(String mqName, String channelId) {
+	/**
+	 * Remove MQ or Channel of MQ
+	 * 
+	 * @param mq
+	 * @param channel
+	 */ 
+	public void removeQueue(String mq, String channel) {
+		if(channel == null) {
+			MessageQueue q = mqTable.remove(mq);
+			if(q != null) {
+				q.destroy();
+			}
+			return;
+		}
 		
-	}
-	
-	public void removeChannel(String mqName, String channelId) {
-		
-	}
+		MessageQueue q = mqTable.get(mq);
+		if(q != null) {
+			q.removeChannel(channel);
+		}
+	} 
 }

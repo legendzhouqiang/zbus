@@ -1,4 +1,4 @@
-package io.zbus.mq.model.disk;
+package io.zbus.mq.model.disk.support;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.StrKit;
-import io.zbus.mq.model.disk.Index.BlockOffset;
-import io.zbus.mq.model.disk.Index.Offset;
+import io.zbus.mq.model.disk.support.Index.BlockOffset;
+import io.zbus.mq.model.disk.support.Index.Offset;
  
 
 public class QueueReader extends MappedFile implements Comparable<QueueReader> {

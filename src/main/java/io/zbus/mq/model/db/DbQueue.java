@@ -7,14 +7,18 @@ import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
 
 public class DbQueue implements MessageQueue{
-
+	
+	public DbQueue(String mqName) { 
+	}
+	
 	@Override
 	public String name() {
 		return null;
 	}
-	
+
 	@Override
-	public Map<String, Object> attributes() {
+	public Long mask() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	 
@@ -35,7 +39,7 @@ public class DbQueue implements MessageQueue{
 	}
 
 	@Override
-	public void saveChannel(Channel channel) {
+	public void addChannel(Channel channel) {
 		
 	}
 
@@ -53,4 +57,10 @@ public class DbQueue implements MessageQueue{
 	public void write(Object... message) { 
 		
 	}  
+	
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		
+	}
 }

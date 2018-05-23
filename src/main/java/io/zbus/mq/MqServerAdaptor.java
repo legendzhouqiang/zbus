@@ -63,7 +63,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		}
 		String mqType = req.getString(Protocol.MQ_TYPE);
-		mqManager.createQueue(mqName, mqType);
+		String channel = req.getString(Protocol.CHANNEL);
+		Long mqMask = req.getLong(Protocol.MQ_MASK);
+		Long channelMask = req.getLong(Protocol.CHANNEL_MASK);
+		mqManager.createQueue(mqName, mqType, mqMask, channel, channelMask); 
+		
 		reply(req, 200, "OK", sess, isWebsocket);
 	};
 	
@@ -74,7 +78,8 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 400, "Missing mq field", sess, isWebsocket);
 			return;
 		}
-		mqManager.removeQueue(mqName);
+		String channel = req.getString(Protocol.CHANNEL);
+		mqManager.removeQueue(mqName, channel);
 		reply(req, 200, "OK", sess, isWebsocket);
 	}; 
 	

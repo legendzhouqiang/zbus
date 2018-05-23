@@ -1,17 +1,14 @@
 package io.zbus.mq.model;
 
-import java.util.HashMap;
-
 public class Channel implements Cloneable {   
 	public String name;
 	public Long offset; 
+	public Long mask; 
 	
-	public HashMap<String, Object> attributes = new HashMap<>();
 	@Override
 	public Channel clone() { 
 		try {
-			Channel channel = (Channel)super.clone();
-			channel.attributes = new HashMap<>(channel.attributes);
+			Channel channel = (Channel)super.clone(); 
 			return channel;
 		} catch (CloneNotSupportedException e) { 
 			throw new IllegalStateException(e.getMessage(), e.getCause());

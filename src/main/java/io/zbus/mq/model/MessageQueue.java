@@ -64,7 +64,7 @@ public interface MessageQueue {
 	 * Add or update channel to the queue
 	 * @param channel Channel object to save
 	 */
-	void saveChannel(Channel channel);
+	void addChannel(Channel channel);
 	
 	/**
 	 * Remove channel by channel's Id
@@ -81,10 +81,15 @@ public interface MessageQueue {
 	/** 
 	 * @return attribute map of the queue
 	 */
-	Map<String, Object> attributes();
+	Long mask();
 	
 	/**
 	 * Flush message in memory to disk if support
 	 */
 	void flush();
+	
+	/**
+	 * Destroy of this queue
+	 */
+	void destroy();
 }

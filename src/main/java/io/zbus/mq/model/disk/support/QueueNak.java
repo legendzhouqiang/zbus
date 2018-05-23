@@ -1,4 +1,4 @@
-package io.zbus.mq.model.disk;
+package io.zbus.mq.model.disk.support;
 
 import java.io.File;
 import java.io.IOException;
