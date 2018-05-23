@@ -3,6 +3,7 @@ package io.zbus.mq;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.db.DbQueue;
 import io.zbus.mq.model.disk.DiskQueue;
@@ -31,7 +32,7 @@ public class MessageQueueManager {
 	 */
 	public MessageQueue createQueue(
 			String mqName, String mqType, Long mqMask, 
-			String channel, Long channelMask) { 
+			String channel, Long channelOffset, Long channelMask) { 
 		
 		if(mqName == null) {
 			throw new IllegalArgumentException("Missing mqName");
@@ -40,18 +41,28 @@ public class MessageQueueManager {
 			mqType = MEMORY;
 		}
 		
-		MessageQueue mq = null; 
-		if(MEMORY.equals(mqType)) {
-			mq = new MemoryQueue(mqName);
-		} else if (DISK.equals(mqType)) {
-			mq = new DiskQueue(mqName);
-		} else if(DB.equals(mqName)) {
-			mq = new DbQueue(mqName);
+		MessageQueue mq = mqTable.get(mqName); 
+		if(mq == null) {
+			if(MEMORY.equals(mqType)) {
+				mq = new MemoryQueue(mqName, mqMask);
+			} else if (DISK.equals(mqType)) {
+				mq = new DiskQueue(mqName, mqMask);
+			} else if(DB.equals(mqName)) {
+				mq = new DbQueue(mqName, mqMask);
+			} else {
+				throw new IllegalArgumentException("mqType(" + mqType + ") Not Support");
+			}  
+			mqTable.put(mqName, mq);
 		} else {
-			throw new IllegalArgumentException("mqType="+mqType + " Not Support");
+			mq.setMask(mqMask);
 		}
 		
-		mqTable.put(mqName, mq);
+		if(channel != null) {
+			Channel ch = new Channel(channel, channelMask);  
+			ch.offset = channelOffset;
+			mq.addChannel(ch);
+		}
+		
 		return mq;
 	} 
 	

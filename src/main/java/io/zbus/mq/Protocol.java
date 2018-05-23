@@ -71,17 +71,18 @@ public interface Protocol {
 	public static final String PING   = "ping";
 	
 	//Parameters
-	public static final String MQ           = "mq";  
-	public static final String CHANNEL      = "channel";  
-	public static final String TOPIC        = "topic";   
-	public static final String MQ_TYPE      = "mqType";  
-	public static final String MQ_MASK      = "mqMask";
-	public static final String CHANNEL_MASK = "channelMask";
-	public static final String WINDOW       = "window";
+	public static final String MQ             = "mq";  
+	public static final String CHANNEL        = "channel";  
+	public static final String TOPIC          = "topic";   
+	public static final String MQ_TYPE        = "mqType";  
+	public static final String MQ_MASK        = "mqMask";
+	public static final String CHANNEL_MASK   = "channelMask";
+	public static final String CHANNEL_OFFSET = "channelOffset";
+	public static final String WINDOW         = "window";
+	public static final String ACK            = "ack";
 	
-	//Response format
-	public static final String DATA   = "data";  
-	public static final String ID     = "id";  
+	public static final String ID     = "id";   
+	public static final String DATA   = "data";   
 	public static final String STATUS = "status"; 
 	
 }

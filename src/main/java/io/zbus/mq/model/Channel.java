@@ -1,9 +1,17 @@
 package io.zbus.mq.model;
 
 public class Channel implements Cloneable {   
-	public String name;
+	public final String name;
 	public Long offset; 
 	public Long mask; 
+	
+	public Channel(String name, Long mask) {
+		this.name = name;
+		this.mask = mask;
+	}
+	public Channel(String name) {
+		this(name, null);
+	}
 	
 	@Override
 	public Channel clone() { 

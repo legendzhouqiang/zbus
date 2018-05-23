@@ -8,7 +8,7 @@ import io.zbus.mq.model.MessageQueue;
 
 public class DiskQueue implements MessageQueue {
 
-	public DiskQueue(String mqName) { 
+	public DiskQueue(String mqName, Long mask) { 
 	}
 	
 	@Override
@@ -54,9 +54,15 @@ public class DiskQueue implements MessageQueue {
 	}
 
 	@Override
-	public Long mask() {
+	public Long getMask() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void setMask(Long mask) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override

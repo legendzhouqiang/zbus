@@ -50,7 +50,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		} 
 		CommandHandler handler = commandTable.get(cmd);
 		if(handler == null) {
-			reply(json, 404, "cmd="+cmd + " Not Found", sess, isWebsocket); 
+			reply(json, 404, "Command(" + cmd + ") Not Found", sess, isWebsocket); 
 			return; 
 		}
 		handler.handle(json, sess, isWebsocket);
@@ -66,9 +66,10 @@ public class MqServerAdaptor extends ServerAdaptor {
 		String channel = req.getString(Protocol.CHANNEL);
 		Long mqMask = req.getLong(Protocol.MQ_MASK);
 		Long channelMask = req.getLong(Protocol.CHANNEL_MASK);
-		mqManager.createQueue(mqName, mqType, mqMask, channel, channelMask); 
+		Long channelOffset = req.getLong(Protocol.CHANNEL_MASK);
+		mqManager.createQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask); 
 		
-		reply(req, 200, "OK", sess, isWebsocket);
+		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
 	};
 	
 	
@@ -80,7 +81,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		}
 		String channel = req.getString(Protocol.CHANNEL);
 		mqManager.removeQueue(mqName, channel);
-		reply(req, 200, "OK", sess, isWebsocket);
+		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
 	}; 
 	
 	private CommandHandler pingHandler = (req, sess, isWebsocket) -> { 
@@ -96,11 +97,16 @@ public class MqServerAdaptor extends ServerAdaptor {
 		
 		MessageQueue mq = mqManager.get(mqName);
 		if(mq == null) { 
-			reply(req, 404, "mq="+mqName + " Not Found", sess, isWebsocket);
+			reply(req, 404, "MQ(" + mqName + ") Not Found", sess, isWebsocket);
 			return; 
 		} 
 		
 		mq.write(req); 
+		Boolean ack = req.getBoolean(Protocol.ACK); 
+		if (ack == null || ack == true) {
+			reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
+		}
+		
 		messageDispatcher.dispatch(mq); 
 	};
 	
@@ -111,16 +117,21 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 400, "Missing mq field", sess, isWebsocket);
 			return;
 		}
-		MessageQueue mq = mqManager.get(mqName); 
-		if(mq == null) {
-			reply(req, 404, "mq="+mqName + " Not Found", sess, isWebsocket);
-			return;
-		}
-		if(channelName == null) channelName = sess.id();
-		if(mq.channel(channelName) == null) { 
-			reply(req, 404, "channel="+channelName + " Not Found", sess, isWebsocket);
+		if(channelName == null) {
+			reply(req, 400, "Missing channel field", sess, isWebsocket);
 			return;
 		} 
+		
+		MessageQueue mq = mqManager.get(mqName); 
+		if(mq == null) {
+			reply(req, 404, "MQ(" + mqName + ") Not Found", sess, isWebsocket);
+			return;
+		} 
+		if(mq.channel(channelName) == null) { 
+			reply(req, 404, "Channel(" + channelName + ") Not Found", sess, isWebsocket);
+			return;
+		} 
+		
 		Integer window = req.getInteger(Protocol.WINDOW);
 		Subscription sub = subscriptionManager.get(sess.id());
 		if(sub == null) {

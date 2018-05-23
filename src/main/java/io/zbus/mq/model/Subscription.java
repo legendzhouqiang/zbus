@@ -1,10 +1,10 @@
 package io.zbus.mq.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Subscription {
-	public List<String> topics = new ArrayList<>();
+	public Set<String> topics = new HashSet<>();
 	public String mq;
 	public String channel;
 	public String clientId; 

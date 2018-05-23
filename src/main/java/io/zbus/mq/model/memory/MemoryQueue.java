@@ -10,18 +10,19 @@ import io.zbus.mq.model.memory.CircularArray.Reader;
 
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  
-	private String name; 
+	private final String name; 
 	private Long mask;
 	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
 	private Map<String, Reader> readerTable = new ConcurrentHashMap<>();  
 	
-	public MemoryQueue(String name, int maxSize) { 
+	public MemoryQueue(String name, Long mask, int maxSize) { 
 		this.name = name;
 		this.data = new CircularArray(maxSize);
+		this.mask = mask;
 	}  
 	
-	public MemoryQueue(String name) { 
-		this(name, 1000);
+	public MemoryQueue(String name, Long mask) { 
+		this(name, mask, 1000); 
 	} 
 	 
   
@@ -30,8 +31,13 @@ public class MemoryQueue implements MessageQueue{
 	}
 
 	@Override
-	public Long mask() { 
+	public Long getMask() { 
 		return mask;
+	}
+	
+	@Override
+	public void setMask(Long mask) {
+		this.mask = mask;
 	}
 	
 	@Override

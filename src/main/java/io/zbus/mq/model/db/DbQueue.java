@@ -8,7 +8,7 @@ import io.zbus.mq.model.MessageQueue;
 
 public class DbQueue implements MessageQueue{
 	
-	public DbQueue(String mqName) { 
+	public DbQueue(String mqName, Long mask) { 
 	}
 	
 	@Override
@@ -17,9 +17,15 @@ public class DbQueue implements MessageQueue{
 	}
 
 	@Override
-	public Long mask() {
+	public Long getMask() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void setMask(Long mask) {
+		// TODO Auto-generated method stub
+		
 	}
 	 
 	@Override

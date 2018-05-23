@@ -81,7 +81,13 @@ public interface MessageQueue {
 	/** 
 	 * @return attribute map of the queue
 	 */
-	Long mask();
+	Long getMask();
+	
+	/**
+	 * Set mask value
+	 * @param mask
+	 */
+	void setMask(Long mask);
 	
 	/**
 	 * Flush message in memory to disk if support
