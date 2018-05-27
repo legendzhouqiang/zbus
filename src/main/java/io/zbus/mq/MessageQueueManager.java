@@ -25,10 +25,10 @@ public class MessageQueueManager {
 	 * 
 	 * Create MQ or Channel of MQ
 	 * 
-	 * @param mqName
-	 * @param mqType
-	 * @param channel
-	 * @return
+	 * @param mqName name of message queue
+	 * @param mqType type of mq
+	 * @param channel channel name of mq
+	 * @return created/updated mq
 	 */
 	public MessageQueue createQueue(
 			String mqName, String mqType, Long mqMask, 
@@ -69,8 +69,8 @@ public class MessageQueueManager {
 	/**
 	 * Remove MQ or Channel of MQ
 	 * 
-	 * @param mq
-	 * @param channel
+	 * @param mq name of mq
+	 * @param channel channel of mq
 	 */ 
 	public void removeQueue(String mq, String channel) {
 		if(channel == null) {

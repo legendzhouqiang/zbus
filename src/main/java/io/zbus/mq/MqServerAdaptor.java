@@ -42,7 +42,10 @@ public class MqServerAdaptor extends ServerAdaptor {
 		} else {
 			throw new IllegalStateException("Not support message type");
 		}
-		
+		if (json == null) {
+			reply(json, 400, "json format required", sess, isWebsocket); 
+			return;
+		} 
 		String cmd = (String)json.remove(Protocol.CMD);
 		if (cmd == null) {
 			reply(json, 400, "cmd key required", sess, isWebsocket); 
@@ -157,7 +160,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 		JSONObject res = new JSONObject();
 		res.put(Protocol.STATUS, status);
 		res.put(Protocol.DATA, message);
-		res.put(Protocol.ID, req.getString(Protocol.ID)); 
+		if(req != null) {
+			res.put(Protocol.ID, req.getString(Protocol.ID)); 
+		}
 		sendMessage(sess, res, isWebsocket); 
 	}
 	
