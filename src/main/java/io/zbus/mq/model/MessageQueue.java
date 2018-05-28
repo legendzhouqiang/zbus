@@ -41,7 +41,7 @@ public interface MessageQueue {
 	 * 
 	 * @param message message or message list
 	 */
-	void write(Object... message); 
+	void write(Map<String, Object> message); 
 	/**
 	 * Read message from queue by channel, support batch read
 	 * If the length of result is less than count, queue end reached.
@@ -50,7 +50,7 @@ public interface MessageQueue {
 	 * @param count maximum count of message to read
 	 * @return
 	 */
-	List<Object> read(String channelId, int count);  
+	List<Map<String, Object>> read(String channelId, int count);  
 	
 	/**
 	 * Get channel by id
@@ -81,13 +81,13 @@ public interface MessageQueue {
 	/** 
 	 * @return attribute map of the queue
 	 */
-	Long getMask();
+	Integer getMask();
 	
 	/**
 	 * Set mask value
 	 * @param mask
 	 */
-	void setMask(Long mask);
+	void setMask(Integer mask);
 	
 	/**
 	 * Flush message in memory to disk if support

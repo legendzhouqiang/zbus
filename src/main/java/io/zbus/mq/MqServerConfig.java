@@ -8,7 +8,7 @@ public class MqServerConfig extends XmlConfig {
 	public int port = 15555;
 	public int maxSocketCount = 102400;
 	public int packageSizeLimit = 1024*1024*128; 
-	
+	public String mqBaseDir = "/tmp/zbus";
 	
 	@Override
 	public void loadFromXml(Document doc) throws Exception { 

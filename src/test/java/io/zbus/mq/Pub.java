@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Pub {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		MqClient ws = new MqClient("localhost:15555"); 
 		
@@ -16,7 +17,7 @@ public class Pub {
 			}
 		};
 
-		for (int i = 0; i < 200000; i++) {
+		for (int i = 0; i < 500000; i++) {
 			Map<String, Object> req = new HashMap<>();
 			req.put("cmd", "pub");
 			req.put("mq", "MyMQ");

@@ -11,7 +11,7 @@ import io.zbus.mq.model.memory.CircularArray.Reader;
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  
 	private final String name; 
-	private Long mask;
+	private Integer mask;
 	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
 	private Map<String, Reader> readerTable = new ConcurrentHashMap<>();  
 	
@@ -30,12 +30,12 @@ public class MemoryQueue implements MessageQueue{
 	}
 
 	@Override
-	public Long getMask() { 
+	public Integer getMask() { 
 		return mask;
 	}
 	
 	@Override
-	public void setMask(Long mask) {
+	public void setMask(Integer mask) {
 		this.mask = mask;
 	}
 	
@@ -75,12 +75,12 @@ public class MemoryQueue implements MessageQueue{
 	} 
 	
 	@Override
-	public void write(Object... message) {  
+	public void write(Map<String, Object> message) {  
 		data.write(message);
 	} 
 	
 	@Override
-	public List<Object> read(String channelId, int count) { 
+	public List<Map<String, Object>> read(String channelId, int count) { 
 		Reader reader = readerTable.get(channelId);
 		if(reader == null) {
 			throw new IllegalArgumentException("Missing channel: " + channelId);

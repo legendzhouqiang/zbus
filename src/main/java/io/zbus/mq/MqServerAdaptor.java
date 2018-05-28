@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -14,6 +17,7 @@ import io.zbus.transport.Session;
 import io.zbus.transport.http.HttpMessage;
 
 public class MqServerAdaptor extends ServerAdaptor { 
+	private static final Logger logger = LoggerFactory.getLogger(MqServerAdaptor.class); 
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
 	private MessageDispatcher messageDispatcher;
 	private MessageQueueManager mqManager = new MessageQueueManager(); 
@@ -67,10 +71,18 @@ public class MqServerAdaptor extends ServerAdaptor {
 		}
 		String mqType = req.getString(Protocol.MQ_TYPE);
 		String channel = req.getString(Protocol.CHANNEL);
-		Long mqMask = req.getLong(Protocol.MQ_MASK);
-		Long channelMask = req.getLong(Protocol.CHANNEL_MASK);
+		Integer mqMask = req.getInteger(Protocol.MQ_MASK);
+		Integer channelMask = req.getInteger(Protocol.CHANNEL_MASK);
 		Long channelOffset = req.getLong(Protocol.CHANNEL_MASK);
-		mqManager.createQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask); 
+		
+		try {
+			mqManager.createQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask);
+		} catch (IOException e) { 
+			logger.error(e.getMessage(), e);
+			
+			reply(req, 500, e.getMessage(), sess, isWebsocket);
+			return;
+		} 
 		
 		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
 	};

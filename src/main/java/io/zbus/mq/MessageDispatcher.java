@@ -21,8 +21,8 @@ public class MessageDispatcher {
 		this.subscriptionManager = subscriptionManager;
 		this.sessionTable = sessionTable; 
 	} 
+	 
 	
-	@SuppressWarnings("unchecked")
 	public void dispatch(MessageQueue mq, String channel) {   
 		List<Subscription> subs = subscriptionManager.getSubscriptionList(mq.name(), channel);
 		if(subs == null || subs.size() == 0) return;
@@ -32,13 +32,11 @@ public class MessageDispatcher {
 			if(index == null) {
 				index = 0L; 
 			}
-			int count = 10;
-		    List<Object> messages = mq.read(channel, count); 
+			int count = 10; 
 			while(true) {
-				for(Object message : messages) {
-					if(!(message instanceof Map)) continue;
-					Map<String, Object> data = (Map<String, Object>)message;
-					String topic = (String)data.get(Protocol.TOPIC);
+				List<Map<String, Object>> data = mq.read(channel, count); 
+				for(Map<String, Object> message : data) { 
+					String topic = (String)message.get(Protocol.TOPIC);
 					int N = subs.size();
 					long max = index+N;
 					while(index<max) {
@@ -48,12 +46,12 @@ public class MessageDispatcher {
 						if(sub.topics.isEmpty() || sub.topics.contains(topic)) {
 							Session sess = sessionTable.get(sub.clientId);
 							if(sess == null) continue;
-							sendMessage(sess, data, sub.isWebsocket); 
+							sendMessage(sess, message, sub.isWebsocket); 
 							break;
 						}
 					} 
 				}
-				if(messages.size() < count) break;
+				if(data.size() < count) break;
 			}
 			channelIndexTable.put(channel, index);
 		} 

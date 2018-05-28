@@ -3,7 +3,7 @@ package io.zbus.mq.model;
 public class Channel implements Cloneable {   
 	public final String name;
 	public Long offset; 
-	public Long mask; 
+	public Integer mask; 
 	
 	public Channel(String name, Long offset) {
 		this.name = name;

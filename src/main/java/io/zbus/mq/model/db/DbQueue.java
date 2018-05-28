@@ -17,13 +17,13 @@ public class DbQueue implements MessageQueue{
 	}
 
 	@Override
-	public Long getMask() {
+	public Integer getMask() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Override
-	public void setMask(Long mask) {
+	public void setMask(Integer mask) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -55,15 +55,17 @@ public class DbQueue implements MessageQueue{
 	}  
 
 	@Override
-	public List<Object> read(String channelId, int count) {
+	public List<Map<String, Object>> read(String channelId, int count) {
+		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public void write(Object... message) { 
-		
-	}  
 	
+	@Override
+	public void write(Map<String, Object> message) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public void destroy() {
 		// TODO Auto-generated method stub

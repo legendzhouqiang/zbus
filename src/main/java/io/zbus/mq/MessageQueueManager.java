@@ -1,5 +1,7 @@
 package io.zbus.mq;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,6 +15,8 @@ public class MessageQueueManager {
 	public static final String MEMORY = "mem";
 	public static final String DISK = "disk";
 	public static final String DB = "db";
+	
+	public String mqBaseDir = "/tmp/zbus";
 	
 	private Map<String, MessageQueue> mqTable = new ConcurrentHashMap<>();
 	
@@ -29,10 +33,11 @@ public class MessageQueueManager {
 	 * @param mqType type of mq
 	 * @param channel channel name of mq
 	 * @return created/updated mq
+	 * @throws IOException 
 	 */
 	public MessageQueue createQueue(
-			String mqName, String mqType, Long mqMask, 
-			String channel, Long channelOffset, Long channelMask) { 
+			String mqName, String mqType, Integer mqMask, 
+			String channel, Long channelOffset, Integer channelMask) throws IOException { 
 		
 		if(mqName == null) {
 			throw new IllegalArgumentException("Missing mqName");
@@ -46,7 +51,7 @@ public class MessageQueueManager {
 			if(MEMORY.equals(mqType)) {
 				mq = new MemoryQueue(mqName);
 			} else if (DISK.equals(mqType)) {
-				mq = new DiskQueue(mqName);
+				mq = new DiskQueue(mqName, new File(mqBaseDir));
 			} else if(DB.equals(mqName)) {
 				mq = new DbQueue(mqName);
 			} else {
