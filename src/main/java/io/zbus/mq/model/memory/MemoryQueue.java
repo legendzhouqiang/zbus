@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
-import io.zbus.mq.model.memory.CircularArray.MemoryChannelReader;
 
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  
@@ -62,7 +61,7 @@ public class MemoryQueue implements MessageQueue{
 		channel = channel.clone(); //clone it 
 		MemoryChannelReader reader = readerTable.get(channel.name);
 		if(reader == null) {
-			reader = data.createReader(channel);
+			reader = new MemoryChannelReader(data, channel);
 			readerTable.put(channel.name, reader);
 		}
 		reader.seek(channel.offset, null); //TODO msgId to validate
