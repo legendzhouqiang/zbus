@@ -3,14 +3,12 @@ package io.zbus.rpc;
 import java.util.Arrays;
 import java.util.Map;
 
-import io.zbus.rpc.http.RpcBootstrap;
-
 
 public class RpcServerExample_DynamicMethod {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		RpcBootstrap b = new RpcBootstrap(); 
+		RpcServerBootstrap b = new RpcServerBootstrap(); 
 		b.setStackTraceEnabled(false); 
 		
 		GenericService service = new GenericService();

@@ -3,7 +3,7 @@ package io.zbus.rpc;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GenericService implements GenericInvocation {
+public class GenericService implements InvokeBridge {
 
 	@Override
 	public Object invoke(String funcName, Map<String, Object> params) {

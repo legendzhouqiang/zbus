@@ -40,7 +40,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	</bean>
 
 	
-	<bean class="io.zbus.rpc.http.RpcBootstrap" init-method="start"> 
+	<bean class="io.zbus.rpc.RpcServerBootstrap" init-method="start"> 
 		<property name="port" value="8080" />
 		<!-- 
 		<property name="certFile" value="ssl/zbus.crt"/>

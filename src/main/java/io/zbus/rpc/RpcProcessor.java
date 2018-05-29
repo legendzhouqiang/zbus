@@ -83,7 +83,7 @@ public class RpcProcessor {
 		}
 	} 
 	
-	public void addMethod(RpcMethod spec, GenericInvocation service) {
+	public void addMethod(RpcMethod spec, InvokeBridge service) {
 		MethodInstance mi = new MethodInstance(spec.method, service);
 		mi.paramNames = spec.paramNames;
 		
@@ -281,7 +281,7 @@ public class RpcProcessor {
 				}
 				data = target.reflectedMethod.invoke(target.instance, invokeParams);
 				
-			} else if(target.genericInvocation != null) {
+			} else if(target.invokeBridge != null) {
 				Map<String, Object> mapParams = new HashMap<>(); 
 				List<Object> paramList = req.getParams();
 				if(paramList != null) {
@@ -296,7 +296,7 @@ public class RpcProcessor {
 						}
 					}
 				}
-				data = target.genericInvocation.invoke(req.getMethod(), mapParams);
+				data = target.invokeBridge.invoke(req.getMethod(), mapParams);
 			}
 			
 			response.setData(data); 
@@ -369,7 +369,7 @@ public class RpcProcessor {
 		public Method reflectedMethod;
 		public Object instance;  
 		
-		public GenericInvocation genericInvocation;   
+		public InvokeBridge invokeBridge;   
 		public List<String> paramNames; 
 		
 		public MethodInstance(Method reflectedMethod, Object instance) {
@@ -378,9 +378,9 @@ public class RpcProcessor {
 			this.methodName = this.reflectedMethod.getName();
 		}
 		
-		public MethodInstance(String methodName, GenericInvocation genericInvocation) {  
+		public MethodInstance(String methodName, InvokeBridge invokeBridge) {  
 			this.methodName = methodName;
-			this.genericInvocation = genericInvocation;
+			this.invokeBridge = invokeBridge;
 		}
 	}
 }

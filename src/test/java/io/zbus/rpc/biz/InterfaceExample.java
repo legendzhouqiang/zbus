@@ -11,9 +11,7 @@ public interface InterfaceExample{
 	
 	String echo(String string);
 	
-	String getString(String name); 
-	//test of method overloading 
-	String getString(String name, int c);
+	String getString(String name);  
 	
 	String[] stringArray();
 	

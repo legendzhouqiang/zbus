@@ -24,12 +24,8 @@ public class InterfaceExampleImpl implements InterfaceExample{
 			System.out.println("got null: "+ name);
 		}
 		return "Hello World ZBUS " + name;
-	}
+	} 
 	
-	public String getString(String name, int c) {
-		return String.format("%s, %d", name, c);
-	}
- 
 	public String testEncoding() { 
 		return "中文";
 	}
