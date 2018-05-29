@@ -1,19 +1,20 @@
 package io.zbus.mq.model.memory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
-import io.zbus.mq.model.memory.CircularArray.Reader;
+import io.zbus.mq.model.memory.CircularArray.MemoryChannelReader;
 
 public class MemoryQueue implements MessageQueue{  
 	private CircularArray data;  
 	private final String name; 
 	private Integer mask;
 	private Map<String, Channel> channelTable = new ConcurrentHashMap<>(); 
-	private Map<String, Reader> readerTable = new ConcurrentHashMap<>();  
+	private Map<String, MemoryChannelReader> readerTable = new ConcurrentHashMap<>();  
 	
 	public MemoryQueue(String name, int maxSize) { 
 		this.name = name;
@@ -57,14 +58,14 @@ public class MemoryQueue implements MessageQueue{
 	}
 
 	@Override
-	public void addChannel(Channel channel) {  
+	public void saveChannel(Channel channel) throws IOException {  
 		channel = channel.clone(); //clone it 
-		Reader reader = readerTable.get(channel.name);
+		MemoryChannelReader reader = readerTable.get(channel.name);
 		if(reader == null) {
 			reader = data.createReader(channel);
 			readerTable.put(channel.name, reader);
 		}
-		reader.setOffset(channel.offset); 
+		reader.seek(channel.offset, null); //TODO msgId to validate
 		channelTable.put(channel.name, channel);  
 	} 
 
@@ -81,7 +82,7 @@ public class MemoryQueue implements MessageQueue{
 	
 	@Override
 	public List<Map<String, Object>> read(String channelId, int count) { 
-		Reader reader = readerTable.get(channelId);
+		MemoryChannelReader reader = readerTable.get(channelId);
 		if(reader == null) {
 			throw new IllegalArgumentException("Missing channel: " + channelId);
 		}   

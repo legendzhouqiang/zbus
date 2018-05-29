@@ -1,27 +1,27 @@
 package io.zbus.mq.model.disk;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.zbus.kit.JsonKit;
 import io.zbus.mq.model.Channel;
+import io.zbus.mq.model.ChannelReader;
 import io.zbus.mq.model.disk.support.DiskMessage;
 import io.zbus.mq.model.disk.support.QueueReader;
 
-public class DiskChannel extends Channel implements Closeable { 
+public class DiskChannelReader implements ChannelReader { 
+	private static final Logger logger = LoggerFactory.getLogger(DiskChannelReader.class); 
+	
 	private final QueueReader reader;  
-	
-	public DiskChannel(String channel, DiskQueue diskQueue) throws IOException{  
-		super(channel); 
-		reader = new QueueReader(diskQueue.index, this.name);   
-	}
-	
-	public DiskChannel(String channel, QueueReader reader) throws IOException{ 
-		super(channel);
-		this.reader = new QueueReader(reader, channel);  
+	private final String name;
+	public DiskChannelReader(String channel, DiskQueue diskQueue) throws IOException{  
+		this.name = channel;
+		reader = new QueueReader(diskQueue.index, channel);   
 	} 
-	  
+	
 	public boolean isEnd() { 
 		try {
 			return reader.isEOF();
@@ -49,12 +49,13 @@ public class DiskChannel extends Channel implements Closeable {
 	}
 	 
 	
-	public boolean seek(long totalOffset, String msgid) throws IOException{ 
+	public boolean seek(Long totalOffset, String msgid) throws IOException{ 
 		return reader.seek(totalOffset, msgid);
 	}
 	
-	public boolean seek(long time) throws IOException { 
-		return reader.seek(time);
+	@Override
+	public String getFilter() { 
+		return reader.getFilter();
 	}
 	
 	public void setFilter(String filter) {
@@ -65,17 +66,30 @@ public class DiskChannel extends Channel implements Closeable {
 	public void close() throws IOException {
 		reader.close();  
 	} 
-	
-	public void destory() throws IOException{ 
-		reader.delete();
-	}
+	 
 	
 	public Integer getMask(){
 		return reader.getMask(); 
 	}
 	
 	public void setMask(Integer mask){
-		reader.setMask(mask); 
-		this.mask = mask;
+		reader.setMask(mask);  
 	}  
+	
+	@Override
+	public Channel channel() {
+		Channel channel = new Channel(this.name);
+		channel.mask = getMask();
+		channel.offset = (long) reader.getOffset(); //TODO
+		return channel;
+	}
+
+	@Override
+	public void destroy() { 
+		try {
+			reader.delete();
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
 }

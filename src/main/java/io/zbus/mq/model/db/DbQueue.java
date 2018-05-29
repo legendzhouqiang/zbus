@@ -45,7 +45,7 @@ public class DbQueue implements MessageQueue{
 	}
 
 	@Override
-	public void addChannel(Channel channel) {
+	public void saveChannel(Channel channel) {
 		
 	}
 

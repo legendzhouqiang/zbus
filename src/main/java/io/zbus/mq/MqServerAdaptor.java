@@ -76,7 +76,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		Long channelOffset = req.getLong(Protocol.CHANNEL_MASK);
 		
 		try {
-			mqManager.createQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask);
+			mqManager.saveQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask);
 		} catch (IOException e) { 
 			logger.error(e.getMessage(), e);
 			
@@ -95,7 +95,13 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		}
 		String channel = req.getString(Protocol.CHANNEL);
-		mqManager.removeQueue(mqName, channel);
+		try {
+			mqManager.removeQueue(mqName, channel);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+			reply(req, 500, e.getMessage(), sess, isWebsocket);
+			return;
+		}
 		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
 	}; 
 	

@@ -1,15 +1,18 @@
 package io.zbus.mq.model.memory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.zbus.mq.model.Channel;
+import io.zbus.mq.model.ChannelReader;
 
 public class CircularArray {
 	private final int maxSize;
 	private long start = 0; // readable entry
 	private long end = 0;   // first entry to write
-	private Object[] array;
+	Object[] array;
 
 	public CircularArray(int maxSize) {
 		this.maxSize = maxSize;
@@ -44,13 +47,16 @@ public class CircularArray {
 		}
 	} 
 
-	public Reader createReader(Channel channel) {
-		return new Reader(channel);
+	public MemoryChannelReader createReader(Channel channel) {
+		return new MemoryChannelReader(channel);
 	}
 
-	public class Reader { 
+	public class MemoryChannelReader implements ChannelReader { 
 		private final Channel channel; 
-		Reader(Channel channel) {
+		private String filter;
+		private Integer mask;
+		
+		public MemoryChannelReader(Channel channel) {
 			this.channel = channel; 
 			if (this.channel.offset == null || this.channel.offset < start) {
 				this.channel.offset = end;
@@ -58,15 +64,7 @@ public class CircularArray {
 			if (this.channel.offset > end) {
 				this.channel.offset = end;
 			}
-		}
-		
-		public void setOffset(Long offset) {
-			if(offset == null) return;
-			this.channel.offset = offset;
-			if (this.channel.offset < start) {
-				this.channel.offset = start;
-			}
-		}
+		} 
 
 		@SuppressWarnings("unchecked")
 		public <T> List<T> read(int count) {
@@ -94,6 +92,65 @@ public class CircularArray {
 				}
 				return (int) (end - channel.offset);
 			}
+		}
+
+		@Override
+		public void close() throws IOException { 
+			
+		}
+
+		@Override
+		public Map<String, Object> read() throws IOException { 
+			return null;
+		}
+
+		@Override
+		public Map<String, Object> read(long offset) throws IOException {
+			return null;
+		}
+
+		@Override
+		public boolean seek(Long offset, String msgid) throws IOException {
+			if(offset == null) return false;
+			this.channel.offset = offset;
+			if (this.channel.offset < start) {
+				this.channel.offset = start;
+			}
+			return true; 
+		}
+
+		@Override
+		public void destroy() {  
+			
+		}
+
+		@Override
+		public boolean isEnd() {
+			return size() <= 0;
+		}
+
+		@Override
+		public void setFilter(String filter) { 
+			this.filter = filter;
+		}
+		
+		public String getFilter() {
+			return filter;
+		}
+
+		@Override
+		public Integer getMask() { 
+			return mask;
+		}
+
+		@Override
+		public void setMask(Integer mask) {
+			this.mask = mask;
+		}
+
+		@Override
+		public Channel channel() { 
+			return channel.clone();
 		}
 	} 
 }

@@ -1,5 +1,13 @@
 package io.zbus.mq.model;
 
+/**
+ * 
+ * Channel represents an isolated MQ's data reader.
+ * It controls offset from MQ's start position.
+ * 
+ * @author leiming.hong
+ *
+ */
 public class Channel implements Cloneable {   
 	public final String name;
 	public Long offset; 

@@ -35,7 +35,7 @@ public class MessageQueueManager {
 	 * @return created/updated mq
 	 * @throws IOException 
 	 */
-	public MessageQueue createQueue(
+	public MessageQueue saveQueue(
 			String mqName, String mqType, Integer mqMask, 
 			String channel, Long channelOffset, Integer channelMask) throws IOException { 
 		
@@ -65,7 +65,7 @@ public class MessageQueueManager {
 		if(channel != null) {
 			Channel ch = new Channel(channel, channelOffset);  
 			ch.mask = channelMask;
-			mq.addChannel(ch);
+			mq.saveChannel(ch);
 		}
 		
 		return mq;
@@ -77,7 +77,7 @@ public class MessageQueueManager {
 	 * @param mq name of mq
 	 * @param channel channel of mq
 	 */ 
-	public void removeQueue(String mq, String channel) {
+	public void removeQueue(String mq, String channel) throws IOException {
 		if(channel == null) {
 			MessageQueue q = mqTable.remove(mq);
 			if(q != null) {

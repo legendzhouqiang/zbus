@@ -1,5 +1,6 @@
 package io.zbus.mq.model;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ import java.util.Map;
 public interface MessageQueue { 
 	/**
 	 * Name of message queue, identifier
-	 * @return
+	 * @return name of mq
 	 */
 	String name();
 	/**
@@ -50,7 +51,20 @@ public interface MessageQueue {
 	 * @param count maximum count of message to read
 	 * @return
 	 */
-	List<Map<String, Object>> read(String channelId, int count);  
+	List<Map<String, Object>> read(String channelId, int count);   
+	
+	/**
+	 * Add or update channel to the queue
+	 * @param channel Channel object to save
+	 */
+	void saveChannel(Channel channel) throws IOException;
+	
+	/**
+	 * Remove channel by channel's Id
+	 * 
+	 * @param channelId
+	 */
+	void removeChannel(String channelId) throws IOException; 
 	
 	/**
 	 * Get channel by id
@@ -59,19 +73,6 @@ public interface MessageQueue {
 	 * @return Channel object
 	 */
 	Channel channel(String channelId);
-	
-	/**
-	 * Add or update channel to the queue
-	 * @param channel Channel object to save
-	 */
-	void addChannel(Channel channel);
-	
-	/**
-	 * Remove channel by channel's Id
-	 * 
-	 * @param channelId
-	 */
-	void removeChannel(String channelId); 
 	
 	/** 
 	 * @return all channels inside of the queue

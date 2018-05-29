@@ -2,8 +2,10 @@ package io.zbus.mq.model.disk;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ public class DiskQueue implements MessageQueue {
 	final Index index;     
 	private final QueueWriter writer; 
 	private String name;
+	private Map<String, DiskChannelReader> channelTable = new HashMap<>();
 	
 	public DiskQueue(String mqName, File baseDir) throws IOException { 
 		this.name = mqName;
@@ -63,33 +66,43 @@ public class DiskQueue implements MessageQueue {
 	}
 
 	@Override
-	public List<Map<String, Object>> read(String channelId, int count) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Channel channel(String channelId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void addChannel(Channel channel) {
-		// TODO Auto-generated method stub
+	public List<Map<String, Object>> read(String channelId, int count) { 
 		
-	}
-
-	@Override
-	public void removeChannel(String channelId) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Map<String, Channel> channels() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Channel channel(String channelId) { 
+		DiskChannelReader reader = channelTable.get(channelId);
+		if(reader == null) return null;
+		return reader.channel();
+	}
+
+	@Override
+	public void saveChannel(Channel channel) { 
+		try {
+			DiskChannelReader dc = new DiskChannelReader(channel.name, this);
+			channelTable.put(channel.name, dc);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public void removeChannel(String channelId) throws IOException { 
+		DiskChannelReader dc = channelTable.remove(channelId);
+		if(dc != null) {
+			dc.destroy();
+		}
+	}
+
+	@Override
+	public Map<String, Channel> channels() {  
+		Map<String, Channel> res = new HashMap<>();
+		for(Entry<String, DiskChannelReader> e : channelTable.entrySet()) {
+			res.put(e.getKey(), e.getValue().channel());
+		}
+		return res;
 	}
 
 	@Override
