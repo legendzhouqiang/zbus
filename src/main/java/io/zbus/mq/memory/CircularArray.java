@@ -1,4 +1,4 @@
-package io.zbus.mq.model.memory;
+package io.zbus.mq.memory;
 
 public class CircularArray {
 	final int maxSize;

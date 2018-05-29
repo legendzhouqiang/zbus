@@ -1,4 +1,4 @@
-package io.zbus.mq.model.memory;
+package io.zbus.mq.memory;
 
 import java.io.IOException;
 import java.util.ArrayList;

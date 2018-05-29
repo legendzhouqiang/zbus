@@ -1,4 +1,4 @@
-package io.zbus.mq.model.db;
+package io.zbus.mq.db;
 
 import java.util.List;
 import java.util.Map;

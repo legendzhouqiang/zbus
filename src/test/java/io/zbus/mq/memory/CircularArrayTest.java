@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import io.zbus.mq.memory.CircularArray;
+import io.zbus.mq.memory.MemoryChannelReader;
 import io.zbus.mq.model.Channel;
-import io.zbus.mq.model.memory.CircularArray;
-import io.zbus.mq.model.memory.MemoryChannelReader;
 
 public class CircularArrayTest {
 	@Test

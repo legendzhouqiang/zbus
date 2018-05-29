@@ -1,4 +1,4 @@
-package io.zbus.mq.model.disk;
+package io.zbus.mq.disk;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.disk.support.DiskMessage;
+import io.zbus.mq.disk.support.Index;
+import io.zbus.mq.disk.support.QueueWriter;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
-import io.zbus.mq.model.disk.support.DiskMessage;
-import io.zbus.mq.model.disk.support.Index;
-import io.zbus.mq.model.disk.support.QueueWriter;
 
 public class DiskQueue implements MessageQueue {
 	private static final Logger logger = LoggerFactory.getLogger(DiskQueue.class); 
@@ -61,8 +61,7 @@ public class DiskQueue implements MessageQueue {
 			writer.write(diskMsg); 
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
-		}
-		
+		} 
 	}
 
 	@Override

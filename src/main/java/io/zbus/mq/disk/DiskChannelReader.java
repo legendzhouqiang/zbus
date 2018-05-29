@@ -1,4 +1,4 @@
-package io.zbus.mq.model.disk;
+package io.zbus.mq.disk;
 
 import java.io.IOException;
 import java.util.Map;
@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
+import io.zbus.mq.disk.support.DiskMessage;
+import io.zbus.mq.disk.support.QueueReader;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.ChannelReader;
-import io.zbus.mq.model.disk.support.DiskMessage;
-import io.zbus.mq.model.disk.support.QueueReader;
 
 public class DiskChannelReader implements ChannelReader { 
 	private static final Logger logger = LoggerFactory.getLogger(DiskChannelReader.class); 

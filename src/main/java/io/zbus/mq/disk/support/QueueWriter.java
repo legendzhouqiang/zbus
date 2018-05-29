@@ -1,4 +1,4 @@
-package io.zbus.mq.model.disk.support;
+package io.zbus.mq.disk.support;
 
 import java.io.Closeable;
 import java.io.IOException;

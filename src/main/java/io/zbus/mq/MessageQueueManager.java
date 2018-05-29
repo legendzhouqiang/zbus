@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.zbus.mq.db.DbQueue;
+import io.zbus.mq.disk.DiskQueue;
+import io.zbus.mq.memory.MemoryQueue;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
-import io.zbus.mq.model.db.DbQueue;
-import io.zbus.mq.model.disk.DiskQueue;
-import io.zbus.mq.model.memory.MemoryQueue;
 
 public class MessageQueueManager {
 	public static final String MEMORY = "mem";
