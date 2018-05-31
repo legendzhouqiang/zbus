@@ -123,6 +123,7 @@ public class WebsocketClient implements Closeable {
 					for(String json : cachedSendingMessages){
 						sendMessage(json);
 					}
+					cachedSendingMessages.clear();
 				} 
 				if(onOpen != null){
 					try {
