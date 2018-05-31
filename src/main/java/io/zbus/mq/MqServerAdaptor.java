@@ -83,8 +83,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 500, e.getMessage(), sess, isWebsocket);
 			return;
 		} 
-		
-		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
+		String msg = String.format("MQ(%s)/Channel(%s) created OK", mqName, channel); 
+		if(channel == null) {
+			msg = String.format("MQ(%s) create OK", mqName); 
+		}
+		reply(req, 200, msg, sess, isWebsocket);
 	};
 	
 	
@@ -102,7 +105,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 500, e.getMessage(), sess, isWebsocket);
 			return;
 		}
-		reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
+		String msg = String.format("MQ(%s)/Channel(%s) remove OK", mqName, channel); 
+		if(channel == null) {
+			msg = String.format("MQ(%s) remove OK", mqName); 
+		}
+		reply(req, 200, msg, sess, isWebsocket);
 	}; 
 	
 	private CommandHandler pingHandler = (req, sess, isWebsocket) -> { 
@@ -125,7 +132,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		mq.write(req); 
 		Boolean ack = req.getBoolean(Protocol.ACK); 
 		if (ack == null || ack == true) {
-			reply(req, 200, ""+System.currentTimeMillis(), sess, isWebsocket);
+			reply(req, 200, "pub OK", sess, isWebsocket);
 		}
 		
 		messageDispatcher.dispatch(mq); 

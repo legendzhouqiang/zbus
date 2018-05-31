@@ -46,6 +46,8 @@ public class MessageDispatcher {
 						if(sub.topics.isEmpty() || sub.topics.contains(topic)) {
 							Session sess = sessionTable.get(sub.clientId);
 							if(sess == null) continue;
+							message.put(Protocol.CHANNEL, channel);
+							message.put(Protocol.SENDER, sess.id()); 
 							sendMessage(sess, message, sub.isWebsocket); 
 							break;
 						}
