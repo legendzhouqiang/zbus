@@ -133,7 +133,8 @@ public class MqServerAdaptor extends ServerAdaptor {
 		mq.write(req); 
 		Boolean ack = req.getBoolean(Protocol.ACK); 
 		if (ack == null || ack == true) {
-			reply(req, 200, "OK, PUB", sess, isWebsocket);
+			String msg = String.format("OK, PUB (mq=%s)", mqName);
+			reply(req, 200, msg, sess, isWebsocket);
 		}
 		
 		messageDispatcher.dispatch(mq); 

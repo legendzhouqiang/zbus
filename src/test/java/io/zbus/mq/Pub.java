@@ -16,6 +16,7 @@ public class Pub {
 		client.invoke(create, res->{
 			System.out.println(res);
 		});
+		Thread.sleep(1000);
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 100000; i++) {   
