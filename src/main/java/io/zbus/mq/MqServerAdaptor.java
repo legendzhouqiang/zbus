@@ -55,6 +55,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(json, 400, "cmd key required", sess, isWebsocket); 
 			return;
 		} 
+		cmd = cmd.toLowerCase();
 		CommandHandler handler = commandTable.get(cmd);
 		if(handler == null) {
 			reply(json, 404, "Command(" + cmd + ") Not Found", sess, isWebsocket); 
@@ -83,9 +84,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 500, e.getMessage(), sess, isWebsocket);
 			return;
 		} 
-		String msg = String.format("MQ(%s)/Channel(%s) created OK", mqName, channel); 
+		String msg = String.format("OK, CREATE (mq=%s,channel=%s)", mqName, channel); 
 		if(channel == null) {
-			msg = String.format("MQ(%s) create OK", mqName); 
+			msg = String.format("OK, CREATE (mq=%s)", mqName); 
 		}
 		reply(req, 200, msg, sess, isWebsocket);
 	};
@@ -105,9 +106,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(req, 500, e.getMessage(), sess, isWebsocket);
 			return;
 		}
-		String msg = String.format("MQ(%s)/Channel(%s) remove OK", mqName, channel); 
+		String msg = String.format("OK, REMOVE (mq=%s,channel=%s)", mqName, channel); 
 		if(channel == null) {
-			msg = String.format("MQ(%s) remove OK", mqName); 
+			msg = String.format("OK, REMOVE (mq=%s)", mqName); 
 		}
 		reply(req, 200, msg, sess, isWebsocket);
 	}; 
@@ -132,7 +133,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		mq.write(req); 
 		Boolean ack = req.getBoolean(Protocol.ACK); 
 		if (ack == null || ack == true) {
-			reply(req, 200, "pub OK", sess, isWebsocket);
+			reply(req, 200, "OK, PUB", sess, isWebsocket);
 		}
 		
 		messageDispatcher.dispatch(mq); 
@@ -160,6 +161,12 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		} 
 		
+		Boolean ack = req.getBoolean(Protocol.ACK); 
+		if (ack == null || ack == true) {
+			String msg = String.format("OK, SUB (mq=%s,channel=%s)", mqName, channelName); 
+			reply(req, 200, msg, sess, isWebsocket);
+		}
+		
 		Integer window = req.getInteger(Protocol.WINDOW);
 		Subscription sub = subscriptionManager.get(sess.id());
 		if(sub == null) {
@@ -171,7 +178,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			subscriptionManager.add(sub);
 		} else {
 			sub.window = window;
-		} 
+		}  
 		
 		String topic = req.getString(Protocol.TOPIC);
 		sub.topics.clear();

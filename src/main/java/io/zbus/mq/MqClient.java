@@ -84,7 +84,7 @@ public class MqClient extends WebsocketClient{
 				sendMessage(JsonKit.toJSONString(msg));
 			}, interval, interval, timeUnit);
 		}
-	}
+	} 
 	
 	public void invoke(Map<String, Object> req, 
 			DataHandler<Map<String, Object>> dataHandler) {
@@ -105,48 +105,16 @@ public class MqClient extends WebsocketClient{
 		callbackTable.put(id, ctx); 
 		
 		sendMessage(JsonKit.toJSONString(req));
-	}  
+	}   
 	
-	public void publish(String mq, Object data) {
-		Map<String, Object> req = new HashMap<>();
-		req.put(Protocol.CMD, Protocol.PUB);
-		req.put(Protocol.MQ, mq);
-		req.put(Protocol.DATA, data);
-		
-		sendMessage(JsonKit.toJSONString(req));
-	}
-	
-	public void publish(String mq, Object data, 
-			DataHandler<Map<String, Object>> dataHandler) {
-		publish(mq, data, dataHandler, null);
-	} 
-	
-	public void publish(String mq, Object data, 
-			DataHandler<Map<String, Object>> dataHandler,
-			ErrorHandler errorHandler) {
-		Map<String, Object> req = new HashMap<>();
-		req.put(Protocol.CMD, Protocol.PUB);
-		req.put(Protocol.MQ, mq);
-		req.put(Protocol.DATA, data);
-		
-		invoke(req, dataHandler, errorHandler);
-	} 
-	
-	public void subscribe(String mq, String channel, DataHandler<Map<String, Object>> dataHandler) {
+	public void addListener(String mq, String channel, DataHandler<Map<String, Object>> dataHandler) {
 		Map<String,DataHandler<Map<String,Object>>> mqHandlers = handlerTable.get(mq);
 		if(mqHandlers == null) {
 			mqHandlers = new ConcurrentHashMap<>();
 			handlerTable.put(mq, mqHandlers);
 		}
 		mqHandlers.put(channel, dataHandler);
-		
-		Map<String, Object> req = new HashMap<>();
-		req.put(Protocol.CMD, Protocol.SUB);
-		req.put(Protocol.MQ, mq);
-		req.put(Protocol.CHANNEL, channel);
-		
-		sendMessage(JsonKit.toJSONString(req));
-	}
+	} 
 	
 	@Override
 	public void close() throws IOException { 
