@@ -2,10 +2,8 @@ package io.zbus.mq.disk;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,24 +13,27 @@ import io.zbus.mq.Protocol;
 import io.zbus.mq.disk.support.DiskMessage;
 import io.zbus.mq.disk.support.Index;
 import io.zbus.mq.disk.support.QueueWriter;
-import io.zbus.mq.model.Channel;
-import io.zbus.mq.model.MessageQueue;
+import io.zbus.mq.model.ChannelReader;
+import io.zbus.mq.model.MessageQueue.AbstractMessageQueue;
 
-public class DiskQueue implements MessageQueue {
+public class DiskQueue extends AbstractMessageQueue {
 	private static final Logger logger = LoggerFactory.getLogger(DiskQueue.class); 
 	final Index index;     
-	private final QueueWriter writer; 
-	private String name;
-	private Map<String, DiskChannelReader> channelTable = new HashMap<>();
+	private final QueueWriter writer;   
 	
 	public DiskQueue(String mqName, File baseDir) throws IOException { 
-		this.name = mqName;
+		super(mqName); 
 		File mqDir = new File(baseDir, mqName);
 		index = new Index(mqDir);
 		writer = new QueueWriter(index);
 		
 		loadChannels();
 	} 
+	
+	@Override
+	protected ChannelReader buildChannelReader(String channelId) throws IOException {
+		return new DiskChannelReader(channelId, this);
+	}
 	
 	private void loadChannels() {
 		File[] channelFiles = index.getReaderDir().listFiles( pathname-> {
@@ -45,76 +46,35 @@ public class DiskQueue implements MessageQueue {
             }
         } 
 	}
-	
-	@Override
-	public String name() { 
-		return name;
+	 
+	private DiskMessage diskMessage(Map<String, Object> message) {
+		DiskMessage diskMsg = new DiskMessage();
+		diskMsg.id = (String)message.get(Protocol.ID);
+		diskMsg.tag = (String)message.get(Protocol.TOPIC);
+		diskMsg.body = JsonKit.toJSONBytes(message, "UTF8");
+		return diskMsg;
 	}
-
 	@Override
 	public void write(Map<String, Object> message) { 
-		try { 
-			DiskMessage diskMsg = new DiskMessage();
-			diskMsg.id = (String)message.get(Protocol.ID);
-			diskMsg.tag = (String)message.get(Protocol.TOPIC);
-			diskMsg.body = JsonKit.toJSONBytes(message, "UTF8");
-			writer.write(diskMsg); 
+		try {  
+			writer.write(diskMessage(message)); 
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		} 
-	}
+	} 
 	
 	@Override
 	public void write(List<Map<String, Object>> messages) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public Map<String, Object> read(String channelId) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<Map<String, Object>> read(String channelId, int count) { 
-		
-		return null;
-	}
-
-	@Override
-	public Channel channel(String channelId) { 
-		DiskChannelReader reader = channelTable.get(channelId);
-		if(reader == null) return null;
-		return reader.channel();
-	}
-
-	@Override
-	public void saveChannel(Channel channel) { 
-		try {
-			DiskChannelReader dc = new DiskChannelReader(channel.name, this);
-			channelTable.put(channel.name, dc);
+		try { 
+			DiskMessage[] diskMsgs = new DiskMessage[messages.size()];
+			for(int i=0;i<messages.size();i++) { 
+				diskMsgs[i] = diskMessage(messages.get(i)); 
+			} 
+			writer.write(diskMsgs);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void removeChannel(String channelId) throws IOException { 
-		DiskChannelReader dc = channelTable.remove(channelId);
-		if(dc != null) {
-			dc.destroy();
-		}
-	}
-
-	@Override
-	public Map<String, Channel> channels() {  
-		Map<String, Channel> res = new HashMap<>();
-		for(Entry<String, DiskChannelReader> e : channelTable.entrySet()) {
-			res.put(e.getKey(), e.getValue().channel());
-		}
-		return res;
-	}
+		} 
+	} 
 
 	@Override
 	public Integer getMask() {
@@ -122,7 +82,8 @@ public class DiskQueue implements MessageQueue {
 	}
 	
 	@Override
-	public void setMask(Integer mask) {
+	public void setMask(Integer mask) { 
+		if(mask == null) return;
 		index.setMask(mask);
 	}
 

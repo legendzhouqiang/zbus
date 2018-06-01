@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Pub {
+public class Pub1 {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {

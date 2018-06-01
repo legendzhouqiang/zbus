@@ -96,7 +96,7 @@ public class Server implements Closeable {
 						log.info("Server({}:{}) started", host, port);
 					} 
 				} else { 
-					String message = String.format("Server({}:{}) failed to start", host, port);
+					String message = String.format("Server(%s:%d) failed to start", host, port);
 					throw new IOException(message, future.cause());
 				}
 			}

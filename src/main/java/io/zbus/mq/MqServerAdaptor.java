@@ -61,7 +61,13 @@ public class MqServerAdaptor extends ServerAdaptor {
 			reply(json, 404, "Command(" + cmd + ") Not Found", sess, isWebsocket); 
 			return; 
 		}
-		handler.handle(json, sess, isWebsocket);
+		try {
+			handler.handle(json, sess, isWebsocket);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			reply(json, 500, e.getMessage(), sess, isWebsocket); 
+			return; 
+		}
 	}   
 	
 	private CommandHandler createHandler = (req, sess, isWebsocket) -> { 

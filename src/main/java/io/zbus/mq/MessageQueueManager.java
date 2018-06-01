@@ -25,6 +25,10 @@ public class MessageQueueManager {
 		return mqTable.get(mqName);
 	} 
 	
+	public MessageQueue saveQueue(String mqName, String channel) throws IOException { 
+		return saveQueue(mqName, MEMORY, null, channel, null, null);
+	}
+	
 	/**
 	 * 
 	 * Create MQ or Channel of MQ

@@ -10,8 +10,10 @@ package io.zbus.mq.model;
  */
 public class Channel implements Cloneable {   
 	public final String name;
-	public Long offset; 
+	public Long offset;  
 	public Integer mask; 
+	public String filter; 
+	public String offsetChecksum; //MsgId
 	
 	public Channel(String name, Long offset) {
 		this.name = name;
