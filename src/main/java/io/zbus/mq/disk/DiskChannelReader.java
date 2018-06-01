@@ -1,6 +1,7 @@
 package io.zbus.mq.disk;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -38,19 +39,16 @@ public class DiskChannelReader implements ChannelReader {
 		} 
 		return  JsonKit.parseObject(new String(data.body, "UTF8"), Map.class);
 	} 
-	 
-	@SuppressWarnings("unchecked")
-	public Map<String, Object> read(long offset) throws IOException {
-		DiskMessage data = reader.read(offset);
-		if(data == null) {
-			return null;
-		}
-		return  JsonKit.parseObject(new String(data.body, "UTF8"), Map.class);
-	}
-	 
 	
-	public boolean seek(Long totalOffset, String msgid) throws IOException{ 
-		return reader.seek(totalOffset, msgid);
+	@Override
+	public List<Map<String, Object>> read(int count) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	  
+	
+	public boolean seek(Long offset, String msgid) throws IOException{ 
+		return reader.seek(offset, msgid);
 	}
 	
 	@Override
@@ -80,7 +78,7 @@ public class DiskChannelReader implements ChannelReader {
 	public Channel channel() {
 		Channel channel = new Channel(this.name);
 		channel.mask = getMask();
-		channel.offset = (long) reader.getOffset(); //TODO
+		channel.offset = reader.getTotalOffset();
 		return channel;
 	}
 

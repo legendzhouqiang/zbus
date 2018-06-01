@@ -1,5 +1,6 @@
 package io.zbus.mq.db;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +54,12 @@ public class DbQueue implements MessageQueue{
 	public void removeChannel(String channelId) {
 		
 	}  
+	
+	@Override
+	public Map<String, Object> read(String channelId) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public List<Map<String, Object>> read(String channelId, int count) {
@@ -62,6 +69,12 @@ public class DbQueue implements MessageQueue{
 	
 	@Override
 	public void write(Map<String, Object> message) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void write(List<Map<String, Object>> messages) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -292,6 +292,10 @@ class Block implements Closeable {
     	return index.readOffset(blockNumber).endOffset;
     } 
     
+    public long getBaseOffset() {
+		return baseOffset;
+	}
+    
     public long getBlockNumber() {
 		return blockNumber;
 	}

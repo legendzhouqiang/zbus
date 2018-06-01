@@ -38,20 +38,37 @@ public interface MessageQueue {
 	 */
 	String name();
 	/**
-	 * Write message to queue, support batch insert
+	 * Write message to queue
 	 * 
-	 * @param message message or message list
+	 * @param message message
 	 */
 	void write(Map<String, Object> message); 
+	
 	/**
-	 * Read message from queue by channel, support batch read
+	 * Batch write message to queue
+	 * 
+	 * @param message message list
+	 */
+	void write(List<Map<String, Object>> messages); 
+	
+	/**
+	 * Read message from queue by channel 
+	 * 
+	 * @param channelId id of channel 
+	 * @return
+	 */
+	Map<String, Object> read(String channelId) throws IOException;   
+	
+	
+	/**
+	 * Batch rRead message from queue by channel
 	 * If the length of result is less than count, queue end reached.
 	 * 
 	 * @param channelId id of channel
 	 * @param count maximum count of message to read
 	 * @return
 	 */
-	List<Map<String, Object>> read(String channelId, int count);   
+	List<Map<String, Object>> read(String channelId, int count) throws IOException;   
 	
 	/**
 	 * Add or update channel to the queue

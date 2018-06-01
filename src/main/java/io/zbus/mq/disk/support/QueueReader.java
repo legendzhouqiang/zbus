@@ -273,8 +273,12 @@ public class QueueReader extends MappedFile implements Comparable<QueueReader> {
 		buffer.put((byte)0); //tag default to null
 	}   
 	 
-	public int getOffset() {
+	public int getOffset() {  
 		return offset;
+	}  
+	
+	public Long getTotalOffset() {  
+		return block.getBaseOffset() + offset;
 	}  
 
 	public String getFilter() {

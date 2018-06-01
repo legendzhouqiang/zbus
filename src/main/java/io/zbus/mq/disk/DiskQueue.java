@@ -63,6 +63,18 @@ public class DiskQueue implements MessageQueue {
 			logger.error(e.getMessage(), e);
 		} 
 	}
+	
+	@Override
+	public void write(List<Map<String, Object>> messages) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public Map<String, Object> read(String channelId) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public List<Map<String, Object>> read(String channelId, int count) { 

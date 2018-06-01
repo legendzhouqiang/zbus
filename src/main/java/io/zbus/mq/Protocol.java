@@ -15,6 +15,7 @@ public interface Protocol {
 	public static final String MQ             = "mq";  
 	public static final String CHANNEL        = "channel";  
 	public static final String TOPIC          = "topic";   
+	public static final String OFFSET         = "offset";
 	public static final String SENDER         = "sender"; 
 	public static final String MQ_TYPE        = "mqType";  
 	public static final String MQ_MASK        = "mqMask";

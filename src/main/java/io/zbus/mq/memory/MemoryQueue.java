@@ -80,13 +80,27 @@ public class MemoryQueue implements MessageQueue{
 	} 
 	
 	@Override
-	public List<Map<String, Object>> read(String channelId, int count) { 
+	public void write(List<Map<String, Object>> messages) { 
+		data.write(messages.toArray());
+	}
+	
+	@Override
+	public List<Map<String, Object>> read(String channelId, int count) throws IOException { 
 		MemoryChannelReader reader = readerTable.get(channelId);
 		if(reader == null) {
 			throw new IllegalArgumentException("Missing channel: " + channelId);
 		}   
 		return reader.read(count);
 	} 
+	
+	@Override
+	public Map<String, Object> read(String channelId) throws IOException {
+		MemoryChannelReader reader = readerTable.get(channelId);
+		if(reader == null) {
+			throw new IllegalArgumentException("Missing channel: " + channelId);
+		}   
+		return reader.read();
+	}
 	
 	@Override
 	public void destroy() { 

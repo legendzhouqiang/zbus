@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.mq.Protocol;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.ChannelReader;
 
@@ -23,26 +24,7 @@ public class MemoryChannelReader implements ChannelReader {
 		if (this.channel.offset > queue.end) {
 			this.channel.offset = queue.end;
 		}
-	} 
-
-	@SuppressWarnings("unchecked")
-	public <T> List<T> read(int count) {
-		synchronized (queue.array) {
-			List<T> res = new ArrayList<>();
-			if (channel.offset < queue.start) {
-				channel.offset = queue.start;
-			}
-			int c = 0;
-			while (channel.offset < queue.end) {
-				int idx = (int) (channel.offset % queue.maxSize);
-				res.add((T) queue.array[idx]);
-				channel.offset++;
-				c++;
-				if(c > count) break; 
-			}
-			return res;
-		}
-	}
+	}  
 
 	public int size() {
 		synchronized (queue.array) {
@@ -57,15 +39,44 @@ public class MemoryChannelReader implements ChannelReader {
 	public void close() throws IOException { 
 		
 	}
-
+ 
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> read(int count) throws IOException { 
+		synchronized (queue.array) {
+			List<Map<String, Object>> res = new ArrayList<>();
+			if (channel.offset < queue.start) {
+				channel.offset = queue.start;
+			}
+			int c = 0;
+			while (channel.offset < queue.end) {
+				int idx = (int) (channel.offset % queue.maxSize);
+				Map<String, Object> data = (Map<String, Object>)queue.array[idx];
+				data.put(Protocol.OFFSET, channel.offset); //Add offset
+				res.add(data);
+				channel.offset++;
+				c++;
+				if(c > count) break; 
+			}
+			return res;
+		} 
+	} 
+	
+	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, Object> read() throws IOException { 
-		return null;
-	}
-
-	@Override
-	public Map<String, Object> read(long offset) throws IOException {
-		return null;
+	public Map<String, Object> read() throws IOException {
+		synchronized (queue.array) { 
+			if (channel.offset < queue.start) {
+				channel.offset = queue.start;
+			} 
+			Map<String, Object> res = null;
+			if (channel.offset < queue.end) {
+				int idx = (int) (channel.offset % queue.maxSize);
+				res = (Map<String, Object>)queue.array[idx];
+				res.put(Protocol.OFFSET, channel.offset); //Add offset
+				channel.offset++; 
+			}
+			return res;
+		} 
 	}
 
 	@Override
