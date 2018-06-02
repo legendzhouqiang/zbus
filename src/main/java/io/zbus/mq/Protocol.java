@@ -6,7 +6,7 @@ public interface Protocol {
 	public static final String CMD    = "cmd";     // Request message command
 	public static final String STATUS = "status";  // Response message status
 	public static final String ID     = "id";      // Message ID
-	public static final String DATA   = "data";    // Message body 
+	public static final String BODY   = "body";    // Message body 
 	
 	//Command values(key=cmd)
 	public static final String PUB    = "pub";

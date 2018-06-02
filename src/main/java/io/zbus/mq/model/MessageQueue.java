@@ -60,7 +60,7 @@ public interface MessageQueue {
 	 * Read message from queue by channel 
 	 * 
 	 * @param channelId id of channel 
-	 * @return
+	 * @return message
 	 */
 	Map<String, Object> read(String channelId) throws IOException;   
 	
@@ -71,7 +71,7 @@ public interface MessageQueue {
 	 * 
 	 * @param channelId id of channel
 	 * @param count maximum count of message to read
-	 * @return
+	 * @return list of message
 	 */
 	List<Map<String, Object>> read(String channelId, int count) throws IOException;   
 	

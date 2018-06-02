@@ -198,7 +198,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 	private void reply(JSONObject req, int status, String message, Session sess, boolean isWebsocket) {
 		JSONObject res = new JSONObject();
 		res.put(Protocol.STATUS, status);
-		res.put(Protocol.DATA, message);
+		res.put(Protocol.BODY, message);
 		if(req != null) {
 			res.put(Protocol.ID, req.getString(Protocol.ID)); 
 		}

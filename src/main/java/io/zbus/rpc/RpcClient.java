@@ -93,7 +93,7 @@ public class RpcClient extends WebsocketClient {
 	} 
 	 
 	public static <T> T parseResult(Response resp, Class<T> clazz) { 
-		Object data = resp.getData();
+		Object data = resp.getBody();
 		if(resp.getStatus() != 200){
 			if(data instanceof RuntimeException){
 				throw (RuntimeException)data;

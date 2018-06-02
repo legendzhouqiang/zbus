@@ -237,7 +237,7 @@ public class RpcProcessor {
 			}
 			 
 		} catch (Throwable e) {
-			response.setData(new RpcException(e.getMessage(), e.getCause(), false, stackTraceEnabled)); 
+			response.setBody(new RpcException(e.getMessage(), e.getCause(), false, stackTraceEnabled)); 
 			response.setStatus(500);
 		} finally {
 			bindRequestResponse(req, response); 
@@ -258,7 +258,7 @@ public class RpcProcessor {
 			MethodInstance target = matchMethod(req); 
 			if(target == null) {
 				response.setStatus(404);
-				response.setData(String.format("module=%s, method=%s Not Found", req.getModule(), req.getMethod()));
+				response.setBody(String.format("module=%s, method=%s Not Found", req.getModule(), req.getMethod()));
 				return;
 			}
 			
@@ -299,7 +299,7 @@ public class RpcProcessor {
 				data = target.invokeBridge.invoke(req.getMethod(), mapParams);
 			}
 			
-			response.setData(data); 
+			response.setBody(data); 
 			response.setStatus(200);
 		} catch (InvocationTargetException e) {  
 			Throwable t = e.getTargetException();
@@ -308,7 +308,7 @@ public class RpcProcessor {
 					t.setStackTrace(new StackTraceElement[0]);
 				}
 			}
-			response.setData(t);
+			response.setBody(t);
 			response.setStatus(500);
 		} 
 	}

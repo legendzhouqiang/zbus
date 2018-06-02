@@ -22,7 +22,7 @@ public class RpcAuthFilter implements RpcFilter {
 		if(res.success) return true;
 		
 		response.setStatus(403);
-		response.setData(res.message);
+		response.setBody(res.message);
 		
 		return false;
 	} 

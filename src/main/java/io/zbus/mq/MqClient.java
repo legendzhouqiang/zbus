@@ -44,7 +44,7 @@ public class MqClient extends WebsocketClient{
 					Integer status = (Integer)response.get(Protocol.STATUS);
 					if(status != 200) { 
 						if(ctx.onError != null) {
-							ctx.onError.handle(new RuntimeException((String)response.get(Protocol.DATA)));
+							ctx.onError.handle(new RuntimeException((String)response.get(Protocol.BODY)));
 						} else {
 							logger.error(JsonKit.toJSONString(response)); 
 						}
