@@ -11,6 +11,7 @@ public interface Protocol {
 	//Command values(key=cmd)
 	public static final String PUB    = "pub";
 	public static final String SUB    = "sub";  
+	public static final String GET    = "get";     //One-time read message from MQ
 	public static final String CREATE = "create";  //Create or Update
 	public static final String REMOVE = "remove";
 	public static final String PING   = "ping"; 
@@ -20,6 +21,7 @@ public interface Protocol {
 	public static final String CHANNEL        = "channel";  
 	public static final String TOPIC          = "topic";   
 	public static final String OFFSET         = "offset";
+	public static final String CHECKSUM       = "checksum";  //Offset checksum
 	public static final String SENDER         = "sender"; 
 	public static final String MQ_TYPE        = "mqType";  
 	public static final String MQ_MASK        = "mqMask";

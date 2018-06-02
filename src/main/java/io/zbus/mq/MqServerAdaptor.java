@@ -3,13 +3,15 @@ package io.zbus.mq;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import io.zbus.kit.HttpKit;
+import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.Subscription;
 import io.zbus.transport.ServerAdaptor;
@@ -28,6 +30,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		
 		commandTable.put(Protocol.PUB, pubHandler);
 		commandTable.put(Protocol.SUB, subHandler);
+		commandTable.put(Protocol.GET, getHandler);
 		commandTable.put(Protocol.CREATE, createHandler); 
 		commandTable.put(Protocol.REMOVE, removeHandler); 
 		commandTable.put(Protocol.PING, pingHandler); 
@@ -41,7 +44,15 @@ public class MqServerAdaptor extends ServerAdaptor {
 			json = JSONObject.parseObject(new String((byte[])msg)); 
 		} else if (msg instanceof HttpMessage) {
 			HttpMessage httpMessage = (HttpMessage)msg;
-			json = JSONObject.parseObject(httpMessage.getBodyString()); 
+			if(httpMessage.getBody() == null){
+				UrlInfo urlInfo = HttpKit.parseUrl(httpMessage.getUrl());
+				json = new JSONObject();
+				for(Entry<String, String> e : urlInfo.params.entrySet()) {
+					json.put(e.getKey(), e.getValue());
+				}
+			} else {
+				json = JSONObject.parseObject(httpMessage.getBodyString()); 
+			}
 			isWebsocket = false;
 		} else {
 			throw new IllegalStateException("Not support message type");
@@ -121,7 +132,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 	
 	private CommandHandler pingHandler = (req, sess, isWebsocket) -> { 
 		//ignore
-	}; 
+	};  
 	
 	private CommandHandler pubHandler = (req, sess, isWebsocket) -> {
 		String mqName = req.getString(Protocol.MQ);  
@@ -144,30 +155,38 @@ public class MqServerAdaptor extends ServerAdaptor {
 		}
 		
 		messageDispatcher.dispatch(mq); 
-	};
+	}; 
 	
-	private CommandHandler subHandler = (req, sess, isWebsocket) -> { 
+	private boolean validateRequest(JSONObject req, Session sess, boolean isWebsocket) {
 		String mqName = req.getString(Protocol.MQ);
 		String channelName = req.getString(Protocol.CHANNEL);
 		if(mqName == null) {
 			reply(req, 400, "Missing mq field", sess, isWebsocket);
-			return;
+			return false;
 		}
 		if(channelName == null) {
 			reply(req, 400, "Missing channel field", sess, isWebsocket);
-			return;
+			return false;
 		} 
 		
 		MessageQueue mq = mqManager.get(mqName); 
 		if(mq == null) {
 			reply(req, 404, "MQ(" + mqName + ") Not Found", sess, isWebsocket);
-			return;
+			return false;
 		} 
 		if(mq.channel(channelName) == null) { 
 			reply(req, 404, "Channel(" + channelName + ") Not Found", sess, isWebsocket);
-			return;
+			return false;
 		} 
 		
+		return true;
+	}
+	
+	private CommandHandler subHandler = (req, sess, isWebsocket) -> { 
+		if(!validateRequest(req, sess, isWebsocket)) return;
+		
+		String mqName = req.getString(Protocol.MQ);
+		String channelName = req.getString(Protocol.CHANNEL); 
 		Boolean ack = req.getBoolean(Protocol.ACK); 
 		if (ack == null || ack == true) {
 			String msg = String.format("OK, SUB (mq=%s,channel=%s)", mqName, channelName); 
@@ -191,8 +210,21 @@ public class MqServerAdaptor extends ServerAdaptor {
 		sub.topics.clear();
 		if(topic != null) {
 			sub.topics.add(topic); 
-		}   
+		}    
+		MessageQueue mq = mqManager.get(mqName);
 		messageDispatcher.dispatch(mq, channelName); 
+	};
+	
+	private CommandHandler getHandler = (req, sess, isWebsocket) -> { 
+		if(!validateRequest(req, sess, isWebsocket)) return;
+		String mqName = req.getString(Protocol.MQ);
+		String channelName = req.getString(Protocol.CHANNEL); 
+		Integer window = req.getInteger(Protocol.WINDOW); 
+		String msgId = req.getString(Protocol.ID);
+		MessageQueue mq = mqManager.get(mqName); 
+		if(window == null) window = 1; 
+		
+	    messageDispatcher.sendMessage(mq, channelName, window, msgId, sess, isWebsocket); 
 	};
 	
 	private void reply(JSONObject req, int status, String message, Session sess, boolean isWebsocket) {
@@ -202,23 +234,9 @@ public class MqServerAdaptor extends ServerAdaptor {
 		if(req != null) {
 			res.put(Protocol.ID, req.getString(Protocol.ID)); 
 		}
-		sendMessage(sess, res, isWebsocket); 
+		messageDispatcher.sendMessage(res, sess, isWebsocket); 
 	}
-	
-	private void sendMessage(Session sess, JSONObject json, boolean isWebsocket) {
-		if(isWebsocket) {
-			sess.write(JSON.toJSONBytes(json));
-			return;
-		}
-		
-		HttpMessage res = new HttpMessage();
-		Integer status = json.getInteger(Protocol.STATUS);
-		if(status == null) status = 200; 
-		res.setStatus(status);
-		res.setJsonBody(JSON.toJSONBytes(json));
-		
-		sess.write(res);
-	} 
+	 
 	
 	@Override
 	protected void cleanSession(Session sess) throws IOException { 
@@ -230,5 +248,5 @@ public class MqServerAdaptor extends ServerAdaptor {
 }
 
 interface CommandHandler{
-	void handle(JSONObject json, Session sess, boolean isWebsocket);
+	void handle(JSONObject json, Session sess, boolean isWebsocket) throws IOException;
 }

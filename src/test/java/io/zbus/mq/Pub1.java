@@ -19,11 +19,11 @@ public class Pub1 {
 		Thread.sleep(100);
 		
 		AtomicInteger count = new AtomicInteger(0);  
-		for (int i = 0; i < 1000000; i++) {   
+		for (int i = 0; i < 100000; i++) {   
 			Map<String, Object> msg = new HashMap<>();
 			msg.put("cmd", "pub"); //Publish
 			msg.put("mq", "MyMQ");
-			msg.put("data", i); //set business data
+			msg.put("body", i);  
 			
 			client.invoke(msg, res->{
 				if(count.getAndIncrement() % 10000 == 0) {

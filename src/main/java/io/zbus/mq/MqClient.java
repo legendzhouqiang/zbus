@@ -42,7 +42,7 @@ public class MqClient extends WebsocketClient{
 				RequestContext ctx = callbackTable.remove(id);
 				if (ctx != null) {  //1) Request-Response invocation
 					Integer status = (Integer)response.get(Protocol.STATUS);
-					if(status != 200) { 
+					if(status != null && status != 200) { 
 						if(ctx.onError != null) {
 							ctx.onError.handle(new RuntimeException((String)response.get(Protocol.BODY)));
 						} else {

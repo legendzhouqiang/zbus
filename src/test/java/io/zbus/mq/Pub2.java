@@ -2,6 +2,7 @@ package io.zbus.mq;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Pub2 {
@@ -9,6 +10,8 @@ public class Pub2 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		MqClient client = new MqClient("localhost:15555"); 
+		
+		client.heartbeat(30, TimeUnit.SECONDS);
 		
 		final String mq = "DiskMQ";
 		Map<String, Object> req = new HashMap<>();
@@ -26,7 +29,7 @@ public class Pub2 {
 			Map<String, Object> msg = new HashMap<>();
 			msg.put("cmd", "pub"); //Publish
 			msg.put("mq", mq);
-			msg.put("data", i); //set business data
+			msg.put("body", i); //set business data
 			
 			client.invoke(msg, res->{
 				if(count.getAndIncrement() % 10000 == 0) {

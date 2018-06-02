@@ -1,6 +1,7 @@
 package io.zbus.mq;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,86 +18,112 @@ import io.zbus.mq.model.Subscription;
 import io.zbus.transport.Session;
 import io.zbus.transport.http.HttpMessage;
 
-public class MessageDispatcher {  
-	private static final Logger logger = LoggerFactory.getLogger(MessageDispatcher.class); 
-	
+public class MessageDispatcher {
+	private static final Logger logger = LoggerFactory.getLogger(MessageDispatcher.class);
+
 	private SubscriptionManager subscriptionManager;
-	private Map<String, Session> sessionTable;   
-	private Map<String, Long> loadbalanceTable = new ConcurrentHashMap<String, Long>(); //channel => index
-	
+	private Map<String, Session> sessionTable;
+	private Map<String, Long> loadbalanceTable = new ConcurrentHashMap<String, Long>(); // channel => index
+
 	private int batchReadSize = 10;
 	private ExecutorService dispatchRunner = Executors.newFixedThreadPool(64);
-	
+
 	public MessageDispatcher(SubscriptionManager subscriptionManager, Map<String, Session> sessionTable) {
 		this.subscriptionManager = subscriptionManager;
-		this.sessionTable = sessionTable; 
-	} 
-	 
-	public void dispatch(MessageQueue mq, String channel) {   
-		dispatchRunner.submit(()->{
+		this.sessionTable = sessionTable;
+	}
+
+	public void dispatch(MessageQueue mq, String channel) {
+		dispatchRunner.submit(() -> {
 			dispatch0(mq, channel);
 		});
 	}
-	
-	protected void dispatch0(MessageQueue mq, String channel) {   
+
+	protected void dispatch0(MessageQueue mq, String channel) {
 		List<Subscription> subs = subscriptionManager.getSubscriptionList(mq.name(), channel);
-		if(subs == null || subs.size() == 0) return;
-		
+		if (subs == null || subs.size() == 0)
+			return;
+
 		synchronized (subs) {
 			Long index = loadbalanceTable.get(channel);
-			if(index == null) {
-				index = 0L; 
-			} 
-			while(true) {
+			if (index == null) {
+				index = 0L;
+			}
+			while (true) {
 				List<Map<String, Object>> data;
 				try {
 					data = mq.read(channel, batchReadSize);
 				} catch (IOException e) {
 					logger.error(e.getMessage(), e);
 					break;
-				} 
-				for(Map<String, Object> message : data) { 
-					String filter = (String)message.get(Protocol.TOPIC);
+				}
+				for (Map<String, Object> message : data) {
+					String filter = (String) message.get(Protocol.TOPIC);
 					int N = subs.size();
-					long max = index+N;
-					while(index<max) {
-						Subscription sub = subs.get((int)(index%N));
+					long max = index + N;
+					while (index < max) {
+						Subscription sub = subs.get((int) (index % N));
 						index++;
-						if (index < 0) index = 0L;
-						if(sub.topics.isEmpty() || sub.topics.contains(filter)) {
+						if (index < 0)
+							index = 0L;
+						if (sub.topics.isEmpty() || sub.topics.contains(filter)) {
 							Session sess = sessionTable.get(sub.clientId);
-							if(sess == null) continue;
+							if (sess == null)
+								continue;
 							message.put(Protocol.CHANNEL, channel);
-							message.put(Protocol.SENDER, sess.id()); 
-							sendMessage(sess, message, sub.isWebsocket); 
+							message.put(Protocol.SENDER, sess.id());
+							sendMessage(message, sess, sub.isWebsocket);
 							break;
 						}
-					} 
+					}
 				}
-				if(data.size() < batchReadSize) break;
+				if (data.size() < batchReadSize)
+					break;
 			}
 			loadbalanceTable.put(channel, index);
-		} 
-	} 
-	
+		}
+	}
+
 	public void dispatch(MessageQueue mq) {
-		for(String channel : mq.channels()) {
+		for (String channel : mq.channels()) {
 			dispatch(mq, channel);
 		}
 	}
+
+	public void sendMessage(MessageQueue mq, String channel, int count, String reqMsgId, Session sess, boolean isWebsocket) throws IOException { 
+		List<Map<String, Object>> data = mq.read(channel, count);
+		Map<String, Object> message = new HashMap<>();  
+		message.put(Protocol.STATUS, 200);
+		if(count <= 1) {
+			if(data.size() >= 1) { 
+				message = data.get(0); 
+				message.put(Protocol.STATUS, 200);
+			} else {
+				message.put(Protocol.STATUS, 604); //Special status code, no DATA
+			}
+		} else {
+			message.put(Protocol.BODY, data); //batch message format
+		}
+		message.put(Protocol.ID, reqMsgId);
+		message.put(Protocol.MQ, mq.name());
+		message.put(Protocol.CHANNEL, channel);
+		message.put(Protocol.SENDER, sess.id());
+		sendMessage(message, sess, isWebsocket);
+	}
 	
-	private void sendMessage(Session sess, Map<String, Object> data, boolean isWebsocket) {
-		if(isWebsocket) {
+
+	public void sendMessage(Map<String, Object> data, Session sess, boolean isWebsocket) {
+		if (isWebsocket) {
 			sess.write(JSON.toJSONBytes(data));
 			return;
 		}
-		
+
 		HttpMessage res = new HttpMessage();
-		Integer status = (Integer)data.get(Protocol.STATUS);
-		if(status == null) status = 200; 
+		Integer status = (Integer) data.get(Protocol.STATUS);
+		if (status == null) status = 200;
 		res.setStatus(status);
 		res.setJsonBody(JSON.toJSONBytes(data));
-		
+
 		sess.write(res);
 	}
 }

@@ -55,7 +55,7 @@ public class MemoryChannelReader implements ChannelReader {
 				res.add(data);
 				channel.offset++;
 				c++;
-				if(c > count) break; 
+				if(c >= count) break; 
 			}
 			return res;
 		} 
