@@ -1,11 +1,18 @@
 package io.zbus.rpc;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 
-public class Request extends TreeMap<String, Object> {   
+public class Request extends HashMap<String, Object> {   
 	private static final long serialVersionUID = -2112706466764692497L;   
+	public Request() { 
+	}
+	
+	public Request(Map<String, Object> data) {
+		super(data);
+	}
 	
 	public String getMethod() {
 		return get("method");

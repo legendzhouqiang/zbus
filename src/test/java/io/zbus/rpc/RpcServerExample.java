@@ -17,7 +17,7 @@ public class RpcServerExample {
 		//b.setMethodPageModule("m");
 		b.addModule("example", example); 
 		
-		b.setPort(80);
+		b.setPort(8080);
 		b.start();
 	}
 }

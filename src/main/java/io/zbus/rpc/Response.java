@@ -1,9 +1,17 @@
 package io.zbus.rpc;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class Response extends HashMap<String, Object>  { 
 	private static final long serialVersionUID = 3189028874502200908L; 
+	
+	public Response() { 
+	}
+	
+	public Response(Map<String, Object> data) {
+		super(data);
+	}
 	
 	public Integer getStatus() {
 		return get("status");

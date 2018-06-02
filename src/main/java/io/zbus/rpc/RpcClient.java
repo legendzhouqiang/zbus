@@ -1,98 +1,24 @@
 package io.zbus.rpc;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
-import io.zbus.auth.DefaultSign;
-import io.zbus.auth.RequestSign;
 import io.zbus.kit.JsonKit;
-import io.zbus.kit.StrKit;
-import io.zbus.transport.DataHandler;
-import io.zbus.transport.ErrorHandler;
 import io.zbus.transport.http.WebsocketClient;
 import okhttp3.OkHttpClient; 
 
-public class RpcClient extends WebsocketClient { 
-	public String apiKey;
-	public String secretKey;
-	public boolean authEnabled = false;
-	public RequestSign requestSign = new DefaultSign();
-	
-	private Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>();
-
+public class RpcClient extends WebsocketClient {   
 	public RpcClient(String address) {  
-		this(address, new OkHttpClient());
+		super(address);
 	}  
 	
 	public RpcClient(String address, OkHttpClient httpClient) {
-		super(address, httpClient);
-		onText = msg -> {
-			Response response = JsonKit.parseObject(msg, Response.class);
-			RequestContext ctx = callbackTable.remove(response.getId());
-			if (ctx != null) {
-				ctx.onData.handle(response);
-			}
-		}; 
-	}
-	
-	public void invoke(Request request, DataHandler<Response> dataHandler) {
-		invoke(request, dataHandler, null);
-	}
-
-	public void invoke(Request request, DataHandler<Response> dataHandler, ErrorHandler errorHandler) {
-		request.setId(StrKit.uuid());
-		if(authEnabled) {
-			if(apiKey == null) {
-				throw new IllegalStateException("apiKey not set");
-			}
-			if(secretKey == null) {
-				throw new IllegalStateException("secretKey not set");
-			}
-			
-			requestSign.sign(request, apiKey, secretKey);
-		}
-		
-		RequestContext ctx = new RequestContext();
-		ctx.request = request;
-		ctx.onData = dataHandler;
-		ctx.onError = errorHandler;
-
-		callbackTable.put(request.getId(), ctx);
-
-		String reqString = JsonKit.toJSONString(request); 
-		sendMessage(reqString);
-	}
-	
-	public Response invoke(Request req) throws IOException, InterruptedException { 
-		return invoke(req, 10000);
-	}
-	
-	public Response invoke(Request req, long timeout) throws IOException, InterruptedException { 
-		CountDownLatch countDown = new CountDownLatch(1);
-		AtomicReference<Response> res = new AtomicReference<Response>();  
-		long start = System.currentTimeMillis();
-		invoke(req, resp->{
-			res.set(resp);
-			countDown.countDown();
-		});
-		countDown.await(timeout, TimeUnit.MILLISECONDS);
-		if(res.get() == null){ 
-			long end = System.currentTimeMillis();
-			String msg = String.format("Timeout(Time=%dms, ID=%s): %s", (end-start), req.getId(), JsonKit.toJSONString(req)); 
-			throw new IOException(msg);
-		}
-		return res.get();
-	} 
+		super(address, httpClient); 
+	}  
 	 
-	public static <T> T parseResult(Response resp, Class<T> clazz) { 
+	private static <T> T parseResult(Response resp, Class<T> clazz) { 
 		Object data = resp.getBody();
 		if(resp.getStatus() != 200){
 			if(data instanceof RuntimeException){
@@ -146,7 +72,7 @@ public class RpcClient extends WebsocketClient {
 			request.setMethod(method.getName());  
 			request.setParams(args);
 			
-			Response resp = rpc.invoke(request);
+			Response resp = new Response(rpc.invoke(request));
 			return parseResult(resp, method.getReturnType());
 		}
 
@@ -169,11 +95,5 @@ public class RpcClient extends WebsocketClient {
 			}
 			return REMOTE_METHOD_CALL;
 		} 
-	}
-	
-	static class RequestContext {
-		Request request;
-		DataHandler<Response> onData;
-		ErrorHandler onError;
-	}
+	} 
 }
