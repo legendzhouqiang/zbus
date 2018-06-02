@@ -90,7 +90,7 @@ public class MessageDispatcher {
 		}
 	}
 
-	public void sendMessage(MessageQueue mq, String channel, int count, String reqMsgId, Session sess, boolean isWebsocket) throws IOException { 
+	public void take(MessageQueue mq, String channel, int count, String reqMsgId, Session sess, boolean isWebsocket) throws IOException { 
 		List<Map<String, Object>> data = mq.read(channel, count);
 		Map<String, Object> message = new HashMap<>();  
 		message.put(Protocol.STATUS, 200);

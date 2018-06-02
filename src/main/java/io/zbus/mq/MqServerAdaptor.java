@@ -30,7 +30,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		
 		commandTable.put(Protocol.PUB, pubHandler);
 		commandTable.put(Protocol.SUB, subHandler);
-		commandTable.put(Protocol.GET, getHandler);
+		commandTable.put(Protocol.TAKE, takeHandler);
 		commandTable.put(Protocol.CREATE, createHandler); 
 		commandTable.put(Protocol.REMOVE, removeHandler); 
 		commandTable.put(Protocol.PING, pingHandler); 
@@ -215,7 +215,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		messageDispatcher.dispatch(mq, channelName); 
 	};
 	
-	private CommandHandler getHandler = (req, sess, isWebsocket) -> { 
+	private CommandHandler takeHandler = (req, sess, isWebsocket) -> { 
 		if(!validateRequest(req, sess, isWebsocket)) return;
 		String mqName = req.getString(Protocol.MQ);
 		String channelName = req.getString(Protocol.CHANNEL); 
@@ -224,7 +224,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		MessageQueue mq = mqManager.get(mqName); 
 		if(window == null) window = 1; 
 		
-	    messageDispatcher.sendMessage(mq, channelName, window, msgId, sess, isWebsocket); 
+	    messageDispatcher.take(mq, channelName, window, msgId, sess, isWebsocket); 
 	};
 	
 	private void reply(JSONObject req, int status, String message, Session sess, boolean isWebsocket) {
