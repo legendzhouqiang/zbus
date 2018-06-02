@@ -11,13 +11,15 @@ public class Pub2 {
 		MqClient client = new MqClient("localhost:15555"); 
 		
 		final String mq = "DiskMQ";
-		Map<String, Object> create = new HashMap<>();
-		create.put("cmd", "create");
-		create.put("mq", mq); 
-		client.invoke(create, res->{
+		Map<String, Object> req = new HashMap<>();
+		req.put("cmd", "create");
+		req.put("mq", mq); 
+		req.put("mqType", "disk");
+		
+		client.invoke(req, res->{
 			System.out.println(res);
 		});
-		Thread.sleep(1000);
+		Thread.sleep(100);
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 100000; i++) {   

@@ -16,9 +16,10 @@ public class Sub1 {
 		final String mq = "MyMQ", channel = "MyChannel";
 		AtomicInteger count = new AtomicInteger(0);  
 		client.addListener(mq, channel, data->{
-			if(count.getAndIncrement() % 10000 == 0) {
-				System.out.println(data); 
-			} 
+			int c = count.getAndIncrement();
+			if(c%10000 == 0) {
+				System.out.println(c + ":" + data);  
+			}
 		});  
 		
 		client.onOpen = ()->{
@@ -26,6 +27,7 @@ public class Sub1 {
 			req.put("cmd", "create"); //create MQ/Channel
 			req.put("mq", mq); 
 			req.put("channel", channel);  
+			//req.put("offset", 0);
 			client.invoke(req, res->{
 				System.out.println(res);
 			});  

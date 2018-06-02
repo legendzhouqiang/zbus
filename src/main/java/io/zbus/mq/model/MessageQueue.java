@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public interface MessageQueue {
 	/** 
 	 * @return all channels inside of the queue
 	 */
-	Map<String, Channel> channels(); 
+	Set<String> channels(); 
 	
 	/** 
 	 * @return attribute map of the queue
@@ -197,12 +197,8 @@ public interface MessageQueue {
 		}
 
 		@Override
-		public Map<String, Channel> channels() {  
-			Map<String, Channel> res = new HashMap<>();
-			for(Entry<String, ChannelReader> e : channelTable.entrySet()) {
-				res.put(e.getKey(), e.getValue().channel());
-			}
-			return res;
+		public Set<String> channels() {  
+			return channelTable.keySet();
 		}
 	 
 		@Override

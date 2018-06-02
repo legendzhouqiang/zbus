@@ -77,13 +77,13 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		}
 		String mqType = req.getString(Protocol.MQ_TYPE);
-		String channel = req.getString(Protocol.CHANNEL);
-		Integer mqMask = req.getInteger(Protocol.MQ_MASK);
+		Integer mqMask = req.getInteger(Protocol.MQ_MASK); 
+		String channel = req.getString(Protocol.CHANNEL); 
 		Integer channelMask = req.getInteger(Protocol.CHANNEL_MASK);
-		Long channelOffset = req.getLong(Protocol.CHANNEL_MASK);
+		Long offset = req.getLong(Protocol.OFFSET);
 		
 		try {
-			mqManager.saveQueue(mqName, mqType, mqMask, channel, channelOffset, channelMask);
+			mqManager.saveQueue(mqName, mqType, mqMask, channel, offset, channelMask);
 		} catch (IOException e) { 
 			logger.error(e.getMessage(), e);
 			

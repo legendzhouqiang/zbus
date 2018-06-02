@@ -16,10 +16,10 @@ public class Pub1 {
 		client.invoke(create, res->{
 			System.out.println(res);
 		});
-		Thread.sleep(1000);
+		Thread.sleep(100);
 		
 		AtomicInteger count = new AtomicInteger(0);  
-		for (int i = 0; i < 100000; i++) {   
+		for (int i = 0; i < 1000000; i++) {   
 			Map<String, Object> msg = new HashMap<>();
 			msg.put("cmd", "pub"); //Publish
 			msg.put("mq", "MyMQ");
