@@ -28,7 +28,7 @@ public class RpcServerBootstrap implements Closeable {
 	private String certFile;
 	private String keyFile;
 	private HttpWsServer server;    
-	private MethodRegisterInterceptor onStart;
+	private RpcStartInterceptor onStart;
 	
 	String mqServerAddress; //Support MQ based RPC
 	
@@ -95,7 +95,7 @@ public class RpcServerBootstrap implements Closeable {
 		this.processor.setAuthFilter(authFilter);
 	}
 	
-	public void setOnStart(MethodRegisterInterceptor onStart) {
+	public void setOnStart(RpcStartInterceptor onStart) {
 		this.onStart = onStart;
 	}
 

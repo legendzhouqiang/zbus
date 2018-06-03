@@ -1,5 +1,5 @@
 package io.zbus.rpc;
 
-public interface MethodRegisterInterceptor {  
+public interface RpcStartInterceptor {  
 	void onStart(RpcProcessor processor);
 }
