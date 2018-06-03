@@ -3,13 +3,13 @@ package io.zbus.mq;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Get {  
+public class Take {  
 	
 	public static void main(String[] args) throws Exception { 
 		MqClient client = new MqClient("localhost:15555");
 		
 		Map<String, Object> req = new HashMap<>();
-		req.put("cmd", "get");  
+		req.put("cmd", "take");  
 		req.put("mq", "MyMQ"); 
 		req.put("channel", "MyChannel"); 
 		
@@ -17,6 +17,8 @@ public class Get {
 			System.out.println(res);
 			
 			client.close();
+		}, e->{
+			try { client.close(); } catch (Exception ex) { }
 		});  
 	} 
 }
