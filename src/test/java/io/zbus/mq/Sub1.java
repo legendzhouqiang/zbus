@@ -13,7 +13,7 @@ public class Sub1 {
 		
 		client.heartbeat(30, TimeUnit.SECONDS);
 		
-		final String mq = "MyMQ", channel = "MyChannel";
+		final String mq = "MemQ", channel = "MyChannel";
 		AtomicInteger count = new AtomicInteger(0);  
 		client.addListener(mq, channel, data->{
 			int c = count.getAndIncrement();

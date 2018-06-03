@@ -13,7 +13,7 @@ public class Sub2 {
 		
 		client.heartbeat(30, TimeUnit.SECONDS);
 		
-		final String mq = "DiskMQ", channel = "MyChannel";
+		final String mq = "DiskQ", channel = "MyChannel";
 		AtomicInteger count = new AtomicInteger(0);  
 		client.addListener(mq, channel, data->{
 			if(count.getAndIncrement() % 10000 == 0) {

@@ -11,7 +11,7 @@ import io.zbus.mq.model.MessageQueue.AbstractMessageQueue;
 
 public class MemoryQueue extends AbstractMessageQueue{  
 	private CircularArray data;   
-	private Integer mask; 
+	private Integer mask = 0; 
 	
 	public MemoryQueue(String name, int maxSize) { 
 		super(name); 
@@ -25,6 +25,11 @@ public class MemoryQueue extends AbstractMessageQueue{
 	@Override
 	public String type() { 
 		return Protocol.MEMORY;
+	}
+	
+	@Override
+	public long size() { 
+		return data.size();
 	}
 	
 	@Override

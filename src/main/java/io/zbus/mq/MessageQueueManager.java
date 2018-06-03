@@ -1,9 +1,13 @@
 package io.zbus.mq;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.zbus.mq.db.DbQueue;
 import io.zbus.mq.disk.DiskQueue;
@@ -12,9 +16,34 @@ import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
 
 public class MessageQueueManager {  
-	public String mqBaseDir = "/tmp/zbus";
+	private static final Logger logger = LoggerFactory.getLogger(MessageQueueManager.class);
+	public String mqDir = "/tmp/zbus";
+	public String dbConnectionString;
 	
 	private Map<String, MessageQueue> mqTable = new ConcurrentHashMap<>();
+	
+	public void loadQueueTable() {
+		logger.info("Loading MQ from disk ..."); 
+		File[] mqDirs = new File(this.mqDir).listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isDirectory();
+			}
+		});
+		
+		if (mqDirs != null && mqDirs.length > 0) {
+			for (File dir : mqDirs) { 
+				try {
+					MessageQueue mq = new DiskQueue(dir.getName(), new File(this.mqDir));
+					mqTable.put(dir.getName(), mq);
+					logger.info("MQ({}) loaded", dir.getName()); 
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+					continue;
+				} 
+			}
+		}   
+	}
 	
 	public MessageQueue get(String mqName) {
 		if(mqName == null) mqName = "";
@@ -51,7 +80,7 @@ public class MessageQueueManager {
 			if(Protocol.MEMORY.equals(mqType)) {
 				mq = new MemoryQueue(mqName);
 			} else if (Protocol.DISK.equals(mqType)) {
-				mq = new DiskQueue(mqName, new File(mqBaseDir));
+				mq = new DiskQueue(mqName, new File(mqDir));
 			} else if(Protocol.DB.equals(mqName)) {
 				mq = new DbQueue(mqName);
 			} else {

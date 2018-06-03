@@ -13,7 +13,7 @@ public class Pub2 {
 		
 		client.heartbeat(30, TimeUnit.SECONDS);
 		
-		final String mq = "DiskMQ";
+		final String mq = "DiskQ";
 		Map<String, Object> req = new HashMap<>();
 		req.put("cmd", "create");
 		req.put("mq", mq); 
@@ -22,7 +22,7 @@ public class Pub2 {
 		client.invoke(req, res->{
 			System.out.println(res);
 		});
-		Thread.sleep(100);
+		Thread.sleep(1000);
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 100000; i++) {   

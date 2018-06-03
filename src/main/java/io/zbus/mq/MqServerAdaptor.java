@@ -30,8 +30,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 	
 	private Map<String, CommandHandler> commandTable = new HashMap<>(); 
 	
-	public MqServerAdaptor() {
+	public MqServerAdaptor(MqServerConfig config) {
 		messageDispatcher = new MessageDispatcher(subscriptionManager, sessionTable); 
+		mqManager.mqDir = config.mqDir;
+		
+		mqManager.loadQueueTable();
 		
 		commandTable.put(Protocol.PUB, pubHandler);
 		commandTable.put(Protocol.SUB, subHandler);

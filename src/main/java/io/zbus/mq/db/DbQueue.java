@@ -18,6 +18,11 @@ public class DbQueue extends AbstractMessageQueue{
 	public String type() { 
 		return Protocol.DB;
 	}
+	
+	@Override
+	public long size() { 
+		return 0;
+	}
 
 	@Override
 	public void write(Map<String, Object> message) {

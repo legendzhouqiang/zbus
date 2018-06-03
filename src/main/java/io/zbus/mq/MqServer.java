@@ -25,7 +25,7 @@ public class MqServer extends Server {
 			p.add(new HttpWsServerCodec());
 		});  
 		
-		serverAdaptor = new MqServerAdaptor();
+		serverAdaptor = new MqServerAdaptor(this.config);
 		if(config.requestAuth != null) {
 			serverAdaptor.setRequestAuth(config.requestAuth);
 		}

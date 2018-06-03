@@ -27,10 +27,13 @@ public interface Protocol {
 	public static final String CHECKSUM       = "checksum";  //Offset checksum
 	public static final String SENDER         = "sender"; 
 	public static final String MQ_TYPE        = "mqType";  
-	public static final String MQ_MASK        = "mqMask";
+	public static final String MQ_MASK        = "mqMask"; 
+	public static final String MQ_SIZE        = "mqSize";
 	public static final String CHANNEL_MASK   = "channelMask"; 
 	public static final String WINDOW         = "window";
 	public static final String ACK            = "ack"; 
+	public static final String PAGE           = "page";
+	public static final String PAGE_SIZE      = "pageSize";
 	
 	//Parameter mqType values
 	public static final String MEMORY  = "memory";  

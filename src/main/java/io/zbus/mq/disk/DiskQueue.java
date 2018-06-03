@@ -36,6 +36,11 @@ public class DiskQueue extends AbstractMessageQueue {
 	}
 	
 	@Override
+	public long size() { 
+		return index.getMessageCount();
+	}
+	
+	@Override
 	protected ChannelReader buildChannelReader(String channelId) throws IOException {
 		return new DiskChannelReader(channelId, this);
 	}
@@ -47,7 +52,13 @@ public class DiskQueue extends AbstractMessageQueue {
         if (channelFiles != null && channelFiles.length> 0) {
             for (File channelFile : channelFiles) {  
             	String channelName = channelFile.getName();
-            	channelName = channelName.substring(0, channelName.lastIndexOf('.'));  
+            	channelName = channelName.substring(0, channelName.lastIndexOf('.'));   
+				try {
+					ChannelReader reader = buildChannelReader(channelName);
+					channelTable.put(channelName, reader);
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+				} 
             }
         } 
 	}

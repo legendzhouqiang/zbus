@@ -12,17 +12,17 @@ public class Pub1 {
 		
 		Map<String, Object> create = new HashMap<>();
 		create.put("cmd", "create");
-		create.put("mq", "MyMQ"); 
+		create.put("mq", "MemQ"); 
 		client.invoke(create, res->{
 			System.out.println(res);
 		});
-		Thread.sleep(100);
+		Thread.sleep(1000);
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 100000; i++) {   
 			Map<String, Object> msg = new HashMap<>();
 			msg.put("cmd", "pub"); //Publish
-			msg.put("mq", "MyMQ");
+			msg.put("mq", "MemQ");
 			msg.put("body", i);  
 			
 			client.invoke(msg, res->{

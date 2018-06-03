@@ -52,6 +52,12 @@ public interface MessageQueue {
 	String type();
 	
 	/**
+	 * Message count
+	 * @return size of message queue
+	 */
+	long size();
+	
+	/**
 	 * Info of Message queue, memory|disk|db
 	 * @return info of mq
 	 */ 
@@ -149,8 +155,7 @@ public interface MessageQueue {
 		@Override
 		public String name() { 
 			return name;
-		}
-		
+		}  
 		
 		@Override
 		public Map<String, Object> info() {
@@ -158,6 +163,7 @@ public interface MessageQueue {
 			info.put(Protocol.MQ, name());
 			info.put(Protocol.MQ_TYPE, type());
 			info.put(Protocol.MQ_MASK, getMask());
+			info.put(Protocol.MQ_SIZE, size());
 			return info;
 		}
 	 
