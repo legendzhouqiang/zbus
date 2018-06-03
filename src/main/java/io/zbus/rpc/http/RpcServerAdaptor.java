@@ -1,14 +1,13 @@
 package io.zbus.rpc.http;
 
 import java.io.IOException;
-
-import com.alibaba.fastjson.JSON;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.zbus.kit.HttpKit;
 import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.kit.JsonKit;
-import io.zbus.rpc.Request;
-import io.zbus.rpc.Response;
+import io.zbus.rpc.Protocol;
 import io.zbus.rpc.RpcProcessor;
 import io.zbus.transport.ServerAdaptor;
 import io.zbus.transport.Session;
@@ -24,23 +23,23 @@ public class RpcServerAdaptor extends ServerAdaptor {
 	@Override
 	public void onMessage(Object msg, Session sess) throws IOException {
 		HttpMessage reqMsg = null;
-		Request request = null;
+		Map<String, Object> request = null;
 		boolean writeHttp = true;
 		if (msg instanceof HttpMessage) {
 			reqMsg = (HttpMessage) msg;
 			request = handleUrlMessage(reqMsg);
 			if (request == null) {
-				request = JSON.parseObject(reqMsg.getBodyString(), Request.class);
+				request = JsonKit.parseObject(reqMsg.getBodyString());
 			}
 		} else if (msg instanceof byte[]) {
-			request = JSON.parseObject((byte[]) msg, Request.class);
+			request = JsonKit.parseObject((byte[]) msg);
 			writeHttp = false;
 		}
 		
-		Response response = processor.process(request); 
-		
-		if (response.getBody() != null && response.getBody() instanceof HttpMessage) {
-			HttpMessage res = (HttpMessage) response.getBody();
+		Map<String, Object> response = processor.process(request); 
+		Object body = response.get(Protocol.BODY);
+		if (body != null && body instanceof HttpMessage) {
+			HttpMessage res = (HttpMessage)body;
 			if (writeHttp) {
 				if (res.getStatus() == null) {
 					res.setStatus(200);
@@ -48,7 +47,7 @@ public class RpcServerAdaptor extends ServerAdaptor {
 				sess.write(res);
 				return;
 			} else {
-				response.setBody(res.toString());
+				response.put(Protocol.BODY, res.toString());
 			}
 		}
 
@@ -66,7 +65,7 @@ public class RpcServerAdaptor extends ServerAdaptor {
 		}
 	}
 
-	protected Request handleUrlMessage(HttpMessage msg) {
+	protected Map<String, Object> handleUrlMessage(HttpMessage msg) {
 		String url = msg.getUrl();
 		if (url == null || "/".equals(url)) {
 			return null;
@@ -76,17 +75,17 @@ public class RpcServerAdaptor extends ServerAdaptor {
 
 		UrlInfo info = HttpKit.parseUrl(url);
 
-		Request req = new Request();
+		Map<String, Object> req = new HashMap<String, Object>();
 		if (info.path.size() >= 1) {
-			req.setModule(info.path.get(0));
+			req.put(Protocol.MODULE, info.path.get(0));
 		}
 		if (info.path.size() >= 2) {
-			req.setMethod(info.path.get(1));
+			req.put(Protocol.METHOD, info.path.get(1));
 		}
 
 		if (info.path.size() > 2) {
 			Object[] params = new Object[info.path.size() - 2];
-			req.setParams(params);
+			req.put(Protocol.PARAMS, params);
 			for (int i = 0; i < info.path.size() - 2; i++) {
 				params[i] = info.path.get(2 + i);
 			}

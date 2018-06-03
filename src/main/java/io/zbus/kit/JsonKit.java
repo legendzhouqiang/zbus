@@ -17,6 +17,16 @@ public class JsonKit {
 		return JSON.parseObject(jsonString);
 	} 
 	
+	public static Map<String, Object> parseObject(byte[] bytes) {
+		String string;
+		try {
+			string = new String(bytes, DEFAULT_ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			string = new String(bytes);
+		}
+		return JSON.parseObject(string);
+	} 
+	
 	public static <T> T parseObject(String jsonString, Class<T> clazz) {
 		try{
 			return JSON.parseObject(jsonString, clazz);

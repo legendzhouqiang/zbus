@@ -197,8 +197,10 @@ public class RpcProcessor {
 		}
 	} 
 	
-	private MethodInstance matchMethod(Request req) {
-		String key = key(req.getModule(), req.getMethod());
+	private MethodInstance matchMethod(Map<String, Object> req) {
+		String module = (String)req.get(Protocol.MODULE);
+		String method = (String)req.get(Protocol.METHOD);
+		String key = key(module, method);
 		return methodTable.get(key); 
 	} 
 	
@@ -206,23 +208,27 @@ public class RpcProcessor {
 		return module + ":" + method;
 	}
 	
-	public Response process(Request req) {  
-		Response response = new Response();  
+	public Map<String, Object> process(Map<String, Object> req) {  
+		Map<String, Object> response = new HashMap<String, Object>();   
 		try { 
 			if (req == null) {
-				req = new Request();
-				req.setMethod("index");
-				req.setModule("index");
+				req = new HashMap<>(); 
+				req.put(Protocol.MODULE, "index");
+				req.put(Protocol.METHOD, "index");
 			}  
-			if(req.getParams() == null){
-				req.setParams(new Object[0]);
+			
+			String module = (String)req.get(Protocol.MODULE);
+			String method = (String)req.get(Protocol.METHOD);  
+			
+			if(req.get(Protocol.PARAMS) == null){
+				req.put(Protocol.PARAMS, new Object[0]);
 			} 
 			
-			if (StrKit.isEmpty(req.getModule())) {
-				req.setModule("index");
+			if (StrKit.isEmpty(module)) {
+				req.put(Protocol.MODULE, "index");
 			}
-			if (StrKit.isEmpty(req.getMethod())) {
-				req.setMethod("index");
+			if (StrKit.isEmpty(method)) {
+				req.put(Protocol.METHOD, "index");
 			}   
 			
 			if(beforeFilter != null) {
@@ -237,28 +243,41 @@ public class RpcProcessor {
 			}
 			 
 		} catch (Throwable e) {
-			response.setBody(new RpcException(e.getMessage(), e.getCause(), false, stackTraceEnabled)); 
-			response.setStatus(500);
+			response.put(Protocol.BODY, new RpcException(e.getMessage(), e.getCause(), false, stackTraceEnabled)); 
+			response.put(Protocol.STATUS, 500);
 		} finally {
 			bindRequestResponse(req, response); 
-			if(response.getStatus() == null) {
-				response.setStatus(200);
+			if(response.get(Protocol.STATUS) == null) {
+				response.put(Protocol.STATUS, 200);
 			}
 		} 
 		return response;
 	}
 	
-	private void bindRequestResponse(Request request, Response response) {
-		response.setId(request.getId()); //Id Match
+	private void bindRequestResponse(Map<String, Object> request, Map<String, Object> response) {
+		response.put(Protocol.ID, request.get(Protocol.ID)); //Id Match
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void invoke(Request req, Response response) throws IllegalAccessException, IllegalArgumentException {   
+	private Object[] getParams(Map<String, Object> req) {
+		Object params = req.get(Protocol.PARAMS); 
+		if(params instanceof List) {
+			return ((List<Object>)params).toArray();
+		}
+		return (Object[])params;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void invoke(Map<String, Object> req, Map<String, Object> response) throws IllegalAccessException, IllegalArgumentException {   
 		try {   
 			MethodInstance target = matchMethod(req); 
+			String module = (String)req.get(Protocol.MODULE);
+			String method = (String)req.get(Protocol.METHOD); 
+			Object[] params = getParams(req);
+			
 			if(target == null) {
-				response.setStatus(404);
-				response.setBody(String.format("module=%s, method=%s Not Found", req.getModule(), req.getMethod()));
+				response.put(Protocol.STATUS,404);
+				response.put(Protocol.BODY, String.format("module=%s, method=%s Not Found", module, method));
 				return;
 			}
 			
@@ -270,37 +289,35 @@ public class RpcProcessor {
 			Object data = null;
 			if(target.reflectedMethod != null) {
 				Class<?>[] targetParamTypes = target.reflectedMethod.getParameterTypes();
-				Object[] invokeParams = new Object[targetParamTypes.length];
-				List<Object> reqParams = req.getParams(); 
+				Object[] invokeParams = new Object[targetParamTypes.length]; 
 				for (int i = 0; i < targetParamTypes.length; i++) { 
-					if(i>=reqParams.size()) {
+					if(i>=params.length) {
 						invokeParams[i] = null;
 					} else {
-						invokeParams[i] = JsonKit.convert(reqParams.get(i), targetParamTypes[i]);  
+						invokeParams[i] = JsonKit.convert(params[i], targetParamTypes[i]);  
 					}
 				}
 				data = target.reflectedMethod.invoke(target.instance, invokeParams);
 				
 			} else if(target.invokeBridge != null) {
-				Map<String, Object> mapParams = new HashMap<>(); 
-				List<Object> paramList = req.getParams();
-				if(paramList != null) {
-					if(paramList.size() == 1 && paramList.get(0) instanceof Map) {
-						mapParams = (Map<String, Object>)paramList.get(0); 
+				Map<String, Object> mapParams = new HashMap<>();  
+				if(params != null) {
+					if(params.length == 1 && params[0] instanceof Map) {
+						mapParams = (Map<String, Object>)params[0]; 
 					} else {
-						for(int i=0;i <paramList.size(); i++) {
+						for(int i=0;i <params.length; i++) {
 							if(target.paramNames == null) break;
 							if(i<target.paramNames.size()) {
-								mapParams.put(target.paramNames.get(i), paramList.get(i));
+								mapParams.put(target.paramNames.get(i), params[i]);
 							}
 						}
 					}
 				}
-				data = target.invokeBridge.invoke(req.getMethod(), mapParams);
+				data = target.invokeBridge.invoke(method, mapParams);
 			}
 			
-			response.setBody(data); 
-			response.setStatus(200);
+			response.put(Protocol.BODY, data); 
+			response.put(Protocol.STATUS, 200);
 		} catch (InvocationTargetException e) {  
 			Throwable t = e.getTargetException();
 			if(t != null) {
@@ -308,8 +325,8 @@ public class RpcProcessor {
 					t.setStackTrace(new StackTraceElement[0]);
 				}
 			}
-			response.setBody(t);
-			response.setStatus(500);
+			response.put(Protocol.BODY, t);
+			response.put(Protocol.STATUS, 500);
 		} 
 	}
 

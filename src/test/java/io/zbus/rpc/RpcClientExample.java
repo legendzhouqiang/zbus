@@ -1,5 +1,6 @@
 package io.zbus.rpc;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import io.zbus.rpc.biz.InterfaceExample;
@@ -13,9 +14,10 @@ public class RpcClientExample {
 		rpc.apiKey = "2ba912a8-4a8d-49d2-1a22-198fd285cb06";
 		rpc.secretKey = "461277322-943d-4b2f-b9b6-3f860d746ffd";
 
-		Request req = new Request();
-		req.setModule("example");
-		req.setMethod("getOrder");  
+		Map<String, Object> req = new HashMap<>();
+		req.put("module", "example");
+		req.put("method", "getOrder");
+		
 		Map<String, Object> res = rpc.invoke(req); //同步调用
 		System.out.println(res);
 		

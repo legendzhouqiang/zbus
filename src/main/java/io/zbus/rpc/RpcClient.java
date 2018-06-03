@@ -4,6 +4,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.transport.http.WebsocketClient;
@@ -18,9 +20,10 @@ public class RpcClient extends WebsocketClient {
 		super(address, httpClient); 
 	}  
 	 
-	private static <T> T parseResult(Response resp, Class<T> clazz) { 
-		Object data = resp.getBody();
-		if(resp.getStatus() != 200){
+	private static <T> T parseResult(Map<String, Object> resp, Class<T> clazz) { 
+		Object data = resp.get(Protocol.BODY);
+		Integer status = (Integer)resp.get(Protocol.STATUS);
+		if(status != null && status != 200){
 			if(data instanceof RuntimeException){
 				throw (RuntimeException)data;
 			} else {
@@ -67,12 +70,12 @@ public class RpcClient extends WebsocketClient {
 			Object value = handleLocalMethod(proxy, method, args);
 			if (value != REMOTE_METHOD_CALL) return value; 
 			 
-			Request request = new Request();
-			request.setModule(module);
-			request.setMethod(method.getName());  
-			request.setParams(args);
+			Map<String, Object> request = new HashMap<>();
+			request.put(Protocol.MODULE, module);
+			request.put(Protocol.METHOD, method.getName());  
+			request.put(Protocol.PARAMS, args);
 			
-			Response resp = new Response(rpc.invoke(request));
+			Map<String, Object> resp = rpc.invoke(request);
 			return parseResult(resp, method.getReturnType());
 		}
 
