@@ -51,6 +51,7 @@ public class Server implements Closeable {
 	
 	protected int idleTimeInSeconds = 180; //180s 
 	protected int packageSizeLimit = 1024*1024*1024; //maximum of 1G  
+	protected int maxSocketCount = 102400;
 	
 	//Port ==> Server IoAdaptor
 	protected Map<Integer, ServerInfo> listenTable = new ConcurrentHashMap<Integer, ServerInfo>();
@@ -79,7 +80,7 @@ public class Server implements Closeable {
 	public void start(final String host, final int port, IoAdaptor ioAdaptor, boolean isDefault) {  
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(bossGroup, workGroup)
-		 .option(ChannelOption.SO_BACKLOG, 102400) //TODO make it configurable
+		 .option(ChannelOption.SO_BACKLOG, maxSocketCount) 
 		 .channel(NioServerSocketChannel.class) 
 		 .handler(new LoggingHandler(LogLevel.DEBUG))
 		 .childHandler(new SocketChannelInitializer(ioAdaptor));

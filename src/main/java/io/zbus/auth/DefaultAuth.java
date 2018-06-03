@@ -20,7 +20,7 @@ public class DefaultAuth implements RequestAuth {
 		String apiKey = (String)request.get(APIKEY);
 		if(apiKey == null) return new AuthResult(false, "missing apiKey in request");
 		String sign = (String)request.get(SIGNATURE);
-		if(sign == null) return new AuthResult(false);
+		if(sign == null) return new AuthResult(false, "missing signature in request");
 		
 		if(!apiKeyProvider.apiKeyExists(apiKey)) return new AuthResult(false, "apiKey not exists");
 		String secretKey = apiKeyProvider.secretKey(apiKey);

@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.zbus.kit.ConfigKit;
 import io.zbus.transport.Server;
+import io.zbus.transport.Ssl;
 import io.zbus.transport.http.HttpWsServerCodec; 
 
 public class MqServer extends Server {
@@ -17,13 +18,27 @@ public class MqServer extends Server {
 	
 	public MqServer(MqServerConfig config) { 
 		this.config = config;
+		this.maxSocketCount = config.maxSocketCount;
 		codec(p -> {
 			p.add(new HttpServerCodec());
 			p.add(new HttpObjectAggregator(config.packageSizeLimit));  
 			p.add(new HttpWsServerCodec());
-		}); 
+		});  
 		
 		serverAdaptor = new MqServerAdaptor();
+		if(config.requestAuth != null) {
+			serverAdaptor.setRequestAuth(config.requestAuth);
+		}
+		
+		boolean sslEnabled = config.isSslEnabled(); 
+		if (sslEnabled){  
+			try{  
+				this.sslContext = Ssl.buildServerSsl(config.getSslCertFile(), config.getSslKeyFile()); 
+			} catch (Exception e) { 
+				logger.error("SSL init error: " + e.getMessage());
+				throw new IllegalStateException(e.getMessage(), e.getCause());
+			} 
+		}
 	} 
 	public MqServer(String configFile){
 		this(new MqServerConfig(configFile));

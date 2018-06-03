@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
 
+import io.zbus.auth.AuthResult;
+import io.zbus.auth.RequestAuth;
 import io.zbus.kit.HttpKit;
 import io.zbus.kit.HttpKit.UrlInfo;
 import io.zbus.mq.model.Channel;
@@ -24,6 +26,8 @@ public class MqServerAdaptor extends ServerAdaptor {
 	private SubscriptionManager subscriptionManager = new SubscriptionManager();  
 	private MessageDispatcher messageDispatcher;
 	private MessageQueueManager mqManager = new MessageQueueManager(); 
+	private RequestAuth requestAuth;
+	
 	private Map<String, CommandHandler> commandTable = new HashMap<>(); 
 	
 	public MqServerAdaptor() {
@@ -69,6 +73,15 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		} 
 		cmd = cmd.toLowerCase();
+		
+		if(requestAuth != null) {
+			AuthResult authResult = requestAuth.auth(json);
+			if(!authResult.success) {
+				reply(json, 403, authResult.message, sess, isWebsocket); 
+				return; 
+			}
+		}
+		
 		CommandHandler handler = commandTable.get(cmd);
 		if(handler == null) {
 			reply(json, 404, "Command(" + cmd + ") Not Found", sess, isWebsocket); 
@@ -283,7 +296,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 		super.cleanSession(sess); 
 		
 		subscriptionManager.removeByClientId(sessId);
-	} 
+	}
+
+	public void setRequestAuth(RequestAuth requestAuth) {
+		this.requestAuth = requestAuth;
+	}  
 }
 
 interface CommandHandler{

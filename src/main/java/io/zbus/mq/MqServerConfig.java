@@ -7,7 +7,8 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 
-import io.zbus.auth.ApiKeyProvider;
+import io.zbus.auth.DefaultAuth;
+import io.zbus.auth.RequestAuth;
 import io.zbus.auth.XmlApiKeyProvider;
 import io.zbus.kit.ConfigKit.XmlConfig;
 
@@ -19,8 +20,9 @@ public class MqServerConfig extends XmlConfig {
 	public String sslKeyFile;
 	public int maxSocketCount = 102400;
 	public int packageSizeLimit = 1024 * 1024 * 64; // 64M
-	public String mqDir = "/tmp/zbus";
-	public ApiKeyProvider apiKeyProvider;
+	public String mqDir = "/tmp/zbus"; 
+	
+	public RequestAuth requestAuth;
 
 	public MqServerConfig() {
 
@@ -55,7 +57,7 @@ public class MqServerConfig extends XmlConfig {
 		if (valueOf(xpath.evaluate("/zbus/auth", doc), null) != null) {
 			XmlApiKeyProvider provider = new XmlApiKeyProvider();
 			provider.loadFromXml(doc);
-			apiKeyProvider = provider;
+			this.requestAuth = new DefaultAuth(provider); 
 		}
 	}
 
@@ -123,11 +125,11 @@ public class MqServerConfig extends XmlConfig {
 		this.sslKeyFile = sslKeyFile;
 	}
 
-	public ApiKeyProvider getApiKeyProvider() {
-		return apiKeyProvider;
+	public RequestAuth getRequestAuth() {
+		return requestAuth;
 	}
 
-	public void setApiKeyProvider(ApiKeyProvider apiKeyProvider) {
-		this.apiKeyProvider = apiKeyProvider;
+	public void setRequestAuth(RequestAuth requestAuth) {
+		this.requestAuth = requestAuth;
 	} 
 }

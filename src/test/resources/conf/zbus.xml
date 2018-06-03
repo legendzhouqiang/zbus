@@ -7,6 +7,7 @@
 	<maxSocketCount>102400</maxSocketCount>   
 	<packageSizeLimit>128M</packageSizeLimit>     
 	
+	<!-- 
 	<auth>
 		<add>
 			<apiKey>2ba912a8-4a8d-49d2-1a22-198fd285cb06</apiKey>
@@ -16,6 +17,7 @@
 			<apiKey>3ba912a6-4a8d-49d1-1a66-198ea285cb03</apiKey>
 			<secretKey>123475622-953d-4b2f-a7b6-4f860d126cce</secretKey> 
 		</add>  
-	</auth>   
+	</auth>  
+	 --> 
 </zbus>
 
