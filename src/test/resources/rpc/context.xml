@@ -34,7 +34,7 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 	<bean id="authFilter" class="io.zbus.rpc.RpcAuthFilter">
 		<constructor-arg>
 			<bean class="io.zbus.auth.XmlApiKeyProvider">
-				<constructor-arg value="auth.xml"/>
+				<constructor-arg value="rpc/auth.xml"/>
 			</bean> 
 		</constructor-arg>
 	</bean>
