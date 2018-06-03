@@ -9,6 +9,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.zbus.mq.Protocol;
+
 /** 
  *  
  * MessageQueue:
@@ -42,6 +44,18 @@ public interface MessageQueue {
 	 * @return name of mq
 	 */
 	String name();
+	
+	/**
+	 * Type of message queue, identifier
+	 * @return type of mq
+	 */
+	String type();
+	
+	/**
+	 * Info of Message queue, memory|disk|db
+	 * @return info of mq
+	 */ 
+	Map<String, Object> info();
 	/**
 	 * Write message to queue
 	 * 
@@ -135,6 +149,16 @@ public interface MessageQueue {
 		@Override
 		public String name() { 
 			return name;
+		}
+		
+		
+		@Override
+		public Map<String, Object> info() {
+			Map<String, Object> info = new HashMap<>();
+			info.put(Protocol.MQ, name());
+			info.put(Protocol.MQ_TYPE, type());
+			info.put(Protocol.MQ_MASK, getMask());
+			return info;
 		}
 	 
 		@Override

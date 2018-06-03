@@ -31,6 +31,11 @@ public class DiskQueue extends AbstractMessageQueue {
 	} 
 	
 	@Override
+	public String type() { 
+		return Protocol.DISK;
+	}
+	
+	@Override
 	protected ChannelReader buildChannelReader(String channelId) throws IOException {
 		return new DiskChannelReader(channelId, this);
 	}

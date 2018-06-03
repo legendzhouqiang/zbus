@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.mq.Protocol;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.ChannelReader;
 import io.zbus.mq.model.MessageQueue.AbstractMessageQueue;
@@ -20,6 +21,11 @@ public class MemoryQueue extends AbstractMessageQueue{
 	public MemoryQueue(String name) { 
 		this(name, 1000); 
 	} 
+	
+	@Override
+	public String type() { 
+		return Protocol.MEMORY;
+	}
 	
 	@Override
 	protected ChannelReader buildChannelReader(String channelId) throws IOException {

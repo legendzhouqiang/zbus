@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.mq.Protocol;
 import io.zbus.mq.model.ChannelReader;
 import io.zbus.mq.model.MessageQueue.AbstractMessageQueue;
 
@@ -11,6 +12,11 @@ public class DbQueue extends AbstractMessageQueue{
 	
 	public DbQueue(String mqName) { 
 		super(mqName);
+	}
+	
+	@Override
+	public String type() { 
+		return Protocol.DB;
 	}
 
 	@Override

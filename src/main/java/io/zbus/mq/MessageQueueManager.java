@@ -11,11 +11,7 @@ import io.zbus.mq.memory.MemoryQueue;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
 
-public class MessageQueueManager {
-	public static final String MEMORY = "mem";
-	public static final String DISK = "disk";
-	public static final String DB = "db";
-	
+public class MessageQueueManager {  
 	public String mqBaseDir = "/tmp/zbus";
 	
 	private Map<String, MessageQueue> mqTable = new ConcurrentHashMap<>();
@@ -26,7 +22,7 @@ public class MessageQueueManager {
 	} 
 	
 	public MessageQueue saveQueue(String mqName, String channel) throws IOException { 
-		return saveQueue(mqName, MEMORY, null, channel, null, null);
+		return saveQueue(mqName, Protocol.MEMORY, null, channel, null, null);
 	}
 	
 	/**
@@ -47,16 +43,16 @@ public class MessageQueueManager {
 			throw new IllegalArgumentException("Missing mqName");
 		}
 		if(mqType == null) {
-			mqType = MEMORY;
+			mqType = Protocol.MEMORY;
 		}
 		
 		MessageQueue mq = mqTable.get(mqName); 
 		if(mq == null) {
-			if(MEMORY.equals(mqType)) {
+			if(Protocol.MEMORY.equals(mqType)) {
 				mq = new MemoryQueue(mqName);
-			} else if (DISK.equals(mqType)) {
+			} else if (Protocol.DISK.equals(mqType)) {
 				mq = new DiskQueue(mqName, new File(mqBaseDir));
-			} else if(DB.equals(mqName)) {
+			} else if(Protocol.DB.equals(mqName)) {
 				mq = new DbQueue(mqName);
 			} else {
 				throw new IllegalArgumentException("mqType(" + mqType + ") Not Support");

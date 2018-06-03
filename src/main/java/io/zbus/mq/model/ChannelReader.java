@@ -25,5 +25,5 @@ public interface ChannelReader extends Closeable  {
 	
 	void setMask(Integer mask);
 	
-	Channel channel();
+	Channel channel(); 
 }

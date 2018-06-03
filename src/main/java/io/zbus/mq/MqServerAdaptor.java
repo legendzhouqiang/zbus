@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import io.zbus.kit.HttpKit;
 import io.zbus.kit.HttpKit.UrlInfo;
+import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.Subscription;
 import io.zbus.transport.ServerAdaptor;
@@ -33,6 +34,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 		commandTable.put(Protocol.TAKE, takeHandler);
 		commandTable.put(Protocol.CREATE, createHandler); 
 		commandTable.put(Protocol.REMOVE, removeHandler); 
+		commandTable.put(Protocol.QUERY, queryHandler); 
 		commandTable.put(Protocol.PING, pingHandler); 
 	}
 	
@@ -227,10 +229,47 @@ public class MqServerAdaptor extends ServerAdaptor {
 	    messageDispatcher.take(mq, channelName, window, msgId, sess, isWebsocket); 
 	};
 	
+	private CommandHandler queryHandler = (req, sess, isWebsocket) -> { 
+		String mqName = req.getString(Protocol.MQ);
+		String channelName = req.getString(Protocol.CHANNEL);
+		if(mqName == null) {
+			reply(req, 400, "Missing mq field", sess, isWebsocket);
+			return;
+		} 
+		MessageQueue mq = mqManager.get(mqName); 
+		if(mq == null) {
+			reply(req, 404, "MQ(" + mqName + ") Not Found", sess, isWebsocket);
+			return;
+		} 
+		if(channelName == null) { 
+			Map<String, Object> res = new HashMap<>();
+			res.put(Protocol.STATUS, 200);
+			res.put(Protocol.BODY, mq.info()); 
+			reply(req, res, sess, isWebsocket);
+			return;
+		} 
+		
+		Channel channel = mq.channel(channelName);
+		if(channel == null) { 
+			reply(req, 404, "Channel(" + channelName + ") Not Found", sess, isWebsocket);
+			return;
+		}  
+		
+		Map<String, Object> res = new HashMap<>();
+		res.put(Protocol.STATUS, 200);
+		res.put(Protocol.BODY, channel); 
+		reply(req, res, sess, isWebsocket);
+		return;
+	};
+	
 	private void reply(JSONObject req, int status, String message, Session sess, boolean isWebsocket) {
 		JSONObject res = new JSONObject();
 		res.put(Protocol.STATUS, status);
-		res.put(Protocol.BODY, message);
+		res.put(Protocol.BODY, message); 
+		reply(req, res, sess, isWebsocket);
+	}
+	
+	private void reply(JSONObject req, Map<String, Object> res, Session sess, boolean isWebsocket) {
 		if(req != null) {
 			res.put(Protocol.ID, req.getString(Protocol.ID)); 
 		}
