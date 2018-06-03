@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ChannelInfo;
 import io.zbus.mq.disk.support.DiskMessage;
 import io.zbus.mq.disk.support.QueueReader;
-import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.ChannelReader;
 
 public class DiskChannelReader implements ChannelReader {
@@ -83,11 +83,13 @@ public class DiskChannelReader implements ChannelReader {
 	}
 
 	@Override
-	public Channel channel() {
-		Channel channel = new Channel(this.name);
-		channel.mask = getMask();
-		channel.offset = reader.getTotalOffset(); 
-		return channel;
+	public ChannelInfo info() {
+		ChannelInfo info = new ChannelInfo();
+		info.name = name;
+		info.mask = getMask();
+		info.filter = getFilter();
+		info.offset = reader.getTotalOffset(); 
+		return info;
 	}
 
 	@Override

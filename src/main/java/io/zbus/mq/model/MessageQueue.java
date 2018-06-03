@@ -1,15 +1,18 @@
 package io.zbus.mq.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ChannelInfo;
+import io.zbus.mq.Protocol.MqInfo;
 
 /** 
  *  
@@ -61,7 +64,7 @@ public interface MessageQueue {
 	 * Info of Message queue, memory|disk|db
 	 * @return info of mq
 	 */ 
-	Map<String, Object> info();
+	MqInfo info();
 	/**
 	 * Write message to queue
 	 * 
@@ -112,14 +115,19 @@ public interface MessageQueue {
 	 * Get channel by id
 	 * 
 	 * @param channelId id of channel
-	 * @return Channel object
+	 * @return ChannelInfo object
 	 */
-	Channel channel(String channelId);
+	ChannelInfo channel(String channelId);
 	
 	/** 
 	 * @return all channels inside of the queue
 	 */
-	Set<String> channels(); 
+	Map<String, ChannelInfo> channels(); 
+	
+	/** 
+	 * @return channel name iterator
+	 */
+	Iterator<String> channelIterator();
 	
 	/** 
 	 * @return attribute map of the queue
@@ -149,8 +157,10 @@ public interface MessageQueue {
 		protected final String name;
 		
 		public AbstractMessageQueue(String name) {
-			this.name = name;
+			this.name = name; 
 		}
+		
+		protected abstract ChannelReader buildChannelReader(String channelId) throws IOException; 
 		
 		@Override
 		public String name() { 
@@ -158,12 +168,13 @@ public interface MessageQueue {
 		}  
 		
 		@Override
-		public Map<String, Object> info() {
-			Map<String, Object> info = new HashMap<>();
-			info.put(Protocol.MQ, name());
-			info.put(Protocol.MQ_TYPE, type());
-			info.put(Protocol.MQ_MASK, getMask());
-			info.put(Protocol.MQ_SIZE, size());
+		public MqInfo info() {
+			MqInfo info = new MqInfo();
+			info.name = name();
+			info.type = type();
+			info.mask = getMask();
+			info.size = size(); 
+			info.channels = new ArrayList<>(channels().values());
 			return info;
 		}
 	 
@@ -186,13 +197,11 @@ public interface MessageQueue {
 		}
 
 		@Override
-		public Channel channel(String channelId) { 
+		public ChannelInfo channel(String channelId) { 
 			ChannelReader reader = channelTable.get(channelId);
 			if(reader == null) return null;
-			return reader.channel();
-		}
-		
-		protected abstract ChannelReader buildChannelReader(String channelId) throws IOException;
+			return reader.info();
+		} 
 
 		@Override
 		public void saveChannel(Channel channel) { 
@@ -227,8 +236,17 @@ public interface MessageQueue {
 		}
 
 		@Override
-		public Set<String> channels() {  
-			return channelTable.keySet();
+		public Map<String, ChannelInfo> channels() { 
+			Map<String, ChannelInfo> channels = new HashMap<>();
+			for(Entry<String, ChannelReader> e : channelTable.entrySet()) {
+				channels.put(e.getKey(), e.getValue().info());
+			}
+			return channels;
+		}
+		
+		@Override
+		public Iterator<String> channelIterator() { 
+			return channelTable.keySet().iterator();
 		}
 	 
 		@Override

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.zbus.mq.Protocol;
+import io.zbus.mq.Protocol.ChannelInfo;
 import io.zbus.mq.model.Channel;
 import io.zbus.mq.model.ChannelReader;
 
@@ -119,8 +120,12 @@ public class MemoryChannelReader implements ChannelReader {
 	}
 
 	@Override
-	public Channel channel() { 
-		return channel.clone();
+	public ChannelInfo info() { 
+		ChannelInfo info = new ChannelInfo();
+		info.name = channel.name;
+		info.filter = channel.filter;
+		info.mask = channel.mask;
+		return info;
 	}
 	
 	

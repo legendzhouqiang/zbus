@@ -2,6 +2,7 @@ package io.zbus.mq;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,9 +86,11 @@ public class MessageDispatcher {
 	}
 
 	public void dispatch(MessageQueue mq) {
-		for (String channel : mq.channels()) {
+		Iterator<String> iter = mq.channelIterator();
+		while(iter.hasNext()) {
+			String channel = iter.next();
 			dispatch(mq, channel);
-		}
+		} 
 	}
 
 	public void take(MessageQueue mq, String channel, int count, String reqMsgId, Session sess, boolean isWebsocket) throws IOException { 

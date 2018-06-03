@@ -1,5 +1,6 @@
 package io.zbus.mq;
 
+import java.util.List;
 
 public interface Protocol {  
 	//Parameter keys(Message main key-value pairs)
@@ -39,5 +40,20 @@ public interface Protocol {
 	public static final String MEMORY  = "memory";  
 	public static final String DISK    = "disk";  
 	public static final String DB      = "db";  
+	
+	public static class MqInfo {   
+		public String name; 
+		public Integer mask; 
+		public long size;
+		public String type;
+		public List<ChannelInfo> channels; 
+	}
+
+	public static class ChannelInfo {   
+		public String name; 
+		public Integer mask;  
+		public String filter;
+		public long offset;
+	}
 	
 }

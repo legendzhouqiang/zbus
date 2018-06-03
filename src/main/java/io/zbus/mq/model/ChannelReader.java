@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import io.zbus.mq.Protocol.ChannelInfo;
+
 public interface ChannelReader extends Closeable  {  
 	
 	Map<String, Object> read() throws IOException;  
@@ -25,5 +27,5 @@ public interface ChannelReader extends Closeable  {
 	
 	void setMask(Integer mask);
 	
-	Channel channel(); 
+	ChannelInfo info(); 
 }

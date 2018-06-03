@@ -112,6 +112,9 @@ public class DiskQueue extends AbstractMessageQueue {
 	public void destroy() { 
 		try {
 			writer.close();
+			for(ChannelReader reader : channelTable.values()) {
+				reader.destroy();
+			}
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}

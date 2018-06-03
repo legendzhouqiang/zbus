@@ -14,7 +14,7 @@ import io.zbus.auth.AuthResult;
 import io.zbus.auth.RequestAuth;
 import io.zbus.kit.HttpKit;
 import io.zbus.kit.HttpKit.UrlInfo;
-import io.zbus.mq.model.Channel;
+import io.zbus.mq.Protocol.ChannelInfo;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.Subscription;
 import io.zbus.transport.ServerAdaptor;
@@ -265,7 +265,7 @@ public class MqServerAdaptor extends ServerAdaptor {
 			return;
 		} 
 		
-		Channel channel = mq.channel(channelName);
+		ChannelInfo channel = mq.channel(channelName);
 		if(channel == null) { 
 			reply(req, 404, "Channel(" + channelName + ") Not Found", sess, isWebsocket);
 			return;
