@@ -41,7 +41,7 @@ public class Server implements Closeable {
 		void initPipeline(List<ChannelHandler> p);
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(Server.class); 
+	private static final Logger logger = LoggerFactory.getLogger(Server.class); 
 	
 	protected CodecInitializer codecInitializer; 
 	
@@ -91,9 +91,9 @@ public class Server implements Closeable {
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if(future.isSuccess()){
 					if(sslContext != null){
-						log.info("Server([SSL]{}:{}) started", host, port);
+						logger.info("Server([SSL]{}:{}) started", host, port);
 					} else {
-						log.info("Server({}:{}) started", host, port);
+						logger.info("Server({}:{}) started", host, port);
 					} 
 				} else { 
 					String message = String.format("Server(%s:%d) failed to start", host, port);

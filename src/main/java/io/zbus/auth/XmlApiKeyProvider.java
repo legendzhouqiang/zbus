@@ -17,6 +17,10 @@ import io.zbus.kit.ConfigKit.XmlConfig;
 
 public class XmlApiKeyProvider extends XmlConfig implements ApiKeyProvider {  
 	private Map<String, String> table = new HashMap<>(); 
+	
+	public XmlApiKeyProvider() { 
+	}
+	
 	public XmlApiKeyProvider(String configXmlFile) {
 		loadFromXml(configXmlFile);
 	}
