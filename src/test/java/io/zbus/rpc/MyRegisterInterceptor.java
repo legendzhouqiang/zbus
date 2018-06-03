@@ -3,7 +3,7 @@ package io.zbus.rpc;
 import java.util.Arrays;
 import java.util.Map;
 
-public class MyRegisterInterceptor implements RegisterInterceptor {
+public class MyRegisterInterceptor implements MethodRegisterInterceptor {
 
 	@Override
 	public void onStart(RpcProcessor processor) { 

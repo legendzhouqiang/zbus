@@ -16,18 +16,20 @@ import io.zbus.kit.StrKit;
 import io.zbus.rpc.annotation.Auth;
 import io.zbus.rpc.annotation.Param;
 import io.zbus.rpc.annotation.Remote;
+import io.zbus.rpc.doc.DocRender;
 
 public class RpcProcessor {
 	private static final Logger log = LoggerFactory.getLogger(RpcProcessor.class);
-
-	Map<String, MethodInstance> methodTable = new HashMap<>();      //<module>:<method> => MethodInstance
-	Map<String, Map<String, RpcMethod>> methodInfoTable = new HashMap<>(); //<module> => { method: => RpcMethod }
 	
-	String docUrlRoot = "/";
-	boolean stackTraceEnabled = true;
-	boolean methodPageEnabled = true; 
-	boolean methodPageAuthEnabled = false;
-	String methodPageModule = "index";
+	public Map<String, Map<String, RpcMethod>> methodInfoTable = new HashMap<>(); //<module> => { method: => RpcMethod }
+
+	protected Map<String, MethodInstance> methodTable = new HashMap<>();      //<module>:<method> => MethodInstance 
+	
+	protected String docUrlRoot = "/";
+	protected boolean stackTraceEnabled = true;
+	protected boolean methodPageEnabled = true; 
+	protected boolean methodPageAuthEnabled = false;
+	protected String methodPageModule = "index";
 	
 	protected RpcFilter beforeFilter;
 	protected RpcFilter afterFilter;
@@ -36,7 +38,8 @@ public class RpcProcessor {
 	public void enableMethodPageModule() { 
 		DocRender render = new DocRender(this, docUrlRoot);
 		addModule(methodPageModule, render, false, methodPageAuthEnabled);
-	}  
+	}   
+	
 	
 	public void addModule(Object service) {
 		String module = defaultModuleName(service);
@@ -83,7 +86,7 @@ public class RpcProcessor {
 		}
 	} 
 	
-	public void addMethod(RpcMethod spec, InvokeBridge service) {
+	public void addMethod(RpcMethod spec, MethodInvoker service) {
 		MethodInstance mi = new MethodInstance(spec.method, service);
 		mi.paramNames = spec.paramNames;
 		
@@ -386,7 +389,7 @@ public class RpcProcessor {
 		public Method reflectedMethod;
 		public Object instance;  
 		
-		public InvokeBridge invokeBridge;   
+		public MethodInvoker invokeBridge;   
 		public List<String> paramNames; 
 		
 		public MethodInstance(Method reflectedMethod, Object instance) {
@@ -395,7 +398,7 @@ public class RpcProcessor {
 			this.methodName = this.reflectedMethod.getName();
 		}
 		
-		public MethodInstance(String methodName, InvokeBridge invokeBridge) {  
+		public MethodInstance(String methodName, MethodInvoker invokeBridge) {  
 			this.methodName = methodName;
 			this.invokeBridge = invokeBridge;
 		}

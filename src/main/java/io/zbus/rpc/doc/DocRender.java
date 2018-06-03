@@ -1,4 +1,4 @@
-package io.zbus.rpc;
+package io.zbus.rpc.doc;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import io.zbus.kit.FileKit;
+import io.zbus.rpc.RpcMethod;
+import io.zbus.rpc.RpcProcessor;
 import io.zbus.transport.http.HttpMessage;
 
 public class DocRender { 
@@ -56,7 +58,7 @@ public class DocRender {
 				"<td class=\"methodParams\"><code><strong><a href=\"%s\">%s</a></strong>(%s)</code>" +  
 				"</td>" + 
 				"</tr>";
-		String methodLink = this.rpcProcessor.docUrlRoot + m.module + "/" + m.method;
+		String methodLink = urlPrefix + m.module + "/" + m.method;
 		String method = m.method;
 		String paramList = "";
 		int size = m.paramNames.size();
@@ -76,7 +78,7 @@ public class DocRender {
 		if(paramList.length() > 0) {
 			paramList = paramList.substring(0, paramList.length()-2);
 		}  
-		String moduleLink = this.rpcProcessor.docUrlRoot + m.module;
+		String moduleLink = urlPrefix + m.module;
 		
 		return String.format(fmt, moduleLink, m.module, m.returnType, methodLink, method,
 				paramList);
