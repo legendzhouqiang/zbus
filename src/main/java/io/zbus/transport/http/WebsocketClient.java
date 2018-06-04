@@ -1,6 +1,5 @@
 package io.zbus.transport.http;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -12,9 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.transport.DataHandler;
-import io.zbus.transport.ErrorHandler;
-import io.zbus.transport.EventHandler;
-import io.zbus.transport.Invoker.AbstractInvoker;
+import io.zbus.transport.AbastractClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -22,16 +19,12 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-public class WebsocketClient extends AbstractInvoker implements Closeable {
+public class WebsocketClient extends AbastractClient {
 	private static final Logger logger = LoggerFactory.getLogger(WebsocketClient.class);   
 	
 	public DataHandler<String> onText;
-	public DataHandler<ByteBuffer> onBinary;
-	public EventHandler onClose;
-	public EventHandler onOpen;
-	public ErrorHandler onError;
+	public DataHandler<ByteBuffer> onBinary; 
 	
-	public int reconnectDelay = 3000; // 3s 
 	public long lastActiveTime = System.currentTimeMillis(); 
 	
 	private OkHttpClient client; 
@@ -42,6 +35,8 @@ public class WebsocketClient extends AbstractInvoker implements Closeable {
 	private List<String> cachedSendingMessages = new ArrayList<String>();  
 	
 	public WebsocketClient(String address, OkHttpClient client) { 
+		super();
+		
 		this.client = client;
 		if(!address.startsWith("ws://") && !address.startsWith("wss://")) {
 			address = "ws://" + address;
@@ -51,8 +46,12 @@ public class WebsocketClient extends AbstractInvoker implements Closeable {
 		onText = msg-> { 
 			@SuppressWarnings("unchecked")
 			Map<String, Object> response = JsonKit.parseObject(msg, Map.class); 
-			onResponse(response); 
-		} ;
+			if(onMessage != null) {
+				onMessage.handle(response);
+			} 
+		}; 
+		
+		//TODO onBinary
 		
 		onClose = ()-> {
 			synchronized (wsLock) {
@@ -86,11 +85,14 @@ public class WebsocketClient extends AbstractInvoker implements Closeable {
 		this(address, new OkHttpClient());  
 	} 
 	
+	@Override
+	public void sendMessage(Map<String, Object> data) {
+		sendMessage(JsonKit.toJSONString(data));
+	}  
 	
 	@Override
 	public void close() throws IOException { 
-		onClose = null;
-		onError = null;
+		super.close();
 		
 		synchronized (this.wsLock) {
 			if(this.ws != null){
@@ -110,11 +112,6 @@ public class WebsocketClient extends AbstractInvoker implements Closeable {
 			this.ws.send(command);
 		}  
 	}  
-	
-	@Override
-	public void sendMessage(Map<String, Object> data) {
-		sendMessage(JsonKit.toJSONString(data));
-	} 
 	
 	public synchronized void connect(){    
 		connectUnsafe();

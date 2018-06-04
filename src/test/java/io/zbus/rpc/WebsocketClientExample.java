@@ -4,14 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.zbus.transport.Invoker;
 import io.zbus.transport.http.WebsocketClient;
 
 public class WebsocketClientExample {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
-		Invoker rpc = new WebsocketClient("localhost:8080");
+		WebsocketClient rpc = new WebsocketClient("localhost:8080");
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 100000; i++) {

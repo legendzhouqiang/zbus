@@ -4,16 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.zbus.mq.MqClient;
 import io.zbus.mq.MqServer;
 import io.zbus.mq.MqServerConfig;
-import io.zbus.transport.inproc.InprocClient;
 
 public class Pub {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws Exception {
 		MqServer server = new MqServer(new MqServerConfig());
-		InprocClient client = new InprocClient(server.getServerAdaptor()); 
+		
+		MqClient client = new MqClient(server); 
 		
 		String mq = "DiskQ";
 		
@@ -27,7 +28,7 @@ public class Pub {
 		Thread.sleep(100);
 		
 		AtomicInteger count = new AtomicInteger(0);  
-		for (int i = 0; i < 1000000; i++) {   
+		for (int i = 0; i < 200000; i++) {   
 			Map<String, Object> msg = new HashMap<>();
 			msg.put("cmd", "pub"); //Publish
 			msg.put("mq", mq);

@@ -10,29 +10,44 @@ import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
 import io.zbus.kit.StrKit;
-import io.zbus.transport.Invoker.AbstractInvoker;
+import io.zbus.transport.AbastractClient;
 import io.zbus.transport.IoAdaptor;
 import io.zbus.transport.Session;
 
-public class InprocClient extends AbstractInvoker implements Session { 
+public class InprocClient extends AbastractClient implements Session { 
 	private static final Logger logger = LoggerFactory.getLogger(InprocClient.class); 
 	private ConcurrentMap<String, Object> attributes = null;
 	
 	private IoAdaptor ioAdaptor;
 	private final String id = StrKit.uuid();
-	private boolean active = true;
+	private boolean active = false;
+	private Object lock = new Object();
 	
 	public InprocClient(IoAdaptor ioAdaptor) {
 		this.ioAdaptor = ioAdaptor; 
+		
+	}
+	
+	@Override
+	public void connect() { 
+		synchronized (lock) {
+			if(active) return;
+		}
+		active = true;
 		try {
 			ioAdaptor.sessionCreated(this);
-		} catch (IOException e) {
+			if(onOpen != null) {
+				onOpen.handle();
+			} 
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 	
 	@Override
 	public void close() throws IOException { 
+		super.close(); 
+		
 		active = false;
 		ioAdaptor.sessionToDestroy(this); 
 	} 
@@ -55,7 +70,7 @@ public class InprocClient extends AbstractInvoker implements Session {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void write(Object msg) {  //Session received message
+	public void write(Object msg) {  //Session received message  
 		try {
 			Map<String, Object> data = null;
 			if(msg instanceof Map) {
@@ -67,7 +82,9 @@ public class InprocClient extends AbstractInvoker implements Session {
 			} else {
 				throw new IllegalArgumentException("type of msg not support: " + msg.getClass());
 			}
-			onResponse(data);
+			if(onMessage != null) {
+				onMessage.handle(data);
+			} 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -75,6 +92,12 @@ public class InprocClient extends AbstractInvoker implements Session {
 	
 	@Override
 	public void sendMessage(Map<String, Object> data) {  //Session send out message
+		synchronized (lock) {
+			if(!active) {
+				connect();
+			}
+		}
+		
 		try {
 			ioAdaptor.onMessage(data, this);
 		} catch (IOException e) {

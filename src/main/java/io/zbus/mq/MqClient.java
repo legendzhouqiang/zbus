@@ -1,33 +1,29 @@
 package io.zbus.mq;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.zbus.kit.JsonKit;
+import io.zbus.transport.Client;
 import io.zbus.transport.DataHandler;
 import io.zbus.transport.http.WebsocketClient; 
 
-public class MqClient extends WebsocketClient{
-	private static final Logger logger = LoggerFactory.getLogger(MqClient.class);   
+public class MqClient extends Client{ 
+	private static final Logger logger = LoggerFactory.getLogger(MqClient.class); 
 	private Map<String, Map<String,DataHandler<Map<String,Object>>>> handlerTable = new ConcurrentHashMap<>(); //mq=>{channel=>handler}
 	
-	private ScheduledExecutorService heartbeator;
-	
-	public MqClient(String address) { 
+	public MqClient(String address) {  
 		super(address);
-		
-		onText = msg -> {
+		final WebsocketClient websocketClient = (WebsocketClient)support;
+		websocketClient.onText = msg -> {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> response = JsonKit.parseObject(msg, Map.class); 
-			boolean handled = onResponse(response);
+			boolean handled = support.handleInvokeResponse(response);
 			if(handled) return;
 			//Subscribed message pushing
 			
@@ -46,15 +42,16 @@ public class MqClient extends WebsocketClient{
 		}; 
 	}  
 	
+	public MqClient(MqServer server) {
+		super(server.getServerAdaptor());
+	}
+	 
 	public synchronized void heartbeat(long interval, TimeUnit timeUnit) {
-		if(heartbeator == null) {
-			heartbeator = Executors.newSingleThreadScheduledExecutor();
-			heartbeator.scheduleAtFixedRate(()->{
-				Map<String, Object> msg = new HashMap<>();
-				msg.put(Protocol.CMD, Protocol.PING);
-				sendMessage(JsonKit.toJSONString(msg));
-			}, interval, interval, timeUnit);
-		}
+		heartbeat(interval, timeUnit, ()->{
+			Map<String, Object> msg = new HashMap<>();
+			msg.put(Protocol.CMD, Protocol.PING);
+			return msg;
+		});
 	}  
 	
 	public void addListener(String mq, String channel, DataHandler<Map<String, Object>> dataHandler) {
@@ -64,14 +61,5 @@ public class MqClient extends WebsocketClient{
 			handlerTable.put(mq, mqHandlers);
 		}
 		mqHandlers.put(channel, dataHandler);
-	} 
-	
-	@Override
-	public void close() throws IOException { 
-		super.close();
-		if(heartbeator != null) {
-			heartbeator.shutdown();
-			heartbeator = null;
-		}
-	} 
+	}  
 }

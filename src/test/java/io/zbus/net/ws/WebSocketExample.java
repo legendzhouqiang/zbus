@@ -16,13 +16,13 @@ public class WebSocketExample {
 			 ws.close();
 		};   
 		
-		ws.onOpen = ()->{
+		ws.onOpen(()->{
 			Map<String, Object> command = new HashMap<>();
 			command.put("module", "example");
 			command.put("method", "getOrder");   
 			ws.sendMessage(JsonKit.toJSONString(command));
 			
-		};
+		});
 		
 		ws.connect();  
 	}

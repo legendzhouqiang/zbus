@@ -8,17 +8,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.zbus.kit.JsonKit;
-import io.zbus.transport.http.WebsocketClient;
-import okhttp3.OkHttpClient; 
+import io.zbus.transport.Client;
+import io.zbus.transport.IoAdaptor; 
 
-public class RpcClient extends WebsocketClient {   
+public class RpcClient extends Client {   
 	public RpcClient(String address) {  
 		super(address);
-	}  
+	}   
 	
-	public RpcClient(String address, OkHttpClient httpClient) {
-		super(address, httpClient); 
-	}  
+	public RpcClient(IoAdaptor ioAdaptor) {
+		super(ioAdaptor);
+	}
 	 
 	private static <T> T parseResult(Map<String, Object> resp, Class<T> clazz) { 
 		Object data = resp.get(Protocol.BODY);

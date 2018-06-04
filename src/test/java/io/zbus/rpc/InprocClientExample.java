@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.zbus.rpc.biz.InterfaceExampleImpl;
-import io.zbus.transport.Invoker;
 import io.zbus.transport.inproc.InprocClient;
 
 public class InprocClientExample {
@@ -14,10 +13,9 @@ public class InprocClientExample {
 	public static void main(String[] args) throws Exception {
 		RpcServerBootstrap b = new RpcServerBootstrap();   
 		b.addModule("example", new InterfaceExampleImpl());  
-		b.start();
+		b.start(); 
 		
-		
-		Invoker rpc = new InprocClient(b.getRpcServerAdaptor());
+		InprocClient rpc = new InprocClient(b.getRpcServerAdaptor());
 		
 		AtomicInteger count = new AtomicInteger(0);  
 		for (int i = 0; i < 1000000; i++) {

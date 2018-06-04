@@ -22,7 +22,7 @@ public class Sub1 {
 			}
 		});  
 		
-		client.onOpen = ()->{
+		client.onOpen(()->{
 			Map<String, Object> req = new HashMap<>();
 			req.put("cmd", "create"); //create MQ/Channel
 			req.put("mq", mq); 
@@ -39,7 +39,7 @@ public class Sub1 {
 			client.invoke(sub, res->{
 				System.out.println(res);
 			});
-		};
+		});
 		
 		client.connect();  
 	} 
