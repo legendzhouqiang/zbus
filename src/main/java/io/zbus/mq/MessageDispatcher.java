@@ -17,6 +17,7 @@ import com.alibaba.fastjson.JSON;
 import io.zbus.mq.model.MessageQueue;
 import io.zbus.mq.model.Subscription;
 import io.zbus.transport.Session;
+import io.zbus.transport.Session.SessionType;
 import io.zbus.transport.http.HttpMessage;
 
 public class MessageDispatcher {
@@ -73,7 +74,7 @@ public class MessageDispatcher {
 								continue;
 							message.put(Protocol.CHANNEL, channel);
 							message.put(Protocol.SENDER, sess.id());
-							sendMessage(message, sess, sub.isWebsocket);
+							sendMessage(message, sess);
 							break;
 						}
 					}
@@ -93,7 +94,7 @@ public class MessageDispatcher {
 		} 
 	}
 
-	public void take(MessageQueue mq, String channel, int count, String reqMsgId, Session sess, boolean isWebsocket) throws IOException { 
+	public void take(MessageQueue mq, String channel, int count, String reqMsgId, Session sess) throws IOException { 
 		List<Map<String, Object>> data = mq.read(channel, count);
 		Map<String, Object> message = new HashMap<>();  
 		message.put(Protocol.STATUS, 200);
@@ -111,22 +112,34 @@ public class MessageDispatcher {
 		message.put(Protocol.MQ, mq.name());
 		message.put(Protocol.CHANNEL, channel);
 		message.put(Protocol.SENDER, sess.id());
-		sendMessage(message, sess, isWebsocket);
+		sendMessage(message, sess);
 	}
 	
 
-	public void sendMessage(Map<String, Object> data, Session sess, boolean isWebsocket) {
-		if (isWebsocket) {
+	public void sendMessage(Map<String, Object> data, Session sess) { 
+		SessionType clientType = sess.attr(Session.TYPE_KEY); //Get type of session
+		if(clientType == null) clientType = SessionType.Websocket; 
+		
+		if (clientType == SessionType.Websocket) {
 			sess.write(JSON.toJSONBytes(data));
 			return;
 		}
-
-		HttpMessage res = new HttpMessage();
-		Integer status = (Integer) data.get(Protocol.STATUS);
-		if (status == null) status = 200;
-		res.setStatus(status);
-		res.setJsonBody(JSON.toJSONBytes(data));
-
-		sess.write(res);
+		
+		if (clientType == SessionType.Inproc) {
+			sess.write(data);
+			return;
+		} 
+		
+		if (clientType == SessionType.HTTP) {
+			HttpMessage res = new HttpMessage();
+			Integer status = (Integer) data.get(Protocol.STATUS);
+			if (status == null) status = 200;
+			res.setStatus(status);
+			res.setJsonBody(JSON.toJSONBytes(data));
+	
+			sess.write(res);
+			
+			return;
+		}
 	}
 }

@@ -44,6 +44,10 @@ public class MqServer extends Server {
 		this(new MqServerConfig(configFile));
 	}
 	
+	public MqServerAdaptor getServerAdaptor() {
+		return serverAdaptor;
+	}
+	
 	public void start() {
 		if(config.port == null) {
 			logger.info("Networking disabled, zbus work as InProc mode");

@@ -8,6 +8,5 @@ public class Subscription {
 	public String mq;
 	public String channel;
 	public String clientId; 
-	public Integer window;
-	public boolean isWebsocket = true;
+	public Integer window; 
 }

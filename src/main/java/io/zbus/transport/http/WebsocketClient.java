@@ -6,23 +6,15 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.zbus.auth.DefaultSign;
-import io.zbus.auth.RequestSign;
 import io.zbus.kit.JsonKit;
-import io.zbus.kit.StrKit;
-import io.zbus.mq.Protocol;
 import io.zbus.transport.DataHandler;
 import io.zbus.transport.ErrorHandler;
 import io.zbus.transport.EventHandler;
-import io.zbus.transport.Invoker;
+import io.zbus.transport.Invoker.AbstractInvoker;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -30,12 +22,8 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-public class WebsocketClient implements Invoker, Closeable {
-	private static final Logger logger = LoggerFactory.getLogger(WebsocketClient.class); 
-	public String apiKey;
-	public String secretKey;
-	public boolean authEnabled = false;
-	public RequestSign requestSign = new DefaultSign(); 
+public class WebsocketClient extends AbstractInvoker implements Closeable {
+	private static final Logger logger = LoggerFactory.getLogger(WebsocketClient.class);   
 	
 	public DataHandler<String> onText;
 	public DataHandler<ByteBuffer> onBinary;
@@ -44,9 +32,7 @@ public class WebsocketClient implements Invoker, Closeable {
 	public ErrorHandler onError;
 	
 	public int reconnectDelay = 3000; // 3s 
-	public long lastActiveTime = System.currentTimeMillis();
-	
-	protected Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>(); //id->context
+	public long lastActiveTime = System.currentTimeMillis(); 
 	
 	private OkHttpClient client; 
 	private String address;
@@ -125,56 +111,9 @@ public class WebsocketClient implements Invoker, Closeable {
 		}  
 	}  
 	
-	public void invoke(Map<String, Object> req, 
-			DataHandler<Map<String, Object>> dataHandler) {
-		invoke(req, dataHandler, null);
-	}
-	
-	public void invoke(Map<String, Object> req, 
-			DataHandler<Map<String, Object>> dataHandler,
-			ErrorHandler errorHandler) {
-		
-		String id = (String)req.get("id");
-		if(id == null) {
-			id = StrKit.uuid();
-			req.put("id", id); 
-		}  
-		if(authEnabled) {
-			if(apiKey == null) {
-				throw new IllegalStateException("apiKey not set");
-			}
-			if(secretKey == null) {
-				throw new IllegalStateException("secretKey not set");
-			}
-			
-			requestSign.sign(req, apiKey, secretKey);
-		} 
-		
-		RequestContext ctx = new RequestContext(req, dataHandler, errorHandler); 
-		callbackTable.put(id, ctx); 
-		
-		sendMessage(JsonKit.toJSONString(req));
-	}   
-	
-	public Map<String, Object> invoke(Map<String, Object> req) throws IOException, InterruptedException { 
-		return invoke(req, 10, TimeUnit.SECONDS);
-	}
-	
-	public Map<String, Object> invoke(Map<String, Object> req, long timeout, TimeUnit timeUnit) throws IOException, InterruptedException { 
-		CountDownLatch countDown = new CountDownLatch(1);
-		AtomicReference<Map<String, Object>> res = new AtomicReference<Map<String, Object>>();  
-		long start = System.currentTimeMillis();
-		invoke(req, data->{ 
-			res.set(data);
-			countDown.countDown();
-		});
-		countDown.await(timeout, timeUnit);
-		if(res.get() == null){ 
-			long end = System.currentTimeMillis();
-			String msg = String.format("Timeout(Time=%dms, ID=%s): %s", (end-start), (String)req.get("id"), JsonKit.toJSONString(req)); 
-			throw new IOException(msg);
-		}
-		return res.get();
+	@Override
+	public void sendMessage(Map<String, Object> data) {
+		sendMessage(JsonKit.toJSONString(data));
 	} 
 	
 	public synchronized void connect(){    
@@ -258,42 +197,5 @@ public class WebsocketClient implements Invoker, Closeable {
 				}
 			} 
 		}); 
-	} 
-	
-	protected boolean onResponse(Map<String, Object> response) throws Exception { 
-		String id = (String)response.get(Protocol.ID);
-		if(id != null) {
-			RequestContext ctx = callbackTable.remove(id);
-			if (ctx != null) {  //1) Request-Response invocation
-				Integer status = (Integer)response.get(Protocol.STATUS);
-				if(status != null && status != 200) { 
-					if(ctx.onError != null) {
-						ctx.onError.handle(new RuntimeException((String)response.get(Protocol.BODY)));
-					} else {
-						logger.error(JsonKit.toJSONString(response)); 
-					}
-				} else {
-					if(ctx.onData != null) {
-						ctx.onData.handle(response);
-					} else {
-						logger.warn("Missing handler for: " + response);
-					}
-				}
-				return true;
-			} 
-		}  
-		return false;
-	}; 
-	
-	public static class RequestContext {
-		public Map<String, Object> request;
-		public DataHandler<Map<String, Object>> onData;
-		public ErrorHandler onError;
-		
-		RequestContext(Map<String, Object> request, DataHandler<Map<String, Object>> onData, ErrorHandler onError){
-			this.request = request;
-			this.onData = onData;
-			this.onError = onError;
-		}
-	} 
+	}  
 }
