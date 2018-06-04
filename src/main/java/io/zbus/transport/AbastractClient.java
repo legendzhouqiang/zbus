@@ -21,38 +21,39 @@ import io.zbus.mq.Protocol;
 
 public abstract class AbastractClient implements Closeable {
 	private static final Logger logger = LoggerFactory.getLogger(AbastractClient.class);
-	
+
 	protected String apiKey;
 	protected String secretKey;
 	protected boolean authEnabled = false;
 	protected RequestSign requestSign = new DefaultSign();
-	
-	protected DataHandler<Map<String, Object>> onMessage; 
+
+	protected DataHandler<Map<String, Object>> onMessage;
 	protected EventHandler onClose;
 	protected EventHandler onOpen;
 	protected ErrorHandler onError;
-	
-	protected int reconnectDelay = 3000; // 3s 
 
-	protected Map<String, RequestContext> callbackTable = new ConcurrentHashMap<>(); // id->context 
+	protected int reconnectDelay = 3000; // 3s
+
+	protected Map<String, AbastractClient.RequestContext> callbackTable = new ConcurrentHashMap<>(); // id->context
 	protected ScheduledExecutorService heartbeator;
-	
+
 	public AbastractClient() {
-		onMessage = msg-> {  
-			handleInvokeResponse(msg); 
-		}; 
-		
-		onClose = ()-> {  
-			try { 
-				Thread.sleep(reconnectDelay); //TODO make it async?
+		onMessage = msg -> {
+			handleInvokeResponse(msg);
+		};
+
+		onClose = () -> {
+			try {
+				Thread.sleep(reconnectDelay); // TODO make it async?
 			} catch (InterruptedException e) {
 				// ignore
-			}  
+			}
 			connect();
 		};
-		
-		onError = e -> {;
-			if(onClose != null){
+
+		onError = e -> {
+			;
+			if (onClose != null) {
 				try {
 					onClose.handle();
 				} catch (Exception ex) {
@@ -60,33 +61,33 @@ public abstract class AbastractClient implements Closeable {
 				}
 			}
 		};
-	} 
-	
-	public abstract void sendMessage(Map<String, Object> data);
-	
-	public void connect(){ 
-		
 	}
-	
-	public synchronized void heartbeat(long interval, TimeUnit timeUnit, MessageBuilder builder) {
-		if(heartbeator == null) {
+
+	public abstract void sendMessage(Map<String, Object> data);
+
+	public void connect() {
+
+	}
+
+	public synchronized void heartbeat(long interval, TimeUnit timeUnit, AbastractClient.MessageBuilder builder) {
+		if (heartbeator == null) {
 			heartbeator = Executors.newSingleThreadScheduledExecutor();
-			heartbeator.scheduleAtFixedRate(()->{
-				Map<String, Object> msg = builder.build(); 
+			heartbeator.scheduleAtFixedRate(() -> {
+				Map<String, Object> msg = builder.build();
 				sendMessage(msg);
 			}, interval, interval, timeUnit);
 		}
-	}  
-	
+	}
+
 	@Override
-	public void close() throws IOException { 
+	public void close() throws IOException {
 		onClose = null;
 		onError = null;
-		
-		if(heartbeator != null) {
+
+		if (heartbeator != null) {
 			heartbeator.shutdown();
 		}
-	} 
+	}
 
 	public void invoke(Map<String, Object> req, DataHandler<Map<String, Object>> dataHandler) {
 		invoke(req, dataHandler, null);
@@ -111,7 +112,7 @@ public abstract class AbastractClient implements Closeable {
 			requestSign.sign(req, apiKey, secretKey);
 		}
 
-		RequestContext ctx = new RequestContext(req, dataHandler, errorHandler);
+		AbastractClient.RequestContext ctx = new RequestContext(req, dataHandler, errorHandler);
 		callbackTable.put(id, ctx);
 
 		sendMessage(req);
@@ -143,7 +144,7 @@ public abstract class AbastractClient implements Closeable {
 	public boolean handleInvokeResponse(Map<String, Object> response) throws Exception {
 		String id = (String) response.get(Protocol.ID);
 		if (id != null) {
-			RequestContext ctx = callbackTable.remove(id);
+			AbastractClient.RequestContext ctx = callbackTable.remove(id);
 			if (ctx != null) { // 1) Request-Response invocation
 				Integer status = (Integer) response.get(Protocol.STATUS);
 				if (status != null && status != 200) {
@@ -163,7 +164,7 @@ public abstract class AbastractClient implements Closeable {
 			}
 		}
 		return false;
-	}; 
+	};
 
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
@@ -200,7 +201,7 @@ public abstract class AbastractClient implements Closeable {
 	public void setReconnectDelay(int reconnectDelay) {
 		this.reconnectDelay = reconnectDelay;
 	}
- 
+
 	public static class RequestContext {
 		public Map<String, Object> request;
 		public DataHandler<Map<String, Object>> onData;
@@ -212,8 +213,8 @@ public abstract class AbastractClient implements Closeable {
 			this.onError = onError;
 		}
 	}
-	
-	public static interface MessageBuilder{
+
+	public static interface MessageBuilder {
 		Map<String, Object> build();
-	}  
-} 
+	}
+}
