@@ -21,18 +21,23 @@ import io.zbus.transport.http.HttpWsServer;
 public class RpcServerBootstrap implements Closeable {  
 	private static final Logger log = LoggerFactory.getLogger(RpcServerBootstrap.class);
 	
-	private RpcProcessor processor = new RpcProcessor(); 
+	private RpcProcessor processor; 
 	private boolean autoLoadService = false;
-	private int port;
+	private Integer port;
 	private String host = "0.0.0.0"; 
 	private String certFile;
 	private String keyFile;
+	private RpcServerAdaptor rpcServerAdaptor;
 	private HttpWsServer server;    
 	private RpcStartInterceptor onStart;
 	
-	String mqServerAddress; //Support MQ based RPC
+	private String mqServerAddress; //Support MQ based RPC
 	
-	public RpcServerBootstrap setPort(int port){ 
+	public RpcServerBootstrap() {
+		this.processor = new RpcProcessor(); 
+	}
+	
+	public RpcServerBootstrap setPort(Integer port){ 
 		this.port = port;
 		return this;
 	} 
@@ -93,8 +98,16 @@ public class RpcServerBootstrap implements Closeable {
 
 	public void setAuthFilter(RpcFilter authFilter) {
 		this.processor.setAuthFilter(authFilter);
-	}
+	} 
 	
+	public RpcServerAdaptor getRpcServerAdaptor() {
+		return rpcServerAdaptor;
+	}
+
+	public void setMqServerAddress(String mqServerAddress) {
+		this.mqServerAddress = mqServerAddress;
+	}
+
 	public void setOnStart(RpcStartInterceptor onStart) {
 		this.onStart = onStart;
 	}
@@ -132,14 +145,19 @@ public class RpcServerBootstrap implements Closeable {
 			onStart.onStart(processor);
 		}
 		
-		server = new HttpWsServer();    
-		if(keyFile != null && certFile != null) {
-			SslContext context = Ssl.buildServerSsl(certFile, keyFile);
-			server.setSslContext(context);
-		}  
+		if(mqServerAddress == null) { //Direct RPC
+			this.rpcServerAdaptor = new RpcServerAdaptor(this.processor);
+		} 
 		
-		RpcServerAdaptor adaptor = new RpcServerAdaptor(this.processor); 
-		server.start(this.host, this.port, adaptor); 
+		if(port != null) {
+			server = new HttpWsServer();    
+			if(keyFile != null && certFile != null) {
+				SslContext context = Ssl.buildServerSsl(certFile, keyFile);
+				server.setSslContext(context);
+			}  
+			 
+			server.start(this.host, this.port, this.rpcServerAdaptor); 
+		}
 		
 		return this;
 	}   

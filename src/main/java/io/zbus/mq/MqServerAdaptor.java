@@ -66,11 +66,11 @@ public class MqServerAdaptor extends ServerAdaptor {
 				json = JSONObject.parseObject(httpMessage.getBodyString()); 
 			}
 			sessionType = SessionType.HTTP;
-		} else if(msg instanceof Map) { 
-			json =  new JSONObject((Map<String,Object>)msg);
-			sessionType = SessionType.Inproc;
 		} else if(msg instanceof JSONObject) {  
 			json = (JSONObject)msg;
+			sessionType = SessionType.Inproc; 
+		} else if(msg instanceof Map) { 
+			json =  new JSONObject((Map<String,Object>)msg);
 			sessionType = SessionType.Inproc; 
 		} else {
 			throw new IllegalStateException("Not support message type");
